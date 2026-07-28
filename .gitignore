@@ -1,6 +1,9 @@
 # Claude Code machine-local settings
 .claude/settings.local.json
 
+# Scratch: Mermaid render workspace and npm cache used by docs/phase-1/verify checks
+.tmp/
+
 # OS cruft
 Thumbs.db
 desktop.ini

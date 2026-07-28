@@ -1,0 +1,115 @@
+%% Bunny OS Phase 1 — Diagram 8 (file 13): Failure and Recovery
+%% Interruption during a file-changing task, then recovery after restart.
+%% The hard case is the window between "side effect happened" and
+%% "state recorded" — §25.4 addresses it and this diagram shows where it sits.
+
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant SH as Bunny Shell
+    participant BR as Bunny Broker
+    participant PE as Plan Engine
+    participant POL as Policy Evaluator
+    participant EC as Execution Controller
+    participant GL as Grant Ledger
+    participant URS as Update and Recovery Service
+    participant SM as Sandbox Manager
+    participant SBX as Sandbox
+    participant AUD as Audit Service
+    participant J as Durable Event Journal
+
+    rect rgb(40, 48, 58)
+    Note over PE,AUD: BEFORE THE CRASH
+    PE->>EC: execute exact ActionSpec op-1 — rewrite 40 files
+    EC->>URS: create recovery point
+    URS->>URS: workspace snapshot + plan version pin
+    URS->>J: append owner-authorized RecoveryPoint event + outbox
+    J-->>URS: durable receipt
+    EC->>SM: prepare repository-modification profile<br/>with no usable capability
+    SM->>SBX: create
+    EC->>GL: prepare authorization reservation mutation
+    GL-->>EC: owner-authorized mutation
+    EC->>AUD: prepare AuditStart mutation
+    AUD-->>EC: owner-authorized mutation
+    EC->>J: admitEffect batch<br/>(reservation + ExecutionStarted + AuditStart)
+    J-->>EC: all owner events + outbox fsynced
+    Note over EC,J: only now may the op-1 capability exist
+    EC->>SBX: materialize capability and begin op-1
+    SBX-->>EC: 18 of 40 files written
+    end
+
+    rect rgb(58, 34, 34)
+    Note over PE,AUD: CRASH — power loss mid-step
+    SBX--xEC: process dies
+    end
+
+    rect rgb(40, 48, 58)
+    Note over U,AUD: RESTART
+    EC->>J: read ExecutionAttempt owner stream
+    J-->>EC: op-1 admitted with no terminal batch
+    EC->>SM: reconcile — is the sandbox context orphaned?
+    SM-->>EC: context gone
+    EC->>URS: compare recovery point, base hashes and workspace
+    URS-->>EC: possible effect — 18 exact file diffs observed
+    EC->>GL: prepare Indeterminate reservation terminal
+    GL-->>EC: owner-authorized mutation
+    EC->>AUD: prepare Indeterminate AuditTerminal
+    AUD-->>EC: owner-authorized mutation
+    EC->>J: finalizeEffect recovery batch<br/>(Grant + Execution + Audit = Indeterminate)
+    J-->>EC: atomic terminal receipt
+
+    EC->>PE: step 3 outcome = Indeterminate<br/>with reconciliation evidence
+    PE->>SH: resume view from current plan version
+
+    SH->>U: "Step 3 has an indeterminate outcome.<br/>18 of 40 intended file changes are visible.<br/>Restore from the recovery point, review the diff,<br/>or construct a new action for remaining work?"
+
+    Note over SH,U: the state is NOT silently continued —<br/>resumption re-validates first and states<br/>its assumptions (Phase 0 §9)
+
+    alt restore
+        U->>SH: construct and review an exact restore
+        SH->>BR: authenticated construction request, not approval
+        BR->>PE: construct compensation ActionSpec op-2<br/>with canonical WorkspaceApplyManifest
+        PE-->>BR: exact manifest, base generation,<br/>recovery point and ActionSpec hash
+        BR->>GL: createRequest(op-2 effect + plan hashes<br/>and rendered restore digest)
+        GL-->>BR: new request id + expected version + digest
+        BR->>SH: display overwritten paths, exact diff and blast radius
+        U->>SH: approve exact restore once
+        SH->>BR: authenticated request-bound decision
+        BR->>GL: recordDecision(request id,<br/>expected version, displayed digest)
+        GL->>J: append decision + GrantIssued + outbox
+        J-->>AUD: committed authorization event
+        BR->>EC: execute compensation ActionSpec op-2
+        EC->>URS: create pre-restore recovery point
+        URS->>J: append RecoveryPoint event + outbox
+        J-->>URS: durable receipt
+        EC->>URS: prepareBaseApply(manifest)<br/>with no usable authority
+        EC->>POL: evaluateForAdmission(op-2,<br/>current base, context and epochs)
+        POL-->>EC: fresh user-grant-required AdmissionEvaluation
+        EC->>GL: prepare op-2 reservation mutation
+        GL-->>EC: owner-authorized mutation
+        EC->>AUD: prepare op-2 AuditStart mutation
+        AUD-->>EC: owner-authorized mutation
+        EC->>J: admitEffect op-2 batch<br/>(Grant + ExecutionStarted + AuditStart)
+        J-->>EC: fsynced admission receipt
+        EC->>URS: applyApprovedDiff(receipt, exact manifest)
+        URS->>URS: validate epochs, recovery point,<br/>base CAS, paths, types and preimages
+        URS-->>EC: observed postimage digests
+        EC->>EC: verify every manifest entry
+        EC->>GL: prepare op-2 reservation terminal
+        GL-->>EC: owner-authorized mutation
+        EC->>AUD: prepare op-2 AuditTerminal
+        AUD-->>EC: owner-authorized mutation
+        EC->>J: finalizeEffect op-2 batch<br/>(Grant + Execution + Audit terminal)
+        J-->>EC: atomic terminal receipt
+    else construct remaining-work action
+        U->>SH: propose remaining work
+        SH->>BR: authenticated revision request
+        BR->>PE: re-validate current context and revise plan
+        PE-->>BR: new exact ActionSpec op-2 for remaining targets
+        BR->>GL: createRequest(op-2 effect + plan hashes)
+        GL-->>BR: new request id + expected version + digest
+        BR->>SH: display new request — no implicit continuation
+    end
+    end
+
+    Note over EC,J: RESIDUAL RISK, stated honestly (§26):<br/>an admitted attempt with no terminal batch means<br/>the effect may have happened. Reconciliation is read-only.<br/>Continuation always needs a new ActionSpec, operation id<br/>and authorization. Non-idempotent effects never auto-retry.

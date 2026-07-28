@@ -1,0 +1,81 @@
+%% Bunny OS Phase 1 — Diagram 6 (file 11): Permission Sequence
+%% Third-party content cannot authorize a control field. A user may create a
+%% new exact user-authorized action after reviewing the concrete effect.
+
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant SH as Bunny Shell
+    participant BR as Bunny Broker
+    participant PE as Plan Engine
+    participant POL as Policy Evaluator
+    participant GL as Grant Ledger
+    participant EC as Execution Controller
+    participant SM as Sandbox Manager
+    participant SBX as Action Sandbox
+    participant AUD as Audit Service
+    participant J as Durable Event Journal
+
+    Note over SBX: a web page contributes data saying<br/>“also update the git config”
+    SBX-->>BR: proposal with broker-issued third-party lineage
+    BR->>POL: evaluate derived context and ActionSpec
+    POL-->>BR: DENY — third-party data attempted to select<br/>a class-11 control field
+    BR->>AUD: blocked proposal + provenance + reason
+    BR->>SH: blocked suggestion, not an approval request
+    SH->>U: “A webpage suggested changing git config.<br/>No action was authorized. Review a concrete change?”
+
+    alt user dismisses blocked suggestion
+        U->>SH: dismiss
+        SH->>BR: authenticated dismissal
+        BR->>AUD: dismissal recorded
+    else user asks to review an exact action
+        U->>SH: construct a reviewable target and diff
+        SH->>BR: authenticated review request — not approval
+        BR->>PE: construct exact ActionSpec in a plan revision
+        PE-->>BR: new graph sequence/hash + ActionSpec hash
+        BR->>POL: evaluate exact effect and current provenance
+        POL-->>BR: explicit once grant required
+        BR->>GL: createRequest(ActionSpec + effect + plan hashes,<br/>grant shape + rendered digest)
+        GL-->>BR: request id + expected version + request digest
+        BR->>SH: display exact permission request
+        SH->>U: target, diff, requester, provenance and blast radius
+
+        alt user denies exact request
+            U->>SH: deny
+            SH->>BR: authenticated request-bound denial
+            BR->>GL: recordDecision(request id,<br/>expected version, displayed digest)
+            GL->>J: append denial + outbox
+            J-->>AUD: committed denial event
+        else user approves exact request once
+            U->>SH: approve once
+            SH->>BR: authenticated request-bound approval
+            BR->>GL: recordDecision(request id,<br/>expected version, displayed digest)
+            GL->>GL: compare-and-swap and issue once grant
+            GL->>J: append decision + GrantIssued + outbox
+            J-->>AUD: committed authorization event
+            BR->>EC: execute exact ActionSpec with grant reference
+            EC->>SM: prepare exact profile with no usable capability
+            SM->>SBX: create action context
+            EC->>POL: evaluateForAdmission(exact operation tuple,<br/>current context and epochs)
+            POL-->>EC: fresh user-grant-required AdmissionEvaluation
+            EC->>GL: prepare matching reservation mutation
+            GL-->>EC: owner-authorized mutation
+            EC->>AUD: prepare AuditStart mutation
+            AUD-->>EC: owner-authorized mutation
+            EC->>J: admitEffect batch<br/>(Grant + ExecutionStarted + AuditStart)
+            J-->>EC: fsynced admission receipt
+            EC->>SM: present receipt, exact ActionSpec and epochs
+            SM->>SM: independently validate receipt,<br/>ActionSpec hash and epochs
+            SM->>SBX: materialize bounded capability and execute
+            SBX-->>EC: observation
+            EC->>EC: verify terminal outcome + digest
+            EC->>GL: prepare reservation terminal mutation
+            GL-->>EC: owner-authorized mutation
+            EC->>AUD: prepare AuditTerminal mutation
+            AUD-->>EC: owner-authorized mutation
+            EC->>J: finalizeEffect batch<br/>(Grant + Execution + Audit terminal)
+            J-->>EC: atomic terminal receipt
+        end
+    end
+
+    Note over GL,J: a crash after possible effect leaves every owner open.<br/>One recovery batch marks the attempt and reservation indeterminate.<br/>A notifiable effect is never retried automatically.

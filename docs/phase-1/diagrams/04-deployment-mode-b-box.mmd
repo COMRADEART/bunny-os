@@ -1,0 +1,40 @@
+%% Bunny OS Phase 1 — Diagram 3b: Deployment Mode B — Bunny Box
+%% GATED on D4. Ships only when sandbox guarantees 1-5 and 9-12 are ENFORCED.
+%% The browser is presentation only (Phase 0 §13 guarantee 12). No trust decision in client code.
+
+flowchart TB
+    BROW["Browser Client<br/><i>presentation and input only</i><br/>holds no authority, no secrets,<br/>makes no trust decision"]
+
+    subgraph Boundary["Hostile-LAN boundary — treated as untrusted network"]
+        GW["<b>Gateway</b><br/>paired device-key proof<br/>fresh nonce + transcript binding<br/>exact Origin/Host validation<br/>(§24.4, ADR 0018)"]
+    end
+
+    subgraph HostMachine["Local machine"]
+        CORE["<b>Bunny Core</b> — single process<br/><i>identical to Mode A</i><br/>all authority lives here"]
+
+        SM["<b>Sandbox Manager</b><br/>guarantees 1-5 and 9-12 ENFORCED<br/>— this is the D4 gate —"]
+
+        subgraph Workspaces["Isolated workspaces"]
+            WS1["Workspace A<br/>own mounts, egress policy,<br/>memory scope, grants"]
+            WS2["Workspace B<br/>isolated from A as strongly<br/>as from the host"]
+        end
+
+        ART["Artifact export path<br/><i>the only way data leaves a workspace</i>"]
+    end
+
+    BROW ==>|"WSS over loopback or<br/>an explicit overlay — never<br/>an open LAN listener by default"| GW
+    GW --> CORE
+    CORE --> SM
+    SM ==> WS1
+    SM ==> WS2
+    WS1 --> ART
+    WS2 --> ART
+
+    GATE["<b>D4 GATE</b><br/>Bunny Box does not ship before the sandbox does.<br/>A browser-reachable agent host without enforced isolation<br/>is an incident generator (Phase 0 §18 Stage B).<br/><br/>Note: src/app/socket.ts and src/app/websocket.ts already<br/>implement these transports today, with no sandbox present.<br/>See conflict C-4 in §2.4."]
+
+    classDef core fill:#22303a,stroke:#5080a0,color:#d0e8f0
+    classDef gate fill:#3a2222,stroke:#a05050,color:#f0d0d0
+    classDef derived fill:#2a2a30,stroke:#707080,color:#d0d0d8,stroke-dasharray: 4 3
+    class CORE,SM core
+    class GATE,Boundary gate
+    class BROW derived

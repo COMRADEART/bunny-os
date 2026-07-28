@@ -1,0 +1,66 @@
+%% Bunny OS Phase 1 — Diagram 9 (file 14): Memory Retrieval and Update
+%% Scoped retrieval, provenance, model use, verification, and write-back.
+%% Two invariants: retrieval is scope-bounded by the Memory Service (not by the
+%% model's request), and NOTHING writes durable memory silently (C8).
+
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant SH as Bunny Shell
+    participant PE as Plan Engine
+    participant MEM as Memory Service
+    participant POL as Policy Engine
+    participant CR as Capability Router
+    participant M as Model
+    participant AUD as Audit Service
+
+    rect rgb(40, 48, 58)
+    Note over PE,AUD: RETRIEVAL — scope is enforced by Bunny, not requested by the model
+    PE->>MEM: retrieve for plan P in workspace W
+    MEM->>MEM: filter by scope — workspace W only
+    MEM->>MEM: exclude sensitive classes from provider context
+    MEM->>MEM: rank by relevance × confidence × freshness
+    MEM->>MEM: contradiction check against newer evidence
+    MEM-->>PE: 4 records, each with provenance,<br/>valid-time, ingestion-time, confidence
+    Note over MEM: a record without provenance is unstorable,<br/>so every returned record has one
+    MEM->>AUD: retrieval record — what was returned, to what
+
+    PE->>CR: compose request with retrieved context
+    CR->>M: minimized context
+    M-->>CR: response
+    Note over CR,M: response is untrusted —<br/>it may propose a memory, never write one
+    end
+
+    rect rgb(40, 48, 58)
+    Note over SH,U: VISIBLE USE — C8 principle 4
+    PE->>SH: response + "drew on 2 memories"
+    SH->>U: shows which records were used
+    U->>SH: "that one is outdated"
+    SH->>MEM: correct in flow
+    MEM->>MEM: supersede record, keep prior version,<br/>set valid-time end
+    MEM->>AUD: correction record
+    Note over MEM: correction is one action at the moment<br/>of use, not a settings expedition
+    end
+
+    rect rgb(40, 48, 58)
+    Note over PE,AUD: WRITE-BACK — proposals only
+    PE->>MEM: propose candidate memories from completed plan
+    MEM->>POL: memory write is a privileged action
+    POL-->>MEM: requires attribution + user confirmation
+    MEM->>SH: "Bunny noticed you prefer tabs<br/>(from today's session, workspace api-server)"
+    SH->>U: keep / edit / forget
+    U->>SH: keep
+    SH->>MEM: confirmed
+    MEM->>MEM: write with provenance, writer identity,<br/>scope = workspace, lineage to source
+    MEM->>AUD: memory write — what wrote this, from what source, when
+    end
+
+    rect rgb(58, 34, 34)
+    Note over MEM,AUD: DELETION CASCADE — designed in, never retrofitted
+    U->>SH: delete this source
+    SH->>MEM: delete
+    MEM->>MEM: walk derivation lineage
+    MEM->>MEM: remove derived summaries, embeddings, artifacts
+    MEM->>AUD: deletion record with cascade manifest
+    Note over MEM: retrofitted deletion in stateful AI systems<br/>is an unsolved mess — the lineage exists<br/>from record one for exactly this reason
+    end

@@ -1,0 +1,79 @@
+%% Bunny OS Phase 1 — Diagram 1: System Context
+%% Shows actors, the Bunny platform, and every external system it touches.
+%% Trust note: everything in "Untrusted Inputs" may influence proposals, never authority.
+
+flowchart TB
+    subgraph Actors
+        USER["User<br/>(sole source of authority)"]
+        PUB["Extension Publishers<br/>first-party / verified / community"]
+    end
+
+    subgraph Bunny["Bunny Platform (local machine)"]
+        SHELL["Bunny Shell<br/>presentation + input only"]
+        TERM["Terminal Client<br/>(low-fidelity regression test)"]
+        WEB["Browser Client<br/>(Bunny Box, gated on D4)"]
+        BROKER["Bunny Broker / control plane<br/>intent, plan, policy, grants,<br/>memory, routing, audit"]
+        WORKER["Sandboxed Agent Worker<br/>model-directed proposals only"]
+        SBX["Sandboxed Action Contexts<br/>per task or action profile"]
+        EXT["Extension + MCP Runtimes<br/>isolated per extension"]
+        LLM["Local Inference Engine<br/>llama-server (adopted)"]
+    end
+
+    subgraph Host["Host Operating System"]
+        FS["Filesystem + Workspaces"]
+        CRED["OS Credential Store<br/>DPAPI / Keychain / secret-tool"]
+        APPS["Conventional Applications<br/>editors, terminals, browsers"]
+        HW["Hardware<br/>CPU, RAM, GPU, accelerators, devices"]
+    end
+
+    subgraph External["External Systems (outside the trust boundary)"]
+        PROV["Hosted Model Providers"]
+        HF["Model Sources<br/>Hugging Face and equivalents"]
+        MCPR["Remote MCP Servers"]
+        UPD["Update Channel + Registries"]
+        NET["Network Services<br/>reached under egress policy"]
+    end
+
+    subgraph Untrusted["Untrusted Inputs — proposals only, never authority"]
+        WEBC["Web pages, documents, repositories"]
+        TOOLD["Tool + MCP server descriptions"]
+        MOUT["Model output (local and hosted)"]
+    end
+
+    USER --> SHELL
+    USER --> TERM
+    USER --> WEB
+    SHELL --> BROKER
+    TERM --> BROKER
+    WEB --> BROKER
+
+    BROKER --> WORKER
+    WORKER -.->|"typed proposals"| BROKER
+    BROKER --> SBX
+    BROKER --> EXT
+    BROKER --> LLM
+    BROKER --> CRED
+
+    SBX --> FS
+    SBX -.->|"default-deny egress,<br/>allowlist per grant"| NET
+    SBX --> APPS
+    LLM --> HW
+    BROKER --> HW
+
+    BROKER -->|"minimized context<br/>+ disclosure duties"| PROV
+    LLM -.->|"model acquisition,<br/>sha256 verified"| HF
+    EXT --> MCPR
+    BROKER --> UPD
+
+    PUB -->|"signed, manifested"| EXT
+
+    WEBC -.->|ingested by| SBX
+    TOOLD -.->|ingested by| WORKER
+    PROV -.->|produces| MOUT
+    LLM -.->|produces| MOUT
+    MOUT -.->|"treated as untrusted"| WORKER
+
+    classDef untrusted fill:#3a2222,stroke:#a05050,color:#f0d0d0
+    classDef authority fill:#22303a,stroke:#5080a0,color:#d0e8f0
+    class WEBC,TOOLD,MOUT,PROV,HF,MCPR,NET untrusted
+    class BROKER,USER authority

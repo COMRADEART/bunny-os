@@ -1,0 +1,62 @@
+%% Bunny OS Phase 1 — Diagram 7 (file 12): Local-to-Cloud Escalation
+%% How Bunny determines local resources are insufficient, explains the change,
+%% obtains consent, minimizes context, and invokes an external provider.
+%% All seven disclosure duties are discharged and each is labelled below.
+
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant SH as Bunny Shell
+    participant PE as Plan Engine
+    participant CR as Capability Router
+    participant HCS as Hardware Capability Service
+    participant LIM as Local Inference Manager
+    participant BS as Budget Service
+    participant MEM as Memory Service
+    participant POL as Policy Engine
+    participant GL as Grant Ledger
+    participant PA as Provider Adapters
+    participant AUD as Audit Service
+
+    PE->>CR: route request for step 4<br/>task class refactor, 11 steps remaining
+
+    CR->>HCS: current capability profile
+    HCS-->>CR: 16GB RAM, 89GB/s bandwidth,<br/>on battery, thermal headroom low
+    CR->>LIM: local tier fit for this task class
+    LIM-->>CR: 20B MoE loaded, but multi-step<br/>agentic reliability below threshold
+
+    CR->>CR: evaluate against workspace routing posture
+    Note over CR: posture is "balanced" — escalation<br/>permitted with per-workspace consent.<br/>A "privacy-strict" posture would stop here<br/>and offer degrade or decline instead.
+
+    CR->>BS: estimate for hosted route
+    BS-->>CR: 40-80 calls, est. 0.60 to 1.10,<br/>workspace budget 5.00 remaining
+
+    CR->>MEM: minimize context for this step
+    MEM-->>CR: 3 records in scope,<br/>2 sensitive-class records EXCLUDED
+    Note over MEM: sensitive classes are excluded from<br/>provider context by default (§10 privacy floor)
+
+    CR-->>PE: recommend escalation + explanation record
+    PE->>POL: action class 9 — send externally
+    POL-->>PE: ESCALATE — requires explicit consent
+
+    PE->>SH: escalation disclosure
+    Note over SH: the seven duties, all rendered:<br/>1 why · 2 what leaves · 3 minimized context<br/>4 named destination · 5 cost · 6 consent level<br/>7 audit record will be written
+    SH->>U: "Local model can't reliably carry an<br/>11-step refactor. Send this file and the<br/>plan to Anthropic? Est. 0.60-1.10."
+
+    alt user approves
+        U->>SH: approve for this plan
+        SH->>GL: grant (class 9, scope=this plan, duration=until complete)
+        GL->>AUD: grant issued
+        CR->>PA: invoke hosted route
+        PA->>AUD: egress record — what left, to whom, under which grant
+        PA-->>CR: response
+        Note over PA,CR: response is UNTRUSTED INPUT —<br/>it may propose, never authorize
+        CR->>BS: actual cost
+        BS->>BS: reconcile forecast against actual
+        SH->>U: route chip changes to<br/>"Anthropic · metered · leaves this device"
+    else user declines
+        U->>SH: keep it local
+        SH->>PE: degrade or decline
+        PE->>PE: replan within local capability<br/>and state the limitation plainly
+        Note over PE: C11 — Bunny says the work is<br/>narrower, it does not silently<br/>produce a worse result
+    end

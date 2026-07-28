@@ -1,0 +1,44 @@
+%% Bunny OS Phase 1 — Diagram 3e: Low-Resource Device
+%% ~1GB ARM through Raspberry Pi 5-class. Capability negotiation, not an edition.
+%% What stays identical is the whole trust surface. What adapts is the compute mix.
+
+flowchart TB
+    subgraph Device["Low-resource device — ~1GB ARM to Pi 5-class"]
+        subgraph Identical["IDENTICAL to every other profile — never degraded"]
+            ID1["intent vocabulary"]
+            ID2["personality contract"]
+            ID3["permission + grant model"]
+            ID4["living plan + task history"]
+            ID5["controls + interruption"]
+            ID6["accessibility floors"]
+            ID7["transparency: route, spend, egress, audit"]
+        end
+
+        CORE["<b>Bunny Core</b><br/>same process, same components"]
+
+        subgraph Adapted["ADAPTED by detected capability"]
+            AD1["local model: 1-4B, single-shot duties only<br/>intent classification · routing<br/>redaction · summarization"]
+            AD2["rendering: text-forward<br/>static character · reduced motion<br/>(a complete experience, not a degraded one)"]
+            AD3["concurrency: 1 task"]
+            AD4["sandbox density: 1 context"]
+            AD5["background work: only when<br/>plugged in with thermal headroom"]
+        end
+
+        HCS["Hardware Capability Service<br/>detects memory × bandwidth,<br/>not marketing tier"]
+    end
+
+    PROV["Hosted providers<br/><i>this profile is API-dependent<br/>and Bunny says so plainly</i>"]
+
+    HCS --> CORE
+    CORE --> Adapted
+    CORE --> Identical
+    CORE ==>|"escalation is the norm here,<br/>disclosed every time"| PROV
+
+    HONEST["<b>C11 honesty requirement</b><br/>On this profile Bunny states plainly that multi-step agentic work<br/>needs a hosted model or a bigger machine. It does not silently<br/>produce worse local work to preserve a purity claim (C12).<br/>The trust surfaces are identical — only the compute is smaller."]
+
+    classDef core fill:#22303a,stroke:#5080a0,color:#d0e8f0
+    classDef fixed fill:#22303a,stroke:#5080a0,color:#d0e8f0
+    classDef note fill:#2a2a30,stroke:#707080,color:#d0d0d8
+    class CORE core
+    class Identical fixed
+    class HONEST note

@@ -1,0 +1,44 @@
+%% Bunny OS Phase 1 — Diagram 3f: High-End Local AI Workstation
+%% Same product, same trust surface, more of the work stays local.
+%% Tiering is by memory capacity × bandwidth, never by TOPS or product tier.
+
+flowchart TB
+    subgraph WS["AI workstation"]
+        HCS["Hardware Capability Service<br/>detects capacity × bandwidth,<br/>VRAM, accelerators, thermals, power"]
+
+        CORE["<b>Bunny Core</b><br/>identical process, identical components,<br/>identical trust surface"]
+
+        subgraph Local["Expanded local capability"]
+            L1["local model: 20-30B MoE class<br/>the 'capable local' tier"]
+            L2["concurrency: several plans in parallel"]
+            L3["sandbox density: many contexts<br/>microVM tier affordable for<br/>untrusted-content work"]
+            L4["speculative + background execution<br/>within the power and thermal window"]
+            L5["longer context, richer caching,<br/>local embeddings for memory retrieval"]
+        end
+
+        subgraph Same["IDENTICAL to the low-resource profile"]
+            S1["intent vocabulary · personality"]
+            S2["permission + grant model"]
+            S3["living plan · task history · controls"]
+            S4["accessibility floors"]
+            S5["route, spend, egress, audit disclosure"]
+        end
+
+        GPU["GPU / accelerator<br/><i>note: no GPU detection exists today<br/>(src/local is RAM-only, CPU builds)<br/>— this is new construction, §13.4</i>"]
+    end
+
+    PROV["Hosted providers<br/><i>still used for the hardest agentic work</i>"]
+
+    HCS --> CORE
+    HCS --> GPU
+    CORE --> Local
+    CORE --> Same
+    GPU --> L1
+    CORE -.->|"escalation is rarer here<br/>but disclosed identically"| PROV
+
+    HONEST["<b>What does NOT change</b><br/>A bigger machine does not buy looser permissions, weaker disclosure,<br/>or a different product. C11 forbids editions. The capability gap<br/>between this profile and the Pi is real and stated — the trust<br/>model between them is identical."]
+
+    classDef core fill:#22303a,stroke:#5080a0,color:#d0e8f0
+    classDef note fill:#2a2a30,stroke:#707080,color:#d0d0d8
+    class CORE,Same core
+    class HONEST,GPU note

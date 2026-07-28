@@ -1,0 +1,93 @@
+%% Bunny OS Phase 1 — Diagram 10 (file 15): Plugin Execution
+%% Installation, permission declaration, invocation, sandboxing, revocation.
+%% Core invariant: an extension NEVER receives ambient authority merely by
+%% being installed (C16). Today's repo has signing but no isolation (§3.5).
+
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant SH as Bunny Shell
+    participant BR as Bunny Broker
+    participant EM as Extension Manager
+    participant POL as Policy Evaluator
+    participant GL as Grant Ledger
+    participant CREG as Capability Registry
+    participant EC as Execution Controller
+    participant SM as Sandbox Manager
+    participant EXT as Extension Runtime
+    participant AUD as Audit Service
+    participant J as Durable Event Journal
+
+    rect rgb(40, 48, 58)
+    Note over U,AUD: INSTALL
+    U->>SH: install extension X
+    SH->>EM: install
+    EM->>EM: verify Ed25519 signature over the file digest
+    alt tampered
+        EM--xSH: refused — never loaded regardless of policy
+    end
+    EM->>EM: resolve publisher identity and trust tier
+    EM->>EM: parse permission manifest
+    EM->>SH: consent surface in the action-class vocabulary
+    Note over SH: "X declares: Read (this workspace),<br/>Send externally (api.example.com).<br/>Effective isolation and egress follow<br/>the constitution-resolved A4/A5 branch."
+    U->>SH: confirm install and manifest receipt
+    SH->>GL: record declared-but-ungranted manifest
+    EM->>CREG: register tools, tagged with supplying extension
+    EM->>AUD: install record — publisher, tier, signature status
+    Note over EM,GL: NO grants are issued at install.<br/>Installation is not authorization.
+    end
+
+    rect rgb(40, 48, 58)
+    Note over EC,AUD: INVOCATION
+    EC->>CREG: resolve tool
+    CREG-->>EC: tool + declaring extension + trust tier
+    EC->>SM: prepare exact extension profile<br/>with no usable capability
+    SM->>EXT: create isolated context
+    EC->>POL: evaluateForAdmission(exact operation tuple,<br/>declaration, context and epochs)
+    alt undeclared capability requested
+        POL--xEC: deny — fails closed, no prompt offered
+        EC->>AUD: undeclared capability attempt
+        Note over POL: requesting outside the manifest is<br/>treated as evidence of compromise
+    else declared but no exact active grant
+        POL-->>EC: user-grant-required AdmissionEvaluation
+        EC->>BR: surface exact request and stop this attempt
+        BR->>GL: createRequest(ActionSpec, effect,<br/>extension subject and rendered digest)
+        GL-->>BR: request id + expected version + digest
+        BR->>SH: permission request projection
+    else declared with matching active grant
+        POL-->>EC: fresh user-grant-required AdmissionEvaluation
+        EC->>GL: prepare matching reservation mutation
+        GL-->>EC: owner-authorized mutation
+        EC->>AUD: prepare AuditStart mutation
+        AUD-->>EC: owner-authorized mutation
+        EC->>J: admitEffect batch<br/>(Grant + ExecutionStarted + AuditStart)
+        J-->>EC: fsynced admission receipt
+        EC->>SM: present receipt, exact ActionSpec and epochs
+        SM->>SM: independently validate receipt,<br/>ActionSpec hash, extension epoch and grants
+        SM->>EXT: materialize exact capability and invoke
+        EXT-->>EC: observations
+        EC->>EC: verify terminal outcome
+        EC->>GL: prepare reservation terminal
+        GL-->>EC: owner-authorized mutation
+        EC->>AUD: prepare AuditTerminal mutation
+        AUD-->>EC: owner-authorized mutation
+        EC->>J: finalizeEffect batch<br/>(Grant + Execution + Audit terminal)
+        J-->>EC: atomic terminal receipt
+        Note over EXT,EC: the result — including any tool<br/>description text — is UNTRUSTED INPUT<br/>and is a known injection carrier
+    end
+    end
+
+    rect rgb(58, 34, 34)
+    Note over U,AUD: REVOCATION
+    U->>SH: revoke X
+    SH->>EM: revoke
+    EM->>GL: revoke all grants held by X
+    EM->>SM: terminate running contexts
+    EM->>CREG: deregister tools
+    EM->>EM: cancel standing jobs created by X
+    EM->>EM: mark memories created by X for deletion
+    Note over EM: the extension epoch invalidates authority atomically.<br/>Context, registry, job and memory cleanup is<br/>an idempotent visible saga, not one transaction
+    EM->>AUD: revocation record with what was removed
+    end
+
+    Note over EM,AUD: KILL SWITCH — a signed revocation list disables a known-malicious<br/>extension across all installs, with the user informed. Distribution must not<br/>create a phone-home requirement that violates local-first (§19.6).

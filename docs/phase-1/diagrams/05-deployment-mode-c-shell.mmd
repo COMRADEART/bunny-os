@@ -1,0 +1,36 @@
+%% Bunny OS Phase 1 — Diagram 3c: Deployment Mode C — Bunny Shell
+%% A kiosk-style single-purpose Wayland session on a stock Linux base.
+%% NOT a general-purpose desktop environment (Phase 0 §18 option 3, §20).
+
+flowchart TB
+    subgraph Session["Wayland session — kiosk-style, single purpose"]
+        COMP["Compositor<br/><i>adopted, not written</i><br/>cage / labwc / wlroots-based<br/>only if §20.4's falsifiable<br/>condition is met"]
+        SHELL["<b>Bunny Shell</b><br/>task surface · living plan<br/>character (optional) · captions<br/>TSM renderer + platform accessibility mapping"]
+        PORTALS["XDG Desktop Portals<br/>file chooser · screencast<br/>screenshot · device access"]
+    end
+
+    subgraph SystemLayer["Stock Linux base — adopted whole"]
+        CORE["<b>Bunny Core</b> — systemd user service<br/><i>identical to Modes A and B</i>"]
+        SM["Sandbox Manager<br/>full Linux primitive set available<br/>— strongest guarantees of any mode —"]
+        SBX["Sandboxed task contexts"]
+        APPS["Conventional Linux applications<br/>native · Flatpak · CLI"]
+        A11Y["Accessibility stack<br/>AT-SPI / AccessKit<br/><i>budget for the Wayland transition</i>"]
+    end
+
+    SHELL --- COMP
+    SHELL --- CORE
+    SHELL --> A11Y
+    CORE --> SM
+    SM ==> SBX
+    SHELL -.->|"embed, focus, capture,<br/>input — all portal-mediated"| PORTALS
+    PORTALS --> APPS
+    SBX --> APPS
+
+    SCOPE["<b>Deliberate scope limit</b><br/>No settings daemon. No network applet. No control center.<br/>Those belong to the base OS, which Bunny rents (C15).<br/>The delta between a kiosk session and a full DE is measured in years<br/>— System76 needed 4.5 with hardware revenue behind it."]
+
+    classDef core fill:#22303a,stroke:#5080a0,color:#d0e8f0
+    classDef adopted fill:#332822,stroke:#a07850,color:#f0dcc8
+    classDef note fill:#2a2a30,stroke:#707080,color:#d0d0d8
+    class CORE,SM,SHELL core
+    class COMP,APPS,PORTALS,A11Y adopted
+    class SCOPE note

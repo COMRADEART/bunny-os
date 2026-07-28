@@ -1,0 +1,93 @@
+%% Bunny OS Phase 1 — Diagram 5 (file 10): Intent to Execution
+%% One ordinary action traced from user expression to verified completion and
+%% memory write-back. Draft classification is advisory. The fresh admission
+%% evaluation and the adapter's receipt/hash/epoch validation are enforcing checks (§12.1, I6).
+
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant SH as Bunny Shell
+    participant BR as Bunny Broker
+    participant IS as Intent Service
+    participant PE as Plan Engine
+    participant MEM as Memory Service
+    participant CR as Capability Router
+    participant POL as Policy Engine
+    participant GL as Grant Ledger
+    participant EC as Execution Controller
+    participant URS as Update and Recovery Service
+    participant SM as Sandbox Manager
+    participant SBX as Sandbox
+    participant AUD as Audit Service
+    participant J as Durable Event Journal
+
+    U->>SH: "get this project ready for release"
+    SH->>BR: authenticated intent submission
+    BR->>IS: normalized input (origin: user)
+    IS->>IS: resolve to structured intent
+    IS->>AUD: intent captured
+    IS->>PE: accepted intent
+
+    PE->>MEM: scoped retrieval request (workspace)
+    MEM-->>PE: records + provenance + confidence
+    Note over MEM,PE: only this workspace's scope —<br/>promotion requires consent
+
+    PE->>CR: route request (task class, sensitivity, plan length)
+    CR->>CR: evaluate posture, hardware, cost, health
+    CR-->>PE: route decision + explanation record
+    CR->>AUD: routing decision
+
+    PE->>PE: draft living plan v1<br/>with immutable ActionSpecs
+    PE->>POL: evaluate plan envelope and exact effects
+    POL->>POL: classify each step by action class + disposition
+    POL-->>BR: classes 1-5 are policy candidates<br/>step 6 requires a user grant
+    BR->>GL: createRequest(step 6 ActionSpec,<br/>effect + plan hashes + rendered digest)
+    GL-->>BR: request id + expected version + digest
+    BR->>SH: plan proposal + displayed permission request
+    SH->>U: review plan and exact external effect
+    U->>SH: approve plan and request
+    SH->>BR: authenticated plan approval +<br/>request-bound decision
+    BR->>PE: approve graph sequence/hash
+    BR->>GL: recordDecision(request id,<br/>expected version, displayed digest)
+    GL->>GL: compare-and-swap and issue user grant
+    GL->>J: append decision + GrantIssued + outbox
+    J-->>AUD: committed authorization event
+
+    loop each ready step
+        PE->>EC: execute immutable ActionSpec
+        EC->>URS: create recovery point if consequential
+        URS-->>EC: durable recovery-point reference
+        EC->>SM: prepare sandbox with no usable capability
+        SM->>SBX: create with exact profile
+        Note over SM,SBX: mounts, process limits,<br/>default-deny egress, no secrets
+        EC->>POL: evaluateForAdmission(exact operation tuple,<br/>current authoritative context and epochs)
+        POL-->>EC: fresh AdmissionEvaluation<br/>deny, user-grant-required, or policy-permit
+        EC->>GL: prepare matching user reservation<br/>or policy authorization mutation
+        GL-->>EC: owner-authorized mutation
+        EC->>AUD: prepare AuditStart mutation
+        AUD-->>EC: owner-authorized mutation
+        EC->>J: admitEffect batch<br/>(authorization + ExecutionStarted + AuditStart)
+        J-->>EC: all owner events + outbox fsynced
+        Note over EC,J: only now may a usable capability exist
+        EC->>SM: present admission receipt,<br/>exact ActionSpec and current epochs
+        SM->>SM: independently validate receipt,<br/>ActionSpec hash and epochs
+        SM->>SBX: materialize exact capability and execute ActionSpec
+        SBX-->>EC: observations
+        EC->>EC: verify — did this actually succeed?
+        EC->>GL: prepare matching reservation terminal
+        GL-->>EC: owner-authorized terminal mutation
+        EC->>AUD: prepare AuditTerminal + egress mutation
+        AUD-->>EC: owner-authorized terminal mutation
+        EC->>J: finalizeEffect batch<br/>(Grant + Execution + Audit terminal)
+        J-->>EC: atomic terminal receipt
+        EC-->>PE: step verified
+        PE->>SH: step state (streamed)
+    end
+
+    PE->>SH: plan complete + result review
+    SH->>U: what was done, spent, sent, and what is undoable
+    PE->>MEM: propose candidate memories
+    Note over PE,MEM: proposals only — C8 forbids<br/>silent durable writes
+    U->>SH: confirm memory proposals
+    SH->>MEM: write (attributed, scoped, provenance)
+    MEM->>AUD: memory write

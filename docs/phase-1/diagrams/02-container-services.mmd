@@ -1,0 +1,102 @@
+%% Bunny OS Phase 1 — Diagram 2: Container / Service Diagram
+%% “Bunny Core” is a logical runtime. The safe configuration has a trusted
+%% broker/control-plane process and sandboxed Agent Workers.
+
+flowchart TB
+    subgraph Clients["Client Processes — presentation and input only"]
+        SHELL["Bunny Shell"]
+        TERM["Terminal REPL"]
+        BROW["Browser Client"]
+    end
+
+    subgraph BrokerProc["Bunny Broker / control plane — trusted OS process"]
+        direction TB
+        GW["Gateway<br/><i>derived state only</i><br/>authenticates clients, projects state"]
+
+        subgraph Intent["Intent and Planning"]
+            IS["Intent Service<br/><b>owns:</b> intent catalog"]
+            PE["Plan Engine<br/><b>owns:</b> plans, task graph, versions"]
+        end
+
+        subgraph Trust["Authority"]
+            POL["Policy Evaluator<br/><i>pure; immutable installed policy</i>"]
+            GL["Grant Ledger<br/><b>owns:</b> permission requests and grants"]
+            AUD["Audit Service<br/><b>owns:</b> append-only audit log<br/><i>not worker-writable</i>"]
+        end
+
+        subgraph Exec["Execution Control"]
+            EC["Execution Controller<br/><b>owns:</b> executions, observations, verdicts"]
+            SM["Sandbox Manager<br/><b>owns:</b> sandbox lifecycle, profiles"]
+        end
+
+        subgraph Intel["Intelligence Selection"]
+            CREG["Capability Registry<br/><b>owns:</b> what exists"]
+            CR["Capability Router<br/><b>owns:</b> which to use"]
+            PA["Provider Adapters<br/><b>owns:</b> wire translation"]
+            LIM["Local Inference Manager"]
+            HCS["Hardware Capability Service"]
+        end
+
+        subgraph State["State"]
+            MEM["Memory Service<br/><b>owns:</b> memory records, lineage"]
+            STS["Session and Transcript Service<br/><b>owns:</b> threads, turns, items"]
+            IPS["Identity and Profile Service<br/><b>owns:</b> secrets, tokens, profiles"]
+            BS["Budget Service<br/><b>owns:</b> spend, budgets"]
+            URS["Update and Recovery Service<br/><b>owns:</b> installed policy bundle"]
+        end
+
+        EM["Extension Manager"]
+        BUS["Event Bus"]
+    end
+
+    subgraph UntrustedProc["Sandboxed / isolated processes"]
+        WORKER["Agent Worker<br/>model-directed proposals<br/><i>no ambient authority</i>"]
+        SBX["Action Sandbox<br/>per task or action profile"]
+        EXTP["Extension / MCP Runtime<br/>one per extension"]
+        LLS["llama-server<br/>loopback only"]
+    end
+
+    PROV["Hosted Providers"]
+
+    SHELL --- GW
+    TERM --- GW
+    BROW --- GW
+    GW --> IS
+    IS --> PE
+    PE -->|"planning request"| WORKER
+    WORKER -->|"typed proposal only"| PE
+    WORKER -->|"capability request"| POL
+    POL --> GL
+    PE --> EC
+    EC --> POL
+    EC --> SM
+    SM ==>|"grant-bound capability"| SBX
+    WORKER -->|"invocation through broker"| EC
+    EC --> CR
+    CR --> CREG
+    CR --> HCS
+    CR --> PA
+    CR --> LIM
+    PA --> PROV
+    PA -.->|"untrusted model output"| WORKER
+    LIM --> LLS
+    LLS -.->|"untrusted model output"| WORKER
+    EM --> CREG
+    EM ==> EXTP
+    IPS -.->|"injects credential at protocol boundary"| PA
+    PE --> MEM
+    MEM --> STS
+    EC --> AUD
+    GL --> AUD
+    CR --> AUD
+    BS --> AUD
+    CR --> BS
+    URS --> POL
+    BUS --- GW
+
+    classDef derived fill:#2a2a30,stroke:#707080,color:#d0d0d8,stroke-dasharray: 4 3
+    classDef isolated fill:#332822,stroke:#a07850,color:#f0dcc8,stroke-dasharray: 5 3
+    classDef authority fill:#22303a,stroke:#5080a0,color:#d0e8f0
+    class GW,SHELL,TERM,BROW derived
+    class WORKER,SBX,EXTP,LLS,PROV isolated
+    class POL,GL,AUD,IPS authority

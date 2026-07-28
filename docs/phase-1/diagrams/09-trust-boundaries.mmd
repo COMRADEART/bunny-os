@@ -1,0 +1,68 @@
+%% Bunny OS Phase 1 — Diagram 4 (file 09): Trust Boundaries
+%% Eight physical boundaries, each with its primary control, plus the ninth
+%% (instruction provenance) which is logical rather than physical.
+
+flowchart TB
+    subgraph B1["① Client Boundary"]
+        C["Bunny Shell / Browser / Terminal<br/><i>presentation only — no trust decision</i>"]
+    end
+
+    B1 ===|"paired device-key proof<br/>nonce + transcript bound<br/>exact Origin/Host for browser"| B2
+
+    subgraph B2["② Proposal / Authority Boundary"]
+        direction TB
+        AGENT["Sandboxed Agent Worker<br/><i>proposes; no ambient authority</i>"]
+        POLICY["Bunny Broker<br/>Policy Evaluator + Grant Ledger<br/><b>authorizes</b>"]
+        AGENT -->|"authenticated typed proposal;<br/>broker derives security context"| POLICY
+    end
+
+    B2 ===|"fsynced admission receipt<br/>exact ActionSpec + current epochs"| B3
+
+    subgraph B3["③ Effect Adapter / Sandbox Boundary"]
+        direction TB
+        ENF["Sandbox Manager / fixed adapter<br/><i>independently validates receipt, hash and epochs</i>"]
+        SBX["Sandboxed Execution Context<br/><i>receives only the exact materialized capability</i>"]
+        ENF --> SBX
+    end
+
+    B3 ===|"namespaces, seccomp, resource limits"| B4
+    subgraph B4["④ Host Boundary"]
+        HOST["Host OS, filesystem, processes"]
+    end
+
+    B3 ===|"default-deny egress<br/>allowlist per grant"| B5
+    subgraph B5["⑤ Network Boundary"]
+        NET["The internet<br/><i>where the lethal trifecta is enforced</i>"]
+    end
+
+    B2 ===|"manifest + signature + trust tier"| B6
+    subgraph B6["⑥ Extension Boundary"]
+        EXT["Plugins, MCP servers, personalities,<br/>themes, voices"]
+    end
+
+    B2 ===|"context minimization<br/>+ seven disclosure duties"| B7
+    subgraph B7["⑦ Provider Boundary"]
+        PROV["Hosted model providers<br/><i>never a system of record</i>"]
+    end
+
+    subgraph B8["⑧ Workspace + Profile Boundaries"]
+        WS1["Workspace A<br/>memory, grants, files"]
+        WS2["Workspace B<br/>memory, grants, files"]
+        WS1 x--x|"invisible to each other<br/>absent explicit sharing"| WS2
+    end
+
+    B2 === B8
+
+    subgraph B9["⑨ Instruction Provenance — logical, not physical"]
+        PU["origin: user"]
+        PB["origin: bunny-planning"]
+        PC["origin: third-party-content"]
+        PU -.->|"may authorize"| OK["consequential action"]
+        PB -.->|"may authorize<br/>within plan envelope"| OK
+        PC x--x|"NEVER authorizes"| OK
+    end
+
+    classDef untrusted fill:#3a2222,stroke:#a05050,color:#f0d0d0
+    classDef authority fill:#22303a,stroke:#5080a0,color:#d0e8f0
+    class NET,PROV,EXT,PC untrusted
+    class POLICY,ENF,PU authority

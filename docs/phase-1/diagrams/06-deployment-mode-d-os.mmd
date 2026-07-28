@@ -1,0 +1,52 @@
+%% Bunny OS Phase 1 — Diagram 3d: Deployment Mode D — Bunny OS
+%% An image-based atomic variant on an existing base. Packaging, not product.
+%% No kernel fork, ever (D2). No package archive (§20).
+
+flowchart TB
+    subgraph Build["Build + delivery — CI, not a distro team"]
+        BASE["Existing atomic base image<br/><i>adopted whole</i>"]
+        LAYER["Bunny image layer<br/>the ONLY thing maintained<br/>Shell + Core + services"]
+        SIGN["Image signing<br/>+ provenance attestation"]
+        REG["OCI registry"]
+        BASE --> LAYER --> SIGN --> REG
+    end
+
+    subgraph Device["User device"]
+        subgraph Boot["Boot + update"]
+            AB["Two deployments<br/>current + previous"]
+            ROLL["Automatic rollback<br/>on failed boot or health check"]
+            AB --- ROLL
+        end
+
+        subgraph Runtime["Runtime"]
+            KERNEL["Upstream kernel<br/><b>configuration only, never forked</b>"]
+            CORE["<b>Bunny Core</b><br/><i>identical to Modes A, B and C</i>"]
+            SHELL["Bunny Shell session"]
+            SM["Sandbox Manager<br/>full Linux primitives"]
+        end
+
+        subgraph AppLayer["Application layer — inherited free"]
+            FLAT["Flathub / Flatpak<br/>~2,800 apps"]
+            SBX["Sandboxed task contexts"]
+        end
+
+        MUT["Writable state<br/>user data · workspaces · memory<br/><i>survives every image update</i>"]
+    end
+
+    REG ==>|"staged image pull"| AB
+    AB --> KERNEL
+    KERNEL --> CORE
+    CORE --> SHELL
+    CORE --> SM
+    SM ==> SBX
+    SHELL --> FLAT
+    CORE --> MUT
+
+    TENSION["<b>The unresolved tension — see §20.6</b><br/>Agents install software. Atomic systems resist installation.<br/>Resolution: package installs happen INSIDE workspace sandboxes,<br/>never against the base image. A task that genuinely needs a<br/>system-level package is an escalation, not a routine step."]
+
+    classDef core fill:#22303a,stroke:#5080a0,color:#d0e8f0
+    classDef adopted fill:#332822,stroke:#a07850,color:#f0dcc8
+    classDef note fill:#2a2a30,stroke:#707080,color:#d0d0d8
+    class CORE,SM,SHELL core
+    class BASE,KERNEL,FLAT adopted
+    class TENSION note

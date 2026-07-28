@@ -1,0 +1,47 @@
+%% Bunny OS Phase 1 — Diagram 3a: Deployment Mode A — Bunny on an Existing Host
+%% The V1 target (D3). Linux, Windows, macOS. Bunny Core is IDENTICAL to every
+%% other mode. What varies is only the Sandbox Adapter and the client surface.
+
+flowchart TB
+    subgraph HostOS["Host OS — Linux / Windows / macOS"]
+        subgraph UserSession["User session"]
+            TERM["Terminal Client<br/>src/repl"]
+            APP["Desktop Task Surface<br/>(Bunny Shell as an application)"]
+        end
+
+        CORE["<b>Bunny Core</b> — single process<br/>identical across all four modes<br/>intent · plan · policy · grants<br/>memory · routing · audit · budget"]
+
+        subgraph Adapters["Deployment-specific adapters"]
+            SBXA["Sandbox Adapter<br/><b>Linux:</b> namespaces + seccomp + Landlock<br/><b>Windows:</b> restricted token + Job object<br/><b>macOS:</b> Seatbelt profile<br/><i>guarantees differ — see §12.4</i>"]
+            CREDA["Credential Adapter<br/>DPAPI / Keychain / secret-tool"]
+        end
+
+        subgraph Isolated["Isolated processes"]
+            SBX["Sandboxed task contexts"]
+            EXT["Extension + MCP runtimes"]
+            LLS["llama-server (loopback)"]
+        end
+
+        FS["User filesystem + workspaces"]
+    end
+
+    PROV["Hosted providers"]
+
+    TERM --- CORE
+    APP --- CORE
+    CORE --> SBXA
+    CORE --> CREDA
+    SBXA ==> SBX
+    CORE ==> EXT
+    CORE --> LLS
+    SBX --> FS
+    CORE --> PROV
+
+    NOTE["<b>Mode A properties</b><br/>no network transport exposed by default<br/>Gateway runs over stdio only<br/>sandbox guarantees are the weakest of the four modes<br/>and are published per-OS rather than implied"]
+
+    classDef core fill:#22303a,stroke:#5080a0,color:#d0e8f0
+    classDef adapter fill:#332822,stroke:#a07850,color:#f0dcc8
+    classDef note fill:#2a2a30,stroke:#707080,color:#d0d0d8
+    class CORE core
+    class SBXA,CREDA adapter
+    class NOTE note
