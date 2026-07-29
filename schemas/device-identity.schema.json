@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/device-identity-1.schema.json",
+  "title": "Bunny OS device identity record",
+  "description": "A locally generated, rotatable device identity. Hardware identifiers are deliberately unrepresentable: there is no field for a MAC address, board serial, storage serial, CPU serial, or advertising identifier.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "installationId", "deviceKeyId", "keyStorage", "locallyGenerated", "createdAt"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "installationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "description": "128 bits of locally generated randomness. Not derived from any hardware value."
+    },
+    "deviceKeyId": { "type": "string", "pattern": "^dev-[0-9a-f]{16}$" },
+    "keyStorage": { "type": "string", "enum": ["tpm-2.0", "software-protected"] },
+    "locallyGenerated": {
+      "const": true,
+      "description": "A device identity is never issued by a server or assigned at the factory."
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "certificateSerial": { "type": ["string", "null"], "maxLength": 128 },
+    "enrolmentIdentity": { "type": ["string", "null"], "maxLength": 128 },
+    "derivedFrom": {
+      "type": "array",
+      "description": "Optional provenance note. Validation rejects any hardware identifier named here.",
+      "items": { "type": "string", "maxLength": 64 }
+    },
+    "rotationHistory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rotatedAt", "reason", "previousKeyId"],
+        "properties": {
+          "rotatedAt": { "type": "string", "format": "date-time" },
+          "reason": {
+            "type": "string",
+            "enum": ["scheduled", "operator-requested", "suspected-compromise", "storage-migration", "reinstall", "unenrolment", "decommission"]
+          },
+          "previousKeyId": { "type": "string", "pattern": "^dev-[0-9a-f]{16}$" }
+        }
+      }
+    }
+  }
+}
