@@ -72,4 +72,21 @@ The Phase 6 mandatory preflight is recorded in `docs/PHASE_6_BASELINE.md` and `P
 6. obtain the nine protected approvals and change `STABLE_RELEASE_GO_NO_GO.md` to evidence-backed `GO`;
 7. rerun `gate-stable-release` successfully before creating any stable branch, tag, support promise, download, announcement, mirror, or update promotion.
 
+## Phase 7 entry remains blocked
+
+The Phase 7 mandatory preflight is recorded in `docs/PHASE_7_BASELINE.md` and
+`PHASE_7_REPORT.md`. The requested feature branch exists, but implementation did
+not begin. Complete the Phase 6 closure sequence above, operate the stable
+release, finish the named post-release reviews, and rerun
+`gate-stable-release` successfully before adding OEM, enterprise-management,
+fleet, or encrypted-sync trust boundaries. No pilot, manufacturing, broad fleet
+deployment, or hosted-sync launch is authorised by this checkout.
+
+The immediate technical blocker is to consume a reviewed Fedora 44 update or
+supported rebase whose bootc-required Podman/Skopeo/Toolbox dependency set
+passes the pinned Grype gate, then rebuild from a digest-pinned base. After
+that, produce live and independent recovery media and continue the install,
+encryption, update/rollback/recovery, reproducibility, accessibility, and
+physical-hardware matrices.
+
 Until then, the next milestone is Phase 1–5 validation closure, not a stable release or a Phase 7 lifecycle.

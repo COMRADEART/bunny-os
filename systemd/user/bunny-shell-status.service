@@ -3,14 +3,14 @@ Description=Bunny Shell bounded status projection
 Documentation=file:///usr/share/doc/bunny-os/BUNNY_SHELL.md
 PartOf=bunny-shell.target
 After=graphical-session.target
+StartLimitIntervalSec=60s
+StartLimitBurst=4
 
 [Service]
 Type=simple
 ExecStart=/usr/libexec/bunny-shell-service
 Restart=on-failure
 RestartSec=5s
-StartLimitIntervalSec=60s
-StartLimitBurst=4
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict

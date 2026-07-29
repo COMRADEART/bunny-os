@@ -44,3 +44,31 @@ No production Anaconda adapter, kernel peer-credential service, real disk, image
 Phase 5 adds pre-storage redaction/user-content exclusion, strict imported fields, source preservation, no automatic severity/closure/merge, component-scoped failure matching, irreversible installer journaling, fail-closed update routes, hash-only preservation manifests, physical-evidence hardware promotion, non-identifying crash metadata, alert-only automation, repository-private-key rejection, complete signed-candidate requirements, and mandatory nine-party approval.
 
 No Phase 4/public-beta dataset, candidate, signed media/update, migration, multi-user, traffic, diagnostic, accessibility, recovery, supply-chain, soak, or hardware evidence exists. `STABLE_CANDIDATE_SECURITY_REVIEW.md` remains `BLOCKED / NO-GO`; stable publication is denied.
+
+## Phase 7 preflight addendum
+
+The Phase 7 entry gate is denied by the same five protected Blocker codes and 31
+missing or pending evidence/approval entries. No OEM, enterprise, fleet, tenant,
+remote-wipe, or sync trust boundary was implemented, so no Phase 7 security
+approval is claimed. Adding those attack surfaces before stable signing,
+rollback, recovery, encryption, runtime isolation, and supply-chain evidence
+would be unsafe. `docs/PHASE_7_BASELINE.md` is the current disposition.
+
+## Phase 7 remediation security addendum
+
+Real image execution found and fixed a health-service sandbox mismatch:
+`ProtectSystem=strict` allowed `/var/lib/bunny-os/health` but denied the
+separate `/var/lib/bunny` state boundary exercised by the health probe. The
+unit now grants only those two explicit writable paths, and the VM gate requires
+the service to finish successfully in addition to reaching a normal target.
+Installed-path systemd verification also found and fixed ignored start-limit
+directives and an unsupported executable-condition name; the corrected system
+and user units verify cleanly in the beta image fixture.
+
+The repaired release-mode license scan passed the 6,077-record beta SPDX with
+zero unresolved or prohibited markers while recording 306 provenance-covered
+`NOASSERTION` records. The Grype gate did not pass: 8 Critical and 28 High
+fixable matches remain, primarily embedded in Fedora's bootc-required Podman and
+Skopeo packages, plus the kernel classifier finding. These are neither waived
+nor converted to PASS. A reviewed Fedora package update/rebase or equivalent
+patched supply-chain input is required before release consideration.

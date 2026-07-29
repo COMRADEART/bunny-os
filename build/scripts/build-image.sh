@@ -57,7 +57,7 @@ sudo podman build \
   --build-arg "BUNNY_RELEASE_BUILD=${BUNNY_RELEASE_BUILD:-0}" \
   . 2>&1 | tee "${output}/oci-build.log"
 
-sudo podman image inspect "${tag}" > "${output}/oci-inspect.json"
+sudo podman image inspect "${tag}" | tee "${output}/oci-inspect.json" >/dev/null
 sudo podman save --format oci-archive --output "${output}/bunny-os.oci.tar" "${tag}"
 sudo chown "$(id -u):$(id -g)" "${output}/bunny-os.oci.tar"
 image_types=(qcow2)
@@ -66,7 +66,9 @@ if [[ "${profile}" == "beta" ]]; then
 fi
 (
   cd "${output}"
-  sudo image-builder build --bootc-ref "${tag}" --bootc-default-fs ext4 "${image_types[@]}"
+  for image_type in "${image_types[@]}"; do
+    sudo image-builder build --bootc-ref "${tag}" --bootc-default-fs ext4 "${image_type}"
+  done
 ) 2>&1 | tee "${output}/image-builder.log"
 sudo chown -R "$(id -u):$(id -g)" "${output}"
 

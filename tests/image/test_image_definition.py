@@ -26,6 +26,19 @@ class ImageDefinitionTests(unittest.TestCase):
         self.assertIn("fedora-bootc:44", value)
         self.assertIn('containers.bootc="1"', value)
 
+    def test_image_inspection_handles_bootc_layout_without_legacy_auto_inspection(self) -> None:
+        value = (ROOT / "build/scripts/inspect-image.sh").read_text(encoding="utf-8")
+        self.assertIn("virt-filesystems", value)
+        self.assertIn('filesystem labelled root', value)
+        self.assertIn('/ostree/deploy/', value)
+        self.assertNotIn(' -i ', value)
+
+    def test_each_image_type_is_composed_with_a_separate_builder_invocation(self) -> None:
+        value = (ROOT / "build/scripts/build-image.sh").read_text(encoding="utf-8")
+        self.assertIn('for image_type in "${image_types[@]}"', value)
+        self.assertIn('ext4 "${image_type}"', value)
+        self.assertNotIn('ext4 "${image_types[@]}"', value)
+
 
 if __name__ == "__main__":
     unittest.main()

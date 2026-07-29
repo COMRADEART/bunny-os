@@ -3,15 +3,15 @@ Description=Bunny Desktop (user enabled)
 Documentation=file:///usr/share/doc/bunny-os/BUNNY_INTEGRATION_CONTRACT.md
 After=graphical-session.target
 PartOf=graphical-session.target
-ConditionPathIsExecutable=/opt/bunny/current/bunny-desktop
+ConditionFileIsExecutable=/opt/bunny/current/bunny-desktop
+StartLimitIntervalSec=60s
+StartLimitBurst=4
 
 [Service]
 Type=simple
 ExecStart=/opt/bunny/current/bunny-desktop
 Restart=on-failure
 RestartSec=5s
-StartLimitIntervalSec=60s
-StartLimitBurst=4
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict

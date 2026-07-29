@@ -41,3 +41,28 @@ The implementation deliberately contains no Bunny raw-disk executor. `install.st
 Branch `feature/stable-qualification` adds the Phase 5 baseline, strict local feedback ingestion/redaction, component/severity taxonomy, advisory duplicate matching, failure-signature catalogue, monotonic installer transaction journal, update compatibility rejection, content-free preservation comparison, evidence-only hardware tiers, privacy-safe crash aggregation, multi-user/local-only/Bunny-disabled evidence rules, alert-only maintenance checks, complete-candidate validation, per-artifact detached-signature verification, external signing-key enforcement, stable decision engine, no-score dashboard, safe rollback/recovery fixture launchers, schemas, 74 host tests, stable operations/support guides, reports, and the 17-file demonstration package.
 
 The implementation cannot publish, auto-close, lower severity, ingest user content, promote hardware without evidence, or pass stable gates with unknown rows. Phase 4/public-beta artifacts and observations are absent, so no beta defect correction, RC, installation, migration, rollback, recovery, soak, hardware, runtime privacy/accessibility, or stable release is delivered. See `PHASE_5_REPORT.md`.
+
+## Phase 7 preflight update
+
+Branch `feature/oem-enterprise-and-sync` contains only the mandatory evidence
+baseline and stop report. It adds no OEM, factory, identity, enrolment, policy,
+fleet, console, sync, air-gap, kiosk, or decommission implementation because the
+stable entry gate failed closed. See `docs/PHASE_7_BASELINE.md` and
+`PHASE_7_REPORT.md`.
+
+## Phase 7 blocker-remediation update
+
+No Phase 7 feature boundary was opened, but locally solvable inherited image
+defects were repaired on `feature/oem-enterprise-and-sync`: current
+image-builder multi-format invocation, bootc/OSTree filesystem inspection,
+health-service writable-state policy, strict VM health-marker enforcement, and
+SPDX concluded-versus-declared license handling with provenance-based coverage.
+Fedora validation also corrected ignored systemd start-limit placement and the
+unsupported Bunny executable-condition name. Regression tests cover each source
+change, installed-path unit verification passes, and native ShellCheck is clean.
+
+Real Fedora builds then produced and inspected developer and beta images. The
+beta QCOW2/raw compose, `qemu-img` check, libguestfs inspection, SBOM/license
+gate, and QEMU/KVM boot-health smoke passed. The vulnerability gate failed on
+the current Fedora 44 kernel and bootc-required Podman/Skopeo/Toolbox packages,
+so the release and Phase 7 entry decisions remain `NO-GO`.

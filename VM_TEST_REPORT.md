@@ -23,3 +23,24 @@ QEMU/KVM, VMware, VirtualBox, Secure Boot, TPM2 and physical hardware remain unt
 The installation VM launcher was attempted on 2026-07-29 and stopped because `qemu-system-x86_64` is unavailable. No latest public beta exists to install. Clean/encrypted/offline install, prior-beta upgrade, rollback, recovery, migration, application install, diagnostics, multi-user, Bunny-disabled, local-only, driver regression, pressure, long-session, or soak VM scenario ran.
 
 Phase 5 supplies evidence requirements and source tests only. QEMU/KVM, VirtualBox, VMware, Secure Boot, power-interruption, and independent recovery rows remain `NOT RUN`.
+
+## 2026-07-29 QEMU/KVM remediation run
+
+Developer and beta QCOW2 images were booted locally with QEMU/KVM, q35, OVMF
+UEFI, four vCPUs, 6 GiB RAM, virtio disk/network/GPU, no graphical display, and
+serial capture. The first developer run exposed a failing
+`bunny-health-check.service`: its strict filesystem sandbox omitted
+`/var/lib/bunny`, which the probe intentionally tests. After adding that exact
+writable path and making the smoke gate require a finished health service, both
+the rebuilt developer image and final beta image passed.
+
+The final beta serial log reached `multi-user.target` and `graphical.target` and
+contained `Finished bunny-health-check.service - Bunny OS boot health check.`
+The bounded QEMU process ended after the expected 240-second observation
+timeout; the smoke gate exited zero. The serial-log SHA-256 is
+`675de0650b357a1ebfb3add832b7b262440ac0c36cbb597e19bc5fa1a7919616`.
+
+This closes only the basic q35/OVMF/virtio boot and offline health-smoke defect.
+Interactive GDM/Bunny behavior, install, LUKS, Secure Boot, TPM, update,
+rollback, recovery, accessibility, VMware/VirtualBox, and physical hardware
+remain untested.

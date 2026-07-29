@@ -30,9 +30,12 @@ if [[ ${status} -ne 0 && ${status} -ne 124 ]]; then
   echo "QEMU failed with status ${status}" >&2
   exit "${status}"
 fi
-grep -Eiq 'Reached target (Graphical Interface|Multi-User System)|Started GNOME Display Manager|Bunny OS' "${log}" || {
+grep -aEiq 'Graphical Interface|Multi-User System|GNOME Display Manager' "${log}" || {
   echo "boot success marker not observed; see ${log}" >&2
   exit 4
 }
+grep -aEiq 'Finished .*Bunny OS boot health check' "${log}" || {
+  echo "required Bunny OS health check did not finish successfully; see ${log}" >&2
+  exit 4
+}
 echo "VM boot marker observed. Interactive graphics, Bunny, rollback, and recovery still require the documented manual matrix."
-

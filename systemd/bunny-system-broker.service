@@ -3,6 +3,8 @@ Description=Bunny OS narrowly scoped privileged broker
 Documentation=file:///usr/share/doc/bunny-os/PRIVILEGED_BROKER.md
 Requires=bunny-system-broker.socket
 After=systemd-logind.service polkit.service
+StartLimitIntervalSec=60s
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -42,8 +44,6 @@ SystemCallFilter=~@clock @debug @module @mount @obsolete @raw-io @reboot @resour
 IPAddressDeny=any
 Restart=on-failure
 RestartSec=3s
-StartLimitIntervalSec=60s
-StartLimitBurst=5
 TimeoutStartSec=20s
 TimeoutStopSec=15s
 KillMode=mixed

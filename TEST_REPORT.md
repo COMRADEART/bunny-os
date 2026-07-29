@@ -70,3 +70,40 @@ Phase 3 tests cover strict protocol and schema boundaries; request staleness/sec
 Final Phase 5 run: 92 inherited tests passed with one Linux-only skip, 60 installer tests passed, and 74 Phase 5 tests passed: 226 distinct passes and one skip. `gate-phase-5` passed as source/operations only. The candidate and stable-release gates blocked on the absent candidate manifest; the direct decision remained `NO-GO`.
 
 Coverage includes import schemas, PII/secret/user-content redaction, deterministic IDs, advisory duplicates, taxonomy, failure matching, journal transitions/irreversibility, update-route rejection, preservation hashes, hardware tiers, crash metadata, multi-user/local-only/Bunny-disabled requirements, maintenance alerts, candidate completeness/signing safeguards, accessibility mandatory status, and NO-GO decisions. It is source evidence, not beta operation or stable qualification.
+
+## Phase 7 preflight update
+
+| Command | Result |
+|---|---|
+| `make -s PYTHON=python gate-stable-release` | BLOCKED after inherited static suites passed: stable candidate manifest absent |
+| `python scripts/phase5.py phase4-preflight` | BLOCKED: nine required Phase 4/public-beta reports absent |
+| `python scripts/phase5.py stable-gate --evidence operations/data/stable-qualification.json` | NO-GO: five blocker codes and 31 missing/pending evidence or approvals |
+| `make -s PYTHON=python verify-stable-rc` | BLOCKED: stable public key and candidate absent |
+| Phase 7 component and pilot gates | NOT CREATED / NOT RUN: mandatory entry gate failed before implementation |
+
+The passing inherited tests remain source/static evidence and do not validate a
+stable release, OEM image, factory process, fleet, tenant boundary, or encrypted
+sync system.
+
+## Phase 7 blocker-remediation validation
+
+| Check | Result |
+|---|---|
+| repository audit | PASS: 50 required documents present |
+| repository validation | PASS: 46 JSON documents, 21 schema headers, 162 Python files, 9 desktop entries, 8 XML/SVG assets, Node syntax |
+| final full Python discovery | PASS: 101 tests, one environment-only skip |
+| focused image/security/license regressions | PASS: 17 tests |
+| native Fedora ShellCheck validation | PASS: all repository shell scripts |
+| installed-path systemd verification | PASS: corrected broker and Bunny user units inside beta image fixture |
+| developer OCI/QCOW2 compose and `qemu-img check` | PASS |
+| developer bootc-aware libguestfs inspection | PASS |
+| developer QEMU/KVM/OVMF boot plus Bunny health service | PASS |
+| beta OCI/QCOW2/raw compose | PASS after separate image-type invocation fix |
+| beta `qemu-img` and bootc-aware libguestfs inspection | PASS |
+| beta QEMU/KVM target plus Bunny health service | PASS |
+| beta SPDX release-mode license scan | PASS: 6,077 records, 306 explicitly covered, 0 unresolved, 0 prohibited |
+| beta Grype `--fail-on high --only-fixed` | FAIL: 59 findings (8 Critical, 28 High, 23 Medium) |
+| live/recovery media, install, update/rollback/recovery, reproducibility, Secure Boot/LUKS/TPM, hardware | NOT RUN / BLOCKED |
+
+The real image results close several implementation defects but do not change
+the stable or Phase 7 `NO-GO` decision.

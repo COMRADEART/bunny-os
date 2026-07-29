@@ -48,3 +48,22 @@ Phase 3 is source-implemented in part but not definition-of-done complete and no
 - No stable branch, mirror, download, announcement, update rollout, security advisory, maintenance release, support commitment, key ceremony, post-release review, or EOL action was created.
 - The public GitHub tracker currently has zero open issues, but no qualified beta/runtime population exists; unknown evidence and the five protected qualification blocker codes remain blocking.
 - Every stable hardware tier, supported install/upgrade path, maintenance cadence, security-only window, and EOL date remains uncommitted.
+
+## Phase 7
+
+- Phase 7 stopped at mandatory preflight because there is no completed stable
+  release and the protected stable gate remains `NO-GO`.
+- No OEM profile, factory finalisation, device identity, attestation, enrolment,
+  policy agent, fleet service, console, tenant isolation, encrypted sync,
+  pairing, recovery, air-gap, kiosk, or decommission implementation exists.
+- No Phase 7 component, adversarial, reliability, hardware-qualification, or
+  pilot test ran; no production, pilot, service, support, demand, or cost claim
+  is supported.
+- OEM manufacturing, enterprise rollout, and hosted sync launch remain
+  prohibited. See `docs/PHASE_7_BASELINE.md`.
+- Local developer and beta OCI/QCOW2 builds now compose, inspect, and boot under
+  QEMU/KVM, and beta raw composition plus release-mode license scanning pass.
+  These are unsigned disposable validation artifacts, not stable evidence.
+- The current beta vulnerability gate fails on fixable Critical/High findings
+  in Fedora's kernel and bootc-required Podman/Skopeo/Toolbox dependency set.
+  No release waiver exists.
