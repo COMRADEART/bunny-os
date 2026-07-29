@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "overlayId": "example-nimbus-branding",
+  "profileId": "example-nimbus-14",
+  "files": [
+    {
+      "destination": "usr/share/bunny-oem/branding/logo.svg",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "sizeBytes": 4096,
+      "mode": "0644"
+    },
+    {
+      "destination": "usr/share/bunny-oem/documentation/nimbus-14-hardware.md",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "sizeBytes": 12288,
+      "mode": "0644"
+    },
+    {
+      "destination": "usr/share/bunny-oem/first-run/device-information.json",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "sizeBytes": 1024,
+      "mode": "0644",
+      "inlineText": "device.model = Nimbus 14\ndevice.vendor = Example Hardware Works\n"
+    },
+    {
+      "destination": "usr/share/backgrounds/bunny-oem/nimbus-default.png",
+      "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "sizeBytes": 2097152,
+      "mode": "0644"
+    }
+  ]
+}
