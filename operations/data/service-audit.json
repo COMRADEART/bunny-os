@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "services": [
+    {"unit":"bunny-system-broker.socket","purpose":"Activate the local privileged broker","startupTrigger":"local AF_UNIX connection","privilege":"root service after socket activation","networkAccess":"AF_UNIX only","cpuUse":"unknown","memoryUse":"unknown","failureImpact":"Bunny privileged actions unavailable; desktop remains usable","defaultNecessary":true},
+    {"unit":"bunny-update-agent.timer","purpose":"Check signed OS update metadata","startupTrigger":"timer; disabled by default in current image","privilege":"root","networkAccess":"HTTPS only when explicitly enabled","cpuUse":"unknown","memoryUse":"unknown","failureImpact":"automatic update check unavailable","defaultNecessary":false},
+    {"unit":"bunny-health-check.service","purpose":"Validate a staged deployment","startupTrigger":"boot qualification","privilege":"root","networkAccess":"none","cpuUse":"unknown","memoryUse":"unknown","failureImpact":"deployment must not be marked healthy","defaultNecessary":true},
+    {"unit":"bunny-desktop.service","purpose":"Optional Bunny desktop sidecar","startupTrigger":"per-user opt-in","privilege":"regular user","networkAccess":"loopback/provider policy only","cpuUse":"unknown","memoryUse":"unknown","failureImpact":"Bunny unavailable; conventional desktop remains","defaultNecessary":false},
+    {"unit":"bunny-search-index.timer","purpose":"Index approved-location metadata","startupTrigger":"per-user timer after explicit locations","privilege":"regular user","networkAccess":"none","cpuUse":"unknown","memoryUse":"unknown","failureImpact":"Bunny metadata search unavailable","defaultNecessary":false},
+    {"unit":"bunny-first-run.service","purpose":"Resume optional onboarding","startupTrigger":"user login until completion","privilege":"regular user","networkAccess":"none by default","cpuUse":"unknown","memoryUse":"unknown","failureImpact":"onboarding can be reopened manually","defaultNecessary":true}
+  ]
+}

@@ -43,3 +43,19 @@ Phase 3 source work now exists on `feature/installer-and-beta-image`, but the in
 10. re-review Blocker/High findings and publish a beta candidate only when no Blocker remains.
 
 Stable release, OEM partnerships/manufacturing, public store operation, cloud services and fleet management remain prohibited.
+
+## Phase 5 qualification closure
+
+Phase 5 operations/source work now exists, but it did not cure the absent Phase 4/public-beta baseline. Do not begin Phase 6 or publish stable. The next action is evidence closure:
+
+1. complete Phases 1–3 image/runtime blockers and a production installer adapter;
+2. implement/validate Phase 4 and operate signed public-beta releases with privacy-safe issue/failure exports;
+3. reproduce confirmed defects, add regression tests, and issue immutable signed beta updates;
+4. produce a clean signed stable RC with SBOM, provenance, license/malware/reproducibility evidence;
+5. pass repeated install/encryption/update/rollback/recovery/migration/data-preservation matrices;
+6. pass multi-user, Bunny-disabled, local-only, listener/traffic, diagnostic, security/privacy/accessibility gates;
+7. qualify named kernels/drivers and physical hardware tiers, then complete power/pressure and multi-day soak;
+8. obtain all protected approvals and regenerate reports from evidence;
+9. publish only if `gate-stable-release` passes and the go/no-go report changes to `GO`.
+
+OEM manufacturing, custom firmware, enterprise fleet management, paid cloud services, mandatory accounts, advertising, data monetisation, and stable publication remain prohibited.

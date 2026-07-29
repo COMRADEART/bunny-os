@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/failure-signature-catalogue-1.schema.json",
+  "title": "Bunny OS failure signature catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "signatures"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "signatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "component", "signature", "affectedVersions", "affectedHardware", "detectionMethod", "severity", "workaround", "fixedVersion", "regressionTest"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^FS-[0-9]{4}$" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "component": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "signature": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "affectedVersions": { "type": "array", "items": { "type": "string" } },
+          "affectedHardware": { "type": "array", "items": { "type": "string" } },
+          "detectionMethod": { "type": "string", "maxLength": 512 },
+          "severity": { "type": "string", "enum": ["Blocker", "Critical", "High", "Medium", "Low", "Enhancement"] },
+          "workaround": { "type": "string", "maxLength": 1024 },
+          "fixedVersion": { "type": "string", "maxLength": 128 },
+          "regressionTest": { "type": "string", "maxLength": 256 }
+        }
+      }
+    }
+  }
+}

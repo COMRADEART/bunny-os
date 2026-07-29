@@ -21,3 +21,17 @@ Assets: user files and credentials, Bunny memory/database, plugin trust store, l
 
 Recovery is powerful by design, so confidentiality depends on firmware/boot policy and LUKS credentials. It never bypasses disk encryption or silently resets data. Availability attacks can still force rollback/recovery; the design prioritizes recoverability and records failures without requiring cloud access.
 
+## Phase 5 public-beta operations update
+
+| Threat | Mitigation | Residual evidence gap |
+|---|---|---|
+| malicious diagnostic attachment | local structured imports, size/schema limits, redaction before storage, isolated manual review, no automatic execution | no real public-beta bundle review |
+| poisoned community hardware report | source attribution, immutable original, physical reproduction before tier promotion | no hardware submissions or physical lab |
+| issue-tracker social engineering | untrusted fields never become commands/paths/severity/closure; high-severity merge needs human confirmation | maintainer process not operated publicly |
+| compromised application metadata | signed sources, catalogue review, license/SBOM/provenance, protected approvals | stable catalogue unqualified |
+| inconsistent update mirrors | signed manifest/digest/repository allowlist, monotonic sequence, reproducible comparison | no signed beta update execution |
+| recovery-media downgrade | independent signature/version/revocation verification and migration compatibility check | no recovery ISO |
+| malicious dual-boot environment | installation-media/identity binding, unknown/encrypted/hibernated layouts blocked, no general resize | no destructive dual-boot fixture |
+| persistent shell-extension crash attack | restart limits, Safe Shell, Bunny-disabled conventional desktop, signature-owned extension | no long-running GNOME candidate test |
+
+Stable qualification adds no public ingestion listener and no automated release publisher. The largest residual risk remains absence of runtime, artifact, signing, migration, recovery, multi-user, network, and physical evidence; unknown rows block release.

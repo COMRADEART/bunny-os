@@ -40,3 +40,9 @@ No OCI digest, QCOW2, package inventory, checksum, SBOM, scan, or repeated-build
 New definitions add beta QCOW2/raw, a bootc-generic live installer ISO with a separate offline payload reference, recovery reuse, Anaconda Web UI/Blivet packages and profile, UEFI menu, ephemeral/no-automount live configuration, media manifest/signing/verification hooks, essential offline applications, and disposable QEMU launchers.
 
 No Phase 3 artifact was built. Therefore no ISO/raw/QCOW2/recovery digest, embedded payload, checksum, detached signature, SBOM, package manifest, scan, provenance, Secure Boot chain, or repeated-build comparison exists. The adjacent manifest generator is not evidence that verification metadata is embedded into the ISO. Status remains definition-only and beta publication blocked; see `BETA_IMAGE_REPORT.md`.
+
+## Phase 5 update
+
+No Phase 4 public-beta image or Phase 5 stable candidate exists. The beta build was attempted on 2026-07-29 and stopped at the required Podman check. Stable build/sign/verify scripts now require a clean immutable commit, new RC version, trusted builder tools, complete artifact set, external private key, authenticated public key, hashes, and detached signature. They were not used to create or publish media.
+
+Stable ISO/raw/QCOW2/recovery ISO, checksums, signatures, SBOM, package manifest, provenance, notes, and notices: **none produced**. Reproducibility, license, malware, image inspection, and signing status remain `NOT RUN`/`BLOCKED`.

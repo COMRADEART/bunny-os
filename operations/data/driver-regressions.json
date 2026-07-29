@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "dimensions": ["kernel", "Mesa", "NVIDIA", "firmware", "Wi-Fi", "Bluetooth", "audio", "camera"],
+  "regressions": [],
+  "note": "No physical or candidate driver result exists. Empty means unknown, not regression-free."
+}

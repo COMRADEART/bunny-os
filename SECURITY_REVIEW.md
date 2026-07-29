@@ -38,3 +38,9 @@ Runtime review is still blocked by the missing image, signed Bunny artifact, GNO
 Phase 3 adds strict typed installer plans, protected primary-user secrets, disk identity binding, installation-media/read-only/mounted/complex-target blockers, two-step disk-specific erase confirmation, fixed `lsblk`, serial/UUID redaction, simulation-only fail-closed execution, LUKS2 fallback/recovery policy, structured log redaction, signed media/hash/path validation, conservative driver/remotes, and first-run privacy defaults. Sixty host tests cover the new layer.
 
 No production Anaconda adapter, kernel peer-credential service, real disk, image, encrypted boot, Secure Boot, TPM, VM, UI, or supply-chain test ran. The external media manifest is not proven embedded into an ISO. These are Blocker/High findings in `INSTALLER_SECURITY_REVIEW.md`; beta/release approval remains denied.
+
+## Phase 5 addendum
+
+Phase 5 adds pre-storage redaction/user-content exclusion, strict imported fields, source preservation, no automatic severity/closure/merge, component-scoped failure matching, irreversible installer journaling, fail-closed update routes, hash-only preservation manifests, physical-evidence hardware promotion, non-identifying crash metadata, alert-only automation, repository-private-key rejection, complete signed-candidate requirements, and mandatory nine-party approval.
+
+No Phase 4/public-beta dataset, candidate, signed media/update, migration, multi-user, traffic, diagnostic, accessibility, recovery, supply-chain, soak, or hardware evidence exists. `STABLE_CANDIDATE_SECURITY_REVIEW.md` remains `BLOCKED / NO-GO`; stable publication is denied.

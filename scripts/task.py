@@ -43,6 +43,18 @@ PHASE3_DOCS = (
     "HARDWARE_COMPATIBILITY_REPORT.md", "BETA_IMAGE_REPORT.md", "FIRST_RUN_ACCESSIBILITY_REPORT.md",
     "INSTALLER_PERFORMANCE_REPORT.md",
 )
+PHASE5_DOCS = (
+    "docs/PHASE_5_BASELINE.md", "docs/BETA_OPERATIONS.md", "docs/TRIAGE_PROCESS.md", "docs/BUG_LIFECYCLE.md",
+    "docs/UPDATE_COMPATIBILITY.md", "docs/SUPPORT_POLICY.md", "docs/RELEASE_LIFECYCLE.md",
+    "docs/BRANCHING_AND_RELEASES.md", "docs/STABLE_RELEASE_BLOCKERS.md", "docs/GETTING_STARTED.md",
+    "docs/VERIFY_DOWNLOAD.md", "docs/SYSTEM_REQUIREMENTS.md", "docs/HARDWARE_COMPATIBILITY.md",
+    "docs/ROLLBACK.md", "docs/PRIVACY.md", "docs/DIAGNOSTICS.md", "docs/TROUBLESHOOTING.md",
+    "docs/REPORTING_BUGS.md", "docs/STABLE_FAQ.md", "PHASE_5_REPORT.md", "BETA_FEEDBACK_REPORT.md",
+    "INSTALLER_RELIABILITY_REPORT.md", "UPDATE_RELIABILITY_REPORT.md", "ROLLBACK_QUALIFICATION_REPORT.md",
+    "RECOVERY_QUALIFICATION_REPORT.md", "STABLE_HARDWARE_SUPPORT_REPORT.md", "STABLE_CANDIDATE_SECURITY_REVIEW.md",
+    "STABLE_CANDIDATE_PRIVACY_REVIEW.md", "STABLE_CANDIDATE_ACCESSIBILITY_REVIEW.md",
+    "LONG_DURATION_TEST_REPORT.md", "STABLE_RELEASE_CHECKLIST.md", "STABLE_RELEASE_GO_NO_GO.md",
+)
 
 
 def run(argv: list[str], *, required: bool = True) -> int:
@@ -75,11 +87,28 @@ def installer_audit() -> None:
     print(f"installer-audit: {len(PHASE3_DOCS)} required Phase 3 documents present")
 
 
+def phase5_audit() -> None:
+    missing = [name for name in PHASE5_DOCS if not (ROOT / name).is_file()]
+    demo_root = ROOT / "demos/05-stable-qualification"
+    required_demos = (
+        "README.md", "beta-feedback-triage.md", "reproduce-issue.md", "installer-regression.md",
+        "update-regression.md", "rollback-qualification.md", "recovery-qualification.md", "hardware-validation.md",
+        "privacy-regression.md", "accessibility-regression.md", "build-stable-rc.md", "verify-stable-rc.md",
+        "stable-gate.md", "troubleshooting.md", "demo-5-minutes.md", "demo-15-minutes.md", "demo-30-minutes.md",
+    )
+    missing.extend(f"demos/05-stable-qualification/{name}" for name in required_demos if not (demo_root / name).is_file())
+    if missing:
+        raise SystemExit("missing Phase 5 documents:\n" + "\n".join(missing))
+    print(f"phase5-audit: {len(PHASE5_DOCS)} reports/guides and {len(required_demos)} demos present")
+
+
 def validate_json() -> None:
     paths = sorted({
         *[path for path in (ROOT / "schemas").rglob("*.json")],
         *[path for path in (ROOT / "shell").rglob("*.json")],
         *[path for path in (ROOT / "build").rglob("*.json") if "out" not in path.parts],
+        *[path for path in (ROOT / "operations").rglob("*.json")],
+        *[path for path in (ROOT / "tests/operations/fixtures").rglob("*.json")],
     })
     for path in paths:
         json.loads(path.read_text(encoding="utf-8"))
@@ -183,6 +212,13 @@ def installer_tests(pattern: str | None = None) -> None:
     run(argv)
 
 
+def phase5_tests(pattern: str | None = None) -> None:
+    argv = [sys.executable, "-m", "unittest", "discover", "-s", str(ROOT / "tests/operations")]
+    if pattern:
+        argv.extend(["-p", pattern])
+    run(argv)
+
+
 def component_tests(component: str) -> None:
     start = ROOT / "tests" / component
     if not start.is_dir():
@@ -201,12 +237,19 @@ def main() -> int:
         "test-terminal", "test-accessibility", "test-performance", "test-desktop-security", "installer-audit",
         "test-installer", "test-storage", "test-encryption", "test-dual-boot", "test-first-run",
         "test-app-distribution", "test-installer-security",
+        "phase5-audit", "test-phase5", "test-installer-regressions", "test-update-regressions",
+        "test-rollbacks", "test-recovery-qualification", "test-migrations", "test-multi-user",
+        "test-bunny-disabled", "test-local-only", "test-privacy-regressions", "test-accessibility-regressions",
+        "test-hardware-matrix", "test-hardware-report", "test-diagnostics", "test-redaction",
+        "test-crash-reporting", "test-network-privacy", "test-application-catalogue", "test-release-signing",
     ))
     args = parser.parse_args()
     if args.command == "audit":
         audit()
     elif args.command == "installer-audit":
         installer_audit()
+    elif args.command == "phase5-audit":
+        phase5_audit()
     elif args.command == "validate":
         validate()
     elif args.command == "test-security":
@@ -227,6 +270,28 @@ def main() -> int:
         installer_tests("test_applications.py")
     elif args.command == "test-installer-security":
         installer_tests("test_security.py")
+    elif args.command == "test-phase5":
+        phase5_tests()
+    elif args.command == "test-installer-regressions":
+        phase5_tests("test_installer_journal.py")
+    elif args.command == "test-update-regressions":
+        phase5_tests("test_compatibility.py")
+    elif args.command == "test-rollbacks" or args.command == "test-recovery-qualification" or args.command == "test-migrations":
+        phase5_tests("test_preservation.py")
+    elif args.command == "test-multi-user" or args.command == "test-bunny-disabled" or args.command == "test-local-only":
+        phase5_tests("test_modes.py")
+    elif args.command == "test-privacy-regressions" or args.command == "test-diagnostics" or args.command == "test-redaction" or args.command == "test-network-privacy":
+        phase5_tests("test_redaction.py")
+    elif args.command == "test-accessibility-regressions":
+        phase5_tests("test_qualification.py")
+    elif args.command == "test-hardware-matrix" or args.command == "test-hardware-report":
+        phase5_tests("test_hardware.py")
+    elif args.command == "test-crash-reporting":
+        phase5_tests("test_crash.py")
+    elif args.command == "test-application-catalogue":
+        phase5_tests("test_catalogue.py")
+    elif args.command == "test-release-signing":
+        phase5_tests("test_candidate.py")
     elif args.command.startswith("test-"):
         component_tests(args.command.removeprefix("test-"))
     else:

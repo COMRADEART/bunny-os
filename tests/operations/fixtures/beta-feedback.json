@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "reports": [
+    {
+      "source": "synthetic-test-export",
+      "sourceId": "SYN-001",
+      "affectedVersion": "0.5.0-beta.synthetic",
+      "component": "Installer",
+      "severity": "High",
+      "reproducibility": "always",
+      "environment": {"firmware":"UEFI","hardware":"q35-virtio","email":"fixture@example.invalid"},
+      "owner": "unassigned",
+      "targetRelease": "unassigned",
+      "workaround": "Use the verified alternate disposable disk fixture.",
+      "verificationStatus": "unverified",
+      "closureEvidence": "",
+      "symptomText": "Synthetic disk probe timeout during clean install.",
+      "affectedWorkflow": "clean-install",
+      "errorSignature": "disk-probe-timeout",
+      "stackSignature": "synthetic-probe-timeout-v1",
+      "hardwareClass": "q35-virtio",
+      "kernelVersion": "synthetic",
+      "imageVersion": "synthetic",
+      "evidenceLinks": ["https://example.invalid/synthetic/SYN-001"]
+    },
+    {
+      "source": "synthetic-test-export",
+      "sourceId": "SYN-002",
+      "affectedVersion": "0.5.0-beta.synthetic",
+      "component": "Installer",
+      "severity": "High",
+      "reproducibility": "always",
+      "environment": {"firmware":"UEFI","hardware":"q35-virtio"},
+      "owner": "unassigned",
+      "targetRelease": "unassigned",
+      "workaround": "Use the verified alternate disposable disk fixture.",
+      "verificationStatus": "unverified",
+      "closureEvidence": "",
+      "symptomText": "Synthetic disk probe timeout during clean install.",
+      "affectedWorkflow": "clean-install",
+      "errorSignature": "disk-probe-timeout",
+      "stackSignature": "synthetic-probe-timeout-v1",
+      "hardwareClass": "q35-virtio",
+      "kernelVersion": "synthetic",
+      "imageVersion": "synthetic",
+      "evidenceLinks": ["https://example.invalid/synthetic/SYN-002"]
+    }
+  ]
+}

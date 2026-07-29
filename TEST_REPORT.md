@@ -55,3 +55,18 @@ Phase 2 coverage includes malicious desktop entries/URI handlers, deterministic/
 Artifact targets were invoked through Make (blocked because Bash was not resolved on Make's Windows PATH) and directly through MSYS2 Bash. Direct checks failed closed on missing Podman, QEMU, Phase 1/2/live artifacts, and Syft. No partial image or disk was produced.
 
 Phase 3 tests cover strict protocol and schema boundaries; request staleness/secrets/generic commands; token/cross-session/replay; disk parsing and identifier redaction; installation media, small, read-only, mounted, sector and complex-stack policy; disk-bound confirmations; erase/encrypted/alongside/manual plans; LUKS2/TPM/recovery keys; media signature/hash/path failure with a mocked signature process; live/beta definitions; first-run privacy/resume/search/secret constraints; Flatpak/native permissions/remotes; firmware/NVIDIA policy; and source command invariants. Synthetic metadata is not destructive virtual-disk evidence.
+
+## Phase 5 host test update
+
+| Command | Result |
+|---|---|
+| `python scripts/task.py validate` | PASS: 46 JSON documents, 21 schemas, 161 Python files, 9 desktop entries, 8 XML/SVG assets |
+| `python scripts/task.py test-phase5` | PASS: 74 Phase 5 operations tests |
+| Phase 1–3 static preflight | PASS: 152 prior tests, one inherited Linux-only skip; 24-check verifier |
+| `gate-phase-4`; `gate-public-beta` | BLOCKED: Phase 4/public-beta reports absent |
+| beta build/install attempts | BLOCKED: no artifact; Podman and QEMU unavailable |
+| candidate/release runtime gates | expected BLOCKED until signed evidence and approvals exist |
+
+Final Phase 5 run: 92 inherited tests passed with one Linux-only skip, 60 installer tests passed, and 74 Phase 5 tests passed: 226 distinct passes and one skip. `gate-phase-5` passed as source/operations only. The candidate and stable-release gates blocked on the absent candidate manifest; the direct decision remained `NO-GO`.
+
+Coverage includes import schemas, PII/secret/user-content redaction, deterministic IDs, advisory duplicates, taxonomy, failure matching, journal transitions/irreversibility, update-route rejection, preservation hashes, hardware tiers, crash metadata, multi-user/local-only/Bunny-disabled requirements, maintenance alerts, candidate completeness/signing safeguards, accessibility mandatory status, and NO-GO decisions. It is source evidence, not beta operation or stable qualification.

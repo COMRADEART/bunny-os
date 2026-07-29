@@ -17,3 +17,9 @@ No Phase 2 VM run occurred. `build/scripts/vm-shell-smoke.sh` targets the `shell
 No ISO or Phase 2 disk exists and QEMU/KVM/OVMF are unavailable, so live boot, media verification, storage probe, Anaconda, automatic/manual/encrypted install, reboot/unlock, first run, applications, update, upgrade, rollback, recovery, and shutdown were not observed. Scripts define fresh 80 GiB disposable QCOW2 launch paths and refuse reuse; the upgrade wrapper fails closed without a Phase 2 disk. They are not test results.
 
 QEMU/KVM, VMware, VirtualBox, Secure Boot, TPM2 and physical hardware remain untested. See `INSTALLATION_TEST_REPORT.md`.
+
+## Phase 5 stable-qualification matrix
+
+The installation VM launcher was attempted on 2026-07-29 and stopped because `qemu-system-x86_64` is unavailable. No latest public beta exists to install. Clean/encrypted/offline install, prior-beta upgrade, rollback, recovery, migration, application install, diagnostics, multi-user, Bunny-disabled, local-only, driver regression, pressure, long-session, or soak VM scenario ran.
+
+Phase 5 supplies evidence requirements and source tests only. QEMU/KVM, VirtualBox, VMware, Secure Boot, power-interruption, and independent recovery rows remain `NOT RUN`.

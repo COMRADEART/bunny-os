@@ -23,3 +23,11 @@
 ## Source-level caveats
 
 The GTK live and first-run surfaces are source-compiled only and have not run with GNOME, screen reader, high contrast, scale, keyboard-only, multiple displays, or translations. Synthetic lsblk JSON validates parsing and policy but is not a virtual block-device destructive test. Any release report must retain those distinctions.
+
+## Phase 5 stable-qualification blockers
+
+- All required Phase 4/public-beta reports, images, feedback/failure records, signed update metadata, and observation history are absent.
+- Public issue counts, failure rates, crash trends, beta duration/installations, and support capacity are unknown.
+- No stable RC/artifact/signature/SBOM/provenance/reproducibility/license/malware evidence exists.
+- Migration, preservation, rollback, independent recovery, multi-user, local-only, Bunny-disabled, privacy traffic/manual bundle, essential accessibility, physical hardware, kernel/driver, power/pressure, and soak tests did not run.
+- Stable candidate/release gates intentionally fail and the decision is `NO-GO`.

@@ -29,3 +29,10 @@
 - Media signing hooks produce no release evidence until a signed manifest is embedded/proven in a built ISO and verified by negative tests.
 
 See `docs/KNOWN_ISSUES.md` and `PHASE_3_REPORT.md`. Unexecuted checks remain blockers, never passes.
+
+## Phase 5 additions
+
+- The repository has no Phase 4/public-beta source reports or runtime evidence; Phase 5 cannot infer a beta population, reliability, issue distribution, or trends.
+- Operations schemas/tooling/tests and stable guides exist, but no real issue was ingested, reproduced, fixed, updated, verified, or closed.
+- Stable RC build/sign/verify entry points are fail-closed scaffolds; no candidate or publication exists.
+- Every installed/VM/hardware/privacy/accessibility/soak/support approval remains blocked. `NO-GO` is authoritative.

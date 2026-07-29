@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/update-compatibility-1.schema.json",
+  "title": "Bunny OS update compatibility matrix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "entries"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sourceRelease", "targetRelease", "directUpdateSupported", "intermediateRelease", "databaseMigration", "configurationMigration", "recoveryImageRequired", "rollbackStatus", "downgradeStatus", "knownLimitations"],
+        "properties": {
+          "sourceRelease": { "type": "string" },
+          "targetRelease": { "type": "string" },
+          "directUpdateSupported": { "type": "boolean" },
+          "intermediateRelease": { "type": "string" },
+          "databaseMigration": { "type": "string" },
+          "configurationMigration": { "type": "string" },
+          "recoveryImageRequired": { "type": "boolean" },
+          "rollbackStatus": { "type": "string" },
+          "downgradeStatus": { "type": "string" },
+          "knownLimitations": { "type": "string" }
+        }
+      }
+    }
+  }
+}

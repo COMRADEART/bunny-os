@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "candidateVersion": null,
+  "evidence": {
+    "source_integrity": "PASS",
+    "reproducible_build": "NOT_RUN",
+    "dependency_validation": "BLOCKED",
+    "unit_tests": "PASS",
+    "integration_tests": "BLOCKED",
+    "installer": "NOT_RUN",
+    "encryption": "NOT_RUN",
+    "updates": "NOT_RUN",
+    "rollback": "NOT_RUN",
+    "recovery": "NOT_RUN",
+    "migration": "NOT_RUN",
+    "multi_user": "NOT_RUN",
+    "bunny_disabled": "NOT_RUN",
+    "local_only": "NOT_RUN",
+    "security": "BLOCKED",
+    "privacy": "BLOCKED",
+    "network": "NOT_RUN",
+    "accessibility": "NOT_RUN",
+    "hardware": "NOT_RUN",
+    "image_inspection": "NOT_RUN",
+    "signature_verification": "NOT_RUN",
+    "sbom": "NOT_RUN",
+    "licensing": "NOT_RUN",
+    "malware_scan": "NOT_RUN",
+    "documentation": "PASS"
+  },
+  "approvals": {
+    "Engineering": "PENDING",
+    "Release": "PENDING",
+    "Security": "PENDING",
+    "Privacy": "PENDING",
+    "Accessibility": "PENDING",
+    "Installer": "PENDING",
+    "Hardware": "PENDING",
+    "Documentation": "PENDING",
+    "Maintenance": "PENDING"
+  },
+  "blockers": [
+    "unresolved-blocker",
+    "unsigned-artifact",
+    "missing-checksum",
+    "untested-release-rollback",
+    "recovery-media-failure"
+  ]
+}
