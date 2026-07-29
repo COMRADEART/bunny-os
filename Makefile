@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release
+.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot
 
 audit:
 	$(PYTHON) scripts/task.py audit
@@ -285,3 +285,94 @@ gate-stable-candidate: gate-phase-5
 
 gate-stable-release: gate-stable-candidate
 	$(PYTHON) scripts/phase5.py stable-gate --evidence operations/data/stable-qualification.json
+
+# --- Phase 7: OEM, enterprise management, and optional encrypted sync ---------
+
+phase7-audit:
+	$(PYTHON) scripts/task.py phase7-audit
+
+phase-7-baseline:
+	$(PYTHON) scripts/phase7.py baseline
+
+test-oem:
+	$(PYTHON) scripts/task.py test-oem
+
+test-factory:
+	$(PYTHON) scripts/task.py test-factory
+
+test-device-identity:
+	$(PYTHON) scripts/task.py test-device-identity
+
+test-enrolment:
+	$(PYTHON) scripts/task.py test-enrolment
+
+test-policy:
+	$(PYTHON) scripts/task.py test-policy
+
+test-fleet:
+	$(PYTHON) scripts/task.py test-fleet
+
+test-multitenancy:
+	$(PYTHON) scripts/task.py test-multitenancy
+
+test-sync:
+	$(PYTHON) scripts/task.py test-sync
+
+test-sync-crypto:
+	$(PYTHON) scripts/task.py test-sync-crypto
+
+test-device-revocation:
+	$(PYTHON) scripts/task.py test-device-revocation
+
+test-remote-wipe:
+	$(PYTHON) scripts/task.py test-remote-wipe
+
+test-airgap:
+	$(PYTHON) scripts/task.py test-airgap
+
+test-kiosk:
+	$(PYTHON) scripts/task.py test-kiosk
+
+test-decommission:
+	$(PYTHON) scripts/task.py test-decommission
+
+test-pilot:
+	$(PYTHON) scripts/task.py test-pilot
+
+fleet-simulation:
+	$(PYTHON) scripts/phase7.py fleet-simulation --devices $${BUNNY_FLEET_DEVICES:-500}
+
+pilot-readiness:
+	$(PYTHON) scripts/phase7.py pilot-readiness
+
+# Validates an OEM profile and its overlay. A real image build additionally needs
+# the Fedora/KVM image-builder host, so this target validates inputs only and
+# says so rather than implying an artifact was produced.
+build-oem-image:
+	$(PYTHON) oem/bin/bunny-oem --json validate-profile --profile $${BUNNY_OEM_PROFILE:-oem/profiles/example-validated-integrator.json}
+	$(PYTHON) oem/bin/bunny-oem --json validate-overlay --overlay $${BUNNY_OEM_OVERLAY:-oem/overlays/example-nimbus-overlay.json}
+	@if [ "$${FULL_GATE:-0}" = "1" ]; then \
+		bash build/scripts/build-image.sh developer; \
+	else \
+		echo "OEM profile and overlay validated. No image was built: set FULL_GATE=1 on the Fedora/KVM image builder."; \
+	fi
+
+# The Phase 7 source gate runs on any development host. It never implies a pilot
+# approval, and the pilot gates below stay blocked while stable release is NO-GO.
+gate-phase-7-source: validate phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot
+	$(PYTHON) scripts/phase7.py source-gate
+	@echo "Phase 7 source gate passed. This is not a pilot, OEM, enterprise, or hosted-sync approval."
+
+# The full Phase 7 gate inherits the stable-release gate and therefore fails
+# closed while STABLE_RELEASE_GO_NO_GO.md records NO-GO.
+gate-phase-7: gate-phase-7-source gate-stable-release
+	$(PYTHON) scripts/phase7.py pilot-readiness
+
+gate-oem-pilot: gate-phase-7-source
+	$(PYTHON) scripts/phase7.py pilot-gate --kind oem
+
+gate-enterprise-pilot: gate-phase-7-source
+	$(PYTHON) scripts/phase7.py pilot-gate --kind enterprise
+
+gate-sync-pilot: gate-phase-7-source
+	$(PYTHON) scripts/phase7.py pilot-gate --kind sync
