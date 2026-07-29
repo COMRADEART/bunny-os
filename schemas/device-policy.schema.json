@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/device-policy-1.schema.json",
+  "title": "Bunny OS device policy",
+  "description": "One organisation policy bound to exactly one typed operation. There is no field for a command, argv, script, interpreter, or path, so a policy cannot become an execution channel. Safety invariants such as update signature verification are not listed as domains and are refused by the validator.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "policyId", "version", "domain", "scope", "owner", "desiredState", "enforcementType", "effectiveFrom", "priority", "conflictRule", "remediation"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "policyId": { "type": "string", "pattern": "^POL-[0-9]{4}$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "domain": {
+      "type": "string",
+      "enum": [
+        "update-channel", "update-deadline", "application-allowlist", "application-blocklist",
+        "firewall-baseline", "screen-lock", "encryption-requirement", "secure-boot-requirement",
+        "minimum-os-version", "recovery-readiness", "bunny-provider-policy",
+        "local-only-ai-requirement", "plugin-policy", "removable-media-policy", "diagnostic-export-policy"
+      ]
+    },
+    "scope": { "type": "string", "enum": ["organisation", "device-group", "device", "user"] },
+    "owner": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "desiredState": {
+      "description": "Domain-specific. Validated by the paired hand-written validator in enterprise/policy.py, which enforces per-domain value types and refuses execution-shaped keys at any depth.",
+      "not": {
+        "type": "object",
+        "anyOf": [
+          { "required": ["command"] }, { "required": ["commands"] }, { "required": ["exec"] },
+          { "required": ["argv"] }, { "required": ["script"] }, { "required": ["scripts"] },
+          { "required": ["shell"] }, { "required": ["interpreter"] }, { "required": ["entrypoint"] },
+          { "required": ["binary"] }, { "required": ["payload"] }
+        ]
+      }
+    },
+    "enforcementType": { "type": "string", "enum": ["informational", "recommended", "enforced", "blocked"] },
+    "effectiveFrom": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+    "priority": { "type": "integer", "minimum": 0, "maximum": 1000 },
+    "conflictRule": { "type": "string", "enum": ["most-restrictive-wins", "highest-priority-wins", "closest-scope-wins"] },
+    "remediation": { "type": "string", "enum": ["none", "notify", "remediate", "block-until-compliant"] }
+  }
+}
