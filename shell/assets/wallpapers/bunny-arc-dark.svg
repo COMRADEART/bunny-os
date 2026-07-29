@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="5120" height="2160" viewBox="0 0 5120 2160" role="img" aria-label="Abstract mint arcs on a deep green ultrawide background">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0c1210"/><stop offset="1" stop-color="#172c24"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#88e7c4" stop-opacity=".34"/><stop offset="1" stop-color="#88e7c4" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="5120" height="2160" fill="url(#bg)"/>
+  <ellipse cx="3980" cy="480" rx="1420" ry="980" fill="url(#glow)"/>
+  <path d="M-400 1940 C880 620 1920 2580 3260 1120 S5000 520 5600 940" fill="none" stroke="#2c8e70" stroke-width="190" stroke-linecap="round" opacity=".58"/>
+  <path d="M-250 2080 C1030 800 2010 2690 3420 1240 S5020 720 5560 1120" fill="none" stroke="#88e7c4" stroke-width="46" stroke-linecap="round"/>
+</svg>

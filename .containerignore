@@ -1,0 +1,11 @@
+.git
+.github
+.selfcheck-tmp
+desktop
+node_modules
+ui
+build/out
+**/__pycache__
+**/*.pyc
+**/*.pyo
+

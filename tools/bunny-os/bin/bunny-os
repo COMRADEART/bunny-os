@@ -1,0 +1,18 @@
+#!/usr/bin/python3
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+installed = Path("/usr/lib/bunny-os/python")
+sys.path.insert(0, str(installed if installed.is_dir() else Path(__file__).resolve().parents[1]))
+installer = Path("/usr/lib/bunny-installer")
+if installer.is_dir():
+    sys.path.insert(0, str(installer))
+else:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
+from bunny_os.cli import main
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,24 @@
+[Unit]
+Description=Refresh approved Bunny desktop-search metadata
+Documentation=file:///usr/share/doc/bunny-os/DESKTOP_SEARCH.md
+PartOf=bunny-shell.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bunny-search rebuild
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ConfigurationDirectory=bunny-shell
+StateDirectory=bunny-shell
+CacheDirectory=bunny-shell
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+MemoryMax=256M
+TasksMax=64
+TimeoutStartSec=5min
+StandardOutput=journal
+StandardError=journal

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/shell/workspace-1.schema.json",
+  "title": "Bunny Shell workspace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "taskIds", "applicationWindows", "terminalSessions", "recentFiles", "permissions", "sandboxSessions", "checkpoints", "createdAt", "updatedAt"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 80},
+    "projectPath": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "desktopWorkspaceId": {"type": "string", "maxLength": 128},
+    "bunnyThreadId": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"},
+    "intentId": {"type": "string", "maxLength": 128},
+    "planId": {"type": "string", "maxLength": 128},
+    "taskIds": {"type": "array", "maxItems": 500, "items": {"type": "string", "maxLength": 128}, "uniqueItems": true},
+    "applicationWindows": {"type": "array", "maxItems": 200, "items": {"$ref": "#/$defs/window"}},
+    "terminalSessions": {"type": "array", "maxItems": 100, "items": {"type": "object"}},
+    "recentFiles": {"type": "array", "maxItems": 100, "items": {"type": "string", "maxLength": 4096}},
+    "permissions": {"type": "array", "maxItems": 100, "items": {"type": "object"}},
+    "sandboxSessions": {"type": "array", "maxItems": 100, "items": {"type": "object"}},
+    "checkpoints": {"type": "array", "maxItems": 100, "items": {"type": "object"}},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "updatedAt": {"type": "string", "format": "date-time"},
+    "archivedAt": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applicationId"],
+      "properties": {
+        "applicationId": {"type": "string", "maxLength": 256},
+        "windowId": {"type": "string", "maxLength": 256},
+        "monitor": {"type": "integer", "minimum": 0, "maximum": 32}
+      }
+    }
+  }
+}

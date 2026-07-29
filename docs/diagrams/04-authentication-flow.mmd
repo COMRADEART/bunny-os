@@ -1,0 +1,18 @@
+sequenceDiagram
+  participant B as Bunny user process
+  participant K as Linux kernel
+  participant R as Broker
+  participant L as logind
+  participant P as Polkit
+  B->>K: connect AF_UNIX
+  K->>R: SO_PEERCRED PID/UID/GID
+  R->>R: verify /proc start time, timestamp, nonce, rate
+  alt read-only method
+    R-->>B: typed machine status
+  else mutation
+    R->>L: active session check
+    R->>P: exact action + PID/start/UID
+    P-->>R: authorize or deny
+    R-->>B: typed result or safe denial
+  end
+

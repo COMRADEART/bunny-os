@@ -1,0 +1,46 @@
+policy_module(bunny_os, 0.1.0)
+
+# Phase 1 compile-tested reference domains. The developer image continues to
+# use Fedora targeted policy until these transitions pass AVC tests in a VM.
+type bunny_broker_t;
+type bunny_broker_exec_t;
+init_daemon_domain(bunny_broker_t, bunny_broker_exec_t)
+
+type bunny_update_t;
+type bunny_update_exec_t;
+init_daemon_domain(bunny_update_t, bunny_update_exec_t)
+
+type bunny_core_t;
+type bunny_core_exec_t;
+application_domain(bunny_core_t, bunny_core_exec_t)
+
+type bunny_app_server_t;
+type bunny_app_server_exec_t;
+application_domain(bunny_app_server_t, bunny_app_server_exec_t)
+
+type bunny_desktop_t;
+type bunny_desktop_exec_t;
+application_domain(bunny_desktop_t, bunny_desktop_exec_t)
+
+type bunny_plugin_t;
+type bunny_plugin_exec_t;
+application_domain(bunny_plugin_t, bunny_plugin_exec_t)
+
+type bunny_model_t;
+type bunny_model_exec_t;
+application_domain(bunny_model_t, bunny_model_exec_t)
+
+type bunny_var_lib_t;
+files_type(bunny_var_lib_t)
+type bunny_var_log_t;
+logging_log_file(bunny_var_log_t)
+type bunny_runtime_t;
+files_pid_file(bunny_runtime_t)
+
+manage_dirs_pattern(bunny_broker_t, bunny_var_lib_t, bunny_var_lib_t)
+manage_files_pattern(bunny_broker_t, bunny_var_lib_t, bunny_var_lib_t)
+manage_dirs_pattern(bunny_update_t, bunny_var_lib_t, bunny_var_lib_t)
+manage_files_pattern(bunny_update_t, bunny_var_lib_t, bunny_var_lib_t)
+logging_send_syslog_msg(bunny_broker_t)
+logging_send_syslog_msg(bunny_update_t)
+

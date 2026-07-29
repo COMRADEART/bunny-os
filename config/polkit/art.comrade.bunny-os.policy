@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>COMRADEART</vendor>
+  <vendor_url>https://github.com/COMRADEART/bunny-os</vendor_url>
+  <icon_name>art.comrade.Bunny</icon_name>
+
+  <action id="art.comrade.bunny-os.power">
+    <description>Control Bunny OS power state</description>
+    <message>Authentication is required to change the system power state</message>
+    <defaults><allow_any>no</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>yes</allow_active></defaults>
+  </action>
+  <action id="art.comrade.bunny-os.update">
+    <description>Stage or install a Bunny OS update</description>
+    <message>Authentication is required to update Bunny OS</message>
+    <defaults><allow_any>no</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>auth_admin_keep</allow_active></defaults>
+  </action>
+  <action id="art.comrade.bunny-os.rollback">
+    <description>Select the previous Bunny OS deployment</description>
+    <message>Authentication is required to select an operating-system rollback</message>
+    <defaults><allow_any>no</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>auth_admin</allow_active></defaults>
+  </action>
+  <action id="art.comrade.bunny-os.recovery">
+    <description>Schedule Bunny OS recovery</description>
+    <message>Authentication is required to schedule the recovery environment</message>
+    <defaults><allow_any>no</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>auth_admin</allow_active></defaults>
+  </action>
+  <action id="art.comrade.bunny-os.diagnostics">
+    <description>Export redacted system diagnostics</description>
+    <message>Authentication is required to export system diagnostics</message>
+    <defaults><allow_any>no</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>auth_self_keep</allow_active></defaults>
+  </action>
+</policyconfig>
+

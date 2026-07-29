@@ -1,0 +1,2 @@
+"""Narrow installer service boundary."""
+

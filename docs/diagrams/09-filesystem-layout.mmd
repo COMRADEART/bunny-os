@@ -1,0 +1,10 @@
+flowchart TB
+  image["OCI deployment"] --> usr["/usr"]
+  image --> opt["/opt/bunny releases"]
+  persistent["persistent state"] --> etc["/etc"]
+  persistent --> var["/var"]
+  persistent --> home["/home per-user XDG Bunny state/models/plugins"]
+  volatile["tmpfs/runtime"] --> run["/run/bunny broker socket"]
+  boot["boot state"] --> bootdir["/boot + /boot/efi"]
+  recovery["protected metadata"] --> recoverydir["/var/lib/bunny-os/recovery"]
+

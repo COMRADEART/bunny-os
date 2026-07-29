@@ -1,0 +1,2 @@
+"""Evidence-aware hardware preflight."""
+

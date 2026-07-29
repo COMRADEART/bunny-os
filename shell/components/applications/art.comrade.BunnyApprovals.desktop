@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Bunny Approvals
+Comment=Inspect scoped requests before allowing or denying them in Bunny
+Exec=/usr/bin/bunny-approvals
+Icon=bunny-approvals
+Terminal=false
+Categories=System;Security;
+Keywords=Approval;Permission;Security;Bunny;
+StartupNotify=true

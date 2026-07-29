@@ -1,0 +1,14 @@
+[Unit]
+Description=Periodically refresh approved Bunny desktop-search metadata
+Documentation=file:///usr/share/doc/bunny-os/DESKTOP_SEARCH.md
+PartOf=bunny-shell.target
+
+[Timer]
+OnStartupSec=2min
+OnUnitActiveSec=15min
+RandomizedDelaySec=2min
+Persistent=false
+Unit=bunny-search-index.service
+
+[Install]
+WantedBy=bunny-shell.target

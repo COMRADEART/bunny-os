@@ -1,0 +1,43 @@
+[Unit]
+Description=Bunny OS atomic update agent (%i)
+Documentation=file:///usr/share/doc/bunny-os/UPDATES.md
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/usr/bin/bootc
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bunny-update-agent %i
+User=root
+Group=root
+StateDirectory=bunny-os/update
+CacheDirectory=bunny-os/update
+LogsDirectory=bunny-os/update
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHome=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectProc=invisible
+ProcSubset=pid
+ProtectSystem=strict
+ReadWritePaths=/var/lib/bunny-os/update /var/cache/bunny-os/update /var/log/bunny-os/update /run/ostree-booted /sysroot /boot
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service @mount
+SystemCallFilter=~@clock @debug @module @obsolete @raw-io @swap
+Restart=no
+TimeoutStartSec=90min
+TimeoutStopSec=2min
+KillMode=mixed
+StandardOutput=journal
+StandardError=journal
+

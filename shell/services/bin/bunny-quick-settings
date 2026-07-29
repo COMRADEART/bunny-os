@@ -1,0 +1,7 @@
+#!/usr/bin/python3
+from pathlib import Path
+import sys
+system = Path("/usr/lib/bunny-shell")
+sys.path.insert(0, str(system if system.exists() else Path(__file__).resolve().parents[1]))
+from bunny_shell.cli import main
+raise SystemExit(main("bunny-quick-settings"))

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/update-manifest-1.schema.json",
+  "title": "Bunny OS signed update manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "sequence", "channel", "osVersion", "imageVersion",
+    "imageReference", "imageDigest", "architecture", "publishedAt", "expiresAt",
+    "contractVersion", "downloadSize", "installedSize", "keyId", "signature"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "channel": { "type": "string", "enum": ["developer", "beta", "stable"] },
+    "osVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$" },
+    "imageVersion": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "imageReference": { "type": "string", "pattern": "^[a-z0-9.-]+(?::[0-9]+)?/[a-z0-9._/-]+$", "maxLength": 256 },
+    "imageDigest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "architecture": { "type": "string", "enum": ["x86_64", "aarch64"] },
+    "publishedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "minimumFirmware": { "type": "string", "maxLength": 128 },
+    "minimumBunnyVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "maximumBunnyVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "contractVersion": { "const": "1.0.0" },
+    "downloadSize": { "type": "integer", "minimum": 1 },
+    "installedSize": { "type": "integer", "minimum": 1 },
+    "releaseNotesReference": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "keyId": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,96}$" },
+    "signature": { "type": "string", "pattern": "^[A-Za-z0-9+/]{80,120}={0,2}$" }
+  }
+}

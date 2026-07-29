@@ -1,0 +1,6 @@
+flowchart LR
+  failure["new boot/update failure"] --> prior["prior deployment remains"]
+  prior --> choice{"boot menu or authorized bootc rollback"}
+  choice --> boot["boot previous deployment"]
+  boot --> audit["record failure; prevent update loop"]
+

@@ -1,0 +1,9 @@
+flowchart TD
+  request["authorized recovery.schedule"] --> marker["root-only one-shot marker"]
+  marker --> validate{"early generator validates exact marker"}
+  validate -->|invalid| normal["normal target"]
+  validate -->|valid| recovery["Bunny-independent recovery target"]
+  recovery --> menu["version, filesystem inventory, rollback, disable startup/plugins, diagnostics"]
+  menu --> confirm{"explicit YES for mutation"}
+  confirm --> repaired["reboot/power off; marker removed"]
+

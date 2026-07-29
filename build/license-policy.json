@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "failOnNoAssertionInRelease": true,
+  "prohibitedLicensePatterns": ["(?i)proprietary", "(?i)commercial-only", "(?i)no-redistribution", "(?i)eula"]
+}
+

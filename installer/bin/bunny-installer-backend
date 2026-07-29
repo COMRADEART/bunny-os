@@ -1,0 +1,15 @@
+#!/usr/bin/python3
+import json
+import sys
+from pathlib import Path
+
+installed = Path("/usr/lib/bunny-installer")
+sys.path.insert(0, str(installed if installed.is_dir() else Path(__file__).resolve().parents[2]))
+
+print(json.dumps({
+    "schemaVersion": 1,
+    "available": False,
+    "reason": "The reviewed Anaconda adapter is not installed in this source-only build.",
+    "writesPerformed": False
+}, sort_keys=True))
+raise SystemExit(78)

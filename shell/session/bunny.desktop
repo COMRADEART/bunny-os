@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Bunny
+Comment=Bunny Shell on GNOME and Wayland
+Exec=/usr/libexec/bunny-shell-session
+TryExec=/usr/libexec/bunny-shell-session
+Type=Application
+DesktopNames=Bunny;GNOME;
+X-GDM-SessionRegisters=true

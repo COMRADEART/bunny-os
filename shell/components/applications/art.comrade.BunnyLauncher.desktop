@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Bunny Launcher
+Comment=Open applications, workspaces, approved files, settings, and Bunny
+Exec=/usr/bin/bunny-launcher
+Icon=bunny-shell
+Terminal=false
+Categories=Utility;System;
+Keywords=Search;Applications;Workspace;Bunny;
+StartupNotify=true

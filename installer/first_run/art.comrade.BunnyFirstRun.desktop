@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Welcome to Bunny OS
+GenericName=First Run
+Comment=Configure privacy, Bunny, applications, backup, and recovery
+Exec=bunny-first-run
+Icon=bunny-shell
+Terminal=false
+Categories=Settings;System;
+StartupNotify=true
+NoDisplay=true

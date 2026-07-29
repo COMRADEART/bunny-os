@@ -1,0 +1,1 @@
+"""Bunny desktop search tests."""

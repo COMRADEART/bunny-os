@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Bunny Workspaces
+Comment=Project-aware workspaces, tasks, plans, checkpoints, and activity
+Exec=/usr/bin/bunny-workspace
+Icon=bunny-workspaces
+Terminal=false
+Categories=Utility;Development;
+Keywords=Project;Workspace;Tasks;Plans;
+StartupNotify=true

@@ -1,0 +1,9 @@
+flowchart LR
+  uefi["UEFI"] --> esp["ESP + Fedora boot chain"]
+  esp --> deployment["selected bootc deployment"]
+  deployment --> kernel["kernel + initramfs"]
+  kernel --> root["image-managed root"]
+  root --> systemd["systemd"]
+  systemd --> health["offline required health"]
+  health --> session["GDM/GNOME or multi-user"]
+

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/shell/settings-1.schema.json",
+  "title": "Bunny Shell settings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "revision", "values"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "revision": {"type": "integer", "minimum": 0},
+    "values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["launchBunnyAtLogin", "defaultProviderAlias", "defaultModel", "localOnlyMode", "offlineMode", "cloudFailoverPolicy", "memoryEnabled", "approvedSearchLocations", "pluginNetworkDefault", "unattendedJobs", "notifications", "doNotDisturb", "checkpointRetentionDays", "modelStoragePath", "diagnosticsPolicy", "telemetryEnabled", "clipboardHistory", "clipboardExcludedApplications", "reducedMotion", "reducedTransparency", "theme", "textScalePercent"],
+      "properties": {
+        "launchBunnyAtLogin": {"type": "boolean", "default": false},
+        "defaultProviderAlias": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,96}$", "default": "local"},
+        "defaultModel": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,96}$", "default": "automatic"},
+        "localOnlyMode": {"type": "boolean", "default": false},
+        "offlineMode": {"type": "boolean", "default": false},
+        "cloudFailoverPolicy": {"enum": ["never", "ask"], "default": "ask"},
+        "memoryEnabled": {"type": "boolean", "default": true},
+        "approvedSearchLocations": {"type": "array", "maxItems": 100, "items": {"type": "string", "maxLength": 512}},
+        "pluginNetworkDefault": {"enum": ["deny", "ask"], "default": "deny"},
+        "unattendedJobs": {"type": "boolean", "default": false},
+        "notifications": {"type": "boolean", "default": true},
+        "doNotDisturb": {"type": "boolean", "default": false},
+        "checkpointRetentionDays": {"type": "integer", "minimum": 1, "maximum": 365, "default": 30},
+        "modelStoragePath": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,96}$", "default": "default"},
+        "diagnosticsPolicy": {"const": "local-only"},
+        "telemetryEnabled": {"const": false},
+        "clipboardHistory": {"type": "boolean", "default": false},
+        "clipboardExcludedApplications": {"type": "array", "maxItems": 100, "items": {"type": "string", "maxLength": 512}},
+        "reducedMotion": {"type": "boolean", "default": false},
+        "reducedTransparency": {"type": "boolean", "default": false},
+        "theme": {"enum": ["system", "bunny-light", "bunny-dark", "high-contrast"], "default": "system"},
+        "textScalePercent": {"type": "integer", "minimum": 75, "maximum": 200, "default": 100}
+      }
+    }
+  }
+}

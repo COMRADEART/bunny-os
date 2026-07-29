@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/shell/core-summary-1.schema.json",
+  "title": "Bunny Core server-authoritative shell projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sequence", "tasks", "plans", "approvals", "notifications", "provider", "privacy", "sandbox"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "sequence": {"type": "integer", "minimum": 0},
+    "tasks": {"type": "array", "maxItems": 500, "items": {"type": "object"}},
+    "plans": {"type": "array", "maxItems": 500, "items": {"type": "object"}},
+    "approvals": {"type": "array", "maxItems": 500, "items": {"type": "object"}},
+    "notifications": {"type": "array", "maxItems": 500, "items": {"type": "object"}},
+    "provider": {"type": ["object", "null"]},
+    "privacy": {"type": "object"},
+    "sandbox": {"type": "object"}
+  }
+}

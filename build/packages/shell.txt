@@ -1,0 +1,15 @@
+# Bunny Shell is an integration layer on GNOME/Mutter, not a compositor.
+gnome-shell
+gnome-session-wayland-session
+gnome-control-center
+gnome-terminal
+nautilus
+nautilus-python
+python3-gobject
+gtk4
+libadwaita
+dconf
+xdg-desktop-portal-gnome
+at-spi2-core
+orca
+mousetweaks

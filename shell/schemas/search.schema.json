@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/shell/search-1.schema.json",
+  "title": "Bunny private desktop search configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "locations", "exclusions", "contentIndexing", "cloudSearch", "maxEntries"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "locations": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "enabled", "encryption", "addedAt"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "enabled": {"type": "boolean"},
+          "encryption": {"enum": ["encrypted", "not-encrypted", "unknown"]},
+          "addedAt": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "exclusions": {"type": "array", "maxItems": 100, "items": {"type": "string", "maxLength": 256}},
+    "contentIndexing": {"const": false},
+    "cloudSearch": {"const": false},
+    "maxEntries": {"type": "integer", "minimum": 1, "maximum": 20000}
+  }
+}

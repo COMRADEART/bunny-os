@@ -1,0 +1,11 @@
+# Essential offline desktop applications. Ordinary additions use per-user Flatpak.
+firefox
+gnome-text-editor
+file-roller
+evince
+loupe
+totem
+gnome-software
+flatpak
+xdg-desktop-portal
+xdg-desktop-portal-gnome

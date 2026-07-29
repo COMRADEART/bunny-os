@@ -1,0 +1,30 @@
+[Unit]
+Description=Bunny OS recovery console
+Documentation=file:///usr/share/doc/bunny-os/RECOVERY.md
+DefaultDependencies=no
+After=local-fs.target systemd-user-sessions.service
+Before=bunny-recovery.target
+PartOf=bunny-recovery.target
+
+[Service]
+Type=idle
+ExecStart=/usr/libexec/bunny-recovery
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+User=root
+Group=root
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=full
+ReadWritePaths=/etc /var /home /boot /run
+PrivateTmp=yes
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+TimeoutStartSec=infinity
+
+[Install]
+WantedBy=bunny-recovery.target
+

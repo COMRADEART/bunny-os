@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "live",
+  "base": "fedora-bootc-44",
+  "packageSets": ["common", "desktop", "shell", "installer", "applications"],
+  "desktop": "bunny-live-gnome-wayland",
+  "imageTypes": ["bootc-generic-iso"],
+  "rootFilesystem": "ext4",
+  "offlinePayload": true,
+  "bunnyArtifact": "verified-or-explicit-placeholder"
+}

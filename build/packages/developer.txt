@@ -1,0 +1,17 @@
+# Development-only profile; these packages are intentionally absent from future consumer images.
+git
+make
+gcc
+gcc-c++
+clang
+rust
+cargo
+gdb
+strace
+podman
+buildah
+skopeo
+shellcheck
+qemu-guest-agent
+spice-vdagent
+toolbox

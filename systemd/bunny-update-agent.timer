@@ -1,0 +1,14 @@
+[Unit]
+Description=Check for Bunny OS image updates
+Documentation=file:///usr/share/doc/bunny-os/UPDATES.md
+ConditionPathExists=/var/lib/bunny-os/update/automatic-check-enabled.json
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=24h
+RandomizedDelaySec=2h
+Persistent=yes
+Unit=bunny-update-agent@check.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,12 @@
+flowchart TB
+  system["root OS services"] -->|"machine facts only"| broker["broker"]
+  subgraph u1["UID 1000"]
+    d1["Desktop/Core"] --> x1["XDG Bunny data + Secret Service"]
+  end
+  subgraph u2["UID 1001"]
+    d2["Desktop/Core"] --> x2["XDG Bunny data + Secret Service"]
+  end
+  d1 -->|"SO_PEERCRED UID 1000"| broker
+  d2 -->|"SO_PEERCRED UID 1001"| broker
+  x1 -. "Linux DAC: no access" .-> x2
+

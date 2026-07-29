@@ -1,0 +1,13 @@
+.bunny-shell-icon {
+  color: #88e7c4;
+}
+
+.bunny-shell-status {
+  color: #bac8c3;
+  font-weight: 600;
+}
+
+.bunny-shell-status:focus {
+  outline: 2px solid #88e7c4;
+  outline-offset: 2px;
+}

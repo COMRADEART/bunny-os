@@ -1,0 +1,12 @@
+# Standalone recovery prototype uses conventional tools and no Bunny runtime.
+systemd
+bootc
+e2fsprogs
+xfsprogs
+btrfs-progs
+cryptsetup
+smartmontools
+nvme-cli
+tar
+gzip
+

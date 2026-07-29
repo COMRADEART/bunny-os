@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "shell",
+  "base": "fedora-bootc-44",
+  "packageSets": ["common", "desktop", "shell", "developer"],
+  "desktop": "bunny-gnome-wayland",
+  "imageTypes": ["qcow2"],
+  "rootFilesystem": "ext4",
+  "bunnyArtifact": "verified-or-explicit-placeholder"
+}

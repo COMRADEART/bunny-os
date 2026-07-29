@@ -1,0 +1,12 @@
+flowchart LR
+  subgraph user["Logged-in user session"]
+    desktop["Bunny Desktop"] --> core["Bunny Core"]
+    core --> app["app-server 127.0.0.1:ephemeral"]
+    desktop --> portals["Desktop portals"]
+  end
+  desktop -->|"JSON + SO_PEERCRED"| socket["/run/bunny/broker.sock"]
+  socket --> broker["root broker / fixed API"]
+  broker --> systemd["systemd"]
+  broker --> updater["root one-shot updater"]
+  updater --> bootc["bootc"]
+

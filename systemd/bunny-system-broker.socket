@@ -1,0 +1,14 @@
+[Unit]
+Description=Bunny OS local privileged broker socket
+Documentation=file:///usr/share/doc/bunny-os/PRIVILEGED_BROKER.md
+
+[Socket]
+ListenStream=/run/bunny/broker.sock
+SocketMode=0666
+RemoveOnStop=yes
+DirectoryMode=0755
+Accept=no
+
+[Install]
+WantedBy=sockets.target
+
