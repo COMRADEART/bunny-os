@@ -59,3 +59,17 @@ Phase 5 operations/source work now exists, but it did not cure the absent Phase 
 9. publish only if `gate-stable-release` passes and the go/no-go report changes to `GO`.
 
 OEM manufacturing, custom firmware, enterprise fleet management, paid cloud services, mandatory accounts, advertising, data monetisation, and stable publication remain prohibited.
+
+## Phase 6 entry remains blocked
+
+The Phase 6 mandatory preflight is recorded in `docs/PHASE_6_BASELINE.md` and `PHASE_6_REPORT.md`. It stopped before branch creation or publication because the authoritative stable decision is `NO-GO`. Do not implement post-release operations or create `release/stable-1` until all of the following are true:
+
+1. complete Phase 4/public-beta operation with traceable issue, reliability, privacy, accessibility, recovery, and hardware evidence;
+2. close the five protected qualification blocker codes and every non-waivable stable blocker;
+3. create a new immutable RC from a clean protected commit with ISO/raw/QCOW2/recovery media, checksums, detached signatures, SBOM, package manifest, provenance, release notes, and known issues;
+4. pass independent signature verification, two-builder reproducibility, license/malware/supply-chain checks, and signing-key rotation/revocation recovery;
+5. pass installed clean/encrypted/offline/update/rollback/recovery/migration/multi-user/local-only/Bunny-disabled/privacy/accessibility/hardware/soak matrices;
+6. obtain the nine protected approvals and change `STABLE_RELEASE_GO_NO_GO.md` to evidence-backed `GO`;
+7. rerun `gate-stable-release` successfully before creating any stable branch, tag, support promise, download, announcement, mirror, or update promotion.
+
+Until then, the next milestone is Phase 1–5 validation closure, not a stable release or a Phase 7 lifecycle.
