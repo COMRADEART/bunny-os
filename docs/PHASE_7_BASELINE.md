@@ -3,7 +3,16 @@
 Date: 2026-07-29  
 Baseline commit: `0691e0646db4d0cdd9a2ecadc3aca6dde3350287`  
 Feature branch: `feature/oem-enterprise-and-sync`  
-Entry decision: **NO-GO — stop before Phase 7 implementation**
+Entry decision: **NO-GO for pilots, manufacturing, deployment, and hosted services** — see the addendum at the end of this document for the revised implementation disposition.
+
+> **Addendum, 2026-07-29.** This baseline was first written as a preflight stop that
+> declined to implement Phase 7 at all. That disposition has been revised for the
+> *source* scope only, matching how Phases 3 and 5 were delivered: design, schemas,
+> validators, tests, and documentation land ahead of runtime evidence, and the gates
+> that would authorise deployment fail closed. Phase 7 source now exists under
+> `oem/`, `enterprise/`, and `sync/`. Every finding, gap, risk, and blocker recorded
+> below remains accurate and unresolved, and every pilot, OEM, enterprise, and
+> hosted-sync gate remains blocked. See `PHASE_7_REPORT.md`.
 
 ## Preflight disposition
 
