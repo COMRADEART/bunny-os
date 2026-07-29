@@ -66,3 +66,25 @@ beta QCOW2/raw compose, `qemu-img` check, libguestfs inspection, SBOM/license
 gate, and QEMU/KVM boot-health smoke passed. The vulnerability gate failed on
 the current Fedora 44 kernel and bootc-required Podman/Skopeo/Toolbox packages,
 so the release and Phase 7 entry decisions remain `NO-GO`.
+
+## Phase 7 implementation
+
+Phase 7 adds OEM, enterprise-management, and optional encrypted-sync source. Three new top-level packages, all Python standard library only:
+
+- `oem/` — signed profile validation, overlay validation, hardware qualification evaluation, 22-check factory finalisation, and the `bunny-oem` CLI.
+- `enterprise/` — device identity, attestation, enrolment, typed policy agent, conflict precedence, remote administration boundary, fleet groups and rings, organisation catalogue, fleet health, tamper-evident audit, roles and console authorisation, multi-tenant scoping, air-gapped bundles, kiosk and shared-device profiles, decommissioning, and pilot gating.
+- `sync/` — versioned encrypted envelope, key hierarchy, authenticated pairing, deterministic conflict resolution, selective sync, account recovery, deletion semantics, metadata disclosure, backup and migration, and the cryptographic executor boundary.
+
+Eleven new schemas in `schemas/`, each paired with a hand-written validator and rejection tests, following the existing convention. Twenty-five new documents in `docs/`, seven ADRs (`ADR-020` through `ADR-026`), an 18-file demonstration package, and thirteen new root reports.
+
+New commands: `phase7-audit`, `phase-7-baseline`, fourteen `test-*` targets, `fleet-simulation`, `pilot-readiness`, `build-oem-image`, `gate-phase-7-source`, `gate-phase-7`, and the three pilot gates. All wired through `scripts/task.py` and `scripts/phase7.py`.
+
+454 tests were added across fourteen test packages; the main suite is now 557 tests plus 60 installer and 74 operations tests, all passing.
+
+Server components are deliberately absent. The fleet server, enrolment service, and enterprise console are separate trust domains with independent deployment lifecycles and are not in this repository; see `docs/adr/ADR-023-fleet-control-plane.md`. No server code was placed in `services/`, `build/`, or any boot or recovery path.
+
+Executors that would touch real hardware or perform real cryptography report themselves unavailable and exit 78 rather than degrading: `bunny-oem provision`, `seal`, and `build-image`, and every operation in `sync/crypto.py`.
+
+Four defects were fixed during implementation, three of them caught by new tests: an unreachable OEM key-namespace check, a policy validator registered with the wrong arity, two privacy refusals preempted by a generic unknown-field check, and a test-discovery configuration in `scripts/task.py` that put `tests/` on `sys.path` so `tests/sync` and `tests/oem` shadowed the real packages.
+
+The Phase 7 source gate passes. `gate-phase-7` and all three pilot gates remain blocked, and the stable release remains `NO-GO`.

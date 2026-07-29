@@ -67,3 +67,22 @@ Phase 3 is source-implemented in part but not definition-of-done complete and no
 - The current beta vulnerability gate fails on fixable Critical/High findings
   in Fedora's kernel and bootc-required Podman/Skopeo/Toolbox dependency set.
   No release waiver exists.
+
+## Phase 7 limitations
+
+Phase 7 delivered OEM, enterprise-management, and encrypted-sync **source, schemas, validators, tests, and documentation**. It delivered no running system. The following are open and are the reason every pilot gate fails.
+
+- **No fleet server, enrolment service, or enterprise console exists.** They are separate trust domains outside this repository. Nothing has been deployed, load-tested, failed over, or penetration-tested.
+- **The policy agent has no privileged transport.** `services/bunny-system-broker/src/bunny_system_broker/auth.py` refuses UIDs below 1000 and `authorize_polkit` requires an active logind session; a headless agent has neither. A separate socket with its own peer-credential rule is required and is not implemented.
+- **The settings layer has no organisation scope.** All 22 settings in `shell/services/bunny_shell/settings.py` are user-scoped with no override or locked-setting mechanism, so resolved policy cannot yet change a running desktop.
+- **Factory finalisation evaluates a supplied record, not a device.** A factory submitting a dishonest record would seal a device that still holds credentials. This becomes Critical the moment a real provisioning line runs. `bunny-oem provision` and `seal` exit 78.
+- **No reviewed sync cryptography backend is installed** and no independent cryptographic review has been commissioned. `sync/crypto.py` refuses every operation rather than degrading.
+- **No hardware has been qualified.** Zero models, zero repeat runs, zero sustained-load campaigns, no recovery media booted, no OEM image built.
+- **No OEM signing key infrastructure exists.** No key ceremony, no offline storage procedure, no rotation rehearsal, and only one potential release signer.
+- **Sync metadata is genuinely revealing.** Account identity, device count, object sizes, upload times, and version counts are visible to an operator. The design is not zero knowledge and is not described as such.
+- **Audit chains have no off-device anchoring.** An attacker with write access from entry N can rewrite the chain from N forward.
+- **No root `LICENSE` file and no trademark policy exist.** Both block OEM and enterprise distribution. See `LICENSE_COMPLIANCE_REPORT.md`.
+- **Support capacity is one maintainer**, which is smaller than the Phase 7 surface. See `SUSTAINABILITY_REPORT.md`.
+- Fleet simulation is arithmetic over synthetic counts and is never production-readiness evidence.
+
+All inherited limitations above remain unchanged, including the stable-release `NO-GO`, the five blocker codes, the 31 missing evidence entries, and the 59 fixable vulnerability findings.

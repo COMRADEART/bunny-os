@@ -90,3 +90,28 @@ encryption, update/rollback/recovery, reproducibility, accessibility, and
 physical-hardware matrices.
 
 Until then, the next milestone is Phase 1–5 validation closure, not a stable release or a Phase 7 lifecycle.
+
+## After Phase 7 source
+
+Phase 7 source is complete: OEM profiles, factory finalisation, device identity, enrolment, a typed policy agent, fleet rings, a remote administration boundary, multi-tenant scoping, encrypted sync, air-gapped management, kiosk and shared-device profiles, decommissioning, and pilot gating — 454 tests, all passing, with every pilot gate deliberately blocked.
+
+**The next milestone is still not Phase 8.** Phase 7 cannot unblock itself: every one of its pilot gates depends on a published, signed stable release that does not exist. Working on more Phase 7 features would add surface to a system that cannot ship.
+
+Ordered work, unchanged in priority from the previous section and extended:
+
+1. Consume a reviewed Fedora 44 update or supported rebase whose bootc-required dependency set passes the pinned Grype gate; rebuild from a digest-pinned base. 8 Critical and 28 High findings currently block everything downstream.
+2. Produce live and independent recovery media, then run the install, encryption, update, rollback, and recovery matrices.
+3. Produce reproducibility evidence from two independent builders.
+4. Close the five stable-release blocker codes and the 31 missing evidence and approval entries.
+5. Write the missing records: `PHASE_4_REPORT.md`, `STABLE_PUBLICATION_REPORT.md`, the three `POST_RELEASE_*_REVIEW.md` documents, `STABLE_SUPPORT_MATRIX.md`, and `SECURITY_POLICY.md`.
+6. Add a root `LICENSE` file and a reviewed trademark policy. Both block any OEM or enterprise distribution independently of everything above.
+
+Only after a stable release exists do the Phase 7 follow-ups become meaningful:
+
+7. Implement the policy agent's privileged transport and the settings organisation scope, so resolved policy can actually change a running desktop.
+8. Implement the factory provisioning executor, so finalisation inspects a device rather than trusting a record.
+9. Commission an independent cryptographic review of the sync design and select a reviewed backend.
+10. Qualify at least one hardware model end to end, including validated recovery.
+11. Decide which Phase 7 capabilities the project will actually operate, and confirm support capacity for exactly those. Operating none of them is a legitimate answer.
+
+Only then does a controlled internal pilot become proposable, and it would still require separate approval.

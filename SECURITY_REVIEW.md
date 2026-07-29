@@ -72,3 +72,15 @@ fixable matches remain, primarily embedded in Fedora's bootc-required Podman and
 Skopeo packages, plus the kernel classifier finding. These are neither waived
 nor converted to PASS. A reviewed Fedora package update/rebase or equivalent
 patched supply-chain input is required before release consideration.
+
+## Phase 7 security review summary
+
+Twelve separate assessments are recorded in `PHASE_7_SECURITY_REVIEW.md`: OEM supply chain, factory provisioning, device identity, enterprise enrolment, policy agent, fleet service, enterprise console, encrypted sync, device pairing, account recovery, remote wipe, and air-gapped management. Companion reviews: `FACTORY_PROVISIONING_SECURITY_REVIEW.md`, `FLEET_SECURITY_REVIEW.md`, `ENCRYPTED_SYNC_SECURITY_REVIEW.md`, `MULTITENANCY_TEST_REPORT.md`.
+
+No unresolved Blocker or Critical issue exists in Phase 7 source. Three Minor defects were found and fixed during implementation, each caught by a new test rather than by inspection: an OEM key-namespace collision check that could never fire, a policy-domain validator registered with the wrong arity, and two privacy refusals preempted by a generic unknown-field check so the message misrepresented the reason for rejection.
+
+Three Major limitations remain open and are recorded in `KNOWN_LIMITATIONS.md`: the policy agent has no privileged transport because the existing broker refuses system UIDs and requires an active logind session; the settings layer has no organisation scope so resolved policy cannot yet change a running desktop; and factory finalisation evaluates a supplied record rather than inspecting the device.
+
+The structural properties worth noting are those that make a compromised control plane survivable. Update signature verification is not expressible as a policy or a ring setting, so a fully compromised fleet server cannot install arbitrary software. There is no generic remote shell and no operation accepts a command or argv. A failed fleet update that lost rollback is an unrepresentable report rather than an incident to discover. Signing authorities are separated into five disjoint namespaces validated at parse time, so a fleet key cannot cause an OS image to be installed.
+
+The inherited position is unchanged and independently blocking: 8 Critical and 28 High fixable vulnerability findings in the Fedora bootc-required dependency set, neither waived nor converted to PASS, plus the five stable-release blocker codes and 31 missing evidence entries. No Phase 7 pilot may begin.
