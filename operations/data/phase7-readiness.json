@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-07-29",
+  "recommendation": "NO-GO",
+  "summary": "Phase 7 source, schemas, validators, and tests exist and pass on the host. No pilot may begin: every pilot entry gate that depends on a published, signed stable release is unmet, and Phase 7 inherits the stable-release blockers recorded in operations/data/stable-qualification.json.",
+  "inheritedBlockers": [
+    "unresolved-blocker",
+    "unsigned-artifact",
+    "missing-checksum",
+    "untested-release-rollback",
+    "recovery-media-failure"
+  ],
+  "entryGates": {
+    "stableReleasePublished": false,
+    "signedStableArtifacts": false,
+    "reproducibleBuildEvidence": false,
+    "postReleaseSecurityReview": false,
+    "postReleasePrivacyReview": false,
+    "phase7SecurityReview": true,
+    "phase7PrivacyReview": true,
+    "multiTenancyIsolationTests": true,
+    "syncCryptographyIndependentReview": false,
+    "oemRecoveryValidation": false,
+    "supportCapacityConfirmed": false
+  },
+  "entryGateNotes": {
+    "stableReleasePublished": "STABLE_RELEASE_GO_NO_GO.md records NO-GO. No stable version, tag, or candidate exists.",
+    "signedStableArtifacts": "build/keys contains no release public key and no candidate artifact has been signed.",
+    "reproducibleBuildEvidence": "make reproducible-build-check fails closed by design; a second independent builder comparison has never been run.",
+    "postReleaseSecurityReview": "POST_RELEASE_SECURITY_REVIEW.md does not exist because no release occurred.",
+    "postReleasePrivacyReview": "POST_RELEASE_PRIVACY_REVIEW.md does not exist because no release occurred.",
+    "phase7SecurityReview": "PHASE_7_SECURITY_REVIEW.md exists and records source-level findings with no unresolved Blocker or Critical item in Phase 7 source.",
+    "phase7PrivacyReview": "PHASE_7_PRIVACY_REVIEW.md exists and documents exactly what an organisation administrator can see.",
+    "multiTenancyIsolationTests": "tests/multitenancy passes on the host, including adversarial cross-organisation cases.",
+    "syncCryptographyIndependentReview": "No independent cryptographic review has been commissioned or completed, and no reviewed cryptographic backend is installed.",
+    "oemRecoveryValidation": "No physical OEM hardware has been qualified and no recovery media has been booted.",
+    "supportCapacityConfirmed": "Operational capacity is one maintainer with no funded support rota; see SUSTAINABILITY_REPORT.md."
+  },
+  "pilotDefinition": {
+    "scope": "Internal engineering devices only, no external participants.",
+    "durationDays": 30,
+    "deviceCount": 5,
+    "supportedHardware": ["reference-x86-64-uefi-virtual-machine"],
+    "supportOwner": "Bunny OS maintainers",
+    "successCriteria": [
+      "enrolmentSuccessRate",
+      "policyDeliverySuccessRate",
+      "updateSuccessRate",
+      "rollbackSuccessRate",
+      "recoverySuccessRate",
+      "serviceAvailability"
+    ],
+    "privacyNotice": "docs/FLEET_PRIVACY.md",
+    "incidentProcess": "docs/ENTERPRISE_AUDIT.md and the existing security disclosure process",
+    "rollbackPlan": "Unenrol every device and select the previous bootc deployment.",
+    "exitPlan": "Unenrol every device, revoke all certificates, rotate sync keys, and delete the organisation record."
+  },
+  "prohibitedByPolicy": [
+    "mass OEM production",
+    "broad enterprise rollout",
+    "public hosted sync launch",
+    "paid service launch"
+  ]
+}

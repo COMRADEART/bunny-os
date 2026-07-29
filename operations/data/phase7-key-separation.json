@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-07-29",
+  "principle": "Update, release, OEM, fleet-control, and sync signing authorities are separate. Compromise of any one must not grant the powers of another, so the namespaces are disjoint and validated at parse time rather than by convention.",
+  "namespaces": {
+    "osUpdate": {
+      "prefix": "update-",
+      "purpose": "Signs OS update manifests. Trust root ships inside the image at /usr/share/bunny-os/update-keys.",
+      "authority": "Can cause a device to install a new OS image.",
+      "privateKeyInRepository": false,
+      "validatedBy": "services/bunny-update-agent/bunny_update_agent.py"
+    },
+    "releaseArtifact": {
+      "prefix": "bunny-os-release-",
+      "purpose": "Signs stable release candidate artifacts and the candidate manifest.",
+      "authority": "Can cause an artifact to be accepted as an official release.",
+      "privateKeyInRepository": false,
+      "validatedBy": "build/scripts/verify-stable-rc.py"
+    },
+    "oemProfile": {
+      "prefix": "oem-",
+      "purpose": "Signs OEM profiles, overlays, and hardware qualification reports.",
+      "authority": "Can cause an OEM customisation to be accepted for a matching hardware model. Cannot alter update trust, privacy defaults, or security protections.",
+      "privateKeyInRepository": false,
+      "validatedBy": "oem/validation/profile.py"
+    },
+    "fleetControl": {
+      "prefix": "fleet-",
+      "purpose": "Signs policy bundles, offline management bundles, and status reports.",
+      "authority": "Can cause an enrolled device to apply organisation policy. Cannot cause an OS image to be installed and cannot disable signature verification.",
+      "privateKeyInRepository": false,
+      "validatedBy": "enterprise/airgap.py"
+    },
+    "syncDevice": {
+      "prefix": "sync-",
+      "purpose": "Identifies sync service endpoints. Content keys are never held by this authority.",
+      "authority": "Can authenticate a sync service to a device. Cannot decrypt user content.",
+      "privateKeyInRepository": false,
+      "validatedBy": "sync/envelope.py rejects key material in uploaded envelopes"
+    }
+  },
+  "separationRules": [
+    "An OEM key id may not be named to impersonate a release, fleet, or sync namespace; oem/validation/profile.py rejects such names.",
+    "An offline management bundle signed with an OEM or release key is rejected; only the fleet- namespace is accepted.",
+    "No signing authority can disable update signature verification, because that is a safety invariant and is not representable as a policy.",
+    "Private keys are supplied through environment variables that point outside the repository, and build/scripts/sign-stable-rc.py refuses a key path inside the repository."
+  ],
+  "currentState": {
+    "keysProvisioned": false,
+    "note": "No production or test private key exists in this repository, and build/keys contains no release public key. Every signature-related check is therefore structural: it verifies that verification is required and correctly scoped, not that a real signature validated."
+  }
+}

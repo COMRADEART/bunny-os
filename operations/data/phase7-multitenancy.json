@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-07-29",
+  "scope": "Source-level multi-tenant isolation controls implemented in enterprise/tenancy.py and exercised by tests/multitenancy.",
+  "controls": {
+    "organisationScopedIdentities": true,
+    "organisationScopedStorage": true,
+    "organisationScopedEncryptionKeys": true,
+    "strictApiAuthorisation": true,
+    "auditIsolation": true,
+    "rateLimits": true,
+    "exportBoundaries": true,
+    "backupIsolation": true
+  },
+  "evidence": {
+    "organisationScopedIdentities": "assert_organisation_id refuses absent, empty, and wildcard tenant scopes; every identifier must match org-<slug>.",
+    "organisationScopedStorage": "scoped_filter always injects the tenant predicate and refuses a caller filter that tries to override it; filter_rows refuses rows with no organisationId rather than treating them as unscoped.",
+    "organisationScopedEncryptionKeys": "Fleet-control signing keys use the reserved fleet- namespace, separate from OS update, release, OEM, and sync namespaces; sync collection keys never leave the device.",
+    "strictApiAuthorisation": "assert_same_tenant is a required call for all 11 tenant-scoped resource families and refuses on mismatch.",
+    "auditIsolation": "verify_chain is per-organisation; an entry belonging to another organisation breaks verification, and append_entry refuses to extend a chain with a foreign organisation's entry.",
+    "rateLimits": "Declared as a control the hosted service must implement; no hosted service exists yet, so this is a design commitment recorded here and not a measured property.",
+    "exportBoundaries": "audit.retention_policy declares one organisation per export and no multi-organisation export.",
+    "backupIsolation": "assert_same_tenant covers the backup resource family, so restoring a backup into another tenant is refused."
+  },
+  "limitations": [
+    "These are source-level controls verified by host tests. No multi-tenant service has been deployed, load-tested, or penetration-tested.",
+    "rateLimits and exportBoundaries are partly commitments about a service that does not exist; they are recorded as true for the source contract only.",
+    "No independent security assessment of a running control plane has been performed."
+  ],
+  "adversarialTests": [
+    "organisation A reading organisation B devices",
+    "policy cross-assignment",
+    "audit cross-access",
+    "application catalogue cross-access",
+    "update-ring cross-access",
+    "administrator role escalation",
+    "unscoped and wildcard tenant queries",
+    "backup restoration into the wrong tenant"
+  ]
+}
