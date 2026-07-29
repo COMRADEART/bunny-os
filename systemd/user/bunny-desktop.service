@@ -1,0 +1,29 @@
+[Unit]
+Description=Bunny Desktop (user enabled)
+Documentation=file:///usr/share/doc/bunny-os/BUNNY_INTEGRATION_CONTRACT.md
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionFileIsExecutable=/opt/bunny/current/bunny-desktop
+StartLimitIntervalSec=60s
+StartLimitBurst=4
+
+[Service]
+Type=simple
+ExecStart=/opt/bunny/current/bunny-desktop
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.config/bunny %h/.local/share/bunny %h/.cache/bunny %t/bunny
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=graphical-session.target
+

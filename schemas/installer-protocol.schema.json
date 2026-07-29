@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.invalid/schemas/installer-protocol.schema.json",
+  "title": "Bunny OS installation plan protocol v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "installationId",
+    "mode",
+    "targetDisk",
+    "partitions",
+    "encryption",
+    "boot",
+    "user",
+    "locale",
+    "network",
+    "recovery",
+    "applicationProfile"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "installationId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$" },
+    "mode": { "enum": ["erase_disk", "install_alongside", "replace_partition", "manual", "oem"] },
+    "targetDisk": { "$ref": "#/$defs/diskReference" },
+    "partitions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": { "$ref": "#/$defs/plannedPartition" }
+    },
+    "encryption": { "$ref": "#/$defs/encryptionPlan" },
+    "boot": { "$ref": "#/$defs/bootPlan" },
+    "user": { "$ref": "#/$defs/userPlan" },
+    "locale": { "$ref": "#/$defs/localePlan" },
+    "network": { "$ref": "#/$defs/networkPlan" },
+    "recovery": { "$ref": "#/$defs/recoveryPlan" },
+    "applicationProfile": { "enum": ["offline-essential", "standard", "developer"] }
+  },
+  "$defs": {
+    "diskReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "devicePath", "expectedSizeBytes"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^disk-[a-f0-9]{16}$" },
+        "devicePath": { "type": "string", "pattern": "^/dev/[A-Za-z0-9._/+:-]+$" },
+        "expectedSizeBytes": { "type": "integer", "minimum": 42949672960 }
+      }
+    },
+    "plannedPartition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "role", "startBytes", "sizeBytes", "filesystem", "mountPoint", "encrypt", "preserve"],
+      "properties": {
+        "action": { "enum": ["create", "reuse", "format", "resize"] },
+        "role": { "enum": ["efi", "boot", "system", "home", "var", "swap", "recovery"] },
+        "startBytes": { "type": "integer", "minimum": 0 },
+        "sizeBytes": { "type": "integer", "minimum": 1048576 },
+        "filesystem": { "enum": ["vfat", "ext4", "btrfs", "xfs", "swap", "crypto_luks"] },
+        "mountPoint": { "type": ["string", "null"], "pattern": "^/" },
+        "encrypt": { "type": "boolean" },
+        "preserve": { "type": "boolean" },
+        "sourcePartitionId": { "type": ["string", "null"], "maxLength": 128 }
+      }
+    },
+    "encryptionPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "type", "recoveryKeyRequired", "tpm2"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "type": { "enum": ["none", "luks2"] },
+        "recoveryKeyRequired": { "type": "boolean" },
+        "tpm2": { "type": "boolean" },
+        "pcrPolicy": { "type": "array", "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 23 } }
+      }
+    },
+    "bootPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["firmware", "bootloader", "preserveExistingEntries"],
+      "properties": {
+        "firmware": { "const": "uefi" },
+        "bootloader": { "const": "fedora-shim-grub" },
+        "preserveExistingEntries": { "const": true },
+        "secureBootState": { "enum": ["enabled_supported", "enabled_with_limitations", "disabled", "unknown"] }
+      }
+    },
+    "userPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["username", "displayName", "administrator", "passwordSecretRef", "autologin", "groups"],
+      "properties": {
+        "username": { "type": "string", "pattern": "^[a-z_][a-z0-9_-]{0,31}$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "administrator": { "const": true },
+        "passwordSecretRef": { "type": "string", "pattern": "^(fd:[3-9][0-9]*|installer-secret:[A-Za-z0-9_-]{16,64})$" },
+        "autologin": { "const": false },
+        "groups": { "type": "array", "maxItems": 0 }
+      }
+    },
+    "localePlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["language", "keyboard", "timezone"],
+      "properties": {
+        "language": { "type": "string", "minLength": 2, "maxLength": 35 },
+        "keyboard": { "type": "string", "minLength": 2, "maxLength": 35 },
+        "timezone": { "type": "string", "pattern": "^[A-Za-z_+-]+(?:/[A-Za-z0-9_+-]+)+$" }
+      }
+    },
+    "networkPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "migrateLiveConnection"],
+      "properties": {
+        "required": { "const": false },
+        "migrateLiveConnection": { "type": "boolean" }
+      }
+    },
+    "recoveryPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["installDeployment", "recoveryKeyAcknowledged"],
+      "properties": {
+        "installDeployment": { "const": true },
+        "recoveryKeyAcknowledged": { "type": "boolean" }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "requestId", "installationId", "operation", "nonce", "timestamp", "params"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "requestId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$" },
+        "installationId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$" },
+        "operation": {
+          "enum": [
+            "installer.initialize",
+            "installer.probe",
+            "installer.plan.validate",
+            "installer.plan.preview",
+            "installer.install.start",
+            "installer.install.status",
+            "installer.install.cancel",
+            "installer.install.logs",
+            "installer.install.verify",
+            "installer.recovery.prepare"
+          ]
+        },
+        "nonce": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "params": { "type": "object" }
+      }
+    }
+  }
+}

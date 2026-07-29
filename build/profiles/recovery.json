@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "recovery",
+  "base": "fedora-bootc-44",
+  "packageSets": ["common", "recovery"],
+  "desktop": "none",
+  "imageTypes": ["qcow2"],
+  "rootFilesystem": "ext4",
+  "bunnyArtifact": "none"
+}
+

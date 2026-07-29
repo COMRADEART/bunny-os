@@ -1,0 +1,8 @@
+[Unit]
+Description=Bunny OS offline recovery target
+Documentation=file:///usr/share/doc/bunny-os/RECOVERY.md
+Requires=local-fs.target systemd-remount-fs.service
+After=local-fs.target systemd-remount-fs.service
+Conflicts=graphical.target
+AllowIsolate=yes
+

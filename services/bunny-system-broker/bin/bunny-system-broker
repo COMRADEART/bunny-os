@@ -1,0 +1,14 @@
+#!/usr/bin/python3
+from __future__ import annotations
+
+import os
+from pathlib import Path
+import sys
+
+installed = Path("/usr/lib/bunny-system-broker")
+sys.path.insert(0, str(installed if installed.is_dir() else Path(__file__).resolve().parents[1] / "src"))
+
+from bunny_system_broker.server import main
+
+if __name__ == "__main__":
+    raise SystemExit(main())

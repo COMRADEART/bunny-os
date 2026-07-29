@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/stable-candidate-manifest-1.schema.json",
+  "title": "Bunny OS stable release candidate manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "candidateVersion", "sourceCommit", "immutable", "artifacts", "signedUpdateMetadata", "reviewEvidence", "soak"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "candidateVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+-stable-rc[1-9][0-9]*$" },
+    "sourceCommit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "immutable": { "const": true },
+    "artifacts": { "type": "array", "items": { "type": "object" } },
+    "signedUpdateMetadata": { "const": true },
+    "reviewEvidence": { "type": "object" },
+    "soak": { "type": "object" }
+  }
+}

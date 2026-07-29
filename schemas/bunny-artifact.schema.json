@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/bunny-artifact-1.schema.json",
+  "title": "Verified Bunny release artifact consumed by Bunny OS",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "bunnyVersion", "protocolVersion", "contractRange", "architecture", "runtimeMode", "files", "sourceCommit"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "status": { "enum": ["verified", "placeholder"] },
+    "bunnyVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "protocolVersion": { "const": 3 },
+    "contractRange": { "type": "string", "pattern": "^>=1\\.0\\.0 <2\\.0\\.0$" },
+    "architecture": { "enum": ["x86_64", "aarch64"] },
+    "runtimeMode": { "enum": ["tauri-supervised", "placeholder"] },
+    "sourceCommit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "mode"],
+        "properties": {
+          "path": { "type": "string", "pattern": "^[A-Za-z0-9._/-]+$", "not": { "pattern": "(^|/)\\.\\.(/|$)" } },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "mode": { "type": "string", "enum": ["0555", "0444"] }
+        }
+      }
+    }
+  }
+}
+

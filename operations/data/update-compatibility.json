@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "sourceRelease": "latest-public-beta",
+      "targetRelease": "stable-rc1",
+      "directUpdateSupported": false,
+      "intermediateRelease": "none-qualified",
+      "databaseMigration": "unknown",
+      "configurationMigration": "unknown",
+      "recoveryImageRequired": true,
+      "rollbackStatus": "not_run",
+      "downgradeStatus": "recovery-only-until-qualified",
+      "knownLimitations": "No public-beta image, migration fixture, or independently booted recovery image exists in this repository."
+    },
+    {
+      "sourceRelease": "previous-public-beta",
+      "targetRelease": "stable-rc1",
+      "directUpdateSupported": false,
+      "intermediateRelease": "latest-public-beta",
+      "databaseMigration": "unknown",
+      "configurationMigration": "unknown",
+      "recoveryImageRequired": true,
+      "rollbackStatus": "not_run",
+      "downgradeStatus": "fresh-reinstall-required-until-qualified",
+      "knownLimitations": "Neither beta release nor a signed update path is available for execution."
+    }
+  ]
+}

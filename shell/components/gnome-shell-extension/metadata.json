@@ -1,0 +1,10 @@
+{
+  "uuid": "bunny-shell@bunny-os.org",
+  "name": "Bunny Shell",
+  "description": "Bunny OS launcher, workspace, task, approval, and privacy entry points on GNOME Shell.",
+  "shell-version": ["50"],
+  "session-modes": ["user"],
+  "settings-schema": "org.gnome.shell.extensions.bunny-shell",
+  "url": "https://github.com/COMRADEART/bunny-os",
+  "version": 1
+}

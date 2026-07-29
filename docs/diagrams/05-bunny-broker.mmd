@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant D as Bunny Desktop
+  participant R as Broker socket
+  participant S as Fixed backend
+  D->>R: contract 1.0.0 request + nonce
+  R->>R: schema/authz/replay/rate checks
+  R->>S: allowlisted method + validated values
+  S->>S: absolute executable + fixed argv/env/timeout
+  S-->>R: bounded typed result
+  R-->>D: response with same request ID
+

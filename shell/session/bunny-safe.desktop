@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Bunny (Safe Shell)
+Comment=Bunny recovery desktop without Bunny services or custom shell behavior
+Exec=/usr/libexec/bunny-shell-session --safe
+TryExec=/usr/libexec/bunny-shell-session
+Type=Application
+DesktopNames=Bunny-Safe;GNOME;
+X-GDM-SessionRegisters=true

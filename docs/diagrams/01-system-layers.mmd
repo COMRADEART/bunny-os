@@ -1,0 +1,10 @@
+flowchart TB
+  hardware["Hardware"] --> kernel["Linux kernel + upstream drivers"]
+  kernel --> base["Fedora 44 userspace"]
+  base --> lifecycle["systemd + SELinux + NetworkManager + firewalld + GNOME"]
+  lifecycle --> image["bootc image-managed OS"]
+  image --> integration["Bunny OS integration services"]
+  integration --> core["Bunny Core + loopback app-server"]
+  core --> desktop["Bunny Desktop + Bunny Box"]
+  desktop --> apps["User apps + developer tools"]
+

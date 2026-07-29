@@ -1,0 +1,24 @@
+[Unit]
+Description=Bunny OS per-user first-boot preferences
+Documentation=file:///usr/share/doc/bunny-os/DEVELOPER_IMAGE.md
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionPathExists=!%h/.config/bunny-os/first-boot-complete.json
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bunny-first-boot
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.config/bunny-os %h/.config/systemd/user
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=graphical-session.target
+

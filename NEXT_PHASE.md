@@ -1,0 +1,92 @@
+# Next work after the Phase 1 implementation pass
+
+Do not start a custom shell, compositor, visual redesign, installer experience, app store, or consumer release.
+
+The immediate next milestone is **Phase 1 validation closure**:
+
+1. provision trusted Fedora 44/KVM builder with digest-pinned base and unified image-builder;
+2. run compose/inspection/SBOM/vulnerability/license/two-build gates and fix real package/tool differences;
+3. boot QEMU/KVM and qualify services, first boot, network/listeners/privacy, health/update/rollback/recovery;
+4. enforce and test OCI signature policy plus update key ceremony;
+5. qualify SELinux domains and systemd security scores;
+6. obtain signed upstream Bunny 0.2.0 Linux artifacts and run lifecycle/protocol/rollback tests;
+7. run VMware/VirtualBox then named physical/Secure Boot/LUKS/GPU matrices.
+
+Upstream Bunny requirement: publish a signed x86-64 Linux Tauri release directory containing Bunny Desktop, `bunny-core`, `ccgrep`, protocol v3 schema/provenance, SHA-256/modes/source commit, updater signature, SBOM, and clean install/update/rollback evidence. No Bunny repository edit was made in this phase.
+
+## Phase 2 validation closure
+
+Phase 2 source has now been implemented on `feature/bunny-shell`, but the inherited Phase 1 blockers prevented the required boot preflight and the Phase 2 image/VM/accessibility definition of done. The next milestone remains validation closure:
+
+1. run `FULL_GATE=1 make gate-phase-2` on the pinned Fedora 44/KVM builder;
+2. fix real package, GLib schema, systemd, GNOME 50 extension, GDM session, portal, and SELinux findings;
+3. boot developer/shell/shell-test/recovery images and execute both VM matrices;
+4. install the signed Bunny artifact and qualify authenticated task/plan/approval/provider/degraded flows;
+5. execute Orca, keyboard, contrast/scale/motion, multi-monitor, suspend/resume, performance, privacy-egress, VMware/VirtualBox, and physical hardware tests;
+6. archive image provenance, checksums, SBOM, vulnerability/licence reports, VM logs, and exact configurations.
+
+Do not start Phase 3, an installer, app store, device provisioning/manufacturing, consumer distribution, or stable release work until these rows pass.
+
+## Phase 3 validation closure
+
+Phase 3 source work now exists on `feature/installer-and-beta-image`, but the inherited image blockers and absent Anaconda adapter prevent completion. Do not begin Phase 4. The next milestone is evidence closure:
+
+1. close Phase 1/2 builder, signed Bunny, registry, SELinux, GNOME, accessibility and VM blockers;
+2. pin/qualify Fedora 44 Anaconda Web UI, Blivet, cryptsetup, bootc and unified image-builder packages;
+3. implement and externally review the narrow authenticated Anaconda adapter and protected secret channel;
+4. build, sign, inspect and archive beta QCOW2/raw, live ISO, recovery, manifests, SBOMs, provenance and scans;
+5. pass disposable-disk empty/encrypted/free-space/manual/failure/power-loss suites and prove no secret leakage;
+6. pass UEFI/Secure Boot positive/negative, LUKS password/recovery and optional TPM fallback;
+7. install Phase 2 then upgrade/rollback/recovery with user, Bunny, workspace, plugin, application and model preservation;
+8. run Orca/keyboard/contrast/scale/motion/localisation and multi-user isolation;
+9. run VMware/VirtualBox then named physical Intel/AMD/NVIDIA/NVMe/Wi-Fi/HiDPI matrices;
+10. re-review Blocker/High findings and publish a beta candidate only when no Blocker remains.
+
+Stable release, OEM partnerships/manufacturing, public store operation, cloud services and fleet management remain prohibited.
+
+## Phase 5 qualification closure
+
+Phase 5 operations/source work now exists, but it did not cure the absent Phase 4/public-beta baseline. Do not begin Phase 6 or publish stable. The next action is evidence closure:
+
+1. complete Phases 1–3 image/runtime blockers and a production installer adapter;
+2. implement/validate Phase 4 and operate signed public-beta releases with privacy-safe issue/failure exports;
+3. reproduce confirmed defects, add regression tests, and issue immutable signed beta updates;
+4. produce a clean signed stable RC with SBOM, provenance, license/malware/reproducibility evidence;
+5. pass repeated install/encryption/update/rollback/recovery/migration/data-preservation matrices;
+6. pass multi-user, Bunny-disabled, local-only, listener/traffic, diagnostic, security/privacy/accessibility gates;
+7. qualify named kernels/drivers and physical hardware tiers, then complete power/pressure and multi-day soak;
+8. obtain all protected approvals and regenerate reports from evidence;
+9. publish only if `gate-stable-release` passes and the go/no-go report changes to `GO`.
+
+OEM manufacturing, custom firmware, enterprise fleet management, paid cloud services, mandatory accounts, advertising, data monetisation, and stable publication remain prohibited.
+
+## Phase 6 entry remains blocked
+
+The Phase 6 mandatory preflight is recorded in `docs/PHASE_6_BASELINE.md` and `PHASE_6_REPORT.md`. It stopped before branch creation or publication because the authoritative stable decision is `NO-GO`. Do not implement post-release operations or create `release/stable-1` until all of the following are true:
+
+1. complete Phase 4/public-beta operation with traceable issue, reliability, privacy, accessibility, recovery, and hardware evidence;
+2. close the five protected qualification blocker codes and every non-waivable stable blocker;
+3. create a new immutable RC from a clean protected commit with ISO/raw/QCOW2/recovery media, checksums, detached signatures, SBOM, package manifest, provenance, release notes, and known issues;
+4. pass independent signature verification, two-builder reproducibility, license/malware/supply-chain checks, and signing-key rotation/revocation recovery;
+5. pass installed clean/encrypted/offline/update/rollback/recovery/migration/multi-user/local-only/Bunny-disabled/privacy/accessibility/hardware/soak matrices;
+6. obtain the nine protected approvals and change `STABLE_RELEASE_GO_NO_GO.md` to evidence-backed `GO`;
+7. rerun `gate-stable-release` successfully before creating any stable branch, tag, support promise, download, announcement, mirror, or update promotion.
+
+## Phase 7 entry remains blocked
+
+The Phase 7 mandatory preflight is recorded in `docs/PHASE_7_BASELINE.md` and
+`PHASE_7_REPORT.md`. The requested feature branch exists, but implementation did
+not begin. Complete the Phase 6 closure sequence above, operate the stable
+release, finish the named post-release reviews, and rerun
+`gate-stable-release` successfully before adding OEM, enterprise-management,
+fleet, or encrypted-sync trust boundaries. No pilot, manufacturing, broad fleet
+deployment, or hosted-sync launch is authorised by this checkout.
+
+The immediate technical blocker is to consume a reviewed Fedora 44 update or
+supported rebase whose bootc-required Podman/Skopeo/Toolbox dependency set
+passes the pinned Grype gate, then rebuild from a digest-pinned base. After
+that, produce live and independent recovery media and continue the install,
+encryption, update/rollback/recovery, reproducibility, accessibility, and
+physical-hardware matrices.
+
+Until then, the next milestone is Phase 1–5 validation closure, not a stable release or a Phase 7 lifecycle.

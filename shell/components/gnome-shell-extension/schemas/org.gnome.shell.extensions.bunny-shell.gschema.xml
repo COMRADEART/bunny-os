@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.bunny-shell" path="/org/gnome/shell/extensions/bunny-shell/">
+    <key name="open-launcher" type="as"><default>['&lt;Super&gt;space']</default><summary>Open Bunny Launcher</summary></key>
+    <key name="open-bunny" type="as"><default>['&lt;Super&gt;b']</default><summary>Open Bunny command surface</summary></key>
+    <key name="open-terminal" type="as"><default>['&lt;Super&gt;t']</default><summary>Open the normal terminal</summary></key>
+    <key name="open-files" type="as"><default>['&lt;Super&gt;e']</default><summary>Open Files</summary></key>
+    <key name="open-approvals" type="as"><default>['&lt;Super&gt;&lt;Shift&gt;a']</default><summary>Open approvals without replacing GNOME Super+A</summary></key>
+    <key name="open-tasks" type="as"><default>['&lt;Super&gt;j']</default><summary>Open Bunny tasks</summary></key>
+    <key name="open-workspaces" type="as"><default>['&lt;Super&gt;w']</default><summary>Open Bunny workspaces</summary></key>
+  </schema>
+</schemalist>

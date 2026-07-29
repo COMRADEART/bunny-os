@@ -1,0 +1,1 @@
+"""Bunny Settings tests."""

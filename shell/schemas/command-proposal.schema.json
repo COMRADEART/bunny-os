@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/shell/command-proposal-1.schema.json",
+  "title": "Bunny Terminal command proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["command", "workingDirectory", "environmentChanges", "classification", "requiresApproval", "checkpointRequired", "sandboxRequired", "dryRunAvailable", "editable", "cloudHistoryDisclosureRequired", "executesAutomatically"],
+  "properties": {
+    "command": {"type": "string", "minLength": 1, "maxLength": 8192},
+    "workingDirectory": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "environmentChanges": {"type": "object", "maxProperties": 64, "additionalProperties": {"type": "string", "maxLength": 4096}},
+    "classification": {"enum": ["read_only", "workspace_write", "system_change", "network_action", "destructive", "unknown"]},
+    "requiresApproval": {"type": "boolean"},
+    "checkpointRequired": {"type": "boolean"},
+    "sandboxRequired": {"type": "boolean"},
+    "dryRunAvailable": {"type": "boolean"},
+    "editable": {"const": true},
+    "cloudHistoryDisclosureRequired": {"const": true},
+    "executesAutomatically": {"const": false}
+  }
+}

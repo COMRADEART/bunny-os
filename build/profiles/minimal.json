@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "minimal",
+  "base": "fedora-bootc-44",
+  "packageSets": ["common", "minimal"],
+  "desktop": "none",
+  "imageTypes": ["qcow2"],
+  "rootFilesystem": "ext4",
+  "bunnyArtifact": "none"
+}
+

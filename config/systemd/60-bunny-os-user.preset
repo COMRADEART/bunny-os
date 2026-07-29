@@ -1,0 +1,4 @@
+enable bunny-first-boot.service
+enable bunny-first-run.service
+disable bunny-desktop.service
+disable bunny-shell.target

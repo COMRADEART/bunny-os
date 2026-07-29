@@ -1,0 +1,5 @@
+[org/gnome/shell]
+enabled-extensions=['bunny-shell@bunny-os.org']
+
+[org/gnome/desktop/interface]
+enable-animations=true

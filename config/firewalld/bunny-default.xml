@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zone target="DROP">
+  <short>Bunny OS default</short>
+  <description>Deny unsolicited inbound traffic. Loopback and stateful replies are handled by the firewall core; user services require explicit opt-in.</description>
+</zone>
+

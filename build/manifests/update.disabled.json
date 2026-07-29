@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "channel": "developer",
+  "manifestUrl": "https://updates.invalid.bunny-os.example/developer/x86_64/manifest.json",
+  "imageRepositories": ["quay.io/comradeart/bunny-os"]
+}
+

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "status": "unqualified",
+  "applications": [
+    {"category":"Browser","application":"Firefox","maintenanceOwner":"Fedora package maintainers","updateSource":"image-owned Fedora RPM","licence":"requires generated SBOM confirmation","securityUpdatePath":"OS maintenance image","accessibilityStatus":"runtime untested","reason":"standards-based web access"},
+    {"category":"Terminal","application":"GNOME Terminal","maintenanceOwner":"Fedora package maintainers","updateSource":"image-owned Fedora RPM","licence":"requires generated SBOM confirmation","securityUpdatePath":"OS maintenance image","accessibilityStatus":"runtime untested","reason":"conventional Linux recovery and administration"},
+    {"category":"File manager","application":"GNOME Files","maintenanceOwner":"Fedora package maintainers","updateSource":"image-owned Fedora RPM","licence":"requires generated SBOM confirmation","securityUpdatePath":"OS maintenance image","accessibilityStatus":"runtime untested","reason":"conventional local file management"},
+    {"category":"Settings","application":"GNOME Settings","maintenanceOwner":"Fedora package maintainers","updateSource":"image-owned Fedora RPM","licence":"requires generated SBOM confirmation","securityUpdatePath":"OS maintenance image","accessibilityStatus":"runtime untested","reason":"retained platform configuration"},
+    {"category":"Bunny Desktop","application":"Bunny Desktop placeholder","maintenanceOwner":"unknown","updateSource":"no signed production artifact","licence":"unqualified","securityUpdatePath":"unqualified","accessibilityStatus":"runtime untested","reason":"not eligible for stable inclusion until upstream artifact qualification"}
+  ]
+}

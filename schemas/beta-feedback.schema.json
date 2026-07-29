@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/beta-feedback-1.schema.json",
+  "title": "Bunny OS beta feedback import",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reports"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "reports": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "$ref": "#/$defs/report" }
+    }
+  },
+  "$defs": {
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "sourceId", "affectedVersion", "component", "severity", "reproducibility", "environment", "owner", "targetRelease", "workaround", "verificationStatus", "closureEvidence", "symptomText", "affectedWorkflow"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "sourceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "affectedVersion": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "component": { "type": "string", "enum": ["Boot", "Installer", "Encryption", "Secure Boot", "Recovery", "Updates", "Rollback", "Kernel", "Firmware", "Graphics", "Display", "Wi-Fi", "Bluetooth", "Audio", "Camera", "Suspend", "Power", "Bunny Shell", "Bunny Core", "Bunny Desktop", "Privileged broker", "Applications", "Flatpak", "Accessibility", "Privacy", "Security", "Performance", "Documentation"] },
+        "severity": { "type": "string", "enum": ["Blocker", "Critical", "High", "Medium", "Low", "Enhancement"] },
+        "reproducibility": { "type": "string", "enum": ["always", "intermittent", "once", "not_reproduced", "unknown"] },
+        "environment": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean", "null"] }, "maxProperties": 32 },
+        "owner": { "type": "string", "maxLength": 128 },
+        "targetRelease": { "type": "string", "maxLength": 128 },
+        "workaround": { "type": "string", "maxLength": 2048 },
+        "verificationStatus": { "type": "string", "enum": ["unverified", "reproduced", "fix_pending", "fixed_unverified", "verified", "closed"] },
+        "closureEvidence": { "type": "string", "maxLength": 2048 },
+        "symptomText": { "type": "string", "maxLength": 4096 },
+        "affectedWorkflow": { "type": "string", "maxLength": 256 },
+        "errorSignature": { "type": "string", "maxLength": 256 },
+        "stackSignature": { "type": "string", "maxLength": 256 },
+        "hardwareClass": { "type": "string", "maxLength": 256 },
+        "kernelVersion": { "type": "string", "maxLength": 128 },
+        "imageVersion": { "type": "string", "maxLength": 128 },
+        "evidenceLinks": { "type": "array", "maxItems": 32, "items": { "type": "string", "pattern": "^https://" } }
+      }
+    }
+  }
+}

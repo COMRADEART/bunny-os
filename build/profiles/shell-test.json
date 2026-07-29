@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "shell-test",
+  "base": "fedora-bootc-44",
+  "packageSets": ["common", "desktop", "shell", "developer"],
+  "desktop": "bunny-gnome-wayland-test",
+  "imageTypes": ["qcow2"],
+  "rootFilesystem": "ext4",
+  "bunnyArtifact": "verified-or-explicit-placeholder"
+}

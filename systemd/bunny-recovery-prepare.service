@@ -1,0 +1,27 @@
+[Unit]
+Description=Validate a scheduled Bunny OS recovery boot
+Documentation=file:///usr/share/doc/bunny-os/RECOVERY.md
+ConditionPathExists=/var/lib/bunny-os/recovery/scheduled.json
+Before=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bunny-recovery-prepare
+User=root
+Group=root
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadOnlyPaths=/usr
+ReadWritePaths=/var/lib/bunny-os/recovery
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+TimeoutStartSec=20s
+

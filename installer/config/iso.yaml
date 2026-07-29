@@ -1,0 +1,18 @@
+label: "Bunny-OS-Beta"
+grub2:
+  entries:
+    - name: "Try or Install Bunny OS"
+      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Bunny-OS-Beta inst.webui console=tty0 rhgb quiet"
+      initrd: "/images/pxeboot/initrd.img"
+    - name: "Safe Graphics"
+      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Bunny-OS-Beta inst.webui console=tty0 nomodeset rd.driver.blacklist=nouveau quiet"
+      initrd: "/images/pxeboot/initrd.img"
+    - name: "Recovery Tools"
+      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Bunny-OS-Beta systemd.unit=bunny-recovery.target console=tty0"
+      initrd: "/images/pxeboot/initrd.img"
+    - name: "Verify Installation Media"
+      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Bunny-OS-Beta rd.live.check inst.webui console=tty0"
+      initrd: "/images/pxeboot/initrd.img"
+    - name: "Try or Install Bunny OS (serial console)"
+      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Bunny-OS-Beta inst.webui console=tty0 console=ttyS0,115200n8"
+      initrd: "/images/pxeboot/initrd.img"

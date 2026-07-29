@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.invalid/schemas/first-run.schema.json",
+  "title": "Bunny OS per-user first-run state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "currentStep", "completed", "preferences", "providerAliases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "currentStep": { "enum": ["welcome", "language_region", "keyboard", "privacy", "updates", "user_profile", "bunny_introduction", "provider_setup", "local_model_setup", "search_locations", "permissions_overview", "backup_recovery", "finish"] },
+    "completed": { "type": "boolean" },
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "telemetry": { "type": "boolean" },
+        "cloudAIConfigured": { "type": "boolean" },
+        "remoteDiagnostics": { "type": "boolean" },
+        "screenAccess": { "type": "boolean" },
+        "microphoneAccess": { "type": "boolean" },
+        "cameraAccess": { "type": "boolean" },
+        "searchLocations": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 4096 } },
+        "pluginNetworkAccess": { "type": "boolean" },
+        "bunnyAtLogin": { "type": "boolean" },
+        "bunnyMode": { "enum": ["configure_later", "local_only", "manual", "enabled"] },
+        "backup": { "enum": ["configure_later", "local", "external"] }
+      }
+    },
+    "providerAliases": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$" } }
+  }
+}

@@ -1,0 +1,23 @@
+[Unit]
+Description=Bunny OS first-run experience
+Documentation=file:///usr/share/doc/bunny-os/FIRST_RUN.md
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionPathExists=!%S/bunny-os/first-run-complete
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bunny-first-run
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%S/bunny-os
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=graphical-session.target

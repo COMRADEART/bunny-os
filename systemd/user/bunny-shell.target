@@ -1,0 +1,7 @@
+[Unit]
+Description=Bunny Shell user session
+Documentation=file:///usr/share/doc/bunny-os/BUNNY_SHELL.md
+Wants=bunny-shell-status.service bunny-search-index.timer
+After=graphical-session-pre.target
+PartOf=graphical-session.target
+StopWhenUnneeded=yes

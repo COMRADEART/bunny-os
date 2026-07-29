@@ -1,0 +1,11 @@
+flowchart TD
+  check["HTTPS manifest"] --> signature{"Ed25519 trusted and unrevoked?"}
+  signature -->|no| fail["record failure; preserve deployment"]
+  signature -->|yes| compatibility{"channel, expiry, sequence, arch, contract, Bunny, space"}
+  compatibility -->|no| fail
+  compatibility -->|yes| digest["trusted OCI ref@sha256"]
+  digest --> switch["bootc switch stages deployment"]
+  switch --> reboot["explicit authorized reboot"]
+  reboot --> health["offline health checks"]
+  health --> success["mark boot successful"]
+

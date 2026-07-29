@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Install Bunny OS
+GenericName=System Installer
+Comment=Install Bunny OS with explicit storage review
+Exec=bunny-installer gui
+Icon=bunny-shell
+Terminal=false
+Categories=System;Settings;
+Keywords=Install;Disk;Encryption;Recovery;
+StartupNotify=true
+NoDisplay=false

@@ -1,0 +1,2 @@
+"""Unprivileged installer presentation."""
+

@@ -1,0 +1,32 @@
+[Unit]
+Description=Bunny OS boot health check
+Documentation=file:///usr/share/doc/bunny-os/UPDATES.md
+After=local-fs.target bunny-system-broker.socket
+Wants=bunny-system-broker.socket
+Before=boot-complete.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bunny-health-check
+User=root
+Group=root
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectHome=read-only
+ProtectSystem=strict
+ReadWritePaths=/var/lib/bunny-os/health /var/lib/bunny
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+TimeoutStartSec=45s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

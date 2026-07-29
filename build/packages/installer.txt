@@ -1,0 +1,23 @@
+# Fedora Anaconda Web UI and bootc generic ISO runtime.
+anaconda
+anaconda-live
+anaconda-webui
+anaconda-install-img-deps
+anaconda-dracut
+dracut-config-generic
+dracut-network
+net-tools
+grub2-efi-x64-cdboot
+grub2-pc-modules
+plymouth
+default-fonts-core-sans
+default-fonts-other-sans
+google-noto-sans-cjk-fonts
+xorriso
+squashfs-tools
+podman
+
+# Diagnostics available without network access.
+smartmontools
+nvme-cli
+memtest86+

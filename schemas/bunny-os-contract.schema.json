@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/bunny-os-contract-1.0.0.schema.json",
+  "title": "Bunny OS integration contract",
+  "description": "OS integration types. This contract version is independent of the Bunny app protocol version.",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/capabilities" },
+    { "$ref": "#/$defs/request" },
+    { "$ref": "#/$defs/response" },
+    { "$ref": "#/$defs/notification" }
+  ],
+  "$defs": {
+    "contractVersion": { "const": "1.0.0" },
+    "state": {
+      "type": "string",
+      "enum": ["detected", "driver-available", "driver-active", "runtime-verified", "unsupported", "unknown"]
+    },
+    "capabilityEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "state", "evidence"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "state": { "$ref": "#/$defs/state" },
+        "evidence": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 512 } }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind", "contractVersion", "osVersion", "imageVersion", "architecture",
+        "secureBoot", "tpmAvailable", "sandboxBackends", "gpuCapabilities",
+        "updateBackend", "recoveryAvailable", "privilegedBrokerVersion",
+        "bunnyProtocolVersions", "desktopIntegration"
+      ],
+      "properties": {
+        "kind": { "const": "capabilities" },
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "osVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$" },
+        "imageVersion": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "architecture": { "type": "string", "enum": ["x86_64", "aarch64", "unknown"] },
+        "secureBoot": { "type": "boolean" },
+        "tpmAvailable": { "type": "boolean" },
+        "sandboxBackends": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/capabilityEvidence" } },
+        "gpuCapabilities": { "type": "array", "items": { "$ref": "#/$defs/capabilityEvidence" } },
+        "updateBackend": { "const": "bootc" },
+        "recoveryAvailable": { "type": "boolean" },
+        "privilegedBrokerVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "bunnyProtocolVersions": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "contains": { "const": 3 } },
+        "desktopIntegration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["packaging", "artifactStatus", "launcher", "urlScheme", "notifications", "fileDialogs"],
+          "properties": {
+            "packaging": { "enum": ["versioned-opt", "rpm", "placeholder"] },
+            "artifactStatus": { "enum": ["verified", "placeholder", "absent"] },
+            "launcher": { "const": "art.comrade.Bunny.desktop" },
+            "urlScheme": { "const": "bunny" },
+            "notifications": { "const": "freedesktop" },
+            "fileDialogs": { "const": "xdg-desktop-portal" }
+          }
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "id", "method", "params", "timestamp", "nonce"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$" },
+        "method": {
+          "type": "string",
+          "enum": [
+            "system.status.read", "power.shutdown", "power.reboot", "power.suspend",
+            "service.status.read", "network.status.read", "update.status.read",
+            "update.check", "update.stage", "update.install", "update.preference.set", "rollback.list",
+            "rollback.select", "recovery.status.read", "recovery.schedule",
+            "logs.export", "hardware.inventory.read", "request.cancel"
+          ]
+        },
+        "params": { "type": "object", "maxProperties": 4 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "nonce": { "type": "string", "pattern": "^[A-Za-z0-9_-]{22,128}$" }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "method": { "enum": [
+                  "system.status.read", "power.shutdown", "power.reboot", "power.suspend",
+                  "network.status.read", "update.status.read", "update.check", "update.stage",
+                  "update.install", "rollback.list", "rollback.select", "recovery.status.read",
+                  "hardware.inventory.read"
+                ] },
+                "params": { "$ref": "#/$defs/emptyParams" }
+              }
+            },
+            {
+              "properties": {
+                "method": { "const": "update.preference.set" },
+                "params": { "$ref": "#/$defs/enabledParams" }
+              }
+            },
+            {
+              "properties": {
+                "method": { "const": "service.status.read" },
+                "params": { "$ref": "#/$defs/serviceParams" }
+              }
+            },
+            {
+              "properties": {
+                "method": { "const": "recovery.schedule" },
+                "params": { "$ref": "#/$defs/recoveryParams" }
+              }
+            },
+            {
+              "properties": {
+                "method": { "const": "logs.export" },
+                "params": { "$ref": "#/$defs/logParams" }
+              }
+            },
+            {
+              "properties": {
+                "method": { "const": "request.cancel" },
+                "params": { "$ref": "#/$defs/cancelParams" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "emptyParams": { "type": "object", "additionalProperties": false, "maxProperties": 0 },
+    "serviceParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["service"],
+      "properties": {
+        "service": { "enum": [
+          "bunny-system-broker.service", "bunny-update-agent@check.service",
+          "bunny-update-agent@stage.service", "bunny-update-agent@install.service",
+          "bunny-health-check.service", "bunny-recovery-prepare.service",
+          "firewalld.service", "NetworkManager.service", "gdm.service"
+        ] }
+      }
+    },
+    "recoveryParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": { "mode": { "enum": ["recovery", "safe-graphics"] } }
+    },
+    "enabledParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": { "enabled": { "type": "boolean" } }
+    },
+    "logParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "sinceMinutes": { "type": "integer", "minimum": 1, "maximum": 1440, "default": 60 } }
+    },
+    "cancelParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requestId"],
+      "properties": { "requestId": { "type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$" } }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "id", "ok"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "id": { "type": ["string", "null"] },
+        "ok": { "type": "boolean" },
+        "result": {},
+        "error": { "$ref": "#/$defs/error" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "ok": { "const": true } } },
+          "then": { "required": ["result"], "not": { "required": ["error"] } },
+          "else": { "required": ["error"], "not": { "required": ["result"] } }
+        }
+      ]
+    },
+    "notification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "event", "sequence", "timestamp", "data"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "event": { "enum": ["os.status.changed", "update.status.changed", "recovery.scheduled", "power.event", "session.event"] },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "data": { "type": "object" }
+      }
+    }
+  }
+}

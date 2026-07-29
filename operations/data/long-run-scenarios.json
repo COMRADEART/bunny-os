@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    {"id":"LONG-001","name":"24-hour idle","minimumHours":24,"fixture":"physical-or-KVM-installed-candidate","measurements":["crashes","memory","CPU","network","power"],"status":"NOT_RUN","evidence":""},
+    {"id":"LONG-002","name":"72-hour idle","minimumHours":72,"fixture":"physical-installed-candidate","measurements":["crashes","memory","CPU","network","suspendDrain"],"status":"NOT_RUN","evidence":""},
+    {"id":"LONG-003","name":"24-hour normal use","minimumHours":24,"fixture":"physical-installed-candidate","measurements":["crashes","OOM","storageGrowth","responsiveness"],"status":"NOT_RUN","evidence":""},
+    {"id":"LONG-004","name":"Repeated suspend and resume","minimumHours":24,"fixture":"supported-laptop-candidate","measurements":["cycleCount","failures","batteryDrain"],"status":"NOT_RUN","evidence":""},
+    {"id":"LONG-005","name":"Repeated network loss","minimumHours":24,"fixture":"KVM-network-fault-candidate","measurements":["recovery","dataLoss","serviceFailures"],"status":"NOT_RUN","evidence":""},
+    {"id":"LONG-006","name":"Repeated application and Bunny lifecycle","minimumHours":24,"fixture":"installed-candidate","measurements":["crashes","leaks","restartIsolation"],"status":"NOT_RUN","evidence":""}
+  ]
+}

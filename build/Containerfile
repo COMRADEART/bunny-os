@@ -1,0 +1,47 @@
+# syntax=docker/dockerfile:1
+ARG BASE_IMAGE=quay.io/fedora/fedora-bootc:44
+FROM ${BASE_IMAGE}
+
+ARG BUNNY_PROFILE=developer
+ARG BUNNY_OS_VERSION=0.1.0
+ARG BUNNY_IMAGE_VERSION=0.1.0-dev
+ARG BUNNY_SOURCE_COMMIT=unknown
+ARG SOURCE_DATE_EPOCH=0
+ARG BASE_IMAGE
+ARG BUNNY_RELEASE_BUILD=0
+
+LABEL org.opencontainers.image.title="Bunny OS" \
+      org.opencontainers.image.version="${BUNNY_OS_VERSION}" \
+      org.opencontainers.image.revision="${BUNNY_SOURCE_COMMIT}" \
+      org.opencontainers.image.base.name="${BASE_IMAGE}" \
+      art.comrade.bunny-os.contract="1.0.0" \
+      containers.bootc="1"
+
+COPY build /tmp/bunny-os/build
+COPY config /tmp/bunny-os/config
+COPY desktop-integration /tmp/bunny-os/desktop-integration
+COPY docs /tmp/bunny-os/docs
+COPY installer /tmp/bunny-os/installer
+COPY ARCHITECTURE.md README.md /tmp/bunny-os/
+COPY schemas /tmp/bunny-os/schemas
+COPY scripts /tmp/bunny-os/scripts
+COPY selinux /tmp/bunny-os/selinux
+COPY services /tmp/bunny-os/services
+COPY shell /tmp/bunny-os/shell
+COPY systemd /tmp/bunny-os/systemd
+COPY tools /tmp/bunny-os/tools
+
+RUN /usr/bin/python3 /tmp/bunny-os/build/scripts/install-packages.py \
+      --profile "${BUNNY_PROFILE}" \
+      --release-build "${BUNNY_RELEASE_BUILD}" \
+      --root /tmp/bunny-os/build/packages && \
+    /usr/bin/python3 /tmp/bunny-os/build/scripts/install-root.py \
+      --source /tmp/bunny-os \
+      --profile "${BUNNY_PROFILE}" \
+      --os-version "${BUNNY_OS_VERSION}" \
+      --image-version "${BUNNY_IMAGE_VERSION}" \
+      --source-commit "${BUNNY_SOURCE_COMMIT}" \
+      --source-date-epoch "${SOURCE_DATE_EPOCH}" \
+      --base-image "${BASE_IMAGE}" && \
+    /usr/bin/dnf clean all && \
+    rm -rf /var/cache/dnf /tmp/bunny-os

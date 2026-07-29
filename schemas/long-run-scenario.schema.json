@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/long-run-scenario-1.schema.json",
+  "title": "Bunny OS long-duration scenario catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scenarios"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "minimumHours", "fixture", "measurements", "status", "evidence"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^LONG-[0-9]{3}$" },
+          "name": { "type": "string" },
+          "minimumHours": { "type": "integer", "minimum": 1 },
+          "fixture": { "type": "string" },
+          "measurements": { "type": "array", "items": { "type": "string" } },
+          "status": { "type": "string", "enum": ["NOT_RUN", "RUNNING", "PASS", "FAIL", "BLOCKED"] },
+          "evidence": { "type": "string" }
+        }
+      }
+    }
+  }
+}

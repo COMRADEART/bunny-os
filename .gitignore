@@ -8,3 +8,9 @@
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Bunny OS generated validation/build outputs
+build/out/
+.selfcheck-tmp/
+__pycache__/
+*.py[cod]

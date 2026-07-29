@@ -1,0 +1,23 @@
+# Mature Wayland desktop and portal integration; no custom compositor.
+gdm
+gnome-shell
+gnome-session-wayland-session
+gnome-control-center
+gnome-initial-setup
+gnome-terminal
+nautilus
+nautilus-python
+zenity
+xdg-desktop-portal-gnome
+adwaita-icon-theme
+python3-gobject
+gtk4
+libadwaita
+gnome-extensions-app
+dconf
+at-spi2-core
+orca
+mousetweaks
+mesa-dri-drivers
+mesa-vulkan-drivers
+vulkan-tools

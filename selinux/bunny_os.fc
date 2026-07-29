@@ -1,0 +1,10 @@
+/usr/libexec/bunny-system-broker                 -- gen_context(system_u:object_r:bunny_broker_exec_t,s0)
+/usr/libexec/bunny-update-agent                  -- gen_context(system_u:object_r:bunny_update_exec_t,s0)
+/opt/bunny/releases/[^/]+/bunny-core             -- gen_context(system_u:object_r:bunny_core_exec_t,s0)
+/opt/bunny/releases/[^/]+/bunny-app-server       -- gen_context(system_u:object_r:bunny_app_server_exec_t,s0)
+/opt/bunny/releases/[^/]+/bunny-desktop          -- gen_context(system_u:object_r:bunny_desktop_exec_t,s0)
+/var/lib/bunny(/.*)?                                gen_context(system_u:object_r:bunny_var_lib_t,s0)
+/var/lib/bunny-os(/.*)?                             gen_context(system_u:object_r:bunny_var_lib_t,s0)
+/var/log/bunny(/.*)?                                gen_context(system_u:object_r:bunny_var_log_t,s0)
+/run/bunny(/.*)?                                    gen_context(system_u:object_r:bunny_runtime_t,s0)
+

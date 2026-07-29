@@ -1,0 +1,28 @@
+[Unit]
+Description=Prepare the ephemeral Bunny OS live session
+Documentation=file:///usr/share/doc/bunny-os/INSTALLER_ARCHITECTURE.md
+Before=gdm.service
+ConditionPathExists=!/run/bunny-installer/live-session
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bunny-live-session
+RemainAfterExit=yes
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/run/bunny-installer /home /etc/passwd /etc/shadow /etc/group /etc/gshadow
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+UMask=0022
+
+[Install]
+WantedBy=graphical.target

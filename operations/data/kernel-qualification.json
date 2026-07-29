@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "stableDefaultKernel": "unknown",
+  "hardwareEnablementKernel": "not-selected",
+  "emergencyFallbackKernel": "unknown",
+  "supportLifetime": "unknown",
+  "updateCadence": "only after candidate qualification",
+  "rollbackPolicy": "preserve and test the previous deployment",
+  "tests": {
+    "boot":"NOT_RUN","encryption":"NOT_RUN","secureBoot":"NOT_RUN","graphics":"NOT_RUN","wifi":"NOT_RUN","bluetooth":"NOT_RUN","audio":"NOT_RUN","suspend":"NOT_RUN","resume":"NOT_RUN","nvme":"NOT_RUN","usb":"NOT_RUN","virtualMachines":"NOT_RUN","localModelAcceleration":"NOT_RUN"
+  }
+}

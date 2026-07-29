@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Bunny
+Comment=Local-first Bunny Desktop
+Exec=/usr/libexec/bunny-desktop-launch %U
+Icon=art.comrade.Bunny
+Terminal=false
+Categories=Utility;Development;
+MimeType=x-scheme-handler/bunny;
+StartupNotify=true
+DBusActivatable=false
+

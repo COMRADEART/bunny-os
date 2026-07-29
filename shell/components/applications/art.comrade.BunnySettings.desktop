@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Bunny Settings
+Comment=System settings, privacy, updates, recovery, and Bunny preferences
+Exec=/usr/bin/bunny-settings
+Icon=bunny-settings
+Terminal=false
+Categories=Settings;System;
+Keywords=Privacy;Updates;Recovery;Accessibility;AI;
+StartupNotify=true

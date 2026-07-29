@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/stable-qualification-1.schema.json",
+  "title": "Bunny OS stable qualification evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "candidateVersion", "evidence", "approvals", "blockers"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "candidateVersion": { "type": ["string", "null"], "maxLength": 128 },
+    "evidence": { "type": "object", "additionalProperties": { "type": "string", "enum": ["PASS", "FAIL", "BLOCKED", "UNKNOWN", "NOT_RUN"] } },
+    "approvals": { "type": "object", "additionalProperties": { "type": "string", "enum": ["APPROVED", "REJECTED", "PENDING", "MISSING"] } },
+    "blockers": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+  }
+}

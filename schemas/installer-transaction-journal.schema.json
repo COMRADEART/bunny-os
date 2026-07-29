@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/installer-transaction-journal-1.schema.json",
+  "title": "Bunny OS installer transaction journal export",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "installationId", "rollbackAfterDestructiveWrite", "operations"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "installationId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "rollbackAfterDestructiveWrite": { "const": false },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["operationId", "description", "destructive", "resumeSafe", "state", "history"],
+        "properties": {
+          "operationId": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "description": { "type": "string", "maxLength": 256 },
+          "destructive": { "type": "boolean" },
+          "resumeSafe": { "type": "boolean" },
+          "state": { "type": "string", "enum": ["not_started", "planned", "validated", "started", "completed", "failed"] },
+          "history": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+# category: boot and image management
+bootc
+kernel
+dracut
+efibootmgr
+shim-x64
+grub2-efi-x64
+greenboot
+greenboot-default-health-checks
+
+# category: firmware and storage
+linux-firmware
+fwupd
+udisks2
+e2fsprogs
+xfsprogs
+btrfs-progs
+dosfstools
+cryptsetup
+
+# category: base userspace and diagnostics
+python3
+openssl
+util-linux
+procps-ng
+iproute
+iputils
+ethtool
+pciutils
+usbutils
+jq
+tar
+gzip
+
+# category: networking and security
+NetworkManager
+NetworkManager-wifi
+firewalld
+polkit
+selinux-policy-targeted
+policycoreutils
+bubblewrap
+flatpak
+xdg-desktop-portal
+
+# category: audio, Bluetooth, printing
+pipewire
+wireplumber
+bluez
+cups
+

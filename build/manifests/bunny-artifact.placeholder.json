@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "status": "placeholder",
+  "bunnyVersion": "0.2.0",
+  "protocolVersion": 3,
+  "contractRange": ">=1.0.0 <2.0.0",
+  "architecture": "x86_64",
+  "runtimeMode": "placeholder",
+  "sourceCommit": "f27fa63e0406e91149aeacf8437c36b960e09961",
+  "files": []
+}
+

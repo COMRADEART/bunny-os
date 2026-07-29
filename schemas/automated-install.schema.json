@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.invalid/schemas/automated-install.schema.json",
+  "title": "Bunny OS explicit test automation configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "automation", "target", "locale", "keyboard", "timezone", "partitionProfile", "network", "applicationProfile"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "automation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "testEnvironment", "confirmation"],
+      "properties": {
+        "enabled": { "const": true },
+        "testEnvironment": { "const": true },
+        "confirmation": { "const": "BUNNY_OS_DISPOSABLE_TEST_DISK" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["diskId", "expectedSizeBytes", "virtual"],
+      "properties": {
+        "diskId": { "type": "string", "pattern": "^disk-[a-f0-9]{16}$" },
+        "expectedSizeBytes": { "type": "integer", "minimum": 42949672960 },
+        "virtual": { "const": true }
+      }
+    },
+    "locale": { "type": "string", "maxLength": 35 },
+    "keyboard": { "type": "string", "maxLength": 35 },
+    "timezone": { "type": "string", "maxLength": 64 },
+    "partitionProfile": { "enum": ["erase", "encrypted-erase"] },
+    "network": { "const": "skip" },
+    "applicationProfile": { "enum": ["offline-essential", "standard", "developer"] }
+  }
+}
