@@ -1,0 +1,48 @@
+[Unit]
+Description=Generate the per-device BrlAPI authorisation key
+Documentation=file:///usr/share/doc/bunny-os/IMAGE_FINALISATION.md
+# The key must exist before brltty starts, or the braille display is
+# unauthorised for the whole session. Ordering is Before=brltty rather than a
+# generic first-boot target because accessibility must not wait behind anything
+# it does not have to.
+After=local-fs.target systemd-tmpfiles-setup.service
+Before=brltty.service brltty-udev.service basic.target
+DefaultDependencies=no
+# ConditionPathExists with a leading ! runs the unit only when the key is
+# absent. It is not a first-boot marker: if the key is ever lost — a failed
+# update, a restored backup, a recovery action — this regenerates it, because
+# the failure mode of no key is no braille output.
+ConditionPathExists=!/etc/brlapi.key
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/bunny-brlapi-key
+User=root
+Group=root
+NoNewPrivileges=yes
+# CHOWN is required to hand the key to the brlapi group, and nothing else is.
+CapabilityBoundingSet=CAP_CHOWN CAP_FOWNER
+PrivateDevices=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/etc
+RestrictAddressFamilies=
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+UMask=0077
+TimeoutStartSec=30s
+StandardOutput=journal
+# The generator never prints the key. StandardError carries only the
+# group-missing warning, and a secret in a journal is a secret in every support
+# bundle downstream of it.
+StandardError=journal
+
+[Install]
+WantedBy=sysinit.target

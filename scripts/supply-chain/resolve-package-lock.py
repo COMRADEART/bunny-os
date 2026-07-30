@@ -28,6 +28,7 @@ import datetime as _datetime
 import hashlib
 import json
 from pathlib import Path
+import re
 import shlex
 import subprocess
 import sys
@@ -75,8 +76,13 @@ shift || true
 mkdir -p /downloads
 found=0
 while IFS= read -r rpm; do
+    # The repository id goes in a directory name, not in the file name. A first
+    # attempt joined them with `%%` and `rpm -qp` read that as a format escape,
+    # collapsed it to a single `%`, and then could not open the file it had just
+    # been given.
     repo="$(basename "$(dirname "$(dirname "${rpm}")")")"
-    cp -n "${rpm}" "/downloads/${repo}%%$(basename "${rpm}")"
+    mkdir -p "/downloads/${repo}"
+    cp -n "${rpm}" "/downloads/${repo}/$(basename "${rpm}")"
     found=$((found + 1))
 done < <(find /var/cache/libdnf5 -type f -name '*.rpm')
 echo "copied ${found} packages out of the transaction cache"
@@ -200,9 +206,12 @@ def main() -> int:
         ).strip()
         name, epoch, version, release, arch, source_rpm, licence, signature, size = line.split("\t")
         digest = hashlib.sha256(rpm.read_bytes()).hexdigest()
-        repository, _, file_name = rpm.name.partition("%%")
-        if not file_name:
-            repository, file_name = "unknown", rpm.name
+        # dnf5 names its cache directory `<repoid>-<hash>`. Both are recorded:
+        # the id is what a repository definition calls itself, and the hash is
+        # what distinguishes two configurations of the same id.
+        cache_directory = rpm.parent.name
+        repository = re.sub(r"-[0-9a-f]{8,}$", "", cache_directory) or cache_directory
+        file_name = rpm.name
         records.append(
             {
                 "name": name,
@@ -214,6 +223,7 @@ def main() -> int:
                 "size": rpm.stat().st_size,
                 "installedSize": int(size),
                 "sourceRepository": repository,
+                "repositoryCacheKey": cache_directory,
                 "sourceRpm": source_rpm,
                 "licence": licence,
                 "signature": signature,
