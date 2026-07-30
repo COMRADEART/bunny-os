@@ -81,7 +81,7 @@ H2-run.json                 the same for H2
 H1-artifacts/               what the run uploaded before failing:
                               ci/runner-environment.txt
                               qualification/hydrated-inputs.json
-H2-artifacts/               H2 uploaded nothing; it failed at the same step
+H2-artifacts/               the same two files; H2 failed at the same step
 ```
 
 `hydrated-inputs.json` is the interesting file: it records the three inputs
