@@ -303,6 +303,29 @@ def verify_against_lock(before: set[str], after: set[str], snapshot_root: Path) 
     }
     newly_installed = after - before
 
+    # Configuring `gpgkey=` makes rpm import the key, and an imported key becomes
+    # a `gpg-pubkey` pseudo-package in the database. It is a real new rpmdb entry
+    # and the accounting check was right to notice it; it is not a package from
+    # any repository, so it cannot be in the snapshot lock.
+    #
+    # It is allowed by name and then checked, rather than filtered out: the
+    # version field of a gpg-pubkey entry is the key's fingerprint, and every
+    # package in the snapshot recorded the key id that signed it. So each
+    # imported key must be one that actually signed something here. A key that
+    # signed nothing has no business being trusted by this image.
+    signing_key_ids = {
+        str(entry.get("signingKey", "")).lower()
+        for entry in json.loads(manifest.read_text(encoding="utf-8"))
+        if entry.get("signingKey")
+    }
+    imported_keys = {name for name in newly_installed if name.startswith("gpg-pubkey-")}
+    unexpected_keys = [
+        name
+        for name in sorted(imported_keys)
+        if not any(key_id and key_id in name.lower() for key_id in signing_key_ids)
+    ]
+    newly_installed = newly_installed - imported_keys
+
     missing = sorted(locked - after)
     unaccounted = sorted(newly_installed - locked)
 
@@ -317,6 +340,13 @@ def verify_against_lock(before: set[str], after: set[str], snapshot_root: Path) 
             + ", ".join(unaccounted[:10])
             + " — something was obtained from a source this build did not record"
         )
+    if unexpected_keys:
+        problems.append(
+            f"{len(unexpected_keys)} GPG keys were imported that signed nothing in this snapshot: "
+            + ", ".join(unexpected_keys)
+            + " — a key that signed none of the installed packages should not be trusted by "
+            "this image"
+        )
     if problems:
         raise SystemExit(
             "hermetic build: the installed set does not match the snapshot lock:\n  "
@@ -324,7 +354,8 @@ def verify_against_lock(before: set[str], after: set[str], snapshot_root: Path) 
         )
     print(
         f"hermetic install: {len(newly_installed)} packages installed, all {len(locked)} locked "
-        "packages accounted for"
+        f"packages accounted for; {len(imported_keys)} signing key(s) imported, each of which "
+        "signed packages in this snapshot"
     )
 
 
