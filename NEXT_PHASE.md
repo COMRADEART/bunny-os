@@ -324,3 +324,40 @@ hardware or people. Item 7 is the owner's.
 
 Do not begin Phase 8. Do not manufacture hardware, deploy a fleet, or launch a
 hosted service.
+
+## After the reproducible build remediation, 2026-07-30
+
+**Do not begin Phase 8, physical-hardware qualification, independent review,
+production signing, or any pilot.** Nothing below changes that.
+
+The supply chain the previous section asked for now exists and has been run:
+the base is mirrored and every blob re-hashed, the builder toolchain is pinned by
+digest with all eighteen tools classified, and 474 packages are held in an
+immutable snapshot whose every signature verifies against Fedora's own keys.
+
+What has **not** happened is the measurement. In order:
+
+1. **Grant `write:packages`.** One credential. Without it the retained inputs
+   exist on one machine, which is the defect the mirror exists to remove, and the
+   hosted half of the comparison cannot run at all.
+2. **Complete two clean local hermetic builds** and compare them. This is the
+   gate that must pass before dispatching anything hosted — a warm-cache build
+   does not satisfy it and the tooling refuses one.
+3. **Create Commit C**, a new qualification target. Commit A cannot be reused:
+   the base reference, the builder, the package source, the clock and the
+   finalisation stage have all changed.
+4. **Dispatch two hosted builds** on separate fresh runners against Commit C,
+   then compare H1↔H2, L↔H1 and L↔H2. Two hosted runs of one commit an hour
+   apart previously disagreed because the runner image rotated; one hosted
+   comparison cannot distinguish reproducibility from a favourable accident.
+5. **Import as Commit D**, referencing Commit C, without moving the candidate.
+
+The nine defects found by running this tooling are recorded in
+`REPRODUCIBILITY_REMEDIATION_REPORT.md`. Three of them — two garbage version
+strings that would have compared equal, a signature field reporting every Fedora
+package as unsigned, and a clock override wider than the lock declaring it —
+would each have produced evidence that looked correct.
+
+Everything else in this document is unchanged. The vulnerability position, the
+absent hardware, the absent reviews, the absent second signer and the absent
+production key all still block, and none of them is touched by this work.

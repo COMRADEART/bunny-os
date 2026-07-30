@@ -300,3 +300,62 @@ what would remove it.
 | No independent review of any kind | four evidence positions rest on self-assessment | commissioning them |
 | Accessibility evidence is entirely static | 14 essential workflows unverified; this is the limitation that risks harming a user rather than merely leaving a box unticked | driving them with assistive technology |
 | `tests/hardware_evidence/`, `tests/accessibility_evidence/` and `tests/pilot_gates/` use underscores where the brief writes hyphens | directory names differ from the brief | nothing - a hyphenated directory is not an importable Python package, so `unittest discover` would skip it and the tests would silently never run |
+
+## Reproducible build remediation limitations, 2026-07-30
+
+Branch `feature/reproducible-build-remediation`, from
+`e7600b08236806f1c9c656d79b074924c40dfb19`. The attempt-1 result is retained and
+was not overwritten.
+
+### The retained inputs exist on one machine, which is the defect being fixed
+
+The base image, the builder image and the package snapshot are mirrored,
+verified and locked — and they live only in `/var/lib/bunny-retention` on the
+Fedora builder. The retention channel chosen for this pass is `ghcr.io`, and the
+available GitHub token carries `gist, read:org, repo, workflow`; pushing needs
+`write:packages`, which has not been granted.
+
+Until it is, an independent party cannot obtain the inputs, which is precisely
+the failure the mirror exists to remove. `gh auth refresh -h github.com -s
+write:packages,read:packages` is the whole of the fix.
+
+### The remediation is implemented and unmeasured
+
+Every mechanism for the fifteen differing files exists: the `brlapi.key`
+first-boot service, the font-directory mtime pinning, the frozen package
+transaction, the WAL checkpoint, the countme removal. **None has been verified by
+a two-builder comparison**, because no remediated build has completed. The
+mechanisms are backed by measured causes; whether they work is a separate claim
+and is not made.
+
+### `rpm -qi` will report the commit timestamp as the install time
+
+A consequence of ADR-028, accepted deliberately. For an image built once and
+installed on many devices there was never a correct per-device install time in
+the image, but anyone reading the field as "when this machine installed it" will
+be wrong.
+
+### The snapshot repository has `repo_gpgcheck=0`
+
+`repo_gpgcheck` verifies a detached GPG signature over `repomd.xml` that a Fedora
+mirror provides and a local snapshot does not. What replaces it: the snapshot
+manifest is signed, carries the SHA-256 of `repomd.xml`, and is verified before
+the build container starts. `gpgcheck=1` stays on and every RPM's own Fedora
+signature is checked at install time against Fedora's key for that release.
+
+This is a real difference from the remote-snapshot path and is recorded rather
+than described as equivalent.
+
+### The snapshot signing key is a development key
+
+`dev-snapshot-signing1`, Ed25519, held outside the repository.
+`release.signing.require_production_key` refuses the `dev-` prefix, so nothing
+signed with it can satisfy a release gate. It establishes that the snapshot has
+not changed since it was made and nothing about release authorisation.
+
+### Only the amd64 architecture is retained
+
+The upstream base is a four-architecture index; the mirror holds the amd64
+manifest and records the other three by digest without their blobs. An arm64
+build would fail at verification rather than silently pull from upstream, which
+is correct, and also means this project can currently qualify one architecture.
