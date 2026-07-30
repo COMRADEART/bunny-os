@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import configparser
+import datetime
 import json
 import os
 from pathlib import Path
@@ -150,9 +151,26 @@ def main() -> int:
         # transaction would be broader than declared, and the first version of
         # this did exactly that — the `before` snapshot ran under LD_PRELOAD and
         # rpm exited 1 with a message nobody captured.
+        # libfaketime's `@` prefix means "absolute, frozen", and the value after
+        # it is a *formatted date*, not a Unix timestamp:
+        #
+        #   libfaketime: In parse_ft_string(), failed to parse FAKETIME timestamp.
+        #
+        # SOURCE_DATE_EPOCH is seconds, so it is converted here. UTC explicitly:
+        # the two builders are in different time zones, and a local-time
+        # rendering would give them different frozen clocks from the same epoch —
+        # which is the exact class of difference this is meant to remove.
+        frozen = datetime.datetime.fromtimestamp(
+            int(source_date_epoch), datetime.timezone.utc
+        ).strftime("%Y-%m-%d %H:%M:%S")
         transaction_environment["LD_PRELOAD"] = faketime_library
-        transaction_environment["FAKETIME"] = f"@{source_date_epoch}"
+        transaction_environment["FAKETIME"] = f"@{frozen}"
+        transaction_environment["FAKETIME_FMT"] = "%Y-%m-%d %H:%M:%S"
+        # Monotonic clocks drive timeouts and progress reporting rather than
+        # recorded state. Freezing them makes dnf's own waits misbehave and
+        # changes nothing in the artifact.
         transaction_environment["FAKETIME_DONT_FAKE_MONOTONIC"] = "1"
+        transaction_environment["TZ"] = "UTC"
 
     before = installed_nevras(environment)
     subprocess.run(
