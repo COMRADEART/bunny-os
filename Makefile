@@ -624,7 +624,7 @@ finalise-package-databases:
 	bash build/scripts/finalise-package-databases.sh --report build/out/qualification/package-databases.json
 
 sqlite-determinism-check test-rpmdb-rebuild test-libdnf-history-rebuild:
-	$(PYTHON) scripts/reproducibility/evaluate_database_approaches.py --command $@ --report "build/out/reproducibility/$@.json"
+	$(PYTHON) scripts/reproducibility/evaluate_database_approaches.py --command $@ --rpmdb "$${BUNNY_RPMDB:?set BUNNY_RPMDB to an extracted rpmdb.sqlite}" --history "$${BUNNY_HISTORY:?set BUNNY_HISTORY to an extracted transaction_history.sqlite}" --trials "$${BUNNY_TRIALS:-3}" --report "build/out/reproducibility/$@.json"
 
 complete-local-comparison:
 	bash scripts/supply-chain/local-hermetic-repeatability.sh --mode qualification
