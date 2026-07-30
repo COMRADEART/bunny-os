@@ -89,6 +89,11 @@ def _decode(frame: bytes) -> dict[str, Any] | None:
     return {"protocol": name, "source": source, "destination": destination, "port": port}
 
 
+#: The limited broadcast address. DHCP discovery uses it before the interface
+#: has an address at all; it never leaves the link and is not a third party.
+IPV4_BROADCAST = ipaddress.ip_address("255.255.255.255")
+
+
 def _is_local(address: str | None) -> bool:
     if not address:
         return True
@@ -97,7 +102,13 @@ def _is_local(address: str | None) -> bool:
     except ValueError:
         return True
     if parsed.version == 4:
-        return parsed in SLIRP_NETWORK or parsed.is_multicast or parsed.is_unspecified
+        return (
+            parsed in SLIRP_NETWORK
+            or parsed.is_multicast
+            or parsed.is_unspecified
+            or parsed == IPV4_BROADCAST
+            or parsed.is_link_local
+        )
     return parsed.is_link_local or parsed.is_multicast or parsed.is_unspecified or parsed.is_loopback
 
 
