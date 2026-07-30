@@ -15,6 +15,7 @@ from pathlib import Path
 import sys
 from typing import Any
 
+from oem.inspection import merge_attestation, probe_root
 from oem.validation.finalize import describe_checks, evaluate_finalisation
 from oem.validation.overlay import validate_overlay
 from oem.validation.profile import validate_profile
@@ -90,6 +91,13 @@ def parser() -> argparse.ArgumentParser:
 
     commands.add_parser("describe-checks", help="list the factory finalisation check catalogue")
 
+    inspect = commands.add_parser(
+        "inspect", help="inspect a root filesystem tree and produce a factory finalisation record"
+    )
+    inspect.add_argument("--root", type=Path, required=True)
+    inspect.add_argument("--attestation", type=Path, help="signed live-attestation record for the five offline-unsettleable checks")
+    inspect.add_argument("--evaluate", action="store_true", help="also evaluate the record and set the exit code")
+
     for name, helptext in (
         ("provision", "run factory provisioning against a connected device"),
         ("seal", "erase factory state on a connected device"),
@@ -126,6 +134,24 @@ def main(argv: list[str] | None = None) -> int:
         verdict = evaluate_finalisation(_load(args.record))
         payload = verdict.as_dict()
         payload["handoffPermitted"] = verdict.sealed
+        if not verdict.sealed:
+            payload["message"] = (
+                "Customer handoff refused: temporary factory state remains or could not be verified."
+            )
+        _emit(payload, as_json)
+        return EXIT_OK if verdict.sealed else EXIT_REJECTED
+
+    if args.command == "inspect":
+        record = probe_root(args.root)
+        if args.attestation:
+            record = merge_attestation(record, _load(args.attestation))
+        if not args.evaluate:
+            _emit(record, as_json)
+            return EXIT_OK
+        verdict = evaluate_finalisation(record)
+        payload = verdict.as_dict()
+        payload["handoffPermitted"] = verdict.sealed
+        payload["inspectionRoot"] = record["inspectionRoot"]
         if not verdict.sealed:
             payload["message"] = (
                 "Customer handoff refused: temporary factory state remains or could not be verified."

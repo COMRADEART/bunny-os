@@ -159,8 +159,22 @@ def evaluate_finalisation(
 
 
 def describe_checks() -> list[dict[str, Any]]:
-    """Return the check catalogue for documentation and operator display."""
+    """Return the check catalogue for documentation and operator display.
+
+    ``offlineInspectable`` tells an operator which checks ``bunny-oem inspect``
+    can settle from a filesystem tree and which need a running system or a
+    signed burn-in report, so the five that always report UNKNOWN offline are
+    not mistaken for a broken probe.
+    """
+    from oem.inspection import INSPECTABLE_CHECKS, REQUIRES_LIVE_ATTESTATION
+
     return [
-        {"checkId": check.checkId, "description": check.description, "blocking": check.blocking}
+        {
+            "checkId": check.checkId,
+            "description": check.description,
+            "blocking": check.blocking,
+            "offlineInspectable": check.checkId in INSPECTABLE_CHECKS,
+            "requiresLiveAttestation": REQUIRES_LIVE_ATTESTATION.get(check.checkId),
+        }
         for check in FACTORY_STATE_CHECKS
     ]
