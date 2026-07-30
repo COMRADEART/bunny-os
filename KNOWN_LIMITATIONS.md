@@ -319,14 +319,49 @@ Until it is, an independent party cannot obtain the inputs, which is precisely
 the failure the mirror exists to remove. `gh auth refresh -h github.com -s
 write:packages,read:packages` is the whole of the fix.
 
-### The remediation is implemented and unmeasured
+### The remediation was implemented and unmeasured, and measuring it changed it
 
-Every mechanism for the fifteen differing files exists: the `brlapi.key`
-first-boot service, the font-directory mtime pinning, the frozen package
-transaction, the WAL checkpoint, the countme removal. **None has been verified by
-a two-builder comparison**, because no remediated build has completed. The
-mechanisms are backed by measured causes; whether they work is a separate claim
-and is not made.
+*Superseded 2026-07-30 by the SQLite determinism pass. Retained because the
+limitation was real and its resolution is the point.*
+
+Every mechanism existed and none had been verified by a two-builder comparison.
+When one was run, three of them turned out not to do what they were documented to
+do:
+
+* the frozen package transaction was not frozen. `FAKETIME` carried an `@`
+  prefix, which is libfaketime's *start-at* mode; `INSTALLTIME` recorded elapsed
+  build seconds and fifty of 1,015 packages landed on a different second between
+  two builds.
+* the minimisation `dnf remove` ran with no clock override at all, so libdnf5
+  wrote a live wall clock into its transaction history.
+* `usr/share/bunny-os/finalisation.json` had identical content and mtimes 203
+  seconds apart. Layer tars carry entry mtimes and no dimension compared them, so
+  the archive difference had no file to attribute it to.
+
+See `RPM_DATABASE_DETERMINISM_REPORT.md`. The general lesson is recorded here
+because it is not about libfaketime: a decision document records what somebody
+intended, and the effect has to be measured in the artifact.
+
+### The input locks were not in the commit
+
+*Found and fixed 2026-07-30.* `base-image-lock.json`, `package-lock.json`,
+`package-snapshot-lock.json` and `reproducibility-lock.json` were untracked. The
+previous "fresh clone" comparison worked because they had been hand-copied into
+each clone; a hosted builder has nothing but the commit, so the pins pinned
+nothing a second builder could see. They are committed, and
+`local-hermetic-repeatability.sh` refuses to build until they are tracked.
+
+### Two builds shared a container store and a layer cache
+
+*Found and fixed 2026-07-30.* The repeatability driver created a store per build
+and never told podman about it. podman keys its build cache on the instruction
+and the context digest, and two fresh clones of one commit produce the same
+both — so the second build could be served the first one's layers and produce a
+byte-identical archive because it *was* the first archive. `--no-cache` is now
+always on in the hermetic path and the store is genuinely per-build.
+
+A comparison that can only pass is worse than one that fails, and this one had no
+way to report that it had not really run twice.
 
 ### `rpm -qi` will report the commit timestamp as the install time
 
