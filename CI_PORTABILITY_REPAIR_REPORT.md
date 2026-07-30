@@ -249,6 +249,75 @@ One case the exit code alone cannot distinguish: **CPython exits 2 for
 checks a named script exists before running it, and a test asserts every script
 referenced by a workflow assertion is present.
 
+## Four more, found by running the hosted builder
+
+`.github/workflows/independent-builder.yml` had been committed and never
+executed. Running it found four defects, none of which was visible by reading it.
+"The workflow is committed" and "the workflow works" are different claims, and
+the gap between them was four defects wide.
+
+### F9 — The pinned base-image digest no longer exists
+
+```text
+reading manifest sha256:fb71f099… in quay.io/fedora/fedora-bootc: manifest unknown
+```
+
+`fedora-bootc:44` is rebuilt daily and old digests are garbage collected.
+Confirmed against the registry with `skopeo` rather than inferred from the build
+failure.
+
+The important half: **the local Fedora builder built against that dead digest on
+the same day**, because podman had the layers cached. A build that appears to
+reproduce may only be reachable from one machine's cache, and that is invisible
+from the machine that has it. Pinning a digest records which base was used; it
+does not make that base obtainable later.
+
+Nothing in the repository was changed. The base is a workflow *input*: the
+currently published digest was supplied for the next dispatch and the local
+builder was rebuilt against the same one. The digest check was not relaxed, the
+base was not unpinned, and the qualification target commit did not move.
+
+### F10 — `crun` refuses the OCI spec version Ubuntu's podman writes
+
+```text
+error running container: from /usr/bin/crun creating container for [...]:
+unknown version specified
+```
+
+Ubuntu 24.04's podman 4.9.3 and its crun disagree about the OCI runtime
+specification version; `runc`, also packaged by Ubuntu, accepts it. Selecting the
+runtime changes which program starts the build container and nothing about what
+is built. The runtime and its version are now recorded in the runner environment.
+
+### F11 — Podman fell back to the `vfs` storage driver
+
+No error — the symptom was in the timings. Each `COPY` of a source directory took
+2 minutes 24 seconds, and the build had spent 32 minutes copying directories
+before failing for an unrelated reason. `vfs` copies the whole image for every
+layer; the runner's ext4 root supports `overlay`.
+
+Measured effect: the same build step took **387 seconds** with `overlay`, against
+more than 32 minutes with `vfs` before it failed for another reason. A job that
+looked like it needed a longer timeout needed a storage driver.
+
+### F12 — The driver cannot be changed under an initialised store
+
+```text
+Error: database graph driver "" does not match our graph driver "overlay":
+database configuration mismatch
+```
+
+The runner image ships an already-initialised container store. It holds nothing
+this build needs — the base is pulled by digest — so it is removed rather than
+migrated, which is also what `BUNNY_CACHES_DISABLED=1` asks for.
+
+### One more, found by reading the provenance
+
+`oci-inspect.json` is described by the CI provenance but was not among the
+uploaded artifacts, so the verify job's recomputed-digest check would have
+reported it absent and blocked — correctly, on a bundle that was simply
+incomplete. It is now uploaded and copied into the verification root.
+
 ## What was not changed
 
 The gate state is preserved exactly:

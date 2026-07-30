@@ -377,6 +377,118 @@ correct refusal.
 
 ---
 
+---
+
+## Defects found by running the hosted builder
+
+`.github/workflows/independent-builder.yml` had never been executed. Four defects
+were found by running it, none of which was visible by reading it. They are
+recorded here in the same form as the rest, because "the workflow is committed"
+and "the workflow works" are different claims and only the second is evidence.
+
+### F9 — The pinned base-image digest no longer exists
+
+| | |
+| --- | --- |
+| Run | 30558573550, job `Hosted independent build` |
+| Step | `Build the normalised OCI archive` |
+| Local reproduction | **Not reproducible locally** — the local builder has the layers cached. That *is* the finding. |
+| Affects evidence integrity | **Yes.** |
+| Pre-existing | Yes — the digest was pinned in Phase 6. |
+
+```text
+Error: creating build container: unable to copy from source
+docker://quay.io/fedora/fedora-bootc@sha256:fb71f099…: reading manifest
+sha256:fb71f099… in quay.io/fedora/fedora-bootc: manifest unknown
+```
+
+**Root cause.** `quay.io/fedora/fedora-bootc:44` is rebuilt daily and old digests
+are garbage collected. Confirmed against the registry with `skopeo`, not inferred
+from the build failure: the pinned digest returns `manifest unknown`, and the
+current `:44` tag resolves to `sha256:c466de53…`, built the same morning.
+
+The local Fedora builder built against the dead digest on that same day, because
+podman had the layers in its store. A build that appears to reproduce may only be
+reachable from one machine's cache, and that is invisible from the machine that
+has it.
+
+**Fix applied.** None to the repository. The base is a workflow *input*: the
+currently published digest was supplied for the next dispatch and the local
+builder rebuilt against the same one, so both halves of the comparison share a
+base. The digest check was not relaxed and the base was not unpinned.
+
+**Regression test required.** None possible — this is an upstream retention
+policy, not a repository defect. Recorded in `KNOWN_LIMITATIONS.md` with what
+would remove it: mirroring the base under this project's control.
+
+### F10 — `crun` refuses the OCI spec version Ubuntu's podman writes
+
+| | |
+| --- | --- |
+| Run | 30558894088 |
+| Step | `Build the normalised OCI archive`, after 32 minutes |
+| Local reproduction | Not applicable — Fedora ships a matched podman/crun pair. |
+| Affects evidence integrity | **No.** |
+
+```text
+error running container: from /usr/bin/crun creating container for
+[/bin/sh -c /usr/bin/python3 …install-packages.py…]: unknown version specified
+did not get container create message from subprocess: EOF
+```
+
+**Root cause.** Ubuntu 24.04's `podman` 4.9.3 and its `crun` disagree about the
+OCI runtime specification version. `runc`, also packaged by Ubuntu, accepts it.
+
+**Fix applied.** `runc` installed and selected in `/etc/containers/containers.conf`.
+This changes which program starts the build container; it changes nothing about
+what is built.
+
+**Regression test required.** The runner's OCI runtime and its version are now
+recorded in `runner-environment.txt`, so the difference from the local Fedora
+builder is visible in the evidence rather than implicit.
+
+### F11 — Podman fell back to the `vfs` storage driver
+
+| | |
+| --- | --- |
+| Run | 30558894088 |
+| Step | `Build the normalised OCI archive` |
+| Affects evidence integrity | **No**, but it made the job unaffordable. |
+
+No error. The symptom was in the timings: each `COPY` of a source directory took
+2 minutes 24 seconds, and the build had spent 32 minutes copying directories
+before it failed for an unrelated reason.
+
+**Root cause.** With no configured storage driver podman selected `vfs`, which
+copies the entire image for every layer instead of stacking them. The runner's
+ext4 root supports `overlay`.
+
+**Fix applied.** `driver = "overlay"` in `/etc/containers/storage.conf`, and the
+driver in use is recorded in the runner environment.
+
+### F12 — The storage driver cannot be changed under an initialised store
+
+| | |
+| --- | --- |
+| Run | 30561595976 |
+| Step | `Configure the container runtime and storage driver` |
+| Affects evidence integrity | **No.** |
+
+```text
+Error: database graph driver "" does not match our graph driver "overlay":
+database configuration mismatch
+```
+
+**Root cause.** The `ubuntu-24.04` runner image ships an already-initialised
+container store whose recorded graph driver is empty. Podman refuses to change
+drivers under an existing database.
+
+**Fix applied.** The store is removed before the driver is configured. It holds
+nothing this build needs — the base image is pulled by digest — and starting from
+an empty store is what `BUNNY_CACHES_DISABLED=1` asks for anyway.
+
+---
+
 ## Summary
 
 | Defect | Jobs failed | Evidence integrity | Pre-existing |
@@ -389,11 +501,21 @@ correct refusal.
 | F6 systemd units | 1 | No | Yes |
 | F7 session entries | 1 | No | Yes |
 | F8 gate exit codes | 0 (latent) | Yes | Yes |
+| F9 dead base digest | 1 | Yes | Yes |
+| F10 crun spec version | 1 | No | Yes |
+| F11 vfs storage driver | 0 (timing only) | No | Yes |
+| F12 store driver change | 1 | No | Yes |
 
-F2 accounts for four of the eight failing jobs. F6 and F7 predate the branch and
-are not regressions from the candidate commit; they are repaired here because the
-objective is a green source pipeline, not a green diff.
+F2 accounts for four of the eight failing source jobs. F6 and F7 predate the
+branch and are not regressions from the candidate commit; they are repaired here
+because the objective is a green source pipeline, not a green diff.
 
 Three defects — F3, F4 and F8 — affect whether evidence means what it claims.
 None of them was visible as a red step for the reason that actually matters: F4
 failed for a reason that hid the real one, and F3 and F8 do not fail at all yet.
+
+F9 to F12 were found by *running* the hosted builder, which had been committed
+and never executed. Each needed a real dispatch to surface, and F9 in particular
+could not have been found any other way: it is invisible from the machine whose
+cache still holds the base image. The gap between "the workflow is committed" and
+"the workflow works" was four defects wide.

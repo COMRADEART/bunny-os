@@ -45,6 +45,23 @@ other than the truth.
 | `test_dimension_collector.py` | 26 | all seventeen dimensions read from an OCI archive, whiteout semantics, setuid bits, capabilities, and an absent SELinux set reported as not-collected rather than matching |
 | `test_comparison_assembly.py` | 15 | the reduced comparison form preserves equality exactly — one changed member among 20,000 is caught and named |
 
+### One transient failure, observed once and not reproduced
+
+`python scripts/task.py test` reported `FAILED (failures=1, errors=1, skipped=4)`
+on one run. The output of that run was not retained, so which two tests failed is
+not known. Eight subsequent runs of the same command, and a direct
+`unittest discover` over the same tree, all reported `OK (skipped=4)` — nine
+clean runs against one failure.
+
+The failing run overlapped with a 71 MB write to the same disk from the
+dimension collector in WSL, and several of these suites spawn subprocesses that
+read and write under `build/out/`, so I/O contention is the plausible
+explanation. It is not the established one: no evidence was captured.
+
+Recorded rather than omitted, because a suite whose job is to fail closed is
+exactly the kind that must not be quietly flaky. The lesson taken is to retain
+the output of every run of this suite, not only the ones expected to fail.
+
 ### Checks that Windows cannot run, run under Fedora Linux 44 (WSL2)
 
 | Check | Result |
