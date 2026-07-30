@@ -1,0 +1,20 @@
+{
+  "base": {
+    "digest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+    "location": "/var/lib/bunny-retention/base-images/sha256-c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
+    "reference": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844"
+  },
+  "builder": {
+    "digest": "sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+    "location": "/var/lib/bunny-retention/builder-images/9c525bf1ca34",
+    "reference": "ghcr.io/comradeart/bunny-os-builder@sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e"
+  },
+  "result": "PASS",
+  "schemaVersion": 1,
+  "snapshot": {
+    "location": "/var/lib/bunny-retention/package-snapshots/fedora-44-beta-20260730",
+    "packages": 474,
+    "reference": "ghcr.io/comradeart/bunny-os-package-snapshot@sha256:4fa4fbc1f14cf0b5406475778eda708c303143d5c5ec2c5ec783ddfdb3af501b",
+    "repodata": true
+  }
+}

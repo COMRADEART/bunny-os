@@ -1,0 +1,6 @@
+label=H2
+runnerImage=ubuntu24
+runnerName=GitHub Actions 1000000870
+kernel=6.17.0-1020-azure
+containerRuntime=podman version 4.9.3
+workflowRunId=30590413565.1
