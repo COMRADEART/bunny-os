@@ -6,8 +6,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
 # Qualification candidate readiness report
 
 Date: 2026-07-30
-Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`
-HEAD: `80df25b09f6578276d18c8a82f15c47dd8959740`
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8` (scan-derived evidence)
+Qualification target commit: `9ea5459bdaf122f8c5999683b2c8961555826954` (both builders)
 Result: **2 of 14 prerequisites satisfied. No artifact may be labelled
 release-qualified.**
 
@@ -35,7 +35,7 @@ stage of it, and `evaluate_candidate_gate` states it in its own output.
 |---|---|---|---|---|
 | 1 | Licence gate passed | **PASS** | engineering | — |
 | 2 | Vulnerability gate passed | `PENDING_EXTERNAL_REVIEW` | independent-reviewer | commission the review; `reviews/security/REQUEST.md` |
-| 3 | Independent reproducibility passed | `BLOCKED` | ci-infrastructure | dispatch `.github/workflows/independent-builder.yml` |
+| 3 | Independent reproducibility passed | `BLOCKED` | ci-infrastructure | measured 2026-07-30: `NON_REPRODUCIBLE`, 15 files of build-environment state differ; stop shipping `brlapi.key` and the `countme` counters, make the rpm/dnf databases reproducible, rebuild the fontconfig caches at first boot |
 | 4 | Development signing drill passed | **PASS** | engineering | — |
 | 5 | Independent recovery media passed | `NOT_RUN` | engineering | build a signed recovery ISO |
 | 6 | Installation matrix passed | `NOT_RUN` | engineering | build a live installer ISO |
@@ -84,23 +84,43 @@ applied *after* the observed state:
 
 Both are silent failures otherwise: the check passed, once, somewhere.
 
-## The one prerequisite that costs a button
+## The prerequisite that was described as costing a button
 
-`independent-reproducibility` reports `BLOCKED` with the dependency *"hosted CI run
-of .github/workflows/independent-builder.yml"*.
+This section previously read:
 
-The workflow is committed and has never been dispatched. It checks out an exact SHA,
-pins the base digest, pins syft and grype, disables the pip cache, asserts an empty
-output tree, records eleven environment facts, emits a schema-2 builder record with
-a real `workflowRunId`, emits provenance with a 90-day expiry, uploads the archive,
-SBOM, package inventory, manifests and logs, and verifies the bundle on a *second*
-runner.
+> Of the fourteen, this is the only one that needs nothing but a workflow
+> dispatch.
 
-One prerequisite step remains: `BUNNY_ARCHIVE_ONLY=1` was added to
-`build/scripts/build-image.sh` this phase so a hosted Ubuntu runner can build
-without `image-builder`, and that change has not been exercised on a Fedora host.
+That was wrong, and the way it was wrong is worth recording. The workflow was
+committed, carefully written, and had never been executed. Reaching a build that
+completed took seven dispatches, and each failure was a real defect that could
+only be found by running it:
 
-Of the fourteen, this is the only one that needs nothing but a workflow dispatch.
+1. The pinned base image digest no longer existed. `fedora-bootc:44` is rebuilt
+   daily and old digests are garbage collected. The local Fedora builder still
+   built against it, because podman had the layers cached — **the defect was
+   invisible from the machine that had it.**
+2. `crun` refused the OCI runtime spec version Ubuntu's podman writes.
+3. Podman fell back to the `vfs` storage driver: 2m24s per `COPY`, 32 minutes
+   spent copying directories before failing for another reason.
+4. The storage driver could not be changed under the runner's pre-initialised
+   container store.
+5. The SBOM step was killed with an empty log and `cancelled`. Diagnosed as disk
+   exhaustion, which was wrong: the next run entered that step with 28 GB free
+   and died anyway. The constraint is memory — 7.8 GiB on the runner against a
+   1.85 GB archive holding 164,962 entries.
+6. A `[storage]` section replaces podman's defaults wholesale, so `runroot` has
+   to be written even when the intent is to keep it.
+7. The verify job used a flat artifact layout that `upload-artifact` never
+   produces; the build job had already succeeded.
+
+None of these is exotic. All seven are ordinary properties of a hosted Ubuntu
+runner, and none was visible by reading the workflow. "The workflow is committed"
+and "the workflow works" are different claims, and only the second is evidence.
+
+The general lesson for the other thirteen prerequisites: an unexecuted mechanism
+is not a satisfied prerequisite that happens to be waiting. It is an untested
+one. The five `NOT_RUN` rows below should be read with that in mind.
 
 ## The five `NOT_RUN` rows are three actions
 
@@ -147,3 +167,34 @@ python scripts/release.py gate --kind qualification-candidate
 The dashboard is generated from the same evaluation as the evidence report, so the
 two cannot disagree. A report saying `BLOCKED` beside a dashboard saying `PASS` is
 exactly the failure the evidence model exists to prevent.
+
+## 2026-07-30 addendum: after the hosted builder ran
+
+`independent-reproducibility` is still `BLOCKED`, and the reason changed.
+
+Before: no hosted builder record existed, so no pair existed, so no comparison
+was possible. Sixteen of seventeen dimensions were `NOT_COLLECTED`.
+
+After: a hosted builder record exists (`hosted-ci-30566412012`, GitHub-hosted
+`ubuntu-24.04`), a local schema-2 record exists, the pair is declared, and
+sixteen of seventeen dimensions were collected from both. The comparison reports
+`NON_REPRODUCIBLE`:
+
+* **11 dimensions match**, including the file tree (164,356 paths), permissions,
+  ownership, the package inventory (6,076 packages) and the kernel.
+* **5 differ**, driven by fifteen files out of 104,247 — all build-environment
+  state: a random `brlapi.key`, seven fontconfig caches, the rpm and dnf
+  databases, two `countme` counters.
+* **1 is not collectable** from an archive-only build: a bootc image carries no
+  SELinux xattrs in its layers.
+
+The pair is additionally not certified independent, because `skopeo`, `python3`
+and `image-builder` differ between the builders.
+
+**Prerequisite count: unchanged at 2 of 14.** `licence-gate` and
+`development-signing-drill` pass; the other twelve block.
+
+What this addendum adds to the report above is not a changed count but a changed
+kind of evidence. `independent-reproducibility` used to be an absence. It is now
+a measurement, with fifteen named files and a dependency-ordered list of what
+would move it, in `INDEPENDENT_REPRODUCIBILITY_REPORT.md`.

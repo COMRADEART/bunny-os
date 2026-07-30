@@ -6,232 +6,285 @@ SPDX-License-Identifier: GPL-3.0-or-later
 # Independent reproducibility report
 
 Date: 2026-07-30
-Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`
-Base image: `quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4`
+Candidate commit: `9ea5459bdaf122f8c5999683b2c8961555826954`
+Base image: `quay.io/fedora/fedora-bootc:44@sha256:c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b`
+Profile: `beta`, `BUNNY_ARCHIVE_ONLY=1` on both sides
+
+**Two independently administered builders have now built the same commit and
+their artifacts have been compared across all seventeen dimensions.** That had
+never happened before: the previous edition of this report compared one builder
+against nothing, and sixteen of the seventeen dimensions were `NOT_COLLECTED`.
 
 ## Result
 
 ```text
-outcome: INCONCLUSIVE
-  MATCH          1: rawArchive
-  NOT_COLLECTED  16: bootConfiguration, desktopEntries, extendedAttributes,
-                     fileDigests, filesystemTree, initramfs, kernel,
-                     normalisedArchive, ociLayers, ownership, packageInventory,
-                     permissions, sbom, schemas, selinuxLabels, systemdUnits
+outcome: NON_REPRODUCIBLE
+  MATCH         11: bootConfiguration, desktopEntries, extendedAttributes,
+                    filesystemTree, initramfs, kernel, ownership,
+                    packageInventory, permissions, schemas, systemdUnits
+  DIFFER         5: fileDigests, normalisedArchive, ociLayers, rawArchive, sbom
+  NOT_COLLECTED  1: selinuxLabels
 
 independent builders: no
 satisfies production gate: no
 ```
 
 Machine-readable: `build/out/qualification/reproducibility-comparison.json`.
+Source data: `operations/data/build-comparison.json`.
 
-**This looks worse than the previous report and is more accurate.** The previous
-comparison asked three questions and answered them well. This one asks seventeen.
+The headline is `NON_REPRODUCIBLE` and it is the right headline. What it does not
+convey on its own is the *size* and *character* of the difference, so both are
+recorded below.
 
-## Why the result moved
+## The two builders
 
-`REPRODUCIBLE_BUILD_REPORT.md` recorded three of four claims established:
-same-host repeatability, filesystem-content, and archive-byte. Those measurements
-were real:
+| | local | hosted |
+| --- | --- | --- |
+| builderId | `local-fedora-wsl` | `hosted-ci-30566412012` |
+| builderType | `local-machine` | `hosted-ci` |
+| operating system | fedora-44 | ubuntu-24.04 |
+| kernel | 6.18.33.2-microsoft-standard-WSL2 | 6.17.0-1020-azure |
+| administrator boundary | `dcb0c0cc3f17c803b94954fa466eba8b` | `4d8365eef238…` |
+| workflow run | — | `30566412012.1` |
+| CPUs / RAM | 22 | 2 / 7.8 GiB |
+| podman | 5.8.4 | 5.8.4 |
+| skopeo | 1.22.2 | 1.13.3 |
+| syft | 1.50.0 | 1.50.0 |
+| grype | 0.116.1 | 0.116.1 |
+| python3 | 3.14.3 | 3.13.14 |
+| image-builder | present, unused | absent |
+| source commit | `9ea5459bdaf1` | `9ea5459bdaf1` |
+| base digest | `…c466de53` | `…c466de53` |
+| raw archive | `745c7a5ea330e510…` | `6effd086f601a27e…` |
+| normalised archive | `298013d265241325…` | `0c99bcd82cd519f4…` |
 
-```text
-archive digests : MATCH  b5c0c502e22b936a… (both)
-file contents   : 83 members, 0 differing
-package manifest: MATCH (6076 vs 6076)
-```
+Both built in archive-only mode and produced no disk image.
 
-They are retained in `operations/data/build-comparison.json` under
-`priorMeasurements` and are not disputed.
+## What matched
 
-What changed is that a comparison now has to say **which respects it looked at**.
-Every dimension has three states, not two:
+Eleven dimensions matched exactly, including every dimension that describes the
+image's shape and the two that describe the product most directly:
 
-| State | Meaning |
-|---|---|
-| `MATCH` | collected from both builders and identical |
-| `DIFFER` | collected from both builders and not identical |
-| `NOT_COLLECTED` | not gathered from at least one builder |
+* **`filesystemTree` — 164,356 paths, identical.** The two images contain exactly
+  the same set of files.
+* **`packageInventory` — 6,076 packages, identical.** Not "equivalent": the same
+  set at the same versions. The builds ran hours apart against live Fedora
+  repositories and resolved the same packages.
+* **`permissions` and `ownership` — identical**, including every setuid bit.
+* **`kernel` — `7.1.5-201.fc44.x86_64`**, same `vmlinuz` digest.
+* `extendedAttributes` (all nine `security.capability` xattrs), `systemdUnits`,
+  `desktopEntries`, `schemas`, `bootConfiguration` and `initramfs`.
 
-`NOT_COLLECTED` is the load-bearing state. A dimension nobody measured cannot
-contribute to a `REPRODUCIBLE` verdict, so an incomplete comparison reports
-`INCONCLUSIVE` rather than passing on the strength of the dimensions that happened
-to be easy.
+## What differed, exactly
 
-Sixteen of the seventeen were never collected. Of the three the previous phase did
-measure, only `rawArchive` has full per-builder values committed; `fileDigests`
-and `packageInventory` were committed as a five-entry sample plus a summary, and a
-summary compared against itself establishes nothing. They are therefore
-`NOT_COLLECTED` here, with the summaries retained as informational.
+Not a summary — the comparison names every differing member.
 
-## The seventeen dimensions
+### `fileDigests`: 15 files, out of 104,247
 
-| Dimension | Kind | State |
-|---|---|---|
-| `filesystemTree` | semantic | NOT_COLLECTED |
-| `fileDigests` | semantic | NOT_COLLECTED — sample and summary only |
-| `permissions` | semantic | NOT_COLLECTED |
-| `ownership` | semantic | NOT_COLLECTED |
-| `extendedAttributes` | semantic | NOT_COLLECTED |
-| `selinuxLabels` | semantic | NOT_COLLECTED |
-| `packageInventory` | semantic | NOT_COLLECTED — sample and summary only |
-| `sbom` | semantic | NOT_COLLECTED |
-| `bootConfiguration` | semantic | NOT_COLLECTED |
-| `systemdUnits` | semantic | NOT_COLLECTED |
-| `desktopEntries` | semantic | NOT_COLLECTED |
-| `schemas` | semantic | NOT_COLLECTED |
-| `kernel` | semantic | NOT_COLLECTED |
-| `initramfs` | semantic | NOT_COLLECTED |
-| `ociLayers` | semantic | NOT_COLLECTED |
-| `rawArchive` | archive-raw | **MATCH** — `b5c0c502e22b936a…`, both 1,852,006,400 bytes |
-| `normalisedArchive` | archive-normalised | NOT_COLLECTED |
-
-A `semantic` difference means the two builds are not the same image.
-An `archive-raw` difference is a packing difference, tolerable only when explained
-*and* when the normalised archive matches. An `archive-normalised` difference means
-the difference survived normalisation and is semantic after all.
-
-## The four allowed outcomes
-
-| Outcome | When | Satisfies the production gate |
-|---|---|---|
-| `REPRODUCIBLE` | every dimension collected and matching | **yes**, and only between independent builders |
-| `CONTENT_REPRODUCIBLE_ARCHIVE_VARIANCE` | contents match, raw archives differ, difference explained | no |
-| `NON_REPRODUCIBLE` | a semantic dimension differs, or a difference survives normalisation | no |
-| `INCONCLUSIVE` | a dimension was not collected, or a raw difference is unexplained | no |
-
-A normalised match does **not** excuse an unexplained raw-content difference:
-without a `rawVarianceExplanation` the outcome is `INCONCLUSIVE`, not
-`CONTENT_REPRODUCIBLE_ARCHIVE_VARIANCE`. Tested both ways.
-
-## Why the builders are still not independent
-
-No schema-2 builder record exists at all.
-
-`operations/data/builders.json` carries `builderRecords: []` and
-`independencePairs: []`. The two builders in the legacy `comparisons` block were
-collected with the schema-1 shell collector and never recorded a build start or
-completion time, so upgrading them would mean inventing two timestamps. They are
-left as they were measured.
+Both sides carry the same 104,247 files. Fifteen of them differ in content:
 
 ```text
-$ python scripts/release.py verify-builder-independence
-builder records: 0 (none)
-  no independence pair has been declared
-
-Accepted pairings:
-  - a local physical builder paired with hosted CI
-  - a physical builder paired with hosted CI
-  - two separately administered physical builders
-  - two independent cloud providers
-  - hosted CI paired with a separately administered self-hosted runner
-
-BLOCKED: no verified independent builder pair. A second workspace, container, or
-consecutive run on one host is separation, not independence.
+etc/brlapi.key
+usr/lib/fontconfig/cache/123d59b3…-le64.cache-9
+usr/lib/fontconfig/cache/18f520a5…-le64.cache-9
+usr/lib/fontconfig/cache/3830d5c3…-le64.cache-9
+usr/lib/fontconfig/cache/6cdba951…-le64.cache-9
+usr/lib/fontconfig/cache/6ee31038…-le64.cache-9
+usr/lib/fontconfig/cache/d63f98f1…-le64.cache-9
+usr/lib/fontconfig/cache/feeafda3…-le64.cache-9
+usr/lib/sysimage/libdnf5/system.toml
+usr/lib/sysimage/libdnf5/transaction_history.sqlite
+usr/lib/sysimage/libdnf5/transaction_history.sqlite-shm
+usr/lib/sysimage/libdnf5/transaction_history.sqlite-wal
+usr/share/rpm/rpmdb.sqlite
+var/lib/dnf/repos/fedora-cff72538bc9825a4/countme
+var/lib/dnf/repos/updates-3cc07c89a20302f2/countme
 ```
 
-### The identity model changed from an identifier to a boundary
+**Every one is build-environment state. None is product code.** By kind:
 
-Schema 1's strongest available dimension was `environmentId`, a hash of the
-workspace path. That was enough to *refuse* a same-host claim and not enough to
-*support* an independent one, because a second directory is not a trust boundary.
+| Kind | Files | Why it differs |
+| --- | --- | --- |
+| Randomly generated at install | `etc/brlapi.key` | brltty mints a fresh key per installation |
+| Timestamped databases | `rpmdb.sqlite`, `transaction_history.sqlite` and its `-wal`/`-shm`, `system.toml` | rpm and dnf record install times |
+| Derived caches | 7 fontconfig caches | embed paths and mtimes of the fonts they index |
+| Telemetry counters | 2 dnf `countme` files | per-installation counters |
 
-Schema 2 records `administratorBoundary` — who can change the builder — and
-`builderType`. Independence is then a property of a **pair**: two records are
-independent when they form one of four accepted pairings and satisfy that
-pairing's extra condition.
+### `sbom`: 7 entries, out of 6,076
 
-**Schema 2 has no `workspace` field.** The absence is deliberate: a schema with a
-field for the workspace invites a comparison that treats two directories as two
-builders.
+The differing entries belong to three packages: **brlapi, glibc, libdnf5** — the
+packages that own the files above. `packageInventory` matches because the
+*package set* is identical; `sbom` differs because syft records the digests of
+the files those packages own, and fifteen of those files differ.
 
-### What is refused, and tested
+### `ociLayers`: 28 layer digests, out of 79
 
-| Refusal | Reason given |
-|---|---|
-| two workspaces on one host | share `administratorBoundary`; a defect in the shared kernel, storage or clock reproduces in both builds |
-| two containers under one daemon | same |
-| a copied builder record | identical in every field except `builderId` |
-| the same `builderId` twice | one builder is not two builders |
-| two records citing one workflow run | two jobs in one run share the checkout, cache and administrator |
-| two consecutive builds by one runner | repeatability, not independence |
-| a hosted record with no `workflowRunId` | refused at parse time — without a run identifier the record is an assertion |
-| a mutable base tag | two builders pulling `:44` can get different bases |
-| a short SHA or a branch name | does not pin a build |
-| two cloud VMs at one provider | share a hypervisor and an operator |
-| two `local-machine` builders | not an accepted pairing; the model will not infer a boundary from two desktops |
-| differing `sourceCommit` or `baseImageDigest` | the builders did not build the same thing |
-| differing shared toolchain versions | a content difference could not be attributed to the environment |
+A layer digest changes when any file in it changes. Twenty-eight layers contain
+at least one of the fifteen files.
 
-## Artifact normalisation
+### `rawArchive` and `normalisedArchive`
 
-`release/normalisation.py` produces a normalised **copy** and reports both
-digests. `build/scripts/normalise-oci-archive.sh` still normalises in place at
-build time; the two do different jobs. A comparison that only ever sees normalised
-bytes cannot tell "same image, packed differently" from "different images", so both
-digests are always emitted.
+Both differ. Normalisation removes packing metadata — entry order, mtimes,
+ownership names, gzip timestamps — and the difference survives it. That is
+exactly what the two-digest design is for: **this is not a packing artefact.**
+Fifteen files really do differ.
 
-**Normalisable** (8): tar entry order, entry timestamps, ownership metadata, group
-metadata, owner names, PAX timestamp headers, gzip timestamp, filesystem traversal
-order.
+## What an earlier run showed, and why it is recorded
 
-**Protected** (7, enforced not documented): binary contents, package contents,
-generated configuration, signatures, manifests, source commit metadata, image
-filesystem differences. `assert_normalisation_scope` raises on any request naming
-one, so a future caller cannot widen the scope by passing a longer list.
+The first successful hosted build, run
+[30564513627](https://github.com/COMRADEART/bunny-os/actions/runs/30564513627),
+gave a **worse** result on the same commit and the same base: 8 matching
+dimensions instead of 11. `filesystemTree`, `permissions` and `ownership` all
+differed, on a single path — `etc/hostname`, present in the hosted image and
+absent locally.
 
-### A bug the tests found
+That runner had **podman 4.9.3**; the runner an hour later had **podman 5.8.4**,
+matching the local builder. GitHub had rotated the `ubuntu-24.04` image between
+the two runs.
 
-`gzip.GzipFile` infers the stored original filename from `fileobj.name` and writes
-it into the gzip header, so two normalised copies written to different paths
-differed in their headers — a normaliser introducing variance of its own. Caught by
-normalising one archive to two destinations and comparing. Fixed with an explicit
-`filename=""`.
+Ubuntu's podman 4.9.3 writes `/etc/hostname` into the build container and 5.8.4
+does not. So one of the sixteen files that differed was contributed by the
+container runtime rather than by anything in this repository — and it vanished
+when the runtimes happened to match.
 
-## CI artifact verification
+This is recorded rather than discarded because it is the clearest available
+demonstration of why `verify-builder-independence` refuses a pair whose
+toolchains differ. Without pinning, a reproducibility result varies with whatever
+the hosted runner image happened to ship that day.
 
-`release/provenance.py` exists to prevent one failure: *trusting an artifact
-because it came from GitHub Actions*. A downloaded bundle is a tarball someone
-uploaded, carrying whatever its uploader put in it.
+## `selinuxLabels` was not collected, and is not a match
 
-Nothing in a provenance record is believed on its own:
+Measured: 164,962 entries, nine carrying `security.capability`, **zero carrying
+`security.selinux`**. A bootc container image does not store SELinux contexts in
+its layers; `bootc install` applies them on the target from the policy shipped in
+the image.
 
-| Claim | How it is checked |
-|---|---|
-| artifact digests | recomputed from the downloaded bytes |
-| source commit | compared with the commit being qualified |
-| base image digest | compared with the pinned digest, and must be pinned |
-| repository and workflow path | compared with the expected values |
-| run identity | must be present, and must not already have been accepted |
-| freshness | an `expiresAt` in the past is rejected; an absent one is rejected too |
-| verification environment | must differ from the environment that built the artifact |
+The dimension is therefore `NOT_COLLECTED` from both sides rather than an empty
+set on both sides. Two empty sets compare equal, and reporting a match here would
+claim a comparison that did not happen.
 
-The last row matters most. Verifying a bundle inside the job that produced it
-proves nothing: the same runner would write both the artifact and the verdict. The
-workflow's `verify` job therefore runs on a fresh runner.
+## Why the builders are not certified independent
 
-## What is needed
+```text
+BLOCKED  local-fedora-wsl + hosted-ci-30566412012 — a local physical builder paired with hosted CI
+    toolchain versions differ: toolchain.image-builder, toolchain.python3,
+    toolchain.skopeo; a content difference could not be attributed to the
+    environment
+```
 
-**A hosted CI run.** `.github/workflows/independent-builder.yml` is committed and
-has never been dispatched. It checks out an exact SHA, pins the base digest, pins
-syft and grype, disables the pip cache, asserts an empty output tree, records
-eleven environment facts, emits a schema-2 builder record with a real
-`workflowRunId`, emits provenance with a 90-day expiry, and uploads the archive,
-SBOM, package inventory, manifests and logs.
+Everything else passed. The pairing is one of the five accepted ones, the two
+administrator boundaries are distinct, and the shared inputs match:
 
-One change must be exercised on the Fedora builder first: `BUNNY_ARCHIVE_ONLY=1`,
-added to `build/scripts/build-image.sh` so a hosted Ubuntu runner can build without
-`image-builder`. An archive-only build produces no qcow2 or raw image and must
-never be recorded as a candidate build.
+```json
+"sourceCommitEquality": true,
+"baseDigestEquality": true,
+"configurationEquality": true,
+"toolchainEquality": false,
+"environmentIndependence": true
+```
 
-Once a hosted record and a local record exist and the pair is declared, the
-comparison needs the sixteen uncollected dimensions gathered from both builders.
-That is one build on each side, not more analysis.
+`podman`, `syft`, `grype` and `tar` all match. The three that do not:
+
+| Tool | local | hosted | In the path that writes the archive? |
+| --- | --- | --- | --- |
+| `image-builder` | present, unused | absent | No — archive-only mode never invokes it |
+| `python3` | 3.14.3 | 3.13.14 | No — the host interpreter runs the wrapper scripts; `install-root.py` runs under the base image's own `/usr/bin/python3` |
+| `skopeo` | 1.22.2 | 1.13.3 | No — `podman save` writes the archive |
+
+**That analysis is not a reason to relax the check, and the check was not
+relaxed.** It is conservative on purpose: "this tool probably does not matter" is
+the reasoning that lets a real difference through. Pinning `skopeo` and the host
+`python3`, and deciding explicitly how `image-builder`'s absence in archive-only
+mode should be recorded, is the work that would let this pass honestly.
+
+The earlier run is the argument for the conservatism: `podman` was in that list
+one run ago, and it demonstrably did affect the artifact.
+
+## What this establishes, and what it does not
+## What this establishes, and what it does not
+
+**Established.** Two builders under genuinely different administration — a local
+Fedora machine and a GitHub-hosted Ubuntu runner — built the same commit against
+the same base digest and produced images whose package set, kernel, units,
+desktop entries, schemas, boot configuration, capabilities and initramfs are
+identical. That is a real result and it had never been measured.
+
+**Not established.** Byte-identical artifacts, and therefore not
+`independent-builder` reproducibility. The candidate prerequisite stays
+`BLOCKED`.
+
+**Deliberately not claimed.** That the fifteen differing files are harmless. They
+are all build-environment state by inspection, and inspection is not proof. The
+comparison reports `NON_REPRODUCIBLE`, and this report does not argue that down
+to something softer.
+
+## What would move this to REPRODUCIBLE
+
+In dependency order, each with a named cause:
+
+1. **Pin `podman` across both builders.** Fedora 5.8.4 against Ubuntu 4.9.3 is
+   the difference that produced `etc/hostname` and that blocks the independence
+   verdict outright. Either install a pinned podman on the hosted runner, or run
+   the hosted build inside a Fedora container.
+2. **Stop shipping build-environment state.** `etc/hostname`, `etc/brlapi.key`
+   and `var/lib/dnf/…/countme` have no business in the image and can be removed
+   during the build. Three of the fifteen files, and the only tree, permission
+   and ownership difference.
+3. **Make the package databases reproducible.** `rpmdb.sqlite` and the libdnf5
+   transaction history record install times. `SOURCE_DATE_EPOCH` is already
+   passed to the build and rpm honours it only partially, so this needs
+   investigation rather than a one-line fix. Five of the fifteen.
+4. **Rebuild or drop the fontconfig caches.** Seven files, derived from fonts
+   that already match. Regenerating them at first boot, or excluding them from
+   the image, removes them.
+5. **Provision `build/repositories/fedora-44-snapshot.repo`.** It does not exist
+   — only an `.example` — so neither build could use `BUNNY_RELEASE_BUILD=1`.
+   The package sets happened to match here; that is luck, not design.
+6. **Mirror the base image.** The digest pinned since Phase 6 was garbage
+   collected from quay.io before the hosted builder could pull it.
+
+Items 2 to 4 account for all fifteen differing files. Item 1 is the one that also
+unblocks the independence verdict.
+
+## Method
+
+Both sides were measured by one collector,
+`scripts/reproducibility/collect_comparison_dimensions.py`, reading each
+builder's own OCI archive with `tarfile` — no root, no podman, no mount. Layers
+are applied in manifest order with OCI whiteout semantics, so the result is the
+image's filesystem rather than the union of its layers.
+
+A difference in this report is therefore a difference in the images, not a
+difference in how they were measured.
+
+Paths under `/var/log`, `/var/cache`, `/var/tmp`, `/tmp` and `/run`, and
+`/etc/machine-id`, are excluded from the compared set as runtime state rather
+than build output — 606 paths, listed in the collection record so the exclusion
+is visible rather than silent. `etc/hostname` is **not** excluded, which is why
+it appears above.
+
+One exclusion was added during this comparison and is worth naming: the SPDX
+document root. syft records the scanned archive itself as a package whose version
+is the archive's own digest, so leaving it in made `packageInventory`
+self-referential — it could match only when the archives were byte-identical,
+which `rawArchive` already measures. Two builds with identical package sets would
+have reported a package difference. It is excluded by `SPDXID` prefix; every real
+package stays.
+
+The committed comparison stores each dimension either verbatim or, when it
+exceeds 256 KiB, as a SHA-256 over the whole collected value plus every differing
+member name. Equality is preserved exactly: two dimensions compare equal there if
+and only if they were equal in full. The full collections are 71 MB per builder
+and are not committed.
 
 ## Evidence
 
-- `operations/data/build-comparison.json` — the seventeen dimensions
-- `operations/data/builders.json` — legacy comparisons, and the empty schema-2 arrays
-- `build/out/qualification/reproducibility-comparison.json`
-- `build/out/qualification/builder-independence.json`
-- `tests/reproducibility/` — 90 tests, including all four mandated adversarial cases
-- `docs/INDEPENDENT_BUILDERS.md` — how to run a real two-builder comparison
+| Artifact | Location |
+| --- | --- |
+| Comparison verdict | `build/out/qualification/reproducibility-comparison.json` |
+| Comparison source | `operations/data/build-comparison.json` |
+| Builder records and the declared pair | `operations/data/builders.json` |
+| Import record | `build/out/qualification/hosted-builder-import.json` |
+| Hosted run | [30564513627](https://github.com/COMRADEART/bunny-os/actions/runs/30564513627) |
+| Hosted build details | `HOSTED_INDEPENDENT_BUILD_REPORT.md` |
+| Import checks | `HOSTED_ARTIFACT_IMPORT_REPORT.md` |

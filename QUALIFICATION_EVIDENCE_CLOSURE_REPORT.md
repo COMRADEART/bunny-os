@@ -334,3 +334,70 @@ launch any hosted service.**
 The next useful work is item 1, and it costs a workflow dispatch.
 
 Do not begin Phase 8.
+
+## 2026-07-30 addendum: CI portability repair and hosted execution
+
+The apparatus this report describes has now been *run*, on CI and on a second
+builder. Running it changed three things.
+
+### The CI that verified this evidence was itself broken
+
+Eight defects across three workflows, recorded in
+`docs/CI_PORTABILITY_BASELINE.md` and repaired in
+`CI_PORTABILITY_REPAIR_REPORT.md`. Two of them affected whether the evidence in
+this report means what it says:
+
+* **The committed CVE findings could never have regenerated.** The generator
+  stamped `git rev-parse HEAD`, so committing the twenty-five records moved
+  `HEAD` and invalidated them in the same act. The check that was supposed to
+  prove they follow from the committed evidence would have reported the same
+  failure for an honest record and a tampered one. They are now bound to
+  `candidateCommit`, every differing field is classified before anything is
+  excluded, and only `generatedAt` may differ. Documented in
+  `docs/CVE_REGENERATION_INVARIANTS.md`.
+
+* **Several CI jobs accepted any non-zero exit as proof a protected gate
+  refused.** A traceback exits 1. So does a missing file. Such a job goes green
+  when `release.py` stops parsing and reports the stable gate correctly holding.
+  All seventeen call sites now assert the exact documented status.
+
+A third defect was latent: pull-request jobs check out a synthetic merge commit
+that exists in no branch, and six call sites each resolved a commit independently
+as `HEAD`. `release/commits.py` now distinguishes the five commit concepts and
+refuses to generate committed evidence for a merge ref.
+
+### The hosted builder had never been run, and it did not work
+
+This report previously described dispatching it as the one prerequisite that
+"needs nothing but a button". It took seven dispatches and five real defects,
+recorded as F9–F14. The one worth carrying forward: **the base image digest
+pinned since Phase 6 had been garbage collected from quay.io**, and the local
+builder kept building against it because podman had the layers cached. A build
+that appears to reproduce may only be reachable from one machine's cache.
+
+### Independent reproducibility was measured, and it does not pass
+
+Full result in `INDEPENDENT_REPRODUCIBILITY_REPORT.md`:
+`NON_REPRODUCIBLE`, 11 dimensions matching, 5 differing, 1 not collected. Fifteen
+files differ out of 104,247, all of them build-environment state — a random
+`brlapi.key`, seven fontconfig caches, the rpm and dnf databases, two `countme`
+counters. The file tree, permissions, ownership, package inventory and kernel
+match exactly. The builders are additionally not certified independent because
+`skopeo`, `python3` and `image-builder` differ.
+
+### Gate state
+
+Unchanged, and now verified by exact exit code rather than by "non-zero":
+
+```text
+Source gate:               PASS      (exit 0)
+Qualification candidate:   BLOCKED   (exit 2, 2 of 14 prerequisites)
+Stable release:            NO-GO     (exit 2)
+OEM / Enterprise / Sync:   BLOCKED   (exit 2)
+```
+
+`independent-reproducibility` remains `BLOCKED`. It is no longer blocked for want
+of a hosted build — the hosted build exists and its evidence is imported. It is
+blocked because the comparison it enabled reported `NON_REPRODUCIBLE` and the
+builders are not certified independent. That is a better kind of blocked: the
+prerequisite now fails on a measurement rather than on an absence.

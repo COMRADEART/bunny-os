@@ -26,11 +26,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install validation dependencies
-        run: python -m pip install --disable-pip-version-check jsonschema
+        run: python -m pip install --disable-pip-version-check jsonschema pyyaml
       - name: Repository-native validation
         run: python scripts/task.py validate
       - name: Inherited source suites
@@ -46,6 +51,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -57,6 +67,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -67,22 +82,12 @@ jobs:
         run: python scripts/generate_disposition.py --check --image x --base-digest x --commit x --scanned-at x
       - name: Generate the vulnerability report
         run: |
-          set +e
-          python scripts/release.py vulnerability-position
-          status=$?
-          set -e
-          if [ "$status" -eq 0 ]; then
-            echo "::warning::the vulnerability position no longer blocks; update the reports"
-          elif [ "$status" -ne 2 ]; then
-            echo "unexpected exit $status"; exit 1
-          fi
+          # Exit 0 would be good news that the reports do not yet reflect, so it
+          # is a warning rather than a failure. Any other status is a crash.
+          bash build/scripts/assert-gate.sh evaluated "vulnerability position" -- python scripts/release.py vulnerability-position
       - name: Bounded reachability review is well formed
         run: |
-          set +e
-          python scripts/release.py reachability-review
-          status=$?
-          set -e
-          [ "$status" -eq 0 ] || [ "$status" -eq 2 ]
+          bash build/scripts/assert-gate.sh evaluated "bounded reachability review" -- python scripts/release.py reachability-review
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -94,6 +99,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -101,24 +111,21 @@ jobs:
         run: python -m unittest discover -s tests/image -t .
       - name: Reproducibility comparison must not overclaim
         run: |
-          set +e
-          python scripts/release.py reproducibility-compare
-          status=$?
-          set -e
           # Exit 2 is correct while only one machine exists. Exit 0 would mean
           # independent-builder reproducibility was established, which needs a
-          # second machine that CI does not have.
-          if [ "$status" -eq 0 ]; then
-            echo "::error::independent-builder reproducibility reported as established in CI"
-            exit 1
-          fi
-          [ "$status" -eq 2 ]
+          # second machine this job does not have.
+          bash build/scripts/assert-gate.sh 2 "reproducibility comparison" -- python scripts/release.py reproducibility-compare
 
   package-minimisation:
     name: Package minimisation
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -130,6 +137,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -140,46 +152,41 @@ jobs:
         run: python scripts/signing_drill.py --keydir "$RUNNER_TEMP/bunny-dev-keys"
       - name: Signing roles are separated and no production key is claimed
         run: |
-          set +e
-          python scripts/release.py signing-roles
-          status=$?
-          set -e
-          if [ "$status" -eq 0 ]; then
-            echo "::error::a production signing key is claimed in pull-request CI"
-            exit 1
-          fi
+          bash build/scripts/assert-gate.sh 2 "signing roles" -- python scripts/release.py signing-roles
 
   release-manifest:
     name: Release manifest validation
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Candidate manifest validation fails closed with no candidate
         run: |
-          set +e
-          python scripts/release.py validate-release-manifest
-          status=$?
-          set -e
-          [ "$status" -eq 2 ] || { echo "expected the manifest gate to block"; exit 1; }
+          bash build/scripts/assert-gate.sh 2 "release manifest validation" -- python scripts/release.py validate-release-manifest
 
   recovery-image-validation:
     name: Recovery image validation
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Recovery matrix must not pass on source inspection
         run: |
-          set +e
-          python scripts/release.py test-matrix --name recovery-media
-          status=$?
-          set -e
-          [ "$status" -eq 2 ] || { echo "recovery media reported qualified without a boot"; exit 1; }
+          bash build/scripts/assert-gate.sh 2 "recovery media matrix" -- python scripts/release.py test-matrix --name recovery-media
       - name: Recovery qualification tests
         run: python -m unittest discover -s tests/recovery -t .
 
@@ -188,32 +195,25 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Evidence record is well formed
         run: |
-          set +e
-          python scripts/release.py stable-evidence-report
-          status=$?
-          set -e
           # 2 means blocking evidence, which is expected. Any other non-zero
           # exit means the record itself is malformed.
-          [ "$status" -eq 0 ] || [ "$status" -eq 2 ]
+          bash build/scripts/assert-gate.sh evaluated "stable evidence report" -- python scripts/release.py stable-evidence-report
       - name: Hardware evidence intake
         run: |
-          set +e
-          python scripts/release.py validate-hardware-evidence
-          status=$?
-          set -e
-          [ "$status" -eq 0 ] || [ "$status" -eq 2 ]
+          bash build/scripts/assert-gate.sh evaluated "hardware evidence intake" -- python scripts/release.py validate-hardware-evidence
       - name: Independent review status
         run: |
-          set +e
-          python scripts/release.py validate-independent-reviews
-          status=$?
-          set -e
-          [ "$status" -eq 0 ] || [ "$status" -eq 2 ]
+          bash build/scripts/assert-gate.sh evaluated "independent review status" -- python scripts/release.py validate-independent-reviews
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -228,6 +228,11 @@ jobs:
     # evidence, so a GO here means a gate was weakened.
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -237,20 +242,10 @@ jobs:
         run: python scripts/release.py pilot-closure-assertion
       - name: Each pilot gate individually reports BLOCKED
         run: |
+          set -euo pipefail
           for kind in oem-pilot enterprise-pilot sync-pilot; do
-            set +e
-            python scripts/release.py gate --kind "$kind"
-            status=$?
-            set -e
-            if [ "$status" -ne 2 ]; then
-              echo "::error::$kind did not report BLOCKED (exit $status)"
-              exit 1
-            fi
+            bash build/scripts/assert-gate.sh 2 "$kind gate" -- python scripts/release.py gate --kind "$kind"
           done
       - name: Stable release gate reports NO-GO
         run: |
-          set +e
-          python scripts/release.py gate --kind stable-release
-          status=$?
-          set -e
-          [ "$status" -eq 2 ] || { echo "::error::stable gate reported GO in pull-request CI"; exit 1; }
+          bash build/scripts/assert-gate.sh 2 "stable release gate" -- python scripts/release.py gate --kind stable-release

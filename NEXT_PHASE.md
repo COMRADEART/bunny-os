@@ -10,30 +10,61 @@ The qualification evidence closure completed every technically automatable evide
 task. What remains is ordered below by cost, and the cheapest item is genuinely
 cheap.
 
-### 1. Dispatch the hosted builder — one workflow run
+### 1. The hosted builder has now been run — and it was not one button
 
-`.github/workflows/independent-builder.yml` is committed and has never run. It is the
-only one of the fourteen candidate prerequisites that needs nothing but a button.
+This section previously said the hosted builder "needs nothing but a button". It
+took seven dispatches. Five of the failures were real defects in the workflow or
+the runner environment, and none was visible by reading the workflow:
 
-Before dispatching, verify `BUNNY_ARCHIVE_ONLY=1` on the Fedora/KVM builder:
+| Attempt | Failed on |
+| --- | --- |
+| 1 | the pinned base digest no longer existed upstream |
+| 2 | `crun` refused the OCI spec version Ubuntu's podman writes |
+| 3 | the storage driver could not be changed under an initialised store |
+| 4 | the SBOM step was killed — first diagnosed as disk, wrongly |
+| 5 | a `[storage]` section replaces the defaults, so `runroot` must be set |
 
-```sh
-BUNNY_ARCHIVE_ONLY=1 \
-BUNNY_BASE_IMAGE=quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4 \
-  bash build/scripts/build-image.sh beta
-```
+See `CI_PORTABILITY_REPAIR_REPORT.md` and `docs/CI_PORTABILITY_BASELINE.md`
+(F9–F13) for each.
 
-Then, on the builder, collect the local half and dispatch the hosted half:
+The first is the one worth carrying forward. `quay.io/fedora/fedora-bootc:44` is
+rebuilt daily and old digests are garbage collected, and **the local builder kept
+building against the dead digest because it had the layers cached**. A build that
+appears to reproduce may only be reachable from one machine's cache.
 
-```sh
-make collect-builder-record BUNNY_BUILDER_ID=local-fedora
-# dispatch the workflow against this commit and the pinned digest
-make verify-builder-independence
-make compare-independent-builds
-```
+### 1a. Mirror the base image — the cheapest remaining reproducibility work
 
-The comparison then needs the sixteen uncollected dimensions gathered from both
-builders. That is one build on each side, not more analysis.
+Pinning a digest records which base was used. It does not make that base
+obtainable, and this project's pinned base became unobtainable within days.
+
+Mirror the base into a registry under this project's control, or a
+content-addressed local mirror both builders pull from. Until then every
+reproducibility comparison is against whatever base was current that week, and
+cannot be repeated afterwards.
+
+### 1b. Provision the package snapshot repository
+
+`build/repositories/` contains `fedora-44-snapshot.repo.example` and a README,
+and no reviewed `fedora-44-snapshot.repo`. `BUNNY_RELEASE_BUILD=1` therefore
+cannot be used, and both halves of the independent comparison resolved their
+package sets against live Fedora repositories.
+
+The build already knows how to use a snapshot repository and already validates it
+(HTTPS, `gpgcheck=1`, `repo_gpgcheck=1`, exactly one section). What is missing is
+the file. Two builders cannot be expected to produce identical images while each
+resolves its own package set from a moving repository.
+
+### 1c. Pin the container toolchain across both builders
+
+`verify-builder-independence` refuses the pair because their toolchains differ.
+The pairing itself is accepted — a local machine paired with hosted CI, under
+distinct administrator boundaries — and source commit and base digest match. What
+differs is `podman` (5.8.4 on Fedora, 4.9.3 as Ubuntu 24.04 packages it), and
+`podman` is the program that writes the OCI archive.
+
+`syft` already matches at 1.50.0 on both sides because the workflow pins it. The
+same treatment is needed for podman, either by installing a pinned podman on the
+hosted runner or by running the hosted build inside a Fedora container.
 
 ### 2. Build a live ISO and a signed recovery ISO — engineering
 
@@ -293,3 +324,40 @@ hardware or people. Item 7 is the owner's.
 
 Do not begin Phase 8. Do not manufacture hardware, deploy a fleet, or launch a
 hosted service.
+
+## After the reproducible build remediation, 2026-07-30
+
+**Do not begin Phase 8, physical-hardware qualification, independent review,
+production signing, or any pilot.** Nothing below changes that.
+
+The supply chain the previous section asked for now exists and has been run:
+the base is mirrored and every blob re-hashed, the builder toolchain is pinned by
+digest with all eighteen tools classified, and 474 packages are held in an
+immutable snapshot whose every signature verifies against Fedora's own keys.
+
+What has **not** happened is the measurement. In order:
+
+1. **Grant `write:packages`.** One credential. Without it the retained inputs
+   exist on one machine, which is the defect the mirror exists to remove, and the
+   hosted half of the comparison cannot run at all.
+2. **Complete two clean local hermetic builds** and compare them. This is the
+   gate that must pass before dispatching anything hosted — a warm-cache build
+   does not satisfy it and the tooling refuses one.
+3. **Create Commit C**, a new qualification target. Commit A cannot be reused:
+   the base reference, the builder, the package source, the clock and the
+   finalisation stage have all changed.
+4. **Dispatch two hosted builds** on separate fresh runners against Commit C,
+   then compare H1↔H2, L↔H1 and L↔H2. Two hosted runs of one commit an hour
+   apart previously disagreed because the runner image rotated; one hosted
+   comparison cannot distinguish reproducibility from a favourable accident.
+5. **Import as Commit D**, referencing Commit C, without moving the candidate.
+
+The nine defects found by running this tooling are recorded in
+`REPRODUCIBILITY_REMEDIATION_REPORT.md`. Three of them — two garbage version
+strings that would have compared equal, a signature field reporting every Fedora
+package as unsigned, and a clock override wider than the lock declaring it —
+would each have produced evidence that looked correct.
+
+Everything else in this document is unchanged. The vulnerability position, the
+absent hardware, the absent reviews, the absent second signer and the absent
+production key all still block, and none of them is touched by this work.

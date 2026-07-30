@@ -299,3 +299,71 @@ than averaged away.
 Unchanged and blocking. 8 Critical and 28 High fixable findings, neither waived
 nor converted to PASS. `gate-stable-release` reports `NO-GO`. No release
 approval is given and no pilot may begin.
+
+## 2026-07-30 hosted independent builder security addendum
+
+The first execution of `.github/workflows/independent-builder.yml`, and what it
+does and does not establish about trust.
+
+### No production signing secret is reachable, asserted rather than assumed
+
+The guard job names all four secrets explicitly and fails if any resolves to a
+non-empty value:
+
+```text
+BUNNY_OS_RELEASE_KEY  BUNNY_RECOVERY_KEY  BUNNY_UPDATE_KEY  BUNNY_CATALOGUE_KEY
+```
+
+Naming them individually rather than iterating over `secrets` is deliberate: the
+point is that these four names resolve to nothing in this workflow, and a future
+edit that wires one in fails here. The guard passed on every one of the five
+dispatches, including the four that failed for other reasons.
+
+The artifacts the workflow produces are unsigned and cannot be promoted. The
+import refuses any bundle claiming production provenance without a signature.
+
+### The imported evidence is cross-referenced, not signed
+
+`release/hosted.py` checks each claim a hosted builder record makes against
+another file in the same bundle that would have to be edited consistently for the
+claim to survive — the runner's own environment report, the CI provenance, the
+artifact manifest, the build provenance.
+
+This detects a record edited in one place. It does **not** detect a consistently
+forged bundle, and the import record says so:
+
+```json
+"signed": false,
+"provenanceClaim": "unsigned"
+```
+
+`tests/portability/test_hosted_import.py::test_a_consistently_forged_bundle_is_not_claimed_to_be_caught`
+asserts the limit directly, so that the acceptance of such a bundle is understood
+rather than mistaken for a proof. Closing that gap needs the hosted build to sign
+its bundle with a key the importer can verify, which is a key-management change,
+not a workflow change.
+
+### A dead base digest is a supply-chain observation
+
+The pinned base image `sha256:fb71f099…` had been garbage collected upstream. The
+hosted builder could not obtain it; the local builder built against it from cache.
+
+Two things follow. First, an artifact's provenance can name a base that no longer
+exists, and nothing about the artifact reveals this. Second, and more sharply: a
+build reproducing on one machine may be reproducing *from that machine's cache*,
+and cannot be reproduced by anyone else. A pinned digest is a record of what was
+used, not a guarantee of availability, and the two are easy to confuse.
+
+Mitigation, recorded in `KNOWN_LIMITATIONS.md`: mirror the pinned base into a
+registry under this project's control.
+
+### An archive-only build cannot qualify anything
+
+`BUNNY_ARCHIVE_ONLY=1` produces an OCI archive and no disk image. Nothing was
+installed, nothing booted, no recovery media was written, no hardware was
+exercised. Both protected gates refuse such an artifact and name what it did not
+do; the build provenance declares `archiveOnly: true`; and a record that does not
+declare the field at all is treated as *unknown*, not as a full build.
+
+This matters because an archive-only artifact is otherwise indistinguishable from
+a complete one: same filename, same digest discipline, same provenance shape.

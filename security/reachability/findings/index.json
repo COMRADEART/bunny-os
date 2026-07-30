@@ -32,8 +32,8 @@
     "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
     "/sysroot/ostree/repo/objects/ea/cf5a37b7b9193f1063a40c3def6c25fc348d9f404d569b91aeba6007bceef7.file"
   ],
-  "generatedAt": "2026-07-30T11:24:44.948396Z",
+  "generatedAt": "2026-07-30T14:49:43.437984Z",
   "note": "Every record concludes 'Unknown'. Nine of the ten bounded reachability questions are answered from measured evidence; the tenth needs the binary, its debuginfo and the advisory's own description of the vulnerable function, none of which is in this repository.",
   "schemaVersion": 1,
-  "sourceCommit": "80df25b09f6578276d18c8a82f15c47dd8959740"
+  "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8"
 }

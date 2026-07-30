@@ -33,6 +33,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import tempfile
 from typing import Any, Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +53,19 @@ from release.cve import (  # noqa: E402
     CveAnalysisError,
     classify_symbol_evidence,
     evaluate_document,
+)
+from release.commits import (  # noqa: E402
+    commit_for_purpose,
+    is_full_sha,
+    resolve_commit_context,
+    validate_candidate_binding,
+)
+from release.paths import display_path  # noqa: E402
+from release.regeneration import (  # noqa: E402
+    CLASSIFICATIONS,
+    GENERATION_METADATA_FIELDS,
+    evaluate_regeneration,
+    render_differences,
 )
 from release.reviews import completed_review_identifiers  # noqa: E402
 
@@ -107,12 +121,60 @@ def write_text(path: Path, text: str) -> None:
 
 
 def source_commit() -> str:
-    try:
-        return subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
-        ).stdout.strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):  # pragma: no cover
-        return "0" * 40
+    """The commit these findings describe. Not ``HEAD``.
+
+    This returned ``git rev-parse HEAD``. The 25 records were generated while
+    ``HEAD`` was ``80df25b``, then committed, which moved ``HEAD`` to ``9dc7e33``
+    — so the CI step that regenerates them and requires a byte-identical result
+    could never pass. Committing the evidence invalidated it.
+
+    The findings describe the image that was scanned into
+    ``evidence/vulnerability/beta-grype.json``, and the commit that image was
+    built from is declared as ``candidateCommit`` in
+    ``operations/data/release-evidence.json``. Binding to that makes the records
+    regenerate for as long as they describe the same candidate, and makes
+    wrong-commit evidence still fail, because the declared candidate is compared
+    rather than ignored.
+    """
+    declared = load_optional(DATA / "release-evidence.json", {}).get("candidateCommit")
+    context = resolve_commit_context(
+        root=ROOT, declaredCandidate=declared if is_full_sha(declared) else None
+    )
+    reasons = validate_candidate_binding(context, root=ROOT)
+    if reasons:
+        raise SystemExit(
+            "BLOCKED: the candidate commit these findings would describe is unusable:\n  - "
+            + "\n  - ".join(reasons)
+        )
+    return commit_for_purpose("committed-evidence", context)
+
+
+def _tracked_desktop_entries(commit: str) -> list[tuple[str, str]]:
+    """Every tracked ``.desktop`` file at ``commit``, as (path, contents).
+
+    Read out of the commit rather than off disk. A record that says it measured
+    the tree at a commit must have measured that tree: grepping the working
+    directory would describe whatever is checked out, which is how the embedded
+    short commit in ``desktopActivationEvidence`` started moving between runs.
+    """
+    listing = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", commit],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    if listing.returncode != 0:
+        raise SystemExit(
+            f"BLOCKED: cannot list the tree at {commit[:12]}: {listing.stderr.strip()}. "
+            "A shallow clone does not contain the candidate commit; fetch with depth 0."
+        )
+    entries: list[tuple[str, str]] = []
+    for name in sorted(line for line in listing.stdout.splitlines() if line.endswith(".desktop")):
+        blob = subprocess.run(
+            ["git", "show", f"{commit}:{name}"], cwd=ROOT, capture_output=True, text=True
+        )
+        if blob.returncode != 0:  # pragma: no cover - listed but unreadable
+            raise SystemExit(f"BLOCKED: cannot read {name} at {commit[:12]}")
+        entries.append((name, blob.stdout))
+    return entries
 
 
 def blocking_findings() -> list[dict[str, Any]]:
@@ -150,20 +212,20 @@ def carrier_locations() -> dict[tuple[str, str], list[str]]:
     return locations
 
 
-def _desktop_entries_reference_container_runtime() -> tuple[str, list[str]]:
-    """Grep the shipped desktop entries for a container-runtime invocation."""
+def _desktop_entries_reference_container_runtime(commit: str) -> tuple[str, list[str]]:
+    """Grep the desktop entries *at the candidate commit* for a runtime invocation.
+
+    Paths are reported in POSIX form because git reports them that way, so the
+    result is identical on a Windows development host and an Ubuntu runner.
+    """
     hits: list[str] = []
-    for path in sorted(ROOT.rglob("*.desktop")):
-        if "node_modules" in path.parts or "out" in path.parts:
-            continue
-        try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:  # pragma: no cover
+    for name, text in _tracked_desktop_entries(commit):
+        if name.startswith("node_modules/") or "/out/" in f"/{name}":
             continue
         for token in ("podman", "skopeo", "bootc", "toolbox", "docker"):
             if re.search(rf"^Exec=.*\b{token}\b", text, re.MULTILINE):
-                hits.append(f"{path.relative_to(ROOT)}: {token}")
-    return ("yes" if hits else "no"), hits
+                hits.append(f"{name}: {token}")
+    return ("yes" if hits else "no"), sorted(hits)
 
 
 # --------------------------------------------------------------------------- #
@@ -171,15 +233,21 @@ def _desktop_entries_reference_container_runtime() -> tuple[str, list[str]]:
 # --------------------------------------------------------------------------- #
 
 
-def generate_findings() -> int:
-    """Write one analysis record per Critical/High advisory from committed evidence."""
+def generate_findings(destination: Path | None = None) -> int:
+    """Write one analysis record per Critical/High advisory from committed evidence.
+
+    ``destination`` lets the regeneration check write to a scratch directory
+    instead of the working tree, so verifying determinism does not first destroy
+    the thing being verified.
+    """
+    target = destination if destination is not None else FINDINGS
     findings = blocking_findings()
     answers = reachability_answers()
     locations = carrier_locations()
-    desktop_state, desktop_hits = _desktop_entries_reference_container_runtime()
     commit = source_commit()
+    desktop_state, desktop_hits = _desktop_entries_reference_container_runtime(commit)
 
-    for directory in (FINDINGS, SOURCES, REPORTS, PACKAGES):
+    for directory in (target, SOURCES, REPORTS, PACKAGES):
         directory.mkdir(parents=True, exist_ok=True)
 
     written: list[str] = []
@@ -280,7 +348,7 @@ def generate_findings() -> int:
         if missing:  # pragma: no cover - guards the generator against drift
             raise SystemExit(f"{advisory}: generator omitted required fields: {', '.join(missing)}")
 
-        write_json(FINDINGS / f"{advisory}.json", record)
+        write_json(target / f"{advisory}.json", record)
         written.append(advisory)
 
     # Only the blocking set's carriers. The scan records locations for every
@@ -303,8 +371,8 @@ def generate_findings() -> int:
             "repository."
         ),
     }
-    write_json(FINDINGS / "index.json", index)
-    print(f"wrote {len(written)} per-CVE analysis records to {FINDINGS.relative_to(ROOT)}")
+    write_json(target / "index.json", index)
+    print(f"wrote {len(written)} per-CVE analysis records to {display_path(target, ROOT)}")
     print(f"distinct carrier objects: {len(index['distinctCarrierObjects'])}")
     for path in index["distinctCarrierObjects"]:
         sharing = sorted(
@@ -383,7 +451,7 @@ def acquire_plan() -> int:
     }
     write_json(SOURCES / "acquisition-plan.json", payload)
     write_text(SOURCES / "ACQUISITION.md", _render_acquisition_markdown(payload))
-    print(f"wrote {(SOURCES / 'acquisition-plan.json').relative_to(ROOT)} for {len(plan)} target(s)")
+    print(f"wrote {display_path(SOURCES / 'acquisition-plan.json', ROOT)} for {len(plan)} target(s)")
     for target in plan:
         print(f"  {target['installedNevra']} -> {target['binaryPath']}")
     return 0
@@ -441,7 +509,7 @@ def validate_acquisition() -> int:
     document = load_optional(path, None)
     if document is None:
         print(
-            f"BLOCKED: {path.relative_to(ROOT)} does not exist. No source, binary or debuginfo "
+            f"BLOCKED: {display_path(path, ROOT)} does not exist. No source, binary or debuginfo "
             "package has been acquired, so no symbol analysis can be performed."
         )
         print("run: python scripts/reachability.py acquire-plan, then execute the plan on a Fedora host")
@@ -664,7 +732,7 @@ def generate_packages() -> int:
         ),
     }
     write_json(PACKAGES / "index.json", manifest)
-    print(f"wrote {len(written)} review bundle(s) of {len(_BUNDLE_FILES)} files to {PACKAGES.relative_to(ROOT)}")
+    print(f"wrote {len(written)} review bundle(s) of {len(_BUNDLE_FILES)} files to {display_path(PACKAGES, ROOT)}")
     return 0
 
 
@@ -981,6 +1049,61 @@ def disposition() -> int:
     return 0
 
 
+def verify_findings() -> int:
+    """Regenerate the findings and report every difference, classified.
+
+    The step this replaces printed one filename and stopped, having first
+    stripped ``generatedAt`` from both sides. It could not distinguish a record
+    that drifted by a timestamp from one edited by hand, and it hid that all 25
+    records differed in ``sourceCommit`` for a reason unrelated to the evidence.
+
+    Nothing is stripped here. Every difference is classified, and only
+    generation metadata — an enumerated list, currently one field — may differ.
+    """
+    committed_paths = sorted(FINDINGS.glob("*.json"))
+    if not committed_paths:
+        print(f"BLOCKED: no committed findings in {display_path(FINDINGS, ROOT)}")
+        return 2
+
+    committed = {path.name: load(path) for path in committed_paths}
+
+    scratch = Path(tempfile.mkdtemp(prefix="bunny-reachability-verify-"))
+    try:
+        status = generate_findings(destination=scratch)
+        if status != 0:  # pragma: no cover - generator refused
+            return status
+        regenerated = {path.name: load(path) for path in sorted(scratch.glob("*.json"))}
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+    report = evaluate_regeneration(committed, regenerated)
+    payload = report.as_dict()
+    OUT.mkdir(parents=True, exist_ok=True)
+    write_json(OUT / "reachability-regeneration.json", payload)
+
+    counts = report.counts()
+    print(f"{report.documents} record(s) compared, nothing excluded before comparison")
+    for name in CLASSIFICATIONS:
+        if counts[name]:
+            print(f"  {counts[name]:3} {name}")
+    if not any(counts.values()):
+        print("  no differences at all")
+
+    if report.deterministic:
+        allowed = ", ".join(sorted(GENERATION_METADATA_FIELDS))
+        print(f"findings regenerate deterministically; only {allowed} may differ")
+        return 0
+
+    print("\nBLOCKED: the committed findings do not follow from the committed evidence.")
+    print(render_differences(report.blocking))
+    for name in report.missing:
+        print(f"  committed record {name} is not regenerated at all")
+    for name in report.unexpected:
+        print(f"  regenerated record {name} is not committed")
+    print(f"\nwrote {display_path(OUT / 'reachability-regeneration.json', ROOT)}")
+    return 2
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="reachability")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -999,9 +1122,16 @@ def main() -> int:
         help="root of a mounted Bunny OS deployment; omit to look at this host",
     )
 
+    commands.add_parser(
+        "verify-findings",
+        help="regenerate into a scratch directory and report every classified difference",
+    )
+
     args = parser.parse_args()
     if args.command == "generate-findings":
         return generate_findings()
+    if args.command == "verify-findings":
+        return verify_findings()
     if args.command == "acquire-plan":
         return acquire_plan()
     if args.command == "validate-acquisition":

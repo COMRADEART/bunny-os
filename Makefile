@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot gate-dev-qualification dev-qualification-gaps qualification-compare release-blocker-baseline vulnerability-position reachability-review package-minimisation-check licence-gate independent-builder-prepare reproducibility-compare development-signing-drill signing-roles build-qualification-candidate build-independent-recovery validate-release-manifest test-installation-matrix test-encryption-matrix test-update-matrix test-rollback-matrix test-recovery-matrix test-preservation-matrix test-accessibility-matrix validate-hardware-evidence validate-independent-reviews stable-evidence-report pilot-closure-assertion test-release-closure qualification-evidence-baseline independent-builder-ci-manifest collect-builder-record verify-builder-independence compare-independent-builds acquire-cve-sources validate-cve-acquisition analyse-cve-symbols generate-reachability-packages collect-hardware-evidence accessibility-evidence-plan validate-accessibility-evidence two-person-development-signing-drill qualification-candidate-readiness gate-source gate-qualification-candidate test-qualification-evidence test-reachability test-review-evidence
+.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot gate-dev-qualification dev-qualification-gaps qualification-compare release-blocker-baseline vulnerability-position reachability-review package-minimisation-check licence-gate independent-builder-prepare reproducibility-compare development-signing-drill signing-roles build-qualification-candidate build-independent-recovery validate-release-manifest test-installation-matrix test-encryption-matrix test-update-matrix test-rollback-matrix test-recovery-matrix test-preservation-matrix test-accessibility-matrix validate-hardware-evidence validate-independent-reviews stable-evidence-report pilot-closure-assertion test-release-closure qualification-evidence-baseline independent-builder-ci-manifest collect-builder-record verify-builder-independence compare-independent-builds acquire-cve-sources validate-cve-acquisition analyse-cve-symbols generate-reachability-packages collect-hardware-evidence accessibility-evidence-plan validate-accessibility-evidence two-person-development-signing-drill qualification-candidate-readiness gate-source gate-qualification-candidate test-qualification-evidence test-reachability test-review-evidence mirror-base-image verify-retained-base build-builder-image verify-builder-image resolve-package-lock materialise-package-snapshot verify-package-snapshot verify-input-locks hermetic-build image-finalisation machine-identity-check mutable-state-check rpmdb-determinism-check font-cache-determinism-check intended-selinux-manifest deterministic-sbom local-hermetic-repeatability dispatch-hosted-reproducibility import-reproducibility-evidence compare-three-builds toolchain-independence reproducibility-gate test-supplychain
 
 audit:
 	$(PYTHON) scripts/task.py audit
@@ -555,3 +555,76 @@ gate-enterprise-pilot: gate-phase-7-source
 gate-sync-pilot: gate-phase-7-source
 	$(PYTHON) scripts/phase7.py pilot-gate --kind sync
 	$(PYTHON) scripts/release.py gate --kind sync-pilot
+
+# --- Reproducible build remediation -----------------------------------------
+# Every target has a Python entry point; `make` is unavailable on the Windows
+# development host, so the equivalent command is given in each report.
+
+mirror-base-image:
+	bash scripts/supply-chain/mirror-base-image.sh --upstream "$${BUNNY_BASE_IMAGE:?set BUNNY_BASE_IMAGE to a digest-pinned reference}"
+
+verify-retained-base:
+	$(PYTHON) scripts/supply-chain/verify-retained-base.py
+
+build-builder-image:
+	bash scripts/supply-chain/build-builder-image.sh
+
+verify-builder-image:
+	$(PYTHON) scripts/supply-chain/verify-builder-image.py
+
+resolve-package-lock:
+	$(PYTHON) scripts/supply-chain/resolve-package-lock.py --profile "$${BUNNY_PROFILE:-beta}" --base-layout "$${BUNNY_BASE_LAYOUT:?set BUNNY_BASE_LAYOUT}" --download-dir "$${BUNNY_DOWNLOAD_DIR:-/var/tmp/bunny-package-download}"
+
+materialise-package-snapshot:
+	bash scripts/supply-chain/materialise-package-snapshot.sh --snapshot-id "$${BUNNY_SNAPSHOT_ID:?set BUNNY_SNAPSHOT_ID}" --packages "$${BUNNY_DOWNLOAD_DIR:-/var/tmp/bunny-package-download}"
+
+verify-package-snapshot:
+	$(PYTHON) scripts/supply-chain/verify-package-snapshot.py
+
+verify-input-locks:
+	$(PYTHON) scripts/supplychain.py verify-input-locks
+
+hermetic-build:
+	BUNNY_HERMETIC_BUILD=1 BUNNY_ARCHIVE_ONLY=1 bash build/scripts/build-image.sh "$${BUNNY_PROFILE:-beta}"
+
+image-finalisation:
+	bash build/scripts/finalise-image.sh --epoch "$${SOURCE_DATE_EPOCH:?set SOURCE_DATE_EPOCH}" --report build/out/qualification/finalisation.json
+
+machine-identity-check:
+	$(PYTHON) scripts/supplychain.py machine-identity-check --dimensions "$${BUNNY_DIMENSIONS:-build/out/qualification/dimensions.json}"
+
+mutable-state-check:
+	$(PYTHON) scripts/supplychain.py mutable-state-check --dimensions "$${BUNNY_DIMENSIONS:-build/out/qualification/dimensions.json}"
+
+rpmdb-determinism-check:
+	$(PYTHON) scripts/reproducibility/check_package_state.py --dimensions "$${BUNNY_DIMENSIONS:-build/out/qualification/dimensions.json}" --kind rpmdb
+
+font-cache-determinism-check:
+	$(PYTHON) scripts/reproducibility/check_package_state.py --dimensions "$${BUNNY_DIMENSIONS:-build/out/qualification/dimensions.json}" --kind fontconfig
+
+intended-selinux-manifest:
+	$(PYTHON) scripts/reproducibility/collect_intended_selinux.py --archive "$${BUNNY_ARCHIVE:?set BUNNY_ARCHIVE}" --output build/out/qualification/intended-selinux.json
+
+deterministic-sbom:
+	$(PYTHON) scripts/reproducibility/check_package_state.py --dimensions "$${BUNNY_DIMENSIONS:-build/out/qualification/dimensions.json}" --kind sbom
+
+local-hermetic-repeatability:
+	bash scripts/supply-chain/local-hermetic-repeatability.sh
+
+dispatch-hosted-reproducibility:
+	gh workflow run hermetic-builder.yml --repo COMRADEART/bunny-os --field commit="$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}"
+
+import-reproducibility-evidence:
+	$(PYTHON) scripts/release.py import-hosted-builder-evidence --artifact-dir "$${BUNNY_ARTIFACT_DIR:?set BUNNY_ARTIFACT_DIR}" --candidate-commit "$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}"
+
+compare-three-builds:
+	$(PYTHON) scripts/supplychain.py compare-three-builds
+
+toolchain-independence:
+	$(PYTHON) scripts/supplychain.py toolchain-independence
+
+reproducibility-gate:
+	$(PYTHON) scripts/supplychain.py reproducibility-gate --independent
+
+test-supplychain:
+	$(PYTHON) -m unittest discover -s tests/supplychain -t .

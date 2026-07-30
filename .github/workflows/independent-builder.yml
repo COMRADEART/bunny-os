@@ -151,6 +151,83 @@ jobs:
           syft version
           grype version
 
+      - name: Reclaim disk before building
+        run: |
+          set -euo pipefail
+          # The SBOM step was killed after 419 seconds with no error and the job
+          # reported "cancelled" — the runner ran out of disk. A 1.85 GB OCI
+          # archive plus the container store plus syft extracting the archive
+          # does not fit in the ~14 GB free on the root volume.
+          #
+          # The runner image ships around 25 GB of toolchains this build never
+          # uses. /opt/hostedtoolcache is left alone: setup-python installed the
+          # interpreter this job runs on.
+          before=$(df --output=avail -BG / | tail -1 | tr -dc '0-9')
+          sudo rm -rf \
+            /usr/share/dotnet \
+            /usr/local/lib/android \
+            /opt/ghc \
+            /usr/local/share/boost \
+            /usr/local/lib/node_modules \
+            /usr/share/swift || true
+          sudo apt-get clean
+          after=$(df --output=avail -BG / | tail -1 | tr -dc '0-9')
+          echo "reclaimed $((after - before)) GiB; ${after} GiB free on /"
+          df -h / /mnt || true
+          # /mnt on this runner is the same filesystem as /, so relocating work
+          # there buys nothing. Disk was never the constraint: the SBOM step was
+          # killed with 28 GiB still free. Memory is — syft catalogues a 1.85 GB
+          # archive holding 164,962 entries on a 16 GiB runner, and the step ends
+          # with "The operation was canceled" and no other output.
+          free -h
+          sudo fallocate -l 16G /swapfile-bunny
+          sudo chmod 600 /swapfile-bunny
+          sudo mkswap /swapfile-bunny
+          sudo swapon /swapfile-bunny
+          free -h
+
+      - name: Configure the container runtime and storage driver
+        run: |
+          set -euo pipefail
+          # Two defects, both specific to podman as Ubuntu 24.04 packages it.
+          #
+          # 1. crun refuses the OCI spec version podman writes:
+          #      error running container: from /usr/bin/crun creating container
+          #      for [...]: unknown version specified
+          #    runc accepts it. This selects the runtime; it changes nothing
+          #    about what is built.
+          #
+          # 2. Without an explicit storage driver podman fell back to `vfs`,
+          #    which copies the whole image for every layer. Each COPY step took
+          #    2m24s and the build had spent 32 minutes on directory copies
+          #    alone before it failed. `overlay` is supported on the runner's
+          #    ext4 root.
+          #
+          # Neither setting is a build input: the image content is determined by
+          # the Containerfile, the base digest and the source commit. Both are
+          # recorded in the runner environment so the difference from the local
+          # Fedora builder is visible rather than hidden.
+          sudo apt-get install --yes --no-install-recommends runc fuse-overlayfs
+          sudo install -d /etc/containers
+          printf '[engine]\nruntime = "runc"\n' | sudo tee /etc/containers/containers.conf
+          # graphroot and runroot are their usual defaults and are written
+          # explicitly: a [storage] section replaces the built-in one wholesale,
+          # and a section carrying only `driver` fails with "runroot must be set".
+          printf '[storage]\ndriver = "overlay"\nrunroot = "/run/containers/storage"\ngraphroot = "/var/lib/containers/storage"\n' \
+            | sudo tee /etc/containers/storage.conf
+          # The runner image ships an already-initialised container store whose
+          # recorded driver is empty, and podman refuses to change drivers under
+          # an existing database:
+          #   Error: database graph driver "" does not match our graph driver
+          #   "overlay": database configuration mismatch
+          # The store holds nothing this build needs — the base image is pulled
+          # by digest — so it is removed rather than migrated. Starting from an
+          # empty store is also what BUNNY_CACHES_DISABLED=1 asks for: a warm
+          # cache is a build input nobody recorded.
+          sudo rm -rf /var/lib/containers/storage /run/containers/storage
+          sudo podman info --format 'runtime={{.Host.OCIRuntime.Name}} {{.Host.OCIRuntime.Version}}'
+          sudo podman info --format 'storage={{.Store.GraphDriverName}}'
+
       - name: Record the runner environment
         id: environment
         run: |
@@ -162,8 +239,10 @@ jobs:
             echo "runnerName=${RUNNER_NAME:-unknown}"
             echo "runnerEnvironment=${RUNNER_ENVIRONMENT:-unknown}"
             echo "kernel=$(uname -r)"
-            echo "os=$(. /etc/os-release && echo "${ID}-${VERSION_ID}")"
+            echo "os=$(sed -n 's/^ID=//p' /etc/os-release | tr -d "\"'" | head -1)-$(sed -n 's/^VERSION_ID=//p' /etc/os-release | tr -d "\"'" | head -1)"
             echo "containerRuntime=$(podman --version)"
+            echo "ociRuntime=$(sudo podman info --format '{{.Host.OCIRuntime.Name}} {{.Host.OCIRuntime.Version}}' | head -1)"
+            echo "storageDriver=$(sudo podman info --format '{{.Store.GraphDriverName}}')"
             echo "imageBuilder=absent (BUNNY_ARCHIVE_ONLY=1)"
             echo "workflowRunId=${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}"
             echo "cpus=$(nproc)"
@@ -183,9 +262,21 @@ jobs:
         run: |
           set -euo pipefail
           profile='${{ inputs.profile }}'
+          # syft extracts the whole archive into a temporary directory, so it is
+          # pointed at the large volume. Only spdx-json is produced: the
+          # syft-json output was another 70 MB that nothing downstream reads.
+          export TMPDIR="${RUNNER_TEMP}/syft"
+          mkdir -p "$TMPDIR"
+          # One worker. syft's default parallelism holds several catalogued
+          # layers in memory at once, and this image is large enough that the
+          # memory matters more than the wall-clock.
+          export SYFT_PARALLELISM=1
+          df -h /
+          free -h
           syft "oci-archive:build/out/${profile}/bunny-os.oci.tar" \
-            -o spdx-json="build/out/ci/sbom.spdx.json" \
-            -o syft-json="build/out/ci/sbom.syft.json"
+            -o spdx-json="build/out/ci/sbom.spdx.json"
+          df -h /
+          free -h
           python - <<'PY'
           import json, os, pathlib
           document = json.loads(pathlib.Path("build/out/ci/sbom.spdx.json").read_text(encoding="utf-8"))
@@ -260,11 +351,16 @@ jobs:
             build/out/ci/build.log
             build/out/${{ inputs.profile }}/oci-build.log
             build/out/${{ inputs.profile }}/image-builder.log
+            build/out/${{ inputs.profile }}/oci-inspect.json
             build/out/${{ inputs.profile }}/provenance.json
             build/out/${{ inputs.profile }}/SHA256SUMS
 
       - name: Upload the OCI archive
         uses: actions/upload-artifact@v4
+        # Everything else in the bundle can be derived from the archive, and
+        # rebuilding it costs the whole job. It is uploaded even when a later
+        # step fails.
+        if: always()
         with:
           name: independent-builder-archive-${{ github.run_id }}
           if-no-files-found: error
@@ -283,6 +379,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.commit }}
+          # Evidence binds to a candidate commit behind HEAD; the gates read it.
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -300,16 +398,24 @@ jobs:
       - name: Verify provenance against the downloaded bytes
         run: |
           set -euo pipefail
+          # upload-artifact preserves the structure below the least common
+          # ancestor of its path list. That list spans build/out/ci and
+          # build/out/<profile>, so the bundle contains ci/ and <profile>/ rather
+          # than the flat directory this step used to assume. It failed closed,
+          # which is right, but on a path bug rather than on the evidence.
+          profile='${{ inputs.profile }}'
+          find downloaded -maxdepth 3 -type f | sort
           # The provenance describes paths relative to build/out/<profile>, so
           # the archive is placed where the manifest says it is.
           mkdir -p downloaded/root
           cp downloaded/archive/bunny-os.oci.tar downloaded/root/
-          cp downloaded/evidence/provenance.json downloaded/root/ 2>/dev/null || true
-          cp downloaded/evidence/SHA256SUMS downloaded/root/ 2>/dev/null || true
-          cp downloaded/evidence/oci-build.log downloaded/root/ 2>/dev/null || true
-          cp downloaded/evidence/image-builder.log downloaded/root/ 2>/dev/null || true
+          for name in provenance.json SHA256SUMS oci-build.log image-builder.log oci-inspect.json; do
+            # oci-inspect.json is described by the CI provenance, so it must be
+            # present for the recomputed-digest check; an absent artifact blocks.
+            cp "downloaded/evidence/${profile}/${name}" downloaded/root/ 2>/dev/null || true
+          done
           python scripts/release.py verify-ci-artifacts \
-            --provenance downloaded/evidence/ci-provenance.json \
+            --provenance downloaded/evidence/ci/ci-provenance.json \
             --artifact-root downloaded/root \
             --expected-commit '${{ inputs.commit }}' \
             --expected-base-digest '${{ inputs.base_image }}' \
@@ -324,7 +430,7 @@ jobs:
           sys.path.insert(0, ".")
           from release.builders import parse_builder_record
           record = parse_builder_record(
-              json.loads(pathlib.Path("downloaded/evidence/builder-record.json").read_text(encoding="utf-8"))
+              json.loads(pathlib.Path("downloaded/evidence/ci/builder-record.json").read_text(encoding="utf-8"))
           )
           assert record.builderType == "hosted-ci", record.builderType
           assert record.workflowRunId, "a hosted-ci record must carry a workflowRunId"
@@ -348,6 +454,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.commit }}
+          # Evidence binds to a candidate commit behind HEAD; the gates read it.
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -357,15 +465,7 @@ jobs:
       # stable gate pass, something else is wrong.
       - name: The stable gate still reports NO-GO
         run: |
-          set +e
-          python scripts/release.py gate --kind stable-release
-          status=$?
-          set -e
-          [ "$status" -eq 2 ] || { echo "::error::stable gate reported GO from a hosted archive-only build"; exit 1; }
+          bash build/scripts/assert-gate.sh 2 "stable release gate after a hosted archive-only build" -- python scripts/release.py gate --kind stable-release
       - name: The candidate gate still blocks
         run: |
-          set +e
-          python scripts/release.py gate --kind qualification-candidate
-          status=$?
-          set -e
-          [ "$status" -eq 2 ] || { echo "::error::candidate gate passed on an archive-only build"; exit 1; }
+          bash build/scripts/assert-gate.sh 2 "qualification candidate gate on an archive-only build" -- python scripts/release.py gate --kind qualification-candidate

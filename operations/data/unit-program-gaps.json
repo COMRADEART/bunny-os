@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "note": "systemd units shipped into the image whose ExecStart names a program the build does not install. This file exists so that such a gap is recorded rather than discovered as a container-verification failure mixed in with environment noise. A unit not listed here whose program is absent fails repository validation.",
+  "recordedAt": "2026-07-30",
+  "gaps": [
+    {
+      "unit": "bunny-policy-agent.service",
+      "program": "/usr/libexec/bunny-policy-agent",
+      "finding": "build/scripts/install-root.py copies systemd/ wholesale into /usr/lib/systemd/system, so the unit ships, but no step installs the program it starts. enterprise/policy.py is a library, not an executable.",
+      "impact": "On an installed system the unit would fail to start. It is guarded by ConditionPathExists=/etc/bunny-os/enrolment.json, so it does not run on an unenrolled device, which is every device today: no enrolment has been performed and the enterprise pilot gate is BLOCKED.",
+      "notFixedHere": "Writing the agent would be a new product feature. This pass is CI portability repair and hosted independent-build execution.",
+      "blockedBy": "enterprise-pilot gate",
+      "owner": "Phase 7 enterprise workstream",
+      "trackedIn": "KNOWN_LIMITATIONS.md"
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "note": "The declared pins for the qualification builder image, and the classification of every tool against the artifact. This file is the input; build/inputs/builder-image-lock.json is the measured result of building it. A classification that permits two builders to differ requires a reason and a test, and 'unknown' blocks.",
+  "builderBase": "registry.fedoraproject.org/fedora@sha256:754c6d7d5767750e57caf10376a72eb347ce5721a4310334aaeedb09ba80e05f",
+  "architecture": "x86_64",
+  "pinnedDownloads": [
+    {
+      "name": "syft",
+      "version": "1.50.0",
+      "url": "https://github.com/anchore/syft/releases/download/v1.50.0/syft_1.50.0_linux_amd64.tar.gz",
+      "sha256": "bf7b29ff57f06da30918266a0e1c2885a8f99784798d1bdb1628886aa015d788"
+    },
+    {
+      "name": "grype",
+      "version": "0.116.1",
+      "url": "https://github.com/anchore/grype/releases/download/v0.116.1/grype_0.116.1_linux_amd64.tar.gz",
+      "sha256": "0122df7b655981abe547ad3d2190d65551dac6a2bfc80b4dc2a989b5d0587458"
+    }
+  ],
+  "classifications": {
+    "podman": {
+      "classification": "output-affecting",
+      "reason": "podman builds the container and writes the OCI archive. Measured: Ubuntu's podman 4.9.3 wrote /etc/hostname into the build container where 5.8.4 did not, and that single file changed three comparison dimensions between two runs of the same commit.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_podman_is_output_affecting"
+    },
+    "buildah": {
+      "classification": "output-affecting",
+      "reason": "podman delegates image construction to buildah's libraries; a change there is a change in how layers are written.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_every_container_tool_is_output_affecting"
+    },
+    "skopeo": {
+      "classification": "output-affecting",
+      "reason": "skopeo copies the base image into controlled retention and out of it again. A copy that re-encoded a layer would change the base the build starts from. The mirror verifies every blob digest afterwards, which detects that rather than assuming it cannot happen.",
+      "test": "tests/supplychain/test_base_retention.py::test_a_re_encoded_mirror_is_refused"
+    },
+    "crun": {
+      "classification": "output-affecting",
+      "reason": "the OCI runtime executes every RUN step. Measured: Ubuntu's crun refused the OCI spec version Ubuntu's podman writes, which is a runtime disagreement that stopped a build outright.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_every_container_tool_is_output_affecting"
+    },
+    "runc": {
+      "classification": "output-affecting",
+      "reason": "an alternative OCI runtime, selectable at run time; the same reasoning as crun applies.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_every_container_tool_is_output_affecting"
+    },
+    "conmon": {
+      "classification": "output-affecting",
+      "reason": "conmon monitors the container process and mediates its output; it is in the path that runs every build step.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_every_container_tool_is_output_affecting"
+    },
+    "python3": {
+      "classification": "output-affecting",
+      "reason": "install-root.py and install-packages.py run inside the build and write files into the image. The host interpreter and the image's own /usr/bin/python3 are different interpreters and both are pinned, because reasoning about which one matters is exactly the reasoning that lets a difference through.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_python_is_output_affecting"
+    },
+    "rpm": {
+      "classification": "output-affecting",
+      "reason": "rpm writes /usr/share/rpm/rpmdb.sqlite, one of the fifteen files that differed.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_package_tools_are_output_affecting"
+    },
+    "dnf5": {
+      "classification": "output-affecting",
+      "reason": "dnf5 installs the packages and writes /usr/lib/sysimage/libdnf5 state, four of the fifteen files that differed.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_package_tools_are_output_affecting"
+    },
+    "libdnf5": {
+      "classification": "output-affecting",
+      "reason": "the library that writes the transaction history database and system.toml.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_package_tools_are_output_affecting"
+    },
+    "tar": {
+      "classification": "output-affecting",
+      "reason": "tar repacks the OCI archive during normalisation; its pax header handling determines the normalised digest.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_archive_tools_are_output_affecting"
+    },
+    "gzip": {
+      "classification": "output-affecting",
+      "reason": "layer blobs are gzip-compressed and the compressed bytes are what the layer digest covers.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_archive_tools_are_output_affecting"
+    },
+    "zstd": {
+      "classification": "output-affecting",
+      "reason": "an alternative layer compressor; selectable, so pinned.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_archive_tools_are_output_affecting"
+    },
+    "createrepo_c": {
+      "classification": "output-affecting",
+      "reason": "it generates the snapshot repository metadata the build resolves against. Different metadata can produce a different dependency solution.",
+      "test": "tests/supplychain/test_package_snapshot.py::test_metadata_digest_is_locked"
+    },
+    "syft": {
+      "classification": "evidence-generation-only",
+      "reason": "syft reads the finished archive and writes an SBOM to a separate file. It is never invoked before or during image construction, it is never given a writable path inside the image, and the build does not consume its output. A syft difference changes the SBOM document, which is compared as its own dimension, and cannot change the artifact the SBOM describes.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_evidence_tools_never_write_into_the_image"
+    },
+    "grype": {
+      "classification": "evidence-generation-only",
+      "reason": "grype reads the SBOM or the archive and writes a vulnerability report. It runs after the artifact exists and writes nothing into it.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_evidence_tools_never_write_into_the_image"
+    },
+    "policycoreutils": {
+      "classification": "evidence-generation-only",
+      "reason": "setfiles is run in verification mode only, to compute the intended SELinux context of every path from the policy the image ships. Verification mode reads the policy and the path list and writes a manifest to a separate file; it relabels nothing. If the build ever applied labels, this classification would be wrong and would have to change.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_selinux_tools_run_in_verification_mode_only"
+    },
+    "libselinux-utils": {
+      "classification": "evidence-generation-only",
+      "reason": "matchpathcon resolves a path to its policy context and writes nothing.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_selinux_tools_run_in_verification_mode_only"
+    }
+  },
+  "absentTools": {
+    "image-builder": "Fedora-only, and the archive-only qualification path never invokes it. build/scripts/build-image.sh takes the BUNNY_ARCHIVE_ONLY branch, which prints that it skipped image-builder and produces no qcow2 or raw image. Its absence therefore cannot affect the archive. It is declared here rather than omitted, because a tool that is simply missing from a lock is indistinguishable from one somebody forgot to pin. Its absence also means this builder can never produce a disk image, and so can never satisfy installation, recovery, hardware, encryption, update, rollback or secure-boot qualification."
+  },
+  "runtimeRequirements": {
+    "privileged": true,
+    "privilegedReason": "podman builds a container inside a container, which needs mount and user-namespace privileges the default profile withholds.",
+    "network": "required only for the builder image build itself; a qualification build runs with the package snapshot mounted and no repository network access",
+    "minimumMemoryGiB": 8,
+    "minimumDiskGiB": 40,
+    "swapNote": "the hosted runner has 7.8 GiB of RAM and syft was killed cataloguing a 1.85 GB archive holding 164,962 entries; 16 GiB of swap and SYFT_PARALLELISM=1 are required there."
+  }
+}

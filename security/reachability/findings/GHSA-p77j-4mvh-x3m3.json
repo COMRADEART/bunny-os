@@ -25,14 +25,14 @@
   "defaultEnablement": "no",
   "desktopActivation": "no",
   "desktopActivationEvidence": [
-    "grep '^Exec=.*(podman|skopeo|bootc|toolbox|docker)' over every shipped .desktop at 80df25b09f65: no match"
+    "grep '^Exec=.*(podman|skopeo|bootc|toolbox|docker)' over every shipped .desktop at 79bb99ddb39d: no match"
   ],
   "dynamicDependencies": [],
   "elfBuildId": "unknown",
   "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
   "exportedSymbols": [],
   "fixedVersion": "1.79.3",
-  "generatedAt": "2026-07-30T11:24:44.940674Z",
+  "generatedAt": "2026-07-30T14:49:43.430322Z",
   "independentReviewReference": null,
   "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file",
   "installedVersion": "v1.72.2",
@@ -64,7 +64,7 @@
   "socketUnits": [
     "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
   ],
-  "sourceCommit": "80df25b09f6578276d18c8a82f15c47dd8959740",
+  "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
   "sourcePackage": "unknown",
   "sourceRpmReference": "unknown",
   "strippedState": "unknown",

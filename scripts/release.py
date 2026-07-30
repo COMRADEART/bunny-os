@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as _datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -29,6 +30,7 @@ if str(ROOT) not in os.sys.path:
 from release import accessibility as accessibility_module
 from release import matrix as matrix_module
 from release.artifacts import ArtifactError, parse_manifest, verify_against_disk
+from release.buildmode import BuildModeError, require_candidate_capable
 from release.builders import (
     ACCEPTED_PAIRINGS,
     BuilderError,
@@ -41,11 +43,13 @@ from release.candidate import (
     render_dashboard,
 )
 from release.comparison import (
+    reduce_dimension,
     COMPARISON_DIMENSIONS,
     ComparisonError,
     evaluate_comparison,
 )
 from release.cve import CveAnalysisError, evaluate_document as evaluate_cve_document
+from release.hosted import HostedImportError, import_hosted_evidence
 from release.evidence import (
     EVIDENCE_CATEGORIES,
     EvidenceError,
@@ -70,6 +74,8 @@ from release.hardware import (
 from release.licensing import LicenceError, evaluate_licence_gate, parse_decision
 from release.minimisation import MinimisationError, evaluate_minimisation
 from release.normalisation import NormalisationError, normalise_archive
+from release.paths import display_path
+from release.validation import run_validators
 from release.provenance import ProvenanceError, parse_provenance, verify_provenance
 from release.reachability import ReachabilityError, parse_review as parse_reachability, summarise
 from release.reproducibility import (
@@ -792,9 +798,72 @@ def _stable_inputs() -> StableInputs:
     )
 
 
+def validate_repository() -> int:
+    """Run every repository validator and report each one separately.
+
+    The same evaluation the source gate performs, exposed on its own so a
+    failing validator can be identified without running the whole gate — which
+    also runs three test suites.
+    """
+    report = run_validators(ROOT)
+    atomic_json(OUT / "repository-validation.json", report.as_dict())
+    print("repository validation:", "PASS" if report.passed else "FAIL")
+    print(report.render())
+    print(f"\nwrote {display_path(OUT / 'repository-validation.json', ROOT)}")
+    if report.passed:
+        return 0
+    print(
+        "\nBLOCKED: " + ", ".join(outcome.name for outcome in report.failing)
+        + " failed. A SKIP is not a PASS: a validator whose host tool is absent "
+        "reports SKIP with the reason."
+    )
+    return 2
+
+
+def _build_mode_blockers(gateName: str) -> list[str]:
+    """Refuse any built artifact whose build mode could not have qualified it.
+
+    An archive-only build (BUNNY_ARCHIVE_ONLY=1) produces an OCI archive and no
+    disk image. Nothing was installed, nothing booted, no recovery media was
+    written, no hardware was exercised. Such an artifact is evidence for the
+    reproducibility comparison and for nothing else, and the gates say so rather
+    than leaving it to be inferred from which files are absent.
+    """
+    reasons: list[str] = []
+    for path in sorted((ROOT / "build/out").glob("*/provenance.json")):
+        document = load_optional(path, None)
+        if not isinstance(document, dict):
+            continue
+        try:
+            require_candidate_capable(document, gate=gateName)
+        except BuildModeError as exc:
+            reasons.append(f"{display_path(path, ROOT)}: {exc}")
+    return reasons
+
+
 def gate(kind: str) -> int:
     if kind == "source":
         return source_gate()
+
+    # Build-mode refusals are *additional* to the gate's own evaluation, never a
+    # substitute for it. Returning early here would hide the prerequisite count,
+    # which is the number this gate exists to report.
+    buildModeBlockers: list[str] = []
+    if kind in {"qualification-candidate", "stable-release"}:
+        buildModeBlockers = _build_mode_blockers(kind)
+        if buildModeBlockers:
+            atomic_json(
+                OUT / f"gate-{kind}-build-mode.json",
+                {"gate": kind, "result": "BLOCKED", "reasons": buildModeBlockers},
+            )
+
+    def _with_build_mode(status: int) -> int:
+        if not buildModeBlockers:
+            return status
+        print(f"\nBLOCKED: {kind} also refuses the built artifacts present:")
+        for reason in buildModeBlockers:
+            print(f"  {reason}")
+        return 2
 
     if kind == "qualification-candidate":
         try:
@@ -819,7 +888,7 @@ def gate(kind: str) -> int:
                 "\nNo artifact may be labelled release-qualified. Building a candidate for "
                 "examination remains permitted; calling one qualified does not."
             )
-        return 0 if result.passed else 2
+        return _with_build_mode(0 if result.passed else 2)
 
     stable = evaluate_stable_gate(_stable_inputs())
     if kind == "stable-release":
@@ -834,7 +903,7 @@ def gate(kind: str) -> int:
                 "\nStable publication is prohibited. GO requires every requirement above to pass, "
                 "every approval recorded, and no blocker code open."
             )
-        return 0 if stable.passed else 2
+        return _with_build_mode(0 if stable.passed else 2)
 
     requirements = load_optional(DATA / "pilot-requirements.json", {}).get(kind, {}).get("requirements", {})
     try:
@@ -979,7 +1048,7 @@ def independent_builder_ci_manifest() -> int:
     """Describe the hosted workflow, and refuse to imply it has run."""
     workflow = ROOT / ".github/workflows/independent-builder.yml"
     if not workflow.is_file():
-        print(f"BLOCKED: {workflow.relative_to(ROOT)} does not exist")
+        print(f"BLOCKED: {display_path(workflow, ROOT)} does not exist")
         return 2
     text = workflow.read_text(encoding="utf-8")
 
@@ -1073,7 +1142,7 @@ def collect_builder_record(builderId: str, builderType: str | None) -> int:
         print(f"BLOCKED: the collected record does not validate: {exc}")
         return 2
     print(f"builder {parsed.builderId}: {parsed.builderType}, boundary {parsed.administratorBoundary[:12]}")
-    print(f"wrote {output.relative_to(ROOT)}")
+    print(f"wrote {display_path(output, ROOT)}")
     return 0
 
 
@@ -1112,6 +1181,224 @@ def verify_builder_independence() -> int:
         )
         return 2
     print("builder independence verified from real environment evidence")
+    return 0
+
+
+def import_hosted_builder_evidence(
+    artifactDir: Path,
+    candidateCommit: str,
+    expectedBaseDigest: str | None,
+    expectedRunId: str | None,
+    localArtifactDir: Path | None,
+) -> int:
+    """Import a downloaded hosted-builder bundle, and the local builder's pair.
+
+    Imported through this command rather than by editing ``builders.json``: every
+    field the hosted record claims about itself is cross-checked against another
+    file in the same bundle, and a record edited in one place fails. Hand-editing
+    the JSON skips all of it.
+    """
+    document = load_optional(DATA / "builders.json", {"builderRecords": [], "comparisons": []})
+    existing = list(document.get("builderRecords", []))
+
+    # Reuse means a *different* builder citing a run another builder already
+    # used. Re-importing the same bundle over its own record is idempotent, and
+    # treating that as reuse would make the command runnable exactly once.
+    incoming = load_optional(Path(artifactDir) / "builder-record.json", {})
+    incomingId = incoming.get("builderId") if isinstance(incoming, dict) else None
+    known = {
+        str(record.get("workflowRunId"))
+        for record in existing
+        if record.get("workflowRunId") and record.get("builderId") != incomingId
+    }
+
+    try:
+        hosted = import_hosted_evidence(
+            artifactDir,
+            candidateCommit=candidateCommit,
+            expectedBaseDigest=expectedBaseDigest,
+            knownRunIds=known,
+            expectedRunId=expectedRunId,
+        )
+    except HostedImportError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    payload: dict[str, Any] = {"hosted": hosted.as_dict()}
+    print(f"hosted builder {hosted.builder.builderId} ({hosted.builder.builderType})")
+    print(f"  workflow run   {hosted.builder.workflowRunId}")
+    print(f"  runner         {hosted.provenance.runnerImage} {hosted.provenance.runnerArchitecture}")
+    print(f"  source commit  {hosted.builder.sourceCommit[:12]}")
+    print(f"  base digest    {hosted.builder.baseImageDigest[-19:]}")
+    print(f"  raw archive    {hosted.rawArchiveDigest[:16]}")
+    print(f"  normalised     {hosted.normalisedArchiveDigest[:16]}")
+    print(f"  packages       {hosted.packageCount}")
+    print(f"  boundary       {hosted.builder.administratorBoundary[:12]}")
+
+    local = None
+    if localArtifactDir is not None:
+        try:
+            local = import_hosted_evidence(
+                localArtifactDir,
+                candidateCommit=candidateCommit,
+                expectedBaseDigest=expectedBaseDigest,
+            )
+        except HostedImportError as exc:
+            print(f"BLOCKED: the local builder bundle is unusable: {exc}")
+            return 2
+        # The local builder is not hosted CI and legitimately has neither a
+        # workflow run nor a github-hosted environment; those reasons are its
+        # correct description, not a defect.
+        local.reasons = [
+            reason for reason in local.reasons
+            if "workflowRunId" not in reason
+            and "hosted-ci record" not in reason
+            and "github-hosted" not in reason
+            and "the runner reported" not in reason
+        ]
+        payload["local"] = local.as_dict()
+        print(f"\nlocal builder {local.builder.builderId} ({local.builder.builderType})")
+        print(f"  source commit  {local.builder.sourceCommit[:12]}")
+        print(f"  base digest    {local.builder.baseImageDigest[-19:]}")
+        print(f"  raw archive    {local.rawArchiveDigest[:16]}")
+        print(f"  normalised     {local.normalisedArchiveDigest[:16]}")
+        print(f"  packages       {local.packageCount}")
+        print(f"  boundary       {local.builder.administratorBoundary[:12]}")
+
+    rejected = list(hosted.reasons) + list(local.reasons if local else [])
+    atomic_json(OUT / "hosted-builder-import.json", payload)
+    if rejected:
+        print("\nBLOCKED: the evidence was not imported:")
+        for reason in rejected:
+            print(f"  - {reason}")
+        print(f"\nwrote {display_path(OUT / 'hosted-builder-import.json', ROOT)}")
+        return 2
+
+    records = [
+        record for record in existing
+        if record.get("builderId") not in {
+            hosted.builder.builderId, local.builder.builderId if local else None
+        }
+    ]
+    records.append(hosted.builder.as_dict())
+    if local:
+        records.append(local.builder.as_dict())
+    document["builderRecords"] = records
+
+    # Importing two records means declaring which pair is claimed to be
+    # independent. Declaring the pair is not asserting that it *is* independent:
+    # evaluate_independence decides that, and refuses for its own reasons.
+    if local:
+        pairs = [
+            pair for pair in document.get("independencePairs", [])
+            if isinstance(pair, dict)
+            and {pair.get("first"), pair.get("second")}
+            != {local.builder.builderId, hosted.builder.builderId}
+        ]
+        pairs.append({
+            "first": local.builder.builderId,
+            "second": hosted.builder.builderId,
+            "claim": "independent-builder",
+            "declaredBy": "scripts/release.py import-hosted-builder-evidence",
+            "candidateCommit": candidateCommit,
+        })
+        document["independencePairs"] = pairs
+    else:
+        document.setdefault("independencePairs", [])
+
+    document["builderRecordNote"] = (
+        f"Imported by scripts/release.py import-hosted-builder-evidence against candidate "
+        f"{candidateCommit}. The hosted record was cross-checked against the runner's own "
+        "environment report, the CI provenance and the artifact manifest in the same bundle; "
+        "it is not signed, and the import record says so."
+    )
+    atomic_json(DATA / "builders.json", document)
+    print(f"\nimported {len(records)} builder record(s) into {display_path(DATA / 'builders.json', ROOT)}")
+    print("A builder record is not a reproducibility result. Run verify-builder-independence")
+    print("and compare-independent-builds; independence is decided over a pair.")
+    return 0
+
+
+def assemble_build_comparison(
+    first: Path,
+    second: Path,
+    firstLabel: str,
+    secondLabel: str,
+    rawVarianceExplanation: str | None,
+    sourceCommit: str,
+    baseImageDigest: str,
+) -> int:
+    """Build the seventeen-dimension comparison document from two collections.
+
+    Both sides are collected by the same script from each builder's own archive,
+    so a difference in the report is a difference in the images rather than a
+    difference in how they were measured.
+    """
+    try:
+        left = load(first)
+        right = load(second)
+    except FileNotFoundError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    dimensions: dict[str, Any] = {}
+    forms: dict[str, str] = {}
+    for name, _, _ in COMPARISON_DIMENSIONS:
+        pair, form, detail = reduce_dimension(
+            left.get("dimensions", {}).get(name),
+            right.get("dimensions", {}).get(name),
+        )
+        pair["detail"] = detail
+        dimensions[name] = pair
+        forms[name] = form
+
+    document = {
+        "schemaVersion": 1,
+        # The comparison names the commit and the base it compared. Two builders
+        # on different sources or different bases are not comparable, and a
+        # record that does not say which it used cannot be checked later.
+        "sourceCommit": sourceCommit,
+        "baseImageDigest": baseImageDigest,
+        "builders": [firstLabel, secondLabel],
+        "firstBuilder": firstLabel,
+        "secondBuilder": secondLabel,
+        "firstArchiveSha256": left.get("archiveSha256"),
+        "secondArchiveSha256": right.get("archiveSha256"),
+        "collectedBy": "scripts/reproducibility/collect_comparison_dimensions.py",
+        "collectionNote": (
+            "Both sides were read out of each builder's own OCI archive by the same collector, "
+            "with no root, no podman and no mount, so the comparison measures the images and not "
+            "the measuring."
+        ),
+        "storageForms": forms,
+        "storageNote": (
+            "A dimension larger than 256 KiB is stored as a SHA-256 over its whole collected "
+            "value plus every differing member name, capped at 200 with the true count recorded. "
+            "Equality is preserved exactly — two dimensions compare equal here if and only if "
+            "they were equal in full — and what is dropped is the bulk of the matching members. "
+            "The full collections are 71 MB per builder and are not committed."
+        ),
+        "volatilePathsExcluded": sorted(
+            set(left.get("volatilePathsExcluded", [])) | set(right.get("volatilePathsExcluded", []))
+        ),
+        "dimensions": dimensions,
+    }
+    if rawVarianceExplanation:
+        document["rawVarianceExplanation"] = rawVarianceExplanation
+
+    atomic_json(DATA / "build-comparison.json", document)
+    collected = sum(
+        1 for value in dimensions.values()
+        if value["first"] is not None and value["second"] is not None
+    )
+    print(f"assembled {len(dimensions)} dimensions, {collected} collected from both builders")
+    absent = sorted(
+        name for name, value in dimensions.items()
+        if value["first"] is None or value["second"] is None
+    )
+    if absent:
+        print(f"NOT_COLLECTED from one or both: {', '.join(absent)}")
+    print(f"wrote {display_path(DATA / 'build-comparison.json', ROOT)}")
     return 0
 
 
@@ -1180,7 +1467,7 @@ def compare_independent_builds() -> int:
             print(f"  {state:14} {len(names)}: {', '.join(names)}")
     for reason in report.reasons:
         print(f"  {reason}")
-    print(f"wrote {(OUT / 'reproducibility-comparison.json').relative_to(ROOT)}")
+    print(f"wrote {display_path(OUT / 'reproducibility-comparison.json', ROOT)}")
     if not report.satisfiesProductionGate:
         print(
             "BLOCKED: only REPRODUCIBLE between independent builders satisfies the production "
@@ -1711,7 +1998,7 @@ def qualification_candidate_readiness() -> int:
         print(f"  {row['state']:24} {row['description']}")
         if not row["satisfied"]:
             print(f"      owner={row['owner']} next={row['nextAction']}")
-    print(f"\nwrote {(OUT / 'stable-evidence-dashboard.md').relative_to(ROOT)}")
+    print(f"\nwrote {display_path(OUT / 'stable-evidence-dashboard.md', ROOT)}")
     if not readiness.ready:
         print(
             "BLOCKED: no artifact may be labelled release-qualified while a prerequisite is "
@@ -1750,9 +2037,17 @@ def source_gate() -> int:
         except MinimisationError:
             minimisation = False
 
+    # Run the validators in process rather than shelling out to `task.py
+    # validate`, so the gate can name the validator and the file that failed.
+    # Shelling out reduced twelve independent checks to one exit code, which is
+    # how "repositoryValidation: FAIL" came to describe JSON, schemas and Python
+    # when the thing that failed was ShellCheck on one line of one file.
+    validation = run_validators(ROOT)
+    atomic_json(OUT / "repository-validation.json", validation.as_dict())
+
     python = os.sys.executable
     requirements = {
-        "repositoryValidation": suite([python, "scripts/task.py", "validate"]),
+        "repositoryValidation": validation.passed,
         "sourceSuitesPass": suite([python, "scripts/task.py", "test"]),
         "qualificationSuitesPass": suite([python, "scripts/task.py", "test-release-closure"]),
         "licenceGatePassed": licence_passed,
@@ -1770,6 +2065,11 @@ def source_gate() -> int:
         print(f"  ok      {name}")
     for name in result.unmet:
         print(f"  FAIL    {name}")
+
+    if not validation.passed:
+        print("\nrepositoryValidation, by validator:")
+        print(validation.render())
+    print(f"\nwrote {display_path(OUT / 'repository-validation.json', ROOT)}")
     print(
         "\nA passing source gate asserts nothing about a built image, a booted system, a review, a "
         "device or a signature."
@@ -1808,6 +2108,7 @@ def main() -> int:
         "analyse-cve-symbols",
         "generate-reachability-packages",
         "validate-cve-acquisition",
+        "validate-repository",
     ):
         commands.add_parser(name)
 
@@ -1825,6 +2126,26 @@ def main() -> int:
     normalise.add_argument("--source", required=True, type=Path)
     normalise.add_argument("--destination", required=True, type=Path)
     normalise.add_argument("--output", type=Path)
+
+    hosted_import = commands.add_parser("import-hosted-builder-evidence")
+    hosted_import.add_argument("--artifact-dir", required=True, type=Path)
+    hosted_import.add_argument("--candidate-commit", required=True)
+    hosted_import.add_argument("--expected-base-digest")
+    hosted_import.add_argument("--expected-run-id")
+    hosted_import.add_argument(
+        "--local-artifact-dir",
+        type=Path,
+        help="the local builder's matching bundle; a pair is what establishes independence",
+    )
+
+    assemble = commands.add_parser("assemble-build-comparison")
+    assemble.add_argument("--first", required=True, type=Path)
+    assemble.add_argument("--second", required=True, type=Path)
+    assemble.add_argument("--first-label", default="local")
+    assemble.add_argument("--second-label", default="hosted-ci")
+    assemble.add_argument("--raw-variance-explanation")
+    assemble.add_argument("--source-commit", required=True)
+    assemble.add_argument("--base-image-digest", required=True)
 
     verify_ci = commands.add_parser("verify-ci-artifacts")
     verify_ci.add_argument("--provenance", required=True, type=Path)
@@ -1878,6 +2199,7 @@ def main() -> int:
         "stable-evidence-report": stable_evidence_report,
         "qualification-candidate-readiness": qualification_candidate_readiness,
         "validate-release-manifest": validate_release_manifest,
+        "validate-repository": validate_repository,
         "pilot-closure-assertion": pilot_closure_assertion,
     }
     if args.command in dispatch:
@@ -1896,6 +2218,19 @@ def main() -> int:
         return independent_builder_prepare(args.builder)
     if args.command == "collect-builder-record":
         return collect_builder_record(args.builder_id, args.builder_type)
+    if args.command == "import-hosted-builder-evidence":
+        return import_hosted_builder_evidence(
+            args.artifact_dir,
+            args.candidate_commit,
+            args.expected_base_digest,
+            args.expected_run_id,
+            args.local_artifact_dir,
+        )
+    if args.command == "assemble-build-comparison":
+        return assemble_build_comparison(
+            args.first, args.second, args.first_label, args.second_label,
+            args.raw_variance_explanation, args.source_commit, args.base_image_digest,
+        )
     if args.command == "normalise-artifact":
         return normalise_artifact(args.source, args.destination, args.output)
     if args.command == "verify-ci-artifacts":
