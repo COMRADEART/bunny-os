@@ -84,6 +84,28 @@ def main() -> int:
         # one behind this step's back.
         for existing in Path("/etc/yum.repos.d").glob("*.repo"):
             disable_repository_file(existing)
+        # The snapshot is verified against **Fedora's own keys**, not against a
+        # key this project holds. Every RPM in it is byte-identical to the one
+        # Fedora published, signature included, and configuring Fedora's key
+        # here is what lets rpm check that at install time.
+        #
+        # The first hermetic build failed exactly here, and the failure was the
+        # check working:
+        #
+        #   Transaction failed: Signature verification failed.
+        #   OpenPGP check for package "NetworkManager-wifi-1:1.56.1-2.fc44.x86_64"
+        #   ... has failed: The repository does not have any OpenPGP keys configured.
+        #
+        # The wrong fix would have been gpgcheck=0. Re-signing the packages with
+        # the development snapshot key would have been worse: it would replace
+        # Fedora's trust with ours while looking like an improvement.
+        fedora_keys = sorted(Path("/etc/pki/rpm-gpg").glob("RPM-GPG-KEY-fedora-*"))
+        if not fedora_keys:
+            raise SystemExit(
+                "hermetic build: no Fedora signing keys at /etc/pki/rpm-gpg. Every RPM must "
+                "retain its original trusted signature, and without the key that signature "
+                "cannot be checked. Refusing rather than installing unverified packages."
+            )
         Path("/etc/yum.repos.d/bunny-snapshot.repo").write_text(
             "[bunny-fedora-snapshot]\n"
             "name=Bunny OS retained Fedora snapshot\n"
@@ -91,11 +113,16 @@ def main() -> int:
             "enabled=1\n"
             "gpgcheck=1\n"
             "repo_gpgcheck=0\n"
+            "gpgkey=" + "\n       ".join(f"file://{key}" for key in fedora_keys) + "\n"
             "countme=0\n"
             "metadata_expire=-1\n"
             "skip_if_unavailable=0\n",
             encoding="utf-8",
             newline="\n",
+        )
+        print(
+            f"hermetic install: {len(fedora_keys)} Fedora signing keys configured: "
+            + ", ".join(key.name for key in fedora_keys)
         )
         repository_args = [
             "--disablerepo=*",
