@@ -68,6 +68,7 @@ RUN dnf -y install --setopt=install_weak_deps=False \
         sqlite \
         jq \
         git \
+        openssl \
         ca-certificates \
         util-linux \
         diffutils \
