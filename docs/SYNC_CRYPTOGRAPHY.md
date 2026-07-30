@@ -62,6 +62,20 @@ Revoking the last active device is refused; that is account deletion, not revoca
 
 Objects a revoked device already downloaded cannot be retracted. Only future objects are protected. A device added to a collection can read that collection's existing objects, because they are encrypted under the current collection key. Both facts are returned in the operation plan rather than left for a user to discover.
 
+## The backend
+
+`sync/backends/reference.py` adapts the `cryptography` package, which wraps OpenSSL. It performs AES-256-GCM sealing with the envelope's associated data bound, HKDF-SHA256 with the labels above, RFC 3394 AES key wrap, and CSPRNG draws. Nothing is implemented in Bunny OS; the module selects parameters and calls audited code, and a test greps every file under `sync/` for hand-rolled cipher constructions.
+
+**XChaCha20-Poly1305 is refused, not substituted.** The envelope format permits it, but the available `cryptography` build exposes only the IETF 12-byte-nonce ChaCha20-Poly1305, not the 24-byte XChaCha20 variant. Sealing with it raises and names libsodium as the backend that would provide it. Quietly using a different construction would make the envelope's declared algorithm false.
+
+The openssl CLI covers four of the seven operations — `openssl kdf` for HKDF, `enc -aes256-wrap` for RFC 3394, `rand` for entropy — but **cannot** do the other three: `openssl enc` refuses AEAD outright and no subcommand seals with caller-supplied associated data. That is why an in-process reviewed library is required.
+
+## Detection, never fallback
+
+The soft-import borrows its shape from the optional `jsonschema` import in `scripts/task.py`, but not its semantics. That precedent degrades a *check*. Degrading a *guarantee* would be far worse, because a stub returning plausible ciphertext lets every downstream test pass while nothing is encrypted.
+
+So an absent backend sets `available: false` and `require_backend()` still raises for all seven operations. A test asserts that under a simulated absence, and that `seal_object` raises rather than returning anything.
+
 ## Not reviewed
 
-No independent cryptographic review has been commissioned or completed, and no reviewed backend is installed. `syncCryptographyIndependentReview` is `false` in `operations/data/phase7-readiness.json` and `make gate-sync-pilot` fails on it.
+No independent cryptographic review has been commissioned or completed. A design that looks correct to its author is not a design that has been reviewed. `syncCryptographyIndependentReview` is `false` in `operations/data/phase7-readiness.json` and `make gate-sync-pilot` fails on it, and implementing a working backend does not change that.

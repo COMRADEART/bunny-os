@@ -25,6 +25,26 @@ Run `bunny-oem describe-checks` for the current catalogue.
 
 `0` handoff permitted, `2` refused with the blocking checks listed, `78` the operation needs a reviewed executor that is not installed.
 
+## Inspection rather than assertion
+
+`bunny-oem inspect --root <path>` produces the record by looking at a root filesystem tree — a mounted image, a container rootfs, or a fixture — instead of trusting one supplied by the factory.
+
+Seventeen of the twenty-two checks are settleable this way: leftover login accounts, privileged group membership, autologin, NetworkManager profiles carrying a PSK, `authorized_keys`, credential-shaped file content, `NOPASSWD` sudo and permissive polkit rules, installer logs and answer files, shell history, a fixed `machine-id` or cloned SSH host keys that would be identical on every unit shipped, residual device identity, enrolment and sync state, a completed first-run marker, and retained diagnostics containing a serial.
+
+Five cannot be settled offline and report `UNKNOWN`, which is already a refusal:
+
+| Check | Why |
+|---|---|
+| `recovery-verified` | requires physically booting the recovery media |
+| `image-signatures-verified` | requires bootc deployment state on a running system |
+| `secure-boot-state-recorded` | requires firmware state from efivars |
+| `tpm-state-recorded` | requires TPM presence on the running unit |
+| `burn-in-completed` | requires a time-based campaign report |
+
+So an offline probe **alone never seals a device**. `merge_attestation` supplies those five from a signed live record and refuses an attestation that tries to override a check the probe already settled — which is exactly the move a dishonest factory would make.
+
+`describe-checks` reports `offlineInspectable` per check, so the five permanent `UNKNOWN`s are not mistaken for a broken probe.
+
 ## Not evidenced
 
-No device has been provisioned, sealed, or handed over. Every result here is the evaluation of a supplied record, not an observation of hardware.
+No device has been provisioned, sealed, or handed over, and no live attestation has ever been produced. The probe has been exercised against a real Fedora root filesystem, where it correctly reported two genuine failures — a login account and a fixed `machine-id` — and refused handoff.

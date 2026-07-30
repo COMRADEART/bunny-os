@@ -1,6 +1,6 @@
 # ADR-022: Enterprise policy agent
 
-- Status: accepted as design; the privileged transport is unimplemented
+- Status: accepted; the privileged transport and the settings organisation scope are now implemented
 - Date: 2026-07-29
 
 ## Decision
@@ -21,4 +21,12 @@ Every management product that ships one becomes a remote code execution tool, an
 
 ## Consequences
 
-Both gaps are real and unclosed. The policy agent's privileged transport and the settings-layer override mechanism are unimplemented, and are recorded in `KNOWN_LIMITATIONS.md` and `docs/DEVICE_POLICY.md`. What exists is the policy model, the validation, the conflict resolution, and the tests — not a running agent that changes system state.
+Both gaps are now closed.
+
+The transport is a second socket at `/run/bunny/policy.sock`, mode 0600, adopted by `LISTEN_FDNAMES` so it can never be confused with the user socket. `require_local_user` is untouched; `require_policy_identity` is a sibling, and authorisation is the dedicated service uid plus a `/proc/<pid>/cgroup` unit match rather than a logind session the daemon does not have. Each socket has its own method table, rate limiter and nonce cache.
+
+The socket carries only `policyId` and `version`. The desired state comes from the bundle the agent already verified, so a compromised control plane cannot push a novel value through the interface and the broker does not reimplement the fifteen per-domain validators.
+
+The settings layer gained a root-owned overlay at `/etc/bunny-os/managed-settings.json`, written only by the broker. `MANAGEABLE_SETTINGS` is an allowlist; `set()` raises `SettingLockedError` naming the organisation and policy; `reset()` returns a locked setting to the organisation value rather than the Bunny OS default, closing what would otherwise be a one-command escape.
+
+What remains unproven is operational, not architectural: no policy has been delivered to a running device, because no control plane exists to deliver one.

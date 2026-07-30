@@ -75,6 +75,78 @@ jobs:
           desktop-file-validate /src/shell/session/*.desktop /src/shell/components/applications/*.desktop &&
           gnome-extensions pack --force --out-dir=/tmp /tmp/bunny-shell@bunny-os.org'
 
+  # Phases 3, 5 and 7 had no CI coverage: only gate-phase-2 ran, so an installer,
+  # operations or Phase 7 regression could merge unnoticed.
+  installer-gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --disable-pip-version-check jsonschema
+      - name: Installer and application distribution gate
+        run: |
+          python scripts/task.py installer-audit
+          python scripts/task.py test-installer
+          python scripts/task.py test-storage
+          python scripts/task.py test-encryption
+          python scripts/task.py test-first-run
+          python scripts/task.py test-app-distribution
+          python scripts/task.py test-installer-security
+
+  operations-gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --disable-pip-version-check jsonschema
+      - name: Phase 5 operations and stable-qualification tooling
+        run: |
+          python scripts/task.py phase5-audit
+          python scripts/phase5.py baseline
+          python scripts/task.py test-phase5
+          python scripts/phase5.py source-gate
+          python scripts/phase5.py long-run-plan
+      - name: Protected gates must stay closed
+        run: |
+          if python scripts/phase5.py stable-gate --evidence operations/data/stable-qualification.json; then
+            echo "::error::the stable gate reported GO; publication must not be unblocked by CI"
+            exit 1
+          fi
+          echo "stable gate correctly reports NO-GO"
+
+  phase7-gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install validation and cryptography dependencies
+        run: python -m pip install --disable-pip-version-check jsonschema cryptography
+      - name: Phase 7 source gate
+        run: |
+          python scripts/task.py validate
+          python scripts/task.py phase7-audit
+          python scripts/phase7.py baseline
+          for area in oem factory device-identity enrolment policy fleet multitenancy \
+                      sync sync-crypto device-revocation remote-wipe airgap kiosk decommission pilot; do
+            python scripts/task.py "test-$area"
+          done
+          python scripts/phase7.py source-gate
+      - name: Pilot gates must stay closed
+        run: |
+          for kind in oem enterprise sync; do
+            if python scripts/phase7.py pilot-gate --kind "$kind"; then
+              echo "::error::the $kind pilot gate reported GO; pilots must not be unblocked by CI"
+              exit 1
+            fi
+          done
+          echo "all three pilot gates correctly report BLOCKED"
+
   full-image-gate:
     if: github.event_name == 'workflow_dispatch' && inputs.full_image_gate
     runs-on: [self-hosted, linux, x64, bunny-os-image-builder]
