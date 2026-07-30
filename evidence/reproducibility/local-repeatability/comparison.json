@@ -337,12 +337,12 @@
     "fileDigests": {
       "detail": "104255 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "73e4a65c4744c916ac5d32cd45f2a650d8c13ef2a8b0e90e927b1212ebc6e523",
+        "__digest__": "686eeb708e60f0e8e7a572f2a1084bd0941091ac365ba015c7df970943cfbc5a",
         "__memberCount__": 104255
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "73e4a65c4744c916ac5d32cd45f2a650d8c13ef2a8b0e90e927b1212ebc6e523",
+        "__digest__": "686eeb708e60f0e8e7a572f2a1084bd0941091ac365ba015c7df970943cfbc5a",
         "__memberCount__": 104255
       }
     },
@@ -387,9 +387,9 @@
       }
     },
     "normalisedArchive": {
-      "first": "3fc0b512e6b7f75a4c5d41a462b5b3fdf4576b744a28a17af9b7a5411cac0de2",
+      "first": "54ba89a85c927f88b7476db0a6279179537b69849a73be057dc40b14bdfc8faf",
       "reductionForm": "verbatim",
-      "second": "3fc0b512e6b7f75a4c5d41a462b5b3fdf4576b744a28a17af9b7a5411cac0de2"
+      "second": "54ba89a85c927f88b7476db0a6279179537b69849a73be057dc40b14bdfc8faf"
     },
     "ociLayers": {
       "first": [
@@ -458,7 +458,7 @@
         "sha256:5d54fd4b57ae38321730975e9301cbaa13be19423f5bbac56fd9c150b19aaa81",
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
-        "sha256:7fbe20b1acce234bbd4498566640f816310ef60668e5d98a7a49d23911891f01",
+        "sha256:9db1e365501ffa09d6f694584d6811c1c2f022d058aab542ec1a550f2a916724",
         "sha256:77089bd08aff6836b9bec6fb933b7ec8d0fd7668bcc268b9a33691c7970a0f1c",
         "sha256:0c916b66b4d392a053eed54413769a89cb6410cf7f88d52ece500a094c750313",
         "sha256:f127c0a6e6b4f6b7675bdcdc3499f7584a45fab344d4c4c6163dae978c771038",
@@ -471,7 +471,7 @@
         "sha256:7f9217a7b91f117d61cafccb5959f1e44f70dd7682aee9454cf0a6e42c8fdd74",
         "sha256:89617b95f3dbe144763f8bab359db0ad7565342f2290c49c2f181382e6267000",
         "sha256:4ce9e0a7121413afe8d9e1aa10c10fc7a154e207f11d020f2d6425e275a946e8",
-        "sha256:867fd76684c514f484896c15753168be2dda4bea190145ac95499867d46036c5",
+        "sha256:f325fbfffe8ba7513a6bc2a4d325835cd99699dd7ed75066368e71ec8528ac02",
         "sha256:5f75694ade70f0809db2e979dbd19cdd8f6273585af633cd05c15e6cd3aebed7"
       ],
       "reductionForm": "verbatim",
@@ -541,7 +541,7 @@
         "sha256:5d54fd4b57ae38321730975e9301cbaa13be19423f5bbac56fd9c150b19aaa81",
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
-        "sha256:7fbe20b1acce234bbd4498566640f816310ef60668e5d98a7a49d23911891f01",
+        "sha256:9db1e365501ffa09d6f694584d6811c1c2f022d058aab542ec1a550f2a916724",
         "sha256:77089bd08aff6836b9bec6fb933b7ec8d0fd7668bcc268b9a33691c7970a0f1c",
         "sha256:0c916b66b4d392a053eed54413769a89cb6410cf7f88d52ece500a094c750313",
         "sha256:f127c0a6e6b4f6b7675bdcdc3499f7584a45fab344d4c4c6163dae978c771038",
@@ -554,7 +554,7 @@
         "sha256:7f9217a7b91f117d61cafccb5959f1e44f70dd7682aee9454cf0a6e42c8fdd74",
         "sha256:89617b95f3dbe144763f8bab359db0ad7565342f2290c49c2f181382e6267000",
         "sha256:4ce9e0a7121413afe8d9e1aa10c10fc7a154e207f11d020f2d6425e275a946e8",
-        "sha256:867fd76684c514f484896c15753168be2dda4bea190145ac95499867d46036c5",
+        "sha256:f325fbfffe8ba7513a6bc2a4d325835cd99699dd7ed75066368e71ec8528ac02",
         "sha256:5f75694ade70f0809db2e979dbd19cdd8f6273585af633cd05c15e6cd3aebed7"
       ]
     },
@@ -12742,9 +12742,9 @@
       }
     },
     "rawArchive": {
-      "first": "3fc0b512e6b7f75a4c5d41a462b5b3fdf4576b744a28a17af9b7a5411cac0de2",
+      "first": "54ba89a85c927f88b7476db0a6279179537b69849a73be057dc40b14bdfc8faf",
       "reductionForm": "verbatim",
-      "second": "3fc0b512e6b7f75a4c5d41a462b5b3fdf4576b744a28a17af9b7a5411cac0de2"
+      "second": "54ba89a85c927f88b7476db0a6279179537b69849a73be057dc40b14bdfc8faf"
     },
     "sbom": {
       "detail": "6076 members, identical (compared by digest over the full value)",
@@ -15496,7 +15496,7 @@
         }
       ]
     },
-    "sourceCommit": "6492022938a19d80bb970fb067752b58a27b0232"
+    "sourceCommit": "f5985f6ffe613066e0d7a9119c52afa48b990c1e"
   },
   "schemaVersion": 1,
   "selinux": {
@@ -15520,7 +15520,7 @@
       "file_contexts"
     ]
   },
-  "sourceCommit": "6492022938a19d80bb970fb067752b58a27b0232",
+  "sourceCommit": "f5985f6ffe613066e0d7a9119c52afa48b990c1e",
   "volatilePathDiagnostic": {
     "differing": [],
     "differingCount": 0,
