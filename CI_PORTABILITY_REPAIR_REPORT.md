@@ -7,9 +7,9 @@ not change.
 | --- | --- |
 | Starting commit | `9dc7e33f66a270150dfc2c1c9950b1e974a3c2ae` |
 | Branch | `feature/qualification-evidence-closure` |
-| Failures found | 8 defects across 8 failing jobs in 3 workflows |
+| Failures found | 13 defects: 8 in the source workflows, 5 more found by running the hosted builder |
 | Baseline record | [docs/CI_PORTABILITY_BASELINE.md](docs/CI_PORTABILITY_BASELINE.md) |
-| Regression tests added | 125, in `tests/portability/` |
+| Regression tests added | 197, in `tests/portability/` |
 
 No protected decision moved. The gate state this pass began with is the gate
 state it ends with, and three of the repairs make that state harder to falsify
@@ -249,12 +249,12 @@ One case the exit code alone cannot distinguish: **CPython exits 2 for
 checks a named script exists before running it, and a test asserts every script
 referenced by a workflow assertion is present.
 
-## Four more, found by running the hosted builder
+## Five more, found by running the hosted builder
 
 `.github/workflows/independent-builder.yml` had been committed and never
-executed. Running it found four defects, none of which was visible by reading it.
+executed. Running it found five defects, none of which was visible by reading it.
 "The workflow is committed" and "the workflow works" are different claims, and
-the gap between them was four defects wide.
+the gap between them was five defects wide.
 
 ### F9 — The pinned base-image digest no longer exists
 
@@ -310,6 +310,23 @@ database configuration mismatch
 The runner image ships an already-initialised container store. It holds nothing
 this build needs — the base is pulled by digest — so it is removed rather than
 migrated, which is also what `BUNNY_CACHES_DISABLED=1` asks for.
+
+### F13 — The runner ran out of disk, and reported `cancelled`
+
+The SBOM step ran for 419 seconds and the job reported `cancelled` with an empty
+failure log and every later step skipped. The build itself had succeeded in 387
+seconds.
+
+The `ubuntu-24.04` runner has about 14 GB free on its root volume. The job writes
+a 1.85 GB archive, a container store holding the base and the built image, and
+then syft extracts that archive to catalogue it. The runner was killed, which
+surfaces as `cancelled` rather than as an error — a step that produced no message
+and no exit code is indistinguishable from one somebody deliberately stopped.
+
+About 25 GB of unused preinstalled toolchains are now removed first, the
+container store and syft's temporary directory move to `/mnt`, and syft produces
+only the one SBOM format anything reads. Free space is printed around the heavy
+steps so the next such failure reports itself.
 
 ### One more, found by reading the provenance
 
@@ -372,6 +389,9 @@ builder, where the tool is deliberately absent. A missing tool is now recorded a
 | `test_repository_validation.py` | 18 | F5: all ten required validators reported, one failure does not implicate the others, session vs launcher rules, machine-readable output |
 | `test_gate_exit_codes.py` | 14 | F8: refusal accepted, approval rejected, crash/traceback/missing-file/odd-status rejected, no workflow accepts any non-zero |
 | `test_archive_only.py` | 21 | archive-only refused by both gates, provenance writer refuses contradictory records, undeclared mode treated as unknown |
+| `test_hosted_import.py` | 34 | missing and reused run ids, source and base mismatch, a record edited in one place, a shared administrator boundary, an unsigned production claim |
+| `test_dimension_collector.py` | 26 | all seventeen dimensions read from an OCI archive, whiteout semantics, setuid bits, capabilities, an absent SELinux set reported as not-collected rather than matching |
+| `test_comparison_assembly.py` | 15 | the reduced comparison form preserves equality exactly — one changed member among 20,000 is caught and named |
 
 ## Local verification
 

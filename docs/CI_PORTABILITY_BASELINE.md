@@ -487,6 +487,47 @@ drivers under an existing database.
 nothing this build needs — the base image is pulled by digest — and starting from
 an empty store is what `BUNNY_CACHES_DISABLED=1` asks for anyway.
 
+### F13 — The runner ran out of disk, and said `cancelled`
+
+| | |
+| --- | --- |
+| Run | 30561822516 |
+| Step | `Generate the SBOM and package inventory` |
+| Local reproduction | **Not reproducible** — the local builder has 1 TB free. |
+| Affects evidence integrity | **No**, but it produced no evidence at all. |
+
+No error message. The step ran for 419 seconds and the job reported:
+
+```text
+cancelled  Generate the SBOM and package inventory
+```
+
+with every subsequent step skipped and an empty failure log. The build itself had
+succeeded in 387 seconds.
+
+**Root cause.** The `ubuntu-24.04` runner has roughly 14 GB free on its root
+volume. The job writes a 1.85 GB OCI archive, a container store holding the
+2 GB base plus the built image, and then syft extracts that archive into a
+temporary directory to catalogue it. The runner exhausted its disk and was
+killed, which surfaces as `cancelled` rather than as an error.
+
+That silence is the reportable part: a step that produced no message and no exit
+code is indistinguishable from a step that was deliberately cancelled.
+
+**Fix applied.** Three changes, none of them a build input:
+
+* ~25 GB of preinstalled toolchains the build never uses are removed first.
+  `/opt/hostedtoolcache` is left alone — `setup-python` installed the
+  interpreter the job runs on.
+* The container store and syft's temporary directory move to `/mnt`, the
+  runner's large ephemeral volume.
+* syft produces only `spdx-json`; the `syft-json` output was another 70 MB that
+  nothing downstream reads.
+
+**Regression test required.** Free space is now printed before and after the
+heavy steps, so the next disk-exhaustion failure reports itself rather than
+appearing as a bare `cancelled`.
+
 ---
 
 ## Summary
@@ -505,6 +546,7 @@ an empty store is what `BUNNY_CACHES_DISABLED=1` asks for anyway.
 | F10 crun spec version | 1 | No | Yes |
 | F11 vfs storage driver | 0 (timing only) | No | Yes |
 | F12 store driver change | 1 | No | Yes |
+| F13 runner out of disk | 1 | No | Yes |
 
 F2 accounts for four of the eight failing source jobs. F6 and F7 predate the
 branch and are not regressions from the candidate commit; they are repaired here
@@ -514,8 +556,8 @@ Three defects — F3, F4 and F8 — affect whether evidence means what it claims
 None of them was visible as a red step for the reason that actually matters: F4
 failed for a reason that hid the real one, and F3 and F8 do not fail at all yet.
 
-F9 to F12 were found by *running* the hosted builder, which had been committed
+F9 to F13 were found by *running* the hosted builder, which had been committed
 and never executed. Each needed a real dispatch to surface, and F9 in particular
 could not have been found any other way: it is invisible from the machine whose
 cache still holds the base image. The gap between "the workflow is committed" and
-"the workflow works" was four defects wide.
+"the workflow works" was five defects wide.
