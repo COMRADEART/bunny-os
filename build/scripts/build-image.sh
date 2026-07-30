@@ -32,6 +32,22 @@ for command in "${required_commands[@]}"; do
   fi
 done
 
+# Every podman and skopeo invocation goes through these, so a caller asking for
+# an isolated container store gets one everywhere rather than for the build step
+# and not the pull. Two builds of a repeatability pair that shared a store would
+# be one build measured twice.
+podman_store_args=()
+skopeo_store_args=()
+if [[ -n "${BUNNY_PODMAN_ROOT:-}" ]]; then
+  : "${BUNNY_PODMAN_RUNROOT:=${BUNNY_PODMAN_ROOT}/run}"
+  sudo mkdir -p "${BUNNY_PODMAN_ROOT}" "${BUNNY_PODMAN_RUNROOT}"
+  podman_store_args=(--root "${BUNNY_PODMAN_ROOT}" --runroot "${BUNNY_PODMAN_RUNROOT}")
+  # skopeo names the same two things differently, and only on the
+  # containers-storage transport.
+  skopeo_store_args=("[overlay@${BUNNY_PODMAN_ROOT}+${BUNNY_PODMAN_RUNROOT}]")
+fi
+podman() { sudo command podman "${podman_store_args[@]+"${podman_store_args[@]}"}" "$@"; }
+
 repository_root="$(git rev-parse --show-toplevel)"
 cd "${repository_root}"
 source_commit="$(git rev-parse HEAD)"
@@ -75,10 +91,10 @@ import json
 print(json.load(open("build/inputs/base-image-lock.json"))["retainedDigest"])
 ')"
   base_tag="localhost/bunny-os-retained-base:${retained_digest#sha256:}"
-  sudo podman pull "oci:${retained_layout}:retained" >/dev/null
-  pulled_id="$(sudo podman pull "oci:${retained_layout}:retained" 2>/dev/null | tail -1)"
-  sudo podman tag "${pulled_id}" "${base_tag}"
-  observed="$(sudo skopeo inspect --raw "containers-storage:${base_tag}" |
+  podman pull "oci:${retained_layout}:retained" >/dev/null
+  pulled_id="$(podman pull "oci:${retained_layout}:retained" 2>/dev/null | tail -1)"
+  podman tag "${pulled_id}" "${base_tag}"
+  observed="$(sudo skopeo inspect --raw "containers-storage:${skopeo_store_args[0]-}${base_tag}" |
     python3 -c 'import hashlib,sys; print("sha256:"+hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')"
   if [[ "${observed}" != "${retained_digest}" ]]; then
     echo "the base pulled from retention does not carry the locked digest:" >&2
@@ -138,9 +154,9 @@ print(json.load(open("build/inputs/builder-image-lock.json"))["builderDigest"])
       exit 4
     fi
     builder_tag="localhost/bunny-os-builder-pinned:${builder_digest#sha256:}"
-    builder_id="$(sudo podman pull "oci:${builder_layout}:builder" 2>/dev/null | tail -1)"
-    sudo podman tag "${builder_id}" "${builder_tag}"
-    observed_builder="$(sudo skopeo inspect --raw "containers-storage:${builder_tag}" |
+    builder_id="$(podman pull "oci:${builder_layout}:builder" 2>/dev/null | tail -1)"
+    podman tag "${builder_id}" "${builder_tag}"
+    observed_builder="$(sudo skopeo inspect --raw "containers-storage:${skopeo_store_args[0]-}${builder_tag}" |
       python3 -c 'import hashlib,sys; print("sha256:"+hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')"
     if [[ "${observed_builder}" != "${builder_digest}" ]]; then
       echo "the builder image pulled from retention does not carry the locked digest:" >&2
@@ -150,7 +166,7 @@ print(json.load(open("build/inputs/builder-image-lock.json"))["builderDigest"])
     fi
     faketime_scratch="$(mktemp -d)"
     trap '[[ -n "${faketime_scratch:-}" ]] && rm -rf "${faketime_scratch}" || true' EXIT
-    sudo podman run --rm --network=none --entrypoint /usr/bin/cp \
+    podman run --rm --network=none --entrypoint /usr/bin/cp \
       --volume "${faketime_scratch}:/out:z" "${builder_tag}" \
       /usr/local/lib/bunny-faketime/libfaketime.so.1 /out/libfaketime.so.1
     sudo chown "$(id -u):$(id -g)" "${faketime_scratch}/libfaketime.so.1"
@@ -229,7 +245,22 @@ print(record.get("libraryVersion", ""))
   )
 fi
 
-sudo podman build \
+# Two builds of one commit must not share a layer.
+#
+# podman keys its build cache on the instruction and the context digest, and two
+# fresh clones of one commit produce the same both. Without --no-cache the second
+# build of a repeatability pair reuses the first build's layers wholesale and
+# produces a byte-identical archive because it *is* the first archive — a
+# comparison that can only ever pass, which is worse than one that fails.
+#
+# --root and --runroot, when the caller sets them, put each build in its own
+# store as well. That is the stronger property and it costs a full base-image
+# copy per build; --no-cache is the one that is always on, because it is the one
+# that makes the comparison mean anything.
+cache_args=(--no-cache)
+
+podman build \
+  "${cache_args[@]}" \
   --file build/Containerfile \
   --tag "${tag}" \
   "${build_mounts[@]+"${build_mounts[@]}"}" \
@@ -243,8 +274,8 @@ sudo podman build \
   "${hermetic_args[@]+"${hermetic_args[@]}"}" \
   . 2>&1 | tee "${output}/oci-build.log"
 
-sudo podman image inspect "${tag}" | tee "${output}/oci-inspect.json" >/dev/null
-sudo podman save --format oci-archive --output "${output}/bunny-os.oci.tar" "${tag}"
+podman image inspect "${tag}" | tee "${output}/oci-inspect.json" >/dev/null
+podman save --format oci-archive --output "${output}/bunny-os.oci.tar" "${tag}"
 sudo chown "$(id -u):$(id -g)" "${output}/bunny-os.oci.tar"
 
 # Normalise the archive wrapper so the artifact digest is reproducible.

@@ -128,12 +128,18 @@ build_one() {
   git clone --quiet --no-hardlinks "${repository_root}" "${workspace}"
   git -C "${workspace}" checkout --quiet "${source_commit}"
 
-  # Its own container storage. A store shared with the other build could serve
-  # a cached layer to the second one, and a build partly copied from another is
-  # not an independent measurement of anything.
+  # Its own container store, and its own layer cache.
+  #
+  # An earlier version of this driver created the store directory and never told
+  # podman about it, which is worse than not isolating at all: the evidence said
+  # "empty container storage" and the second build could have been served the
+  # first one's layers wholesale. `--no-cache` is what makes the two builds two
+  # builds; the separate store is what makes "empty container storage" a fact
+  # rather than a caption.
   (
     cd "${workspace}"
-    CONTAINERS_STORAGE_CONF="" \
+    BUNNY_PODMAN_ROOT="${storage}/graph" \
+    BUNNY_PODMAN_RUNROOT="${storage}/run" \
     BUNNY_HERMETIC_BUILD=1 \
     BUNNY_ARCHIVE_ONLY=1 \
     bash build/scripts/build-image.sh "${profile}"
@@ -182,7 +188,9 @@ build_one() {
     --require-all >/dev/null
 
   if [[ "${keep}" == "0" ]]; then
-    rm -rf "${storage}"
+    # Each store holds a full copy of the retained base and the built image;
+    # two of them outlive the disk if they are not reclaimed between builds.
+    sudo rm -rf "${storage}" 2>/dev/null || rm -rf "${storage}"
   fi
   echo
 }

@@ -85,22 +85,32 @@ RUN BUNNY_SNAPSHOT_ROOT="${BUNNY_SNAPSHOT_ROOT}" \
 # assertion afterwards is what makes this a check rather than a sweep — if a
 # path cannot be pinned, the build stops instead of shipping an artifact whose
 # archive digest nobody can explain.
-# Mount points are excluded, not pinned. /snapshot is the retained package
-# snapshot bind-mounted read-only for this build, and touching it fails outright:
+# Mount points are excluded, and *only* mount points.
+#
+# /snapshot is the retained package snapshot bind-mounted read-only for this
+# build, and touching it fails outright:
 #
 #   touch: setting times of '/snapshot': Read-only file system
 #
 # It is also not in the committed layer, which is the actual reason — the same
-# reason finalise-image.sh empties /etc/hostname instead of removing it. The list
-# is read from /proc/self/mounts rather than hard-coded, so a mount added later
-# is excluded without anyone having to remember this step exists. `-xdev` already
-# stops the walk descending into them; what it does not do is stop `find`
-# reporting the mount point itself.
+# reason finalise-image.sh empties /etc/hostname instead of removing it.
+#
+# The list comes from /proc/self/mounts and nowhere else. An earlier version also
+# hard-coded /proc /sys /dev /run, which was wrong about the last one: measured
+# inside this base, /run is *not* a mount, is ordinary image content, and can be
+# touched. Excluding it left one entry in the artifact carrying a wall-clock
+# mtime — 987 seconds past the epoch — which changes the layer digest and
+# differs between two builds. The mounts file already names the three paths
+# under /run that really are mounts (/run/.containerenv, /run/secrets and
+# systemd's stub resolv.conf), so nothing is gained by guessing at the parent.
+#
+# `-xdev` already stops the walk descending into another filesystem; what it does
+# not do is stop `find` reporting the mount point directory itself.
 RUN bash -euo pipefail -c '\
     epoch="${SOURCE_DATE_EPOCH}"; \
     mapfile -t mounts < <(awk "\$2 != \"/\" { print \$2 }" /proc/self/mounts | sort -u); \
     prune=(); \
-    for point in "${mounts[@]}" /proc /sys /dev /run; do \
+    for point in "${mounts[@]}"; do \
       prune+=(-path "${point}" -o); \
     done; \
     unset "prune[${#prune[@]}-1]"; \
