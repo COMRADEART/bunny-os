@@ -11,6 +11,7 @@ import shutil
 from typing import Any, Callable
 
 from . import SETTINGS_SCHEMA_VERSION
+from .managed import MANAGEABLE_SETTINGS, ManagedOverlay, load_overlay
 from .paths import JsonStore, config_dir
 
 
@@ -84,9 +85,29 @@ def defaults() -> dict[str, Any]:
     return {key: deepcopy(value["default"]) for key, value in DEFINITIONS.items()}
 
 
+class SettingLockedError(PermissionError):
+    """Raised when a user tries to change a setting an organisation has locked.
+
+    Distinct from ``KeyError`` and ``ValueError`` so the CLI and the settings
+    surface can report *who* is preventing the change rather than reporting a
+    generic failure. A user who cannot change a control is entitled to know
+    which layer decided that.
+    """
+
+    def __init__(self, key: str, organisation: str | None, policy_id: str) -> None:
+        owner = organisation or "your organisation"
+        super().__init__(
+            f"{key} is managed by {owner} under policy {policy_id} and cannot be changed here"
+        )
+        self.key = key
+        self.organisation = organisation
+        self.policyId = policy_id
+
+
 class SettingsStore:
-    def __init__(self, path: Path | None = None) -> None:
+    def __init__(self, path: Path | None = None, *, managed: ManagedOverlay | None = None) -> None:
         self.store = JsonStore(path or config_dir() / "settings.json", {"schemaVersion": SETTINGS_SCHEMA_VERSION, "revision": 0, "values": defaults()})
+        self.managed = load_overlay() if managed is None else managed
 
     def _validate(self, state: dict[str, Any]) -> dict[str, Any]:
         if state.get("schemaVersion") != SETTINGS_SCHEMA_VERSION or not isinstance(state.get("values"), dict):
@@ -100,18 +121,55 @@ class SettingsStore:
             DEFINITIONS[key]["validate"](value)
         return merged
 
+    def _apply_managed(self, values: dict[str, Any]) -> dict[str, Any]:
+        """Overlay organisation-locked values on top of the user's own.
+
+        The coupled invariants below mirror ``set()``: a locked ``localOnlyMode``
+        must drag the provider settings with it, or the effective state would
+        contradict the policy that locked it.
+        """
+        for key, managed in self.managed.settings.items():
+            values[key] = deepcopy(managed.value)
+        if values.get("localOnlyMode") and "localOnlyMode" in self.managed.settings:
+            values["cloudFailoverPolicy"] = "never"
+            values["defaultProviderAlias"] = "local"
+        if values.get("offlineMode") and "offlineMode" in self.managed.settings:
+            values["cloudFailoverPolicy"] = "never"
+        return values
+
     def get_all(self) -> dict[str, Any]:
-        return self._validate(self.store.read())
+        return self._apply_managed(self._validate(self.store.read()))
 
     def describe(self) -> dict[str, Any]:
-        return {
-            key: {"type": type(meta["default"]).__name__, "default": deepcopy(meta["default"]), "scope": meta["scope"], "policyOwner": meta["owner"], "reset": "default"}
-            for key, meta in DEFINITIONS.items()
-        }
+        described: dict[str, Any] = {}
+        for key, meta in DEFINITIONS.items():
+            managed = self.managed.settings.get(key)
+            described[key] = {
+                "type": type(meta["default"]).__name__,
+                "default": deepcopy(meta["default"]),
+                "scope": "organisation" if managed else meta["scope"],
+                "policyOwner": meta["owner"],
+                "reset": "organisation" if managed else "default",
+                "managed": managed is not None,
+                "lockedBy": self.managed.organisationId if managed else None,
+                "lockedByPolicy": managed.policyId if managed else None,
+                "effectiveSource": "organisation" if managed else "user",
+                "manageable": key in MANAGEABLE_SETTINGS,
+            }
+        return described
+
+    def managed_status(self) -> dict[str, Any]:
+        """Report the organisation overlay, including anything it got wrong."""
+        return self.managed.as_dict()
 
     def set(self, key: str, value: Any) -> dict[str, Any]:
         if key not in DEFINITIONS:
             raise KeyError(f"unknown setting: {key}")
+        managed = self.managed.settings.get(key)
+        if managed is not None:
+            # Refuse before opening the transaction, so a locked write never
+            # takes the store lock or bumps the revision.
+            raise SettingLockedError(key, self.managed.organisationId, managed.policyId)
         checked = DEFINITIONS[key]["validate"](value)
         with self.store.transaction() as state:
             values = self._validate(state)
@@ -139,9 +197,13 @@ class SettingsStore:
         with self.store.transaction() as state:
             current = self._validate(state)
             if key:
-                current[key] = deepcopy(DEFINITIONS[key]["default"])
+                # A locked setting resets to the organisation's value, not the
+                # Bunny OS default; resetting to default would silently escape
+                # the policy.
+                managed = self.managed.settings.get(key)
+                current[key] = deepcopy(managed.value) if managed else deepcopy(DEFINITIONS[key]["default"])
             else:
-                current = defaults()
+                current = self._apply_managed(defaults())
             state.update(schemaVersion=SETTINGS_SCHEMA_VERSION, revision=int(state.get("revision", 0)) + 1, values=current)
         return self.get_all()
 
