@@ -42,6 +42,20 @@ REFUSED = 2
 #: One `rpm -qp` query per package, tab-separated so a licence containing spaces
 #: survives. `%|EPOCH?{...}:{0}|` renders an absent epoch as 0 rather than
 #: "(none)", which would then have to be special-cased by every reader.
+#:
+#: The signature is read from **RSAHEADER**, not SIGPGP. Fedora signs the
+#: package header with RSA; `SIGPGP` is the legacy whole-file signature and
+#: Fedora does not populate it. Querying SIGPGP returned "(none)" for all 474
+#: packages, which would have written a lock recording every Fedora package as
+#: unsigned — a claim that is both false and, in a supply-chain lock, exactly
+#: the wrong direction to be wrong in. DSAHEADER and SIGPGP are kept as
+#: fallbacks for a repository that signs differently.
+SIGNATURE_EXPRESSION = (
+    "%|RSAHEADER?{%{RSAHEADER:pgpsig}}:"
+    "{%|DSAHEADER?{%{DSAHEADER:pgpsig}}:"
+    "{%|SIGPGP?{%{SIGPGP:pgpsig}}:{unsigned}|}|}|"
+)
+
 QUERY_FORMAT = "\\t".join(
     [
         "%{NAME}",
@@ -51,10 +65,14 @@ QUERY_FORMAT = "\\t".join(
         "%{ARCH}",
         "%{SOURCERPM}",
         "%{LICENSE}",
-        "%|SIGPGP?{%{SIGPGP:pgpsig}}:{unsigned}|",
+        SIGNATURE_EXPRESSION,
         "%{SIZE}",
     ]
 )
+
+#: `RSA/SHA256, <date>, Key ID <hex>` — the key id is the part that identifies
+#: which Fedora key signed the package, and it is what the snapshot records.
+_KEY_ID = re.compile(r"Key ID ([0-9a-f]{16})", re.IGNORECASE)
 
 
 #: Run inside the retained base to produce the exact transaction set.
@@ -197,8 +215,10 @@ def main() -> int:
             "this tool will write out as success."
         )
 
-    print(f"==> recording {len(rpms)} packages")
+    print(f"==> recording {len(rpms)} packages and checking every signature")
     records: list[dict[str, object]] = []
+    unsigned: list[str] = []
+    unverified: list[str] = []
     for rpm in rpms:
         line = run(
             ["rpm", "-qp", "--nosignature", "--queryformat", QUERY_FORMAT, str(rpm)],
@@ -212,6 +232,25 @@ def main() -> int:
         cache_directory = rpm.parent.name
         repository = re.sub(r"-[0-9a-f]{8,}$", "", cache_directory) or cache_directory
         file_name = rpm.name
+
+        key_match = _KEY_ID.search(signature)
+        signing_key = key_match.group(1).lower() if key_match else ""
+        if not signing_key:
+            unsigned.append(rpm.name)
+
+        # The authoritative check, not the header tag. `rpmkeys --checksig`
+        # verifies the signature against the keys rpm trusts and reports
+        # "digests signatures OK" only when both hold. A header that merely
+        # *claims* a signature is not a verified signature, and the difference
+        # is the whole reason this step exists.
+        checked = subprocess.run(
+            ["rpmkeys", "--checksig", str(rpm)],
+            capture_output=True,
+            text=True,
+        )
+        verified = checked.returncode == 0 and "signatures OK" in checked.stdout
+        if not verified:
+            unverified.append(f"{rpm.name}: {checked.stdout.strip() or checked.stderr.strip()}")
         records.append(
             {
                 "name": name,
@@ -227,8 +266,26 @@ def main() -> int:
                 "sourceRpm": source_rpm,
                 "licence": licence,
                 "signature": signature,
+                "signingKey": signing_key,
+                "signatureVerified": verified,
                 "fileName": file_name,
             }
+        )
+
+    if unsigned:
+        raise SystemExit(
+            f"BLOCKED: {len(unsigned)} packages carry no signature key id:\n  "
+            + "\n  ".join(unsigned[:20])
+            + "\nEvery RPM must retain its original trusted signature. A snapshot built from "
+            "unsigned packages would trade supply-chain integrity for reproducibility, which is "
+            "the wrong direction."
+        )
+    if unverified:
+        raise SystemExit(
+            f"BLOCKED: {len(unverified)} packages failed signature verification:\n  "
+            + "\n  ".join(unverified[:20])
+            + "\nImport the Fedora signing keys (rpmkeys --import) and re-run. A package whose "
+            "signature does not verify must never reach a snapshot."
         )
 
     records.sort(key=lambda item: (item["name"], item["architecture"], item["version"]))
@@ -257,7 +314,9 @@ def main() -> int:
     lock_path.write_text(
         json.dumps(lock, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
     )
-    print(f"    {len(records)} packages locked")
+    keys = sorted({str(item["signingKey"]) for item in records})
+    print(f"    {len(records)} packages locked, every signature verified")
+    print(f"    signing keys: {', '.join(keys)}")
     print(f"    wrote {display_path(lock_path, Path.cwd())}")
     return 0
 
