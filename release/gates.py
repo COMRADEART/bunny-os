@@ -24,7 +24,30 @@ from typing import Any, Iterable, Mapping
 
 SCHEMA_VERSION = 1
 
-GATES = ("stable-release", "oem-pilot", "enterprise-pilot", "sync-pilot")
+GATES = (
+    "source",
+    "qualification-candidate",
+    "stable-release",
+    "oem-pilot",
+    "enterprise-pilot",
+    "sync-pilot",
+)
+
+#: What the source gate checks, and — more importantly — what passing it does not
+#: mean. It is a statement about the repository: the tree parses, the suites pass,
+#: the licence position is clean, and the baseline is recorded. It is not evidence
+#: that anything was built, booted, reviewed or signed, and no other gate consults
+#: it. Keeping it separate is the point: a green source gate is the state this
+#: project has been in for most of its life, and it has never been close to a
+#: release.
+SOURCE_GATE_REQUIREMENTS: dict[str, str] = {
+    "repositoryValidation": "every JSON document parses, every schema is well formed, every Python file compiles",
+    "sourceSuitesPass": "the inherited source test suites pass",
+    "qualificationSuitesPass": "the qualification evidence suites pass",
+    "licenceGatePassed": "the licence gate passes all seven requirements",
+    "minimisationComplete": "package minimisation is recorded and touches no protected category",
+    "baselineRecorded": "the qualification evidence baseline document exists and classifies every unmet requirement",
+}
 
 #: Additional requirements per pilot, over and above a passing stable gate.
 OEM_PILOT_REQUIREMENTS: dict[str, str] = {
@@ -171,6 +194,68 @@ def evaluate_stable_gate(inputs: StableInputs) -> GateResult:
     )
 
 
+def evaluate_source_gate(requirements: Mapping[str, Any]) -> GateResult:
+    """The source gate. A statement about the repository and nothing else."""
+    unknown = sorted(set(requirements) - set(SOURCE_GATE_REQUIREMENTS))
+    if unknown:
+        raise GateError(f"source gate: unknown requirements declared: {', '.join(unknown)}")
+
+    unmet: list[str] = []
+    satisfied: list[str] = []
+    for name, description in sorted(SOURCE_GATE_REQUIREMENTS.items()):
+        if requirements.get(name) is True:
+            satisfied.append(name)
+        else:
+            unmet.append(f"{name}: {description}")
+
+    return GateResult(
+        gate="source",
+        recommendation="PASS" if not unmet else "FAIL",
+        unmet=tuple(unmet),
+        satisfied=tuple(satisfied),
+        detail={
+            "requirementCount": len(SOURCE_GATE_REQUIREMENTS),
+            "impliesRelease": False,
+            "impliesPilot": False,
+            "meaning": (
+                "The repository is internally consistent and its own checks pass. Nothing about a "
+                "built image, a booted system, a review, a device or a signature is asserted."
+            ),
+        },
+    )
+
+
+def evaluate_candidate_gate(
+    *,
+    prerequisitesReady: bool,
+    unsatisfied: tuple[str, ...],
+    detail: Mapping[str, Any],
+) -> GateResult:
+    """The qualification-candidate gate.
+
+    Deliberately not derived from the stable gate. A candidate is a thing that may
+    be built and examined; a stable release is a thing that may be published. The
+    candidate gate blocking does not mean a candidate cannot be *built* — it means
+    no built artifact may be labelled release-qualified.
+    """
+    unmet = tuple(f"{name}: candidate prerequisite unsatisfied" for name in unsatisfied)
+    return GateResult(
+        gate="qualification-candidate",
+        recommendation="PASS" if prerequisitesReady and not unmet else "BLOCKED",
+        unmet=unmet,
+        satisfied=tuple(
+            name for name in detail.get("satisfied", []) if isinstance(name, str)
+        ),
+        detail={
+            **dict(detail),
+            "meaning": (
+                "A blocking candidate gate does not forbid building an artifact. It forbids calling "
+                "one release-qualified."
+            ),
+        },
+    )
+
+
 def evaluate_pilot_gate(
     gate: str,
     *,
@@ -238,11 +323,14 @@ __all__ = [
     "OEM_PILOT_REQUIREMENTS",
     "PILOT_REQUIREMENTS",
     "REQUIRED_APPROVALS",
+    "SOURCE_GATE_REQUIREMENTS",
     "SYNC_PILOT_REQUIREMENTS",
     "GateError",
     "GateResult",
     "StableInputs",
     "assert_no_unprotected_go",
+    "evaluate_candidate_gate",
     "evaluate_pilot_gate",
+    "evaluate_source_gate",
     "evaluate_stable_gate",
 ]

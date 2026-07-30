@@ -1,7 +1,7 @@
 # Rollback qualification report
 
 Date: 2026-07-29  
-Source commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
 Result: **NOT QUALIFIED** — 0 of 5 scenarios resolved, 0 failing, 5 not run.
 
 Manual, automatic and recovery-assisted rollback, plus rollback after encryption and rollback with user data preserved.
@@ -33,6 +33,10 @@ Each of these is blocking. `NOT_RUN` is not a soft state:
 ## Standing note
 
 `untested-release-rollback` and `rollback-failure` are open blocker codes.
+
+## Related
+
+- `QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the `rollback-matrix` prerequisite
 
 ## How to regenerate
 

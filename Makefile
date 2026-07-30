@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot gate-dev-qualification dev-qualification-gaps qualification-compare release-blocker-baseline vulnerability-position reachability-review package-minimisation-check licence-gate independent-builder-prepare reproducibility-compare development-signing-drill signing-roles build-qualification-candidate build-independent-recovery validate-release-manifest test-installation-matrix test-encryption-matrix test-update-matrix test-rollback-matrix test-recovery-matrix test-preservation-matrix test-accessibility-matrix validate-hardware-evidence validate-independent-reviews stable-evidence-report pilot-closure-assertion test-release-closure
+.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot gate-dev-qualification dev-qualification-gaps qualification-compare release-blocker-baseline vulnerability-position reachability-review package-minimisation-check licence-gate independent-builder-prepare reproducibility-compare development-signing-drill signing-roles build-qualification-candidate build-independent-recovery validate-release-manifest test-installation-matrix test-encryption-matrix test-update-matrix test-rollback-matrix test-recovery-matrix test-preservation-matrix test-accessibility-matrix validate-hardware-evidence validate-independent-reviews stable-evidence-report pilot-closure-assertion test-release-closure qualification-evidence-baseline independent-builder-ci-manifest collect-builder-record verify-builder-independence compare-independent-builds acquire-cve-sources validate-cve-acquisition analyse-cve-symbols generate-reachability-packages collect-hardware-evidence accessibility-evidence-plan validate-accessibility-evidence two-person-development-signing-drill qualification-candidate-readiness gate-source gate-qualification-candidate test-qualification-evidence test-reachability test-review-evidence
 
 audit:
 	$(PYTHON) scripts/task.py audit
@@ -374,6 +374,79 @@ pilot-closure-assertion:
 
 test-release-closure:
 	$(PYTHON) scripts/task.py test-release-closure
+
+# --- Qualification evidence closure -------------------------------------------
+# Every target here fails closed. Several are expected to exit 2 indefinitely:
+# they need a hosted CI run, a physical device, an external reviewer or a second
+# signer, and no amount of running them again produces one.
+
+qualification-evidence-baseline:
+	$(PYTHON) scripts/release.py qualification-evidence-baseline
+
+# Reports whether the hosted workflow records everything an independent builder
+# must record, and separately whether it has ever run. A prepared workflow is not
+# an executed one.
+independent-builder-ci-manifest:
+	$(PYTHON) scripts/release.py independent-builder-ci-manifest
+
+# Run on each builder. BUNNY_BUILDER_ID names it; BUNNY_BASE_IMAGE must be the
+# pinned digest, because a record naming a mutable tag is refused.
+collect-builder-record:
+	$(PYTHON) scripts/release.py collect-builder-record --builder-id "$${BUNNY_BUILDER_ID:-local}"
+
+verify-builder-independence:
+	$(PYTHON) scripts/release.py verify-builder-independence
+
+compare-independent-builds:
+	$(PYTHON) scripts/release.py compare-independent-builds
+
+# Emits the acquisition plan. It does not download anything: the environments
+# that run these gates have no route to Fedora infrastructure, and a plan can be
+# reviewed before it is run.
+acquire-cve-sources:
+	$(PYTHON) scripts/release.py acquire-cve-sources
+
+validate-cve-acquisition:
+	$(PYTHON) scripts/release.py validate-cve-acquisition
+
+# Set BUNNY_SYSROOT to a mounted deployment to analyse the shipped binaries.
+analyse-cve-symbols:
+	$(PYTHON) scripts/reachability.py analyse-symbols $${BUNNY_SYSROOT:+--sysroot $$BUNNY_SYSROOT}
+
+generate-reachability-packages:
+	$(PYTHON) scripts/reachability.py generate-findings
+	$(PYTHON) scripts/reachability.py generate-packages
+	$(PYTHON) scripts/release.py cve-disposition
+
+collect-hardware-evidence:
+	$(PYTHON) scripts/release.py collect-hardware-evidence
+
+accessibility-evidence-plan:
+	$(PYTHON) scripts/release.py accessibility-evidence-plan
+
+validate-accessibility-evidence:
+	$(PYTHON) scripts/release.py validate-accessibility-evidence
+
+# Runs the drill, then validates what it recorded. BUNNY_DRILL_ARTIFACT should
+# name a real built archive; without one the drill uses a synthetic artifact and
+# says so.
+two-person-development-signing-drill:
+	$(PYTHON) scripts/two_person_drill.py $${BUNNY_DRILL_ARTIFACT:+--artifact $$BUNNY_DRILL_ARTIFACT}
+	$(PYTHON) scripts/release.py two-person-development-signing-drill
+
+qualification-candidate-readiness:
+	$(PYTHON) scripts/release.py qualification-candidate-readiness
+
+# The source gate is a statement about the repository and nothing else. It has
+# passed for most of this project's life and the project has never been close to
+# a release; keeping it separate is what stops the two being confused.
+gate-source:
+	$(PYTHON) scripts/release.py gate --kind source
+
+# A blocking candidate gate does not forbid building an artifact. It forbids
+# calling one release-qualified.
+gate-qualification-candidate:
+	$(PYTHON) scripts/release.py gate --kind qualification-candidate
 
 # --- Development qualification track ------------------------------------------
 # A second, clearly-labelled evidence track. It can reach GO on virtual,

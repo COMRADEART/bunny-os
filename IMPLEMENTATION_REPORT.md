@@ -4,6 +4,68 @@ Date: 2026-07-28
 Branch: `feature/os-foundation`  
 Baseline: `8fc27253e448cfe0cbe267231f816012f831ebf0`
 
+## Current implementation state — 2026-07-30
+
+Branch: `feature/qualification-evidence-closure`
+Base commit: `80df25b09f6578276d18c8a82f15c47dd8959740`
+
+```text
+Source gate:               PASS
+Qualification candidate:   BLOCKED   (2 of 14)
+Stable release:            NO-GO
+OEM / enterprise / sync:   BLOCKED
+```
+
+### Delivered by the qualification evidence closure
+
+| Area | Deliverable |
+|---|---|
+| Independent builder | `.github/workflows/independent-builder.yml` (4 jobs) — **prepared, not executed** |
+| Builder identity | `release/builders.py` — schema 2 records an administrator *boundary*, not an identifier, and has no `workspace` field |
+| Independence rules | 4 accepted pairings, 8 adversarial rejections |
+| Normalisation | `release/normalisation.py` — 8 normalisable properties, 7 protected and enforced, raw **and** normalised digests |
+| Comparison | `release/comparison.py` — 17 dimensions, 3 states, 4 outcomes; `NOT_COLLECTED` cannot support a pass |
+| Provenance | `release/provenance.py` — every claim recomputed from bytes or held locally; verification must run in a different environment from the build |
+| Per-CVE analysis | `release/cve.py`, `security/reachability/` — 29-field record, 12-field mapping, 5 proof classes with per-class evidence requirements |
+| Acquisition | `release/acquisition.py` — Fedora hosts only, exact NEVRA matching, nothing committed |
+| Symbol analysis | `scripts/reachability.py` — and a refusal to treat an absent symbol as absent code |
+| Review bundles | 24 advisories × 9 files, self-contained |
+| Review intake | `IndependentReviewRecord` — signed, digest-verified, commit-bound, self-review refused |
+| Review requests | 4 × `reviews/*/REQUEST.md`, 10 sections each |
+| Hardware collector | `bunny-os qualification collect` — 17-field allow-list, 12 excluded categories, 21 guided tests |
+| Hardware signatures | 3 roles; the word "certified" refused in code |
+| Accessibility | `release/accessibility.py` — 17 flows, 7 critical, static results refused |
+| Second signer | `docs/SECOND_SIGNER_ONBOARDING.md`, `docs/TWO_PERSON_RELEASE_APPROVAL.md` |
+| Two-person drill | `scripts/two_person_drill.py` — **PASS 9/9** with two real Ed25519 keys |
+| Candidate readiness | `release/candidate.py` — 14 prerequisites, fail-closed, 8-state dashboard, no percentage |
+| Gates | 6 separated: source, qualification-candidate, stable-release, and three pilots |
+| CI protection | `.github/workflows/qualification-evidence.yml` — 10 named protections |
+| Tests | 510 qualification tests across 11 suites, up from 252 across 9 |
+| Build | `BUNNY_ARCHIVE_ONLY=1` in `build/scripts/build-image.sh`, so a hosted runner can be a real second builder |
+
+### Two defects fixed in existing code
+
+1. **The evidence record invalidated itself.** Evidence was compared against `HEAD`,
+   so committing the record changed `HEAD` and invalidated it in the same act — all
+   twenty records failed at `80df25b`, including two that genuinely passed.
+   `operations/data/release-evidence.json` now declares a `candidateCommit` and the
+   gate compares against that. Wrong-commit evidence still blocks.
+2. **The generated qualification reports were labelled with `HEAD`** rather than the
+   commit their scenarios were measured at, so each claimed to describe a tree it was
+   not taken from. `scripts/write_qualification_reports.py` now reads the candidate
+   commit.
+
+### What was deliberately not built
+
+No new OEM, enterprise, fleet, encrypted-sync or consumer feature. No Phase 8 work.
+No pilot. No gate weakened.
+
+See `QUALIFICATION_EVIDENCE_CLOSURE_REPORT.md`.
+
+---
+
+## Phase 1 delivery (2026-07-28)
+
 ## Delivered
 
 - Fedora 44 bootc/GNOME/Wayland/SELinux/firewalld architecture and four accepted OS ADRs.

@@ -2,6 +2,98 @@
 
 This root report mirrors the maintained detail in `docs/KNOWN_LIMITATIONS.md`.
 
+## Current limitations — 2026-07-30
+
+The list below is the accumulated per-phase detail. These are the limitations that
+matter today.
+
+### Not releasable
+
+`gate-stable-release` reports **NO-GO** and `gate-qualification-candidate` reports
+**BLOCKED** with 2 of 14 prerequisites satisfied. All three pilot gates report
+`BLOCKED`. Nothing in this repository may be described as release-qualified.
+
+### The vulnerability position is unchanged and blocks
+
+**59 fixable findings: 8 Critical, 28 High, 23 Medium.** Deduplicated to 24 unique
+Critical/High pairs, all dispositioned `Unknown`.
+
+Every one comes from the digest-pinned `fedora-bootc:44` base. The beta profile adds
+none of its own. Three things were tried and none helped: the base was rebuilt by
+Fedora on 2026-07-29 — a genuinely new digest — without the counts moving;
+`dnf check-update podman skopeo` returns nothing; and the packages cannot be removed
+because `bootc` requires podman and skopeo and `rpm-ostree` requires skopeo.
+
+Nine of the ten bounded reachability questions are answered with measured evidence.
+The tenth — *is the vulnerable code path compiled into the installed binary and
+active or invocable?* — is not, and needs per-CVE symbol analysis plus the advisory's
+own description of the vulnerable function. **An independent security review is the
+only route by which any Critical becomes non-blocking.**
+
+### Same-host builds are not independent builds
+
+Two isolated workspaces on one host produce byte-identical archives. That is
+same-host repeatability and **not** independent-builder reproducibility: a defect in
+the shared kernel, storage or clock reproduces in both builds and the comparison
+cannot detect it.
+
+The seventeen-dimension comparison reports `INCONCLUSIVE` because sixteen dimensions
+were never collected. A hosted CI workflow exists and **has not been executed**.
+
+### No physical machine has ever run Bunny OS
+
+Zero hardware reports, zero collections. The `Hardware` and `Secure Boot` evidence
+categories block, and the OEM pilot cannot begin without a device even if every
+other blocker closed tomorrow.
+
+### Zero runtime accessibility evidence
+
+0 of 17 flows driven. Seven of them are `critical` — each is required to own or
+recover the machine. Static accessibility tests pass and are **explicitly not
+sufficient**; the tooling refuses a source-inspection pass and refuses a `PASS` with
+no recorded steps.
+
+Two flows — installer screen reader and keyboard-only installation — additionally
+need an installer ISO that has not been built.
+
+### No independent review of any kind exists
+
+Four bounded requests are ready to send. Zero commissioned, zero delivered. The
+repository contains a great deal of internal security and privacy review and
+`release/reviews.py` refuses to record any of it as independent, which is correct.
+
+### No production signing key exists
+
+Not one, of any of the seven roles. Four roles require two-person approval and
+**cannot be provisioned at all** with one signer. No key ceremony has been held.
+
+The nine-check and two-person development drills both pass 9/9 and neither
+establishes anything about production signing.
+
+### Nothing is operated
+
+No update manifest is published, no previous release exists, no sync service runs,
+no fleet is enrolled, no device is manufactured. The update, rollback, migration and
+soak evidence categories depend on operated release evidence that does not exist.
+
+### An archive-only build is not a candidate build
+
+`BUNNY_ARCHIVE_ONLY=1` was added to `build/scripts/build-image.sh` so a hosted
+Ubuntu runner can be a real second builder. It skips `image-builder` and produces
+**no qcow2 and no raw image**. It must never be recorded as a candidate build, and
+the change has not yet been exercised on a Fedora host.
+
+### Evidence is bound to a candidate commit, not to HEAD
+
+The candidate commit is `79bb99ddb39d…`; HEAD is `80df25b09f65…`. Qualifying an
+older commit is legitimate for a release candidate, and it means **the tree has moved
+since the evidence was measured**. A rebuild is required before publication.
+
+### `make` is unavailable on the development host
+
+Every `make` target has an equivalent `python scripts/release.py` entry point.
+`systemd-analyze` and `shellcheck` are also unavailable and their checks skip.
+
 - Image definitions exist, but no OCI/QCOW2/recovery artifact was built or booted here.
 - No VM, physical hardware, Secure Boot, TPM, LUKS2, GPU, suspend, audio, Wi-Fi, Bluetooth, or multi-display test ran.
 - Bunny is an honest non-functional 0.2.0 placeholder pending a signed upstream Linux release.

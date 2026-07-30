@@ -59,9 +59,20 @@ def stable_inputs(**overrides) -> StableInputs:
 
 
 class GateStructureTests(unittest.TestCase):
-    def test_four_separate_gates_exist(self):
+    def test_six_separate_gates_exist(self):
+        # Was four. `source` and `qualification-candidate` were split out so a
+        # passing repository and a buildable candidate stop being mistaken for
+        # release readiness; neither contributes to any other gate.
         self.assertEqual(
-            set(GATES), {"stable-release", "oem-pilot", "enterprise-pilot", "sync-pilot"}
+            set(GATES),
+            {
+                "source",
+                "qualification-candidate",
+                "stable-release",
+                "oem-pilot",
+                "enterprise-pilot",
+                "sync-pilot",
+            },
         )
 
     def test_each_pilot_declares_its_own_additional_requirements(self):

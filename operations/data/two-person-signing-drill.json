@@ -1,0 +1,86 @@
+{
+  "artifact": "bunny-os.oci.tar (2041734656 bytes)",
+  "artifactDigest": "25cab482caf4a01bd57d4b7be43c003df187db67a2171e737b03cabd77af6157",
+  "checks": [
+    {
+      "check": "signer-a-approval",
+      "command": "openssl pkeyutl -sign -rawin; -verify",
+      "detail": "dev-bunny-os-release-signer-a signed and verified the approval manifest over bunny-os.oci.tar (2041734656 bytes)",
+      "outcome": "PASS"
+    },
+    {
+      "check": "signer-b-approval",
+      "command": "openssl pkeyutl -sign -rawin; -verify",
+      "detail": "dev-bunny-os-release-signer-b signed and verified the same manifest independently",
+      "outcome": "PASS"
+    },
+    {
+      "check": "distinct-keys",
+      "command": "openssl pkeyutl -verify with the other signer's public key",
+      "detail": "the two private keys differ and signer B's signature does not verify against signer A's public key",
+      "outcome": "PASS"
+    },
+    {
+      "check": "distinct-key-ids",
+      "command": "release.signing.parse_key_id",
+      "detail": "dev-bunny-os-release-signer-a and dev-bunny-os-release-signer-b are separate identities in the osRelease namespace",
+      "outcome": "PASS"
+    },
+    {
+      "check": "distinct-operation-logs",
+      "command": "one log per signer",
+      "detail": "two operation logs written to C:\\Users\\allam\\AppData\\Local\\Temp\\bunny-two-person-drill-7tiunrfb\\logs",
+      "outcome": "PASS"
+    },
+    {
+      "check": "artifact-digest-agreement",
+      "command": "release.signing.evaluate_two_person_approval",
+      "detail": "both signers approved 25cab482caf4; authorisation granted",
+      "outcome": "PASS"
+    },
+    {
+      "check": "role-verification",
+      "command": "release.signing.parse_signer_approval(expectedRole=osRelease)",
+      "detail": "key 'dev-recovery-signer-b' belongs to the recoveryImage authority but was presented for osRelease; signing roles are not interchangeable",
+      "outcome": "PASS"
+    },
+    {
+      "check": "revocation-test",
+      "command": "openssl pkeyutl -verify with the revoked signer's public key",
+      "detail": "a signature made by signer A does not verify as signer B, so revoking one signer's key removes that signer's approval and cannot be substituted by the other",
+      "outcome": "PASS"
+    },
+    {
+      "check": "disagreement-refusal",
+      "command": "release.signing.evaluate_two_person_approval with decision=refuse",
+      "detail": "signer B refusing blocks the authorisation: unanimous-approval: at least one signer refused; two-person approval requires both, and a refusal is final",
+      "outcome": "PASS"
+    }
+  ],
+  "keyClass": "development",
+  "keyDirectory": "C:\\Users\\allam\\.bunny-dev-keys\\two-person",
+  "operationLogDirectory": "C:\\Users\\allam\\AppData\\Local\\Temp\\bunny-two-person-drill-7tiunrfb\\logs",
+  "role": "osRelease",
+  "runAt": "2026-07-30T11:38:49Z",
+  "schemaVersion": 1,
+  "signers": [
+    {
+      "approvedAt": "2026-07-30T11:38:49Z",
+      "artifactDigest": "25cab482caf4a01bd57d4b7be43c003df187db67a2171e737b03cabd77af6157",
+      "decision": "approve",
+      "keyId": "dev-bunny-os-release-signer-a",
+      "operationLogReference": "C:\\Users\\allam\\AppData\\Local\\Temp\\bunny-two-person-drill-7tiunrfb\\logs\\dev-bunny-os-release-signer-a.log",
+      "operatorFingerprint": "c2b8496e0a4aeec1cb4856a0f0bbbe46",
+      "signerId": "signer-a"
+    },
+    {
+      "approvedAt": "2026-07-30T11:38:49Z",
+      "artifactDigest": "25cab482caf4a01bd57d4b7be43c003df187db67a2171e737b03cabd77af6157",
+      "decision": "approve",
+      "keyId": "dev-bunny-os-release-signer-b",
+      "operationLogReference": "C:\\Users\\allam\\AppData\\Local\\Temp\\bunny-two-person-drill-7tiunrfb\\logs\\dev-bunny-os-release-signer-b.log",
+      "operatorFingerprint": "8a4411e782e7f620e6c7aeeabef1b65f",
+      "signerId": "signer-b"
+    }
+  ]
+}

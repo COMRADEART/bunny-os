@@ -1,7 +1,7 @@
 # Encryption qualification report
 
 Date: 2026-07-29  
-Source commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
 Result: **NOT QUALIFIED** — 0 of 9 scenarios resolved, 0 failing, 9 not run.
 
 Nine scenarios covering LUKS password unlock, recovery key, incorrect password, missing recovery key, TPM fallback, Secure Boot interaction, and update, rollback and recovery media access against an encrypted installation.
@@ -41,6 +41,10 @@ Each of these is blocking. `NOT_RUN` is not a soft state:
 ## Standing note
 
 `encryption-failure` and `key-leakage` are non-waivable blockers, and the `Encryption` evidence category is one of six that `release/evidence.py` refuses to let anyone waive.
+
+## Related
+
+- `QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the `encryption-matrix` prerequisite
 
 ## How to regenerate
 

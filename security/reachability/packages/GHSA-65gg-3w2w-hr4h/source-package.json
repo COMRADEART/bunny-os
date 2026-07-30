@@ -1,0 +1,11 @@
+{
+  "acquisitionManifestPresent": false,
+  "acquisitionPlan": "security/reachability/sources/acquisition-plan.json",
+  "advisoryId": "GHSA-65gg-3w2w-hr4h",
+  "debuginfoReference": "unknown",
+  "debugsourceReference": "unknown",
+  "schemaVersion": 1,
+  "sourcePackage": "unknown",
+  "sourceRpmReference": "unknown",
+  "vendoredModuleNote": "The module is vendored into a Go binary, so the source of record is the module at the installed version inside the RPM's vendor tree, not a separately packaged library. The source RPM is the only artifact that pins which module version Fedora built."
+}

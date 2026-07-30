@@ -6,6 +6,45 @@ Phase 1 selected Fedora 44 bootc, GNOME on Wayland, SELinux, firewalld, a versio
 
 The current checkout has source definitions and passing host gates, but this Windows host has no Podman, unified `image-builder`, Linux systemd, or QEMU/KVM. No Phase 1 or Phase 2 disk artifact, graphical boot, VM interaction, or hardware result is claimed. The signed upstream Bunny Linux artifact also remains unavailable, so Bunny/Core end-to-end surfaces correctly degrade to unavailable.
 
+## Release state — 2026-07-30
+
+**Bunny OS is not releasable and no pilot may begin.** Read this before anything
+else in this repository.
+
+```text
+Source gate:               PASS
+Qualification candidate:   BLOCKED   (2 of 14 prerequisites satisfied)
+Stable release:            NO-GO
+OEM pilot:                 BLOCKED
+Enterprise pilot:          BLOCKED
+Encrypted-sync pilot:      BLOCKED
+```
+
+| Closed | State |
+|---|---|
+| Licensing | **complete** — GPL-3.0-or-later for the OS layer, Apache-2.0 for the client packages; root and eight per-directory licences, 127 SPDX headers, a clean 6,077-record scan, 7 of 7 gate requirements |
+| Package minimisation | **complete** — `toolbox` removed from four consumer profiles with a fail-closed protected-package check. **It changed no scan number**, and no claim is made that it reduced security risk |
+| Development signing drill | **PASS — 9/9** against real 1.85 GB and 1.33 GB artifacts, including four refusals |
+| Two-person development signing drill | **PASS — 9/9** with two separate Ed25519 keys, including two refusals |
+
+| Open | State |
+|---|---|
+| Vulnerability position | **59 fixable, 8 Critical, 28 High, 23 Medium — unchanged.** All 24 unique Critical/High findings are dispositioned `Unknown`, which blocks. Every one comes from the digest-pinned Fedora bootc base, and a base rebuild on 2026-07-29 did not move the counts |
+| Independent reproducibility | **not established.** Same-host repeatability is; two workspaces on one host are not two builders. A hosted CI workflow is committed and **has not been executed** |
+| Physical hardware | **zero reports.** No physical machine has ever run Bunny OS |
+| Accessibility | **0 of 17 runtime flows driven.** Static tests pass and are explicitly not sufficient |
+| Independent reviews | **four requests ready to send, zero commissioned, zero delivered** |
+| Production signing | **no production key of any role exists.** Four of seven roles need two signers; there is one |
+| Protected approvals | **nine pending** |
+
+Start here:
+
+- `QUALIFICATION_EVIDENCE_CLOSURE_REPORT.md` — what the most recent pass built, and what it deliberately did not claim
+- `QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the fourteen prerequisites, each with an owner
+- `docs/QUALIFICATION_EVIDENCE_BASELINE.md` — every unmet requirement classified by who can produce the evidence
+- `docs/STABLE_RELEASE_BLOCKERS.md` — what blocks a stable release
+- `KNOWN_LIMITATIONS.md` — what this repository does not do
+
 ## Quick start
 
 On any development host:

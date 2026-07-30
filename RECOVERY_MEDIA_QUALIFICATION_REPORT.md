@@ -1,7 +1,7 @@
 # Recovery media qualification report
 
 Date: 2026-07-29  
-Source commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
 Result: **NOT QUALIFIED** — 0 of 11 scenarios resolved, 0 failing, 11 not run.
 
 Recovery media must boot independently of the installed deployment, verify its own signature, and reach the installed system's data only with valid credentials. No claim here may rest on source inspection: `release/matrix.py` refuses a source-inspection pass in this matrix, because a recovery tool that has never booted is a hypothesis.
@@ -45,6 +45,10 @@ Each of these is blocking. `NOT_RUN` is not a soft state:
 ## Standing note
 
 `recovery-media-failure` is one of the five open stable-release blocker codes, and it stays open.
+
+## Related
+
+- `QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the `independent-recovery-media` prerequisite
 
 ## How to regenerate
 

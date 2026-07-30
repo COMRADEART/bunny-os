@@ -1,7 +1,7 @@
 # Update qualification report
 
 Date: 2026-07-29  
-Source commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
 Result: **NOT QUALIFIED** — 0 of 13 scenarios resolved, 0 failing, 13 not run.
 
 Thirteen scenarios covering the happy path and twelve failure paths, including interrupted download and staging, insufficient disk, invalid signature, expired metadata, wrong architecture, and failures of service health, graphical session and the Bunny contract.
@@ -49,6 +49,10 @@ Each of these is blocking. `NOT_RUN` is not a soft state:
 ## Standing note
 
 A signed manifest and a reachable registry are prerequisites. Neither exists.
+
+## Related
+
+- `QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the `update-matrix` prerequisite
 
 ## How to regenerate
 

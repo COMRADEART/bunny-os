@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.invalid/schemas/independent-review-record.schema.json",
+  "title": "Bunny OS independent review record",
+  "description": "A delivered review from an identified external party, bound to a commit and to a report whose digest can be recomputed. A repository maintainer cannot mark their own review as independent: release/reviews.py rejects any reviewer matching a project principal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reviewId",
+    "reviewType",
+    "reviewerName",
+    "independenceDeclaration",
+    "scopeCommit",
+    "scopeArtifacts",
+    "completedAt",
+    "findings",
+    "conclusion",
+    "reportDigest"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "reviewId": { "type": "string", "minLength": 1 },
+    "reviewType": { "enum": ["security", "cryptography", "accessibility", "legal"] },
+    "reviewerName": { "type": "string", "minLength": 1 },
+    "reviewerOrganisation": { "type": "string" },
+    "independenceDeclaration": {
+      "type": "string",
+      "minLength": 40,
+      "description": "The reviewer's own statement of independence: no employment, contract, equity or authorship relationship with the project beyond this engagement."
+    },
+    "scopeCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "scopeArtifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "completedAt": { "type": "string" },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["findingId", "severity", "summary", "state"],
+        "properties": {
+          "findingId": { "type": "string", "minLength": 1 },
+          "severity": { "enum": ["critical", "high", "medium", "low", "informational"] },
+          "summary": { "type": "string", "minLength": 1 },
+          "detail": { "type": "string" },
+          "affectedArtifacts": { "type": "array", "items": { "type": "string" } },
+          "state": { "enum": ["open", "resolved", "accepted-risk", "disputed"] },
+          "advisoryIds": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Advisories this finding dispositions, for a security review answering per-CVE reachability."
+          },
+          "reachabilityConclusion": {
+            "enum": [
+              "Not present",
+              "Present but unreachable",
+              "Reachable but mitigated",
+              "Reachable and blocking",
+              "Unknown"
+            ]
+          }
+        }
+      }
+    },
+    "conclusion": { "enum": ["pass", "conditional", "fail"] },
+    "reportDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "reportReference": { "type": "string" },
+    "signature": {
+      "type": "string",
+      "description": "Detached signature over reportDigest by a key the reviewer published independently of this repository."
+    },
+    "signaturePublicKey": { "type": "string" },
+    "signatureAlgorithm": { "type": "string" }
+  }
+}

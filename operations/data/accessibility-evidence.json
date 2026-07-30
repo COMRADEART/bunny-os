@@ -1,0 +1,163 @@
+{
+  "note": "Seventeen flows, every one NOT_RUN. No assistive-technology session has been driven against an installed Bunny OS. Static accessibility tests pass and are explicitly not sufficient: release/matrix.py refuses a source-inspection pass in this matrix, and release/accessibility.py refuses a PASS with no recorded steps.",
+  "preInstallFlowsNeedAnIso": [
+    "screen-reader-installation",
+    "keyboard-only-installation"
+  ],
+  "results": [
+    {
+      "failureSeverity": "none",
+      "flow": "approval-centre",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "diagnostics-export",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "disk-selection",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "encryption",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "first-run-setup",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "high-contrast",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "keyboard-only-installation",
+      "notes": "Requires an installer ISO and either physical hardware or an interactive VM session; neither exists.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "launcher",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "login",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "recovery",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "recovery-key-display",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "reduced-motion",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "rollback",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "screen-reader-installation",
+      "notes": "Requires an installer ISO and either physical hardware or an interactive VM session; neither exists.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "settings",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "text-scaling",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    },
+    {
+      "failureSeverity": "none",
+      "flow": "update",
+      "notes": "Requires an installed system driven with assistive technology.",
+      "redactionState": "not-required",
+      "result": "NOT_RUN",
+      "screenshotConsent": false,
+      "steps": []
+    }
+  ],
+  "schemaVersion": 1
+}

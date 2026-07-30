@@ -2,6 +2,108 @@
 
 Do not start a custom shell, compositor, visual redesign, installer experience, app store, or consumer release.
 
+## Next work — 2026-07-30
+
+**Do not begin Phase 8. Do not begin an OEM, enterprise or encrypted-sync pilot.**
+
+The qualification evidence closure completed every technically automatable evidence
+task. What remains is ordered below by cost, and the cheapest item is genuinely
+cheap.
+
+### 1. Dispatch the hosted builder — one workflow run
+
+`.github/workflows/independent-builder.yml` is committed and has never run. It is the
+only one of the fourteen candidate prerequisites that needs nothing but a button.
+
+Before dispatching, verify `BUNNY_ARCHIVE_ONLY=1` on the Fedora/KVM builder:
+
+```sh
+BUNNY_ARCHIVE_ONLY=1 \
+BUNNY_BASE_IMAGE=quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4 \
+  bash build/scripts/build-image.sh beta
+```
+
+Then, on the builder, collect the local half and dispatch the hosted half:
+
+```sh
+make collect-builder-record BUNNY_BUILDER_ID=local-fedora
+# dispatch the workflow against this commit and the pinned digest
+make verify-builder-independence
+make compare-independent-builds
+```
+
+The comparison then needs the sixteen uncollected dimensions gathered from both
+builders. That is one build on each side, not more analysis.
+
+### 2. Build a live ISO and a signed recovery ISO — engineering
+
+Unblocks the installation, encryption and recovery matrices in a VM, three evidence
+categories, three candidate prerequisites, and the `recovery-media-failure` blocker
+code. It also makes five of the seven **critical** accessibility flows reachable
+without hardware, which is the single largest reduction in this project's
+accessibility risk available for free.
+
+### 3. Publish a signed update manifest and keep a previous release — engineering
+
+Unblocks update, rollback, migration and data preservation.
+
+### 4. Resolve the CVE carrier attribution — engineering
+
+Mount the beta deployment and run:
+
+```sh
+make analyse-cve-symbols BUNNY_SYSROOT=/mnt/beta
+```
+
+This does **not** answer question 7. It resolves which of the four ostree objects is
+which installed binary, confirms or refutes the `toolbox` attribution for
+`GO-2026-5970`, and collects build IDs, stripped state and dynamic dependencies —
+removing that work from the reviewer's scope and lowering what the review costs.
+
+### 5. Drive the eleven post-install accessibility flows — engineering
+
+Flows 7–17 need an installed system and Orca on GNOME 50, not hardware. Doing this
+before commissioning the review means the reviewer finds the residue rather than the
+obvious failures.
+
+### 6. Commission the four independent reviews — needs a third party and money
+
+All four requests are ready to send:
+
+| Request | Unblocks |
+|---|---|
+| `reviews/security/REQUEST.md` | the only route to dispositioning any Critical finding |
+| `reviews/cryptography/REQUEST.md` | `gate-sync-pilot` outright |
+| `reviews/accessibility/REQUEST.md` | the `Accessibility` category and approval |
+| `reviews/legal/REQUEST.md` | OEM distribution; the anti-tivoisation question |
+
+### 7. Acquire one x86-64 UEFI machine — needs hardware
+
+With Secure Boot and TPM 2.0. Blocks two evidence categories that nothing else
+satisfies, the OEM pilot, and two accessibility flows.
+
+### 8. Find a second production signer — needs a person
+
+`docs/SECOND_SIGNER_ONBOARDING.md` is the material they would need; twelve of its
+fifteen readiness items are done. Four of seven signing roles cannot be provisioned
+at all without them.
+
+### 9. Owner decisions
+
+The nine protected approvals; whether to fund the reviews; whether to acquire
+hardware; and which Phase 7 capabilities to operate, if any. **Operating none remains
+a legitimate answer and is still the recommendation.**
+
+### What not to do next
+
+- Do not change the base image. `docs/adr/ADR-027-base-image-security-decision.md`
+  evaluated three options across fifteen dimensions; none improves the vulnerability
+  position and two make everything else worse.
+- Do not add a feature. No OEM, enterprise, fleet, encrypted-sync or consumer
+  feature belongs in the next pass.
+- Do not weaken a gate. Four of the six are expected to keep blocking, and that is
+  the correct result while the evidence is absent.
+
 The immediate next milestone is **Phase 1 validation closure**:
 
 1. provision trusted Fedora 44/KVM builder with digest-pinned base and unified image-builder;

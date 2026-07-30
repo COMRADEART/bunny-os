@@ -1,4 +1,6 @@
 {
+  "builderRecordNote": "No schema-2 builder record exists. The two builders in `comparisons` were collected with the schema-1 shell collector and never recorded a build start or completion time, so upgrading them would mean inventing two timestamps. They are left as they were measured. A schema-2 record is produced by scripts/reproducibility/collect_builder_record.py, which the local Fedora builder and the hosted CI workflow must each run; neither has.",
+  "builderRecords": [],
   "comparisons": [
     {
       "archiveDigests": [
@@ -187,5 +189,6 @@
       }
     }
   ],
+  "independencePairs": [],
   "schemaVersion": 1
 }

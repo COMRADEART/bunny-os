@@ -1,8 +1,55 @@
 # Pilot readiness report
 
-Date: 2026-07-29. Recommendation: **NO-GO.** Evidence: `operations/data/phase7-readiness.json`. Command: `make pilot-readiness`.
+Date: 2026-07-30. Recommendation: **NO-GO.** Evidence: `operations/data/phase7-readiness.json`. Command: `make pilot-readiness`.
 
 No pilot may begin. Do not manufacture devices, deploy fleets, or launch a hosted sync service.
+
+## Gate state, 2026-07-30
+
+```text
+$ python scripts/release.py gate --kind oem-pilot          # BLOCKED
+$ python scripts/release.py gate --kind enterprise-pilot    # BLOCKED
+$ python scripts/release.py gate --kind sync-pilot          # BLOCKED
+$ python scripts/release.py gate --kind stable-release      # NO-GO
+$ python scripts/release.py gate --kind qualification-candidate  # BLOCKED
+$ python scripts/release.py gate --kind source              # PASS
+```
+
+Each pilot gate reports `BLOCKED` on the stable gate **plus** its own additional
+requirements, none of which is satisfied:
+
+| Gate | Additional requirements | Satisfied |
+|---|---|---|
+| `oem-pilot` | 6 — qualified hardware model, OEM recovery validation, signed OEM profile, factory finalisation on hardware, branding and licensing approval, named support owner | **0** |
+| `enterprise-pilot` | 6 — fleet control plane implemented, tenant isolation penetration test, enrolment service deployed, console role testing, incident-response owner, support capacity | **0** |
+| `sync-pilot` | 7 — independent cryptographic review, operated sync service, key-recovery drill, deletion drill, service privacy review, data-residency disclosure, incident-response owner | **0** |
+
+The gates are **deliberately not nested into one another's success**. A passing
+source gate contributes nothing to a pilot; nor does a passing candidate gate.
+`pilot-closure-assertion` additionally fails the build if any pilot gate reports GO
+while the stable gate blocks, whatever the pilot's own requirements say — asserted
+rather than relied on, because those requirements are read from a data file a change
+could populate.
+
+`tests/pilot_gates/` proves that satisfying **every** pilot requirement is still not
+enough while the stable gate blocks: the resulting `unmet` list has exactly one
+entry, and it is `stable-release`.
+
+## What each pilot is waiting on, specifically
+
+- **OEM.** A physical device. Two of its six requirements need hardware nobody has,
+  and the anti-tivoisation question in `reviews/legal/REQUEST.md` gates
+  `brandingAndLicensingApproval`. No OEM agreement should be signed with it
+  outstanding.
+- **Enterprise.** A deployed control plane and an adversarial multi-tenant isolation
+  test performed by someone other than the author. Neither exists; nothing is
+  operated.
+- **Sync.** `independentCryptographicReview`, which is prepared and not sent
+  (`reviews/cryptography/REQUEST.md`), plus an operated service. The subsystem has
+  never run.
+
+The project's recommendation remains to **operate none of the Phase 7
+capabilities**. That is a legitimate answer and is the standing one.
 
 ## Entry gates
 

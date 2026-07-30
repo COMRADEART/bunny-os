@@ -112,10 +112,15 @@ def validate_json() -> None:
         *[path for path in (ROOT / "oem").rglob("*.json")],
         *[path for path in (ROOT / "enterprise").rglob("*.json")],
         *[path for path in (ROOT / "sync").rglob("*.json")],
+        *[path for path in (ROOT / "security").rglob("*.json")],
     })
     for path in paths:
         json.loads(path.read_text(encoding="utf-8"))
-    schema_paths = sorted([*(ROOT / "schemas").rglob("*.schema.json"), *(ROOT / "shell/schemas").glob("*.schema.json")])
+    schema_paths = sorted([
+        *(ROOT / "schemas").rglob("*.schema.json"),
+        *(ROOT / "shell/schemas").glob("*.schema.json"),
+        *(ROOT / "security").rglob("*.schema.json"),
+    ])
     for path in schema_paths:
         schema = json.loads(path.read_text(encoding="utf-8"))
         if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema" or not schema.get("$id") or schema.get("type") != "object":
@@ -240,6 +245,10 @@ RELEASE_CLOSURE_SUITES = (
     "hardware_evidence",
     "accessibility_evidence",
     "pilot_gates",
+    # Added by the qualification evidence closure. Underscores because these are
+    # imported as Python packages.
+    "reachability",
+    "review_evidence",
 )
 
 

@@ -3,6 +3,91 @@
 Date: 2026-07-28  
 Host: Windows, Python 3; no Linux systemd/container/KVM runtime
 
+## Current test position — 2026-07-30
+
+Host: Windows 11, Python 3.14.6. No Linux systemd, container or KVM runtime;
+`make`, `systemd-analyze` and `shellcheck` unavailable and their checks skip.
+
+| Command | Result |
+|---|---|
+| `python scripts/task.py validate` | **PASS** — 277 JSON documents parsed, 35 schemas validated, 297 Python files compiled |
+| `python scripts/task.py test` | **PASS** — **1,150 tests**, 1 skipped (was 892) |
+| `python scripts/task.py test-installer` | **PASS** — 60 tests |
+| `python scripts/task.py test-phase5` | **PASS** — 105 tests |
+| `python scripts/task.py test-release-closure` | **PASS** — **510 tests** across 11 suites (was 252 across 9) |
+| `python scripts/task.py phase7-audit` | **PASS** — 47 documents, 18 demonstrations, 11 schemas |
+| `python scripts/phase7.py source-gate` | **PASS** |
+
+**1,315 distinct tests pass, 1 skipped**: 1,150 under `tests/`, plus 60 installer
+and 105 phase-5 tests discovered separately. `test-release-closure` re-runs eleven of
+the `tests/` directories — 510 tests — so it is a subset of the 1,150 rather than an
+addition to it. Those eleven grew from 252 to 510 this phase.
+
+### The eleven qualification suites
+
+| Suite | Tests | Covers |
+|---|---|---|
+| `tests/security` | 52 | vulnerability disposition, severity-reduction refusals |
+| `tests/licensing` | 20 | the seven licence-gate requirements |
+| `tests/reproducibility` | **119** | builder independence, normalisation, 17-dimension comparison, provenance verification |
+| `tests/signing` | **57** | role separation, key lifecycle, two-person approval |
+| `tests/recovery` | 38 | recovery media qualification |
+| `tests/release` | **53** | evidence model, candidate prerequisites, dashboard, source gate |
+| `tests/hardware_evidence` | **62** | intake, redaction, the collector, guided tests, signatures |
+| `tests/accessibility_evidence` | **39** | the matrix and the 17-flow runtime model |
+| `tests/pilot_gates` | **37** | six separated gates, pilot-cannot-bypass-stable |
+| `tests/reachability` | **32** | per-CVE analysis, proof classes, acquisition trust |
+| `tests/review_evidence` | **30** | the self-review wall, signed review records, request completeness |
+
+`reachability` and `review_evidence` are new. Six suites grew.
+
+### All eighteen mandated adversarial cases
+
+| # | Case | Suite |
+|---|---|---|
+| 1 | the same physical host represented as two builders | `reproducibility` |
+| 2 | the same CI run represented twice | `reproducibility` |
+| 3 | a mutable base tag instead of a digest | `reproducibility` |
+| 4 | a mismatched source commit | `reproducibility` |
+| 5 | missing debuginfo | `reachability` |
+| 6 | source and binary version mismatch | `reachability` |
+| 7 | an absent symbol treated as absent code | `reachability` |
+| 8 | a self-review marked independent | `review_evidence` |
+| 9 | an unsigned review report | `review_evidence` |
+| 10 | a fake hardware report | `hardware_evidence` |
+| 11 | a report containing a hardware serial number | `hardware_evidence` |
+| 12 | a `NOT_RUN` hardware test marked `PASS` | `hardware_evidence` |
+| 13 | a development signer used for production | `signing` |
+| 14 | one person supplying two signer identities | `signing` |
+| 15 | a Critical CVE accepted without a reviewer | `reachability` |
+| 16 | a stable candidate built with an unresolved `Unknown` | `release` |
+| 17 | a pilot gate invoked before a stable release | `pilot_gates` |
+| 18 | stale evidence accepted | `release` |
+
+Each rejects the invalid evidence, and each names the mandated case in its docstring.
+
+### Two bugs the new tests found
+
+1. **The normaliser introduced variance of its own.** `gzip.GzipFile` infers the
+   stored original filename from `fileobj.name` and writes it into the gzip header,
+   so two normalised copies written to different paths differed in their headers.
+   Caught by normalising one archive to two destinations and comparing. Fixed with an
+   explicit `filename=""`.
+2. **`WEAK_DIMENSIONS` named a field the schema does not have.** Schema 1 carried a
+   `workspace` path; schema 2 deliberately has nowhere to put one, and the constant
+   still referenced it — raising `AttributeError` on every same-host comparison.
+
+### What is not tested here
+
+No test in this repository builds an image, boots a system, touches hardware, or
+signs anything with a production key. The suites test the *evidence model*: that it
+accepts valid evidence and refuses invalid evidence. They are not a substitute for
+the evidence, and the model's whole purpose is to say so.
+
+---
+
+## Phase 1 test report (2026-07-28)
+
 | Command | Result |
 |---|---|
 | `python scripts/task.py validate` | PASS: 11 JSON documents parsed; 3 schema headers/local-reference graphs validated; 39 Python files compiled in memory |

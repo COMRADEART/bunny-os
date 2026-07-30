@@ -1,0 +1,28 @@
+{
+  "advisoryId": "GHSA-4vrq-3vrq-g6gg",
+  "binaryPackage": "unknown",
+  "candidateCarriers": [
+    "podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman",
+    "skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo",
+    "bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc"
+  ],
+  "carrierAttributionConfirmed": false,
+  "carrierObjects": [
+    "/sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file"
+  ],
+  "fixedVersion": "0.28.1",
+  "howToConfirm": [
+    "mount or boot the beta deployment built from the pinned base digest",
+    "for each of /usr/sbin/podman, /usr/sbin/skopeo, /usr/sbin/bootc: `find /sysroot/ostree/repo/objects -samefile <binary>`",
+    "or `ostree ls -R <commit> /usr/sbin` and compare object checksums"
+  ],
+  "installedNevrasMeasured": [
+    "podman-5.8.4-1.fc44.x86_64",
+    "skopeo-1.22.2-2.fc44.x86_64",
+    "bootc-1.16.4-1.fc44.x86_64",
+    "kernel-core-7.1.5-200.fc44.x86_64"
+  ],
+  "module": "github.com/moby/buildkit",
+  "moduleVersion": "v0.25.1",
+  "schemaVersion": 1
+}

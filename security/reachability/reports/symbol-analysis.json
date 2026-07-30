@@ -1,0 +1,96 @@
+{
+  "collectedTargets": [],
+  "discipline": "An absent symbol is not absent code. Every conclusion drawn from this data must go through release.cve.classify_symbol_evidence, which refuses to support a 'Not present' conclusion from a symbol observation on a stripped or Go binary.",
+  "generatedAt": "2026-07-30T12:25:54.845841Z",
+  "host": "nt",
+  "missingTools": [
+    "eu-readelf",
+    "eu-unstrip",
+    "file",
+    "rpm"
+  ],
+  "result": "BLOCKED",
+  "schemaVersion": 1,
+  "sourceCommit": "80df25b09f6578276d18c8a82f15c47dd8959740",
+  "targets": [
+    {
+      "binaryPath": "/usr/sbin/podman",
+      "binaryPresent": false,
+      "collectionErrors": [
+        "\\usr\\sbin\\podman does not exist on this host; the image must be mounted or booted"
+      ],
+      "debuginfoResolved": false,
+      "dynamicDependencies": [],
+      "dynamicSymbolCount": null,
+      "elfBuildId": "unknown",
+      "installedNevra": "podman-5.8.4-1.fc44.x86_64",
+      "language": "go",
+      "resolvedPath": "\\usr\\sbin\\podman",
+      "strippedState": "unknown",
+      "symbolTablePresent": null
+    },
+    {
+      "binaryPath": "/usr/sbin/skopeo",
+      "binaryPresent": false,
+      "collectionErrors": [
+        "\\usr\\sbin\\skopeo does not exist on this host; the image must be mounted or booted"
+      ],
+      "debuginfoResolved": false,
+      "dynamicDependencies": [],
+      "dynamicSymbolCount": null,
+      "elfBuildId": "unknown",
+      "installedNevra": "skopeo-1.22.2-2.fc44.x86_64",
+      "language": "go",
+      "resolvedPath": "\\usr\\sbin\\skopeo",
+      "strippedState": "unknown",
+      "symbolTablePresent": null
+    },
+    {
+      "binaryPath": "/usr/sbin/bootc",
+      "binaryPresent": false,
+      "collectionErrors": [
+        "\\usr\\sbin\\bootc does not exist on this host; the image must be mounted or booted"
+      ],
+      "debuginfoResolved": false,
+      "dynamicDependencies": [],
+      "dynamicSymbolCount": null,
+      "elfBuildId": "unknown",
+      "installedNevra": "bootc-1.16.4-1.fc44.x86_64",
+      "language": "rust",
+      "resolvedPath": "\\usr\\sbin\\bootc",
+      "strippedState": "unknown",
+      "symbolTablePresent": null
+    },
+    {
+      "binaryPath": "/usr/lib/modules/7.1.5-200.fc44.x86_64/vmlinuz",
+      "binaryPresent": false,
+      "collectionErrors": [
+        "\\usr\\lib\\modules\\7.1.5-200.fc44.x86_64\\vmlinuz does not exist on this host; the image must be mounted or booted"
+      ],
+      "debuginfoResolved": false,
+      "dynamicDependencies": [],
+      "dynamicSymbolCount": null,
+      "elfBuildId": "unknown",
+      "installedNevra": "kernel-core-7.1.5-200.fc44.x86_64",
+      "language": "c",
+      "resolvedPath": "\\usr\\lib\\modules\\7.1.5-200.fc44.x86_64\\vmlinuz",
+      "strippedState": "unknown",
+      "symbolTablePresent": null
+    }
+  ],
+  "toolsAvailable": {
+    "eu-readelf": false,
+    "eu-unstrip": false,
+    "file": false,
+    "nm": true,
+    "objdump": true,
+    "readelf": true,
+    "rpm": false
+  },
+  "uncollectedTargets": [
+    "podman-5.8.4-1.fc44.x86_64",
+    "skopeo-1.22.2-2.fc44.x86_64",
+    "bootc-1.16.4-1.fc44.x86_64",
+    "kernel-core-7.1.5-200.fc44.x86_64"
+  ]
+}

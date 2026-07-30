@@ -1,7 +1,7 @@
 # Data preservation qualification report
 
 Date: 2026-07-29  
-Source commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
 Result: **NOT QUALIFIED** — 0 of 10 scenarios resolved, 0 failing, 10 not run.
 
 Ten classes of user state that must survive an update or a rollback: `/home`, the Bunny database, Bunny memory, provider aliases, local models, plugins, workspaces, applications, settings and checkpoints.
@@ -43,6 +43,10 @@ Each of these is blocking. `NOT_RUN` is not a soft state:
 ## Standing note
 
 Preservation is measured across an update or a rollback. Both are blocked, so nothing has been preserved or lost yet.
+
+## Related
+
+- `QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — depends on the update and rollback matrices
 
 ## How to regenerate
 

@@ -333,6 +333,218 @@ def evaluate_drill(results: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
     }
 
 
+# --------------------------------------------------------------------------- #
+# Two-person approval
+# --------------------------------------------------------------------------- #
+
+#: The nine checks a two-person drill must perform.
+TWO_PERSON_DRILL_CHECKS = (
+    "signer-a-approval",
+    "signer-b-approval",
+    "distinct-keys",
+    "distinct-key-ids",
+    "distinct-operation-logs",
+    "artifact-digest-agreement",
+    "role-verification",
+    "revocation-test",
+    "disagreement-refusal",
+)
+
+SIGNER_DECISIONS = ("approve", "refuse")
+
+
+@dataclass(frozen=True)
+class SignerApproval:
+    signerId: str
+    keyId: str
+    role: str
+    keyClass: str
+    operatorFingerprint: str
+    operationLogReference: str
+    artifactDigest: str
+    decision: str
+    approvedAt: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "signerId": self.signerId,
+            "keyId": self.keyId,
+            "role": self.role,
+            "keyClass": self.keyClass,
+            "operatorFingerprint": self.operatorFingerprint,
+            "operationLogReference": self.operationLogReference,
+            "artifactDigest": self.artifactDigest,
+            "decision": self.decision,
+            "approvedAt": self.approvedAt,
+        }
+
+
+def parse_signer_approval(record: Mapping[str, Any], *, expectedRole: str | None = None) -> SignerApproval:
+    """Validate one signer's approval of one artifact."""
+    if not isinstance(record, Mapping):
+        raise SigningError("signer approval must be an object")
+    required = (
+        "signerId",
+        "keyId",
+        "operatorFingerprint",
+        "operationLogReference",
+        "artifactDigest",
+        "decision",
+        "approvedAt",
+    )
+    missing = [name for name in required if not str(record.get(name) or "").strip()]
+    if missing:
+        raise SigningError(f"signer approval missing fields: {', '.join(sorted(missing))}")
+
+    identity = parse_key_id(str(record["keyId"]), expectedRole=expectedRole)
+    decision = record["decision"]
+    if decision not in SIGNER_DECISIONS:
+        raise SigningError(f"{identity.keyId}: decision must be one of {', '.join(SIGNER_DECISIONS)}")
+    if not _RFC3339.match(str(record["approvedAt"])):
+        raise SigningError(f"{identity.keyId}: approvedAt must be an RFC 3339 timestamp")
+    digest = str(record["artifactDigest"])
+    if not re.fullmatch(r"[0-9a-f]{64}", digest):
+        raise SigningError(f"{identity.keyId}: artifactDigest must be a SHA-256 hex digest")
+
+    return SignerApproval(
+        signerId=str(record["signerId"]),
+        keyId=identity.keyId,
+        role=identity.role,
+        keyClass=identity.keyClass,
+        operatorFingerprint=str(record["operatorFingerprint"]),
+        operationLogReference=str(record["operationLogReference"]),
+        artifactDigest=digest,
+        decision=str(decision),
+        approvedAt=str(record["approvedAt"]),
+    )
+
+
+def evaluate_two_person_approval(
+    first: SignerApproval,
+    second: SignerApproval,
+    *,
+    role: str,
+) -> dict[str, Any]:
+    """Decide whether two approvals constitute a valid two-person authorisation.
+
+    The check that matters is ``operatorFingerprint``. Two key ids and two
+    operation logs are trivially produced by one person with two files; a
+    fingerprint derived from the operating account and host is not. It is not
+    proof — a determined operator can defeat it — but it converts "one person
+    supplying two signer identities" from the default outcome into a deliberate
+    act, and it is the strongest control available without a second human.
+    """
+    reasons: list[str] = []
+    satisfied: list[str] = []
+
+    def check(name: str, ok: bool, why: str) -> None:
+        (satisfied if ok else reasons).append(name if ok else f"{name}: {why}")
+
+    if role not in TWO_PERSON_ROLES:
+        raise SigningError(
+            f"{role} does not require two-person approval; the roles that do are "
+            + ", ".join(sorted(TWO_PERSON_ROLES))
+        )
+
+    check("role-verification", first.role == role and second.role == role,
+          f"approvals are for {first.role} and {second.role}, not {role}")
+    check("distinct-key-ids", first.keyId != second.keyId,
+          f"both approvals use key {first.keyId}; one key is not two signers")
+    check("distinct-operation-logs", first.operationLogReference != second.operationLogReference,
+          "both approvals cite the same operation log")
+    check(
+        "distinct-signers",
+        first.operatorFingerprint != second.operatorFingerprint,
+        (
+            f"both approvals carry operator fingerprint {first.operatorFingerprint}; one person "
+            "supplying two signer identities is not two-person approval"
+        ),
+    )
+    check("distinct-signer-ids", first.signerId != second.signerId,
+          f"both approvals name signer {first.signerId}")
+    check("artifact-digest-agreement", first.artifactDigest == second.artifactDigest,
+          f"signers approved different artifacts: {first.artifactDigest[:12]} vs {second.artifactDigest[:12]}")
+
+    both_approve = first.decision == "approve" and second.decision == "approve"
+    check("unanimous-approval", both_approve,
+          "at least one signer refused; two-person approval requires both, and a refusal is final")
+
+    return {
+        "schemaVersion": SCHEMA_VERSION,
+        "role": role,
+        "signers": [first.as_dict(), second.as_dict()],
+        "satisfied": satisfied,
+        "reasons": reasons,
+        "authorised": not reasons,
+        "keyClasses": sorted({first.keyClass, second.keyClass}),
+        "productionCapable": first.keyClass == "production" and second.keyClass == "production",
+        "result": "PASS" if not reasons else "FAIL",
+        "note": (
+            "Two development keys establish that the two-person path works. They do not provision "
+            "the role: a production two-person authorisation needs two production keys held by two "
+            "people, and no production key of any role exists."
+        ),
+    }
+
+
+def evaluate_two_person_drill(document: Mapping[str, Any]) -> dict[str, Any]:
+    """Evaluate a recorded two-person development signing drill."""
+    if document.get("schemaVersion") != SCHEMA_VERSION:
+        raise SigningError("two-person drill schemaVersion is invalid")
+
+    rows: list[DrillResult] = []
+    for record in document.get("checks", []):
+        check = record.get("check")
+        if check not in TWO_PERSON_DRILL_CHECKS:
+            raise SigningError(f"unknown two-person drill check {check!r}")
+        outcome = record.get("outcome")
+        if outcome not in {"PASS", "FAIL", "NOT_RUN"}:
+            raise SigningError(f"{check}: outcome must be PASS, FAIL or NOT_RUN")
+        rows.append(
+            DrillResult(
+                check=str(check),
+                outcome=str(outcome),
+                detail=str(record.get("detail", "")),
+                command=str(record.get("command", "")),
+            )
+        )
+
+    seen = {row.check for row in rows}
+    missing = sorted(set(TWO_PERSON_DRILL_CHECKS) - seen)
+    failing = sorted(row.check for row in rows if row.outcome != "PASS")
+
+    signers = document.get("signers") or []
+    signer_detail: Any = None
+    if len(signers) == 2:
+        role = str(document.get("role", "osRelease"))
+        first = parse_signer_approval(signers[0], expectedRole=role)
+        second = parse_signer_approval(signers[1], expectedRole=role)
+        if "production" in {first.keyClass, second.keyClass}:
+            raise SigningError(
+                "a development drill may not use a production key; the drill exists precisely so "
+                "that the path can be exercised without releasable output"
+            )
+        signer_detail = evaluate_two_person_approval(first, second, role=role)
+        if not signer_detail["authorised"]:
+            failing = sorted(set(failing) | {"signer-a-approval", "signer-b-approval"})
+
+    return {
+        "schemaVersion": SCHEMA_VERSION,
+        "checks": [row.as_dict() for row in rows],
+        "missingChecks": missing,
+        "failingChecks": failing,
+        "twoPersonApproval": signer_detail,
+        "keyClass": "development",
+        "result": "PASS" if not missing and not failing else "FAIL",
+        "satisfiesProductionRequirement": False,
+        "note": (
+            "This drill validates the two-person process with two separate development keys. It "
+            "does not satisfy the production second-signer requirement, which needs a second "
+            "person, a key ceremony, and hardware-token or offline-HSM custody."
+        ),
+    }
+
+
 def load(path: Path) -> Any:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
@@ -342,15 +554,21 @@ __all__ = [
     "DRILL_CHECKS",
     "KEY_STATES",
     "ROLE_AUTHORITY",
+    "SIGNER_DECISIONS",
     "SIGNING_ROLES",
+    "TWO_PERSON_DRILL_CHECKS",
     "TWO_PERSON_ROLES",
     "DrillResult",
     "KeyIdentity",
     "KeyRecord",
+    "SignerApproval",
     "SigningError",
     "evaluate_drill",
+    "evaluate_two_person_approval",
+    "evaluate_two_person_drill",
     "parse_key_id",
     "parse_key_record",
+    "parse_signer_approval",
     "require_production_key",
     "rotation_overlap",
     "usable_key",

@@ -1,7 +1,7 @@
 # Installation qualification report
 
 Date: 2026-07-29  
-Source commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
 Result: **NOT QUALIFIED** — 0 of 12 scenarios resolved, 0 failing, 12 not run.
 
 Twelve disposable-disk installation scenarios, from an empty UEFI disk through interrupted installation and bootloader failure. Every scenario is destructive by nature and is run against disposable virtual disks.
@@ -47,6 +47,10 @@ Each of these is blocking. `NOT_RUN` is not a soft state:
 ## Standing note
 
 No disk has been written. The installer source, its safety checks and its refusals are covered by 60 source tests that all pass; none of that is an installation.
+
+## Related
+
+- `QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the `installation-matrix` prerequisite
 
 ## How to regenerate
 

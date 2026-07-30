@@ -1,11 +1,25 @@
 # Reproducible build report
 
-Date: 2026-07-30  
-Source commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
+Date: 2026-07-30
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`
 Base image: `quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4`
 
 **Result: three of four reproducibility claims are established. The fourth —
 independent-builder reproducibility — is not, and cannot be on one machine.**
+
+> **Superseded for the production gate.** The four-claim model below is still
+> correct and its measurements still hold. The production evidence gate now reads a
+> **seventeen-dimension** comparison instead, which reports `INCONCLUSIVE` because
+> sixteen of the seventeen dimensions were never collected. That is not a
+> regression: it is the difference between a comparison that asks three questions
+> and one that asks seventeen. See `INDEPENDENT_REPRODUCIBILITY_REPORT.md`, which
+> is the authority for the gate.
+>
+> The builder identity model also changed. Schema 2 records an
+> **administratorBoundary** — who can change the builder — rather than an
+> `environmentId` derived from a workspace path, and it has no `workspace` field at
+> all, because a schema with a field for the workspace invites a comparison that
+> treats two directories as two builders.
 
 ## The four claims, and why they are separate
 
@@ -115,15 +129,37 @@ generation for every build.
 A second machine, a cloud runner, or a second administrator. Nothing about this
 is solvable locally, and no number of additional workspaces changes the answer.
 
-The cheapest route is a cloud runner. `collect-builder-record.sh` already reads
-`GITHUB_RUN_ID` and `CI_JOB_ID` into `cloudRunner`, so a CI-hosted build of the
-same commit and base digest would differ in a strong dimension without anyone
-acquiring hardware. That is the recommended next step and it is not blocked by
-anything else in this phase.
+The cheapest route is a cloud runner, and the qualification evidence closure built
+it: **`.github/workflows/independent-builder.yml`** checks out an exact SHA, pins
+the base digest, pins syft and grype, disables the pip cache, asserts an empty
+output tree, records eleven environment facts, emits a schema-2 builder record with
+a real `workflowRunId`, and verifies the uploaded bundle on a *second* runner.
+
+**It has not been dispatched.** `independent-builder-ci-manifest` derives `executed`
+from whether a `hosted-ci` builder record exists — not from the workflow file being
+present — and it is `false`:
+
+```text
+BLOCKED: the workflow is prepared and has not been executed. No hosted-ci builder
+record exists, so independent-builder reproducibility remains unestablished.
+```
+
+One prerequisite step first: `BUNNY_ARCHIVE_ONLY=1` was added to
+`build/scripts/build-image.sh` so a hosted Ubuntu runner can build without
+`image-builder`, and that change has not been exercised on a Fedora host. An
+archive-only build produces no qcow2 or raw image and must never be recorded as a
+candidate build.
 
 ## Evidence
 
-- `operations/data/builders.json` — both comparisons, both builder records
+- `INDEPENDENT_REPRODUCIBILITY_REPORT.md` — the seventeen-dimension comparison, and
+  the authority for the production gate
+- `operations/data/build-comparison.json` — the dimensions, and the prior
+  measurements retained as informational
+- `operations/data/builders.json` — the legacy comparisons, plus empty schema-2
+  arrays and the note explaining why they are empty
 - `evidence/reproducibility/builder-a-record.json`, `builder-b-record.json`
 - `docs/INDEPENDENT_BUILDERS.md` — how to run a real two-builder comparison
-- `tests/reproducibility/` — 29 tests, including the same-host-marked-independent case
+- `tests/reproducibility/` — 119 tests (29 original plus 90 added), including all
+  four mandated adversarial cases: same host as two builders, one CI run twice, a
+  mutable base tag, and a mismatched source commit

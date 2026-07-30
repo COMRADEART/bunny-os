@@ -89,6 +89,39 @@ REPORTS = {
 }
 
 
+#: Cross-references added by the qualification evidence closure. A matrix result
+#: and a runtime evidence record are different artifacts and both must be
+#: findable from either; a reader who lands on a NOT_RUN matrix should not have to
+#: guess where the plan for running it lives.
+RELATED: dict[str, tuple[str, ...]] = {
+    "recovery-media": (
+        "`QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the `independent-recovery-media` prerequisite",
+    ),
+    "installation": (
+        "`QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the `installation-matrix` prerequisite",
+    ),
+    "encryption": (
+        "`QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the `encryption-matrix` prerequisite",
+    ),
+    "update": (
+        "`QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the `update-matrix` prerequisite",
+    ),
+    "rollback": (
+        "`QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — the `rollback-matrix` prerequisite",
+    ),
+    "accessibility": (
+        "`ACCESSIBILITY_EVIDENCE_PLAN.md` — the seventeen-flow runtime evidence model, which "
+        "supersedes this fourteen-scenario matrix for runtime results",
+        "`operations/data/accessibility-evidence.json` — the runtime record, 17 of 17 `NOT_RUN`",
+        "`reviews/accessibility/REQUEST.md` — the review this matrix cannot substitute for",
+        "`release/accessibility.py` — refuses a `PASS` with no recorded steps",
+    ),
+    "preservation": (
+        "`QUALIFICATION_CANDIDATE_READINESS_REPORT.md` — depends on the update and rollback matrices",
+    ),
+}
+
+
 def render(matrix: str, title: str, intro: str, note: str, document: dict, commit: str) -> str:
     rows = document.get("matrices", {}).get(matrix, [])
     verdict = evaluate_matrix(matrix, rows, root=ROOT)
@@ -103,7 +136,11 @@ def render(matrix: str, title: str, intro: str, note: str, document: dict, commi
         f"# {title}",
         "",
         f"Date: {document.get('recordedOn', 'unknown')}  ",
-        f"Source commit: `{commit}`  ",
+        # The commit the scenarios were *measured* at, not HEAD. Labelling a
+        # measurement with HEAD makes every report claim to describe a tree it
+        # was not taken from, and the report goes stale the moment it is
+        # committed. See scripts/release.py candidate_commit().
+        f"Candidate commit: `{commit}`  ",
         f"Result: **{'QUALIFIED' if verdict.complete else 'NOT QUALIFIED'}** — "
         f"{len(resolved)} of {len(MATRICES[matrix])} scenarios resolved, "
         f"{len(failing)} failing, {len(untested)} not run.",
@@ -136,12 +173,16 @@ def render(matrix: str, title: str, intro: str, note: str, document: dict, commi
             lines.append(f"- `{result.scenario}`")
         lines.append("")
 
+    lines.extend(["## Standing note", "", note, ""])
+
+    related = RELATED.get(matrix, ())
+    if related:
+        lines.extend(["## Related", ""])
+        lines.extend(f"- {item}" for item in related)
+        lines.append("")
+
     lines.extend(
         [
-            "## Standing note",
-            "",
-            note,
-            "",
             "## How to regenerate",
             "",
             "```text",
@@ -168,11 +209,21 @@ def main() -> int:
 
     commit = args.commit
     if commit is None:
-        import subprocess
+        # The candidate commit the evidence record declares, falling back to HEAD
+        # only when no candidate has been declared. Using HEAD unconditionally
+        # labelled every scenario with a commit it was not measured at.
+        evidence = ROOT / "operations/data/release-evidence.json"
+        declared = None
+        if evidence.is_file():
+            declared = json.loads(evidence.read_text(encoding="utf-8")).get("candidateCommit")
+        if isinstance(declared, str) and len(declared) == 40:
+            commit = declared
+        else:
+            import subprocess
 
-        commit = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
-        ).stdout.strip()
+            commit = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
+            ).stdout.strip()
 
     for matrix, (filename, title, intro, note) in REPORTS.items():
         text = render(matrix, title, intro, note, document, commit)

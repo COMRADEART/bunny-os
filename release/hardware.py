@@ -362,16 +362,391 @@ def evaluate_intake(
     }
 
 
+# --------------------------------------------------------------------------- #
+# The on-device collector
+# --------------------------------------------------------------------------- #
+
+#: The only fields ``bunny-os qualification collect`` may emit. An allow-list
+#: rather than a deny-list: adding a field requires editing this tuple, which is
+#: a reviewable act, whereas forgetting to exclude one is an accident.
+COLLECTOR_FIELDS = (
+    "bunnyOsVersion",
+    "sourceCommit",
+    "imageDigest",
+    "architecture",
+    "firmwareMode",
+    "secureBootState",
+    "tpmAvailable",
+    "cpuFamily",
+    "gpuFamily",
+    "ramSizeCategory",
+    "storageType",
+    "wifiChipset",
+    "bluetoothChipset",
+    "kernel",
+    "driverVersions",
+    "testResults",
+    "recoveryMediaDigest",
+)
+
+#: What the collector must never emit, named so the exclusion is testable rather
+#: than aspirational. Every one of these is either a device identifier or
+#: personal content, and a hardware qualification needs none of them.
+EXCLUDED_CATEGORIES = (
+    "serialNumber",
+    "macAddress",
+    "ipAddress",
+    "hostname",
+    "username",
+    "wifiNetworkName",
+    "personalPaths",
+    "personalFiles",
+    "bunnyPrompts",
+    "bunnyMemory",
+    "browserHistory",
+    "assetTag",
+)
+
+#: RAM is recorded by category, not by size in bytes: an exact byte count plus a
+#: chipset class narrows a device more than the qualification needs.
+RAM_SIZE_CATEGORIES = ("under-4GB", "4-8GB", "8-16GB", "16-32GB", "32GB-or-more", "unknown")
+STORAGE_TYPES = ("nvme", "sata-ssd", "sata-hdd", "emmc", "virtual", "unknown")
+SECURE_BOOT_STATES = ("enabled", "disabled", "setup-mode", "unsupported", "unknown")
+
+#: The twenty-one guided tests an operator drives on a physical machine. A
+#: superset of HARDWARE_TESTS, which remains the fifteen the intake gate scores.
+GUIDED_TESTS = (
+    "boot",
+    "installation",
+    "encrypted-installation",
+    "secure-boot",
+    "tpm",
+    "graphics",
+    "display",
+    "wifi",
+    "bluetooth",
+    "audio",
+    "microphone",
+    "camera",
+    "suspend",
+    "resume",
+    "battery-reporting",
+    "update",
+    "rollback",
+    "recovery",
+    "bunny-disabled-mode",
+    "local-only-mode",
+    "accessibility",
+)
+
+#: Who may sign a hardware evidence report, and what the signature means.
+SIGNER_ROLES = {
+    "test-operator": "the person who ran the tests, attesting the report describes what they saw",
+    "approved-laboratory": "a laboratory attesting it ran the tests under its own procedures",
+    "project-maintainer-after-verification": (
+        "a maintainer attesting they independently verified the submitted evidence; not that they "
+        "ran the tests"
+    ),
+}
+
+#: Language a hardware result may not use. A signature proves report integrity;
+#: it does not certify hardware, and this project has no certification authority.
+FORBIDDEN_TERMS = ("certified", "certification", "certifies", "certify")
+
+#: What may be said instead.
+PERMITTED_CLAIMS = ("tested", "qualified for pilot", "supported based on evidence")
+
+
+class HardwareCollectionError(ValueError):
+    """Raised when collected evidence is out of scope or a claim is overstated."""
+
+
+def assert_collector_scope(payload: Mapping[str, Any]) -> tuple[str, ...]:
+    """Refuse a collection carrying a field outside the allow-list."""
+    if not isinstance(payload, Mapping):
+        raise HardwareCollectionError("collected evidence must be an object")
+    extraneous = sorted(set(payload) - set(COLLECTOR_FIELDS) - {"schemaVersion", "collectedAt", "collectorVersion"})
+    if extraneous:
+        excluded = [name for name in extraneous if name in EXCLUDED_CATEGORIES]
+        if excluded:
+            raise HardwareCollectionError(
+                "collected evidence carries excluded categories: "
+                + ", ".join(excluded)
+                + ". A hardware qualification needs no device identifier and no personal content"
+            )
+        raise HardwareCollectionError(
+            "collected evidence carries fields outside the allow-list: "
+            + ", ".join(extraneous)
+            + f". Permitted: {', '.join(COLLECTOR_FIELDS)}"
+        )
+    missing = sorted(set(COLLECTOR_FIELDS) - set(payload))
+    return tuple(missing)
+
+
+def assert_no_certification_claim(text: str, *, where: str = "report") -> None:
+    """Refuse the word 'certified' and its family."""
+    haystack = text.casefold()
+    for term in FORBIDDEN_TERMS:
+        if term in haystack:
+            raise HardwareCollectionError(
+                f"{where} uses {term!r}. A signature proves report integrity, not hardware "
+                f"certification. Use one of: {', '.join(PERMITTED_CLAIMS)}"
+            )
+
+
+@dataclass(frozen=True)
+class GuidedTestRecord:
+    test: str
+    startedAt: str
+    completedAt: str
+    operator: str
+    expectedResult: str
+    actualResult: str
+    outcome: str
+    evidenceReference: str | None
+    notes: str
+    logs: tuple[str, ...]
+    redactionState: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "test": self.test,
+            "startedAt": self.startedAt,
+            "completedAt": self.completedAt,
+            "operator": self.operator,
+            "expectedResult": self.expectedResult,
+            "actualResult": self.actualResult,
+            "outcome": self.outcome,
+            "evidenceReference": self.evidenceReference,
+            "notes": self.notes,
+            "logs": list(self.logs),
+            "redactionState": self.redactionState,
+        }
+
+
+def parse_guided_test(record: Mapping[str, Any], *, evidenceRoot: Path | None = None) -> GuidedTestRecord:
+    """Validate one guided physical test."""
+    if not isinstance(record, Mapping):
+        raise HardwareCollectionError("guided test record must be an object")
+    test = record.get("test")
+    if test not in GUIDED_TESTS:
+        raise HardwareCollectionError(f"test must be one of {', '.join(GUIDED_TESTS)}")
+    outcome = record.get("outcome")
+    if outcome not in TEST_OUTCOMES:
+        raise HardwareCollectionError(f"{test}: outcome must be one of {', '.join(TEST_OUTCOMES)}")
+
+    redaction = record.get("redactionState", "not-required")
+    if redaction not in ("not-required", "completed", "pending"):
+        raise HardwareCollectionError(f"{test}: redactionState is invalid")
+
+    if outcome == "NOT_RUN":
+        # The one conversion this whole module exists to prevent.
+        for name in ("actualResult", "evidenceReference"):
+            if str(record.get(name) or "").strip():
+                raise HardwareCollectionError(
+                    f"{test}: recorded NOT_RUN but carries {name}. A test that produced a result "
+                    "was run; NOT_RUN must never be converted to PASS"
+                )
+    else:
+        for name in ("startedAt", "completedAt", "operator", "expectedResult", "actualResult"):
+            if not str(record.get(name) or "").strip():
+                raise HardwareCollectionError(f"{test}: {name} is required for outcome {outcome}")
+        if outcome in {"PASS", "FAIL"}:
+            reference = record.get("evidenceReference")
+            if not reference:
+                raise HardwareCollectionError(
+                    f"{test}: outcome {outcome} must name an evidence artifact; a claimed result "
+                    "with no artifact is an assertion"
+                )
+            if evidenceRoot is not None:
+                target = (evidenceRoot / str(reference)).resolve()
+                try:
+                    target.relative_to(evidenceRoot.resolve())
+                except ValueError:
+                    raise HardwareCollectionError(
+                        f"{test}: evidenceReference escapes hardware/evidence/"
+                    ) from None
+                if not target.exists():
+                    raise HardwareCollectionError(
+                        f"{test}: evidence artifact {reference} does not exist"
+                    )
+        if redaction == "pending" and record.get("logs"):
+            raise HardwareCollectionError(
+                f"{test}: logs are attached with redaction pending; logs carry hostnames and paths"
+            )
+
+    for field_name in ("notes", "expectedResult", "actualResult"):
+        assert_no_certification_claim(str(record.get(field_name) or ""), where=f"{test}.{field_name}")
+
+    return GuidedTestRecord(
+        test=str(test),
+        startedAt=str(record.get("startedAt", "")),
+        completedAt=str(record.get("completedAt", "")),
+        operator=str(record.get("operator", "")),
+        expectedResult=str(record.get("expectedResult", "")),
+        actualResult=str(record.get("actualResult", "")),
+        outcome=str(outcome),
+        evidenceReference=str(record["evidenceReference"]) if record.get("evidenceReference") else None,
+        notes=str(record.get("notes", "")),
+        logs=tuple(str(item) for item in record.get("logs", [])),
+        redactionState=str(redaction),
+    )
+
+
+def parse_evidence_signature(record: Mapping[str, Any], *, reportDigest: str) -> dict[str, Any]:
+    """Validate a hardware evidence signature.
+
+    The signature binds a signer to a report digest. It says the report has not
+    changed since that person saw it. It does not say the hardware is fit for
+    anything, and the wording is checked because that distinction erodes the
+    moment someone writes "certified" in a summary.
+    """
+    if not isinstance(record, Mapping):
+        raise HardwareCollectionError("signature must be an object")
+    role = record.get("role")
+    if role not in SIGNER_ROLES:
+        raise HardwareCollectionError(f"signature role must be one of {', '.join(SIGNER_ROLES)}")
+    for name in ("signerName", "signedAt", "signature", "publicKey", "reportDigest"):
+        if not str(record.get(name) or "").strip():
+            raise HardwareCollectionError(f"signature missing {name}")
+    if str(record["reportDigest"]) != reportDigest:
+        raise HardwareCollectionError(
+            f"signature covers digest {str(record['reportDigest'])[:12]} but the report is "
+            f"{reportDigest[:12]}; the report changed after it was signed"
+        )
+    statement = str(record.get("statement", ""))
+    assert_no_certification_claim(statement, where="signature.statement")
+    if role == "project-maintainer-after-verification" and not str(record.get("verificationNotes") or "").strip():
+        raise HardwareCollectionError(
+            "a maintainer signature must record how the submitted evidence was independently "
+            "verified; otherwise it attests only that a file was read"
+        )
+    return {
+        "role": str(role),
+        "roleMeaning": SIGNER_ROLES[str(role)],
+        "signerName": str(record["signerName"]),
+        "signerOrganisation": record.get("signerOrganisation"),
+        "signedAt": str(record["signedAt"]),
+        "reportDigest": reportDigest,
+        "statement": statement,
+        "verificationNotes": record.get("verificationNotes"),
+        "proves": "report integrity",
+        "doesNotProve": "hardware certification, fitness for purpose, or a supported configuration",
+    }
+
+
+def evaluate_collection(
+    document: Mapping[str, Any],
+    *,
+    evidenceRoot: Path | None = None,
+) -> dict[str, Any]:
+    """Evaluate a collected-evidence submission: scope, tests, and signature."""
+    if document.get("schemaVersion") != SCHEMA_VERSION:
+        raise HardwareCollectionError("collected evidence schemaVersion is invalid")
+
+    submissions = document.get("collections")
+    if not isinstance(submissions, list):
+        raise HardwareCollectionError("collected evidence must carry a collections array")
+
+    rows: list[dict[str, Any]] = []
+    rejected: list[str] = []
+    for submission in submissions:
+        if not isinstance(submission, Mapping):
+            rejected.append("collection must be an object")
+            continue
+        identifier = str(submission.get("collectionId") or "<unnamed>")
+        try:
+            leaks = redaction_findings(submission)
+            if leaks:
+                raise HardwareCollectionError(
+                    f"{identifier}: submission carries personal or device identifiers: "
+                    + "; ".join(leaks[:5])
+                )
+            missing_fields = assert_collector_scope(submission.get("collected") or {})
+            tests = [
+                parse_guided_test(item, evidenceRoot=evidenceRoot)
+                for item in submission.get("guidedTests", [])
+            ]
+        except HardwareCollectionError as exc:
+            rejected.append(str(exc))
+            continue
+
+        by_test = {record.test: record for record in tests}
+        not_run = sorted(set(GUIDED_TESTS) - {name for name, r in by_test.items() if r.outcome != "NOT_RUN"})
+        failing = sorted(name for name, r in by_test.items() if r.outcome == "FAIL")
+        passing = sorted(name for name, r in by_test.items() if r.outcome == "PASS")
+
+        signature = submission.get("signature")
+        signature_detail: Any = None
+        if signature:
+            digest = str(submission.get("reportDigest") or "")
+            try:
+                signature_detail = parse_evidence_signature(signature, reportDigest=digest)
+            except HardwareCollectionError as exc:
+                rejected.append(str(exc))
+                continue
+
+        rows.append(
+            {
+                "collectionId": identifier,
+                "missingCollectorFields": list(missing_fields),
+                "testCount": len(tests),
+                "passingTests": passing,
+                "failingTests": failing,
+                "notRunTests": not_run,
+                "complete": not not_run and not failing and len(passing) == len(GUIDED_TESTS),
+                "signature": signature_detail,
+                "signed": signature_detail is not None,
+                "guidedTests": [record.as_dict() for record in tests],
+            }
+        )
+
+    complete = [row for row in rows if row["complete"] and row["signed"]]
+    return {
+        "schemaVersion": SCHEMA_VERSION,
+        "guidedTestCount": len(GUIDED_TESTS),
+        "collectorFieldCount": len(COLLECTOR_FIELDS),
+        "excludedCategories": list(EXCLUDED_CATEGORIES),
+        "submitted": len(submissions),
+        "accepted": len(rows),
+        "rejected": rejected,
+        "collections": rows,
+        "completeCollections": [row["collectionId"] for row in complete],
+        "requirementMet": bool(complete),
+        "result": "PASS" if complete and not rejected else "BLOCKED",
+        "note": (
+            "A signature proves report integrity, not hardware certification. NOT_RUN is never "
+            "converted to PASS: a record claiming NOT_RUN while carrying a result is rejected."
+        ),
+    }
+
+
 def load(path: Path) -> Any:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 __all__ = [
+    "COLLECTOR_FIELDS",
+    "EXCLUDED_CATEGORIES",
+    "FORBIDDEN_TERMS",
+    "GUIDED_TESTS",
     "HARDWARE_CHARACTERISTICS",
     "HARDWARE_TESTS",
+    "PERMITTED_CLAIMS",
+    "RAM_SIZE_CATEGORIES",
+    "SECURE_BOOT_STATES",
+    "SIGNER_ROLES",
+    "STORAGE_TYPES",
+    "GuidedTestRecord",
+    "HardwareCollectionError",
     "HardwareEvidenceError",
     "HardwareReport",
+    "assert_collector_scope",
+    "assert_no_certification_claim",
+    "evaluate_collection",
     "evaluate_intake",
+    "parse_evidence_signature",
+    "parse_guided_test",
     "parse_report",
     "redaction_findings",
 ]

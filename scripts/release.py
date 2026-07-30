@@ -26,8 +26,26 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in os.sys.path:
     os.sys.path.insert(0, str(ROOT))
 
+from release import accessibility as accessibility_module
 from release import matrix as matrix_module
 from release.artifacts import ArtifactError, parse_manifest, verify_against_disk
+from release.builders import (
+    ACCEPTED_PAIRINGS,
+    BuilderError,
+    evaluate_builder_set,
+)
+from release.candidate import (
+    CANDIDATE_PREREQUISITES,
+    CandidateError,
+    evaluate_candidate,
+    render_dashboard,
+)
+from release.comparison import (
+    COMPARISON_DIMENSIONS,
+    ComparisonError,
+    evaluate_comparison,
+)
+from release.cve import CveAnalysisError, evaluate_document as evaluate_cve_document
 from release.evidence import (
     EVIDENCE_CATEGORIES,
     EvidenceError,
@@ -36,13 +54,23 @@ from release.evidence import (
 from release.gates import (
     GateError,
     PILOT_REQUIREMENTS,
+    SOURCE_GATE_REQUIREMENTS,
     StableInputs,
+    evaluate_candidate_gate,
     evaluate_pilot_gate,
+    evaluate_source_gate,
     evaluate_stable_gate,
 )
-from release.hardware import HardwareEvidenceError, evaluate_intake
+from release.hardware import (
+    HardwareCollectionError,
+    HardwareEvidenceError,
+    evaluate_collection,
+    evaluate_intake,
+)
 from release.licensing import LicenceError, evaluate_licence_gate, parse_decision
 from release.minimisation import MinimisationError, evaluate_minimisation
+from release.normalisation import NormalisationError, normalise_archive
+from release.provenance import ProvenanceError, parse_provenance, verify_provenance
 from release.reachability import ReachabilityError, parse_review as parse_reachability, summarise
 from release.reproducibility import (
     ReproducibilityError,
@@ -50,10 +78,17 @@ from release.reproducibility import (
     parse_builder,
     summarise_claims,
 )
-from release.reviews import ReviewError, completed_review_identifiers, evaluate_reviews
+from release.reviews import (
+    ReviewError,
+    completed_review_identifiers,
+    evaluate_requests,
+    evaluate_review_records,
+    evaluate_reviews,
+)
 from release.signing import (
     SigningError,
     evaluate_drill,
+    evaluate_two_person_drill,
     parse_key_record,
     validate_namespaces,
 )
@@ -66,6 +101,8 @@ from release.vulnerability import (
 DATA = ROOT / "operations/data"
 OUT = ROOT / "build/out/qualification"
 HARDWARE_EVIDENCE = ROOT / "hardware/evidence"
+SECURITY = ROOT / "security/reachability"
+ACCESSIBILITY_EVIDENCE = ROOT / "evidence/accessibility"
 
 
 def load(path: Path) -> Any:
@@ -118,6 +155,51 @@ def now() -> _datetime.datetime:
     if stamp:
         return _datetime.datetime.fromisoformat(stamp.replace("Z", "+00:00"))
     return _datetime.datetime.now(_datetime.timezone.utc)
+
+
+def candidate_commit() -> str:
+    """The commit being qualified, which is not necessarily ``HEAD``.
+
+    This distinction was missing and it made the evidence model unusable in
+    practice. Every record was compared against ``HEAD``, so committing the record
+    changed ``HEAD`` and invalidated the record it had just committed. The previous
+    phase's twenty records were all generated at ``79bb99dd``, committed as
+    ``80df25b``, and consequently every one of them reported:
+
+        generated from commit 79bb99dd but the candidate is 80df25b;
+        evidence does not transfer between commits
+
+    Two categories that genuinely passed reported as stale for no reason but the
+    act of recording them.
+
+    The candidate commit is the commit that was *built and measured*, declared in
+    the record itself. Evidence must match it, so wrong-commit evidence still
+    blocks. What no longer happens is a record invalidating itself. Whether the
+    candidate is still ``HEAD`` is reported separately, because qualifying an older
+    commit is legitimate for a release candidate and must nevertheless be visible.
+    """
+    document = load_optional(DATA / "release-evidence.json", {})
+    declared = document.get("candidateCommit")
+    if isinstance(declared, str) and len(declared) == 40:
+        return declared
+    return source_commit()
+
+
+def candidate_commit_state() -> dict[str, Any]:
+    candidate = candidate_commit()
+    head = source_commit()
+    return {
+        "candidateCommit": candidate,
+        "headCommit": head,
+        "candidateIsHead": candidate == head,
+        "note": (
+            "Evidence is bound to the candidate commit, not to HEAD. A candidate behind HEAD is "
+            "legitimate — a release candidate qualifies one commit — but the tree has moved since "
+            "the evidence was measured and a rebuild is needed before publication."
+            if candidate != head
+            else "The candidate commit is HEAD."
+        ),
+    }
 
 
 def _completed_reviews() -> tuple[str, ...]:
@@ -440,55 +522,9 @@ def all_matrices() -> tuple[bool, dict[str, Any]]:
     return result["result"] == "PASS", result
 
 
-# --- Workstream 14: hardware ---------------------------------------------------
-
-
-def validate_hardware_evidence() -> int:
-    document = load_optional(DATA / "hardware-evidence.json", {"schemaVersion": 1, "reports": []})
-    try:
-        result = evaluate_intake(document, evidenceRoot=HARDWARE_EVIDENCE)
-    except HardwareEvidenceError as exc:
-        print(f"BLOCKED: {exc}")
-        return 2
-    atomic_json(OUT / "hardware-evidence.json", result)
-    print(f"hardware evidence: {result['accepted']} accepted of {result['submitted']} submitted")
-    for rejection in result["rejected"]:
-        print(f"  REJECTED {rejection}")
-    print(f"qualified x86-64 UEFI machines: {result['qualifiedX86UefiMachines'] or 'none'}")
-    if not result["requirementMet"]:
-        print(
-            "BLOCKED: no x86-64 UEFI physical machine is fully qualified. This cannot be produced "
-            "by running more tests; it needs a device."
-        )
-        return 2
-    print("hardware requirement met")
-    return 0
-
-
-# --- Workstream 16: independent reviews ----------------------------------------
-
-
-def validate_independent_reviews() -> int:
-    document = load_optional(DATA / "independent-reviews.json", None)
-    if document is None:
-        print("BLOCKED: operations/data/independent-reviews.json does not exist")
-        return 2
-    try:
-        result = evaluate_reviews(document, root=ROOT)
-    except ReviewError as exc:
-        print(f"BLOCKED: {exc}")
-        return 2
-    atomic_json(OUT / "independent-reviews.json", result)
-    for review in result["reviews"]:
-        reviewer = review["reviewer"] or "unassigned"
-        print(f"  {review['state']:18} {review['kind']:14} reviewer={reviewer}")
-        if review["package"]["missingSections"]:
-            print("      package missing: " + ", ".join(review["package"]["missingSections"]))
-    if result["outstandingReviews"]:
-        print("BLOCKED: outstanding reviews: " + ", ".join(result["outstandingReviews"]))
-        return 2
-    print("all independent reviews delivered")
-    return 0
+# Workstreams 14 and 16 — hardware intake and independent reviews — are
+# implemented below alongside the collector and the review-record intake that
+# extend them, rather than in two places.
 
 
 # --- Workstream 17: stable evidence report ------------------------------------
@@ -503,7 +539,7 @@ def stable_evidence_report() -> int:
         report = evaluate_evidence(
             document,
             root=ROOT,
-            sourceCommit=source_commit(),
+            sourceCommit=candidate_commit(),
             now=now(),
             externalReviewers=_external_reviewers(),
         )
@@ -511,8 +547,24 @@ def stable_evidence_report() -> int:
         print(f"BLOCKED: {exc}")
         return 2
     payload = report.as_dict()
+    payload["commitBinding"] = candidate_commit_state()
+
+    # The dashboard is generated from the same evaluation, so the two cannot
+    # disagree. A report that says BLOCKED beside a dashboard that says PASS is
+    # exactly the failure the evidence model exists to prevent.
+    try:
+        readiness = _candidate_readiness()
+        payload["candidatePrerequisites"] = readiness.as_dict()
+        write_text(OUT / "stable-evidence-dashboard.md", render_dashboard(readiness))
+    except CandidateError as exc:  # pragma: no cover - defensive
+        payload["candidatePrerequisites"] = {"error": str(exc)}
+
     atomic_json(OUT / "stable-evidence-report.json", payload)
 
+    binding = payload["commitBinding"]
+    print(f"candidate commit: {binding['candidateCommit'][:12]}, HEAD: {binding['headCommit'][:12]}")
+    if not binding["candidateIsHead"]:
+        print(f"  {binding['note']}")
     print(f"evidence records: {payload['recordCount']}, blocking: {payload['blockingRecordCount']}")
     for record in payload["blockingRecords"]:
         print(f"  BLOCKING {record['id']} ({record['category']})")
@@ -520,7 +572,16 @@ def stable_evidence_report() -> int:
             print(f"      {reason}")
     if payload["missingCategories"]:
         print("  MISSING CATEGORIES: " + ", ".join(payload["missingCategories"]))
+    prerequisites = payload.get("candidatePrerequisites", {})
+    if "rows" in prerequisites:
+        print(
+            f"candidate prerequisites: {len(prerequisites['satisfied'])} of "
+            f"{prerequisites['prerequisiteCount']} satisfied"
+        )
+        for state, names in sorted(prerequisites["byState"].items()):
+            print(f"  {state:24} {', '.join(names)}")
     print(f"wrote {OUT / 'stable-evidence-report.json'}")
+    print(f"wrote {OUT / 'stable-evidence-dashboard.md'}")
     return 2 if payload["blocked"] else 0
 
 
@@ -567,7 +628,7 @@ def _stable_inputs() -> StableInputs:
         evidence_report = evaluate_evidence(
             evidence_document,
             root=ROOT,
-            sourceCommit=source_commit(),
+            sourceCommit=candidate_commit(),
             now=now(),
             externalReviewers=_external_reviewers(),
         )
@@ -593,6 +654,42 @@ def _stable_inputs() -> StableInputs:
             }
         except VulnerabilityError as exc:
             vulnerability_detail = {"error": str(exc)}
+
+        # Both the position and the per-CVE analyses must be clear. The position
+        # is a per-finding disposition; the analyses are the binary evidence
+        # behind it. A scanner score cannot substitute for either, and a clear
+        # position with no analysis behind it is the state this phase was written
+        # to make impossible.
+        blocking = [
+            item
+            for item in vulnerability_document.get("findings", [])
+            if item.get("scannerSeverity") in {"Critical", "High"}
+        ]
+        analyses = [
+            load(SECURITY / "findings" / f"{item['advisoryId']}.json")
+            for item in blocking
+            if (SECURITY / "findings" / f"{item['advisoryId']}.json").is_file()
+        ]
+        try:
+            cve_result = evaluate_cve_document(
+                {"schemaVersion": 1, "analyses": analyses},
+                completed_independent_reviews=_completed_reviews(),
+                criticalAdvisories=[
+                    item["advisoryId"] for item in blocking if item["scannerSeverity"] == "Critical"
+                ],
+                independentReviewers=_external_reviewers(),
+                expectedAdvisories=[item["advisoryId"] for item in blocking],
+            )
+            vulnerability_detail["perCveAnalysis"] = {
+                "analysed": cve_result["analysed"],
+                "byProofClass": cve_result["byProofClass"],
+                "uncoveredAdvisories": cve_result["uncoveredAdvisories"],
+                "blocked": cve_result["blocked"],
+            }
+            vulnerability_blocked = vulnerability_blocked or cve_result["blocked"]
+        except CveAnalysisError as exc:
+            vulnerability_detail["perCveAnalysis"] = {"error": str(exc)}
+            vulnerability_blocked = True
 
     licence_document = load_optional(DATA / "licence-decision.json", None)
     licence_passed = False
@@ -696,6 +793,34 @@ def _stable_inputs() -> StableInputs:
 
 
 def gate(kind: str) -> int:
+    if kind == "source":
+        return source_gate()
+
+    if kind == "qualification-candidate":
+        try:
+            readiness = _candidate_readiness()
+        except CandidateError as exc:
+            print(f"BLOCKED: {exc}")
+            return 2
+        detail = readiness.as_dict()
+        result = evaluate_candidate_gate(
+            prerequisitesReady=readiness.ready,
+            unsatisfied=tuple(detail["unsatisfied"]),
+            detail=detail,
+        )
+        atomic_json(OUT / "gate-qualification-candidate.json", result.as_dict())
+        write_text(OUT / "stable-evidence-dashboard.md", render_dashboard(readiness))
+        print(f"qualification candidate gate: {result.recommendation}")
+        for row in detail["rows"]:
+            marker = "ok     " if row["satisfied"] else "BLOCKED"
+            print(f"  {marker} {row['state']:24} {row['description']}")
+        if not result.passed:
+            print(
+                "\nNo artifact may be labelled release-qualified. Building a candidate for "
+                "examination remains permitted; calling one qualified does not."
+            )
+        return 0 if result.passed else 2
+
     stable = evaluate_stable_gate(_stable_inputs())
     if kind == "stable-release":
         atomic_json(OUT / "gate-stable-release.json", stable.as_dict())
@@ -736,6 +861,21 @@ def pilot_closure_assertion() -> int:
     protected = bool(os.environ.get("BUNNY_PROTECTED_EVIDENCE"))
     stable = evaluate_stable_gate(_stable_inputs())
     results = [stable]
+
+    try:
+        readiness = _candidate_readiness()
+        detail = readiness.as_dict()
+        results.append(
+            evaluate_candidate_gate(
+                prerequisitesReady=readiness.ready,
+                unsatisfied=tuple(detail["unsatisfied"]),
+                detail=detail,
+            )
+        )
+    except CandidateError as exc:  # pragma: no cover - defensive
+        print(f"CI FAILURE: the candidate prerequisites are malformed: {exc}")
+        return 2
+
     for kind in PILOT_REQUIREMENTS:
         requirements = load_optional(DATA / "pilot-requirements.json", {}).get(kind, {}).get("requirements", {})
         results.append(evaluate_pilot_gate(kind, stable=stable, requirements=requirements))
@@ -747,6 +887,19 @@ def pilot_closure_assertion() -> int:
             + ", ".join(unexpected)
         )
         return 2
+
+    # A pilot gate must never pass while the stable gate blocks, whatever the
+    # pilot's own requirements say. Asserted rather than relied on, because the
+    # pilot gates read their requirements from a data file and a change could
+    # populate it.
+    for result in results:
+        if result.gate.endswith("-pilot") and result.passed and not stable.passed:
+            print(
+                f"CI FAILURE: {result.gate} reports GO while the stable gate reports "
+                f"{stable.recommendation}; no pilot may bypass a stable release"
+            )
+            return 2
+
     print(
         "pilot-gate closure assertion passed: "
         + ", ".join(f"{result.gate}={result.recommendation}" for result in results)
@@ -792,28 +945,897 @@ def release_blocker_baseline() -> int:
     return 0
 
 
+# --- Qualification evidence closure: baseline ---------------------------------
+
+
+def qualification_evidence_baseline() -> int:
+    path = ROOT / "docs/QUALIFICATION_EVIDENCE_BASELINE.md"
+    if not path.is_file():
+        print("BLOCKED: docs/QUALIFICATION_EVIDENCE_BASELINE.md does not exist")
+        return 2
+    required = (
+        "automatable in repository",
+        "requires ci infrastructure",
+        "requires second independent machine",
+        "requires physical hardware",
+        "requires independent reviewer",
+        "requires second authorised signer",
+        "requires owner decision",
+        "requires operated release evidence",
+    )
+    text = path.read_text(encoding="utf-8").casefold()
+    missing = [name for name in required if name not in text]
+    if missing:
+        print("BLOCKED: baseline is missing required classifications: " + ", ".join(missing))
+        return 2
+    print(f"qualification evidence baseline classifies all {len(required)} categories")
+    return 0
+
+
+# --- Workstream 1: independent-builder CI --------------------------------------
+
+
+def independent_builder_ci_manifest() -> int:
+    """Describe the hosted workflow, and refuse to imply it has run."""
+    workflow = ROOT / ".github/workflows/independent-builder.yml"
+    if not workflow.is_file():
+        print(f"BLOCKED: {workflow.relative_to(ROOT)} does not exist")
+        return 2
+    text = workflow.read_text(encoding="utf-8")
+
+    required_recordings = {
+        "GITHUB_RUN_ID": "the GitHub run id",
+        "RUNNER_ARCH": "the runner architecture",
+        "ImageOS": "the runner image",
+        "uname -r": "the kernel",
+        "podman --version": "the container runtime",
+        "collect_builder_record.py builder-record": "the builder record",
+        "collect_builder_record.py provenance": "the provenance and artifact manifest",
+        "sbom.spdx.json": "the SBOM",
+        "package-inventory.txt": "the package inventory",
+        "normalise-artifact": "raw and normalised digests",
+        "upload-artifact": "comparison artifact upload",
+        "BUNNY_CACHES_DISABLED": "mutable caches disabled",
+    }
+    missing = sorted(
+        description for token, description in required_recordings.items() if token not in text
+    )
+    for secret in ("BUNNY_OS_RELEASE_KEY", "BUNNY_RECOVERY_KEY"):
+        if secret not in text:
+            missing.append(f"an explicit assertion that {secret} is unreachable")
+
+    builders = load_optional(DATA / "builders.json", {})
+    hosted = [
+        record
+        for record in builders.get("builderRecords", [])
+        if isinstance(record, dict) and record.get("builderType") in {"hosted-ci", "self-hosted-ci"}
+    ]
+
+    payload = {
+        "schemaVersion": 1,
+        "workflow": ".github/workflows/independent-builder.yml",
+        "workflowPresent": True,
+        "recordedFields": sorted(set(required_recordings.values()) - set(missing)),
+        "missingFields": missing,
+        "executed": bool(hosted),
+        "hostedBuilderRecordCount": len(hosted),
+        "acceptedPairings": [text for _, _, text in ACCEPTED_PAIRINGS],
+        "note": (
+            "A prepared workflow is not an executed workflow. `executed` is derived from whether a "
+            "hosted-ci builder record exists in operations/data/builders.json, not from the "
+            "workflow file being present."
+        ),
+    }
+    atomic_json(OUT / "independent-builder-ci.json", payload)
+
+    print("independent-builder workflow: present")
+    for name in payload["recordedFields"]:
+        print(f"  ok      records {name}")
+    for name in missing:
+        print(f"  MISSING {name}")
+    print(f"hosted builder records committed: {len(hosted)}")
+    if missing:
+        print("BLOCKED: the workflow does not record everything an independent builder must record")
+        return 2
+    if not hosted:
+        print(
+            "BLOCKED: the workflow is prepared and has not been executed. No hosted-ci builder "
+            "record exists, so independent-builder reproducibility remains unestablished."
+        )
+        return 2
+    print("a hosted builder record is recorded")
+    return 0
+
+
+def collect_builder_record(builderId: str, builderType: str | None) -> int:
+    """Run the schema-2 collector on this host."""
+    command = [
+        os.sys.executable,
+        str(ROOT / "scripts/reproducibility/collect_builder_record.py"),
+        "builder-record",
+        "--builder-id",
+        builderId,
+    ]
+    if builderType:
+        command += ["--builder-type", builderType]
+    output = OUT / f"builder-record-{builderId}.json"
+    command += ["--output", str(output)]
+    result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True)
+    print(result.stdout.strip() or result.stderr.strip())
+    if result.returncode != 0:
+        return 2
+    record = load(output)
+    try:
+        from release.builders import parse_builder_record
+
+        parsed = parse_builder_record(record)
+    except BuilderError as exc:
+        print(f"BLOCKED: the collected record does not validate: {exc}")
+        return 2
+    print(f"builder {parsed.builderId}: {parsed.builderType}, boundary {parsed.administratorBoundary[:12]}")
+    print(f"wrote {output.relative_to(ROOT)}")
+    return 0
+
+
+# --- Workstreams 2 and 3: builder independence --------------------------------
+
+
+def verify_builder_independence() -> int:
+    document = load_optional(DATA / "builders.json", None)
+    if document is None:
+        print("BLOCKED: operations/data/builders.json does not exist")
+        return 2
+    try:
+        result = evaluate_builder_set(document)
+    except BuilderError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+    atomic_json(OUT / "builder-independence.json", result)
+
+    print(f"builder records: {result['builderCount']} ({', '.join(result['builderTypes']) or 'none'})")
+    for reason in result["rejected"]:
+        print(f"  REJECTED {reason}")
+    for pair in result["pairs"]:
+        state = "PASS" if pair["independent"] else "BLOCKED"
+        print(f"  {state:8} {pair['first']} + {pair['second']}" + (f" — {pair['pairing']}" if pair["pairing"] else ""))
+        for reason in pair["reasons"]:
+            print(f"      {reason}")
+    if not result["pairs"]:
+        print("  no independence pair has been declared")
+        print("\nAccepted pairings:")
+        for _, _, description in ACCEPTED_PAIRINGS:
+            print(f"  - {description}")
+    if not result["requirementMet"]:
+        print(
+            "BLOCKED: no verified independent builder pair. A second workspace, container, or "
+            "consecutive run on one host is separation, not independence."
+        )
+        return 2
+    print("builder independence verified from real environment evidence")
+    return 0
+
+
+# --- Workstream 4: artifact normalisation -------------------------------------
+
+
+def normalise_artifact(source: Path, destination: Path, output: Path | None) -> int:
+    try:
+        result = normalise_archive(source, destination)
+    except NormalisationError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+    payload = result.as_dict()
+    atomic_json(output or (OUT / "normalisation.json"), payload)
+    print(f"raw digest        {result.rawDigest}")
+    print(f"normalised digest {result.normalisedDigest}")
+    print(f"members           {result.memberCount}")
+    print(f"applied           {', '.join(result.appliedProperties)}")
+    print("both digests are recorded: a normalised match with differing raw digests is a packing")
+    print("difference that must still be explained.")
+    return 0
+
+
+# --- Workstream 5: seventeen-dimension comparison -----------------------------
+
+
+def compare_independent_builds() -> int:
+    document = load_optional(DATA / "build-comparison.json", None)
+    if document is None:
+        print("BLOCKED: operations/data/build-comparison.json does not exist")
+        print(
+            f"a comparison must record all {len(COMPARISON_DIMENSIONS)} dimensions from both "
+            "builders; an unmeasured dimension cannot support a reproducibility claim"
+        )
+        return 2
+
+    builders = load_optional(DATA / "builders.json", {})
+    independent = False
+    independence_reasons: tuple[str, ...] = ("no independence pair has been verified",)
+    try:
+        verdict = evaluate_builder_set(builders)
+        passing = [pair for pair in verdict["pairs"] if pair["independent"]]
+        independent = bool(passing)
+        if not independent:
+            reasons = [reason for pair in verdict["pairs"] for reason in pair["reasons"]]
+            independence_reasons = tuple(reasons) or independence_reasons
+        else:
+            independence_reasons = ()
+    except BuilderError as exc:
+        independence_reasons = (str(exc),)
+
+    try:
+        report = evaluate_comparison(
+            document, independent=independent, independenceReasons=independence_reasons
+        )
+    except ComparisonError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    payload = report.as_dict()
+    atomic_json(OUT / "reproducibility-comparison.json", payload)
+
+    print(f"outcome: {report.outcome}")
+    for state, names in sorted(payload["dimensionsByState"].items()):
+        if names:
+            print(f"  {state:14} {len(names)}: {', '.join(names)}")
+    for reason in report.reasons:
+        print(f"  {reason}")
+    print(f"wrote {(OUT / 'reproducibility-comparison.json').relative_to(ROOT)}")
+    if not report.satisfiesProductionGate:
+        print(
+            "BLOCKED: only REPRODUCIBLE between independent builders satisfies the production "
+            "evidence gate."
+        )
+        return 2
+    print("independent reproducibility established across every dimension")
+    return 0
+
+
+# --- Workstream 6: CI artifact verification -----------------------------------
+
+
+def verify_ci_artifacts(
+    provenancePath: Path,
+    artifactRoot: Path,
+    expectedCommit: str,
+    expectedBaseDigest: str,
+    verificationEnvironment: str,
+    output: Path | None,
+) -> int:
+    try:
+        record = parse_provenance(load(provenancePath))
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        print(f"BLOCKED: cannot read {provenancePath}: {exc}")
+        return 2
+    except ProvenanceError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    builders = load_optional(DATA / "builders.json", {})
+    consumed = {
+        str(item.get("workflowRunId"))
+        for item in builders.get("builderRecords", [])
+        if isinstance(item, dict) and item.get("workflowRunId")
+    }
+
+    result = verify_provenance(
+        record,
+        artifactRoot=artifactRoot,
+        expectedCommit=expectedCommit,
+        expectedBaseDigest=expectedBaseDigest,
+        verificationEnvironmentId=verificationEnvironment,
+        builderEnvironmentId=record.workflowRunId,
+        now=now(),
+        consumedRunIds=consumed,
+    )
+    atomic_json(output or (OUT / "ci-verification.json"), result)
+    for check in result["checks"]:
+        print(f"  {check['outcome']:8} {check['check']}: {check['detail']}")
+    if not result["accepted"]:
+        print("BLOCKED: the downloaded evidence is not acceptable. An artifact is not trustworthy")
+        print("because it came from a CI provider.")
+        return 2
+    print("CI artifacts verified against the downloaded bytes")
+    return 0
+
+
+# --- Workstreams 7 to 13: per-CVE reachability --------------------------------
+
+
+def _reachability(subcommand: str, *extra: str) -> int:
+    result = subprocess.run(
+        [os.sys.executable, str(ROOT / "scripts/reachability.py"), subcommand, *extra],
+        cwd=ROOT,
+        text=True,
+    )
+    return result.returncode
+
+
+def cve_disposition() -> int:
+    """Aggregate the per-CVE analyses into the vulnerability gate's input."""
+    findings = load_optional(DATA / "vulnerability-disposition.json", {"findings": []})
+    blocking = [
+        item for item in findings.get("findings", []) if item.get("scannerSeverity") in {"Critical", "High"}
+    ]
+    expected = [item["advisoryId"] for item in blocking]
+    critical = [item["advisoryId"] for item in blocking if item["scannerSeverity"] == "Critical"]
+
+    analyses = []
+    for advisory in expected:
+        path = SECURITY / "findings" / f"{advisory}.json"
+        if path.is_file():
+            analyses.append(load(path))
+
+    try:
+        result = evaluate_cve_document(
+            {"schemaVersion": 1, "analyses": analyses},
+            completed_independent_reviews=_completed_reviews(),
+            criticalAdvisories=critical,
+            independentReviewers=_external_reviewers(),
+            expectedAdvisories=expected,
+        )
+    except CveAnalysisError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+    atomic_json(OUT / "cve-reachability-disposition.json", result)
+    print(f"per-CVE analyses: {result['analysed']} of {len(expected)} Critical/High advisories")
+    for name, advisories in sorted(result["byProofClass"].items()):
+        print(f"  {name:26} {len(advisories)}")
+    if result["uncoveredAdvisories"]:
+        print("  UNCOVERED: " + ", ".join(result["uncoveredAdvisories"]))
+    if result["blocked"]:
+        print(f"BLOCKED: {result['blockingCount']} advisory(ies) block a stable release")
+        return 2
+    print("every Critical and High advisory has an acceptable, reviewed disposition")
+    return 0
+
+
+# --- Workstreams 14 and 15: independent reviews -------------------------------
+
+
+def validate_independent_reviews() -> int:
+    """Requests must be sendable; delivered records must be signed and bound."""
+    document = load_optional(DATA / "independent-reviews.json", None)
+    if document is None:
+        print("BLOCKED: operations/data/independent-reviews.json does not exist")
+        return 2
+    try:
+        status = evaluate_reviews(document, root=ROOT)
+        requests = evaluate_requests(ROOT)
+        records = evaluate_review_records(document, root=ROOT, expectedCommit=candidate_commit())
+    except ReviewError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    payload = {
+        "schemaVersion": 1,
+        "status": status,
+        "requests": requests,
+        "records": records,
+        "allComplete": status["allComplete"] and records["allComplete"],
+    }
+    atomic_json(OUT / "independent-reviews.json", payload)
+
+    for review in status["reviews"]:
+        reviewer = review["reviewer"] or "unassigned"
+        print(f"  {review['state']:18} {review['kind']:14} reviewer={reviewer}")
+        if review["package"]["missingSections"]:
+            print("      package missing: " + ", ".join(review["package"]["missingSections"]))
+    print()
+    for kind, gaps in sorted(requests["requests"].items()):
+        state = "ready" if not gaps else "incomplete"
+        print(f"  request {kind:14} {state}")
+        for gap in gaps:
+            print(f"      missing: {gap}")
+    print()
+    print(f"delivered review records: {records['acceptedCount']} of {records['recordCount']}")
+    for reason in records["rejected"]:
+        print(f"  REJECTED {reason}")
+
+    if not payload["allComplete"]:
+        outstanding = sorted(set(status["outstandingReviews"]) | set(records["outstandingReviewTypes"]))
+        print("BLOCKED: outstanding reviews: " + ", ".join(outstanding))
+        print("No reviewer name or completion date has been invented; the requests are ready to send.")
+        return 2
+    print("all independent reviews delivered, signed and bound to this commit")
+    return 0
+
+
+# --- Workstreams 16 to 18: hardware evidence ---------------------------------
+
+
+def collect_hardware_evidence() -> int:
+    """Report what the on-device collector would gather, and what it excludes."""
+    from release.hardware import COLLECTOR_FIELDS, EXCLUDED_CATEGORIES, GUIDED_TESTS
+
+    payload = {
+        "schemaVersion": 1,
+        "command": "bunny-os qualification collect",
+        "collectorFields": list(COLLECTOR_FIELDS),
+        "excludedCategories": list(EXCLUDED_CATEGORIES),
+        "guidedTests": list(GUIDED_TESTS),
+        "recordCommand": "bunny-os qualification record --test <test> --outcome <outcome> ...",
+        "reportCommand": "bunny-os qualification report --operator <name>",
+        "note": (
+            "The collector is an allow-list of seventeen facts recorded as classes rather than "
+            "identities. It has no function that reads a serial number, a MAC or IP address, a "
+            "hostname, a username, a network name, a personal path or file, a Bunny prompt or "
+            "memory, or browser history."
+        ),
+    }
+    atomic_json(OUT / "hardware-collector.json", payload)
+    print(f"collector fields: {len(COLLECTOR_FIELDS)}")
+    print(f"excluded categories: {len(EXCLUDED_CATEGORIES)}")
+    print(f"guided tests: {len(GUIDED_TESTS)}")
+    print("run on the device under test: bunny-os qualification collect")
+    return 0
+
+
+def validate_hardware_evidence() -> int:
+    document = load_optional(DATA / "hardware-evidence.json", {"schemaVersion": 1, "reports": []})
+    try:
+        result = evaluate_intake(document, evidenceRoot=HARDWARE_EVIDENCE)
+    except HardwareEvidenceError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    collections = load_optional(DATA / "hardware-collections.json", {"schemaVersion": 1, "collections": []})
+    try:
+        collection_result = evaluate_collection(collections, evidenceRoot=HARDWARE_EVIDENCE)
+    except HardwareCollectionError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    payload = {**result, "collections": collection_result}
+    atomic_json(OUT / "hardware-evidence.json", payload)
+    print(f"hardware evidence: {result['accepted']} accepted of {result['submitted']} submitted")
+    for rejection in result["rejected"]:
+        print(f"  REJECTED {rejection}")
+    print(f"qualified x86-64 UEFI machines: {result['qualifiedX86UefiMachines'] or 'none'}")
+    print(
+        f"guided collections: {collection_result['accepted']} accepted of "
+        f"{collection_result['submitted']} submitted, "
+        f"{len(collection_result['completeCollections'])} complete and signed"
+    )
+    for rejection in collection_result["rejected"]:
+        print(f"  REJECTED {rejection}")
+    if not result["requirementMet"] or not collection_result["requirementMet"]:
+        print(
+            "BLOCKED: no x86-64 UEFI physical machine is fully qualified. This cannot be produced "
+            "by running more tests; it needs a device."
+        )
+        return 2
+    print("hardware requirement met")
+    return 0
+
+
+# --- Workstream 19: accessibility evidence -----------------------------------
+
+
+def accessibility_evidence_plan() -> int:
+    plan = accessibility_module.evidence_plan()
+    atomic_json(OUT / "accessibility-evidence-plan.json", plan)
+    print(f"accessibility flows: {len(plan['flows'])}")
+    for flow in plan["flows"]:
+        marker = "blocks release" if flow["blocksRelease"] else flow["failureSeverity"]
+        extra = " (needs an installer ISO)" if flow["requiresPreInstallEnvironment"] else ""
+        print(f"  {flow['flow']:32} {marker}{extra}")
+    print("\nRefusals:")
+    for refusal in plan["refusals"]:
+        print(f"  - {refusal}")
+    return 0
+
+
+def validate_accessibility_evidence() -> int:
+    document = load_optional(DATA / "accessibility-evidence.json", None)
+    if document is None:
+        print("BLOCKED: operations/data/accessibility-evidence.json does not exist")
+        return 2
+    reviews = load_optional(DATA / "independent-reviews.json", {"schemaVersion": 1, "reviews": []})
+    review_complete = False
+    try:
+        review_complete = "accessibility" in evaluate_reviews(reviews, root=ROOT)["completeReviews"]
+    except ReviewError:
+        review_complete = False
+
+    try:
+        result = accessibility_module.evaluate_evidence(
+            document,
+            evidenceRoot=ACCESSIBILITY_EVIDENCE if ACCESSIBILITY_EVIDENCE.is_dir() else None,
+            independentReviewComplete=review_complete,
+        )
+    except accessibility_module.AccessibilityEvidenceError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    atomic_json(OUT / "accessibility-evidence.json", result)
+    print(
+        f"accessibility: {len(result['passingFlows'])} passing, {len(result['failingFlows'])} failing, "
+        f"{len(result['notRunFlows'])} not run of {result['flowCount']} flows"
+    )
+    for reason in result["rejected"]:
+        print(f"  REJECTED {reason}")
+    print(f"assistive technologies exercised: {', '.join(result['assistiveTechnologies']) or 'none'}")
+    if result["criticalUnresolvedFlows"]:
+        print("  critical flows unresolved: " + ", ".join(result["criticalUnresolvedFlows"]))
+    for reason in result["reasons"]:
+        print(f"  {reason}")
+    if not result["requirementMet"]:
+        print("BLOCKED: accessibility evidence is incomplete")
+        return 2
+    print("accessibility requirement met")
+    return 0
+
+
+# --- Workstream 21: two-person development signing drill ---------------------
+
+
+def two_person_development_signing_drill() -> int:
+    document = load_optional(DATA / "two-person-signing-drill.json", None)
+    if document is None:
+        print("BLOCKED: operations/data/two-person-signing-drill.json does not exist")
+        print("run: python scripts/two_person_drill.py --artifact <a built image archive>")
+        return 2
+    try:
+        result = evaluate_two_person_drill(document)
+    except SigningError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+    atomic_json(OUT / "two-person-signing-drill.json", result)
+    for check in result["checks"]:
+        print(f"  {check['outcome']:8} {check['check']}")
+    if result["missingChecks"]:
+        print("BLOCKED: missing checks: " + ", ".join(result["missingChecks"]))
+        return 2
+    if result["failingChecks"]:
+        print("BLOCKED: failing checks: " + ", ".join(result["failingChecks"]))
+        return 2
+    print(f"two-person development signing drill PASSED — {len(result['checks'])}/9")
+    print(
+        "This validates the process. It does not satisfy the production second-signer requirement: "
+        "both keys are development keys and one person ran the drill."
+    )
+    return 0
+
+
+# --- Workstreams 22 and 23: candidate readiness and the dashboard ------------
+
+
+def _candidate_observations() -> dict[str, dict[str, Any]]:
+    """Gather the fourteen prerequisite states from the evidence on disk."""
+    commit = candidate_commit()
+    observations: dict[str, dict[str, Any]] = {}
+
+    def observe(name: str, satisfied: bool, evidence: str, **extra: Any) -> None:
+        observations[name] = {"satisfied": satisfied, "evidence": evidence, **extra}
+
+    # Licence
+    licence_document = load_optional(DATA / "licence-decision.json", None)
+    licence_passed = False
+    if licence_document is not None:
+        try:
+            decision = parse_decision(licence_document)
+            licence_passed = evaluate_licence_gate(
+                decision, root=ROOT, licenceScanResult=licence_document.get("licenceScanResult")
+            ).passed
+        except LicenceError:
+            licence_passed = False
+    observe(
+        "licence-gate",
+        licence_passed,
+        "operations/data/licence-decision.json; 7 of 7 requirements" if licence_passed else "licence gate blocked",
+        commit=commit if licence_passed else "",
+    )
+
+    # Vulnerability, from the per-CVE analyses
+    findings = load_optional(DATA / "vulnerability-disposition.json", {"findings": []})
+    blocking = [
+        item for item in findings.get("findings", []) if item.get("scannerSeverity") in {"Critical", "High"}
+    ]
+    analyses = [
+        load(SECURITY / "findings" / f"{item['advisoryId']}.json")
+        for item in blocking
+        if (SECURITY / "findings" / f"{item['advisoryId']}.json").is_file()
+    ]
+    unresolved = [item for item in analyses if item.get("conclusion") != "Not present" and item.get("conclusion") != "Present but unreachable"]
+    observe(
+        "vulnerability-gate",
+        bool(analyses) and not unresolved,
+        f"{len(analyses)} per-CVE analyses; {len(unresolved)} unresolved",
+        state="PENDING_EXTERNAL_REVIEW" if unresolved else None,
+        blocker=f"{len(unresolved)} Critical/High advisories remain Unknown" if unresolved else "none",
+        dependency="independent security review",
+    )
+
+    # Independent reproducibility
+    builders = load_optional(DATA / "builders.json", {})
+    independent = False
+    try:
+        independent = evaluate_builder_set(builders)["requirementMet"]
+    except BuilderError:
+        independent = False
+    observe(
+        "independent-reproducibility",
+        independent,
+        "operations/data/builders.json" if independent else "no verified independent builder pair",
+        dependency="hosted CI run of .github/workflows/independent-builder.yml",
+    )
+
+    # Development signing drill
+    drill = load_optional(DATA / "signing-drill.json", None)
+    drill_passed = False
+    if drill is not None:
+        try:
+            drill_passed = evaluate_drill(drill.get("checks", []))["result"] == "PASS"
+        except SigningError:
+            drill_passed = False
+    observe(
+        "development-signing-drill",
+        drill_passed,
+        "operations/data/signing-drill.json; 9/9" if drill_passed else "drill not passing",
+        commit=commit if drill_passed else "",
+    )
+
+    # Matrices
+    matrices = load_optional(DATA / "qualification-matrices.json", {"matrices": {}})
+    matrix_states: dict[str, bool] = {}
+    for name in ("recovery-media", "installation", "encryption", "update", "rollback"):
+        recorded = matrices.get("matrices", {}).get(name)
+        state = False
+        if recorded is not None:
+            try:
+                state = matrix_module.evaluate_matrix(name, recorded, root=ROOT).complete
+            except matrix_module.MatrixError:
+                state = False
+        matrix_states[name] = state
+    for prerequisite, matrix_name, dependency in (
+        ("independent-recovery-media", "recovery-media", "a signed recovery ISO"),
+        ("installation-matrix", "installation", "a live installer ISO"),
+        ("encryption-matrix", "encryption", "a completed installation"),
+        ("update-matrix", "update", "a published signed update manifest"),
+        ("rollback-matrix", "rollback", "a previous release to roll back to"),
+    ):
+        observe(
+            prerequisite,
+            matrix_states[matrix_name],
+            f"{matrix_name} matrix" if matrix_states[matrix_name] else f"{matrix_name} matrix incomplete",
+            dependency=dependency,
+        )
+
+    # Hardware
+    hardware = load_optional(DATA / "hardware-evidence.json", {"schemaVersion": 1, "reports": []})
+    hardware_met = False
+    try:
+        hardware_met = evaluate_intake(hardware, evidenceRoot=HARDWARE_EVIDENCE)["requirementMet"]
+    except HardwareEvidenceError:
+        hardware_met = False
+    observe(
+        "physical-hardware-evidence",
+        hardware_met,
+        "hardware/evidence/" if hardware_met else "zero reports submitted",
+        dependency="one x86-64 UEFI machine with Secure Boot and TPM 2.0",
+    )
+
+    # Accessibility
+    accessibility_document = load_optional(DATA / "accessibility-evidence.json", {"schemaVersion": 1, "results": []})
+    reviews_document = load_optional(DATA / "independent-reviews.json", {"schemaVersion": 1, "reviews": []})
+    try:
+        complete_reviews = evaluate_reviews(reviews_document, root=ROOT)["completeReviews"]
+    except ReviewError:
+        complete_reviews = []
+    accessibility_met = False
+    try:
+        accessibility_met = accessibility_module.evaluate_evidence(
+            accessibility_document,
+            independentReviewComplete="accessibility" in complete_reviews,
+        )["requirementMet"]
+    except accessibility_module.AccessibilityEvidenceError:
+        accessibility_met = False
+    observe(
+        "accessibility-evidence",
+        accessibility_met,
+        "operations/data/accessibility-evidence.json" if accessibility_met else "0 of 17 flows driven",
+        dependency="an independent accessibility review",
+    )
+
+    # Independent reviews
+    reviews_complete = False
+    try:
+        reviews_complete = (
+            evaluate_reviews(reviews_document, root=ROOT)["allComplete"]
+            and evaluate_review_records(reviews_document, root=ROOT, expectedCommit=commit)["allComplete"]
+        )
+    except ReviewError:
+        reviews_complete = False
+    observe(
+        "independent-reviews",
+        reviews_complete,
+        "operations/data/independent-reviews.json" if reviews_complete else "four packages prepared, zero delivered",
+        dependency="four identified external reviewers",
+    )
+
+    # Second production signer
+    signing = load_optional(DATA / "signing-keys.json", {"keys": []})
+    production_signers: set[str] = set()
+    try:
+        for item in signing.get("keys", []):
+            record = parse_key_record(item)
+            if record.keyClass == "production" and record.state in {"active", "rotating"}:
+                production_signers.add(record.keyId)
+    except SigningError:
+        production_signers = set()
+    observe(
+        "second-production-signer",
+        len(production_signers) >= 2,
+        f"{len(production_signers)} production key(s) exist",
+        dependency="a second person and a key ceremony",
+    )
+
+    # Approvals
+    qualification = load_optional(DATA / "stable-qualification.json", {"approvals": {}})
+    approvals = qualification.get("approvals", {})
+    from release.gates import REQUIRED_APPROVALS
+
+    pending = [owner for owner in REQUIRED_APPROVALS if approvals.get(owner) != "APPROVED"]
+    observe(
+        "protected-approvals",
+        not pending,
+        f"{len(REQUIRED_APPROVALS) - len(pending)} of {len(REQUIRED_APPROVALS)} recorded",
+        blocker="approvals pending: " + ", ".join(pending) if pending else "none",
+    )
+
+    return {
+        name: {key: value for key, value in observation.items() if value is not None}
+        for name, observation in observations.items()
+    }
+
+
+def _candidate_readiness():
+    return evaluate_candidate(
+        _candidate_observations(), sourceCommit=candidate_commit(), now=now()
+    )
+
+
+def qualification_candidate_readiness() -> int:
+    try:
+        readiness = _candidate_readiness()
+    except CandidateError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+    payload = readiness.as_dict()
+    atomic_json(OUT / "qualification-candidate.json", payload)
+    write_text(OUT / "stable-evidence-dashboard.md", render_dashboard(readiness))
+
+    print(f"candidate prerequisites: {len(payload['satisfied'])} of {len(CANDIDATE_PREREQUISITES)} satisfied")
+    for row in payload["rows"]:
+        print(f"  {row['state']:24} {row['description']}")
+        if not row["satisfied"]:
+            print(f"      owner={row['owner']} next={row['nextAction']}")
+    print(f"\nwrote {(OUT / 'stable-evidence-dashboard.md').relative_to(ROOT)}")
+    if not readiness.ready:
+        print(
+            "BLOCKED: no artifact may be labelled release-qualified while a prerequisite is "
+            "unsatisfied. Building a candidate for examination remains permitted."
+        )
+        return 2
+    print("every candidate prerequisite is satisfied")
+    return 0
+
+
+# --- Workstream 24: gate-source ----------------------------------------------
+
+
+def source_gate() -> int:
+    """The source gate. Runs the repository's own checks and nothing else."""
+    def suite(command: list[str]) -> bool:
+        result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+        return result.returncode == 0
+
+    licence_document = load_optional(DATA / "licence-decision.json", None)
+    licence_passed = False
+    if licence_document is not None:
+        try:
+            decision = parse_decision(licence_document)
+            licence_passed = evaluate_licence_gate(
+                decision, root=ROOT, licenceScanResult=licence_document.get("licenceScanResult")
+            ).passed
+        except LicenceError:
+            licence_passed = False
+
+    minimisation_document = load_optional(DATA / "package-minimisation.json", None)
+    minimisation = False
+    if minimisation_document is not None:
+        try:
+            minimisation = evaluate_minimisation(minimisation_document)["result"] == "PASS"
+        except MinimisationError:
+            minimisation = False
+
+    python = os.sys.executable
+    requirements = {
+        "repositoryValidation": suite([python, "scripts/task.py", "validate"]),
+        "sourceSuitesPass": suite([python, "scripts/task.py", "test"]),
+        "qualificationSuitesPass": suite([python, "scripts/task.py", "test-release-closure"]),
+        "licenceGatePassed": licence_passed,
+        "minimisationComplete": minimisation,
+        "baselineRecorded": qualification_evidence_baseline() == 0,
+    }
+    try:
+        result = evaluate_source_gate(requirements)
+    except GateError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+    atomic_json(OUT / "gate-source.json", result.as_dict())
+    print(f"source gate: {result.recommendation}")
+    for name in result.satisfied:
+        print(f"  ok      {name}")
+    for name in result.unmet:
+        print(f"  FAIL    {name}")
+    print(
+        "\nA passing source gate asserts nothing about a built image, a booted system, a review, a "
+        "device or a signature."
+    )
+    return 0 if result.passed or result.recommendation == "PASS" else 2
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="release")
     commands = parser.add_subparsers(dest="command", required=True)
     for name in (
         "baseline",
+        "qualification-evidence-baseline",
         "vulnerability-position",
         "reachability-review",
+        "cve-disposition",
         "package-minimisation-check",
         "licence-gate",
         "reproducibility-compare",
+        "independent-builder-ci-manifest",
+        "verify-builder-independence",
+        "compare-independent-builds",
         "development-signing-drill",
+        "two-person-development-signing-drill",
         "signing-roles",
+        "collect-hardware-evidence",
         "validate-hardware-evidence",
+        "accessibility-evidence-plan",
+        "validate-accessibility-evidence",
         "validate-independent-reviews",
         "stable-evidence-report",
+        "qualification-candidate-readiness",
         "validate-release-manifest",
         "pilot-closure-assertion",
+        "acquire-cve-sources",
+        "analyse-cve-symbols",
+        "generate-reachability-packages",
+        "validate-cve-acquisition",
     ):
         commands.add_parser(name)
 
     prepare = commands.add_parser("independent-builder-prepare")
     prepare.add_argument("--builder", required=True)
+
+    collect = commands.add_parser("collect-builder-record")
+    collect.add_argument("--builder-id", required=True)
+    collect.add_argument(
+        "--builder-type",
+        choices=("local-machine", "hosted-ci", "self-hosted-ci", "cloud-vm", "physical-builder"),
+    )
+
+    normalise = commands.add_parser("normalise-artifact")
+    normalise.add_argument("--source", required=True, type=Path)
+    normalise.add_argument("--destination", required=True, type=Path)
+    normalise.add_argument("--output", type=Path)
+
+    verify_ci = commands.add_parser("verify-ci-artifacts")
+    verify_ci.add_argument("--provenance", required=True, type=Path)
+    verify_ci.add_argument("--artifact-root", required=True, type=Path)
+    verify_ci.add_argument("--expected-commit", required=True)
+    verify_ci.add_argument("--expected-base-digest", required=True)
+    verify_ci.add_argument("--verification-environment", required=True)
+    verify_ci.add_argument("--output", type=Path)
+
+    symbols = commands.add_parser("analyse-symbols")
+    symbols.add_argument("--sysroot", type=Path)
 
     matrix_parser = commands.add_parser("test-matrix")
     matrix_parser.add_argument("--name", required=True, choices=sorted(matrix_module.MATRICES))
@@ -822,29 +1844,69 @@ def main() -> int:
     gate_parser.add_argument(
         "--kind",
         required=True,
-        choices=("stable-release", "oem-pilot", "enterprise-pilot", "sync-pilot"),
+        choices=(
+            "source",
+            "qualification-candidate",
+            "stable-release",
+            "oem-pilot",
+            "enterprise-pilot",
+            "sync-pilot",
+        ),
     )
 
     args = parser.parse_args()
     dispatch = {
         "baseline": release_blocker_baseline,
+        "qualification-evidence-baseline": qualification_evidence_baseline,
         "vulnerability-position": vulnerability_position,
         "reachability-review": reachability_review,
+        "cve-disposition": cve_disposition,
         "package-minimisation-check": package_minimisation_check,
         "licence-gate": licence_gate,
         "reproducibility-compare": reproducibility_compare,
+        "independent-builder-ci-manifest": independent_builder_ci_manifest,
+        "verify-builder-independence": verify_builder_independence,
+        "compare-independent-builds": compare_independent_builds,
         "development-signing-drill": development_signing_drill,
+        "two-person-development-signing-drill": two_person_development_signing_drill,
         "signing-roles": signing_roles,
+        "collect-hardware-evidence": collect_hardware_evidence,
         "validate-hardware-evidence": validate_hardware_evidence,
+        "accessibility-evidence-plan": accessibility_evidence_plan,
+        "validate-accessibility-evidence": validate_accessibility_evidence,
         "validate-independent-reviews": validate_independent_reviews,
         "stable-evidence-report": stable_evidence_report,
+        "qualification-candidate-readiness": qualification_candidate_readiness,
         "validate-release-manifest": validate_release_manifest,
         "pilot-closure-assertion": pilot_closure_assertion,
     }
     if args.command in dispatch:
         return dispatch[args.command]()
+    if args.command == "acquire-cve-sources":
+        return _reachability("acquire-plan")
+    if args.command == "validate-cve-acquisition":
+        return _reachability("validate-acquisition")
+    if args.command == "analyse-cve-symbols":
+        return _reachability("analyse-symbols")
+    if args.command == "generate-reachability-packages":
+        return _reachability("generate-packages")
+    if args.command == "analyse-symbols":
+        return _reachability("analyse-symbols", *(["--sysroot", str(args.sysroot)] if args.sysroot else []))
     if args.command == "independent-builder-prepare":
         return independent_builder_prepare(args.builder)
+    if args.command == "collect-builder-record":
+        return collect_builder_record(args.builder_id, args.builder_type)
+    if args.command == "normalise-artifact":
+        return normalise_artifact(args.source, args.destination, args.output)
+    if args.command == "verify-ci-artifacts":
+        return verify_ci_artifacts(
+            args.provenance,
+            args.artifact_root,
+            args.expected_commit,
+            args.expected_base_digest,
+            args.verification_environment,
+            args.output,
+        )
     if args.command == "test-matrix":
         return test_matrix(args.name)
     if args.command == "gate":

@@ -1,0 +1,39 @@
+{
+  "advisories": [
+    "CVE-2020-27815",
+    "GHSA-4c29-8rgm-jvjj",
+    "GHSA-4vrq-3vrq-g6gg",
+    "GHSA-5cgq-3rg8-m6cv",
+    "GHSA-65gg-3w2w-hr4h",
+    "GHSA-89gr-r52h-f8rx",
+    "GHSA-cgrx-mc8f-2prm",
+    "GHSA-f5mr-q85p-6hh6",
+    "GHSA-f5wc-c3c7-36mc",
+    "GHSA-f83f-xpx7-ffpw",
+    "GHSA-hrxh-6v49-42gf",
+    "GHSA-jppx-rxg9-jmrx",
+    "GHSA-mh2q-q3fh-2475",
+    "GHSA-p77j-4mvh-x3m3",
+    "GHSA-q4h4-gmj2-qvw2",
+    "GHSA-rm3j-f69w-wqmq",
+    "GHSA-vgwf-h737-ff37",
+    "GHSA-w879-237q-wc7r",
+    "GHSA-wp3j-xq48-xpjw",
+    "GHSA-x527-x647-q7gg",
+    "GHSA-x744-4wpc-v9h2",
+    "GO-2026-5026",
+    "GO-2026-5942",
+    "GO-2026-5970"
+  ],
+  "advisoryCount": 24,
+  "distinctCarrierObjects": [
+    "/sysroot/ostree/repo/objects/75/5cc7cfe2e3b547556eb117093d626800f1dcb3751e3b31952cec86177bdcab.file",
+    "/sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file",
+    "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+    "/sysroot/ostree/repo/objects/ea/cf5a37b7b9193f1063a40c3def6c25fc348d9f404d569b91aeba6007bceef7.file"
+  ],
+  "generatedAt": "2026-07-30T11:24:44.948396Z",
+  "note": "Every record concludes 'Unknown'. Nine of the ten bounded reachability questions are answered from measured evidence; the tenth needs the binary, its debuginfo and the advisory's own description of the vulnerable function, none of which is in this repository.",
+  "schemaVersion": 1,
+  "sourceCommit": "80df25b09f6578276d18c8a82f15c47dd8959740"
+}

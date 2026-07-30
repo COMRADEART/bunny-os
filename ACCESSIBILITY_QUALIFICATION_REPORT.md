@@ -1,7 +1,7 @@
 # Accessibility qualification report
 
 Date: 2026-07-29  
-Source commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
 Result: **NOT QUALIFIED** — 0 of 14 scenarios resolved, 0 failing, 14 not run.
 
 Fourteen essential workflows, from installer keyboard navigation and screen reader through the encryption prompt, first run, login, the Bunny surfaces, update, rollback, recovery, diagnostics export, and the high-contrast, text-scaling and reduced-motion settings.
@@ -51,6 +51,13 @@ Each of these is blocking. `NOT_RUN` is not a soft state:
 ## Standing note
 
 Static accessibility tests are explicitly not sufficient. `release/matrix.py` refuses a source-inspection pass in this matrix. This is the gap where being wrong harms a user rather than merely leaving a box unticked: an inaccessible encryption prompt or recovery tool locks someone out of their own machine.
+
+## Related
+
+- `ACCESSIBILITY_EVIDENCE_PLAN.md` — the seventeen-flow runtime evidence model, which supersedes this fourteen-scenario matrix for runtime results
+- `operations/data/accessibility-evidence.json` — the runtime record, 17 of 17 `NOT_RUN`
+- `reviews/accessibility/REQUEST.md` — the review this matrix cannot substitute for
+- `release/accessibility.py` — refuses a `PASS` with no recorded steps
 
 ## How to regenerate
 
