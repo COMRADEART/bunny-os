@@ -22,12 +22,49 @@ gate.
 
 ## Result
 
-*This section is rewritten from the evidence after each run. The run history
-below is retained rather than overwritten, because the sequence is the finding.*
+**The local repeatability gate passes.** Commit `a30786f`, run 5.
 
 ```text
-run 4 (commit a30786f)     in progress at the time of writing
+outcome        REPRODUCIBLE          (exit 0)
+
+MATCH   17     bootConfiguration, desktopEntries, extendedAttributes,
+               fileDigests, filesystemTree, initramfs, kernel,
+               normalisedArchive, ociLayers, ownership, packageInventory,
+               permissions, rawArchive, sbom, schemas, selinuxLabels,
+               systemdUnits
+DIFFER   0
+NOT_COLLECTED 0
+
+shipped archive, both builds
+    7f032d8ead2009bb88fcbb22a6a96589f4a1b7bc6dbff90d8930d9c0caa5f41a
+
+rpmdb.sqlite                0 of 12,959 pages differ, LOGICALLY_IDENTICAL
+transaction_history.sqlite  LOGICALLY_IDENTICAL
+entry mtimes                0 differing
+excluded runtime-state paths 0 differing
+intended SELinux contexts   165,006 entries, 164,379 labelled, identical
 ```
+
+Both builds produced the same 1.85 GB archive, byte for byte.
+
+The comparison still records two things alongside the pass, and both are
+deliberate:
+
+```text
+every dimension matched, but the two builders are not independent, so this is
+same-host repeatability and does not satisfy the production gate
+
+SELinux evidence is incomplete beyond this stage: appliedSelinuxContexts is
+owned by installed-system qualification and is not satisfied by an
+archive-only build
+```
+
+A `REPRODUCIBLE` outcome here is permission to dispatch a hosted build. It is
+not reproducibility, and the record says so in its own output rather than
+leaving it to a reader.
+
+*The run history below is retained rather than overwritten, because the sequence
+is the finding.*
 
 ## Run history
 

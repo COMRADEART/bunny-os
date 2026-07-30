@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "archive": "bunny-os.oci.tar",
+  "sourceDateEpoch": 1785442979,
+  "preNormalisationDigest": "2ed7e96f4925fc2116f22261b1673538ee35d84b8101be2233fa67d0c106b64f",
+  "preNormalisationNote": "What podman save emitted. It stamps tar entry mtimes with the wall-clock time of archive creation, so this digest differs between two builds of one commit whose contents are identical. The file it names does not survive this script; it is recorded so the difference has a name rather than being discovered as an unexplained archive mismatch.",
+  "rawDigest": "7f032d8ead2009bb88fcbb22a6a96589f4a1b7bc6dbff90d8930d9c0caa5f41a",
+  "normalisedDigest": "7f032d8ead2009bb88fcbb22a6a96589f4a1b7bc6dbff90d8930d9c0caa5f41a",
+  "digestsNote": "rawDigest is the archive as shipped. Normalisation runs in place, so the shipped file is the normalised one and re-normalising it is a no-op — which is the claim these two equal digests make: the deliverable is already in normal form.",
+  "idempotent": true,
+  "changedByNormalisation": true,
+  "normalisedProperties": [
+    "entry order (--sort=name)",
+    "entry mtimes (--mtime=@1785442979)",
+    "entry ownership (--owner=0 --group=0 --numeric-owner)",
+    "pax atime and ctime extended headers (deleted)"
+  ],
+  "notNormalised": [
+    "blob contents",
+    "index.json",
+    "the OCI manifest and config",
+    "SQLite databases",
+    "package-manager state",
+    "machine identity",
+    "product content"
+  ],
+  "note": "Only the archive wrapper is rewritten. Nothing inside is touched, which is what makes a surviving difference a difference in the image rather than in how it was packed."
+}

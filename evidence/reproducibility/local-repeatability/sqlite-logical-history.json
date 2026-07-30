@@ -1,0 +1,319 @@
+{
+  "a": "/root/bunny-os/build/out/qualification/repeatability/databases-a2/usr__lib__sysimage__libdnf5__transaction_history.sqlite",
+  "b": "/root/bunny-os/build/out/qualification/repeatability/databases-b2/usr__lib__sysimage__libdnf5__transaction_history.sqlite",
+  "differingTables": [],
+  "inconclusiveTables": [],
+  "indexesMatch": true,
+  "logicalContentDigestA": "8caf91c1b87a949e58e051091683e3f97b25ae59d951162863d5b58ab74ab7c4",
+  "logicalContentDigestB": "8caf91c1b87a949e58e051091683e3f97b25ae59d951162863d5b58ab74ab7c4",
+  "note": "A diagnostic comparison of content. It explains a byte difference; it does not satisfy the byte-level reproducibility requirement and no gate reads it as if it did.",
+  "schemaDigestA": "b35dae93300e3a2e434bb70901b9b61cc63054ac83db2e6f731c4cb94c6c72fb",
+  "schemaDigestB": "b35dae93300e3a2e434bb70901b9b61cc63054ac83db2e6f731c4cb94c6c72fb",
+  "schemaMatch": true,
+  "schemaVersion": 1,
+  "tableNamesMatch": true,
+  "tables": {
+    "arch": {
+      "compositePrimaryKey": false,
+      "digestA": "a70b7f8f878d7da18a453e478763f318c309fb3deff5f449af9c24ab656da35c",
+      "digestB": "a70b7f8f878d7da18a453e478763f318c309fb3deff5f449af9c24ab656da35c",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 2,
+      "rowCountB": 2,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "comps_environment": {
+      "compositePrimaryKey": false,
+      "digestA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "digestB": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordering": "rowid",
+      "orderingReason": "rowid table with no declared primary key; ordered by rowid",
+      "primaryKey": [],
+      "readOrderMatches": true,
+      "rowCountA": 0,
+      "rowCountB": 0,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "comps_environment_group": {
+      "compositePrimaryKey": false,
+      "digestA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "digestB": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 0,
+      "rowCountB": 0,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "comps_group": {
+      "compositePrimaryKey": false,
+      "digestA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "digestB": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordering": "rowid",
+      "orderingReason": "rowid table with no declared primary key; ordered by rowid",
+      "primaryKey": [],
+      "readOrderMatches": true,
+      "rowCountA": 0,
+      "rowCountB": 0,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "comps_group_package": {
+      "compositePrimaryKey": false,
+      "digestA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "digestB": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 0,
+      "rowCountB": 0,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "config": {
+      "compositePrimaryKey": false,
+      "digestA": "f430f494fdc3c09f7939d032576230c8dea6eb9140d79c450959e7da8bbc167e",
+      "digestB": "f430f494fdc3c09f7939d032576230c8dea6eb9140d79c450959e7da8bbc167e",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "key"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 1,
+      "rowCountB": 1,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "item": {
+      "compositePrimaryKey": false,
+      "digestA": "4987473c0d2aed0131881411573e2dbb7241c6f5dabdb723dd1cff8e4d1a41cc",
+      "digestB": "4987473c0d2aed0131881411573e2dbb7241c6f5dabdb723dd1cff8e4d1a41cc",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 475,
+      "rowCountB": 475,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "item_replaced_by": {
+      "compositePrimaryKey": true,
+      "digestA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "digestB": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "trans_item_id",
+        "by_trans_item_id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 0,
+      "rowCountB": 0,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "pkg_name": {
+      "compositePrimaryKey": false,
+      "digestA": "7a1288b17689c9f081a1d54f76450693b7b0000b54316d47dbb5b8d2070ade90",
+      "digestB": "7a1288b17689c9f081a1d54f76450693b7b0000b54316d47dbb5b8d2070ade90",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 475,
+      "rowCountB": 475,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "repo": {
+      "compositePrimaryKey": false,
+      "digestA": "7e56dc68dfd68b3ba1a563d13f07c359ebf325d4d04cd38bfc1e5777448e4898",
+      "digestB": "7e56dc68dfd68b3ba1a563d13f07c359ebf325d4d04cd38bfc1e5777448e4898",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 2,
+      "rowCountB": 2,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "rpm": {
+      "compositePrimaryKey": false,
+      "digestA": "e302f8d0858ab5006c47e5ccfb098ade066867541756264902742b876a9410c8",
+      "digestB": "e302f8d0858ab5006c47e5ccfb098ade066867541756264902742b876a9410c8",
+      "ordering": "rowid",
+      "orderingReason": "rowid table with no declared primary key; ordered by rowid",
+      "primaryKey": [],
+      "readOrderMatches": true,
+      "rowCountA": 475,
+      "rowCountB": 475,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "sqlite_sequence": {
+      "compositePrimaryKey": false,
+      "digestA": "d3f142d076d5eba843faab7212ba8792982fa081059ac157801901a2f2c061fd",
+      "digestB": "d3f142d076d5eba843faab7212ba8792982fa081059ac157801901a2f2c061fd",
+      "ordering": "rowid",
+      "orderingReason": "rowid table with no declared primary key; ordered by rowid",
+      "primaryKey": [],
+      "readOrderMatches": true,
+      "rowCountA": 2,
+      "rowCountB": 2,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "trans": {
+      "compositePrimaryKey": false,
+      "digestA": "dcf0f32633cbff156a16e249b91b390649068e5c8b0e6acb50b69d52407d26ab",
+      "digestB": "dcf0f32633cbff156a16e249b91b390649068e5c8b0e6acb50b69d52407d26ab",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 2,
+      "rowCountB": 2,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "trans_item": {
+      "compositePrimaryKey": false,
+      "digestA": "d40727ae93bce67cadc6ca71e02bdfe03e5ae547c6b680e9631f67d6699b586f",
+      "digestB": "d40727ae93bce67cadc6ca71e02bdfe03e5ae547c6b680e9631f67d6699b586f",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 475,
+      "rowCountB": 475,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "trans_item_action": {
+      "compositePrimaryKey": false,
+      "digestA": "5ff62d793022cf60d943b6e808459aadea73e80b5b1286e28dc2e9f4f78deeea",
+      "digestB": "5ff62d793022cf60d943b6e808459aadea73e80b5b1286e28dc2e9f4f78deeea",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 7,
+      "rowCountB": 7,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "trans_item_reason": {
+      "compositePrimaryKey": false,
+      "digestA": "d04e5cc09f12259c5d74da3d64174e2268bba31cd006f5e6afd3098a22b69669",
+      "digestB": "d04e5cc09f12259c5d74da3d64174e2268bba31cd006f5e6afd3098a22b69669",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 7,
+      "rowCountB": 7,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "trans_item_state": {
+      "compositePrimaryKey": false,
+      "digestA": "fd8399e1e288adc30982925fc28263778c29d6e81ca0328490575ba4ff04fe58",
+      "digestB": "fd8399e1e288adc30982925fc28263778c29d6e81ca0328490575ba4ff04fe58",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 3,
+      "rowCountB": 3,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    },
+    "trans_state": {
+      "compositePrimaryKey": false,
+      "digestA": "fd8399e1e288adc30982925fc28263778c29d6e81ca0328490575ba4ff04fe58",
+      "digestB": "fd8399e1e288adc30982925fc28263778c29d6e81ca0328490575ba4ff04fe58",
+      "ordering": "primary-key",
+      "orderingReason": "ordered by the declared primary key",
+      "primaryKey": [
+        "id"
+      ],
+      "readOrderMatches": true,
+      "rowCountA": 3,
+      "rowCountB": 3,
+      "rowCountMatch": true,
+      "rowidOrderMatches": true,
+      "verdict": "LOGICALLY_IDENTICAL",
+      "withoutRowid": false
+    }
+  },
+  "triggersMatch": true,
+  "verdict": "LOGICALLY_IDENTICAL",
+  "viewsMatch": true
+}
