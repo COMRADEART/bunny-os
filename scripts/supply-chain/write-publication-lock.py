@@ -99,7 +99,26 @@ def main() -> int:
         "digestReference": f"{args.registry}@{args.pushed_digest}",
         "tagReference": f"{args.registry}:{args.tag}",
         "lockedDigest": args.locked_digest,
-        "digestMatchesLock": args.pushed_digest == args.locked_digest,
+        # For the base and the builder, the locked digest and the pushed digest
+        # describe the same manifest and must be equal — the push is refused
+        # otherwise.
+        #
+        # For the snapshot they describe different things. The snapshot lock's
+        # manifestDigest is the digest of the *signed snapshot manifest*, which
+        # is content inside the artifact; the pushed digest is the OCI wrapper
+        # built around it. Comparing them would be comparing a document to the
+        # envelope it was posted in, and reporting `false` would read as a
+        # corrupted push. Recorded as not applicable, with both values kept.
+        "digestMatchesLock": (
+            None if args.kind == "snapshot" else args.pushed_digest == args.locked_digest
+        ),
+        "digestComparison": (
+            "not-applicable: lockedDigest is the signed snapshot manifest's digest and digest is "
+            "the OCI wrapper's; they describe different bytes by design. The snapshot manifest is "
+            "verified from its own content by the cold-pull verification."
+            if args.kind == "snapshot"
+            else "equal: the registry returned the manifest digest that was retained and locked"
+        ),
         "sourceLayout": args.source_layout,
         "publicationAccount": publisher,
         "blobInventory": blob_inventory(f"{args.registry}@{args.pushed_digest}"),
