@@ -84,3 +84,38 @@ Three Major limitations remain open and are recorded in `KNOWN_LIMITATIONS.md`: 
 The structural properties worth noting are those that make a compromised control plane survivable. Update signature verification is not expressible as a policy or a ring setting, so a fully compromised fleet server cannot install arbitrary software. There is no generic remote shell and no operation accepts a command or argv. A failed fleet update that lost rollback is an unrepresentable report rather than an incident to discover. Signing authorities are separated into five disjoint namespaces validated at parse time, so a fleet key cannot cause an OS image to be installed.
 
 The inherited position is unchanged and independently blocking: 8 Critical and 28 High fixable vulnerability findings in the Fedora bootc-required dependency set, neither waived nor converted to PASS, plus the five stable-release blocker codes and 31 missing evidence entries. No Phase 7 pilot may begin.
+
+## 2026-07-29 vulnerability position: measured, and it is upstream
+
+The 59 findings previously attributed vaguely to "the Fedora kernel and bootc-required Podman/Skopeo/Toolbox" were measured directly rather than inferred.
+
+| Scanned | Fixable | Critical | High | Medium |
+|---|---|---|---|---|
+| `quay.io/fedora/fedora-bootc:44` base image alone | 59 | 8 | 28 | 23 |
+| Bunny OS developer profile | 95 | 19 | 43 | 33 |
+
+**Every one of the 59 comes from the base image.** That is exactly the number the earlier beta report cited, which confirms the beta profile adds none of its own. The developer profile's extra 36 come from `build/packages/developer.txt` — podman, buildah, skopeo, toolbox — whose own header already states these are "intentionally absent from future consumer images".
+
+So the consumer-facing position is 59, and all of it is inherited.
+
+### It cannot be fixed from this repository today
+
+Three routes were tested, not assumed:
+
+- **Rebase.** `podman pull quay.io/fedora/fedora-bootc:44` returns the same digest `sha256:5cd90a82…`. There is no fresher base to move to.
+- **Layer updates.** `dnf check-update podman skopeo` inside the base returns nothing. Fedora 44 ships podman 5.8.4-1, skopeo 1.22.2-2 and containers-common 0.67.0-1, and those are current.
+- **Remove the packages.** They are in the base image, not in our package lists, so removing them from `developer.txt` cannot help a consumer profile that never included them.
+
+The findings are overwhelmingly in Go modules vendored into those binaries — `golang.org/x/crypto` (9 of the base's Critical/High), podman itself, sigstore/fulcio, grpc, `golang.org/x/net`, `golang.org/x/text`. Fedora has not yet rebuilt them against patched modules.
+
+### What this changes
+
+`NEXT_PHASE.md` previously listed "consume a reviewed Fedora update" as the first action. That action is not available. The real options are:
+
+1. **Wait for Fedora** to rebuild the container stack. No engineering, unknown duration, and the position may worsen before it improves.
+2. **Change the base** to one without the container toolchain. A significant architecture change: `ADR-001` and `ADR-002` select `fedora-bootc` deliberately, and bootc needs container tooling to function.
+3. **Waive with review**, per finding, recording why each is not reachable in a Bunny OS deployment. Several plausibly are not — a CVE in podman's registry client is not reachable on a device that never runs podman — but that argument has to be made and reviewed one CVE at a time, not asserted in bulk.
+
+Option 3 is the only one the project can act on unilaterally, and `docs/STABLE_RELEASE_BLOCKERS.md` permits it only for "a narrowly scoped High issue" on "an explicitly unsupported configuration". Nineteen Critical findings are outside what that clause allows.
+
+**No waiver was created and the position remains a blocker.** The value of this measurement is that it identifies who can actually fix it, which is not us.

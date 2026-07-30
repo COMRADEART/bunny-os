@@ -85,7 +85,7 @@
       "method": "grype over the OCI archive, fixable findings only, failing at high",
       "command": "bash build/scripts/security-scan.sh developer",
       "recordedAt": "2026-07-29T21:51:00Z",
-      "detail": "95 fixable findings: 19 Critical, 43 High, 33 Medium. Concentrated in Go modules vendored inside the bootc-required container toolchain \u2014 golang.org/x/crypto, podman, fulcio, grpc, golang.org/x/net, buildkit. No waiver was created."
+      "detail": "95 fixable findings on the developer profile: 19 Critical, 43 High, 33 Medium. Measured against the base image alone, quay.io/fedora/fedora-bootc:44 carries 59 of them (8 Critical, 28 High), so the entire consumer-facing position is inherited from Fedora. Rebasing returns the same digest and dnf check-update finds no newer podman or skopeo, so it cannot be fixed from this repository today. No waiver was created."
     },
     "reproducible_build": {
       "status": "PASS",
