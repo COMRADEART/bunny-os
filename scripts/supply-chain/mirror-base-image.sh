@@ -74,9 +74,30 @@ upstream_digest="${upstream##*@}"
 upstream_name="${upstream%@*}"
 layout="${retention_root}/${upstream_digest//:/-}"
 
+# This project records its base as `name:tag@sha256:digest`, which carries both
+# the human-readable channel and the exact content. skopeo refuses that form:
+#
+#   Docker references with both a tag and digest are currently not supported
+#
+# Found by running this script, not by reading it. The tag is dropped for the
+# registry call and kept in the lock, because the recorded reference is what
+# every other document in this repository names and silently rewriting it would
+# make the evidence disagree with itself.
+upstream_pullable="${upstream_name%%:*}"
+if [[ "${upstream_name}" == *"/"*":"* ]]; then
+  # A registry host may carry a port (`host:5000/name`), so only a colon after
+  # the final slash is a tag.
+  upstream_pullable="${upstream_name%:*}"
+  [[ "${upstream_pullable}" == *"/"* ]] || upstream_pullable="${upstream_name}"
+else
+  upstream_pullable="${upstream_name}"
+fi
+upstream_pullable="${upstream_pullable}@${upstream_digest}"
+
 echo "==> verifying the source manifest before copying anything"
+echo "    pulling ${upstream_pullable}"
 raw="$(mktemp)"; trap 'rm -f "${raw}"' EXIT
-skopeo inspect --raw "docker://${upstream}" >"${raw}"
+skopeo inspect --raw "docker://${upstream_pullable}" >"${raw}"
 
 # Recompute the digest of the manifest we were served and compare it with the
 # digest we asked for. A registry that serves different bytes under a digest is
@@ -103,7 +124,7 @@ else
 fi
 
 skopeo copy "${copy_arguments[@]}" \
-  "docker://${upstream}" \
+  "docker://${upstream_pullable}" \
   "oci:${layout}:retained"
 
 echo "==> verifying every copied blob against its own digest"
