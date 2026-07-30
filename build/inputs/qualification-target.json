@@ -1,0 +1,51 @@
+{
+  "architecture": "x86_64",
+  "buildEpoch": 1785442979,
+  "builderImageDigest": "sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+  "candidateCommit": "805674c1dfcbb4f2cf1d703c6f16c9c47bccfb1d",
+  "candidateCommitShort": "805674c1dfcb",
+  "constraints": [
+    "Both hosted builds must present builderImageDigest, retainedBaseDigest and packageSnapshotDigest exactly. A version string is not a pin.",
+    "Both must run in qualification comparison mode and collect every archive-stage dimension. A missing dimension is INCONCLUSIVE, not a pass.",
+    "Neither may reach a live package repository.",
+    "Neither may have production signing access.",
+    "They must run under separate workflow run IDs on separate runners. One run used twice is one measurement reported as two.",
+    "No build-affecting source may change after this target is created. A later commit is a different target."
+  ],
+  "epochSourceCommit": "c9fbf61b721eeb6803c666333e5390416ac2fbf1",
+  "epochSourceNote": "The build epoch is the timestamp of the commit named in reproducibility-lock.json, which is this commit's ancestor rather than this commit. A lock inside a commit cannot carry that commit's own hash without changing it. Both builders read the epoch from the same file, which is what the pin requires; the asymmetry is recorded so nobody reads epochSourceCommit as the thing being built.",
+  "localRepeatability": {
+    "builders": [
+      "local-fedora-wsl-a2",
+      "local-fedora-wsl-b2"
+    ],
+    "mode": "qualification",
+    "outcome": "REPRODUCIBLE"
+  },
+  "note": "This target is a statement of what must be reproduced and by what. It is not evidence that anything was: that comes from the three-builder comparison, imported separately, and the evidence commit must not become the candidate.",
+  "packageCount": 474,
+  "packageSnapshotDigest": "b6fbf2ae637a288cc8184ccf9142e47414db5196976a9d53b2d8422df1c2949b",
+  "packageSnapshotId": "fedora-44-beta-20260730",
+  "profile": "beta",
+  "publishedInputs": {
+    "base": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+    "builder": "ghcr.io/comradeart/bunny-os-builder@sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+    "snapshot": "ghcr.io/comradeart/bunny-os-package-snapshot@sha256:4fa4fbc1f14cf0b5406475778eda708c303143d5c5ec2c5ec783ddfdb3af501b"
+  },
+  "retainedBaseDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+  "schemaVersion": 1,
+  "selinuxPolicyDigest": "88185873a73249b89bb7285dc0870e4a0fca1cedb6db671010123742e58e3405",
+  "targetKind": "reproducibility-qualification",
+  "toolchain": {
+    "faketimeLibrarySha256": "7877f29c417228f151dbcbe182741d0ca516635dae3afb03eac8f3ee6a42d745",
+    "faketimeVersion": "0.9.12-12.fc44",
+    "libdnf5Version": "5.4.2.1-1.fc44",
+    "podmanVersion": "5.8.4",
+    "rpmVersion": "6.0.2",
+    "sqliteCompileOptionsSha256": "b0820ccb9a3b128e507a367ea967872fb3b147800d405359dc85c7db9c883047",
+    "sqliteSourceId": "2026-01-09 17:27:48 b270f8339eb13b504d0b2ba154ebca966b7dde08e40c3ed7d559749818cbalt1",
+    "sqliteVersion": "3.51.2",
+    "syftVersion": "1.50.0"
+  },
+  "upstreamBaseDigest": "sha256:c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b"
+}

@@ -179,8 +179,22 @@ def main() -> int:
     target = {
         "schemaVersion": 1,
         "targetKind": "reproducibility-qualification",
-        "candidateCommit": commit,
-        "candidateCommitShort": commit[:12],
+        # The target cannot name itself. This file is committed, and writing the
+        # resulting hash into it would change that hash — so the field records
+        # the parent, and the target commit is its child.
+        #
+        # What the hosted builders are pointed at is the *child*: the commit that
+        # contains this file, so that a builder can read the target it is being
+        # measured against. `assert_is_target_commit` below is what checks the
+        # two agree, and it runs against a commit that exists.
+        "parentCommit": commit,
+        "parentCommitShort": commit[:12],
+        "targetCommit": (
+            "the child of parentCommit — the commit that contains this file. Recorded in "
+            "THREE_BUILDER_REPRODUCIBILITY_REPORT.md and asserted by "
+            "scripts/supply-chain/assert-target-commit.py, which refuses a commit whose "
+            "qualification-target.json does not name that commit's own parent."
+        ),
         "epochSourceCommit": epoch_lock.get("candidateCommit"),
         "epochSourceNote": (
             "The build epoch is the timestamp of the commit named in reproducibility-lock.json, "
