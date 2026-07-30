@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "profileId": "example-nimbus-14",
+  "vendor": "Example Hardware Works",
+  "productFamily": "Nimbus 14",
+  "programmeLevel": "validated-hardware-integrator",
+  "updateResponsibility": "official-image-with-signed-oem-extension",
+  "supportedArchitectures": ["x86_64"],
+  "hardwareMatches": [
+    { "matchId": "HM-001", "method": "dmi-sys-vendor", "value": "Example Hardware Works" },
+    { "matchId": "HM-002", "method": "dmi-product-name", "value": "Nimbus 14", "note": "Model-level identifier only; per-unit serials are never used for matching." }
+  ],
+  "packages": [
+    { "name": "example-nimbus-audio-config", "repository": "oem-signed-extension", "signatureRequired": true, "purpose": "Speaker and microphone routing quirks for the Nimbus 14 chassis." }
+  ],
+  "firmware": [
+    { "firmwareId": "FW-001", "component": "Nimbus 14 embedded controller", "distribution": "fwupd-lvfs", "signatureRequired": true, "redistributable": true, "licenceReference": "see THIRD_PARTY_NOTICES.md" }
+  ],
+  "drivers": [
+    { "driverId": "DRV-001", "kind": "in-tree", "module": "iwlwifi", "signatureRequired": true, "secureBootSigned": true, "note": "Upstream in-tree driver; no out-of-tree module is introduced." }
+  ],
+  "defaultApplications": [],
+  "localeDefaults": {
+    "locale": "en_GB.UTF-8",
+    "keyboardLayout": "gb",
+    "timezone": "Europe/London"
+  },
+  "recoveryProfile": "example-nimbus-14-recovery",
+  "supportMetadata": {
+    "supportOwner": "Example Hardware Works",
+    "supportUrl": "https://support.example.invalid/nimbus-14",
+    "documentationUrl": "https://docs.example.invalid/nimbus-14",
+    "securityContact": "security@example.invalid",
+    "maintenanceUntil": "2029-07-29",
+    "knownLimitations": [
+      "The fingerprint reader has no supported Linux driver and is reported as unsupported.",
+      "Discrete GPU switching is untested; the integrated GPU is the qualified path."
+    ],
+    "firstRunDeviceInformation": "Nimbus 14, Example Hardware Works. Support and warranty are provided by Example Hardware Works, not by the Bunny OS project."
+  },
+  "branding": {
+    "vendorName": "Example Hardware Works",
+    "logoAsset": "overlays/example-nimbus/logo.svg",
+    "accentColour": "#3B6EA5",
+    "claimsOfficialBunnyOsDevice": false,
+    "supportLinks": [
+      { "label": "Nimbus 14 support", "url": "https://support.example.invalid/nimbus-14" }
+    ]
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "keyId": "oem-example-hardware-works",
+    "value": "UExBQ0VIT0xERVItTk9ULUEtUkVBTC1TSUdOQVRVUkUtVEhJUy1GSVhUVVJFLUlTLVVOU0lHTkVELUFORC1GT1ItVEVTVFMtT05MWQ=="
+  }
+}

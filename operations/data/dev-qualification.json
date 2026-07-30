@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "track": "development",
+  "recordedOn": "2026-07-29",
+  "builder": "FedoraLinux-44 WSL2, nested KVM, 22 cores, podman 5.8.4, image-builder 76.0.0 (osbuild 185), QEMU 10.2.2, syft 1.50.0, grype 0.116.1",
+  "worktree": "/root/bunny-os (ext4, clean checkout; never /mnt/c, where line-ending normalisation reports ~910 spurious modified files)",
+  "statement": "Every row below was produced by running the named command and recording what it returned. Rows that have not been run are absent rather than assumed, so the gate reports them as missing. No row claims physical hardware or a production key, because neither exists.",
+  "evidence": {
+    "source_integrity": {
+      "status": "PASS",
+      "environment": "host",
+      "keyClass": "none",
+      "method": "Clean git checkout verified on the ext4 worktree before building",
+      "command": "git -C /root/bunny-os status --porcelain=v1 --untracked-files=all",
+      "recordedAt": "2026-07-29T20:40:00Z",
+      "detail": "Zero dirty entries at the build commit."
+    },
+    "unit_tests": {
+      "status": "PASS",
+      "environment": "host",
+      "keyClass": "none",
+      "method": "Full repository test suite on two platforms and two interpreters",
+      "command": "python3 scripts/task.py test",
+      "recordedAt": "2026-07-29T22:30:00Z",
+      "detail": "671 tests in the main suite plus 60 installer and 105 operations tests, passing on Windows 11 with Python 3.14.6 and on Fedora 44 with Python 3.14.3."
+    },
+    "documentation": {
+      "status": "PASS",
+      "environment": "host",
+      "keyClass": "none",
+      "method": "Document, demonstration, and schema presence audit",
+      "command": "python3 scripts/task.py phase7-audit",
+      "recordedAt": "2026-07-29T22:30:00Z",
+      "detail": "47 documents, 18 demonstrations, and 11 schemas present. Release-specific notes are absent and remain a production requirement."
+    },
+    "integration_tests": {
+      "status": "PASS",
+      "environment": "virtual",
+      "keyClass": "none",
+      "method": "QEMU/KVM boot of the freshly built image with serial-marker capture",
+      "command": "bash build/scripts/vm-smoke.sh developer",
+      "recordedAt": "2026-07-29T22:55:00Z",
+      "detail": "Reached a boot target and completed the Bunny OS boot health check, which itself requires a responding privileged broker socket. An earlier run of this same command caught a real regression in the broker's socket-activation handling."
+    },
+    "image_inspection": {
+      "status": "PASS",
+      "environment": "virtual",
+      "keyClass": "none",
+      "method": "bootc-aware offline inspection with libguestfs",
+      "command": "bash build/scripts/inspect-image.sh developer",
+      "recordedAt": "2026-07-29T21:49:00Z",
+      "detail": "Exactly one root filesystem, one bootc state root, and one deployment, as required for a freshly built image."
+    },
+    "sbom": {
+      "status": "PASS",
+      "environment": "host",
+      "keyClass": "none",
+      "method": "syft over the OCI archive, emitting CycloneDX and SPDX with checksums",
+      "command": "bash build/scripts/sbom.sh developer",
+      "recordedAt": "2026-07-29T21:49:00Z",
+      "detail": "30 MB CycloneDX and 60 MB SPDX produced with a SHA256SUMS file. Generated from a development build, not a signed release artifact."
+    },
+    "licensing": {
+      "status": "PASS",
+      "environment": "host",
+      "keyClass": "none",
+      "method": "Release-mode licence policy scan over the generated SPDX",
+      "command": "python3 build/scripts/license-scan.py build/out/developer/sbom/bunny-os.spdx.json",
+      "recordedAt": "2026-07-29T21:49:00Z",
+      "detail": "6252 packages, 0 unresolved licences, no prohibited markers. Does not cover the absent root LICENSE file, which is a separate and blocking gap."
+    },
+    "network": {
+      "status": "PASS",
+      "environment": "virtual",
+      "keyClass": "none",
+      "method": "Quiet-boot packet capture at the netdev with per-destination analysis; payloads never inspected",
+      "command": "bash build/scripts/vm-network-capture.sh developer",
+      "recordedAt": "2026-07-29T23:10:00Z",
+      "detail": "127 frames over 180 idle seconds. Four external destinations, all NTP on port 123, now disclosed in docs/PRIVACY_MODEL.md so the activity is explained rather than unexplained. No Bunny endpoint, telemetry, analytics, crash upload, or model download observed."
+    },
+    "security": {
+      "status": "FAIL",
+      "environment": "virtual",
+      "keyClass": "none",
+      "method": "grype over the OCI archive, fixable findings only, failing at high",
+      "command": "bash build/scripts/security-scan.sh developer",
+      "recordedAt": "2026-07-29T21:51:00Z",
+      "detail": "95 fixable findings on the developer profile: 19 Critical, 43 High, 33 Medium. Measured against the base image alone, quay.io/fedora/fedora-bootc:44 carries 59 of them (8 Critical, 28 High), so the entire consumer-facing position is inherited from Fedora. Rebasing returns the same digest and dnf check-update finds no newer podman or skopeo, so it cannot be fixed from this repository today. No waiver was created."
+    },
+    "reproducible_build": {
+      "status": "PASS",
+      "environment": "host",
+      "keyClass": "none",
+      "method": "Two builds of one commit on one host, archive digests compared after wrapper normalisation",
+      "command": "bash scripts/wsl-build.sh reproducibility developer",
+      "recordedAt": "2026-07-29T23:40:00Z",
+      "detail": "Digests initially differed; unpacking showed identical contents and identical index.json, with podman save stamping tar mtimes from wall-clock time. After normalise-oci-archive.sh both runs converge on 80ee9306. This is same-host determinism, NOT the two-independent-builder evidence the production gate requires."
+    }
+  },
+  "notRunReasons": {
+    "dependency_validation": "Requires a reviewed immutable package snapshot; build/repositories/fedora-44-snapshot.repo.example still points at a placeholder host.",
+    "installer": "No reviewed Anaconda adapter exists, so no destructive install can be performed. bunny-installer-backend exits 78.",
+    "encryption": "Depends on an installer run.",
+    "updates": "No signed update manifest has been published, so the manifest mode of vm-upgrade-test has no input.",
+    "rollback": "Boot parity passed on two images, but a live deployment switch needs a disk with a staged update; a freshly built image carries one deployment entry.",
+    "migration": "Requires two real releases.",
+    "multi_user": "Requires an installed system.",
+    "bunny_disabled": "Requires an installed system.",
+    "local_only": "Requires an installed system with a local model.",
+    "privacy": "The network capture covers one idle virtual boot. A privacy row needs a traffic capture and bundle inspection on an installed system, plus the human review stage docs/DIAGNOSTIC_SAFETY.md requires and that has never run.",
+    "accessibility": "Requires a human reviewer with assistive technology. Cannot be automated, and no assistive technology has ever been used against this system.",
+    "hardware": "No physical hardware exists.",
+    "signature_verification": "The signing mechanism itself is proven on the builder: an Ed25519 development keypair signs the real 2 GB OCI archive, openssl verifies it, and a truncated copy is correctly rejected. sign-stable-rc.py also refuses an in-repo private key and a missing candidate when run for real, not merely by source assertion. The row stays not-run because no twelve-artifact candidate exists to sign: that needs the live ISO, beta raw and recovery ISO, none of which have been built.",
+    "malware_scan": "make malware-scan fails closed by design; no pinned scanner configuration exists."
+  }
+}

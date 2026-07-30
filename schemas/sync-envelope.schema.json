@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/sync-envelope-1.schema.json",
+  "title": "Bunny OS encrypted sync envelope",
+  "description": "What the sync service stores and routes. The envelope carries no plaintext description of the object and no key material, so an operator holding every envelope cannot read a single object. There is deliberately no field for a title, filename, tag, preview, mime type, wrapped key, or passphrase.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["envelopeVersion", "algorithm", "collectionId", "objectId", "objectVersion", "keyReference", "nonce", "ciphertextDigest", "ciphertextBytes", "createdAt", "deviceKeyId"],
+  "properties": {
+    "envelopeVersion": { "const": 1 },
+    "algorithm": {
+      "type": "string",
+      "enum": ["XChaCha20-Poly1305", "AES-256-GCM"],
+      "description": "Reviewed AEAD constructions only. Bunny OS does not define its own primitive."
+    },
+    "collectionId": {
+      "type": "string",
+      "pattern": "^col-[a-z0-9][a-z0-9-]{1,62}$",
+      "description": "Opaque to the service. The service is not told which collection holds memories."
+    },
+    "objectId": { "type": "string", "pattern": "^obj-[0-9a-f]{32}$" },
+    "objectVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonic per object. Bound as associated data so a service cannot replay an older version as current."
+    },
+    "keyReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "keyId", "generation"],
+      "description": "A reference, never key material.",
+      "properties": {
+        "kind": { "type": "string", "enum": ["collection-key", "object-key", "backup-key"] },
+        "keyId": { "type": "string", "pattern": "^(?:ck|ok|bk)-[0-9a-f]{16}$" },
+        "generation": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "nonce": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9+/]+={0,2}$",
+      "description": "Base64. Length is checked against the algorithm: 24 bytes for XChaCha20-Poly1305, 12 for AES-256-GCM."
+    },
+    "ciphertextDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "ciphertextBytes": { "type": "integer", "minimum": 1, "maximum": 5368709120 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "deviceKeyId": { "type": "string", "pattern": "^dev-[0-9a-f]{16}$" }
+  }
+}

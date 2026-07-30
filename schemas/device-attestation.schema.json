@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/device-attestation-1.schema.json",
+  "title": "Bunny OS device attestation",
+  "description": "Optional attestation of device software state. Exact-set equality is enforced: every listed field is required and no other field is permitted. There is deliberately no field for user files, prompts, memory, application usage, browser history, or account activity. Attestation is distinct from device identity, compliance status, and user identity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verifiedBootState", "secureBootState", "osImageDigest", "updateChannel", "brokerVersion", "recoveryAvailable", "encryptionState", "policyAgentState"],
+  "properties": {
+    "verifiedBootState": { "type": "string", "enum": ["verified", "unverified", "unknown"] },
+    "secureBootState": { "type": "string", "enum": ["enabled", "enabled-with-limitations", "disabled", "unknown"] },
+    "osImageDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "updateChannel": { "type": "string", "enum": ["developer", "beta", "stable"] },
+    "brokerVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "recoveryAvailable": { "type": "boolean" },
+    "encryptionState": { "type": "string", "enum": ["encrypted", "not-encrypted", "unknown"] },
+    "policyAgentState": { "type": "string", "enum": ["healthy", "degraded", "stopped", "not-installed"] }
+  }
+}

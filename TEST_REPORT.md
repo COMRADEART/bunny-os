@@ -107,3 +107,76 @@ sync system.
 
 The real image results close several implementation defects but do not change
 the stable or Phase 7 `NO-GO` decision.
+
+## 2026-07-29 Phase 7 test results
+
+454 Phase 7 tests added, all passing on Windows 11 with Python 3.14.6.
+
+| Suite | Tests | Result |
+|---|---|---|
+| `tests/oem` — profiles, overlays, qualification | 41 | PASS |
+| `tests/factory` — finalisation and handoff refusal | 21 | PASS |
+| `tests/identity` — device identity and attestation | 25 | PASS |
+| `tests/enrolment` — tokens, messages, disclosure, states | 30 | PASS |
+| `tests/policy` — typed domains and conflict precedence | 39 | PASS |
+| `tests/fleet` — rings, remote boundary, roles, catalogue, audit | 81 | PASS |
+| `tests/multitenancy` — cross-organisation isolation | 23 | PASS |
+| `tests/sync` — envelope, keys, conflict, deletion, migration | 72 | PASS |
+| `tests/cryptography` — crypto boundary and pairing | 27 | PASS |
+| `tests/recovery` — sync account recovery | 19 | PASS |
+| `tests/decommission` — retirement and lost-device response | 19 | PASS |
+| `tests/airgap` — signed offline bundles | 19 | PASS |
+| `tests/kiosk` — restricted and shared devices | 21 | PASS |
+| `tests/pilot` — pilot ordering and readiness gating | 19 | PASS |
+
+Aggregate: `python scripts/task.py test` now reports 557 tests PASS (1 skipped), plus 60 installer and 74 operations tests.
+
+Gate results. `make` is unavailable on this Windows host, so each target's underlying command was executed directly and the Makefile wiring is unverified by execution:
+
+| Command executed | Result |
+|---|---|
+| all 19 `gate-phase-7-source` components, in order | every one PASS |
+| `python scripts/task.py phase7-audit` | PASS: 47 documents, 18 demonstrations, 11 schemas |
+| `python scripts/phase7.py baseline` | PASS: 14 mandatory fields |
+| `python scripts/phase7.py source-gate` | PASS |
+| `python scripts/phase7.py fleet-simulation --devices 500` | PASS: 6-step rollout arithmetic, simulation only |
+| `python scripts/phase7.py pilot-readiness` | exit 2, NO-GO: 8 of 11 entry gates unmet |
+| `python scripts/phase7.py pilot-gate --kind oem` | exit 2, BLOCKED: 4 unmet gates |
+| `python scripts/phase7.py pilot-gate --kind enterprise` | exit 2, BLOCKED |
+| `python scripts/phase7.py pilot-gate --kind sync` | exit 2, BLOCKED |
+| `make gate-phase-7` | not run; inherits `gate-stable-release`, which fails closed |
+
+A test-discovery defect was fixed: `python scripts/task.py test` discovered with `-s tests` and no `-t`, placing `tests/` on `sys.path`, so once `tests/sync` and `tests/oem` existed they shadowed the real packages and five modules failed to import. The top-level directory is now the repository root, which also brought two previously undiscovered `tests/recovery` tests into the main suite; both pass.
+
+These are source tests. They establish that the Phase 7 code refuses what it claims to refuse. They are not artifact, runtime, service, or physical-hardware evidence, and they do not change the stable `NO-GO`.
+
+## 2026-07-29 runtime evidence on the Fedora WSL builder
+
+The Fedora 44 WSL2 distro turned out to be a fully working builder — root, systemd, nested KVM, podman 5.8.4, image-builder 76.0.0, QEMU 10.2.2, syft, grype, guestfs-tools. Most of what was recorded as impossible was un-run.
+
+| Command | Result |
+|---|---|
+| `scripts/task.py test` on Fedora 44, Python 3.14.3 | 671 pass, matching Windows |
+| `shellcheck` over all 19 shell scripts | clean |
+| `systemd-analyze verify` on every unit | parses; only uninstalled `/usr/libexec` warnings |
+| `build-image.sh developer` | real 2.3 GB QCOW2 plus 2.0 GB OCI archive |
+| `inspect-image.sh developer` | PASS: one root filesystem, one bootc state root, one deployment |
+| `sbom.sh developer` | 30 MB CycloneDX, 60 MB SPDX, SHA256SUMS |
+| `license-scan.py` | 6252 packages, 0 unresolved, no prohibited markers |
+| `security-scan.sh developer` | **FAIL**: 95 fixable — 19 Critical, 43 High, 33 Medium |
+| `vm-smoke.sh developer` | PASS: boot target reached, health check finished |
+| `vm-rollback-test.sh` boot-parity | PASS: two images both boot healthy |
+| `vm-network-capture.sh developer` | 4 external destinations, all NTP |
+| two-build determinism | digests differ; contents identical, tar mtimes differ |
+
+### A regression that only a real boot could find
+
+The first freshly built image failed `vm-smoke`: `bunny-health-check.service` failed and `bunny-system-broker.service` crash-looped. Both traced to one cause introduced by the new two-socket support — systemd names an inherited descriptor after the socket unit when `FileDescriptorName=` is unset, and the new code rejected any name outside `{broker.sock, policy.sock}`. The broker raised at startup on every boot; the health check requires a responding broker socket, so it failed with it.
+
+Every unit test passed, because they all used our own names. Fixed, a regression test added using the real systemd default name, rebuilt, and re-verified: `Finished bunny-health-check.service`.
+
+This is the clearest argument in the repository for why source tests are not runtime evidence.
+
+### Suite totals
+
+671 main-suite tests (from 101 at the start of Phase 7), plus 60 installer and 105 operations tests. New this session: broker 41, settings 40, factory 58, cryptography 46.

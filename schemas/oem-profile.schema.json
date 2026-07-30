@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/oem-profile-1.schema.json",
+  "title": "Bunny OS OEM profile",
+  "description": "A signed, closed OEM image-customisation profile. additionalProperties is false at every level so that unrestricted scripts, arbitrary root commands, embedded secrets, and privacy-default overrides are structurally unrepresentable rather than merely discouraged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "profileId", "vendor", "productFamily", "supportedArchitectures", "hardwareMatches", "packages", "firmware", "drivers", "defaultApplications", "recoveryProfile", "supportMetadata", "branding", "signature"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "profileId": { "type": "string", "pattern": "^[a-z0-9]([a-z0-9-]{1,62}[a-z0-9])$" },
+    "vendor": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "productFamily": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "programmeLevel": {
+      "type": "string",
+      "enum": ["community-image-builder", "validated-hardware-integrator", "supported-oem-partner", "official-bunny-os-device"]
+    },
+    "supportedArchitectures": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["x86_64", "aarch64"] }
+    },
+    "updateResponsibility": {
+      "type": "string",
+      "enum": ["official-image", "official-image-with-signed-oem-extension", "independent-oem-variant"]
+    },
+    "hardwareMatches": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["matchId", "method", "value"],
+        "properties": {
+          "matchId": { "type": "string", "pattern": "^HM-[0-9]{3}$" },
+          "method": {
+            "type": "string",
+            "description": "Only stable model-level identifiers are permitted. Per-unit identifiers (MAC address, board serial, storage serial, CPU serial) are deliberately absent so a profile cannot become a device-tracking vector.",
+            "enum": ["dmi-sys-vendor", "dmi-product-name", "dmi-product-family", "dmi-board-name", "device-tree-compatible", "pci-id", "usb-id"]
+          },
+          "value": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "note": { "type": "string", "maxLength": 512 }
+        }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "repository", "signatureRequired"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$" },
+          "repository": {
+            "type": "string",
+            "description": "Closed set of reviewed repositories. An unknown repository is rejected at validation time; adding one requires an explicit variant separation and a trust-root review.",
+            "enum": ["fedora", "fedora-updates", "bunny-os-stable", "bunny-os-oem-signed", "oem-signed-extension"]
+          },
+          "signatureRequired": { "const": true },
+          "version": { "type": "string", "maxLength": 128 },
+          "purpose": { "type": "string", "maxLength": 512 }
+        }
+      }
+    },
+    "firmware": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["firmwareId", "component", "distribution", "signatureRequired"],
+        "properties": {
+          "firmwareId": { "type": "string", "pattern": "^FW-[0-9]{3}$" },
+          "component": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "distribution": { "type": "string", "enum": ["linux-firmware", "fwupd-lvfs", "oem-signed-extension"] },
+          "signatureRequired": { "const": true },
+          "redistributable": { "type": "boolean" },
+          "licenceReference": { "type": "string", "maxLength": 256 }
+        }
+      }
+    },
+    "drivers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["driverId", "kind", "module", "signatureRequired"],
+        "properties": {
+          "driverId": { "type": "string", "pattern": "^DRV-[0-9]{3}$" },
+          "kind": { "type": "string", "enum": ["in-tree", "reviewed-out-of-tree"] },
+          "module": { "type": "string", "pattern": "^[a-z0-9_]{1,64}$" },
+          "signatureRequired": { "const": true },
+          "secureBootSigned": { "type": "boolean" },
+          "note": { "type": "string", "maxLength": 512 }
+        }
+      }
+    },
+    "defaultApplications": {
+      "type": "array",
+      "maxItems": 32,
+      "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" }
+    },
+    "localeDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "locale": { "type": "string", "pattern": "^[a-z]{2,3}(_[A-Z]{2})?(\\.[A-Za-z0-9-]+)?$" },
+        "keyboardLayout": { "type": "string", "pattern": "^[a-z0-9]{2,16}(\\([a-z0-9-]{1,32}\\))?$" },
+        "timezone": { "type": "string", "pattern": "^[A-Za-z]+(/[A-Za-z0-9_+-]+){1,2}$" }
+      }
+    },
+    "recoveryProfile": { "type": "string", "pattern": "^[a-z0-9]([a-z0-9-]{1,62}[a-z0-9])$" },
+    "supportMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["supportOwner", "supportUrl", "securityContact", "maintenanceUntil"],
+      "properties": {
+        "supportOwner": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "supportUrl": { "type": "string", "pattern": "^https://", "maxLength": 512 },
+        "documentationUrl": { "type": "string", "pattern": "^https://", "maxLength": 512 },
+        "securityContact": { "type": "string", "minLength": 3, "maxLength": 256 },
+        "maintenanceUntil": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+        "knownLimitations": { "type": "array", "items": { "type": "string", "maxLength": 512 } },
+        "firstRunDeviceInformation": { "type": "string", "maxLength": 2048 }
+      }
+    },
+    "branding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vendorName", "claimsOfficialBunnyOsDevice"],
+      "properties": {
+        "vendorName": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "logoAsset": { "type": "string", "pattern": "^overlays/[A-Za-z0-9._/-]+\\.(svg|png)$" },
+        "wallpaperAsset": { "type": "string", "pattern": "^overlays/[A-Za-z0-9._/-]+\\.(svg|png|jpg)$" },
+        "accentColour": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "claimsOfficialBunnyOsDevice": {
+          "type": "boolean",
+          "description": "May only be true for the official-bunny-os-device programme level, and only when the release gate and a completed hardware qualification report are both recorded."
+        },
+        "supportLinks": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "url"],
+            "properties": {
+              "label": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "url": { "type": "string", "pattern": "^https://", "maxLength": 512 }
+            }
+          }
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "keyId", "value"],
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "keyId": {
+          "type": "string",
+          "pattern": "^oem-[a-z0-9-]{2,48}$",
+          "description": "OEM signing key identifiers are namespaced separately from Bunny OS release keys and from fleet-control keys. A key id outside the oem- namespace is rejected."
+        },
+        "value": { "type": "string", "pattern": "^[A-Za-z0-9+/=]{64,}$" }
+      }
+    }
+  }
+}

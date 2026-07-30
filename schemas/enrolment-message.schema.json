@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/enrolment-message-1.schema.json",
+  "title": "Bunny OS enrolment protocol message",
+  "description": "One typed enrolment message. There is no field for a bearer token, password, or enrolment secret: the secret is presented out of band and proved by challenge response, and the validator rejects secret-shaped keys recursively inside params. Freshness is a 60-second window and every message carries a unique nonce for replay protection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "messageType", "messageId", "organisationId", "nonce", "timestamp", "params"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "messageType": {
+      "type": "string",
+      "enum": ["enrolment.begin", "enrolment.challenge", "enrolment.complete", "enrolment.resume", "unenrolment.request"]
+    },
+    "messageId": { "type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$" },
+    "organisationId": { "type": "string", "pattern": "^org-[a-z0-9][a-z0-9-]{1,62}$" },
+    "nonce": { "type": "string", "pattern": "^[A-Za-z0-9_-]{22,64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "params": {
+      "type": "object",
+      "maxProperties": 12,
+      "not": {
+        "anyOf": [
+          { "required": ["token"] }, { "required": ["secret"] }, { "required": ["password"] },
+          { "required": ["passphrase"] }, { "required": ["bearer"] }, { "required": ["apiKey"] },
+          { "required": ["privateKey"] }, { "required": ["credential"] }, { "required": ["credentials"] },
+          { "required": ["enrolmentToken"] }, { "required": ["recoveryKey"] }
+        ]
+      }
+    }
+  }
+}

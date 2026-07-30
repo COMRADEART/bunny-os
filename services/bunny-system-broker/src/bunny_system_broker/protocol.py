@@ -115,6 +115,60 @@ METHODS: dict[str, MethodSpec] = {
 }
 
 
+def _policy(params: dict[str, Any]) -> dict[str, Any]:
+    """Validate a policy application request.
+
+    The socket carries only an identifier and a version. It never carries a
+    desired state: the broker reads the already-validated policy from the
+    root-only staged bundle, so a compromised control plane cannot push a
+    novel value through this interface, and the broker does not have to
+    re-implement the fifteen per-domain validators that live in
+    ``enterprise/policy.py``.
+    """
+    _exact(params, {"policyId", "version"})
+    policy_id = params.get("policyId")
+    if not isinstance(policy_id, str) or not _POLICY_ID.fullmatch(policy_id):
+        raise ProtocolError("invalid_params", "policyId must match POL-<4 digits>")
+    version = params.get("version")
+    if isinstance(version, bool) or not isinstance(version, int) or not 1 <= version <= 1_000_000:
+        raise ProtocolError("invalid_params", "version must be a positive integer")
+    return {"policyId": policy_id, "version": version}
+
+
+_POLICY_ID = re.compile(r"^POL-[0-9]{4}$")
+
+#: The fifteen typed policy operations. These are duplicated literally rather
+#: than imported from ``enterprise.policy`` because this package deliberately
+#: uses only the standard library; ``tests/broker`` asserts the two lists stay
+#: identical, so drift fails a test rather than passing silently.
+POLICY_OPERATIONS = (
+    "policy.application.allowlist.set",
+    "policy.application.blocklist.set",
+    "policy.bunny.local-only.set",
+    "policy.bunny.plugins.set",
+    "policy.bunny.provider.set",
+    "policy.diagnostics.export.set",
+    "policy.encryption.requirement.set",
+    "policy.firewall.baseline.set",
+    "policy.os.minimum-version.set",
+    "policy.recovery.readiness.set",
+    "policy.removable-media.set",
+    "policy.screenlock.set",
+    "policy.secureboot.requirement.set",
+    "policy.update.channel.set",
+    "policy.update.deadline.set",
+)
+
+#: The policy socket's complete method surface. It shares no entry with
+#: ``METHODS``: a policy agent cannot reboot, stage an update, or export logs,
+#: and a desktop client cannot apply policy.
+POLICY_METHODS: dict[str, MethodSpec] = {
+    **{name: MethodSpec(True, None, 30, _policy) for name in POLICY_OPERATIONS},
+    "policy.status.read": MethodSpec(False, None, 5, _none),
+    "request.cancel": MethodSpec(False, None, 5, _cancel),
+}
+
+
 @dataclass(frozen=True)
 class ValidatedRequest:
     request_id: str
@@ -138,7 +192,19 @@ def _parse_timestamp(value: Any) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
-def validate_request(payload: Any, now: datetime | None = None) -> ValidatedRequest:
+def validate_request(
+    payload: Any,
+    now: datetime | None = None,
+    *,
+    methods: dict[str, MethodSpec] | None = None,
+) -> ValidatedRequest:
+    """Validate one request against a method table.
+
+    ``methods`` defaults to the user-socket table, so every existing caller is
+    unchanged. The policy socket passes ``POLICY_METHODS``, which is how a
+    method allowed on one socket stays rejected on the other.
+    """
+    table = METHODS if methods is None else methods
     if not isinstance(payload, dict):
         raise ProtocolError("invalid_request", "request must be an object")
     expected = {"contractVersion", "id", "method", "params", "timestamp", "nonce"}
@@ -154,7 +220,7 @@ def validate_request(payload: Any, now: datetime | None = None) -> ValidatedRequ
     if not isinstance(request_id, str) or not _SAFE_ID.fullmatch(request_id):
         raise ProtocolError("invalid_request", "id is invalid")
     method = payload["method"]
-    if not isinstance(method, str) or method not in METHODS:
+    if not isinstance(method, str) or method not in table:
         raise ProtocolError("unknown_method", "method is not allowed")
     params = payload["params"]
     if not isinstance(params, dict):
@@ -166,7 +232,7 @@ def validate_request(payload: Any, now: datetime | None = None) -> ValidatedRequ
     nonce = payload["nonce"]
     if not isinstance(nonce, str) or not _SAFE_NONCE.fullmatch(nonce):
         raise ProtocolError("invalid_request", "nonce is invalid")
-    spec = METHODS[method]
+    spec = table[method]
     return ValidatedRequest(request_id, method, spec.validate_params(params), timestamp, nonce, spec)
 
 

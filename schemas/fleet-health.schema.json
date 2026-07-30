@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/fleet-health-1.schema.json",
+  "title": "Bunny OS fleet health report",
+  "description": "The complete set of operational facts an organisation administrator can see about an enrolled device. Every field is categorical or a version string. There are no free-text fields, no activity counts, and no durations, because a duration is the easiest way for an operational metric to become a behavioural one.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["osVersion", "updateState", "recoveryReadiness", "encryptionState", "secureBootState", "policyAgentHealth", "requiredServiceStatus", "storageHealthCategory", "hardwareSupportCategory", "criticalSecurityAdvisoryStatus"],
+  "properties": {
+    "osVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "updateState": {
+      "type": "string",
+      "enum": ["not-offered", "offered", "downloading", "staged", "restart-required", "healthy", "failed", "rolled-back", "deferred"]
+    },
+    "recoveryReadiness": { "type": "string", "enum": ["ready", "not-ready", "unknown"] },
+    "encryptionState": { "type": "string", "enum": ["encrypted", "not-encrypted", "unknown"] },
+    "secureBootState": { "type": "string", "enum": ["enabled", "enabled-with-limitations", "disabled", "unknown"] },
+    "policyAgentHealth": { "type": "string", "enum": ["healthy", "degraded", "stopped", "not-installed"] },
+    "requiredServiceStatus": { "type": "string", "enum": ["all-running", "degraded", "failed", "unknown"] },
+    "storageHealthCategory": {
+      "type": "string",
+      "enum": ["healthy", "wear-warning", "failing", "unknown"],
+      "description": "A category only. Storage serials, models, and SMART dumps are never reported."
+    },
+    "hardwareSupportCategory": {
+      "type": "string",
+      "enum": ["stable-recommended", "stable-supported", "best-effort", "experimental", "unsupported", "untested"]
+    },
+    "criticalSecurityAdvisoryStatus": {
+      "type": "string",
+      "enum": ["none-open", "open-patch-available", "open-no-patch", "patched", "unknown"]
+    }
+  }
+}

@@ -15,10 +15,27 @@ import time
 from typing import Any
 
 from . import BROKER_VERSION, MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES
-from .auth import AuthenticationError, PeerIdentity, authorize_polkit, peer_identity, require_local_user
+from .auth import (
+    AuthenticationError,
+    PeerIdentity,
+    authorize_polkit,
+    peer_identity,
+    require_local_user,
+    require_policy_identity,
+)
 from .backend import BackendError, execute
+from . import policy_backend
 from .limits import NonceCache, RateLimiter
-from .protocol import ProtocolError, error_response, success_response, validate_request
+from .protocol import (
+    METHODS,
+    POLICY_METHODS,
+    MethodSpec,
+    ProtocolError,
+    error_response,
+    success_response,
+    validate_request,
+)
+from typing import Callable
 
 
 LOG = logging.getLogger("bunny-system-broker")
@@ -49,12 +66,32 @@ class CancellationRegistry:
 
 
 class BrokerServer:
-    def __init__(self, listener: socket.socket) -> None:
+    """One socket, one method table, one authentication rule.
+
+    The user socket and the policy socket are two instances rather than one
+    instance with a mode flag. Each therefore has its own ``RateLimiter`` and
+    ``NonceCache``, so neither identity can exhaust the other's budget, and a
+    mistake in one table cannot widen the other.
+    """
+
+    def __init__(
+        self,
+        listener: socket.socket,
+        *,
+        methods: dict[str, MethodSpec] | None = None,
+        authenticate: Callable[[PeerIdentity], None] = require_local_user,
+        execute_operation: Callable[..., Any] = execute,
+        name: str = "broker",
+    ) -> None:
         self.listener = listener
+        self.methods = METHODS if methods is None else methods
+        self.authenticate = authenticate
+        self.execute_operation = execute_operation
+        self.name = name
         self.rate = RateLimiter()
         self.nonces = NonceCache()
         self.cancellations = CancellationRegistry()
-        self.executor = ThreadPoolExecutor(max_workers=16, thread_name_prefix="broker")
+        self.executor = ThreadPoolExecutor(max_workers=16, thread_name_prefix=name)
         self.stopping = threading.Event()
 
     def serve(self) -> None:
@@ -115,10 +152,10 @@ class BrokerServer:
         cancel: threading.Event | None = None
         try:
             peer = peer_identity(connection)
-            require_local_user(peer)
+            self.authenticate(peer)
             payload = self._read(connection)
             request_id = payload.get("id") if isinstance(payload, dict) and isinstance(payload.get("id"), str) else None
-            request = validate_request(payload)
+            request = validate_request(payload, methods=self.methods)
             request_id = request.request_id
             method = request.method
             if not self.nonces.accept(peer.uid, request.nonce):
@@ -131,7 +168,7 @@ class BrokerServer:
                 if request.spec.polkit_action and not authorize_polkit(peer, request.spec.polkit_action):
                     raise AuthenticationError("operation authorization was denied")
                 cancel = self.cancellations.register(peer.uid, request.request_id)
-                result = execute(method, request.params, peer, request.request_id, cancel)
+                result = self.execute_operation(method, request.params, peer, request.request_id, cancel)
             self._send(connection, success_response(request.request_id, result))
             outcome = "ok"
         except ProtocolError as exc:
@@ -166,7 +203,7 @@ class BrokerServer:
             LOG.info(
                 json.dumps(
                     {
-                        "event": "broker.request",
+                        "event": f"{self.name}.request",
                         "version": BROKER_VERSION,
                         "uid": peer.uid if peer else None,
                         "pid": peer.pid if peer else None,
@@ -181,15 +218,11 @@ class BrokerServer:
             )
 
 
-def _listener(path: str) -> socket.socket:
-    inherited = int(os.environ.get("LISTEN_FDS", "0"))
-    inherited_pid = int(os.environ.get("LISTEN_PID", "0"))
-    if inherited == 1 and inherited_pid == os.getpid():
-        listener = socket.fromfd(3, socket.AF_UNIX, socket.SOCK_STREAM)
-        os.close(3)
-        return listener
-    if inherited:
-        raise RuntimeError("exactly one systemd socket is required")
+USER_SOCKET_NAME = "broker.sock"
+POLICY_SOCKET_NAME = "policy.sock"
+
+
+def _bind(path: str, mode: int) -> socket.socket:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
     try:
@@ -198,31 +231,126 @@ def _listener(path: str) -> socket.socket:
         pass
     listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     listener.bind(str(target))
-    os.chmod(target, 0o666)
+    os.chmod(target, mode)
     listener.listen(32)
     return listener
+
+
+def _inherited_listeners() -> dict[str, socket.socket]:
+    """Adopt systemd-passed sockets, keyed by ``LISTEN_FDNAMES``.
+
+    Accepts one or two descriptors. With two, the names disambiguate which is
+    the user socket and which is the policy socket; guessing by descriptor
+    order would silently swap their authentication rules if the unit files
+    ever changed, so an unnamed pair is refused.
+    """
+    count = int(os.environ.get("LISTEN_FDS", "0"))
+    listen_pid = int(os.environ.get("LISTEN_PID", "0"))
+    if not count or listen_pid != os.getpid():
+        return {}
+    if count > 2:
+        raise RuntimeError("at most two systemd sockets are supported")
+    names = [name for name in os.environ.get("LISTEN_FDNAMES", "").split(":") if name]
+    if count == 1 and not names:
+        names = [USER_SOCKET_NAME]
+    if len(names) != count:
+        raise RuntimeError("LISTEN_FDNAMES must name every inherited socket")
+
+    # Only the exact name "policy.sock" selects the policy socket. Every other
+    # name is the user socket, including the unit name systemd assigns by
+    # default when FileDescriptorName= is unset — "bunny-system-broker.socket".
+    #
+    # Rejecting unfamiliar names looked safer and was not: it broke the broker
+    # under real socket activation, which unit tests using our own names could
+    # not see. Defaulting to the user socket is the fail-closed direction,
+    # because that socket applies require_local_user and would refuse the
+    # policy agent's system identity outright.
+    resolved: list[str] = [
+        POLICY_SOCKET_NAME if name == POLICY_SOCKET_NAME else USER_SOCKET_NAME for name in names
+    ]
+    if len(set(resolved)) != len(resolved):
+        raise RuntimeError(
+            "two inherited sockets resolved to the same role; set FileDescriptorName= "
+            "to broker.sock and policy.sock so they can be told apart"
+        )
+    listeners: dict[str, socket.socket] = {}
+    for offset, name in enumerate(resolved):
+        listeners[name] = socket.fromfd(3 + offset, socket.AF_UNIX, socket.SOCK_STREAM)
+    for offset in range(count):
+        os.close(3 + offset)
+    return listeners
+
+
+def _policy_service_uid(name: str) -> int:
+    import pwd
+
+    try:
+        return pwd.getpwnam(name).pw_uid
+    except KeyError as exc:
+        raise RuntimeError(
+            f"policy socket requested but the {name!r} service account does not exist"
+        ) from exc
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="bunny-system-broker")
     parser.add_argument("--socket", default="/run/bunny/broker.sock")
+    parser.add_argument(
+        "--policy-socket",
+        default=None,
+        help="enable the policy socket for the device policy agent (off unless requested)",
+    )
+    parser.add_argument("--policy-user", default="bunny-policy")
+    parser.add_argument("--policy-unit", default="bunny-policy-agent.service")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    server = BrokerServer(_listener(args.socket))
+
+    inherited = _inherited_listeners()
+    servers: list[BrokerServer] = []
+
+    user_listener = inherited.get(USER_SOCKET_NAME) or _bind(args.socket, 0o666)
+    servers.append(BrokerServer(user_listener, name="broker"))
+
+    policy_listener = inherited.get(POLICY_SOCKET_NAME)
+    if policy_listener is None and args.policy_socket:
+        # 0600 root-only: the policy socket is not for interactive users, and
+        # filesystem permissions are the first of two independent barriers.
+        policy_listener = _bind(args.policy_socket, 0o600)
+    if policy_listener is not None:
+        expected_uid = _policy_service_uid(args.policy_user)
+        servers.append(
+            BrokerServer(
+                policy_listener,
+                methods=POLICY_METHODS,
+                authenticate=lambda peer: require_policy_identity(
+                    peer, expected_uid=expected_uid, expected_unit=args.policy_unit
+                ),
+                execute_operation=policy_backend.execute,
+                name="policy",
+            )
+        )
 
     def stop(_signum: int, _frame: Any) -> None:
-        server.stopping.set()
-        try:
-            server.listener.close()
-        except OSError:
-            pass
+        for item in servers:
+            item.stopping.set()
+            try:
+                item.listener.close()
+            except OSError:
+                pass
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
+
+    threads = [threading.Thread(target=item.serve, name=item.name, daemon=True) for item in servers[1:]]
+    for thread in threads:
+        thread.start()
     try:
-        server.serve()
+        servers[0].serve()
     finally:
-        server.stop()
+        for item in servers:
+            item.stop()
+        for thread in threads:
+            thread.join(timeout=5)
     return 0
 
 

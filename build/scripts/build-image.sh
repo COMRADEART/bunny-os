@@ -60,6 +60,17 @@ sudo podman build \
 sudo podman image inspect "${tag}" | tee "${output}/oci-inspect.json" >/dev/null
 sudo podman save --format oci-archive --output "${output}/bunny-os.oci.tar" "${tag}"
 sudo chown "$(id -u):$(id -g)" "${output}/bunny-os.oci.tar"
+
+# Normalise the archive wrapper so the artifact digest is reproducible.
+#
+# Measured: two builds of one commit produced identical blobs, an identical
+# index.json and identical file contents, but different archive digests,
+# because podman save stamps tar entry mtimes with the wall-clock time of
+# archive creation rather than honouring SOURCE_DATE_EPOCH. The image was
+# already deterministic; only the wrapper was not. See
+# REPRODUCIBLE_BUILD_REPORT.md.
+bash "${repository_root}/build/scripts/normalise-oci-archive.sh" \
+  "${output}/bunny-os.oci.tar" "${source_epoch}"
 image_types=(qcow2)
 if [[ "${profile}" == "beta" ]]; then
   image_types=(qcow2 raw)

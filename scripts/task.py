@@ -109,6 +109,9 @@ def validate_json() -> None:
         *[path for path in (ROOT / "build").rglob("*.json") if "out" not in path.parts],
         *[path for path in (ROOT / "operations").rglob("*.json")],
         *[path for path in (ROOT / "tests/operations/fixtures").rglob("*.json")],
+        *[path for path in (ROOT / "oem").rglob("*.json")],
+        *[path for path in (ROOT / "enterprise").rglob("*.json")],
+        *[path for path in (ROOT / "sync").rglob("*.json")],
     })
     for path in paths:
         json.loads(path.read_text(encoding="utf-8"))
@@ -197,7 +200,10 @@ def validate() -> None:
 
 
 def tests(pattern: str | None = None) -> None:
-    argv = [sys.executable, "-m", "unittest", "discover", "-s", "tests"]
+    # The top-level directory must be the repository root, not "tests". With
+    # "tests" as the top level it lands on sys.path, and test packages such as
+    # tests/sync and tests/oem then shadow the real sync/ and oem/ packages.
+    argv = [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-t", str(ROOT)]
     if pattern:
         argv.extend(["-p", pattern])
     run(argv)
@@ -242,6 +248,10 @@ def main() -> int:
         "test-bunny-disabled", "test-local-only", "test-privacy-regressions", "test-accessibility-regressions",
         "test-hardware-matrix", "test-hardware-report", "test-diagnostics", "test-redaction",
         "test-crash-reporting", "test-network-privacy", "test-application-catalogue", "test-release-signing",
+        "phase7-audit", "test-oem", "test-factory", "test-device-identity", "test-enrolment",
+        "test-policy", "test-fleet", "test-multitenancy", "test-sync", "test-sync-crypto",
+        "test-device-revocation", "test-remote-wipe", "test-airgap", "test-kiosk",
+        "test-decommission", "test-pilot",
     ))
     args = parser.parse_args()
     if args.command == "audit":
@@ -292,6 +302,19 @@ def main() -> int:
         phase5_tests("test_catalogue.py")
     elif args.command == "test-release-signing":
         phase5_tests("test_candidate.py")
+    elif args.command == "phase7-audit":
+        run([sys.executable, "scripts/phase7.py", "audit"])
+    elif args.command == "test-device-identity":
+        component_tests("identity")
+    elif args.command == "test-sync-crypto":
+        component_tests("cryptography")
+    elif args.command == "test-device-revocation":
+        # Revocation spans two subsystems: sync key rotation and organisation
+        # decommissioning. Both must pass for revocation to be meaningful.
+        component_tests("sync")
+        component_tests("decommission")
+    elif args.command == "test-remote-wipe":
+        component_tests("fleet")
     elif args.command.startswith("test-"):
         component_tests(args.command.removeprefix("test-"))
     else:

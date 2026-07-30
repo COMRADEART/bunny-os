@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/organisation-catalogue-1.schema.json",
+  "title": "Bunny OS organisation application catalogue entry",
+  "description": "An organisation-scoped catalogue entry layered over the project catalogue. signatureVerified is const true: an unsigned package is refused at the trusted catalogue interface regardless of who added it. managedConfiguration carries settings, never credentials.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "organisationId", "packageId", "source", "packageFormat", "publisher", "version", "signatureVerified", "permissions", "deploymentState", "updatePolicy", "removalPolicy", "supportOwner"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "organisationId": { "type": "string", "pattern": "^org-[a-z0-9][a-z0-9-]{1,62}$" },
+    "packageId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$" },
+    "source": {
+      "type": "string",
+      "enum": ["bunny-os-catalogue", "flathub-verified", "organisation-repository", "oem-signed-extension"]
+    },
+    "packageFormat": {
+      "type": "string",
+      "enum": ["flatpak", "rpm", "oci-container"],
+      "description": "A native rpm entry has no enforceable permission boundary and is labelled as having broad system access."
+    },
+    "publisher": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "version": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9.:+~_-]{0,63}$" },
+    "signatureVerified": { "const": true },
+    "permissions": {
+      "type": "array",
+      "description": "Bounded by what the sandbox can express. A flatpak entry may only declare permissions from the enforceable set; a native package may declare none.",
+      "items": {
+        "type": "string",
+        "enum": ["network", "home-read", "home-read-write", "documents-portal", "camera", "microphone", "audio-playback", "printing", "removable-media", "gpu-acceleration", "notifications"]
+      }
+    },
+    "deploymentState": { "type": "string", "enum": ["required", "optional-approved", "blocked", "deprecated"] },
+    "updatePolicy": { "type": "string", "enum": ["automatic", "ring-managed", "manual", "pinned"] },
+    "removalPolicy": { "type": "string", "enum": ["user-removable", "administrator-only", "removed-on-unenrolment"] },
+    "supportOwner": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "updateRing": {
+      "type": ["string", "null"],
+      "enum": ["internal-test", "early-validation", "general-deployment", "deferred", "emergency", null]
+    },
+    "managedConfiguration": {
+      "type": "object",
+      "not": {
+        "anyOf": [
+          { "required": ["password"] }, { "required": ["passphrase"] }, { "required": ["token"] },
+          { "required": ["apiKey"] }, { "required": ["secret"] }, { "required": ["privateKey"] },
+          { "required": ["credential"] }, { "required": ["credentials"] }
+        ]
+      }
+    }
+  }
+}

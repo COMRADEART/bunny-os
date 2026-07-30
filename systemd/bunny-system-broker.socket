@@ -3,6 +3,9 @@ Description=Bunny OS local privileged broker socket
 Documentation=file:///usr/share/doc/bunny-os/PRIVILEGED_BROKER.md
 
 [Socket]
+# Named explicitly. Without this, systemd names the descriptor after the unit,
+# and the broker has to infer which socket it received.
+FileDescriptorName=broker.sock
 ListenStream=/run/bunny/broker.sock
 SocketMode=0666
 RemoveOnStop=yes

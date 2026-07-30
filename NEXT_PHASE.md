@@ -90,3 +90,43 @@ encryption, update/rollback/recovery, reproducibility, accessibility, and
 physical-hardware matrices.
 
 Until then, the next milestone is Phase 1–5 validation closure, not a stable release or a Phase 7 lifecycle.
+
+## After Phase 7 source
+
+Phase 7 source is complete: OEM profiles, factory finalisation, device identity, enrolment, a typed policy agent, fleet rings, a remote administration boundary, multi-tenant scoping, encrypted sync, air-gapped management, kiosk and shared-device profiles, decommissioning, and pilot gating — 454 tests, all passing, with every pilot gate deliberately blocked.
+
+**The next milestone is still not Phase 8.** Phase 7 cannot unblock itself: every one of its pilot gates depends on a published, signed stable release that does not exist. Working on more Phase 7 features would add surface to a system that cannot ship.
+
+Ordered work, unchanged in priority from the previous section and extended:
+
+1. Consume a reviewed Fedora 44 update or supported rebase whose bootc-required dependency set passes the pinned Grype gate; rebuild from a digest-pinned base. 8 Critical and 28 High findings currently block everything downstream.
+2. Produce live and independent recovery media, then run the install, encryption, update, rollback, and recovery matrices.
+3. Produce reproducibility evidence from two independent builders.
+4. Close the five stable-release blocker codes and the 31 missing evidence and approval entries.
+5. Write the missing records: `PHASE_4_REPORT.md`, `STABLE_PUBLICATION_REPORT.md`, the three `POST_RELEASE_*_REVIEW.md` documents, `STABLE_SUPPORT_MATRIX.md`, and `SECURITY_POLICY.md`.
+6. Add a root `LICENSE` file and a reviewed trademark policy. Both block any OEM or enterprise distribution independently of everything above.
+
+Only after a stable release exists do the Phase 7 follow-ups become meaningful:
+
+7. Implement the policy agent's privileged transport and the settings organisation scope, so resolved policy can actually change a running desktop.
+8. Implement the factory provisioning executor, so finalisation inspects a device rather than trusting a record.
+9. Commission an independent cryptographic review of the sync design and select a reviewed backend.
+10. Qualify at least one hardware model end to end, including validated recovery.
+11. Decide which Phase 7 capabilities the project will actually operate, and confirm support capacity for exactly those. Operating none of them is a legitimate answer.
+
+Only then does a controlled internal pilot become proposable, and it would still require separate approval.
+
+## Revised ordering after the 2026-07-29 evidence run
+
+Items 7 and 8 of the previous list are done: the policy agent transport, the settings organisation scope, and the factory inspection executor are implemented, and a working sync backend exists. Item 9, the independent cryptographic review, is unchanged because it needs a third party rather than code.
+
+The critical path is now shorter and better understood:
+
+1. **Decide what to do about a vulnerability position you cannot fix.** Measured since: all 59 consumer-facing findings (8 Critical, 28 High) come from `quay.io/fedora/fedora-bootc:44` itself. Rebasing returns the same digest, `dnf check-update` finds no newer podman or skopeo, and the packages are in the base rather than our lists — so none of the three obvious fixes is available. The real choice is between waiting for Fedora to rebuild the container stack, changing the base image (an ADR-001/ADR-002 decision), or arguing reachability per CVE and waiving with review, which `docs/STABLE_RELEASE_BLOCKERS.md` permits only for narrowly scoped High findings and never for 19 Criticals. See `SECURITY_REVIEW.md`.
+2. ~~Fix archive determinism.~~ **Done.** `normalise-oci-archive.sh` pins entry order, mtimes, ownership and pax timestamps; the two previously divergent builds now converge on one digest, and skopeo, syft and grype all still read the result. Same-host determinism only — two independent builders remain a production requirement.
+3. **Choose a licence.** `docs/LICENSING.md` sets out the options; the recommendation is a split, GPL-3.0-or-later for the OS layer and Apache-2.0 for the Phase 7 client packages. This blocks OEM and enterprise distribution independently of every technical gate and is the one item nobody else can decide.
+4. **Get a second builder** so reproducibility can be evidenced properly, and a second release signer so signing is not a single point of failure.
+5. **Acquire one physical machine.** Every hardware row, the Secure Boot and TPM rows, and the two boot-time accessibility workflows are blocked on there being no device.
+6. **Commission independent security, cryptographic and accessibility reviews.** A self-review is a self-review, and the accessibility gap is the one that risks harm rather than merely missing evidence.
+
+Items 1 and 2 are engineering. Item 3 is a decision. Items 4, 5 and 6 need money or hardware. That is the honest shape of what remains.

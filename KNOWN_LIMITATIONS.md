@@ -67,3 +67,22 @@ Phase 3 is source-implemented in part but not definition-of-done complete and no
 - The current beta vulnerability gate fails on fixable Critical/High findings
   in Fedora's kernel and bootc-required Podman/Skopeo/Toolbox dependency set.
   No release waiver exists.
+
+## Phase 7 limitations
+
+Phase 7 delivered OEM, enterprise-management, and encrypted-sync **source, schemas, validators, tests, and documentation**. Four capabilities deferred at the time have since been implemented and are struck through below. The rest remain open and are why every pilot gate still fails.
+
+- **No fleet server, enrolment service, or enterprise console exists.** They are separate trust domains outside this repository. Nothing has been deployed, load-tested, failed over, or penetration-tested.
+- ~~The policy agent has no privileged transport.~~ **Closed.** A second socket at `/run/bunny/policy.sock`, mode 0600, with `require_policy_identity` as a sibling of the untouched `require_local_user`, its own method table, and its own rate limiter. What remains unproven is delivery: no policy has reached a running device because no control plane exists to send one.
+- ~~The settings layer has no organisation scope.~~ **Closed.** A root-owned overlay at `/etc/bunny-os/managed-settings.json`, an allowlist of manageable settings, `SettingLockedError` on a locked write, and `reset()` returning the organisation value rather than the default.
+- ~~Factory finalisation evaluates a supplied record, not a device.~~ **Largely closed.** `bunny-oem inspect --root` settles 17 of 22 checks by inspecting a filesystem tree. Five need firmware state, booted media, or a burn-in campaign and report `UNKNOWN`, so an offline probe alone still never seals a device; `merge_attestation` supplies those from a signed live record and refuses to override an inspected result. `provision` and `seal` still exit 78: nothing writes to a real device.
+- **No independent cryptographic review has been commissioned.** A working backend now exists (`sync/backends/reference.py`, AES-256-GCM with bound associated data, HKDF-SHA256, RFC 3394 key wrap) and is covered by round-trip and tamper tests, but a design reviewed only by its author is not a reviewed design. XChaCha20-Poly1305 is refused rather than substituted because the available library cannot provide it. When the backend is absent, every operation still raises rather than degrading.
+- **No hardware has been qualified.** Zero models, zero repeat runs, zero sustained-load campaigns, no recovery media booted, no OEM image built.
+- **No OEM signing key infrastructure exists.** No key ceremony, no offline storage procedure, no rotation rehearsal, and only one potential release signer.
+- **Sync metadata is genuinely revealing.** Account identity, device count, object sizes, upload times, and version counts are visible to an operator. The design is not zero knowledge and is not described as such.
+- **Audit chains have no off-device anchoring.** An attacker with write access from entry N can rewrite the chain from N forward.
+- **No root `LICENSE` file exists.** This blocks OEM and enterprise distribution independently of every other gate and is a project decision, not an engineering one. A draft trademark policy now exists at `docs/TRADEMARK_POLICY.md` but has had no legal review.
+- **Support capacity is one maintainer**, which is smaller than the Phase 7 surface. See `SUSTAINABILITY_REPORT.md`.
+- Fleet simulation is arithmetic over synthetic counts and is never production-readiness evidence.
+
+All inherited limitations above remain unchanged, including the stable-release `NO-GO`, the five blocker codes, the 31 missing evidence entries, and the 59 fixable vulnerability findings.

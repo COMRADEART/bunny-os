@@ -36,3 +36,15 @@ only that virtual smoke row from blocked to observed. It does not constitute an
 interactive graphics result, an install result, a stable-candidate result, or
 physical hardware certification. Every named physical, Secure Boot, TPM, LUKS,
 GPU, network, audio, suspend, dock, battery, and firmware row remains untested.
+
+## 2026-07-29 Phase 7 OEM qualification update
+
+Phase 7 adds an OEM hardware qualification kit: `schemas/oem-qualification.schema.json` and `oem/qualification.py`, with thirteen required tests, six optional tests, and seven sustained-load scenarios each requiring six recorded observations including negative ones.
+
+This changes no row in the matrix above. **Zero hardware models have been submitted, qualified, or tested.** Execution status is `NOT_RUN` for every test on every model, because no model exists.
+
+The kit is distinct from the community hardware reporting in `operations/hardware.py`, which classifies submitted reports into support tiers. The OEM kit evaluates a signed per-model qualification run by the qualifying party.
+
+Three refusals are enforced rather than documented: an image cannot be approved without validated recovery, nothing is described as certified without a completed formal process and at least two independent repeat runs, and no performance figure is accepted without a declared methodology of substance.
+
+Consequently no hardware is described as certified, no OEM image has been built, and no recovery media has been booted on any device. `oemRecoveryValidation` is `false` and `make gate-oem-pilot` fails on it.
