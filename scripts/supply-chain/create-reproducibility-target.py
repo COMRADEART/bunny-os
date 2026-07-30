@@ -58,6 +58,32 @@ def git(*arguments: str) -> str:
     return result.stdout.strip()
 
 
+#: What build/Containerfile copies into the build context. Anything here reaches
+#: a layer — even files a later step deletes, because deleting a path does not
+#: remove the bytes an earlier layer already holds.
+BUILD_AFFECTING = (
+    "build",
+    "config",
+    "desktop-integration",
+    "docs",
+    "installer",
+    "ARCHITECTURE.md",
+    "README.md",
+    "schemas",
+    "scripts",
+    "selinux",
+    "services",
+    "shell",
+    "systemd",
+    "tools",
+)
+
+
+def _build_affecting_changes(since: str, until: str) -> list[str]:
+    changed = git("diff", "--name-only", f"{since}..{until}", "--", *BUILD_AFFECTING)
+    return [line for line in changed.splitlines() if line.strip()]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="create-reproducibility-target")
     parser.add_argument("--output", required=True, type=Path)
@@ -108,6 +134,31 @@ def main() -> int:
                 f"the local comparison was produced in {comparison.get('collectionMode')!r} mode. "
                 "Only qualification-mode evidence may support a target"
             )
+        # The comparison must be of *this* tree.
+        #
+        # Without this the target could be minted on the strength of a
+        # REPRODUCIBLE result measured against a different artifact, which is
+        # the most dangerous shape a stale piece of evidence can take: it is
+        # genuine, it is passing, and it is about something else.
+        #
+        # Only the paths build/Containerfile copies matter. A change to a report
+        # or a workflow does not reach the image, and requiring the whole tree to
+        # be untouched would force a rebuild for every documentation edit and
+        # teach everyone to bypass the check.
+        measured_at = str(comparison.get("sourceCommit", ""))
+        if not measured_at:
+            blockers.append("the local comparison does not record which commit it measured")
+        else:
+            changed = _build_affecting_changes(measured_at, commit)
+            if changed:
+                blockers.append(
+                    f"the local comparison measured {measured_at[:12]} and build-affecting paths "
+                    f"have changed since: {', '.join(changed[:10])}"
+                    + (f" and {len(changed) - 10} more" if len(changed) > 10 else "")
+                    + ". A passing result about a different artifact is still about a different "
+                    "artifact"
+                )
+
         if outcome != "REPRODUCIBLE":
             differing = (evaluation.get("dimensionsByState") or {}).get("DIFFER") or []
             uncollected = (evaluation.get("dimensionsByState") or {}).get("NOT_COLLECTED") or []
