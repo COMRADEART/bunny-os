@@ -119,3 +119,22 @@ The findings are overwhelmingly in Go modules vendored into those binaries — `
 Option 3 is the only one the project can act on unilaterally, and `docs/STABLE_RELEASE_BLOCKERS.md` permits it only for "a narrowly scoped High issue" on "an explicitly unsupported configuration". Nineteen Critical findings are outside what that clause allows.
 
 **No waiver was created and the position remains a blocker.** The value of this measurement is that it identifies who can actually fix it, which is not us.
+
+## 2026-07-29 signing path exercised with development keys
+
+Previously every signature-related check in this repository was a source-text assertion. The path has now been run.
+
+An Ed25519 development keypair was generated **outside the repository** at `~/.bunny-dev-keys/`, and used against the real 2 GB OCI archive:
+
+| Check | Result |
+|---|---|
+| `openssl pkeyutl -sign -rawin` over the artifact | signed |
+| `openssl pkeyutl -verify -pubin -rawin` | "Signature Verified Successfully" |
+| Same signature against a truncated copy | rejected, `EVP_DigestVerify` failure |
+| `sign-stable-rc.py` with a key inside `build/keys/` | refused: "private signing keys must not be stored in the repository" |
+| `sign-stable-rc.py` with an external key, no candidate | refused: "missing stable candidate manifest" |
+| `phase5.py candidate-gate` | BLOCKED: manifest absent |
+
+The key-hygiene control is therefore enforced in practice and not only asserted by a test that greps the source.
+
+**This is not release signing evidence.** These are development keys, there has been no key ceremony, there is still only one potential signer, and no twelve-artifact candidate exists to sign — that needs the live ISO, beta raw and recovery ISO, none of which have been built. `signature_verification` remains not-run in both tracks.

@@ -110,7 +110,7 @@
     "privacy": "The network capture covers one idle virtual boot. A privacy row needs a traffic capture and bundle inspection on an installed system, plus the human review stage docs/DIAGNOSTIC_SAFETY.md requires and that has never run.",
     "accessibility": "Requires a human reviewer with assistive technology. Cannot be automated, and no assistive technology has ever been used against this system.",
     "hardware": "No physical hardware exists.",
-    "signature_verification": "Development-key signing of a full twelve-artifact candidate has not been performed.",
+    "signature_verification": "The signing mechanism itself is proven on the builder: an Ed25519 development keypair signs the real 2 GB OCI archive, openssl verifies it, and a truncated copy is correctly rejected. sign-stable-rc.py also refuses an in-repo private key and a missing candidate when run for real, not merely by source assertion. The row stays not-run because no twelve-artifact candidate exists to sign: that needs the live ISO, beta raw and recovery ISO, none of which have been built.",
     "malware_scan": "make malware-scan fails closed by design; no pinned scanner configuration exists."
   }
 }
