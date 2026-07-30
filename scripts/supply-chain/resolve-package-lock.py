@@ -148,10 +148,20 @@ def main() -> int:
         "/usr/bin/dnf",
         "--assumeyes",
         "--setopt=install_weak_deps=False",
+        # countme is disabled at every step that touches a repository, not only
+        # in the image. A resolution that bumped Fedora's counter would be this
+        # project reporting an installation it did not make.
         "--setopt=countme=0",
+        "install",
+        # dnf5 accepts --downloadonly and --destdir only *after* the subcommand:
+        #
+        #   Unknown argument "--downloadonly" for command "dnf5" ...
+        #   (It has to be placed after the command.)
+        #
+        # dnf4 accepted them in either position, which is why the first version
+        # of this script put them where dnf4 wanted them.
         "--downloadonly",
         "--destdir=/downloads",
-        "install",
         *packages,
     ]
     print("==> downloading the resolved transaction (this is the only live-repository step)")
