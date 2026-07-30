@@ -21,8 +21,14 @@ objects or replay an older version as a newer one without detection.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import re
 from typing import Any, Mapping
+
+
+def canonical_associated_data(value: Mapping[str, Any]) -> bytes:
+    """Canonical byte form for AEAD associated data."""
+    return json.dumps(dict(value), sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 ENVELOPE_VERSION = 1
 
@@ -146,6 +152,15 @@ class Envelope:
             "objectId": self.objectId,
             "objectVersion": self.objectVersion,
         }
+
+    def associated_data_bytes(self) -> bytes:
+        """Return the canonical byte encoding of the associated data.
+
+        Sealing and opening must agree byte-for-byte, so the encoding is fixed
+        here rather than left to each caller: sorted keys, no whitespace, the
+        same canonical JSON form the audit chain and update manifests use.
+        """
+        return canonical_associated_data(self.associated_data())
 
 
 def parse_envelope(record: Mapping[str, Any]) -> Envelope:
