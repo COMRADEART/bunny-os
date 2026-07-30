@@ -398,19 +398,24 @@ jobs:
       - name: Verify provenance against the downloaded bytes
         run: |
           set -euo pipefail
+          # upload-artifact preserves the structure below the least common
+          # ancestor of its path list. That list spans build/out/ci and
+          # build/out/<profile>, so the bundle contains ci/ and <profile>/ rather
+          # than the flat directory this step used to assume. It failed closed,
+          # which is right, but on a path bug rather than on the evidence.
+          profile='${{ inputs.profile }}'
+          find downloaded -maxdepth 3 -type f | sort
           # The provenance describes paths relative to build/out/<profile>, so
           # the archive is placed where the manifest says it is.
           mkdir -p downloaded/root
           cp downloaded/archive/bunny-os.oci.tar downloaded/root/
-          cp downloaded/evidence/provenance.json downloaded/root/ 2>/dev/null || true
-          cp downloaded/evidence/SHA256SUMS downloaded/root/ 2>/dev/null || true
-          cp downloaded/evidence/oci-build.log downloaded/root/ 2>/dev/null || true
-          cp downloaded/evidence/image-builder.log downloaded/root/ 2>/dev/null || true
-          # Described by the CI provenance, so it must be present for the
-          # recomputed-digest check; an absent artifact blocks, correctly.
-          cp downloaded/evidence/oci-inspect.json downloaded/root/ 2>/dev/null || true
+          for name in provenance.json SHA256SUMS oci-build.log image-builder.log oci-inspect.json; do
+            # oci-inspect.json is described by the CI provenance, so it must be
+            # present for the recomputed-digest check; an absent artifact blocks.
+            cp "downloaded/evidence/${profile}/${name}" downloaded/root/ 2>/dev/null || true
+          done
           python scripts/release.py verify-ci-artifacts \
-            --provenance downloaded/evidence/ci-provenance.json \
+            --provenance downloaded/evidence/ci/ci-provenance.json \
             --artifact-root downloaded/root \
             --expected-commit '${{ inputs.commit }}' \
             --expected-base-digest '${{ inputs.base_image }}' \
@@ -425,7 +430,7 @@ jobs:
           sys.path.insert(0, ".")
           from release.builders import parse_builder_record
           record = parse_builder_record(
-              json.loads(pathlib.Path("downloaded/evidence/builder-record.json").read_text(encoding="utf-8"))
+              json.loads(pathlib.Path("downloaded/evidence/ci/builder-record.json").read_text(encoding="utf-8"))
           )
           assert record.builderType == "hosted-ci", record.builderType
           assert record.workflowRunId, "a hosted-ci record must carry a workflowRunId"
