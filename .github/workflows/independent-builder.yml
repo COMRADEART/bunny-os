@@ -175,8 +175,17 @@ jobs:
           sudo apt-get install --yes --no-install-recommends runc fuse-overlayfs
           sudo install -d /etc/containers
           printf '[engine]\nruntime = "runc"\n' | sudo tee /etc/containers/containers.conf
-          printf '[storage]\ndriver = "overlay"\nrunroot = "/run/containers/storage"\ngraphroot = "/var/lib/containers/storage"\n' \
-            | sudo tee /etc/containers/storage.conf
+          printf '[storage]\ndriver = "overlay"\n' | sudo tee /etc/containers/storage.conf
+          # The runner image ships an already-initialised container store whose
+          # recorded driver is empty, and podman refuses to change drivers under
+          # an existing database:
+          #   Error: database graph driver "" does not match our graph driver
+          #   "overlay": database configuration mismatch
+          # The store holds nothing this build needs — the base image is pulled
+          # by digest — so it is removed rather than migrated. Starting from an
+          # empty store is also what BUNNY_CACHES_DISABLED=1 asks for: a warm
+          # cache is a build input nobody recorded.
+          sudo rm -rf /var/lib/containers/storage /run/containers/storage
           sudo podman info --format 'runtime={{.Host.OCIRuntime.Name}} {{.Host.OCIRuntime.Version}}'
           sudo podman info --format 'storage={{.Store.GraphDriverName}}'
 
