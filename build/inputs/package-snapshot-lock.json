@@ -1,7 +1,7 @@
 {
   "architecture": "x86_64",
-  "createdAt": "2026-07-30T19:00:06Z",
-  "manifestDigest": "996a7a36a0cc37bdad47459e07af05bbc58a5d7b5a6cc73994e438b3e944488b",
+  "createdAt": "2026-07-30T21:54:34Z",
+  "manifestDigest": "b6fbf2ae637a288cc8184ccf9142e47414db5196976a9d53b2d8422df1c2949b",
   "packages": [
     {
       "architecture": "x86_64",
@@ -7115,7 +7115,7 @@
     }
   ],
   "profile": "beta",
-  "repositoryMetadataDigest": "e283ac3141e228cd41a3b09a1cfb95ae59142c02092d2cee3dc2c62f78991246",
+  "repositoryMetadataDigest": "bb6605abdb4cf57739c13f99e47a2f2e911ecaf0f5199fa1e8f971ec1556f445",
   "retainedLocation": "/var/lib/bunny-retention/package-snapshots/fedora-44-beta-20260730",
   "schemaVersion": 1,
   "signature": {
@@ -7124,7 +7124,7 @@
     "over": "snapshot.json",
     "role": "snapshot-signing",
     "trust": "development",
-    "value": "248d92cd82464f42c7063894c52dbae057224faf464a9cd81e309290af33f51205d899eab24fa203679d4dabc4ea5c45bf8a9733bf9fbd982084542a564dd40b"
+    "value": "ae54bc2f7b71ce187fbbc768f5b16c86708043aea1a376970a81e8eefb9a97085ade93ab0d23f7dfd702f1c9c0e01e833f7c891f7a29f1aac75139a3501aa40a"
   },
   "snapshotId": "fedora-44-beta-20260730",
   "upstreamRepositories": [

@@ -23,7 +23,7 @@
     "update-metadata-expiry",
     "evidence-timestamps"
   ],
-  "packageSnapshotDigest": "996a7a36a0cc37bdad47459e07af05bbc58a5d7b5a6cc73994e438b3e944488b",
+  "packageSnapshotDigest": "b6fbf2ae637a288cc8184ccf9142e47414db5196976a9d53b2d8422df1c2949b",
   "profile": "beta",
   "retainedBaseDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
   "schemaVersion": 1,

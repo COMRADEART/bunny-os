@@ -430,25 +430,26 @@
     },
     "snapshot": {
       "blobInventory": {
-        "configDigest": "sha256:c877ac09efdefddf35a17ca038c0a6fee5ba47867080975e79069ae0dcb835e5",
+        "configDigest": "sha256:3fee805262e2a3c50e06c670f03d70ea4e3d95ee822b8ea3393b12412ad225ef",
         "configSize": 939,
         "layerCount": 1,
         "layers": [
           {
-            "digest": "sha256:fe8dd65c7316a694b7385dabebfb259bd599877d15b180534d22e840d4218d83",
+            "digest": "sha256:5715c84472608303505ffb1ea2c117cd2a27fde6ace7b60c65d42a5812cf9c92",
             "mediaType": "application/vnd.oci.image.layer.v1.tar",
-            "size": 515824128
+            "size": 515827200
           }
         ],
         "mediaType": "application/vnd.oci.image.manifest.v1+json",
-        "totalBytes": 515825067
+        "totalBytes": 515828139
       },
-      "digest": "sha256:1e00a303941972b4b3daf440f213cdf2d306d966530ce1a3e0fd5fa787028cda",
-      "digestMatchesLock": false,
-      "digestReference": "ghcr.io/comradeart/bunny-os-package-snapshot@sha256:1e00a303941972b4b3daf440f213cdf2d306d966530ce1a3e0fd5fa787028cda",
+      "digest": "sha256:4fa4fbc1f14cf0b5406475778eda708c303143d5c5ec2c5ec783ddfdb3af501b",
+      "digestComparison": "not-applicable: lockedDigest is the signed snapshot manifest's digest and digest is the OCI wrapper's; they describe different bytes by design. The snapshot manifest is verified from its own content by the cold-pull verification.",
+      "digestMatchesLock": null,
+      "digestReference": "ghcr.io/comradeart/bunny-os-package-snapshot@sha256:4fa4fbc1f14cf0b5406475778eda708c303143d5c5ec2c5ec783ddfdb3af501b",
       "humanReadableTag": "fedora-44-beta-20260730",
       "kind": "snapshot",
-      "lockedDigest": "996a7a36a0cc37bdad47459e07af05bbc58a5d7b5a6cc73994e438b3e944488b",
+      "lockedDigest": "b6fbf2ae637a288cc8184ccf9142e47414db5196976a9d53b2d8422df1c2949b",
       "note": "The digest is the pin. The tag is a convenience reference; qualification builds must use the digest, because a tag is a promise about a channel and not about content.",
       "publicationAccount": "COMRADEART",
       "purpose": "the 474 signed RPMs, their repodata, the Fedora keys that verify them and the signed snapshot manifest. Without it a second builder resolves packages from a live repository and gets whatever Fedora ships that day.",
