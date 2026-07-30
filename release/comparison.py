@@ -74,6 +74,41 @@ COMPARISON_DIMENSIONS: tuple[tuple[str, str, str], ...] = (
 DIMENSION_KINDS = {name: kind for name, kind, _ in COMPARISON_DIMENSIONS}
 DIMENSION_DESCRIPTIONS = {name: text for name, _, text in COMPARISON_DIMENSIONS}
 
+#: ``selinuxLabels`` is one dimension and two questions, asked at two stages.
+#:
+#: The archive carries no ``security.selinux`` xattrs — measured: 164,962
+#: entries, nine with ``security.capability``, zero with ``security.selinux`` —
+#: because ``bootc install`` applies contexts on the target from the policy in
+#: the image. Reporting the two empty sets as a match claims a comparison that
+#: did not happen, so the dimension was ``NOT_COLLECTED`` and the comparison was
+#: incomplete for a reason no archive build could ever fix.
+#:
+#: What *is* collectable from an archive is the **intended** context of every
+#: path, computed from the policy the image ships. Two builders that ship the
+#: same policy and the same paths must produce the same intended manifest, and a
+#: difference there is a real difference.
+#:
+#: So the dimension becomes a composite over two subchecks, each owned by the
+#: stage that can actually observe it. The composite is never ``MATCH`` on the
+#: strength of a subcheck nobody ran, and satisfying the archive subcheck never
+#: reports the installed-system subcheck as satisfied.
+SELINUX_SUBCHECKS: tuple[tuple[str, str, str], ...] = (
+    (
+        "intendedSelinuxContexts",
+        "archive",
+        "the path-to-context manifest computed from the SELinux policy shipped in the image, "
+        "which two archive builders can both produce",
+    ),
+    (
+        "appliedSelinuxContexts",
+        "installed-system",
+        "the security.selinux xattr actually present on a booted installed system, which an "
+        "archive-only build cannot observe at all",
+    ),
+)
+
+SELINUX_STAGES = tuple(dict.fromkeys(stage for _, stage, _ in SELINUX_SUBCHECKS))
+
 
 class ComparisonError(ValueError):
     """Raised when a comparison document is malformed."""
@@ -233,6 +268,81 @@ def compare_dimension(dimension: str, collected: Mapping[str, Any]) -> Dimension
     )
 
 
+def evaluate_selinux_evidence(
+    document: Mapping[str, Any], *, stage: str = "archive"
+) -> dict[str, Any]:
+    """Evaluate the two SELinux subchecks and the composite they imply.
+
+    ``stage`` is the qualification stage this comparison belongs to. At the
+    ``archive`` stage only ``intendedSelinuxContexts`` is *observable*, so only
+    that subcheck can be required. ``appliedSelinuxContexts`` is not marked
+    satisfied, not marked failed, and not quietly dropped: it is reported as an
+    outstanding requirement owned by installed-system qualification.
+
+    The composite is ``MATCH`` only when every subcheck required at this stage
+    is ``MATCH``. It is never ``MATCH`` because a subcheck was skipped.
+    """
+    if stage not in SELINUX_STAGES:
+        raise ComparisonError(f"unknown SELinux qualification stage {stage!r}")
+
+    supplied = document.get("selinux")
+    supplied = supplied if isinstance(supplied, Mapping) else {}
+
+    subchecks: list[dict[str, Any]] = []
+    composite = "MATCH"
+    for name, owning_stage, description in SELINUX_SUBCHECKS:
+        record = supplied.get(name)
+        if isinstance(record, Mapping):
+            state = compare_dimension_values(record)
+        else:
+            state = ("NOT_COLLECTED", 0, ())
+        required_here = owning_stage == stage
+        subchecks.append(
+            {
+                "subcheck": name,
+                "stage": owning_stage,
+                "description": description,
+                "state": state[0],
+                "differenceCount": state[1],
+                "differences": list(state[2][:100]),
+                "requiredAtThisStage": required_here,
+                "satisfied": required_here and state[0] == "MATCH",
+            }
+        )
+        if required_here and state[0] != "MATCH":
+            composite = state[0] if state[0] == "DIFFER" else "NOT_COLLECTED"
+
+    outstanding = [
+        entry["subcheck"]
+        for entry in subchecks
+        if not entry["requiredAtThisStage"] and entry["state"] != "MATCH"
+    ]
+    return {
+        "stage": stage,
+        "compositeState": composite,
+        "subchecks": subchecks,
+        "outstandingAtLaterStages": outstanding,
+        "fullyQualified": not outstanding and composite == "MATCH",
+        "note": (
+            "The composite cannot be MATCH unless every subcheck required at this stage is MATCH. "
+            "Subchecks owned by a later stage are reported as outstanding and are never counted as "
+            "satisfied here: an archive-only build cannot observe an installed system's xattrs, and "
+            "recording that as a pass would claim a comparison that did not happen."
+        ),
+    }
+
+
+def compare_dimension_values(record: Mapping[str, Any]) -> tuple[str, int, tuple[str, ...]]:
+    """State, difference count and named differences for a ``first``/``second`` pair."""
+    if "first" not in record or "second" not in record:
+        return "NOT_COLLECTED", 0, ()
+    left, right = record["first"], record["second"]
+    if left is None or right is None:
+        return "NOT_COLLECTED", 0, ()
+    equal, differences = _compare_values(left, right)
+    return ("MATCH" if equal else "DIFFER"), len(differences), differences
+
+
 @dataclass(frozen=True)
 class ComparisonReport:
     outcome: str
@@ -243,6 +353,7 @@ class ComparisonReport:
     sourceCommit: str
     baseImageDigest: str
     builders: tuple[str, str]
+    selinux: Mapping[str, Any] | None = None
 
     @property
     def satisfiesProductionGate(self) -> bool:
@@ -264,11 +375,18 @@ class ComparisonReport:
             "dimensionCount": len(self.dimensions),
             "dimensionsByState": {name: sorted(values) for name, values in by_state.items()},
             "dimensions": [result.as_dict() for result in self.dimensions],
+            "selinuxEvidence": dict(self.selinux) if self.selinux else None,
             "satisfiesProductionGate": self.satisfiesProductionGate,
+            "satisfiesInstalledSystemSelinux": bool(
+                self.selinux and self.selinux.get("fullyQualified")
+            ),
             "note": (
                 "Only REPRODUCIBLE satisfies the production evidence gate, and only between "
                 "independent builders. NOT_COLLECTED is not a pass: a dimension nobody measured "
-                "cannot support a reproducibility claim."
+                "cannot support a reproducibility claim. Archive reproducibility and "
+                "installed-system SELinux qualification are separate: satisfiesProductionGate can "
+                "be true while satisfiesInstalledSystemSelinux is false, and the second is not "
+                "implied by the first."
             ),
         }
 
@@ -278,6 +396,7 @@ def evaluate_comparison(
     *,
     independent: bool,
     independenceReasons: tuple[str, ...] = (),
+    selinuxStage: str = "archive",
 ) -> ComparisonReport:
     """Evaluate a full seventeen-dimension comparison document."""
     if not isinstance(document, Mapping):
@@ -345,6 +464,15 @@ def evaluate_comparison(
             "same-host repeatability and does not satisfy the production gate"
         )
 
+    selinux = evaluate_selinux_evidence(document, stage=selinuxStage)
+    if selinux["outstandingAtLaterStages"]:
+        reasons.append(
+            "SELinux evidence is incomplete beyond this stage: "
+            + ", ".join(selinux["outstandingAtLaterStages"])
+            + " is owned by installed-system qualification and is not satisfied by an "
+            "archive-only build. Archive reproducibility does not establish it"
+        )
+
     builders = document.get("builders") or ["unknown", "unknown"]
     return ComparisonReport(
         outcome=outcome,
@@ -355,6 +483,7 @@ def evaluate_comparison(
         sourceCommit=str(document.get("sourceCommit", "")),
         baseImageDigest=str(document.get("baseImageDigest", "")),
         builders=(str(builders[0]), str(builders[1])),
+        selinux=selinux,
     )
 
 
@@ -363,10 +492,14 @@ __all__ = [
     "DIMENSION_DESCRIPTIONS",
     "DIMENSION_KINDS",
     "OUTCOMES",
+    "SELINUX_STAGES",
+    "SELINUX_SUBCHECKS",
     "STATES",
     "ComparisonError",
     "ComparisonReport",
     "DimensionResult",
     "compare_dimension",
+    "compare_dimension_values",
     "evaluate_comparison",
+    "evaluate_selinux_evidence",
 ]
