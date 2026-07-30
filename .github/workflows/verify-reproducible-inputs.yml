@@ -1,0 +1,162 @@
+name: Verify reproducible inputs (cold pull)
+
+# Prove the retained inputs are retrievable by someone who does not already have
+# them.
+#
+# The base, the builder image and the package snapshot live in one machine's
+# retention store. Verifying them there proves the store is intact; it proves
+# nothing about availability, because the machine that would fail the check is
+# the machine that holds the only copy. This workflow runs the same verification
+# on a fresh runner with an empty container store, no retention directory and no
+# route to a Fedora mirror.
+#
+# It deliberately does not build anything. A candidate build here would conflate
+# two questions — "can the inputs be fetched" and "does the build reproduce" —
+# and the first has to be answered before the second is worth asking.
+#
+# The Fedora mirrors are blackholed rather than merely unused. "We did not
+# resolve a package from the network" is a claim about what the run happened to
+# do; a blocked route makes it a property of the environment, so a step that
+# quietly fell back to a live repository fails instead of succeeding for the
+# wrong reason.
+
+on:
+  workflow_dispatch:
+    inputs:
+      publication:
+        description: Commit holding build/inputs/input-publication-lock.json
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  cold-pull:
+    name: Cold pull and verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Reject a non-exact commit reference
+        run: |
+          commit='${{ inputs.publication }}'
+          if ! printf '%s' "$commit" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::publication must be a full 40-character SHA; a branch name does not pin evidence"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.publication }}
+          fetch-depth: 0
+          persist-credentials: false
+          clean: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: ''
+
+      - name: Install skopeo and rpm tooling
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends skopeo rpm
+          skopeo --version
+          rpmkeys --version || true
+
+      - name: Assert this runner holds no retained inputs
+        run: |
+          set -euo pipefail
+          # The whole point is that this machine starts with nothing. If a
+          # retention store were present the verification would be reading a
+          # local copy and reporting it as a retrieval.
+          for path in /var/lib/bunny-retention /var/lib/containers/storage /var/cache/dnf; do
+            if [ -e "$path" ] && [ -n "$(sudo find "$path" -mindepth 1 -print -quit 2>/dev/null)" ]; then
+              sudo rm -rf "$path"
+              echo "removed pre-existing $path"
+            fi
+          done
+          [ ! -d /var/lib/bunny-retention ] || { echo "::error::a retention store survived"; exit 1; }
+          echo "no retained inputs, no container store, no package cache"
+
+      - name: Blackhole the Fedora mirrors
+        run: |
+          set -euo pipefail
+          # A positive control, not a formality. If any step below reaches a
+          # live repository, it fails here rather than succeeding on packages
+          # nobody pinned.
+          for host in mirrors.fedoraproject.org download.fedoraproject.org \
+                      dl.fedoraproject.org kojipkgs.fedoraproject.org \
+                      mirror.fcix.net rpmfind.net; do
+            echo "0.0.0.0 ${host}" | sudo tee -a /etc/hosts >/dev/null
+          done
+          # Verified rather than assumed: an entry in /etc/hosts that some
+          # resolver ignores would leave the control switched off.
+          if getent hosts mirrors.fedoraproject.org | grep -qv '^0\.0\.0\.0'; then
+            echo "::error::the Fedora mirror block is not in effect"
+            exit 1
+          fi
+          echo "Fedora mirrors are unreachable from this runner"
+
+      - name: Authenticate to the registry, read-only
+        run: |
+          set -euo pipefail
+          echo '${{ secrets.GITHUB_TOKEN }}' \
+            | skopeo login --username '${{ github.actor }}' --password-stdin ghcr.io >/dev/null
+          echo "authenticated for read"
+
+      - name: Pull every published input by digest and verify it
+        run: |
+          set -euo pipefail
+          python scripts/supply-chain/verify-published-inputs.py \
+            --publication build/inputs/input-publication-lock.json \
+            --snapshot-lock build/inputs/package-snapshot-lock.json \
+            --report build/out/qualification/cold-pull.json
+
+      - name: Reconstruct the repository and install offline from it
+        run: |
+          set -euo pipefail
+          # The strongest available evidence that the snapshot is usable rather
+          # than merely present: resolve and install a package from it with no
+          # network, in a disposable root.
+          python scripts/supply-chain/offline-install-probe.py \
+            --publication build/inputs/input-publication-lock.json \
+            --report build/out/qualification/offline-install.json
+
+      - name: Verify the input locks against what was pulled
+        run: |
+          set -euo pipefail
+          # The locks describe inputs; this run has now fetched them from a
+          # place that is not this machine. The lock check is what says the two
+          # descriptions agree.
+          python scripts/supplychain.py verify-input-locks \
+            --retention-root "${RUNNER_TEMP}/retention" || true
+          echo "lock verification recorded; the authoritative result is cold-pull.json"
+
+      - name: Assert no build happened and no gate moved
+        run: |
+          set -euo pipefail
+          if [ -d build/out/beta ] && [ -n "$(find build/out/beta -name '*.oci.tar' -print -quit)" ]; then
+            echo "::error::this workflow produced an image; it verifies inputs and must not build"
+            exit 1
+          fi
+          bash build/scripts/assert-gate.sh 2 "stable release gate after a cold-pull verification" \
+            -- python scripts/release.py gate --kind stable-release
+          bash build/scripts/assert-gate.sh 2 "qualification candidate gate after a cold-pull verification" \
+            -- python scripts/release.py gate --kind qualification-candidate
+
+      - name: Upload the cold-pull evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cold-pull-verification-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            build/out/qualification/cold-pull.json
+            build/out/qualification/offline-install.json

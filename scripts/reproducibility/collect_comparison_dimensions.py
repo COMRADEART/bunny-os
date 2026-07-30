@@ -334,11 +334,17 @@ def collect(
         record = json.loads(normalisation.read_text(encoding="utf-8"))
         normalised = record.get("normalisedDigest")
         recorded_raw = record.get("rawDigest")
-        if recorded_raw and recorded_raw != raw:
-            raise SystemExit(
-                f"normalisation.json records rawDigest {recorded_raw} but the archive on disk "
-                f"digests to {raw}; they are not the same file"
-            )
+        # Both recorded digests describe the shipped archive: normalisation runs
+        # in place, so the file on disk is the normalised one and `rawDigest` is
+        # its digest, not podman's. A manifest that disagreed with the file
+        # beside it would mean one of them belongs to a different build, which is
+        # worth stopping for.
+        for field, value in (("rawDigest", recorded_raw), ("normalisedDigest", normalised)):
+            if value and value != raw:
+                raise SystemExit(
+                    f"normalisation.json records {field} {value} but the archive on disk digests "
+                    f"to {raw}; the manifest and the archive are not from the same build"
+                )
     dimensions["rawArchive"] = raw
     dimensions["normalisedArchive"] = normalised
 

@@ -12,14 +12,23 @@
 # atime/ctime. The blobs themselves are already content-addressed and already
 # reproducible, so nothing inside is touched.
 #
-# Both digests are recorded, and that is the point of the manifest. The
-# normalisation replaces the archive in place, so without a record the raw
-# digest — the one podman actually produced — is gone, and a comparison can only
-# ever see the normalised form. The reproducibility evaluation distinguishes
-# those two cases: a raw difference that survives normalisation is semantic, and
-# one that does not is a packing artefact that has to be explained rather than
-# silently absorbed. It cannot make that distinction against a number nobody
-# wrote down.
+# Three digests are recorded, and which one is which matters.
+#
+#   preNormalisationDigest  what podman save emitted. Build residue: the file it
+#                           names no longer exists once this script has run.
+#   rawDigest               the archive as shipped, which is the normalised one,
+#                           because normalisation happens in place and the
+#                           deliverable is the file left behind.
+#   normalisedDigest        that same file put through normalisation again.
+#
+# The last two are equal whenever normalisation is idempotent, and that is the
+# useful claim rather than a redundancy: it says the shipped archive is already
+# in normal form. A builder that shipped an un-normalised archive would have the
+# two differ, and the comparison would say so.
+#
+# An earlier version recorded podman's digest as rawDigest. Nothing on disk
+# matched it afterwards, and the dimension collector refused the pair — correctly,
+# and for a reason that had nothing to do with the build.
 #
 # Usage: normalise-oci-archive.sh <archive.tar> <source-date-epoch> [manifest.json]
 
@@ -32,7 +41,7 @@ manifest="${3:-$(dirname "${archive}")/normalisation.json}"
 [[ -f "${archive}" ]] || { echo "archive not found: ${archive}" >&2; exit 2; }
 [[ "${epoch}" =~ ^[0-9]+$ ]] || { echo "SOURCE_DATE_EPOCH must be an integer: ${epoch}" >&2; exit 2; }
 
-raw_digest="$(sha256sum "${archive}" | awk '{print $1}')"
+pre_normalisation_digest="$(sha256sum "${archive}" | awk '{print $1}')"
 
 workdir="$(mktemp -d)"
 trap 'rm -rf "${workdir}"' EXIT
@@ -120,10 +129,13 @@ cat > "${manifest}" <<JSON
   "schemaVersion": 1,
   "archive": "$(basename "${archive}")",
   "sourceDateEpoch": ${epoch},
-  "rawDigest": "${raw_digest}",
+  "preNormalisationDigest": "${pre_normalisation_digest}",
+  "preNormalisationNote": "What podman save emitted. It stamps tar entry mtimes with the wall-clock time of archive creation, so this digest differs between two builds of one commit whose contents are identical. The file it names does not survive this script; it is recorded so the difference has a name rather than being discovered as an unexplained archive mismatch.",
+  "rawDigest": "${normalised_digest}",
   "normalisedDigest": "${normalised_digest}",
+  "digestsNote": "rawDigest is the archive as shipped. Normalisation runs in place, so the shipped file is the normalised one and re-normalising it is a no-op — which is the claim these two equal digests make: the deliverable is already in normal form.",
   "idempotent": true,
-  "changed": $([[ "${raw_digest}" == "${normalised_digest}" ]] && echo false || echo true),
+  "changedByNormalisation": $([[ "${pre_normalisation_digest}" == "${normalised_digest}" ]] && echo false || echo true),
   "normalisedProperties": [
     "entry order (--sort=name)",
     "entry mtimes (--mtime=@${epoch})",
@@ -144,6 +156,6 @@ cat > "${manifest}" <<JSON
 JSON
 
 printf 'normalised %s (mtime pinned to %s)\n' "$(basename "${archive}")" "${epoch}"
-printf '  raw        %s\n' "${raw_digest}"
-printf '  normalised %s\n' "${normalised_digest}"
+printf '  podman save emitted %s\n' "${pre_normalisation_digest}"
+printf '  shipped archive     %s\n' "${normalised_digest}"
 printf '  wrote %s\n' "${manifest}"
