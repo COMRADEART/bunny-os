@@ -209,9 +209,15 @@ def main() -> int:
         listed = step(
             "repoquery",
             common + ["--entrypoint", "/usr/bin/dnf5", image,
-                      *repo_args, "repoquery", "--available", "--queryformat", "%{name}"],
+                      # The trailing newline is load-bearing. Without it dnf5 emits
+                      # 474 names with no separator, `.split()` sees one token, and the
+                      # evidence records `packagesResolvable: 1` for a repository that
+                      # listed all of them — a counting bug that reads as a broken
+                      # snapshot.
+                      *repo_args, "repoquery", "--available",
+                      "--queryformat", "%{name}\n"],
         )
-        available = sorted({line.strip() for line in listed.stdout.split() if line.strip()})
+        available = sorted({line.strip() for line in listed.stdout.splitlines() if line.strip()})
         record["packagesResolvable"] = len(available)
 
         step(
@@ -230,7 +236,13 @@ def main() -> int:
         step(
             "rpm-install",
             common + ["--entrypoint", "/usr/bin/bash", image, "-c",
+                      # The key is imported into the *install root's* rpm database,
+                      # not the container's. Without this the install proceeds with
+                      # `Header OpenPGP … NOKEY` and rpm accepts the package without
+                      # checking its signature — which would make this step prove
+                      # installability and quietly not prove trust.
                       "mkdir -p /installroot/root && "
+                      f"rpmkeys --root /installroot/root --import /snapshot/{key_in_repo} && "
                       "rpm --root /installroot/root --nodeps --noscripts "
                       "-i /installroot/*.rpm && "
                       "rpm --root /installroot/root -qa"],
