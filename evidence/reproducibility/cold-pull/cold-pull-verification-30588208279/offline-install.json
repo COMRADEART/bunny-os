@@ -1,0 +1,48 @@
+{
+  "builderReference": "ghcr.io/comradeart/bunny-os-builder@sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+  "exitCode": 0,
+  "package": "NetworkManager-wifi",
+  "packagesResolvable": 474,
+  "repositoryRoot": "snapshot",
+  "result": "PASS",
+  "rpmCount": 474,
+  "schemaVersion": 1,
+  "signingKeys": [
+    "snapshot/keys/RPM-GPG-KEY-fedora-44-primary"
+  ],
+  "snapshotReference": "ghcr.io/comradeart/bunny-os-package-snapshot@sha256:4fa4fbc1f14cf0b5406475778eda708c303143d5c5ec2c5ec783ddfdb3af501b",
+  "steps": [
+    {
+      "exitCode": 0,
+      "outputLines": 474,
+      "passed": true,
+      "stderrTail": "Updating and loading repositories:\n bunny-snapshot                         100% | 158.7 MiB/s | 162.5 KiB |  00m00s\nRepositories loaded.",
+      "stdoutTail": "\nurw-base35-nimbus-roman-fonts\nurw-base35-nimbus-sans-fonts\nurw-base35-p052-fonts\nurw-base35-standard-symbols-ps-fonts\nurw-base35-z003-fonts\nusbutils\nvo-amrwbenc\nvte-profile\nvte291\nvulkan-loader\nvulkan-tools\nwavpack\nwebkit2gtk4.1\nwebkitgtk6.0\nwebrtc-audio-processing\nwireless-regdb\nwireplumber\nwireplumber-libs\nwpa_supplicant\nwsdd\nxcb-util\nxdg-dbus-proxy\nxdg-desktop-portal\nxdg-desktop-portal-gnome\nxdg-desktop-portal-gtk\nxdg-user-dirs\nxdg-user-dirs-gtk\nxevd-libs\nxeve-libs\nxhost\nxkbcomp\nxml-common\nxmodmap\nxorg-x11-server-Xwayland\nxorg-x11-xauth\nxorg-x11-xinit\nxprop\nxrdb\nxvidcore\nzenity\nzeromq\nzvbi",
+      "step": "repoquery"
+    },
+    {
+      "exitCode": 0,
+      "outputLines": 1,
+      "passed": true,
+      "stderrTail": "Updating and loading repositories:\n bunny-snapshot                         100% | 158.7 MiB/s | 162.5 KiB |  00m00s\nRepositories loaded.\n NetworkManager-wifi-1:1.56.1-2.fc44.x8 100% | 133.4 MiB/s | 136.6 KiB |  00m00s",
+      "stdoutTail": "Downloading Packages:",
+      "step": "download"
+    },
+    {
+      "exitCode": 0,
+      "outputLines": 1,
+      "passed": true,
+      "stderrTail": "",
+      "stdoutTail": "/installroot/NetworkManager-wifi-1.56.1-2.fc44.x86_64.rpm: digests signatures OK",
+      "step": "checksig"
+    },
+    {
+      "exitCode": 0,
+      "outputLines": 2,
+      "passed": true,
+      "stderrTail": "",
+      "stdoutTail": "gpg-pubkey-36f612dcf27f7d1a48a835e4dbfcf71c6d9f90a6-6786af3b\nNetworkManager-wifi-1.56.1-2.fc44.x86_64",
+      "step": "rpm-install"
+    }
+  ]
+}
