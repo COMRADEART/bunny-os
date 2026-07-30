@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "track": "development",
   "recordedOn": "2026-07-29",
-  "builder": "FedoraLinux-44 WSL2, nested KVM, 22 cores, podman 5.8.4, image-builder 76.0.0, QEMU 10.2.2",
+  "builder": "FedoraLinux-44 WSL2, nested KVM, 22 cores, podman 5.8.4, image-builder 76.0.0 (osbuild 185), QEMU 10.2.2, syft 1.50.0, grype 0.116.1",
   "worktree": "/root/bunny-os (ext4, clean checkout; never /mnt/c, where line-ending normalisation reports ~910 spurious modified files)",
   "statement": "Every row below was produced by running the named command and recording what it returned. Rows that have not been run are absent rather than assumed, so the gate reports them as missing. No row claims physical hardware or a production key, because neither exists.",
   "evidence": {
@@ -21,8 +21,8 @@
       "keyClass": "none",
       "method": "Full repository test suite on two platforms and two interpreters",
       "command": "python3 scripts/task.py test",
-      "recordedAt": "2026-07-29T20:45:00Z",
-      "detail": "Passing on Windows 11 with Python 3.14.6 and on Fedora 44 with Python 3.14.3, plus the separately rooted installer suite."
+      "recordedAt": "2026-07-29T22:30:00Z",
+      "detail": "671 tests in the main suite plus 60 installer and 105 operations tests, passing on Windows 11 with Python 3.14.6 and on Fedora 44 with Python 3.14.3."
     },
     "documentation": {
       "status": "PASS",
@@ -30,40 +30,79 @@
       "keyClass": "none",
       "method": "Document, demonstration, and schema presence audit",
       "command": "python3 scripts/task.py phase7-audit",
-      "recordedAt": "2026-07-29T20:45:00Z",
-      "detail": "47 documents, 18 demonstrations, and 11 schemas present. Release-specific notes are not included and remain a production requirement."
+      "recordedAt": "2026-07-29T22:30:00Z",
+      "detail": "47 documents, 18 demonstrations, and 11 schemas present. Release-specific notes are absent and remain a production requirement."
     },
     "integration_tests": {
       "status": "PASS",
       "environment": "virtual",
       "keyClass": "none",
-      "method": "QEMU/KVM boot of two independently built images with serial-marker capture",
-      "command": "bash build/scripts/vm-rollback-test.sh (BUNNY_ROLLBACK_MODE=boot-parity)",
-      "recordedAt": "2026-07-29T21:15:00Z",
-      "detail": "Both the developer and beta images reached a boot target and completed the Bunny OS boot health check under nested KVM."
+      "method": "QEMU/KVM boot of the freshly built image with serial-marker capture",
+      "command": "bash build/scripts/vm-smoke.sh developer",
+      "recordedAt": "2026-07-29T22:55:00Z",
+      "detail": "Reached a boot target and completed the Bunny OS boot health check, which itself requires a responding privileged broker socket. An earlier run of this same command caught a real regression in the broker's socket-activation handling."
+    },
+    "image_inspection": {
+      "status": "PASS",
+      "environment": "virtual",
+      "keyClass": "none",
+      "method": "bootc-aware offline inspection with libguestfs",
+      "command": "bash build/scripts/inspect-image.sh developer",
+      "recordedAt": "2026-07-29T21:49:00Z",
+      "detail": "Exactly one root filesystem, one bootc state root, and one deployment, as required for a freshly built image."
+    },
+    "sbom": {
+      "status": "PASS",
+      "environment": "host",
+      "keyClass": "none",
+      "method": "syft over the OCI archive, emitting CycloneDX and SPDX with checksums",
+      "command": "bash build/scripts/sbom.sh developer",
+      "recordedAt": "2026-07-29T21:49:00Z",
+      "detail": "30 MB CycloneDX and 60 MB SPDX produced with a SHA256SUMS file. Generated from a development build, not a signed release artifact."
+    },
+    "licensing": {
+      "status": "PASS",
+      "environment": "host",
+      "keyClass": "none",
+      "method": "Release-mode licence policy scan over the generated SPDX",
+      "command": "python3 build/scripts/license-scan.py build/out/developer/sbom/bunny-os.spdx.json",
+      "recordedAt": "2026-07-29T21:49:00Z",
+      "detail": "6252 packages, 0 unresolved licences, no prohibited markers. Does not cover the absent root LICENSE file, which is a separate and blocking gap."
+    },
+    "network": {
+      "status": "PASS",
+      "environment": "virtual",
+      "keyClass": "none",
+      "method": "Quiet-boot packet capture at the netdev with per-destination analysis; payloads never inspected",
+      "command": "bash build/scripts/vm-network-capture.sh developer",
+      "recordedAt": "2026-07-29T23:10:00Z",
+      "detail": "127 frames over 180 idle seconds. Four external destinations, all NTP on port 123, now disclosed in docs/PRIVACY_MODEL.md so the activity is explained rather than unexplained. No Bunny endpoint, telemetry, analytics, crash upload, or model download observed."
+    },
+    "security": {
+      "status": "FAIL",
+      "environment": "virtual",
+      "keyClass": "none",
+      "method": "grype over the OCI archive, fixable findings only, failing at high",
+      "command": "bash build/scripts/security-scan.sh developer",
+      "recordedAt": "2026-07-29T21:51:00Z",
+      "detail": "95 fixable findings: 19 Critical, 43 High, 33 Medium. Concentrated in Go modules vendored inside the bootc-required container toolchain — golang.org/x/crypto, podman, fulcio, grpc, golang.org/x/net, buildkit. No waiver was created."
     }
   },
   "notRunReasons": {
-    "reproducible_build": "Two-build determinism comparison has not completed on this commit.",
-    "dependency_validation": "Awaiting the SBOM and licence scan of the current build.",
-    "installer": "No reviewed Anaconda adapter exists, so no destructive install can be performed.",
+    "reproducible_build": "A two-build same-host determinism comparison is in progress. Even when it completes it is not the two-independent-builder evidence the production gate requires.",
+    "dependency_validation": "Requires a reviewed immutable package snapshot; build/repositories/fedora-44-snapshot.repo.example still points at a placeholder host.",
+    "installer": "No reviewed Anaconda adapter exists, so no destructive install can be performed. bunny-installer-backend exits 78.",
     "encryption": "Depends on an installer run.",
-    "updates": "No signed update manifest has been published, so the manifest mode has no input.",
-    "rollback": "Boot parity passed, but a live deployment switch needs a disk with a staged update; a freshly built image carries one deployment entry.",
-    "recovery": "Awaiting a recovery image build and signature.",
+    "updates": "No signed update manifest has been published, so the manifest mode of vm-upgrade-test has no input.",
+    "rollback": "Boot parity passed on two images, but a live deployment switch needs a disk with a staged update; a freshly built image carries one deployment entry.",
     "migration": "Requires two real releases.",
     "multi_user": "Requires an installed system.",
     "bunny_disabled": "Requires an installed system.",
     "local_only": "Requires an installed system with a local model.",
-    "security": "Awaiting the vulnerability scan of the current build; the previous build reported 8 Critical and 28 High fixable findings.",
-    "privacy": "Requires a traffic capture against an installed system.",
-    "network": "Requires a quiet capture against an installed system.",
-    "accessibility": "Requires a human reviewer; cannot be automated.",
+    "privacy": "The network capture covers one idle virtual boot. A privacy row needs a traffic capture and bundle inspection on an installed system, plus the human review stage docs/DIAGNOSTIC_SAFETY.md requires and that has never run.",
+    "accessibility": "Requires a human reviewer with assistive technology. Cannot be automated, and no assistive technology has ever been used against this system.",
     "hardware": "No physical hardware exists.",
-    "image_inspection": "Awaiting the current build.",
-    "signature_verification": "Awaiting development-key signing of a candidate.",
-    "sbom": "Awaiting the current build.",
-    "licensing": "Awaiting the SBOM, and blocked separately by the absent root LICENSE file.",
+    "signature_verification": "Development-key signing of a full twelve-artifact candidate has not been performed.",
     "malware_scan": "make malware-scan fails closed by design; no pinned scanner configuration exists."
   }
 }
