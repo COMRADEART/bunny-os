@@ -112,8 +112,72 @@ if [[ "${failed}" != "0" ]]; then
 fi
 echo "    all signatures verified"
 
+echo "==> copying the Fedora signing keys into the snapshot"
+# The keys travel with the packages they verify.
+#
+# The build itself reads them from the base image's filesystem, which works
+# because the base image is where the build runs. It leaves the *published*
+# snapshot unverifiable on its own: a consumer who pulled it would have to fetch
+# Fedora's keys from the network to check a single signature, reintroducing at
+# verification time the exact dependency the snapshot exists to remove.
+#
+# Found by running verify-published-inputs.py against the published artifact,
+# which refuses a snapshot shipping no key rather than falling back to a key
+# from somewhere else.
+#
+# They come out of the retained base by digest, so their provenance is the same
+# pinned image the packages were resolved against — not a download, and not
+# whatever the build host happens to trust.
+mkdir -p "${snapshot}/keys"
+base_digest="$(python3 -c '
+import json
+print(json.load(open("build/inputs/base-image-lock.json"))["retainedDigest"])
+')"
+base_tag="localhost/bunny-os-retained-base:${base_digest#sha256:}"
+key_scratch="$(mktemp -d)"
+sudo podman run --rm --network=none --entrypoint /usr/bin/cp \
+  --volume "${key_scratch}:/out:z" "${base_tag}" \
+  -a /etc/pki/rpm-gpg/. /out/
+sudo chown -R "$(id -u):$(id -g)" "${key_scratch}"
+# Only this release's keys, and only the architectures this snapshot is for. A
+# glob of every Fedora key ever published matched 300 of them once, which is the
+# opposite of pinning.
+#
+# The release and architecture are derived rather than assumed: a snapshot id of
+# `fedora-44-beta-20260730` names the release, and the package lock names the
+# architecture it was resolved for. Guessing either would ship a key that
+# verifies nothing.
+release="$(printf '%s' "${snapshot_id}" | sed -n 's/^fedora-\([0-9][0-9]*\)-.*/\1/p')"
+if [[ -z "${release}" ]]; then
+  echo "BLOCKED: cannot read a Fedora release from the snapshot id ${snapshot_id}." >&2
+  echo "The signing keys are per release; shipping the wrong one verifies nothing." >&2
+  exit 2
+fi
+architecture="$(python3 -c '
+import json, sys
+print(json.load(open(sys.argv[1])).get("architecture", "x86_64"))
+' "${lock}")"
+
+copied=0
+for key in "RPM-GPG-KEY-fedora-${release}-primary" \
+           "RPM-GPG-KEY-fedora-${release}-${architecture}"; do
+  if [[ -f "${key_scratch}/${key}" ]]; then
+    cp "${key_scratch}/${key}" "${snapshot}/keys/"
+    echo "    ${key}  $(sha256sum "${snapshot}/keys/${key}" | awk '{print $1}')"
+    copied=$((copied + 1))
+  fi
+done
+rm -rf "${key_scratch}"
+if [[ "${copied}" == "0" ]]; then
+  echo "BLOCKED: the retained base ships none of the expected Fedora signing keys." >&2
+  echo "A snapshot without them cannot be verified by anyone who did not build it." >&2
+  exit 2
+fi
+
 echo "==> generating repository metadata"
-createrepo_c --quiet --general-compress-type=gz "${snapshot}"
+# --excludes keys: the keys are shipped beside the repository, not as part of it.
+# createrepo_c would otherwise be describing files that are not packages.
+createrepo_c --quiet --general-compress-type=gz --excludes 'keys/*' "${snapshot}"
 
 # The metadata digest is over repomd.xml, which is itself a manifest of every
 # other metadata file with their checksums. Signing repomd.xml therefore covers
