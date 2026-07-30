@@ -65,6 +65,28 @@ for path in /var/cache/dnf /var/cache/libdnf5 /var/cache/PackageKit /var/cache/y
   if [[ -e "${path}" ]]; then rm -rf "${path}"; record "${path}"; note "removed ${path}"; fi
 done
 
+echo "==> 3a. removing package-manager build logs"
+# A build log is residue, and this one is dated. /var/log/dnf5.log records every
+# transaction with a wall-clock timestamp per line, so it differs between two
+# builds by construction.
+#
+# It was invisible for the same reason /var/cache/ldconfig/aux-cache was:
+# /var/log is excluded from the compared set as runtime state, which is right for
+# a dimension and irrelevant to a layer tar. Measured, it was the last remaining
+# difference — every one of the fourteen content dimensions matched and
+# ociLayers did not.
+#
+# Removing it also stops the artifact shipping a record of when and where it was
+# built, which is builder-host identity the mandatory principles exclude
+# regardless of how little it reveals.
+shopt -s nullglob
+for log in /var/log/dnf5.log* /var/log/dnf.log* /var/log/dnf.rpm.log* \
+           /var/log/dnf.librepo.log* /var/log/hawkey.log* /var/log/ldconfig* \
+           /var/log/anaconda; do
+  rm -rf "${log}"; record "${log}"; note "removed ${log}"
+done
+shopt -u nullglob
+
 echo "==> 4. removing DNF countme state"
 # countme is Fedora's per-installation usage counter. It is telemetry, it has no
 # place in an immutable artifact, and removing the file without disabling the

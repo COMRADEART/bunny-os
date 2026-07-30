@@ -168,6 +168,22 @@ class FinalisationProtections(unittest.TestCase):
             self.skipTest("finalise-image.sh not present")
         return FINALISER.read_text(encoding="utf-8")
 
+    def _database_finaliser(self):
+        """The delegated half.
+
+        Database canonicalisation used to be three lines inside
+        finalise-image.sh. It is now build/scripts/finalise-package-databases.sh
+        and the module it execs, because it has a contract the rest of
+        finalisation does not — idempotent, fail-closed on eleven conditions,
+        and able to prove it altered no content. These assertions follow it
+        rather than being deleted along with the lines they were watching.
+        """
+        module = ROOT / "scripts" / "reproducibility" / "finalise_package_databases.py"
+        wrapper = ROOT / "build" / "scripts" / "finalise-package-databases.sh"
+        if not (module.is_file() and wrapper.is_file()):
+            self.skipTest("the database finaliser is not present")
+        return wrapper.read_text(encoding="utf-8") + module.read_text(encoding="utf-8")
+
     def test_package_caches_are_removed(self):
         text = self._finaliser()
         self.assertIn("/var/cache/dnf", text)
@@ -179,14 +195,34 @@ class FinalisationProtections(unittest.TestCase):
         self.assertIn("countme=0", text, "removing the counter without disabling it regenerates it")
 
     def test_sqlite_residue_is_checkpointed(self):
-        text = self._finaliser()
+        text = self._database_finaliser()
         self.assertIn("wal_checkpoint", text)
         self.assertIn("transaction_history.sqlite", text)
 
+    def test_the_database_finaliser_is_still_invoked(self):
+        """Delegating the step must not amount to dropping it."""
+        self.assertIn("finalise-package-databases.sh", self._finaliser())
+
     def test_the_transaction_history_itself_is_not_deleted(self):
-        """Package-manager state may not be discarded merely for being inconvenient."""
-        text = self._finaliser()
+        text = self._finaliser() + self._database_finaliser()
         self.assertNotIn("rm -f /usr/lib/sysimage/libdnf5/transaction_history.sqlite\n", text)
+
+    def test_the_database_finaliser_proves_it_changed_no_content(self):
+        """The check that stops a canonicaliser laundering a real difference.
+
+        VACUUM is content-preserving by definition, and the one difference this
+        project actually found was a content difference that a plausible
+        canonicalisation would have erased. So the claim is measured either side
+        rather than cited.
+        """
+        text = self._database_finaliser()
+        self.assertIn("logical_digest", text)
+        self.assertIn("logicalDigestPreserved", text)
+
+    def test_the_database_finaliser_refuses_a_drifted_sqlite(self):
+        text = self._database_finaliser()
+        self.assertIn("expect_sqlite", text)
+        self.assertIn("sqlite3.sqlite_version", text)
 
     def test_font_directory_mtimes_are_pinned_rather_than_caches_deleted(self):
         text = self._finaliser()

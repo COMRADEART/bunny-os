@@ -131,9 +131,14 @@ class CollectorTests(unittest.TestCase):
         self.sbom = base / "sbom.spdx.json"
         self.sbom.write_text(json.dumps(SBOM), encoding="utf-8")
         self.normalisation = base / "normalisation.json"
+        # Both digests describe the shipped archive. Normalisation runs in place,
+        # so the file on disk *is* the normalised one; a fixture whose
+        # normalisedDigest named some other file would be describing a state the
+        # build cannot produce.
+        archive_digest = hashlib.sha256(self.archive.read_bytes()).hexdigest()
         self.normalisation.write_text(json.dumps({
-            "rawDigest": hashlib.sha256(self.archive.read_bytes()).hexdigest(),
-            "normalisedDigest": "n" * 64,
+            "rawDigest": archive_digest,
+            "normalisedDigest": archive_digest,
         }), encoding="utf-8")
 
     def tearDown(self) -> None:
@@ -257,7 +262,7 @@ class CollectorTests(unittest.TestCase):
         )
         with self.assertRaises(SystemExit) as caught:
             self.collected()
-        self.assertIn("not the same file", str(caught.exception))
+        self.assertIn("not from the same build", str(caught.exception))
 
     def test_volatile_paths_are_excluded_and_listed(self) -> None:
         payload = self.collected()

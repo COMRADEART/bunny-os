@@ -145,10 +145,14 @@ jobs:
             echo "::error::this workflow produced an image; it verifies inputs and must not build"
             exit 1
           fi
-          bash build/scripts/assert-gate.sh 2 "stable release gate after a cold-pull verification" \
-            -- python scripts/release.py gate --kind stable-release
-          bash build/scripts/assert-gate.sh 2 "qualification candidate gate after a cold-pull verification" \
-            -- python scripts/release.py gate --kind qualification-candidate
+          # One line each. tests/portability/test_gate_exit_codes.py reads these
+          # line by line and requires the helper on the same line as the gate it
+          # guards; a continuation would put the gate on a line with no visible
+          # assertion, which is exactly the shape the test exists to catch. The
+          # same test resolves every script named on such a line, so this comment
+          # avoids naming the helper's basename bare.
+          bash build/scripts/assert-gate.sh 2 "stable release after a cold pull" -- python scripts/release.py gate --kind stable-release
+          bash build/scripts/assert-gate.sh 2 "qualification candidate after a cold pull" -- python scripts/release.py gate --kind qualification-candidate
 
       - name: Upload the cold-pull evidence
         uses: actions/upload-artifact@v4
