@@ -89,6 +89,35 @@ PINNED_TOOLS = (
 )
 
 
+#: One architecture, two naming schemes. OCI image manifests use Go's names
+#: (``amd64``, ``arm64``); rpm, uname and every Fedora package use the kernel's
+#: (``x86_64``, ``aarch64``). The base-image lock is written from an OCI index
+#: and the reproducibility lock from the package architecture, so a check that
+#: compared the two strings directly reported that ``x86_64`` was not among
+#: ``amd64, arm64, ppc64le, s390x`` — which is true of the strings and false of
+#: the architectures.
+#:
+#: Normalising rather than accepting either name is deliberate: a genuine
+#: mismatch — an x86_64 build against an arm64-only mirror — must still fail,
+#: and it does, because the two normalise to different values.
+_ARCHITECTURE_ALIASES = {
+    "amd64": "x86_64",
+    "x86_64": "x86_64",
+    "arm64": "aarch64",
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le",
+    "s390x": "s390x",
+    "386": "i686",
+    "i686": "i686",
+    "riscv64": "riscv64",
+}
+
+
+def normalise_architecture(name: str) -> str:
+    """Canonical kernel-style name for an architecture written either way."""
+    return _ARCHITECTURE_ALIASES.get(str(name).strip().lower(), str(name).strip().lower())
+
+
 class SupplyChainError(ValueError):
     """Raised when a lock is malformed, unpinned, or unverified."""
 
@@ -962,15 +991,30 @@ def evaluate_input_locks(
                 reproducibility.packageSnapshotDigest == snapshot.manifestDigest,
                 f"{reproducibility.packageSnapshotDigest} vs {snapshot.manifestDigest}",
             )
-        if base is not None and reproducibility.architecture not in base.architectures:
-            check(
-                "architecture-retained",
-                False,
-                f"{reproducibility.architecture} is not among the retained architectures "
-                + ", ".join(base.architectures),
-            )
-        else:
-            check("architecture-retained", True, reproducibility.architecture)
+        if base is not None:
+            wanted = normalise_architecture(reproducibility.architecture)
+            retained = {normalise_architecture(name) for name in base.architectures}
+            selected = normalise_architecture(base.selectedArchitecture)
+            if wanted != selected:
+                check(
+                    "architecture-retained",
+                    False,
+                    f"the build targets {wanted} and the mirror selected {selected}; a build "
+                    "against the wrong architecture's manifest must fail before it starts",
+                )
+            elif wanted not in retained:
+                check(
+                    "architecture-retained",
+                    False,
+                    f"{wanted} is not among the retained architectures "
+                    + ", ".join(sorted(retained)),
+                )
+            else:
+                check(
+                    "architecture-retained",
+                    True,
+                    f"{wanted} (recorded upstream as {base.selectedArchitecture})",
+                )
 
     failed = [name for name, ok, _ in checks if not ok]
     return SupplyChainVerdict(
@@ -991,6 +1035,7 @@ def load_optional(path: str | Path) -> Any | None:
 
 
 __all__ = [
+    "normalise_architecture",
     "DIGEST_PINNED",
     "EPOCH_APPLICABLE",
     "EPOCH_FORBIDDEN",
