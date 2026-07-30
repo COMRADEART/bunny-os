@@ -81,6 +81,10 @@ cmd_evidence() {
     cd "$WORKTREE"
     require_ext4
     mkdir -p "$EVIDENCE/$profile"
+    # libguestfs defaults to the libvirt backend, which runs qemu as uid 107 and
+    # therefore cannot read anything under /root (mode 0700). The direct backend
+    # runs qemu as the invoking user and needs no relaxation of /root.
+    export LIBGUESTFS_BACKEND=direct
     log "inspect"
     bash build/scripts/inspect-image.sh "$profile" 2>&1 | tee "$EVIDENCE/$profile/inspect.log"
     log "sbom"
