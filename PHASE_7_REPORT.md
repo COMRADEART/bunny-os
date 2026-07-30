@@ -192,3 +192,58 @@ One maintainer, no funded support rota, no second release signer, no hardware la
 Do not begin any pilot. Do not manufacture devices, deploy fleets, or launch a hosted sync service.
 
 The Phase 7 design is complete, internally consistent, and covered by 454 tests that verify its refusals as thoroughly as its behaviour. It is not deployable, and the gates enforce that rather than merely describing it. The next useful work is not Phase 8: it is closing the stable-release blockers that every Phase 7 gate depends on. See `NEXT_PHASE.md`.
+
+---
+
+# Addendum, 2026-07-29: deferred capabilities implemented and runtime evidence produced
+
+The report above stands. This addendum records what changed after it was written, and it changes the *evidence* position substantially while changing the *release* position not at all.
+
+## The assumption that was wrong
+
+"No Podman, no image-builder, no QEMU/KVM on this host" was true of the Windows host and false of the machine as a whole. A `FedoraLinux-44` WSL2 distro is a fully working builder: root, systemd, nested KVM, 22 cores, 921 GB free, podman 5.8.4, image-builder 76.0.0, QEMU 10.2.2, syft, grype, guestfs-tools, and a clean ext4 clone of this repository at `/root/bunny-os`.
+
+Most of what was recorded as impossible was simply un-run.
+
+## Four deferred capabilities, now implemented
+
+| Capability | State |
+|---|---|
+| Policy agent privileged transport | Second socket `/run/bunny/policy.sock`, mode 0600, `LISTEN_FDNAMES`-disambiguated, `require_policy_identity` as a sibling of the untouched `require_local_user`, separate method table and rate limiter, peer-uid plus cgroup unit match |
+| Settings organisation scope | Root-owned overlay, allowlist of manageable settings, `SettingLockedError`, `reset()` to the organisation value, `sync` and `enrolment` network kinds with explicit local-only decisions |
+| Factory executor | `bunny-oem inspect --root` settles 17 of 22 checks by inspection; 5 report `UNKNOWN` and need signed live attestation, which cannot override an inspected result |
+| Sync AEAD backend | AES-256-GCM with bound associated data, HKDF-SHA256, RFC 3394 key wrap, real round-trip and tamper tests; XChaCha20 refused rather than substituted; absent backend still refuses every operation |
+
+## Runtime evidence produced
+
+Real 2.3 GB QCOW2 built from a clean checkout. Image inspection passed. SBOM generated. Licence scan clean over 6,252 packages. Two real KVM boots reaching health markers. A quiet-boot packet capture. A two-build determinism comparison.
+
+The three VM harnesses that previously exited 78 now do real work: `vm-rollback-test` has boot-parity and deployment-rollback modes, `vm-recovery-test` verifies the media signature then boots it independently with the installed disk read-only, and `vm-upgrade-test` runs the shipped manifest validator.
+
+## Three findings worth stating plainly
+
+**A regression I introduced, caught by a real boot.** The two-socket change rejected the descriptor name systemd actually assigns, so the broker crash-looped and the health check failed with it. Every unit test passed. Fixed, regression-tested against the real name, rebuilt, re-verified.
+
+**The build is deterministic; the archive wrapper is not.** Two builds of one commit produced different digests. Every file inside both archives is byte-identical — `podman save` stamps tar mtimes with wall-clock time instead of `SOURCE_DATE_EPOCH`. See `REPRODUCIBLE_BUILD_REPORT.md`. This is still not the two-independent-builder evidence the production gate wants.
+
+**The system is quiet but not silent.** A booted image contacts four Fedora-pool NTP servers before any user action. Not telemetry, but real third-party contact that the privacy model did not disclose. Now disclosed.
+
+## Dual-track qualification
+
+`operations/qualification.py` is untouched and still strict. A parallel development track records what was genuinely run, with checked provenance: claiming physical hardware requires a report in the empty `hardware-evidence.json`, and claiming a production key requires a ceremony that does not exist. Both claims therefore fail.
+
+**8 of 25 rows now produced and passing**, against 3 before, with `security` recorded honestly as FAIL. `make gate-dev-qualification` reports NO-GO and names precisely which rows are missing and why.
+
+## Phase 4 and Phase 6
+
+Fourteen absent documents were written, including `PHASE_4_REPORT.md`, the four `PUBLIC_BETA_*` records, `SECURITY_POLICY.md`, `STABLE_PUBLICATION_REPORT.md`, the three `POST_RELEASE_*` reviews and `STABLE_SUPPORT_MATRIX.md`. Each defines a real process and states that the operation never happened.
+
+`make gate-phase-4` now passes its document check for the first time and stops on evidence instead, which is the honest failure.
+
+## What has not changed
+
+`gate-stable-release` is still NO-GO. All three pilot gates are still BLOCKED. The five blocker codes stand. There is still no physical hardware, no independent review, no production key ceremony, no published release, and no human approvals — and none of those can be produced by running more tests.
+
+The vulnerability position got worse rather than better under measurement: 95 fixable findings on the developer profile, 19 Critical and 43 High.
+
+**Recommendation unchanged: do not begin any pilot, manufacture any device, deploy any fleet, or launch any hosted service.**

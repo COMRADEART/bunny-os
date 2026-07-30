@@ -115,3 +115,18 @@ Only after a stable release exists do the Phase 7 follow-ups become meaningful:
 11. Decide which Phase 7 capabilities the project will actually operate, and confirm support capacity for exactly those. Operating none of them is a legitimate answer.
 
 Only then does a controlled internal pilot become proposable, and it would still require separate approval.
+
+## Revised ordering after the 2026-07-29 evidence run
+
+Items 7 and 8 of the previous list are done: the policy agent transport, the settings organisation scope, and the factory inspection executor are implemented, and a working sync backend exists. Item 9, the independent cryptographic review, is unchanged because it needs a third party rather than code.
+
+The critical path is now shorter and better understood:
+
+1. **Resolve the vulnerability position.** 95 fixable findings on the developer profile, 19 Critical and 43 High, almost all in Go modules vendored inside the bootc-required container toolchain — `golang.org/x/crypto`, podman, fulcio, grpc, buildkit. This is the single largest blocker and everything downstream inherits it. Options are a Fedora rebase, a narrower package set that drops the container toolchain from the shipped image, or a reviewed per-finding waiver.
+2. **Fix archive determinism.** Now a small, well-understood job: `podman save` stamps tar mtimes with wall-clock time while every blob inside is already reproducible. Normalise the wrapper, or sign the manifest digest instead of the archive. See `REPRODUCIBLE_BUILD_REPORT.md`.
+3. **Choose a licence.** `docs/LICENSING.md` sets out the options; the recommendation is a split, GPL-3.0-or-later for the OS layer and Apache-2.0 for the Phase 7 client packages. This blocks OEM and enterprise distribution independently of every technical gate and is the one item nobody else can decide.
+4. **Get a second builder** so reproducibility can be evidenced properly, and a second release signer so signing is not a single point of failure.
+5. **Acquire one physical machine.** Every hardware row, the Secure Boot and TPM rows, and the two boot-time accessibility workflows are blocked on there being no device.
+6. **Commission independent security, cryptographic and accessibility reviews.** A self-review is a self-review, and the accessibility gap is the one that risks harm rather than merely missing evidence.
+
+Items 1 and 2 are engineering. Item 3 is a decision. Items 4, 5 and 6 need money or hardware. That is the honest shape of what remains.

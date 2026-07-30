@@ -88,3 +88,15 @@ Executors that would touch real hardware or perform real cryptography report the
 Four defects were fixed during implementation, three of them caught by new tests: an unreachable OEM key-namespace check, a policy validator registered with the wrong arity, two privacy refusals preempted by a generic unknown-field check, and a test-discovery configuration in `scripts/task.py` that put `tests/` on `sys.path` so `tests/sync` and `tests/oem` shadowed the real packages.
 
 The Phase 7 source gate passes. `gate-phase-7` and all three pilot gates remain blocked, and the stable release remains `NO-GO`.
+
+## Phase 7 addendum: deferred capabilities implemented, runtime evidence produced
+
+Four capabilities the Phase 7 report deferred are now implemented: the policy agent's privileged transport (a second broker socket with its own identity rule), the settings organisation scope (a root-owned managed overlay), the factory executor (`bunny-oem inspect --root`, settling 17 of 22 checks by inspection), and a working sync AEAD backend (AES-256-GCM, HKDF-SHA256, RFC 3394 key wrap, with XChaCha20 refused rather than substituted).
+
+The three VM harnesses that previously exited 78 now do real work, sharing one boot path factored out of `vm-smoke.sh`.
+
+Real artifacts were produced on the Fedora WSL builder: a 2.3 GB QCOW2, a 2.0 GB OCI archive, a 60 MB SPDX SBOM, a clean licence scan over 6,252 packages, two KVM boots reaching health markers, a quiet-boot packet capture, and a two-build determinism comparison.
+
+A regression introduced by the two-socket work was caught by a real boot rather than by any test: systemd names an inherited descriptor after the socket unit when `FileDescriptorName=` is unset, and the new code rejected it, so the broker crash-looped and the health check failed with it. Fixed, regression-tested against the real name, rebuilt and re-verified.
+
+Suite total is now 671 main-suite tests plus 60 installer and 105 operations tests, passing identically on Windows and Fedora.
