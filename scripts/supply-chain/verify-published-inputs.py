@@ -27,7 +27,7 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import shutil
 import subprocess
 import sys
@@ -128,20 +128,37 @@ def verify_snapshot_contents(layout: Path, snapshot_lock: dict[str, Any]) -> dic
                 "used it."
             )
 
+        # The lock names each package by its `location` — a repository-relative
+        # path such as `packages/NetworkManager-wifi-1.56.1-2.fc44.x86_64.rpm` —
+        # and its digest as `checksum`. An earlier version guessed at `fileName`
+        # and `sha256`, found neither, and reported all 474 packages as absent
+        # with an empty name, which is a field-name bug wearing the costume of a
+        # supply-chain failure.
         by_name = {path.name: path for path in packages}
         checksum_failures: list[str] = []
+        unnamed = 0
         for record in expected:
-            name = record.get("fileName") or record.get("filename") or ""
-            wanted = record.get("sha256") or record.get("checksum") or ""
+            location = str(record.get("location") or "")
+            name = PurePosixPath(location).name if location else ""
+            wanted = str(record.get("checksum") or "")
+            if not name:
+                unnamed += 1
+                continue
             path = by_name.get(name)
             if path is None:
                 checksum_failures.append(f"{name}: absent from the pulled snapshot")
                 continue
             if not wanted:
+                checksum_failures.append(f"{name}: the lock records no checksum to verify against")
                 continue
             actual = hashlib.sha256(path.read_bytes()).hexdigest()
             if actual != wanted:
                 checksum_failures.append(f"{name}: {actual} != {wanted}")
+        if unnamed:
+            raise Failure(
+                f"{unnamed} of {len(expected)} package records carry no location, so there is "
+                "nothing to look for. A lock that cannot name its own packages cannot verify them."
+            )
         if checksum_failures:
             raise Failure(
                 "package checksums did not verify:\n  "
