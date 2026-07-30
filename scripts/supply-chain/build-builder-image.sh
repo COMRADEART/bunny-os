@@ -63,12 +63,19 @@ tag="localhost/bunny-os-builder:${source_commit:0:12}"
 echo "==> building ${tag}"
 echo "    base   ${builder_base}"
 echo "    commit ${source_commit}"
+# --timestamp pins every layer's created time to the commit's, which is what
+# makes two builds of this Containerfile comparable. It must not be combined
+# with a SOURCE_DATE_EPOCH build argument: podman refuses the pair outright —
+#
+#   Error: timestamp and source-date-epoch would be ambiguous if allowed together
+#
+# — because they are two ways of saying the same thing and it will not guess
+# which one was meant. Found by running the build.
 podman build \
   --file "${containerfile}" \
   --tag "${tag}" \
   --build-arg "BUILDER_BASE=${builder_base}" \
   --build-arg "BUNNY_SOURCE_COMMIT=${source_commit}" \
-  --build-arg "SOURCE_DATE_EPOCH=${source_epoch}" \
   --timestamp "${source_epoch}" \
   .
 
