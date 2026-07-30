@@ -23,7 +23,12 @@ emit_version() {
     buildah)         buildah --version 2>/dev/null | awk '{print $3}' ;;
     skopeo)          skopeo --version 2>/dev/null | awk '{print $3}' ;;
     conmon)          conmon --version 2>/dev/null | awk '/conmon version/ {print $3}' ;;
-    crun)            crun --version 2>/dev/null | awk '/crun /{print $2; exit}' ;;
+    # `crun --version` prints "crun version 1.28", so field 2 is the word
+    # "version". Recorded as `version` in the first lock this produced, which is
+    # a string that compares equal between two builders and says nothing about
+    # either. write-builder-lock.py now refuses a version that is not
+    # version-shaped, so the next such slip fails instead of being written down.
+    crun)            crun --version 2>/dev/null | awk '/^crun version/ {print $3; exit}' ;;
     runc)            runc --version 2>/dev/null | awk '/runc version/ {print $3}' ;;
     python3)         python3 -c 'import sys; print("%d.%d.%d" % sys.version_info[:3])' 2>/dev/null ;;
     rpm)             rpm --version 2>/dev/null | awk '{print $NF}' ;;
@@ -34,7 +39,9 @@ emit_version() {
     zstd)            zstd --version 2>/dev/null | sed -n 's/.*v\([0-9.]*\).*/\1/p' ;;
     syft)            syft version -o json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])' ;;
     grype)           grype version -o json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])' ;;
-    createrepo_c)    createrepo_c --version 2>/dev/null | awk '{print $NF}' ;;
+    # "Version: 1.2.1 (Features: DeltaRPM LegacyWeakdeps )" — the last field is
+    # a closing parenthesis.
+    createrepo_c)    createrepo_c --version 2>/dev/null | sed -n 's/^Version: \([0-9][0-9.]*\).*/\1/p' | head -1 ;;
     policycoreutils) rpm -q --qf '%{VERSION}-%{RELEASE}' policycoreutils 2>/dev/null ;;
     libselinux-utils) rpm -q --qf '%{VERSION}-%{RELEASE}' libselinux-utils 2>/dev/null ;;
     *) return 1 ;;
@@ -92,7 +99,7 @@ for tool in "${tools[@]}"; do
   package="$(providing_package "${tool}" 2>/dev/null || true)"
   nevra=""
   if [[ -n "${package}" ]]; then
-    nevra="$(rpm -q --qf '%{NAME}-%{EPOCH}:%{VERSION}-%{RELEASE}.%{ARCH}' "${package}" 2>/dev/null || true)"
+    nevra="$(rpm -q --qf '%{NAME}-%|EPOCH?{%{EPOCH}}:{0}|:%{VERSION}-%{RELEASE}.%{ARCH}' "${package}" 2>/dev/null || true)"
   fi
   [[ "${first}" == "1" ]] || printf ',\n'
   first=0

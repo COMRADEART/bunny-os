@@ -23,12 +23,23 @@ import argparse
 import datetime as _datetime
 import json
 from pathlib import Path
+import re
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from release.paths import display_path  # noqa: E402
 from release.supplychain import SCHEMA_VERSION, SupplyChainError, parse_builder_image_lock  # noqa: E402
+
+#: A version must start with a digit and contain only version-ish characters.
+#:
+#: Not pedantry. The first lock this generator produced recorded ``crun`` as
+#: ``version`` and ``createrepo_c`` as ``)``, because two ``--version`` outputs
+#: put the number in a different field than the awk expression assumed. Both
+#: strings would have compared *equal* between the two builders and satisfied
+#: the toolchain check while establishing nothing about either tool. A lock is
+#: worth exactly as much as the weakest field nobody checked.
+_VERSION = re.compile(r"^[0-9][0-9A-Za-z.:+~_-]*$")
 
 
 def main() -> int:
@@ -51,6 +62,7 @@ def main() -> int:
     tools: list[dict[str, str]] = []
     unclassified: list[str] = []
     missing: list[str] = []
+    malformed: list[str] = []
 
     for entry in measured.get("tools", []):
         name = str(entry.get("name", ""))
@@ -58,6 +70,9 @@ def main() -> int:
         if version == "absent":
             if name not in absent:
                 missing.append(name)
+            continue
+        if not _VERSION.match(version):
+            malformed.append(f"{name}={version!r}")
             continue
         declaration = classifications.get(name)
         if not declaration:
@@ -75,6 +90,14 @@ def main() -> int:
             }
         )
 
+    if malformed:
+        raise SystemExit(
+            "BLOCKED: these tools reported something that is not a version: "
+            + ", ".join(sorted(malformed))
+            + ".\nA version string the parser mangled compares equal between two builders and "
+            "establishes nothing about either. Fix the extraction in "
+            "build/builder/scripts/record-toolchain.sh rather than recording the mangled value."
+        )
     if unclassified:
         raise SystemExit(
             "BLOCKED: these tools are installed in the builder image and carry no classification "
