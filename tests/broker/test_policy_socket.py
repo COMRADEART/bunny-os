@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 from datetime import datetime, timezone
 import os
 import unittest
@@ -163,6 +164,19 @@ class ProcUnitTests(unittest.TestCase):
 
 
 class InheritedListenerTests(unittest.TestCase):
+    @contextlib.contextmanager
+    def adopt(self):
+        """Stand in for descriptor adoption.
+
+        AF_UNIX does not exist on Windows and is evaluated as a call argument,
+        so it must be patched alongside fromfd for these tests to run on both
+        platforms.
+        """
+        with mock.patch.object(server.socket, "fromfd") as fromfd, mock.patch.object(
+            server.socket, "AF_UNIX", 1, create=True
+        ), mock.patch.object(server.os, "close"):
+            yield fromfd
+
     def environment(self, **values: str) -> dict[str, str]:
         base = {"LISTEN_PID": str(os.getpid())}
         base.update(values)
@@ -187,17 +201,35 @@ class InheritedListenerTests(unittest.TestCase):
                 server._inherited_listeners()
         self.assertIn("LISTEN_FDNAMES", str(error.exception))
 
-    def test_unknown_socket_name_is_refused(self) -> None:
-        environment = self.environment(LISTEN_FDS="1", LISTEN_FDNAMES="attacker.sock")
-        with mock.patch.dict(os.environ, environment, clear=False):
-            with self.assertRaises(RuntimeError):
-                server._inherited_listeners()
+    def test_systemd_default_descriptor_name_is_accepted(self) -> None:
+        # Regression. systemd names the descriptor after the socket unit when
+        # FileDescriptorName= is unset. Rejecting unfamiliar names broke the
+        # broker under real socket activation, and no unit test caught it
+        # because they all used our own names.
+        for name in ("bunny-system-broker.socket", "broker.sock", "legacy-name"):
+            with self.subTest(name=name):
+                environment = self.environment(LISTEN_FDS="1", LISTEN_FDNAMES=name)
+                with mock.patch.dict(os.environ, environment, clear=False):
+                    with self.adopt() as fromfd:
+                        fromfd.return_value = object()
+                        listeners = server._inherited_listeners()
+                self.assertEqual(list(listeners), [server.USER_SOCKET_NAME])
 
-    def test_duplicate_socket_name_is_refused(self) -> None:
-        environment = self.environment(LISTEN_FDS="2", LISTEN_FDNAMES="policy.sock:policy.sock")
+    def test_only_the_exact_policy_name_selects_the_policy_socket(self) -> None:
+        environment = self.environment(LISTEN_FDS="1", LISTEN_FDNAMES="policy.sock")
         with mock.patch.dict(os.environ, environment, clear=False):
-            with self.assertRaises(RuntimeError):
-                server._inherited_listeners()
+            with self.adopt() as fromfd:
+                fromfd.return_value = object()
+                listeners = server._inherited_listeners()
+        self.assertEqual(list(listeners), [server.POLICY_SOCKET_NAME])
+
+    def test_two_sockets_resolving_to_the_same_role_are_refused(self) -> None:
+        for names in ("policy.sock:policy.sock", "broker.sock:some-other-name"):
+            with self.subTest(names=names):
+                environment = self.environment(LISTEN_FDS="2", LISTEN_FDNAMES=names)
+                with mock.patch.dict(os.environ, environment, clear=False):
+                    with self.assertRaises(RuntimeError):
+                        server._inherited_listeners()
 
 
 class ServerWiringTests(unittest.TestCase):

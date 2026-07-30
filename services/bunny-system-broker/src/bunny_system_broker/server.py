@@ -255,17 +255,26 @@ def _inherited_listeners() -> dict[str, socket.socket]:
         names = [USER_SOCKET_NAME]
     if len(names) != count:
         raise RuntimeError("LISTEN_FDNAMES must name every inherited socket")
-    # Validate every name before adopting any descriptor, so a malformed unit
-    # configuration is refused outright rather than half-applied.
-    seen: set[str] = set()
-    for name in names:
-        if name not in {USER_SOCKET_NAME, POLICY_SOCKET_NAME}:
-            raise RuntimeError(f"unsupported systemd socket name: {name}")
-        if name in seen:
-            raise RuntimeError(f"duplicate systemd socket name: {name}")
-        seen.add(name)
+
+    # Only the exact name "policy.sock" selects the policy socket. Every other
+    # name is the user socket, including the unit name systemd assigns by
+    # default when FileDescriptorName= is unset — "bunny-system-broker.socket".
+    #
+    # Rejecting unfamiliar names looked safer and was not: it broke the broker
+    # under real socket activation, which unit tests using our own names could
+    # not see. Defaulting to the user socket is the fail-closed direction,
+    # because that socket applies require_local_user and would refuse the
+    # policy agent's system identity outright.
+    resolved: list[str] = [
+        POLICY_SOCKET_NAME if name == POLICY_SOCKET_NAME else USER_SOCKET_NAME for name in names
+    ]
+    if len(set(resolved)) != len(resolved):
+        raise RuntimeError(
+            "two inherited sockets resolved to the same role; set FileDescriptorName= "
+            "to broker.sock and policy.sock so they can be told apart"
+        )
     listeners: dict[str, socket.socket] = {}
-    for offset, name in enumerate(names):
+    for offset, name in enumerate(resolved):
         listeners[name] = socket.fromfd(3 + offset, socket.AF_UNIX, socket.SOCK_STREAM)
     for offset in range(count):
         os.close(3 + offset)
