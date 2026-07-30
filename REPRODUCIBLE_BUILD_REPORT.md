@@ -46,20 +46,48 @@ run 2:  drwxr-xr-x 0/0  0  2026-07-29 22:19  blobs/
 
 **Does not establish:** that a published artifact would have a stable digest. A verifier comparing `bunny-os.oci.tar` checksums between two builders would see a mismatch and correctly reject it, even though the images are identical.
 
-**Also does not establish** what the production gate asks for. This is two runs on **one host with one toolchain**. Reproducibility means two *independent* builders — different machines, ideally different operators — producing the same output. That comparison has never been run and cannot be run here, because only one builder exists.
+Both statements were true when first measured. The second has since been fixed; see below.
+
+## Fix applied and verified
+
+Option 1 was implemented: `build/scripts/normalise-oci-archive.sh`, invoked from `build-image.sh` immediately after `podman save`. It repacks the archive with entry order sorted, mtimes pinned to `SOURCE_DATE_EPOCH`, ownership zeroed, and the atime/ctime pax headers dropped. The blobs are already content-addressed and are not touched.
+
+Verified against the two divergent archives above:
+
+```text
+before   3df2a457432013eb244f0213a4da5f1e0389ca7d61bdca213ce4734460a4ce21  run1
+         f5d1ded21a10c395ab122dba9b6078948f3feb7a207f99752da848faedf32438  run2
+
+after    80ee93068bc7117702a95db3371085dd8fcf27113c1e5a4c9e959b15f26ea160  run1
+         80ee93068bc7117702a95db3371085dd8fcf27113c1e5a4c9e959b15f26ea160  run2
+```
+
+Two builds of the same commit, previously differing, now produce byte-identical archives.
+
+### A repack is not transparent, and assuming it was cost a round
+
+The first attempt archived `.`, which prefixes every entry with `./`. skopeo tolerated it; **syft refused the archive outright** — "potential path traversal attack with entry: ./" — which would have silently broken SBOM generation for every build. `podman save` does not emit that prefix, so normalisation must not introduce it.
+
+The script now names the top-level entries explicitly, and all three consumers were re-checked against a normalised archive rather than assumed:
+
+| Consumer | Result |
+|---|---|
+| `skopeo inspect --raw` | manifest parses |
+| `syft` | 6252 SPDX packages — identical to the pre-normalisation count |
+| `grype` | 95 fixable matches — identical to the pre-normalisation count |
+
+Matching counts confirm the contents are untouched and only the wrapper changed.
+
+`tests/image/test_archive_normalisation.py` guards the specific mistakes: archiving a bare `.`, an unvalidated epoch, missing determinism flags, and undropped pax timestamps.
+
+## Still not production reproducibility
+
+This is two runs on **one host with one toolchain**. Reproducibility means two *independent* builders — different machines, ideally different operators — producing the same output. That has never been run and cannot be run here, because only one builder exists.
 
 `make reproducible-build-check` continues to fail closed, and correctly: one host is not two.
 
-## Recommended fix
-
-Normalise the archive wrapper. Options, cheapest first:
-
-1. Repack the tar deterministically after `podman save` — sorted entries, mtimes set to `SOURCE_DATE_EPOCH`, uid/gid zeroed. A dozen lines in `build/scripts/build-image.sh`.
-2. Publish `oci-dir` layout rather than a tar, and checksum each blob. The blobs are already content-addressed and already reproducible.
-3. Checksum and sign the **image manifest digest** rather than the archive file. This is what registries do and it sidesteps the wrapper entirely.
-
-Option 3 is probably right long-term, because the manifest digest is what `bootc switch` already pins.
+The remaining longer-term improvement is to checksum and sign the **image manifest digest** rather than the archive file. That is what registries do, it is what `bootc switch` already pins, and it sidesteps the wrapper entirely.
 
 ## Evidence
 
-`/root/bunny-evidence/reproducibility/developer-digests.txt`, plus both archives retained for comparison. Recorded in `operations/data/dev-qualification.json` as not-run rather than passing, because a differing digest is not a pass however well understood the cause is.
+`/root/bunny-evidence/reproducibility/developer-digests.txt`, both original archives, and both normalised archives retained for comparison.
