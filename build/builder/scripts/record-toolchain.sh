@@ -44,6 +44,12 @@ emit_version() {
     createrepo_c)    createrepo_c --version 2>/dev/null | sed -n 's/^Version: \([0-9][0-9.]*\).*/\1/p' | head -1 ;;
     policycoreutils) rpm -q --qf '%{VERSION}-%{RELEASE}' policycoreutils 2>/dev/null ;;
     libselinux-utils) rpm -q --qf '%{VERSION}-%{RELEASE}' libselinux-utils 2>/dev/null ;;
+    # "3.51.2 2026-01-09 17:27:48 b270f833..." — the first field is the version
+    # and the rest is the source-tree identifier of the exact amalgamation.
+    sqlite3)         sqlite3 --version 2>/dev/null | awk '{print $1}' ;;
+    # libfaketime has no --version and no binary of its own here; the library is
+    # what matters, so the package's version is the recorded identity.
+    libfaketime)     rpm -q --qf '%{VERSION}-%{RELEASE}' libfaketime 2>/dev/null ;;
     *) return 1 ;;
   esac
 }
@@ -58,6 +64,7 @@ providing_package() {
     libdnf5)          echo libdnf5 ;;
     policycoreutils)  echo policycoreutils ;;
     libselinux-utils) echo libselinux-utils ;;
+    libfaketime)      echo libfaketime ;;
     syft|grype)       echo "" ;;
     *)
       local path
@@ -86,6 +93,7 @@ package_checksum() {
 tools=(
   podman buildah skopeo conmon crun runc python3 rpm dnf5 libdnf5
   tar gzip zstd syft grype createrepo_c policycoreutils libselinux-utils
+  sqlite3 libfaketime
 )
 
 printf '{\n  "recordedAt": "%s",\n  "tools": [\n' \
@@ -107,4 +115,56 @@ for tool in "${tools[@]}"; do
     "${tool}" "${version}" "${package}" "${nevra}" "${checksum}"
 done
 
-printf '\n  ]\n}\n'
+printf '\n  ],\n'
+
+# The SQLite implementation gets its own section rather than one version string.
+# Two SQLite builds at the same upstream version can differ in page size,
+# threading mode and which extensions are compiled in, and every one of those
+# changes the on-disk file a package transaction leaves behind. The finaliser
+# refuses to run against a SQLite that does not match what is recorded here, so
+# what is recorded has to be enough to tell two of them apart.
+printf '  "sqlite": '
+if command -v sqlite3 >/dev/null 2>&1; then
+  python3 - <<'PYTHON'
+import json
+import sqlite3
+import subprocess
+
+connection = sqlite3.connect(":memory:")
+options = sorted(row[0] for row in connection.execute("PRAGMA compile_options"))
+record = {
+    "libraryVersion": sqlite3.sqlite_version,
+    "cliVersion": subprocess.run(
+        ["sqlite3", "--version"], capture_output=True, text=True, check=False
+    ).stdout.split()[0],
+    "sourceId": subprocess.run(
+        ["sqlite3", ":memory:", "select sqlite_source_id();"],
+        capture_output=True, text=True, check=False,
+    ).stdout.strip(),
+    "defaultPageSize": connection.execute("PRAGMA page_size").fetchone()[0],
+    "threadSafe": next(
+        (option.split("=")[1] for option in options if option.startswith("THREADSAFE=")),
+        "unrecorded",
+    ),
+    "extensionsCompiledIn": [option for option in options if option.startswith("ENABLE_")],
+    "compileOptions": options,
+    "compileOptionsSha256": __import__("hashlib").sha256(
+        "\n".join(options).encode("utf-8")
+    ).hexdigest(),
+}
+connection.close()
+print(json.dumps(record, indent=4, sort_keys=True))
+PYTHON
+else
+  printf 'null'
+fi
+
+printf ',\n  "faketimeLibrary": '
+if [[ -f /usr/local/lib/bunny-faketime/libfaketime.so.1 ]]; then
+  printf '{"path": "/usr/local/lib/bunny-faketime/libfaketime.so.1", "sha256": "%s"}' \
+    "$(sha256sum /usr/local/lib/bunny-faketime/libfaketime.so.1 | awk '{print $1}')"
+else
+  printf 'null'
+fi
+
+printf '\n}\n'

@@ -112,8 +112,72 @@ if [[ "${failed}" != "0" ]]; then
 fi
 echo "    all signatures verified"
 
+echo "==> copying the Fedora signing keys into the snapshot"
+# The keys travel with the packages they verify.
+#
+# The build itself reads them from the base image's filesystem, which works
+# because the base image is where the build runs. It leaves the *published*
+# snapshot unverifiable on its own: a consumer who pulled it would have to fetch
+# Fedora's keys from the network to check a single signature, reintroducing at
+# verification time the exact dependency the snapshot exists to remove.
+#
+# Found by running verify-published-inputs.py against the published artifact,
+# which refuses a snapshot shipping no key rather than falling back to a key
+# from somewhere else.
+#
+# They come out of the retained base by digest, so their provenance is the same
+# pinned image the packages were resolved against — not a download, and not
+# whatever the build host happens to trust.
+mkdir -p "${snapshot}/keys"
+base_layout="$(python3 -c '
+import json
+print(json.load(open("build/inputs/base-image-lock.json"))["retainedLocation"])
+')"
+# Only this release's keys, and only the architectures this snapshot is for. A
+# glob of every Fedora key ever published matched 300 of them once, which is the
+# opposite of pinning.
+#
+# The release and architecture are derived rather than assumed: a snapshot id of
+# `fedora-44-beta-20260730` names the release, and the package lock names the
+# architecture it was resolved for. Guessing either would ship a key that
+# verifies nothing.
+release="$(printf '%s' "${snapshot_id}" | sed -n 's/^fedora-\([0-9][0-9]*\)-.*/\1/p')"
+if [[ -z "${release}" ]]; then
+  echo "BLOCKED: cannot read a Fedora release from the snapshot id ${snapshot_id}." >&2
+  echo "The signing keys are per release; shipping the wrong one verifies nothing." >&2
+  exit 2
+fi
+architecture="$(python3 -c '
+import json, sys
+print(json.load(open(sys.argv[1])).get("architecture", "x86_64"))
+' "${lock}")"
+
+# Read out of the layout directly rather than through a container runtime. This
+# step runs *inside* the pinned builder, where the host's
+# `localhost/bunny-os-retained-base:…` tag is not an image but a hostname —
+# podman resolves it as a registry and fails with a connection refused, which is
+# a confusing way to say the tag belongs to another machine's store.
+python3 scripts/supply-chain/extract-oci-layout-paths.py \
+  --layout "${base_layout}" \
+  --reference retained \
+  --pattern "etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-${release}-primary" \
+  --pattern "etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-${release}-${architecture}" \
+  --destination "${snapshot}/keys" \
+  --flatten \
+  --require 1
+
+# One key is the expected result, not a shortfall. Fedora ships a single real
+# key per release and names the per-architecture files as symlinks to it, so
+# `RPM-GPG-KEY-fedora-44-x86_64` and `RPM-GPG-KEY-fedora-44-primary` are the
+# same bytes. Both patterns are asked for so a release that ever separated them
+# would be picked up; requiring two would fail on every release that does not.
+key_count="$(find "${snapshot}/keys" -type f | wc -l)"
+echo "    ${key_count} signing key(s) shipped with the snapshot"
+
 echo "==> generating repository metadata"
-createrepo_c --quiet --general-compress-type=gz "${snapshot}"
+# --excludes keys: the keys are shipped beside the repository, not as part of it.
+# createrepo_c would otherwise be describing files that are not packages.
+createrepo_c --quiet --general-compress-type=gz --excludes 'keys/*' "${snapshot}"
 
 # The metadata digest is over repomd.xml, which is itself a manifest of every
 # other metadata file with their checksums. Signing repomd.xml therefore covers

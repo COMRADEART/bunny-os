@@ -2,9 +2,36 @@
 
 Do not start a custom shell, compositor, visual redesign, installer experience, app store, or consumer release.
 
-## Next work — 2026-07-30
+## Next work after the SQLite determinism pass — 2026-07-30
 
 **Do not begin Phase 8. Do not begin an OEM, enterprise or encrypted-sync pilot.**
+
+One item blocks four workstreams and costs one command from the repository
+owner:
+
+```text
+gh auth refresh -h github.com -s write:packages,read:packages
+```
+
+Without it the retained base, the builder image and the package snapshot exist
+on one machine, no independent builder can fetch them, and the reproducibility
+gate cannot move regardless of how the local comparison turns out. Every script
+for the publication, the cold-pull verification and the three-builder comparison
+is written and refuses to run, naming that command.
+
+In order, once it is granted:
+
+1. `make publish-retained-base publish-builder-image publish-package-snapshot`
+2. `make verify-published-inputs` — from the machine that published, which
+   proves the push worked
+3. `make cold-pull-input-test` — from a runner holding none of them, which
+   proves they are retrievable, and is the claim that matters
+4. `make create-reproducibility-target` — refuses until 1–3 pass and the local
+   comparison is `REPRODUCIBLE` in qualification mode
+5. `make dispatch-hosted-h1` and `dispatch-hosted-h2`, separate runs
+6. `make import-three-builder-evidence compare-three-builds reproducibility-gate`
+
+Everything below this section predates that pass and is retained.
 
 The qualification evidence closure completed every technically automatable evidence
 task. What remains is ordered below by cost, and the cheapest item is genuinely

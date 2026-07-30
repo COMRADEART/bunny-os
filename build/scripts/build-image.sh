@@ -32,6 +32,22 @@ for command in "${required_commands[@]}"; do
   fi
 done
 
+# Every podman and skopeo invocation goes through these, so a caller asking for
+# an isolated container store gets one everywhere rather than for the build step
+# and not the pull. Two builds of a repeatability pair that shared a store would
+# be one build measured twice.
+podman_store_args=()
+skopeo_store_args=()
+if [[ -n "${BUNNY_PODMAN_ROOT:-}" ]]; then
+  : "${BUNNY_PODMAN_RUNROOT:=${BUNNY_PODMAN_ROOT}/run}"
+  sudo mkdir -p "${BUNNY_PODMAN_ROOT}" "${BUNNY_PODMAN_RUNROOT}"
+  podman_store_args=(--root "${BUNNY_PODMAN_ROOT}" --runroot "${BUNNY_PODMAN_RUNROOT}")
+  # skopeo names the same two things differently, and only on the
+  # containers-storage transport.
+  skopeo_store_args=("[overlay@${BUNNY_PODMAN_ROOT}+${BUNNY_PODMAN_RUNROOT}]")
+fi
+podman() { sudo command podman "${podman_store_args[@]+"${podman_store_args[@]}"}" "$@"; }
+
 repository_root="$(git rev-parse --show-toplevel)"
 cd "${repository_root}"
 source_commit="$(git rev-parse HEAD)"
@@ -75,10 +91,10 @@ import json
 print(json.load(open("build/inputs/base-image-lock.json"))["retainedDigest"])
 ')"
   base_tag="localhost/bunny-os-retained-base:${retained_digest#sha256:}"
-  sudo podman pull "oci:${retained_layout}:retained" >/dev/null
-  pulled_id="$(sudo podman pull "oci:${retained_layout}:retained" 2>/dev/null | tail -1)"
-  sudo podman tag "${pulled_id}" "${base_tag}"
-  observed="$(sudo skopeo inspect --raw "containers-storage:${base_tag}" |
+  podman pull "oci:${retained_layout}:retained" >/dev/null
+  pulled_id="$(podman pull "oci:${retained_layout}:retained" 2>/dev/null | tail -1)"
+  podman tag "${pulled_id}" "${base_tag}"
+  observed="$(sudo skopeo inspect --raw "containers-storage:${skopeo_store_args[0]-}${base_tag}" |
     python3 -c 'import hashlib,sys; print("sha256:"+hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')"
   if [[ "${observed}" != "${retained_digest}" ]]; then
     echo "the base pulled from retention does not carry the locked digest:" >&2
@@ -94,14 +110,84 @@ print(json.load(open("build/inputs/package-snapshot-lock.json"))["retainedLocati
 
   python3 scripts/supply-chain/verify-package-snapshot.py || exit 4
 
-  faketime_library="${BUNNY_FAKETIME_LIBRARY:-}"
-  if [[ -z "${faketime_library}" ]]; then
-    faketime_library="$(find /usr/lib64 /usr/lib -name 'libfaketime.so.1' 2>/dev/null | head -1 || true)"
+  # The frozen clock comes out of the pinned builder image, by digest.
+  #
+  # It used to come from `find /usr/lib64 /usr/lib`, so whichever libfaketime the
+  # build host happened to carry entered the qualification path. That is not a
+  # theoretical hazard: libfaketime's own semantics decide whether the clock
+  # freezes or merely starts at the epoch and then runs, and the second of those
+  # put fifty package headers on different seconds between two builds. A library
+  # that can do that to the artifact is pinned like podman is, not discovered.
+  #
+  # BUNNY_FAKETIME_LIBRARY still says *where* the library is, for an environment
+  # that has already extracted it. It does not say *what* it is: the checksum is
+  # verified against the builder lock either way, so an override cannot smuggle a
+  # different library past the pin.
+  expected_faketime="$(python3 -c '
+import json
+lock = json.load(open("build/inputs/builder-image-lock.json"))
+record = lock.get("faketimeLibrary") or {}
+print(record.get("sha256", ""))
+')"
+  if [[ -z "${expected_faketime}" ]]; then
+    echo "build/inputs/builder-image-lock.json records no faketimeLibrary checksum." >&2
+    echo "Rebuild the builder image with scripts/supply-chain/build-builder-image.sh; a" >&2
+    echo "hermetic build cannot pin a clock the lock does not describe." >&2
+    exit 4
   fi
+
+  faketime_library="${BUNNY_FAKETIME_LIBRARY:-}"
+  faketime_scratch=""
   if [[ -z "${faketime_library}" ]]; then
+    builder_reference="$(python3 -c '
+import json
+print(json.load(open("build/inputs/builder-image-lock.json"))["builderReference"])
+')"
+    builder_digest="$(python3 -c '
+import json
+print(json.load(open("build/inputs/builder-image-lock.json"))["builderDigest"])
+')"
+    builder_layout="${builder_reference%@sha256:*}"
+    if [[ ! -d "${builder_layout}" ]]; then
+      echo "the builder image layout ${builder_layout} is not present on this machine." >&2
+      echo "Pull it from the controlled registry by digest, or rebuild it." >&2
+      exit 4
+    fi
+    builder_tag="localhost/bunny-os-builder-pinned:${builder_digest#sha256:}"
+    builder_id="$(podman pull "oci:${builder_layout}:builder" 2>/dev/null | tail -1)"
+    podman tag "${builder_id}" "${builder_tag}"
+    observed_builder="$(sudo skopeo inspect --raw "containers-storage:${skopeo_store_args[0]-}${builder_tag}" |
+      python3 -c 'import hashlib,sys; print("sha256:"+hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')"
+    if [[ "${observed_builder}" != "${builder_digest}" ]]; then
+      echo "the builder image pulled from retention does not carry the locked digest:" >&2
+      echo "  locked   ${builder_digest}" >&2
+      echo "  observed ${observed_builder}" >&2
+      exit 4
+    fi
+    faketime_scratch="$(mktemp -d)"
+    trap '[[ -n "${faketime_scratch:-}" ]] && rm -rf "${faketime_scratch}" || true' EXIT
+    podman run --rm --network=none --entrypoint /usr/bin/cp \
+      --volume "${faketime_scratch}:/out:z" "${builder_tag}" \
+      /usr/local/lib/bunny-faketime/libfaketime.so.1 /out/libfaketime.so.1
+    sudo chown "$(id -u):$(id -g)" "${faketime_scratch}/libfaketime.so.1"
+    faketime_library="${faketime_scratch}/libfaketime.so.1"
+  fi
+
+  if [[ ! -f "${faketime_library}" ]]; then
     echo "hermetic build requires libfaketime; without it the rpm database records" >&2
-    echo "wall-clock install times and the build cannot reproduce. Install libfaketime" >&2
-    echo "or set BUNNY_FAKETIME_LIBRARY." >&2
+    echo "wall-clock install times and the build cannot reproduce. ${faketime_library}" >&2
+    echo "does not exist." >&2
+    exit 4
+  fi
+  observed_faketime="$(sha256sum "${faketime_library}" | awk '{print $1}')"
+  if [[ "${observed_faketime}" != "${expected_faketime}" ]]; then
+    echo "the libfaketime library does not match the builder lock:" >&2
+    echo "  locked   ${expected_faketime}" >&2
+    echo "  observed ${observed_faketime}  (${faketime_library})" >&2
+    echo >&2
+    echo "Two builders must freeze the clock with the same library. A different build of" >&2
+    echo "libfaketime can freeze differently, and the artifact would differ for a reason" >&2
+    echo "nothing in the evidence would name." >&2
     exit 4
   fi
 
@@ -142,13 +228,58 @@ mkdir -p "${output}"
 
 hermetic_args=()
 if [[ "${hermetic}" == "1" ]]; then
+  expected_sqlite="$(python3 -c '
+import json
+record = json.load(open("build/inputs/builder-image-lock.json")).get("sqlite") or {}
+print(record.get("libraryVersion", ""))
+')"
+  if [[ -z "${expected_sqlite}" ]]; then
+    echo "build/inputs/builder-image-lock.json records no SQLite identity; rebuild the" >&2
+    echo "builder image. The database finaliser refuses to run against an unpinned SQLite." >&2
+    exit 4
+  fi
   hermetic_args=(
     --build-arg "BUNNY_SNAPSHOT_ROOT=/snapshot"
     --build-arg "BUNNY_FAKETIME_LIBRARY=/run/bunny-faketime.so"
+    --build-arg "BUNNY_EXPECT_SQLITE=${expected_sqlite}"
   )
 fi
 
-sudo podman build \
+# Two builds of one commit must not share a layer.
+#
+# podman keys its build cache on the instruction and the context digest, and two
+# fresh clones of one commit produce the same both. Without --no-cache the second
+# build of a repeatability pair reuses the first build's layers wholesale and
+# produces a byte-identical archive because it *is* the first archive — a
+# comparison that can only ever pass, which is worse than one that fails.
+#
+# --root and --runroot, when the caller sets them, put each build in its own
+# store as well. That is the stronger property and it costs a full base-image
+# copy per build; --no-cache is the one that is always on, because it is the one
+# that makes the comparison mean anything.
+cache_args=(--no-cache)
+
+# Clamp every layer's timestamps at commit, not just the ones a RUN step can
+# reach.
+#
+# The in-container mtime pass cannot fix a COPY layer: `COPY build /tmp/bunny-os`
+# writes the build context with the wall-clock time of the copy, a later step
+# deletes /tmp/bunny-os, and the deletion does not remove the earlier layer's
+# bytes. Measured on two builds — layer 65 of 80, 87 members, every one differing
+# in mtime alone:
+#
+#   A  tmp/bunny-os/build/Containerfile   1785444473
+#   B  tmp/bunny-os/build/Containerfile   1785444758
+#
+# --rewrite-timestamp clamps rather than sets: anything older than the epoch keeps
+# its own mtime, which matters because file mtimes inside RPMs are packaging
+# information and flattening them would discard a real difference in what was
+# installed. --timestamp would set them all and is the wrong tool here.
+timestamp_args=(--source-date-epoch "${source_epoch}" --rewrite-timestamp)
+
+podman build \
+  "${cache_args[@]}" \
+  "${timestamp_args[@]}" \
   --file build/Containerfile \
   --tag "${tag}" \
   "${build_mounts[@]+"${build_mounts[@]}"}" \
@@ -162,8 +293,8 @@ sudo podman build \
   "${hermetic_args[@]+"${hermetic_args[@]}"}" \
   . 2>&1 | tee "${output}/oci-build.log"
 
-sudo podman image inspect "${tag}" | tee "${output}/oci-inspect.json" >/dev/null
-sudo podman save --format oci-archive --output "${output}/bunny-os.oci.tar" "${tag}"
+podman image inspect "${tag}" | tee "${output}/oci-inspect.json" >/dev/null
+podman save --format oci-archive --output "${output}/bunny-os.oci.tar" "${tag}"
 sudo chown "$(id -u):$(id -g)" "${output}/bunny-os.oci.tar"
 
 # Normalise the archive wrapper so the artifact digest is reproducible.
@@ -175,7 +306,7 @@ sudo chown "$(id -u):$(id -g)" "${output}/bunny-os.oci.tar"
 # already deterministic; only the wrapper was not. See
 # REPRODUCIBLE_BUILD_REPORT.md.
 bash "${repository_root}/build/scripts/normalise-oci-archive.sh" \
-  "${output}/bunny-os.oci.tar" "${source_epoch}"
+  "${output}/bunny-os.oci.tar" "${source_epoch}" "${output}/normalisation.json"
 if [[ "${archive_only}" == "1" ]]; then
   printf 'BUNNY_ARCHIVE_ONLY=1: skipped image-builder; no qcow2 or raw image produced\n' \
     | tee "${output}/image-builder.log"

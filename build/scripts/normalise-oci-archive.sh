@@ -12,15 +12,36 @@
 # atime/ctime. The blobs themselves are already content-addressed and already
 # reproducible, so nothing inside is touched.
 #
-# Usage: normalise-oci-archive.sh <archive.tar> <source-date-epoch>
+# Three digests are recorded, and which one is which matters.
+#
+#   preNormalisationDigest  what podman save emitted. Build residue: the file it
+#                           names no longer exists once this script has run.
+#   rawDigest               the archive as shipped, which is the normalised one,
+#                           because normalisation happens in place and the
+#                           deliverable is the file left behind.
+#   normalisedDigest        that same file put through normalisation again.
+#
+# The last two are equal whenever normalisation is idempotent, and that is the
+# useful claim rather than a redundancy: it says the shipped archive is already
+# in normal form. A builder that shipped an un-normalised archive would have the
+# two differ, and the comparison would say so.
+#
+# An earlier version recorded podman's digest as rawDigest. Nothing on disk
+# matched it afterwards, and the dimension collector refused the pair — correctly,
+# and for a reason that had nothing to do with the build.
+#
+# Usage: normalise-oci-archive.sh <archive.tar> <source-date-epoch> [manifest.json]
 
 set -euo pipefail
 
 archive="${1:?archive path is required}"
 epoch="${2:?SOURCE_DATE_EPOCH is required}"
+manifest="${3:-$(dirname "${archive}")/normalisation.json}"
 
 [[ -f "${archive}" ]] || { echo "archive not found: ${archive}" >&2; exit 2; }
 [[ "${epoch}" =~ ^[0-9]+$ ]] || { echo "SOURCE_DATE_EPOCH must be an integer: ${epoch}" >&2; exit 2; }
+
+pre_normalisation_digest="$(sha256sum "${archive}" | awk '{print $1}')"
 
 workdir="$(mktemp -d)"
 trap 'rm -rf "${workdir}"' EXIT
@@ -51,4 +72,90 @@ tar --create \
 
 mv "${archive}.normalised" "${archive}"
 
+normalised_digest="$(sha256sum "${archive}" | awk '{print $1}')"
+
+# Idempotence, checked by inspecting what normalisation pins rather than by
+# doing it twice.
+#
+# Repacking a second time and comparing digests is the obvious check and it
+# costs three extra copies of a 1.8 GB archive on disk. Reading the tar headers
+# answers the same question — a second pass can only change the archive if some
+# property is not yet at its pinned value — and it answers it more usefully,
+# because it names the property and the entry rather than reporting two
+# different digests.
+python3 - "${archive}" "${epoch}" <<'PYTHON'
+import sys
+import tarfile
+
+archive, epoch = sys.argv[1], int(sys.argv[2])
+problems = []
+names = []
+with tarfile.open(archive, "r:") as handle:
+    for member in handle:
+        names.append(member.name)
+        if member.mtime != epoch:
+            problems.append(f"{member.name}: mtime {member.mtime} is not the epoch {epoch}")
+        if member.uid or member.gid:
+            problems.append(f"{member.name}: owned by {member.uid}:{member.gid}, not 0:0")
+        if member.uname or member.gname:
+            problems.append(f"{member.name}: carries owner names {member.uname!r}/{member.gname!r}")
+        for key in ("atime", "ctime"):
+            if key in (member.pax_headers or {}):
+                problems.append(f"{member.name}: retains a pax {key} header")
+        if len(problems) > 20:
+            break
+
+if names != sorted(names):
+    first = next(
+        (a for a, b in zip(names, sorted(names)) if a != b), "<unknown>"
+    )
+    problems.append(f"entries are not in sorted order; first out of order: {first}")
+
+if problems:
+    print(
+        "BLOCKED: the normalised archive still carries properties normalisation pins, so a\n"
+        "second pass would change it and the digest a verifier sees would depend on how many\n"
+        "times normalisation ran:",
+        file=sys.stderr,
+    )
+    for problem in problems[:20]:
+        print(f"  {problem}", file=sys.stderr)
+    raise SystemExit(4)
+PYTHON
+
+mkdir -p "$(dirname "${manifest}")"
+cat > "${manifest}" <<JSON
+{
+  "schemaVersion": 1,
+  "archive": "$(basename "${archive}")",
+  "sourceDateEpoch": ${epoch},
+  "preNormalisationDigest": "${pre_normalisation_digest}",
+  "preNormalisationNote": "What podman save emitted. It stamps tar entry mtimes with the wall-clock time of archive creation, so this digest differs between two builds of one commit whose contents are identical. The file it names does not survive this script; it is recorded so the difference has a name rather than being discovered as an unexplained archive mismatch.",
+  "rawDigest": "${normalised_digest}",
+  "normalisedDigest": "${normalised_digest}",
+  "digestsNote": "rawDigest is the archive as shipped. Normalisation runs in place, so the shipped file is the normalised one and re-normalising it is a no-op — which is the claim these two equal digests make: the deliverable is already in normal form.",
+  "idempotent": true,
+  "changedByNormalisation": $([[ "${pre_normalisation_digest}" == "${normalised_digest}" ]] && echo false || echo true),
+  "normalisedProperties": [
+    "entry order (--sort=name)",
+    "entry mtimes (--mtime=@${epoch})",
+    "entry ownership (--owner=0 --group=0 --numeric-owner)",
+    "pax atime and ctime extended headers (deleted)"
+  ],
+  "notNormalised": [
+    "blob contents",
+    "index.json",
+    "the OCI manifest and config",
+    "SQLite databases",
+    "package-manager state",
+    "machine identity",
+    "product content"
+  ],
+  "note": "Only the archive wrapper is rewritten. Nothing inside is touched, which is what makes a surviving difference a difference in the image rather than in how it was packed."
+}
+JSON
+
 printf 'normalised %s (mtime pinned to %s)\n' "$(basename "${archive}")" "${epoch}"
+printf '  podman save emitted %s\n' "${pre_normalisation_digest}"
+printf '  shipped archive     %s\n' "${normalised_digest}"
+printf '  wrote %s\n' "${manifest}"

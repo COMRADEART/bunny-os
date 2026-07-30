@@ -1,0 +1,53 @@
+{
+  "architectures": [
+    "amd64",
+    "arm64",
+    "ppc64le",
+    "s390x"
+  ],
+  "blobBytes": 1088182499,
+  "blobCount": 67,
+  "copiedAt": "2026-07-30T18:38:25Z",
+  "manifests": [
+    {
+      "architecture": "arm64",
+      "digest": "sha256:58dc26498744f6177135425294ebe103628cff01d070d66303a03578f28a385b",
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "os": "linux",
+      "size": 19881
+    },
+    {
+      "architecture": "ppc64le",
+      "digest": "sha256:db1a2ef5111f89ecf68a7ac651f0e60902a25bd0e0e095d6ae7030eb0519f53d",
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "os": "linux",
+      "size": 19891
+    },
+    {
+      "architecture": "s390x",
+      "digest": "sha256:bee1951a6df15f10ab96897522ef9234e35b5fc033d5bffbb80450efc28ebeca",
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "os": "linux",
+      "size": 19639
+    },
+    {
+      "architecture": "amd64",
+      "digest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "os": "linux",
+      "size": 19921
+    }
+  ],
+  "notes": "Every manifest, config and layer blob in the mirror was read and re-hashed against its own digest. The retained manifest was confirmed to be one the upstream index references. This is retention, not a cache: a local podman store is unreachable from the second builder and does not satisfy this check.",
+  "retainedDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+  "retainedLocation": "/var/lib/bunny-retention/base-images/sha256-c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
+  "retainedReference": "/var/lib/bunny-retention/base-images/sha256-c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+  "schemaVersion": 1,
+  "selectedArchitecture": "amd64",
+  "selectedManifestDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+  "upstreamDigest": "sha256:c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
+  "upstreamMediaType": "application/vnd.oci.image.index.v1+json",
+  "upstreamReference": "quay.io/fedora/fedora-bootc:44@sha256:c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
+  "upstreamStillAvailable": true,
+  "verificationStatus": "verified"
+}

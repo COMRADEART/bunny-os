@@ -47,9 +47,45 @@ note() { printf '  %s\n' "$1"; }
 record() { removed+=("$1"); }
 
 echo "==> 3. removing package caches"
-for path in /var/cache/dnf /var/cache/libdnf5 /var/cache/PackageKit /var/cache/yum; do
+# /var/cache/ldconfig is here for a reason the others are not: aux-cache stores
+# an inode number, a size and two timestamps per shared object, and inode numbers
+# are allocated by the filesystem the build happened to run on. Measured on two
+# builds, inside layer 79 at offset 47,478,304:
+#
+#   A  glibc-ld.so.auxcache-2.0 … bbc01200… b0b86b6a… 80c20100…
+#   B  glibc-ld.so.auxcache-2.0 … 5cb41200… d0b96b6a… 30070200…
+#
+# It never appeared in the file comparison because /var/cache is excluded from
+# the compared set as runtime state — correctly, for a *dimension*. The layer tar
+# contains it either way, so it changed ociLayers and rawArchive while every
+# content dimension matched. ldconfig regenerates it on demand and its absence
+# costs one slower ldconfig run.
+for path in /var/cache/dnf /var/cache/libdnf5 /var/cache/PackageKit /var/cache/yum \
+            /var/cache/ldconfig; do
   if [[ -e "${path}" ]]; then rm -rf "${path}"; record "${path}"; note "removed ${path}"; fi
 done
+
+echo "==> 3a. removing package-manager build logs"
+# A build log is residue, and this one is dated. /var/log/dnf5.log records every
+# transaction with a wall-clock timestamp per line, so it differs between two
+# builds by construction.
+#
+# It was invisible for the same reason /var/cache/ldconfig/aux-cache was:
+# /var/log is excluded from the compared set as runtime state, which is right for
+# a dimension and irrelevant to a layer tar. Measured, it was the last remaining
+# difference — every one of the fourteen content dimensions matched and
+# ociLayers did not.
+#
+# Removing it also stops the artifact shipping a record of when and where it was
+# built, which is builder-host identity the mandatory principles exclude
+# regardless of how little it reveals.
+shopt -s nullglob
+for log in /var/log/dnf5.log* /var/log/dnf.log* /var/log/dnf.rpm.log* \
+           /var/log/dnf.librepo.log* /var/log/hawkey.log* /var/log/ldconfig* \
+           /var/log/anaconda; do
+  rm -rf "${log}"; record "${log}"; note "removed ${log}"
+done
+shopt -u nullglob
 
 echo "==> 4. removing DNF countme state"
 # countme is Fedora's per-installation usage counter. It is telemetry, it has no
@@ -133,35 +169,26 @@ if [[ -e /etc/brlapi.key ]]; then
 fi
 
 echo "==> 7. canonicalising package-manager state"
-# The WAL and shared-memory files are transaction residue, not state. Left
-# behind they differ between builds for reasons that have nothing to do with
-# what was installed; checkpointed, the database contains everything and the
-# residue is gone. The history table itself is kept — it is what supports
-# repair, audit and licence inventory, and the brief is explicit that
-# package-manager state may not be discarded merely for being inconvenient.
-for database in /usr/share/rpm/rpmdb.sqlite /usr/lib/sysimage/libdnf5/transaction_history.sqlite; do
-  [[ -f "${database}" ]] || continue
-  if command -v sqlite3 >/dev/null 2>&1; then
-    sqlite3 "${database}" "PRAGMA wal_checkpoint(TRUNCATE); VACUUM;" >/dev/null
-    note "checkpointed and vacuumed ${database}"
-  else
-    python3 - "${database}" <<'PYTHON'
-import sqlite3
-import sys
-
-connection = sqlite3.connect(sys.argv[1])
-connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-connection.execute("VACUUM")
-connection.close()
-PYTHON
-    note "checkpointed and vacuumed ${database} (python sqlite3)"
-  fi
-  for residue in "${database}-wal" "${database}-shm"; do
-    if [[ -e "${residue}" && ! -s "${residue}" ]]; then
-      rm -f "${residue}"; record "${residue}"; note "removed empty ${residue}"
-    fi
-  done
-done
+# Delegated, because this step has a contract the rest of finalisation does not:
+# it must be idempotent, it must fail closed on an unexpected schema, a failed
+# integrity check, a changed package inventory or a broken rpm query, and it must
+# be able to prove it altered no content. The three lines it used to be could do
+# none of that — and would have reported success while the databases still
+# differed, which is what happened.
+#
+# The history table itself is kept. It supports repair, audit and licence
+# inventory, and the brief is explicit that package-manager state may not be
+# discarded merely for being inconvenient.
+database_report=""
+if [[ -n "${report}" ]]; then
+  database_report="$(dirname "${report}")/package-databases.json"
+fi
+bash "$(dirname "${BASH_SOURCE[0]}")/finalise-package-databases.sh" \
+  ${database_report:+--report "${database_report}"} \
+  ${BUNNY_EXPECT_SQLITE:+--expect-sqlite "${BUNNY_EXPECT_SQLITE}"}
+# Which residue files it actually removed is in its own manifest. They are not
+# added to `removed` here, because that list is what this script removed and a
+# path recorded on the assumption it existed is a claim nobody checked.
 # system.toml carries an rpmdb_cookie derived from the rpmdb. It is not
 # independent state: once the rpmdb is deterministic this follows. Left alone
 # deliberately, so that if it still differs the comparison reports a real

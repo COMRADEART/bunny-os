@@ -1,0 +1,31 @@
+{
+  "appliedTo": [
+    "container-image-config-created",
+    "oci-archive-entry-mtimes",
+    "rpm-transaction-install-time",
+    "font-directory-mtimes",
+    "generated-file-mtimes"
+  ],
+  "architecture": "x86_64",
+  "baseImageDigest": "sha256:c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
+  "builderImageDigest": "sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+  "candidateCommit": "c9fbf61b721eeb6803c666333e5390416ac2fbf1",
+  "epochSource": "git show -s --format=%ct c9fbf61b721eeb6803c666333e5390416ac2fbf1 \u2014 the qualification target commit's own timestamp, so the epoch is a property of what is built rather than of when it was built",
+  "mechanism": {
+    "networkOperations": "None occur under the override. The qualification build installs from a local signed snapshot over file://, so no TLS handshake and no certificate validity check happens while the clock is overridden.",
+    "rpmTransaction": "libfaketime is bind-mounted from the builder image into the build container and LD_PRELOADed for the dnf process only. Nothing is installed into the product image to achieve this, and the override ends with the transaction.",
+    "signatureVerification": "RPM signature verification still runs, with gpgcheck=1, against the real Fedora keys. The epoch is the candidate commit's timestamp, which is within every relevant key's validity, and the snapshot's signatures were additionally verified before the build started."
+  },
+  "neverAppliedTo": [
+    "certificate-validity",
+    "security-advisory-freshness",
+    "package-signature-verification",
+    "update-metadata-expiry",
+    "evidence-timestamps"
+  ],
+  "packageSnapshotDigest": "b6fbf2ae637a288cc8184ccf9142e47414db5196976a9d53b2d8422df1c2949b",
+  "profile": "beta",
+  "retainedBaseDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+  "schemaVersion": 1,
+  "sourceDateEpoch": 1785442979
+}

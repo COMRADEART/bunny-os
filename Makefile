@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot gate-dev-qualification dev-qualification-gaps qualification-compare release-blocker-baseline vulnerability-position reachability-review package-minimisation-check licence-gate independent-builder-prepare reproducibility-compare development-signing-drill signing-roles build-qualification-candidate build-independent-recovery validate-release-manifest test-installation-matrix test-encryption-matrix test-update-matrix test-rollback-matrix test-recovery-matrix test-preservation-matrix test-accessibility-matrix validate-hardware-evidence validate-independent-reviews stable-evidence-report pilot-closure-assertion test-release-closure qualification-evidence-baseline independent-builder-ci-manifest collect-builder-record verify-builder-independence compare-independent-builds acquire-cve-sources validate-cve-acquisition analyse-cve-symbols generate-reachability-packages collect-hardware-evidence accessibility-evidence-plan validate-accessibility-evidence two-person-development-signing-drill qualification-candidate-readiness gate-source gate-qualification-candidate test-qualification-evidence test-reachability test-review-evidence mirror-base-image verify-retained-base build-builder-image verify-builder-image resolve-package-lock materialise-package-snapshot verify-package-snapshot verify-input-locks hermetic-build image-finalisation machine-identity-check mutable-state-check rpmdb-determinism-check font-cache-determinism-check intended-selinux-manifest deterministic-sbom local-hermetic-repeatability dispatch-hosted-reproducibility import-reproducibility-evidence compare-three-builds toolchain-independence reproducibility-gate test-supplychain
+.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot gate-dev-qualification dev-qualification-gaps qualification-compare release-blocker-baseline vulnerability-position reachability-review package-minimisation-check licence-gate independent-builder-prepare reproducibility-compare development-signing-drill signing-roles build-qualification-candidate build-independent-recovery validate-release-manifest test-installation-matrix test-encryption-matrix test-update-matrix test-rollback-matrix test-recovery-matrix test-preservation-matrix test-accessibility-matrix validate-hardware-evidence validate-independent-reviews stable-evidence-report pilot-closure-assertion test-release-closure qualification-evidence-baseline independent-builder-ci-manifest collect-builder-record verify-builder-independence compare-independent-builds acquire-cve-sources validate-cve-acquisition analyse-cve-symbols generate-reachability-packages collect-hardware-evidence accessibility-evidence-plan validate-accessibility-evidence two-person-development-signing-drill qualification-candidate-readiness gate-source gate-qualification-candidate test-qualification-evidence test-reachability test-review-evidence mirror-base-image verify-retained-base build-builder-image verify-builder-image resolve-package-lock materialise-package-snapshot verify-package-snapshot verify-input-locks hermetic-build image-finalisation machine-identity-check mutable-state-check rpmdb-determinism-check font-cache-determinism-check intended-selinux-manifest deterministic-sbom inspect-sqlite-databases compare-sqlite-logical compare-sqlite-pages compare-rpm-headers finalise-package-databases sqlite-determinism-check test-rpmdb-rebuild test-libdnf-history-rebuild complete-local-comparison publish-retained-base publish-builder-image publish-package-snapshot verify-published-inputs cold-pull-input-test create-reproducibility-target dispatch-hosted-h1 dispatch-hosted-h2 import-three-builder-evidence local-hermetic-repeatability dispatch-hosted-reproducibility import-reproducibility-evidence compare-three-builds toolchain-independence reproducibility-gate test-supplychain
 
 audit:
 	$(PYTHON) scripts/task.py audit
@@ -608,8 +608,56 @@ intended-selinux-manifest:
 deterministic-sbom:
 	$(PYTHON) scripts/reproducibility/check_package_state.py --dimensions "$${BUNNY_DIMENSIONS:-build/out/qualification/dimensions.json}" --kind sbom
 
+inspect-sqlite-databases:
+	$(PYTHON) scripts/reproducibility/inspect_sqlite.py --database "$${BUNNY_RPMDB:?set BUNNY_RPMDB}" --owner rpm --database "$${BUNNY_HISTORY:?set BUNNY_HISTORY}" --owner libdnf5 --output build/out/reproducibility/sqlite-inspection.json --require-integrity
+
+compare-sqlite-logical:
+	$(PYTHON) scripts/reproducibility/compare_sqlite_logical.py --first "$${BUNNY_FIRST:?set BUNNY_FIRST}" --second "$${BUNNY_SECOND:?set BUNNY_SECOND}" --output build/out/reproducibility/sqlite-logical-diff.json
+
+compare-sqlite-pages:
+	$(PYTHON) scripts/reproducibility/compare_sqlite_pages.py --first "$${BUNNY_FIRST:?set BUNNY_FIRST}" --second "$${BUNNY_SECOND:?set BUNNY_SECOND}" --output build/out/reproducibility/sqlite-structural-diff.json
+
+compare-rpm-headers:
+	$(PYTHON) scripts/reproducibility/diff_rpm_headers.py --first "$${BUNNY_FIRST:?set BUNNY_FIRST}" --second "$${BUNNY_SECOND:?set BUNNY_SECOND}" --output build/out/reproducibility/rpm-header-diff.json
+
+finalise-package-databases:
+	bash build/scripts/finalise-package-databases.sh --report build/out/qualification/package-databases.json
+
+sqlite-determinism-check test-rpmdb-rebuild test-libdnf-history-rebuild:
+	$(PYTHON) scripts/reproducibility/evaluate_database_approaches.py --command $@ --rpmdb "$${BUNNY_RPMDB:?set BUNNY_RPMDB to an extracted rpmdb.sqlite}" --history "$${BUNNY_HISTORY:?set BUNNY_HISTORY to an extracted transaction_history.sqlite}" --trials "$${BUNNY_TRIALS:-3}" --report "build/out/reproducibility/$@.json"
+
+complete-local-comparison:
+	bash scripts/supply-chain/local-hermetic-repeatability.sh --mode qualification
+
 local-hermetic-repeatability:
-	bash scripts/supply-chain/local-hermetic-repeatability.sh
+	bash scripts/supply-chain/local-hermetic-repeatability.sh --mode "$${BUNNY_COMPARISON_MODE:-qualification}"
+
+publish-retained-base:
+	bash scripts/supply-chain/publish-retained-inputs.sh --kind base --registry "$${BUNNY_REGISTRY:-ghcr.io/comradeart}"
+
+publish-builder-image:
+	bash scripts/supply-chain/publish-retained-inputs.sh --kind builder --registry "$${BUNNY_REGISTRY:-ghcr.io/comradeart}"
+
+publish-package-snapshot:
+	bash scripts/supply-chain/publish-retained-inputs.sh --kind snapshot --registry "$${BUNNY_REGISTRY:-ghcr.io/comradeart}"
+
+verify-published-inputs:
+	$(PYTHON) scripts/supply-chain/verify-published-inputs.py --publication build/inputs/input-publication-lock.json
+
+cold-pull-input-test:
+	gh workflow run verify-reproducible-inputs.yml --repo COMRADEART/bunny-os --field publication="$${BUNNY_PUBLICATION_COMMIT:-$$(git rev-parse HEAD)}"
+
+create-reproducibility-target:
+	$(PYTHON) scripts/supply-chain/create-reproducibility-target.py --output build/inputs/qualification-target.json
+
+dispatch-hosted-h1:
+	gh workflow run hermetic-builder.yml --repo COMRADEART/bunny-os --field commit="$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}" --field label=H1
+
+dispatch-hosted-h2:
+	gh workflow run hermetic-builder.yml --repo COMRADEART/bunny-os --field commit="$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}" --field label=H2
+
+import-three-builder-evidence:
+	$(PYTHON) scripts/release.py import-hosted-builder-evidence --artifact-dir "$${BUNNY_ARTIFACT_DIR:?set BUNNY_ARTIFACT_DIR}" --candidate-commit "$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}"
 
 dispatch-hosted-reproducibility:
 	gh workflow run hermetic-builder.yml --repo COMRADEART/bunny-os --field commit="$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}"

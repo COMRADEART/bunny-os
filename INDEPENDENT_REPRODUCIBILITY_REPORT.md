@@ -288,3 +288,49 @@ and are not committed.
 | Hosted run | [30564513627](https://github.com/COMRADEART/bunny-os/actions/runs/30564513627) |
 | Hosted build details | `HOSTED_INDEPENDENT_BUILD_REPORT.md` |
 | Import checks | `HOSTED_ARTIFACT_IMPORT_REPORT.md` |
+
+## 2026-07-30 addendum — three passes, and what each one actually settled
+
+This report described attempt 1: fifteen files differing out of 104,247 between a
+local Fedora builder and a hosted runner. Three further passes followed, and the
+useful record is what each one turned out to have got wrong.
+
+| Pass | Claimed | Measured afterwards |
+| --- | --- | --- |
+| 1 | fifteen files differ, all build-environment state | correct |
+| 2 | thirteen fixed; the two remaining differ by "sqlite page allocation or B-tree construction order" | **wrong.** Identical page counts, empty freelists, identical b-tree depths and cell offsets. Fifty rows of *content* differed. |
+| 3 | — | the build clock was offset rather than frozen, and a second package transaction had no clock at all |
+| 4 | — | every file matched and the layers still differed: wall-clock mtimes in a COPY layer, and inode numbers in an ldconfig cache |
+
+Pass 2's inference is the one worth keeping. Two files of identical length
+differing in the middle is what page-layout variance looks like from a distance,
+and the fix it implied — a canonical re-encoding — would have made the bytes match
+while erasing a real difference in recorded install times. The brief's
+instruction not to assume page allocation until the structures were measured is
+what changed the answer.
+
+### Three defects in the evidence apparatus, not the build
+
+Each would have made a favourable result mean less than it appeared to.
+
+* **The input locks were untracked.** Every "fresh clone" comparison had run with
+  the four pins hand-copied into each clone. A hosted builder has nothing but the
+  commit.
+* **Both builds shared a layer cache.** podman keys its build cache on the
+  instruction and the context digest, so two fresh clones of one commit hit it.
+  The second build could have been served the first one's layers wholesale — a
+  comparison that can only pass.
+* **Two classes of difference had nowhere to be reported.** Layer tars carry entry
+  mtimes and contain the runtime-state paths the dimensions exclude, so a
+  difference in either changed `ociLayers` and `rawArchive` while every content
+  dimension matched. Both are now collected as named diagnostics.
+
+### What is still not established
+
+Independent-builder reproducibility. The retained base, the builder image and the
+package snapshot exist on one machine, so no second builder can obtain them. That
+is one token scope and it is named in `PACKAGE_INPUT_PUBLICATION_REPORT.md`.
+
+Until then the strongest available claim is same-host determinism, which is a
+different claim, and this project has now spent four passes learning how
+different.

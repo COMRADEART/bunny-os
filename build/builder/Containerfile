@@ -58,6 +58,7 @@ RUN dnf -y install --setopt=install_weak_deps=False \
         dnf5 \
         dnf5-plugins \
         createrepo_c \
+        libfaketime \
         policycoreutils \
         libselinux-utils \
         selinux-policy-targeted \
@@ -118,6 +119,28 @@ RUN mkdir -p /etc/containers && \
       '[containers]' \
       'default_capabilities = ["CHOWN","DAC_OVERRIDE","FOWNER","FSETID","KILL","NET_BIND_SERVICE","SETFCAP","SETGID","SETPCAP","SETUID","SYS_CHROOT"]' \
       > /etc/containers/containers.conf
+
+# libfaketime is what freezes the clock the rpm transaction reads, and its
+# semantics are load-bearing: with an `@` prefix it starts at the given instant
+# and then runs, and without one it freezes. Measured on 0.9.12, across a real
+# 2.5-second sleep, the two forms differ by exactly that 2.5 seconds — which is
+# how fifty package headers ended up with different INSTALLTIME values between
+# two builds.
+#
+# It was previously found on the build host with `find /usr/lib64 /usr/lib`, so
+# whichever libfaketime the machine happened to carry entered the qualification
+# path. That is the defect this image exists to remove, and a library whose
+# version changes the artifact is exactly the wrong one to take from the host.
+#
+# Fedora installs it under /usr/lib64/faketime/. The path is normalised to a
+# stable location so the build does not have to search for it, and the build
+# refuses to run if the link does not resolve.
+RUN set -eux; \
+    library="$(find /usr/lib64 /usr/lib -name 'libfaketime.so.1' -not -path '*MT*' 2>/dev/null | head -1)"; \
+    test -n "${library}"; \
+    mkdir -p /usr/local/lib/bunny-faketime; \
+    cp "${library}" /usr/local/lib/bunny-faketime/libfaketime.so.1; \
+    test -s /usr/local/lib/bunny-faketime/libfaketime.so.1
 
 COPY build/builder/scripts/ /usr/local/lib/bunny-builder/
 

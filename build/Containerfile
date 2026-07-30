@@ -37,9 +37,18 @@ COPY tools /tmp/bunny-os/tools
 # for the RUN step and nothing they carry ends up in the image.
 ARG BUNNY_SNAPSHOT_ROOT=
 ARG BUNNY_FAKETIME_LIBRARY=
+# The SQLite version the database finaliser must find in this container. The
+# finalisation runs against this image's own sqlite — never the build host's —
+# and that library is already pinned transitively, by the retained base digest
+# and the package lock. This argument is the cross-check: it comes from the
+# builder lock, so a base or snapshot change that moved SQLite fails the build
+# with the two versions named instead of surfacing later as two databases that
+# lay out identical rows differently.
+ARG BUNNY_EXPECT_SQLITE=
 
 RUN BUNNY_SNAPSHOT_ROOT="${BUNNY_SNAPSHOT_ROOT}" \
     BUNNY_FAKETIME_LIBRARY="${BUNNY_FAKETIME_LIBRARY}" \
+    BUNNY_EXPECT_SQLITE="${BUNNY_EXPECT_SQLITE}" \
     SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}" \
     /usr/bin/python3 /tmp/bunny-os/build/scripts/install-packages.py \
       --profile "${BUNNY_PROFILE}" \
@@ -58,3 +67,63 @@ RUN BUNNY_SNAPSHOT_ROOT="${BUNNY_SNAPSHOT_ROOT}" \
       --epoch "${SOURCE_DATE_EPOCH}" \
       --report /usr/share/bunny-os/finalisation.json && \
     rm -rf /var/cache/dnf /tmp/bunny-os
+
+# Pin every mtime the build itself wrote, as the last thing that happens.
+#
+# It has to be a separate step and it has to be last, because the step above
+# ends by deleting /tmp/bunny-os and that deletion updates /tmp's own mtime
+# after finalisation has already run. Measured on two hermetic builds:
+# usr/share/bunny-os/finalisation.json had identical content and mtimes of
+# 1785439457 and 1785439660 — wall clock, 203 seconds apart. The dimension
+# collector does not compare mtimes, so nothing reported it; the layer tar
+# contains them, so ociLayers and rawArchive differed and the difference was
+# attributed entirely to the two databases.
+#
+# `-newermt` selects exactly what this build wrote: anything RPM installed
+# carries the mtime from its package, which is earlier than the epoch and is
+# packaging information rather than build noise, so it is left alone. The
+# assertion afterwards is what makes this a check rather than a sweep — if a
+# path cannot be pinned, the build stops instead of shipping an artifact whose
+# archive digest nobody can explain.
+# Mount points are excluded, and *only* mount points.
+#
+# /snapshot is the retained package snapshot bind-mounted read-only for this
+# build, and touching it fails outright:
+#
+#   touch: setting times of '/snapshot': Read-only file system
+#
+# It is also not in the committed layer, which is the actual reason — the same
+# reason finalise-image.sh empties /etc/hostname instead of removing it.
+#
+# The list comes from /proc/self/mounts and nowhere else. An earlier version also
+# hard-coded /proc /sys /dev /run, which was wrong about the last one: measured
+# inside this base, /run is *not* a mount, is ordinary image content, and can be
+# touched. Excluding it left one entry in the artifact carrying a wall-clock
+# mtime — 987 seconds past the epoch — which changes the layer digest and
+# differs between two builds. The mounts file already names the three paths
+# under /run that really are mounts (/run/.containerenv, /run/secrets and
+# systemd's stub resolv.conf), so nothing is gained by guessing at the parent.
+#
+# `-xdev` already stops the walk descending into another filesystem; what it does
+# not do is stop `find` reporting the mount point directory itself.
+RUN bash -euo pipefail -c '\
+    epoch="${SOURCE_DATE_EPOCH}"; \
+    mapfile -t mounts < <(awk "\$2 != \"/\" { print \$2 }" /proc/self/mounts | sort -u); \
+    prune=(); \
+    for point in "${mounts[@]}"; do \
+      prune+=(-path "${point}" -o); \
+    done; \
+    unset "prune[${#prune[@]}-1]"; \
+    mapfile -t unpinned < <(find / -xdev \( "${prune[@]}" \) -prune -o -newermt "@${epoch}" -print); \
+    if [ ${#unpinned[@]} -gt 0 ]; then \
+      printf "%s\0" "${unpinned[@]}" | xargs -0r touch --no-dereference --date="@${epoch}"; \
+    fi; \
+    mapfile -t remaining < <(find / -xdev \( "${prune[@]}" \) -prune -o -newermt "@${epoch}" -print); \
+    if [ ${#remaining[@]} -gt 0 ]; then \
+      echo "BLOCKED: these paths still carry an mtime later than the build epoch:" >&2; \
+      printf "  %s\n" "${remaining[@]:0:20}" >&2; \
+      echo "A file the build wrote and did not pin changes the layer digest, and the" >&2; \
+      echo "comparison would report an archive difference with no file to attribute it to." >&2; \
+      exit 2; \
+    fi; \
+    echo "pinned ${#unpinned[@]} path(s) written by this build to ${epoch}"'

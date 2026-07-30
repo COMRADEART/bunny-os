@@ -209,6 +209,35 @@ inventory (6,076 packages) and the kernel match exactly. Details in
 The candidate prerequisite count is unchanged at **2 of 14**:
 `licence-gate` and `development-signing-drill`.
 
+### 2026-07-30, later: the comparison was rerun and it found the apparatus wrong
+
+Two further passes were made. The second reduced the fifteen differing files to
+two. The third measured *why* those two differed instead of inferring it, and the
+inference had been wrong: the databases were structurally identical and differed
+in fifty rows of content, from a build clock that was offset rather than frozen.
+
+Three defects in the evidence apparatus were found in the process, and they
+matter more to this report than the build fixes do:
+
+* **The input locks were untracked.** Every "fresh clone" comparison had been run
+  with the pins hand-copied in. A hosted builder has nothing but the commit.
+* **Both builds shared a layer cache.** The second build could have been served
+  the first one's layers, which would have produced a byte-identical archive
+  because it *was* the first archive.
+* **The dimension collector did not compare entry mtimes**, so an archive
+  difference caused by a wall-clock mtime had no file to attribute it to and was
+  attributed to the databases instead.
+
+None of these changed a gate. All three changed what a passing comparison would
+have been worth.
+
+`independent-reproducibility` remains `BLOCKED`, and now for a fourth distinct
+reason: the retained inputs are not published, so there is no second builder that
+can obtain them. That is one token scope, named in
+`PACKAGE_INPUT_PUBLICATION_REPORT.md`.
+
+The candidate prerequisite count is unchanged at **2 of 14**.
+
 ### The evidence commit is not the candidate commit
 
 This addendum is committed after `9ea5459bdaf122f8c5999683b2c8961555826954`, the

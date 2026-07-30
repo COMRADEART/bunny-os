@@ -94,6 +94,32 @@
       "securityRelevance": "It is behavioural reporting. Removing it matches the project's stated no-telemetry position; the change must not introduce any replacement reporting, and does not."
     },
     {
+      "path": "var/log/dnf5.log",
+      "category": "runtime-cache",
+      "disposition": "absent-from-image",
+      "reason": "The package manager's own log, one wall-clock timestamp per line, written by the build's install and minimisation transactions. It differs between two builds of one commit by construction. It was the last dimension-invisible difference found: /var/log is excluded from the compared set as runtime state, which is right for a dimension and irrelevant to a layer tar, so it changed ociLayers and rawArchive while all fourteen content dimensions matched.",
+      "generator": "dnf5",
+      "generationTime": "whenever the installed system runs a package transaction",
+      "owner": "root:root",
+      "permissions": "0644",
+      "recoveryBehaviour": "dnf5 recreates it on the next transaction. No history is lost that matters: what was installed is in the rpm database, and the transaction structure is in the libdnf5 history, both of which are retained.",
+      "validationTest": "tests/supplychain/test_ci_protections.py::FinalisationProtections::test_build_logs_are_removed",
+      "securityRelevance": "It records when and where the artifact was built. That is builder-host identity leaking into a product artifact, which the mandatory principles exclude regardless of how little it reveals."
+    },
+    {
+      "path": "var/cache/ldconfig",
+      "category": "runtime-cache",
+      "disposition": "absent-from-image",
+      "reason": "aux-cache stores an inode number, a size and two timestamps per shared object, and inode numbers are allocated by the filesystem the build happened to run on. Measured inside one layer at offset 47,478,304, two builds recorded different inode numbers for the same libraries. It also moved glibc's SPDX packageVerificationCode, which is what the sbom dimension was reporting.",
+      "generator": "ldconfig",
+      "generationTime": "whenever ldconfig runs on the installed system",
+      "owner": "root:root",
+      "permissions": "0755",
+      "recoveryBehaviour": "ldconfig regenerates it on demand; its absence costs one slower ldconfig run and changes no linking behaviour.",
+      "validationTest": "tests/supplychain/test_ci_protections.py::FinalisationProtections::test_build_logs_are_removed",
+      "securityRelevance": "None directly. It is a filesystem-layout artefact of the build machine, and an inode number is not information a product artifact should carry."
+    },
+    {
       "path": "var/cache/dnf",
       "category": "runtime-cache",
       "disposition": "absent-from-image",

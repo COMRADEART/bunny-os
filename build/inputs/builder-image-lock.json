@@ -1,0 +1,288 @@
+{
+  "absentTools": {
+    "image-builder": "Fedora-only, and the archive-only qualification path never invokes it. build/scripts/build-image.sh takes the BUNNY_ARCHIVE_ONLY branch, which prints that it skipped image-builder and produces no qcow2 or raw image. Its absence therefore cannot affect the archive. It is declared here rather than omitted, because a tool that is simply missing from a lock is indistinguishable from one somebody forgot to pin. Its absence also means this builder can never produce a disk image, and so can never satisfy installation, recovery, hardware, encryption, update, rollback or secure-boot qualification."
+  },
+  "architecture": "x86_64",
+  "baseDigest": "sha256:754c6d7d5767750e57caf10376a72eb347ce5721a4310334aaeedb09ba80e05f",
+  "baseReference": "registry.fedoraproject.org/fedora@sha256:754c6d7d5767750e57caf10376a72eb347ce5721a4310334aaeedb09ba80e05f",
+  "builderDigest": "sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+  "builderReference": "/var/lib/bunny-retention/builder-images/9c525bf1ca34@sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+  "builtAt": "2026-07-30T20:12:24Z",
+  "containerfileDigest": "49449bf1b876ac3cc912421218240d96a6f388264b26dc5a3ae732347f8193b2",
+  "faketimeLibrary": {
+    "path": "/usr/local/lib/bunny-faketime/libfaketime.so.1",
+    "sha256": "7877f29c417228f151dbcbe182741d0ca516635dae3afb03eac8f3ee6a42d745"
+  },
+  "notes": "Measured from inside the built image, joined to the declared classifications. Both builders must present this builderDigest; the hosts may differ in every other respect, which is what makes them independent.",
+  "runtimeRequirements": {
+    "minimumDiskGiB": 40,
+    "minimumMemoryGiB": 8,
+    "network": "required only for the builder image build itself; a qualification build runs with the package snapshot mounted and no repository network access",
+    "privileged": true,
+    "privilegedReason": "podman builds a container inside a container, which needs mount and user-namespace privileges the default profile withholds.",
+    "swapNote": "the hosted runner has 7.8 GiB of RAM and syft was killed cataloguing a 1.85 GB archive holding 164,962 entries; 16 GiB of swap and SYFT_PARALLELISM=1 are required there."
+  },
+  "schemaVersion": 1,
+  "sourceCommit": "9c525bf1ca341dcac1bf701d5363adabb07be267",
+  "sqlite": {
+    "cliVersion": "3.51.2",
+    "compileOptions": [
+      "ATOMIC_INTRINSICS=1",
+      "COMPILER=gcc-16.0.1 20260115 (Red Hat 16.0.1-0)",
+      "DEFAULT_AUTOVACUUM",
+      "DEFAULT_CACHE_SIZE=-2000",
+      "DEFAULT_FILE_FORMAT=4",
+      "DEFAULT_JOURNAL_SIZE_LIMIT=-1",
+      "DEFAULT_MMAP_SIZE=0",
+      "DEFAULT_PAGE_SIZE=4096",
+      "DEFAULT_PCACHE_INITSZ=20",
+      "DEFAULT_RECURSIVE_TRIGGERS",
+      "DEFAULT_SECTOR_SIZE=4096",
+      "DEFAULT_SYNCHRONOUS=2",
+      "DEFAULT_WAL_AUTOCHECKPOINT=1000",
+      "DEFAULT_WAL_SYNCHRONOUS=2",
+      "DEFAULT_WORKER_THREADS=0",
+      "DIRECT_OVERFLOW_READ",
+      "DISABLE_DIRSYNC",
+      "ENABLE_COLUMN_METADATA",
+      "ENABLE_DBPAGE_VTAB",
+      "ENABLE_DBSTAT_VTAB",
+      "ENABLE_FTS3",
+      "ENABLE_FTS3_PARENTHESIS",
+      "ENABLE_FTS4",
+      "ENABLE_FTS5",
+      "ENABLE_MATH_FUNCTIONS",
+      "ENABLE_PERCENTILE",
+      "ENABLE_PREUPDATE_HOOK",
+      "ENABLE_RTREE",
+      "ENABLE_SESSION",
+      "ENABLE_UNLOCK_NOTIFY",
+      "HAVE_ISNAN",
+      "MALLOC_SOFT_LIMIT=1024",
+      "MAX_ATTACHED=10",
+      "MAX_COLUMN=2000",
+      "MAX_COMPOUND_SELECT=500",
+      "MAX_DEFAULT_PAGE_SIZE=8192",
+      "MAX_EXPR_DEPTH=1000",
+      "MAX_FUNCTION_ARG=1000",
+      "MAX_LENGTH=1000000000",
+      "MAX_LIKE_PATTERN_LENGTH=50000",
+      "MAX_MMAP_SIZE=0x7fff0000",
+      "MAX_PAGE_COUNT=0xfffffffe",
+      "MAX_PAGE_SIZE=65536",
+      "MAX_SQL_LENGTH=1000000000",
+      "MAX_TRIGGER_DEPTH=1000",
+      "MAX_VARIABLE_NUMBER=32766",
+      "MAX_VDBE_OP=250000000",
+      "MAX_WORKER_THREADS=8",
+      "MUTEX_PTHREADS",
+      "SECURE_DELETE",
+      "SYSTEM_MALLOC",
+      "TEMP_STORE=1",
+      "THREADSAFE=1"
+    ],
+    "compileOptionsSha256": "b0820ccb9a3b128e507a367ea967872fb3b147800d405359dc85c7db9c883047",
+    "defaultPageSize": 4096,
+    "extensionsCompiledIn": [
+      "ENABLE_COLUMN_METADATA",
+      "ENABLE_DBPAGE_VTAB",
+      "ENABLE_DBSTAT_VTAB",
+      "ENABLE_FTS3",
+      "ENABLE_FTS3_PARENTHESIS",
+      "ENABLE_FTS4",
+      "ENABLE_FTS5",
+      "ENABLE_MATH_FUNCTIONS",
+      "ENABLE_PERCENTILE",
+      "ENABLE_PREUPDATE_HOOK",
+      "ENABLE_RTREE",
+      "ENABLE_SESSION",
+      "ENABLE_UNLOCK_NOTIFY"
+    ],
+    "libraryVersion": "3.51.2",
+    "sourceId": "2026-01-09 17:27:48 b270f8339eb13b504d0b2ba154ebca966b7dde08e40c3ed7d559749818cbalt1",
+    "threadSafe": "1"
+  },
+  "tools": [
+    {
+      "classification": "output-affecting",
+      "name": "podman",
+      "nevra": "podman-5:5.8.4-1.fc44.x86_64",
+      "packageChecksum": "f9d05cb53433cd679c98d986989ba99790151b7e131cde98d7282ceba336dbc1",
+      "reason": "podman builds the container and writes the OCI archive. Measured: Ubuntu's podman 4.9.3 wrote /etc/hostname into the build container where 5.8.4 did not, and that single file changed three comparison dimensions between two runs of the same commit.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_podman_is_output_affecting",
+      "version": "5.8.4"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "buildah",
+      "nevra": "buildah-2:1.43.2-1.fc44.x86_64",
+      "packageChecksum": "6885d89ec63aa9ae727dfe66b48957da26d4fc6884d7a545f3452a050a2cb59a",
+      "reason": "podman delegates image construction to buildah's libraries; a change there is a change in how layers are written.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_every_container_tool_is_output_affecting",
+      "version": "1.43.2"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "skopeo",
+      "nevra": "skopeo-1:1.22.2-2.fc44.x86_64",
+      "packageChecksum": "1677fecb8d2463b40745b4d0610997b4d1ca324509743c36c93166f4967739f3",
+      "reason": "skopeo copies the base image into controlled retention and out of it again. A copy that re-encoded a layer would change the base the build starts from. The mirror verifies every blob digest afterwards, which detects that rather than assuming it cannot happen.",
+      "test": "tests/supplychain/test_base_retention.py::test_a_re_encoded_mirror_is_refused",
+      "version": "1.22.2"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "conmon",
+      "nevra": "conmon-2:2.2.1-2.fc44.x86_64",
+      "packageChecksum": "37fda240392c21710a1b1383a3425e8c204dfa1d36142d7cc68416eaf441dfe3",
+      "reason": "conmon monitors the container process and mediates its output; it is in the path that runs every build step.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_every_container_tool_is_output_affecting",
+      "version": "2.2.1"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "crun",
+      "nevra": "crun-0:1.28-1.fc44.x86_64",
+      "packageChecksum": "8d3d1f83e87badeeadc24e8f72252b3e5fb55cef3b9fe46db865b1b6f87e3174",
+      "reason": "the OCI runtime executes every RUN step. Measured: Ubuntu's crun refused the OCI spec version Ubuntu's podman writes, which is a runtime disagreement that stopped a build outright.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_every_container_tool_is_output_affecting",
+      "version": "1.28"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "runc",
+      "nevra": "runc-2:1.5.1-1.fc44.x86_64",
+      "packageChecksum": "3a1c00ae3995ae152657bf945a4edddfd5f0cf0bc8afb86653fd04674b37e385",
+      "reason": "an alternative OCI runtime, selectable at run time; the same reasoning as crun applies.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_every_container_tool_is_output_affecting",
+      "version": "1.5.1"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "python3",
+      "nevra": "python3-0:3.14.6-1.fc44.x86_64",
+      "packageChecksum": "8b416f9325ec3304e89239a96891f7260f1d60655a7ee94b4cb0c963b33a35e7",
+      "reason": "install-root.py and install-packages.py run inside the build and write files into the image. The host interpreter and the image's own /usr/bin/python3 are different interpreters and both are pinned, because reasoning about which one matters is exactly the reasoning that lets a difference through.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_python_is_output_affecting",
+      "version": "3.14.6"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "rpm",
+      "nevra": "rpm-0:6.0.2-1.fc44.x86_64",
+      "packageChecksum": "2d859d20cee6722c62818d4312c991a6a523aaa4324810720db3f89a73651f7c",
+      "reason": "rpm writes /usr/share/rpm/rpmdb.sqlite, one of the fifteen files that differed.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_package_tools_are_output_affecting",
+      "version": "6.0.2"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "dnf5",
+      "nevra": "dnf5-0:5.4.2.1-1.fc44.x86_64",
+      "packageChecksum": "4fc61978d52cddbbb0b1a6e970a11c79fc16e1b6ed879990c07b7f778bc9c248",
+      "reason": "dnf5 installs the packages and writes /usr/lib/sysimage/libdnf5 state, four of the fifteen files that differed.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_package_tools_are_output_affecting",
+      "version": "5.4.2.1"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "libdnf5",
+      "nevra": "libdnf5-0:5.4.2.1-1.fc44.x86_64",
+      "packageChecksum": "ce6b9307978d292a45ede49fa09d96f917023372c2559e2e48a720f11b6074b7",
+      "reason": "the library that writes the transaction history database and system.toml.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_package_tools_are_output_affecting",
+      "version": "5.4.2.1-1.fc44"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "tar",
+      "nevra": "tar-2:1.35-8.fc44.x86_64",
+      "packageChecksum": "02b73d3fc46845bc35e79a6d8f5a2bcc9356aed7556c7ebf446243a118b60e5d",
+      "reason": "tar repacks the OCI archive during normalisation; its pax header handling determines the normalised digest.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_archive_tools_are_output_affecting",
+      "version": "1.35"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "gzip",
+      "nevra": "gzip-0:1.14-2.fc44.x86_64",
+      "packageChecksum": "0de3ff719ae0d015c0b8edd017c5fbf5914cba449c5409d7c953140994f582dc",
+      "reason": "layer blobs are gzip-compressed and the compressed bytes are what the layer digest covers.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_archive_tools_are_output_affecting",
+      "version": "1.14"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "zstd",
+      "nevra": "zstd-0:1.5.7-5.fc44.x86_64",
+      "packageChecksum": "a333f2319fd37ab4a8af75045699c4bca8e722f004d35087fab389407d63a8cf",
+      "reason": "an alternative layer compressor; selectable, so pinned.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_archive_tools_are_output_affecting",
+      "version": "1.5.7"
+    },
+    {
+      "classification": "evidence-generation-only",
+      "name": "syft",
+      "nevra": "",
+      "packageChecksum": "22f2b95baf524d45ad16b0ad5cdeb200c4b8a816493768cec50e4682b1f24b0e",
+      "reason": "syft reads the finished archive and writes an SBOM to a separate file. It is never invoked before or during image construction, it is never given a writable path inside the image, and the build does not consume its output. A syft difference changes the SBOM document, which is compared as its own dimension, and cannot change the artifact the SBOM describes.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_evidence_tools_never_write_into_the_image",
+      "version": "1.50.0"
+    },
+    {
+      "classification": "evidence-generation-only",
+      "name": "grype",
+      "nevra": "",
+      "packageChecksum": "a8fff88f37a08af6a536e162f37f9902ec94af03df9928ee6295dffe7044dc43",
+      "reason": "grype reads the SBOM or the archive and writes a vulnerability report. It runs after the artifact exists and writes nothing into it.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_evidence_tools_never_write_into_the_image",
+      "version": "0.116.1"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "createrepo_c",
+      "nevra": "createrepo_c-0:1.2.1-5.fc44.x86_64",
+      "packageChecksum": "bb0cdae2cf122dae435910d1f2e4e3cb473bf740ace678353bfcf39665b93ee1",
+      "reason": "it generates the snapshot repository metadata the build resolves against. Different metadata can produce a different dependency solution.",
+      "test": "tests/supplychain/test_package_snapshot.py::test_metadata_digest_is_locked",
+      "version": "1.2.1"
+    },
+    {
+      "classification": "evidence-generation-only",
+      "name": "policycoreutils",
+      "nevra": "policycoreutils-0:3.10-4.fc44.x86_64",
+      "packageChecksum": "2c02c319dc92f23c5b41c2e3d7a3db9859643590a9bb6c0a508e73d4f77e903c",
+      "reason": "setfiles is run in verification mode only, to compute the intended SELinux context of every path from the policy the image ships. Verification mode reads the policy and the path list and writes a manifest to a separate file; it relabels nothing. If the build ever applied labels, this classification would be wrong and would have to change.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_selinux_tools_run_in_verification_mode_only",
+      "version": "3.10-4.fc44"
+    },
+    {
+      "classification": "evidence-generation-only",
+      "name": "libselinux-utils",
+      "nevra": "libselinux-utils-0:3.10-1.fc44.x86_64",
+      "packageChecksum": "f86ad4f7e4bb96d6a44ca8d7cb77f1c48bf635899f784ef38091b48d3f5140b4",
+      "reason": "matchpathcon resolves a path to its policy context and writes nothing.",
+      "test": "tests/supplychain/test_toolchain_classification.py::test_selinux_tools_run_in_verification_mode_only",
+      "version": "3.10-1.fc44"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "sqlite3",
+      "nevra": "sqlite-0:3.51.2-1.fc44.x86_64",
+      "packageChecksum": "24d90a008e980a38207846b0712f7abc2ab77ca66f51116f330800d48b22c769",
+      "reason": "rpm and libdnf5 both keep their databases in SQLite, and those databases are files in the artifact. The library's version, page size, threading mode and compiled-in extensions all determine the bytes a transaction leaves on disk, so two builders running different SQLite builds can produce different files from identical package operations. build/scripts/finalise-package-databases.sh refuses to run against a SQLite whose recorded identity does not match this lock.",
+      "test": "tests/supplychain/test_sqlite_toolchain.py::test_sqlite_is_output_affecting",
+      "version": "3.51.2"
+    },
+    {
+      "classification": "output-affecting",
+      "name": "libfaketime",
+      "nevra": "libfaketime-0:0.9.12-12.fc44.x86_64",
+      "packageChecksum": "ca339dc69e0b807990808700275be7a8b16f13e414f4dd4eefae0888d1a6b055",
+      "reason": "it supplies the frozen clock the package transaction reads, and rpm writes what that clock says into every installed header as INSTALLTIME. Its semantics are load-bearing rather than incidental: measured on 0.9.12, FAKETIME with a leading '@' starts at the given instant and then runs, and without one it freezes, and the difference put fifty package headers on different seconds between two builds. It was previously located on the build host with `find /usr/lib64 /usr/lib`, so whichever library the machine carried entered the qualification path; it is pinned in this image for the same reason podman is.",
+      "test": "tests/supplychain/test_build_clock.py::test_faketime_library_is_pinned_to_the_builder",
+      "version": "0.9.12-12.fc44"
+    }
+  ],
+  "verificationStatus": "verified"
+}
