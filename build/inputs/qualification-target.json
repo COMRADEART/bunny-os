@@ -2,8 +2,6 @@
   "architecture": "x86_64",
   "buildEpoch": 1785442979,
   "builderImageDigest": "sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
-  "candidateCommit": "805674c1dfcbb4f2cf1d703c6f16c9c47bccfb1d",
-  "candidateCommitShort": "805674c1dfcb",
   "constraints": [
     "Both hosted builds must present builderImageDigest, retainedBaseDigest and packageSnapshotDigest exactly. A version string is not a pin.",
     "Both must run in qualification comparison mode and collect every archive-stage dimension. A missing dimension is INCONCLUSIVE, not a pass.",
@@ -26,6 +24,8 @@
   "packageCount": 474,
   "packageSnapshotDigest": "b6fbf2ae637a288cc8184ccf9142e47414db5196976a9d53b2d8422df1c2949b",
   "packageSnapshotId": "fedora-44-beta-20260730",
+  "parentCommit": "4d4c1af15af30d414b297b8cfa350567e0b0b4ce",
+  "parentCommitShort": "4d4c1af15af3",
   "profile": "beta",
   "publishedInputs": {
     "base": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
@@ -35,6 +35,7 @@
   "retainedBaseDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
   "schemaVersion": 1,
   "selinuxPolicyDigest": "88185873a73249b89bb7285dc0870e4a0fca1cedb6db671010123742e58e3405",
+  "targetCommit": "the child of parentCommit \u2014 the commit that contains this file. Recorded in THREE_BUILDER_REPRODUCIBILITY_REPORT.md and asserted by scripts/supply-chain/assert-target-commit.py, which refuses a commit whose qualification-target.json does not name that commit's own parent.",
   "targetKind": "reproducibility-qualification",
   "toolchain": {
     "faketimeLibrarySha256": "7877f29c417228f151dbcbe182741d0ca516635dae3afb03eac8f3ee6a42d745",
