@@ -7,10 +7,31 @@ from __future__ import annotations
 import argparse
 import configparser
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
 from urllib.parse import urlparse
+
+
+def disable_repository_file(path: Path) -> None:
+    """Set ``enabled=0`` in every section of a repository definition.
+
+    ``--disablerepo=*`` only covers the invocation it is passed to. A package
+    scriptlet that shells out to dnf, or a later step that forgets the flag,
+    would see the base image's repositories enabled and could reach the network.
+    Disabling them in the files closes that, and leaves the definitions in place
+    so the installed system still knows what its repositories are.
+    """
+    parser = configparser.ConfigParser()
+    parser.read(path, encoding="utf-8")
+    if not parser.sections():
+        return
+    for section in parser.sections():
+        parser.set(section, "enabled", "0")
+        parser.set(section, "countme", "0")
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        parser.write(handle)
 
 
 def package_file(path: Path) -> list[str]:
@@ -32,7 +53,60 @@ def main() -> int:
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     packages = sorted({package for name in profile["packageSets"] for package in package_file(args.root / f"{name}.txt")})
     repository_args: list[str] = []
-    if args.release_build == "1":
+
+    # Hermetic mode: install from the retained snapshot and nothing else.
+    #
+    # Both halves of the previous comparison resolved their package sets against
+    # live Fedora repositories, an hour apart. They agreed, and agreeing was
+    # luck — Fedora publishes continuously. Here the set was decided once by the
+    # resolution stage, materialised, signed and verified; this step installs it
+    # and resolves nothing.
+    #
+    # `repo_gpgcheck` is deliberately 0 and that is not a relaxation. It checks
+    # a detached GPG signature over repomd.xml, which a Fedora mirror provides
+    # and a local snapshot does not. What replaces it is stronger: the snapshot
+    # manifest is signed, it carries the SHA-256 of repomd.xml, and
+    # verify-package-snapshot.py checks both *before* the build container
+    # starts. `gpgcheck=1` stays on, so every RPM's own Fedora signature is
+    # still verified at install time by rpm itself.
+    snapshot_root = os.environ.get("BUNNY_SNAPSHOT_ROOT", "")
+    if snapshot_root:
+        if not Path(snapshot_root, "repodata", "repomd.xml").is_file():
+            raise SystemExit(
+                f"hermetic build: no repository metadata at {snapshot_root}/repodata/repomd.xml. "
+                "The snapshot is not mounted, and a build that cannot see it must fail rather "
+                "than fall back to a live repository."
+            )
+        Path("/etc/yum.repos.d").mkdir(parents=True, exist_ok=True)
+        # Every repository the base image ships is disabled by file, not only by
+        # --disablerepo, so that a scriptlet or a nested dnf call cannot re-enable
+        # one behind this step's back.
+        for existing in Path("/etc/yum.repos.d").glob("*.repo"):
+            disable_repository_file(existing)
+        Path("/etc/yum.repos.d/bunny-snapshot.repo").write_text(
+            "[bunny-fedora-snapshot]\n"
+            "name=Bunny OS retained Fedora snapshot\n"
+            f"baseurl=file://{snapshot_root}\n"
+            "enabled=1\n"
+            "gpgcheck=1\n"
+            "repo_gpgcheck=0\n"
+            "countme=0\n"
+            "metadata_expire=-1\n"
+            "skip_if_unavailable=0\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        repository_args = [
+            "--disablerepo=*",
+            "--enablerepo=bunny-fedora-snapshot",
+            "--setopt=countme=0",
+            # Without this, a package missing from the snapshot is a warning and
+            # the transaction proceeds with a smaller set — which is precisely
+            # the silent fallback this mode exists to make impossible.
+            "--setopt=strict=1",
+            "--setopt=skip_if_unavailable=0",
+        ]
+    elif args.release_build == "1":
         repository = args.root.parent / "repositories" / "fedora-44-snapshot.repo"
         if not repository.is_file():
             raise SystemExit("release build requires reviewed build/repositories/fedora-44-snapshot.repo")
@@ -47,11 +121,42 @@ def main() -> int:
         shutil.copyfile(repository, "/etc/yum.repos.d/bunny-fedora-snapshot.repo")
         repository_args = ["--disablerepo=*", "--enablerepo=bunny-fedora-snapshot"]
     environment = {"PATH": "/usr/sbin:/usr/bin", "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
+
+    # The build clock, scoped to the package transaction and to nothing else.
+    #
+    # rpm stamps every installed header with INSTALLTIME from the system clock,
+    # which is why /usr/share/rpm/rpmdb.sqlite differed between two builders.
+    # libfaketime is bind-mounted in by the caller and LD_PRELOADed here; it is
+    # never installed into the image, and the override ends when dnf exits.
+    #
+    # No network operation happens under it: the snapshot is a file:// repository,
+    # so there is no TLS handshake whose certificate validity could be affected.
+    # RPM signature verification still runs against the real Fedora keys, and the
+    # epoch is the candidate commit's own timestamp, which is inside their
+    # validity. See docs/adr/ADR-028-deterministic-package-manager-state.md.
+    faketime_library = os.environ.get("BUNNY_FAKETIME_LIBRARY", "")
+    source_date_epoch = os.environ.get("SOURCE_DATE_EPOCH", "")
+    if faketime_library and source_date_epoch:
+        if not Path(faketime_library).is_file():
+            raise SystemExit(
+                f"hermetic build: BUNNY_FAKETIME_LIBRARY names {faketime_library}, which is not "
+                "present. Continuing would stamp the rpm database with wall-clock install times "
+                "and produce an artifact that cannot reproduce, without saying so."
+            )
+        environment["LD_PRELOAD"] = faketime_library
+        environment["FAKETIME"] = f"@{source_date_epoch}"
+        environment["FAKETIME_DONT_FAKE_MONOTONIC"] = "1"
+
+    before = installed_nevras(environment)
     subprocess.run(
         ["/usr/bin/dnf", "--assumeyes", "--setopt=install_weak_deps=False", *repository_args, "install", *packages],
         check=True,
         env=environment,
     )
+    after = installed_nevras(environment)
+
+    if snapshot_root:
+        verify_against_lock(before, after, Path(snapshot_root))
 
     # Package minimisation. A profile may declare packages that arrive in the
     # base image but that this profile does not want. The removal is verified
@@ -84,6 +189,66 @@ def main() -> int:
             )
         print(f"minimisation: removed {', '.join(sorted(removals))}; {len(after)} protected packages intact")
     return 0
+
+
+def installed_nevras(environment: dict[str, str]) -> set[str]:
+    """Every installed package as ``name-epoch:version-release.arch``."""
+    result = subprocess.run(
+        ["/usr/bin/rpm", "--query", "--all", "--queryformat",
+         "%{NAME}-%|EPOCH?{%{EPOCH}}:{0}|:%{VERSION}-%{RELEASE}.%{ARCH}\\n"],
+        capture_output=True,
+        text=True,
+        env=environment,
+        check=True,
+    )
+    return {line.strip() for line in result.stdout.splitlines() if line.strip()}
+
+
+def verify_against_lock(before: set[str], after: set[str], snapshot_root: Path) -> None:
+    """Every locked package installed, and nothing installed that is not locked.
+
+    Both directions are checked because they fail differently. A locked package
+    that did not install means the snapshot is incomplete and the image is
+    missing something. A package that installed and is not locked means
+    something reached a source nobody recorded — which is the failure the whole
+    offline mode exists to prevent, and it would otherwise be invisible.
+    """
+    manifest = snapshot_root / "packages.json"
+    if not manifest.is_file():
+        raise SystemExit(
+            f"hermetic build: no package inventory at {manifest}; the snapshot cannot be checked "
+            "against what was installed"
+        )
+    locked = {
+        f"{entry['name']}-{entry.get('epoch', '0')}:{entry['version']}-{entry['release']}."
+        f"{entry['architecture']}"
+        for entry in json.loads(manifest.read_text(encoding="utf-8"))
+    }
+    newly_installed = after - before
+
+    missing = sorted(locked - after)
+    unaccounted = sorted(newly_installed - locked)
+
+    problems: list[str] = []
+    if missing:
+        problems.append(
+            f"{len(missing)} locked packages are not installed: " + ", ".join(missing[:10])
+        )
+    if unaccounted:
+        problems.append(
+            f"{len(unaccounted)} installed packages are not in the snapshot lock: "
+            + ", ".join(unaccounted[:10])
+            + " — something was obtained from a source this build did not record"
+        )
+    if problems:
+        raise SystemExit(
+            "hermetic build: the installed set does not match the snapshot lock:\n  "
+            + "\n  ".join(problems)
+        )
+    print(
+        f"hermetic install: {len(newly_installed)} packages installed, all {len(locked)} locked "
+        "packages accounted for"
+    )
 
 
 def installed_subset(names: list[str], environment: dict[str, str]) -> set[str]:
