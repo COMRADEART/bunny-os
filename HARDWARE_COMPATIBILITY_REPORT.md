@@ -48,3 +48,30 @@ The kit is distinct from the community hardware reporting in `operations/hardwar
 Three refusals are enforced rather than documented: an image cannot be approved without validated recovery, nothing is described as certified without a completed formal process and at least two independent repeat runs, and no performance figure is accepted without a declared methodology of substance.
 
 Consequently no hardware is described as certified, no OEM image has been built, and no recovery media has been booted on any device. `oemRecoveryValidation` is `false` and `make gate-oem-pilot` fails on it.
+
+## Hardware evidence intake, 2026-07-30
+
+**Still zero physical machines.** `operations/data/hardware-evidence.json`
+contains an empty `reports` array, and no machine has ever run Bunny OS.
+
+What changed is that there is now a process ready to receive a report and to
+reject a bad one. See `PHYSICAL_HARDWARE_QUALIFICATION_REPORT.md` and
+`hardware/evidence/README.md`.
+
+Two checks are enforced by `release/hardware.py`:
+
+- **Redaction.** Every string in a submission is scanned for MAC addresses,
+  labelled serials, hostnames, usernames and asset-tag-shaped tokens. Machines
+  are recorded by class - `formFactor`, `chipsetClass`, `firmwareVendor`,
+  `firmwareVersion` - never by identity.
+- **Substantiation.** Every claimed `PASS` or `FAIL` must name an artifact that
+  exists in `hardware/evidence/`. A report of fifteen passes with no artifacts is
+  rejected. There is no partial credit: one `NOT_RUN` means the machine is not
+  qualified.
+
+The required first target is one **x86-64 UEFI physical machine**, preferably
+with Secure Boot and TPM 2.0, because those two unblock evidence categories that
+no virtual result can substitute for.
+
+No hardware compatibility is claimed for any model, and none may be claimed
+without a submitted, substantiated report.

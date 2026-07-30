@@ -235,3 +235,23 @@ bash build/scripts/vm-smoke.sh beta
 The four entry checks failed closed for the documented missing prerequisites.
 The later local image checks have the bounded results above and are not stable
 release evidence.
+
+## Maturity ladder, 2026-07-30
+
+These five states are distinct and this repository is at the first. Every
+document listed below reports the same position; if any of them disagrees, that
+document is wrong.
+
+| State | Meaning | Bunny OS |
+|---|---|---|
+| **Source implemented** | Design, schemas, validators, tests and documentation exist and pass | **yes** — Phases 1–7 |
+| **Runtime validated** | The software has been built and observed doing the thing on real or virtual hardware | **partial** — images build from a digest-pinned base and boot under KVM; installation, encryption, update, rollback and recovery matrices have not run |
+| **Release qualified** | `gate-stable-release` reports `GO` against a complete evidence record | **no** — 2 of 20 evidence categories pass |
+| **Pilot approved** | A pilot gate reports `GO` and a controlled pilot has separate approval | **no** — all three gates `BLOCKED` |
+| **Production operated** | A service or fleet is actually being run and supported | **no** — nothing is operated, and operating nothing remains a legitimate outcome |
+
+Agreeing documents: `README.md`, `NEXT_PHASE.md`, `docs/PHASE_7_BASELINE.md`,
+`PHASE_7_REPORT.md`, `KNOWN_LIMITATIONS.md`, `PILOT_READINESS_REPORT.md`.
+
+Current authority for the closure position: `RELEASE_BLOCKER_CLOSURE_REPORT.md`
+and `STABLE_EVIDENCE_REPORT.md`.

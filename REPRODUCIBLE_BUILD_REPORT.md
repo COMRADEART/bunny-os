@@ -1,93 +1,165 @@
 # Reproducible build report
 
-Date: 2026-07-29. Result: **the image content is byte-for-byte deterministic. The OCI archive that wraps it is not, and the cause is identified.**
+Date: 2026-07-30
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`
+Base image: `quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4`
+
+**Result: three of four reproducibility claims are established. The fourth —
+independent-builder reproducibility — is not, and cannot be on one machine.**
+
+> **Superseded for the production gate.** The four-claim model below is still
+> correct and its measurements still hold. The production evidence gate now reads a
+> **seventeen-dimension** comparison instead, which reports `INCONCLUSIVE` because
+> sixteen of the seventeen dimensions were never collected. That is not a
+> regression: it is the difference between a comparison that asks three questions
+> and one that asks seventeen. See `INDEPENDENT_REPRODUCIBILITY_REPORT.md`, which
+> is the authority for the gate.
+>
+> The builder identity model also changed. Schema 2 records an
+> **administratorBoundary** — who can change the builder — rather than an
+> `environmentId` derived from a workspace path, and it has no `workspace` field at
+> all, because a schema with a field for the workspace invites a comparison that
+> treats two directories as two builders.
+
+## The four claims, and why they are separate
+
+| Claim | Means | Result |
+|---|---|---|
+| Same-host repeatability | One machine, two runs, same output | **PASS** |
+| Filesystem-content reproducibility | Every file inside both images is byte-identical | **Established** |
+| Archive-byte reproducibility | The archive files themselves are byte-identical | **Established** |
+| Independent-builder reproducibility | Two builders differing in a strong dimension | **FAIL** |
+
+Only the last satisfies the production gate. This report keeps them apart
+because an earlier version of this document did not, and "the build is
+deterministic" was read as "the build is reproducible" — which is a materially
+stronger claim about a different threat.
 
 ## Method
 
-Two consecutive builds of the same commit on the same builder, with `SOURCE_DATE_EPOCH` pinned to the commit timestamp:
+Two isolated workspaces on the Fedora 44 WSL2 builder, `/var/tmp/bunny-builder-a`
+and `/var/tmp/bunny-builder-b`, each a separate checkout with a separate output
+tree. Same commit, same digest-pinned base, `SOURCE_DATE_EPOCH` pinned to the
+commit timestamp. Profile: `beta`, with package minimisation applied.
 
-```text
-bash scripts/wsl-build.sh reproducibility developer
-```
-
-Builder: Fedora 44 under WSL2, podman 5.8.4, image-builder 76.0.0 (osbuild 185). Each run produced `bunny-os.oci.tar`, which was copied aside and hashed.
+Builder records captured by `scripts/reproducibility/collect-builder-record.sh`,
+comparison by `scripts/reproducibility/compare-builds.py`.
 
 ## Result
 
 ```text
-3df2a457432013eb244f0213a4da5f1e0389ca7d61bdca213ce4734460a4ce21  developer-run1.oci.tar
-f5d1ded21a10c395ab122dba9b6078948f3feb7a207f99752da848faedf32438  developer-run2.oci.tar
+archive digests : MATCH
+  b5c0c502e22b936aa170c58f2240b777235da4c15eb715a4309ee2b859bf87d8
+  b5c0c502e22b936aa170c58f2240b777235da4c15eb715a4309ee2b859bf87d8
+file contents   : 83 members, 0 differing
+package manifest: MATCH (6076 vs 6076)
 ```
 
-Different digests. Identical byte length: 2,041,614,848 both times.
+Both archives 1,852,006,400 bytes. Every one of the 83 archive members hashed
+identically.
 
-## Root cause
+## Why independent-builder still fails
 
-Unpacking both archives and hashing every file inside them:
+The two builder records differ in exactly one dimension:
+
+| Dimension | builder-a | builder-b |
+|---|---|---|
+| `machineId` | `331981094da1acaa…` | `331981094da1acaa…` — **same** |
+| `virtualisationInstance` | `wsl:FedoraLinux-44` | `wsl:FedoraLinux-44` — **same** |
+| `cloudRunner` | null | null — **same** |
+| `administrator` | `bd4c15ed4ff08f90…` | `bd4c15ed4ff08f90…` — **same** |
+| `environmentId` | `13b4f73576c07c96…` | `0388bd8432f3cf17…` — differs |
+
+`release/reproducibility.py` refuses the claim:
 
 ```text
-ALL FILE CONTENTS IDENTICAL — difference is tar metadata only
+the builders differ only in environmentId, which is environment separation on
+one machine. Independent-builder reproducibility requires a different machine,
+cloud runner or administrator; otherwise a defect in the shared kernel, storage
+or clock reproduces in both builds and the comparison cannot detect it
 ```
 
-`index.json` is identical. Every content-addressed blob under `blobs/sha256/` has the same name, the same size and the same content in both runs. The file list is identical.
+That is the correct answer. Two workspaces share a kernel, a container store, a
+clock and an operator. A compromise or a defect in any of them reproduces
+identically in both builds, which is exactly what a second builder is supposed
+to catch. Recording this as independent reproducibility would be the
+`same-host builds marked independent` failure the adversarial tests exist to
+prevent — and it is tested.
 
-The difference is in the tar entry headers:
+`make reproducibility-compare` exits 2.
 
-```text
-run 1:  drwxr-xr-x 0/0  0  2026-07-29 22:16  blobs/
-run 2:  drwxr-xr-x 0/0  0  2026-07-29 22:19  blobs/
-```
+## A measurement that looked like a failure and was not
 
-**`podman save` stamps tar entry mtimes with the wall-clock time of archive creation rather than honouring `SOURCE_DATE_EPOCH`.** Nothing else varies.
+The two SBOMs have different file digests. Investigated rather than assumed:
 
-## What this establishes and what it does not
-
-**Establishes:** the container build itself is deterministic. Given the same commit and the same pinned inputs, every layer and every file is reproduced bit for bit. That is the property that actually matters for supply-chain verification, and it holds.
-
-**Does not establish:** that a published artifact would have a stable digest. A verifier comparing `bunny-os.oci.tar` checksums between two builders would see a mismatch and correctly reject it, even though the images are identical.
-
-Both statements were true when first measured. The second has since been fixed; see below.
-
-## Fix applied and verified
-
-Option 1 was implemented: `build/scripts/normalise-oci-archive.sh`, invoked from `build-image.sh` immediately after `podman save`. It repacks the archive with entry order sorted, mtimes pinned to `SOURCE_DATE_EPOCH`, ownership zeroed, and the atime/ctime pax headers dropped. The blobs are already content-addressed and are not touched.
-
-Verified against the two divergent archives above:
-
-```text
-before   3df2a457432013eb244f0213a4da5f1e0389ca7d61bdca213ce4734460a4ce21  run1
-         f5d1ded21a10c395ab122dba9b6078948f3feb7a207f99752da848faedf32438  run2
-
-after    80ee93068bc7117702a95db3371085dd8fcf27113c1e5a4c9e959b15f26ea160  run1
-         80ee93068bc7117702a95db3371085dd8fcf27113c1e5a4c9e959b15f26ea160  run2
-```
-
-Two builds of the same commit, previously differing, now produce byte-identical archives.
-
-### A repack is not transparent, and assuming it was cost a round
-
-The first attempt archived `.`, which prefixes every entry with `./`. skopeo tolerated it; **syft refused the archive outright** — "potential path traversal attack with entry: ./" — which would have silently broken SBOM generation for every build. `podman save` does not emit that prefix, so normalisation must not introduce it.
-
-The script now names the top-level entries explicitly, and all three consumers were re-checked against a normalised archive rather than assumed:
-
-| Consumer | Result |
+| Difference | Cause |
 |---|---|
-| `skopeo inspect --raw` | manifest parses |
-| `syft` | 6252 SPDX packages — identical to the pre-normalisation count |
-| `grype` | 95 fixable matches — identical to the pre-normalisation count |
+| `documentNamespace` | a fresh UUID per syft run |
+| `creationInfo` | a creation timestamp |
+| `name`, root `SPDXID` | named after the input file's **path** |
+| one package entry | the document-root entry, whose name is the archive path — its content digest `sha256:7a58769c…` was **identical** in both |
 
-Matching counts confirm the contents are untouched and only the wrapper changed.
+6076 of 6077 package entries matched exactly, and the one that did not was
+document identity rather than content.
 
-`tests/image/test_archive_normalisation.py` guards the specific mistakes: archiving a bare `.`, an unvalidated epoch, missing determinism flags, and undropped pax timestamps.
+The comparison now excludes the document-root entry and compares the package
+manifest, which is the semantic content. A raw SBOM digest mismatch is recorded
+as informational; a package manifest mismatch is fatal. Without that change, the
+tool would have reported a reproducibility failure that does not exist.
 
-## Still not production reproducibility
+## Previously fixed, and re-verified here
 
-This is two runs on **one host with one toolchain**. Reproducibility means two *independent* builders — different machines, ideally different operators — producing the same output. That has never been run and cannot be run here, because only one builder exists.
+`podman save` stamps tar entry mtimes with the wall-clock time of archive
+creation rather than honouring `SOURCE_DATE_EPOCH`. Two builds of one commit
+previously produced different archive digests while every file inside was
+byte-identical.
 
-`make reproducible-build-check` continues to fail closed, and correctly: one host is not two.
+`build/scripts/normalise-oci-archive.sh` pins entry order, mtimes, ownership and
+drops the atime/ctime pax headers. That fix holds: the two builds above produced
+identical archives without any post-processing beyond the normalisation the
+build already performs.
 
-The remaining longer-term improvement is to checksum and sign the **image manifest digest** rather than the archive file. That is what registries do, it is what `bootc switch` already pins, and it sidesteps the wrapper entirely.
+The regression tests in `tests/image/test_archive_normalisation.py` guard the
+specific mistakes, including archiving a bare `.` — which skopeo tolerated and
+**syft refused outright** as a path-traversal attempt, silently breaking SBOM
+generation for every build.
+
+## What is needed
+
+A second machine, a cloud runner, or a second administrator. Nothing about this
+is solvable locally, and no number of additional workspaces changes the answer.
+
+The cheapest route is a cloud runner, and the qualification evidence closure built
+it: **`.github/workflows/independent-builder.yml`** checks out an exact SHA, pins
+the base digest, pins syft and grype, disables the pip cache, asserts an empty
+output tree, records eleven environment facts, emits a schema-2 builder record with
+a real `workflowRunId`, and verifies the uploaded bundle on a *second* runner.
+
+**It has not been dispatched.** `independent-builder-ci-manifest` derives `executed`
+from whether a `hosted-ci` builder record exists — not from the workflow file being
+present — and it is `false`:
+
+```text
+BLOCKED: the workflow is prepared and has not been executed. No hosted-ci builder
+record exists, so independent-builder reproducibility remains unestablished.
+```
+
+One prerequisite step first: `BUNNY_ARCHIVE_ONLY=1` was added to
+`build/scripts/build-image.sh` so a hosted Ubuntu runner can build without
+`image-builder`, and that change has not been exercised on a Fedora host. An
+archive-only build produces no qcow2 or raw image and must never be recorded as a
+candidate build.
 
 ## Evidence
 
-`/root/bunny-evidence/reproducibility/developer-digests.txt`, both original archives, and both normalised archives retained for comparison.
+- `INDEPENDENT_REPRODUCIBILITY_REPORT.md` — the seventeen-dimension comparison, and
+  the authority for the production gate
+- `operations/data/build-comparison.json` — the dimensions, and the prior
+  measurements retained as informational
+- `operations/data/builders.json` — the legacy comparisons, plus empty schema-2
+  arrays and the note explaining why they are empty
+- `evidence/reproducibility/builder-a-record.json`, `builder-b-record.json`
+- `docs/INDEPENDENT_BUILDERS.md` — how to run a real two-builder comparison
+- `tests/reproducibility/` — 119 tests (29 original plus 90 added), including all
+  four mandated adversarial cases: same host as two builders, one CI run twice, a
+  mutable base tag, and a mismatched source commit

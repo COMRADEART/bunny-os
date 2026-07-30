@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Socket-activated Bunny OS broker server."""
 
 from __future__ import annotations

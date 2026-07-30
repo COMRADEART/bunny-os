@@ -1,0 +1,15 @@
+{
+  "note": "The SPDX document itself is ~60 MB and is not committed; this digest identifies it.",
+  "packageCount": 6077,
+  "packagesByEcosystem": {
+    "generic": 4726,
+    "golang": 300,
+    "oci": 1,
+    "pypi": 33,
+    "rpm": 1017
+  },
+  "sbomFile": "build/out/beta/sbom/bunny-os.spdx.json",
+  "sbomSha256": "a543be141d042e75c9c09eec5edc6daef0d2a27e36b806e1bf65de2dbb836d3d",
+  "sbomSizeBytes": 61712027,
+  "schemaVersion": 1
+}

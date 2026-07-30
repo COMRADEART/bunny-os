@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Checksum and detached-signature verification for installation media."""
 
 from __future__ import annotations

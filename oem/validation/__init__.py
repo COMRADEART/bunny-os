@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """OEM profile, overlay, and factory-state validation."""
 
 from oem.validation.finalize import FACTORY_STATE_CHECKS, evaluate_finalisation

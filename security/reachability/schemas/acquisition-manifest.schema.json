@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.invalid/schemas/acquisition-manifest.schema.json",
+  "title": "Bunny OS Fedora source and debuginfo acquisition manifest",
+  "description": "What was fetched, from where, at what version, with what checksum. The artifacts themselves are stored outside this repository; this manifest is the committed evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "acquiredBy", "targets"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "acquiredBy": { "type": "string", "minLength": 1 },
+    "cacheLocation": {
+      "type": "string",
+      "description": "Where the artifacts live. Must be outside the repository working tree."
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["installedNevra", "acquired"],
+        "properties": {
+          "installedNevra": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._+-]+-[0-9][^-]*-[^-]+\\.[a-z0-9_]+$",
+            "description": "The NEVRA measured on the installed system, not the upstream version."
+          },
+          "binaryPath": { "type": "string" },
+          "acquired": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "nevra",
+                "repository",
+                "url",
+                "sha256",
+                "sizeBytes",
+                "acquiredAt",
+                "repositoryMetadataDigest",
+                "storedOutsideRepository"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "source-rpm",
+                    "binary-rpm",
+                    "debuginfo-rpm",
+                    "debugsource-rpm",
+                    "package-metadata",
+                    "changelog",
+                    "build-id",
+                    "spec-file",
+                    "applied-patches"
+                  ]
+                },
+                "nevra": { "type": "string", "minLength": 1 },
+                "repository": { "type": "string", "minLength": 1 },
+                "url": {
+                  "type": "string",
+                  "pattern": "^https://[a-z0-9.-]*fedoraproject\\.org/",
+                  "description": "Fedora infrastructure only. An arbitrary mirror is an arbitrary binary."
+                },
+                "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+                "sizeBytes": { "type": "integer", "minimum": 1 },
+                "acquiredAt": { "type": "string" },
+                "repositoryMetadataDigest": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$",
+                  "description": "SHA-256 of the repomd.xml the package was resolved against."
+                },
+                "storedOutsideRepository": { "const": true },
+                "notes": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

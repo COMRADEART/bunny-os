@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
 
 iso="${BUNNY_INSTALL_ISO:-build/out/live/bunny-os.iso}"

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Cryptographic executor boundary.
 
 Bunny OS implements no cipher, mode, KDF, or key-agreement protocol. This module

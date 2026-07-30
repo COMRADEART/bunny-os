@@ -1,6 +1,97 @@
 # Bunny OS Phase 1 security review
 
-## Review outcome
+## Current security position — 2026-07-30
+
+**This document, and every other security review in this repository, is
+internal.** `release/reviews.py` refuses to record any of it as an independent
+review, and that refusal is correct. Read what follows as a statement of what the
+project believes, not as evidence.
+
+### The vulnerability position blocks, and is unchanged
+
+| Scanned | Fixable | Critical | High | Medium |
+|---|---|---|---|---|
+| `fedora-bootc:44` base alone | 59 | 8 | 28 | 23 |
+| Bunny OS beta profile | 59 | 8 | 28 | 23 |
+| Bunny OS beta, after minimisation | 59 | 8 | 28 | 23 |
+
+Deduplicated to 24 unique Critical/High pairs, **all dispositioned `Unknown`**.
+`Unknown` blocks.
+
+Every finding comes from the base image; the beta profile adds none. Package
+minimisation removed `toolbox` and **changed no scan number** — no claim is made
+that it reduced security risk.
+
+### Nine of ten reachability questions are answered
+
+Measured against the built beta image: the carrier binaries are installed at
+`/usr/sbin`, mode 0755, no setuid; **no podman or bootc unit is enabled**;
+`podman.socket` is a unix socket absent from `sockets.target.wants`; nothing in
+Bunny invokes a container runtime; SELinux is enforcing; and **the packages cannot
+be removed** because `bootc` requires podman and skopeo and `rpm-ostree` requires
+skopeo.
+
+The tenth question — *is the vulnerable code path compiled into the installed binary
+and active or invocable?* — is unresolved. It needs the binary, its debuginfo, and
+the advisory's own description of the vulnerable function.
+
+### What the qualification evidence closure measured that was new
+
+All 24 findings are carried by **exactly four ostree objects**:
+
+| Carrier | Advisories | Modules |
+|---|---|---|
+| `…8fbfb47329…` | 15 | x/crypto, selinux, fulcio, docker, x/net |
+| `…8cc9b0248b…` | 7 | buildkit, podman/v5, grpc, otel |
+| `…755cc7cfe2…` | 1 | x/text |
+| `…eacf5a37b7…` | 1 | linux-kernel |
+
+The single-advisory carrier `…755cc7cfe2…` is the object previously identified as
+**`toolbox`**, which minimisation removed. If confirmed, `GO-2026-5970` has no
+installed executable to invoke. It remains `Unknown`: the attribution is not
+confirmed, and question 7 is unanswered either way.
+
+Twenty-four independent questions became four binaries to identify and two Go
+binaries to analyse.
+
+### The rule that stops this being answered badly
+
+`release/cve.py` refuses a `Not present` conclusion drawn from a symbol observation
+alone, for **every** combination of stripped state and language — including an
+unstripped C binary, because a file-static or inlined function is absent from that
+table too. For Go the refusal states why: the compiler inlines across package
+boundaries and the linker rewrites call graphs.
+
+A `Not present` conclusion additionally requires the source and binary versions to
+match exactly, the build configuration to be recorded, a mapping from function to
+binary, and a reviewer. A **Critical** finding additionally requires a completed
+independent review *and* a reviewer drawn from the delivered-review set — a reference
+to somebody else's review does not make this analysis independent.
+
+### No security control was weakened, and one was added
+
+- No waiver was created. No severity was reduced. No `Unknown` was converted.
+- `gate-stable-release` reports `NO-GO` on `vulnerability-position`.
+- The vulnerability gate now consults **both** the per-finding disposition and the
+  per-CVE binary analysis. A clear position with no analysis behind it was previously
+  possible and is not any more.
+- **A numeric scanner score cannot replace a per-finding disposition.** There is no
+  field in the model that accepts one, and a test asserts the word "score" appears
+  nowhere in the aggregate output.
+
+### What an independent security review would do
+
+`reviews/security/REQUEST.md` is prepared and has not been sent. It is the only route
+by which any Critical finding becomes non-blocking, and the code enforces that at
+parse time.
+
+See `SECURITY_REACHABILITY_REVIEW.md`, `CVE_BINARY_ANALYSIS_REPORT.md`,
+`CVE_REACHABILITY_DISPOSITION_REPORT.md`, and
+`docs/adr/ADR-027-base-image-security-decision.md`.
+
+---
+
+## Phase 1 review outcome (2026-07-28)
 
 Architecture and host-tested controls are suitable for a developer-image validation attempt. Consumer/beta release is **not approved**.
 
@@ -138,3 +229,73 @@ An Ed25519 development keypair was generated **outside the repository** at `~/.b
 The key-hygiene control is therefore enforced in practice and not only asserted by a test that greps the source.
 
 **This is not release signing evidence.** These are development keys, there has been no key ceremony, there is still only one potential signer, and no twelve-artifact candidate exists to sign — that needs the live ISO, beta raw and recovery ISO, none of which have been built. `signature_verification` remains not-run in both tracks.
+
+## 2026-07-30 release blocker closure security addendum
+
+### The base image was rebuilt during this phase, and the position did not move
+
+`quay.io/fedora/fedora-bootc:44` now resolves to `sha256:fb71f099…`, created
+2026-07-29T11:06:05Z. The previous measurement recorded `sha256:5cd90a82…`.
+Fedora genuinely rebuilt the base — and the scan is identical: 59 fixable, 8
+Critical, 28 High, 23 Medium.
+
+That single observation changes how "wait for Fedora" should be read. It is no
+longer a plan with an implied date; a rebuild has now been watched to land
+without moving the vulnerability position. `docs/adr/ADR-027-base-image-security-decision.md`
+records the decision to retain the base regardless, with four checkable
+conditions that would reopen it.
+
+### The reachability review narrowed the problem to one question
+
+`SECURITY_REACHABILITY_REVIEW.md` answered nine of the ten mandated questions
+with evidence measured on the built beta image:
+
+- podman, skopeo and bootc are installed at `/usr/sbin`, mode 0755, **no setuid**;
+- **no podman or bootc unit is enabled** — `/etc/systemd` contains no symlink for
+  either and no preset enables them;
+- `podman.socket` is a unix socket at `%t/podman/podman.sock` and is **not** in
+  `sockets.target.wants`;
+- nothing in Bunny invokes a container runtime; the broker has no generic exec path;
+- SELinux targeted policy is enforcing;
+- **the packages cannot be removed**: `bootc` requires podman and skopeo, and
+  `rpm-ostree` requires skopeo.
+
+The tenth — whether the vulnerable code path is compiled in and active — was not
+answered, because it needs per-CVE symbol analysis of a 45 MB stripped Go
+binary. All 24 unique Critical/High pairs are therefore `Unknown`, which blocks.
+
+**No waiver was created and no severity was reduced.**
+`release/vulnerability.py` refuses a severity reduction without a completed
+independent review, and refuses a non-blocking disposition on a Critical for the
+same reason. Both refusals are tested.
+
+### Controls added this phase
+
+| Control | Enforces |
+|---|---|
+| Seven signing roles with disjoint namespaces | a key from one authority cannot be presented for another; checked at parse time |
+| The reserved `dev-` prefix | a development key can never satisfy a production release gate |
+| Rotation overlap requirement | a replacement published after its predecessor expires is refused, so devices that update late are not stranded |
+| Evidence digest verification | a record naming a missing or substituted artifact blocks |
+| Commit binding on evidence | evidence does not transfer between commits |
+| Self-review wall | a reviewer affiliated with the project cannot be recorded as independent |
+| Protected package categories | recovery, accessibility, firmware, installer and security packages cannot be removed, and a dependency cascade into them fails the build |
+
+### An SBOM observation with security consequences
+
+Removing `toolbox` removed the binary from `/usr/bin` and the entry from the rpm
+database — verified in a running container — and syft still reports the package,
+located at `/sysroot/ostree/repo/objects/…` in a base layer.
+
+The `fedora-bootc` base ships an ostree object store, so `dnf remove` cannot
+remove content baked into a lower layer. Two consequences worth carrying
+forward: minimisation on this base reduces what *executes* but not what *ships*,
+and archive-derived and SBOM-derived scan counts disagree (59 against 84). The
+archive scan is treated as authoritative and the discrepancy is recorded rather
+than averaged away.
+
+### Position
+
+Unchanged and blocking. 8 Critical and 28 High fixable findings, neither waived
+nor converted to PASS. `gate-stable-release` reports `NO-GO`. No release
+approval is given and no pilot may begin.

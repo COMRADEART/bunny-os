@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Controlled pilot definitions, success criteria, and readiness gating.
 
 Pilots run smallest-first. ``assert_pilot_order`` refuses to start a larger pilot

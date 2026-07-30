@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Versioned Bunny Shell settings with explicit policy and scope metadata."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Pure partition-plan generation; this module never writes a disk."""
 
 from __future__ import annotations

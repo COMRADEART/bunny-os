@@ -1,0 +1,1887 @@
+{
+  "advisoriesWithUnmappedFields": [
+    "CVE-2020-27815",
+    "GHSA-4c29-8rgm-jvjj",
+    "GHSA-4vrq-3vrq-g6gg",
+    "GHSA-5cgq-3rg8-m6cv",
+    "GHSA-65gg-3w2w-hr4h",
+    "GHSA-89gr-r52h-f8rx",
+    "GHSA-cgrx-mc8f-2prm",
+    "GHSA-f5mr-q85p-6hh6",
+    "GHSA-f5wc-c3c7-36mc",
+    "GHSA-f83f-xpx7-ffpw",
+    "GHSA-hrxh-6v49-42gf",
+    "GHSA-jppx-rxg9-jmrx",
+    "GHSA-mh2q-q3fh-2475",
+    "GHSA-p77j-4mvh-x3m3",
+    "GHSA-q4h4-gmj2-qvw2",
+    "GHSA-rm3j-f69w-wqmq",
+    "GHSA-vgwf-h737-ff37",
+    "GHSA-w879-237q-wc7r",
+    "GHSA-wp3j-xq48-xpjw",
+    "GHSA-x527-x647-q7gg",
+    "GHSA-x744-4wpc-v9h2",
+    "GO-2026-5026",
+    "GO-2026-5942",
+    "GO-2026-5970"
+  ],
+  "analysed": 24,
+  "analyses": [
+    {
+      "advisoryId": "GHSA-5cgq-3rg8-m6cv",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.52.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.46.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/crypto",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-89gr-r52h-f8rx",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.52.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.46.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/crypto",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-f5wc-c3c7-36mc",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.52.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.46.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/crypto",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-jppx-rxg9-jmrx",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.52.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.46.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/crypto",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-rm3j-f69w-wqmq",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.52.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.46.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/crypto",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-vgwf-h737-ff37",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.52.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.46.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/crypto",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-x527-x647-q7gg",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.52.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.46.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/crypto",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-p77j-4mvh-x3m3",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "1.79.3",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file",
+      "installedVersion": "v1.72.2",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "google.golang.org/grpc",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-65gg-3w2w-hr4h",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "5.5.2",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file",
+      "installedVersion": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "github.com/containers/podman/v5",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-wp3j-xq48-xpjw",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "5.6.1",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file",
+      "installedVersion": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "github.com/containers/podman/v5",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-x744-4wpc-v9h2",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "29.3.1",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v28.5.1+incompatible",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "github.com/docker/docker",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-4c29-8rgm-jvjj",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.28.1",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file",
+      "installedVersion": "v0.25.1",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "github.com/moby/buildkit",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-4vrq-3vrq-g6gg",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.28.1",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file",
+      "installedVersion": "v0.25.1",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "github.com/moby/buildkit",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-cgrx-mc8f-2prm",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "1.13.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v1.12.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "github.com/opencontainers/selinux",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-f5mr-q85p-6hh6",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "1.8.6",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v1.7.1",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "github.com/sigstore/fulcio",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-f83f-xpx7-ffpw",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "1.8.3",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v1.7.1",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "github.com/sigstore/fulcio",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-mh2q-q3fh-2475",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "1.41.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file",
+      "installedVersion": "v1.36.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "go.opentelemetry.io/otel",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-q4h4-gmj2-qvw2",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.52.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.46.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/crypto",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-w879-237q-wc7r",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.52.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.46.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/crypto",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GO-2026-5026",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.55.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.48.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/net",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GO-2026-5942",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.56.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file",
+      "installedVersion": "v0.48.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "golang.org/x/net",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GO-2026-5970",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "0.39.0",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/75/5cc7cfe2e3b547556eb117093d626800f1dcb3751e3b31952cec86177bdcab.file",
+      "installedVersion": "v0.21.0",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/75/5cc7cfe2e3b547556eb117093d626800f1dcb3751e3b31952cec86177bdcab.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc. This advisory's carrier object is the one the previous phase identified as toolbox, which package minimisation removed: `rpm -q toolbox` reports not installed and /usr/bin/toolbox is absent from the minimised image. The object survives in a base layer because dnf remove cannot remove an object from a lower layer's store. If the carrier attribution is confirmed, this finding's invocation analysis differs from the other 23 \u2014 there is no installed executable to invoke. It remains Unknown because the attribution is not confirmed and question 7 is unanswered either way.",
+      "packageName": "golang.org/x/text",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "GHSA-hrxh-6v49-42gf",
+      "binaryPackage": "unknown",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+        "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+        "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "unknown",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "no",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "1.82.1",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file",
+      "installedVersion": "v1.72.2",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "yes",
+        "networkRequirement": "none",
+        "privilegeRequired": "unprivileged-user",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "The scan records the carrier as an ostree object, not an installed path: the fedora-bootc base ships an object store and every finding's location is an object in a lower layer. Carrier object: /sysroot/ostree/repo/objects/8c/c9b0248b19238b5f375ee6f7c986efc7ef8cdd360140254e41c478cd91b933.file. Mapping that object to one of the three installed Go binaries requires the image: `ostree ls` or `find /usr -samefile` inside a booted or mounted deployment. Until that is done the carrier is one of: podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman; skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo; bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc.",
+      "packageName": "google.golang.org/grpc",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "yes",
+      "schemaVersion": 1,
+      "socketUnits": [
+        "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+      ],
+      "sourcePackage": "unknown",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "podman.service (present, not enabled)",
+        "podman.socket (present, not in sockets.target.wants)",
+        "bootc-fetch-apply-updates.timer (present, not enabled)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "yes",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    },
+    {
+      "advisoryId": "CVE-2020-27815",
+      "binaryPackage": "kernel-core-7.1.5-200.fc44.x86_64",
+      "blocking": true,
+      "bunnyInvocationPaths": [
+        "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+      ],
+      "commandInvocationPaths": [
+        "kernel code is reached through syscalls, not a command"
+      ],
+      "conclusion": "Unknown",
+      "cveId": "CVE-2020-27815",
+      "dbusActivation": "unknown",
+      "debuginfoReference": "unknown",
+      "defaultEnablement": "unknown",
+      "desktopActivation": "no",
+      "dynamicDependencies": [],
+      "elfBuildId": "unknown",
+      "evidenceSource": "evidence/vulnerability/beta-grype.json (carrier object), evidence/reachability/beta-facts.txt (unit state), evidence/reachability/beta-permissions.txt (modes), evidence/reachability/beta-minimised-binaries.txt (installed NEVRAs)",
+      "exportedSymbols": [],
+      "fixedVersion": "4.9.249",
+      "independentReviewReference": null,
+      "installedExecutableOrLibrary": "/sysroot/ostree/repo/objects/ea/cf5a37b7b9193f1063a40c3def6c25fc348d9f404d569b91aeba6007bceef7.file",
+      "installedVersion": "7.1.5-200.fc44.x86_64",
+      "mapping": {
+        "affectedFeature": "unknown",
+        "buildTimeFlag": "unknown",
+        "bunnyExposesFeature": "no",
+        "commandRequiredToReach": "unknown",
+        "containerOrImageRequirement": "unknown",
+        "inputType": "unknown",
+        "localUserRequirement": "no",
+        "networkRequirement": "none",
+        "privilegeRequired": "kernel",
+        "runtimeFlag": "unknown",
+        "vulnerableFunction": "unknown",
+        "vulnerableSourceFile": "unknown"
+      },
+      "networkExposure": "none",
+      "notes": "Grype's kernel classifier compares the installed version against an upstream stable series. CVE-2020-27815 is a 2020 JFS bug whose stated fixed version, 4.9.249, is six major versions behind the installed 7.1.5. That is consistent with a classifier artefact and is recorded as Unknown rather than Remediated, because the remediation path is 'confirm against the Fedora kernel changelog' and nobody has. Being almost certainly fine is not evidence.",
+      "packageName": "linux-kernel",
+      "packageScripts": "unknown",
+      "pluginInvocationPaths": [
+        "none \u2014 plugins reach the system only through the broker"
+      ],
+      "proofClass": "Unknown",
+      "reviewer": null,
+      "sandboxReachability": "unknown",
+      "schemaVersion": 1,
+      "socketUnits": [],
+      "sourcePackage": "kernel",
+      "sourceRpmReference": "unknown",
+      "strippedState": "unknown",
+      "systemdUnits": [
+        "(kernel: no unit carries the vulnerable code)"
+      ],
+      "unknownMappingFields": [
+        "affectedFeature",
+        "buildTimeFlag",
+        "commandRequiredToReach",
+        "containerOrImageRequirement",
+        "inputType",
+        "runtimeFlag",
+        "vulnerableFunction",
+        "vulnerableSourceFile"
+      ],
+      "userInvocability": "unknown",
+      "vulnerableFunctionOrSubsystem": "unknown"
+    }
+  ],
+  "blocked": true,
+  "blockingAdvisories": [
+    "CVE-2020-27815",
+    "GHSA-4c29-8rgm-jvjj",
+    "GHSA-4vrq-3vrq-g6gg",
+    "GHSA-5cgq-3rg8-m6cv",
+    "GHSA-65gg-3w2w-hr4h",
+    "GHSA-89gr-r52h-f8rx",
+    "GHSA-cgrx-mc8f-2prm",
+    "GHSA-f5mr-q85p-6hh6",
+    "GHSA-f5wc-c3c7-36mc",
+    "GHSA-f83f-xpx7-ffpw",
+    "GHSA-hrxh-6v49-42gf",
+    "GHSA-jppx-rxg9-jmrx",
+    "GHSA-mh2q-q3fh-2475",
+    "GHSA-p77j-4mvh-x3m3",
+    "GHSA-q4h4-gmj2-qvw2",
+    "GHSA-rm3j-f69w-wqmq",
+    "GHSA-vgwf-h737-ff37",
+    "GHSA-w879-237q-wc7r",
+    "GHSA-wp3j-xq48-xpjw",
+    "GHSA-x527-x647-q7gg",
+    "GHSA-x744-4wpc-v9h2",
+    "GO-2026-5026",
+    "GO-2026-5942",
+    "GO-2026-5970"
+  ],
+  "blockingCount": 24,
+  "byProofClass": {
+    "Unknown": [
+      "CVE-2020-27815",
+      "GHSA-4c29-8rgm-jvjj",
+      "GHSA-4vrq-3vrq-g6gg",
+      "GHSA-5cgq-3rg8-m6cv",
+      "GHSA-65gg-3w2w-hr4h",
+      "GHSA-89gr-r52h-f8rx",
+      "GHSA-cgrx-mc8f-2prm",
+      "GHSA-f5mr-q85p-6hh6",
+      "GHSA-f5wc-c3c7-36mc",
+      "GHSA-f83f-xpx7-ffpw",
+      "GHSA-hrxh-6v49-42gf",
+      "GHSA-jppx-rxg9-jmrx",
+      "GHSA-mh2q-q3fh-2475",
+      "GHSA-p77j-4mvh-x3m3",
+      "GHSA-q4h4-gmj2-qvw2",
+      "GHSA-rm3j-f69w-wqmq",
+      "GHSA-vgwf-h737-ff37",
+      "GHSA-w879-237q-wc7r",
+      "GHSA-wp3j-xq48-xpjw",
+      "GHSA-x527-x647-q7gg",
+      "GHSA-x744-4wpc-v9h2",
+      "GO-2026-5026",
+      "GO-2026-5942",
+      "GO-2026-5970"
+    ]
+  },
+  "coverageComplete": true,
+  "extraneousAnalyses": [],
+  "note": "'Unknown' and 'Reachable and blocking' block. 'Reachable but mitigated' blocks until a release approver explicitly accepts it, because a mitigation is not a fix. An absent symbol was not treated as absent code anywhere in this set.",
+  "result": "BLOCKED",
+  "schemaVersion": 1,
+  "uncoveredAdvisories": []
+}

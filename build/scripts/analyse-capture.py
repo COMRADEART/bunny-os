@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Summarise a quiet-boot packet capture.
 
 Parses libpcap format directly rather than depending on tcpdump, which is not

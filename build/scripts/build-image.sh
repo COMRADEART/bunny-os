@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
 
 profile="${1:-}"
@@ -7,7 +8,24 @@ case "${profile}" in
   *) echo "usage: $0 developer|recovery|shell|shell-test|beta" >&2; exit 2 ;;
 esac
 
-for command in git podman image-builder python3; do
+# BUNNY_ARCHIVE_ONLY=1 stops after the normalised OCI archive and skips the
+# disk-image stage.
+#
+# This exists so a hosted CI runner can be a real second builder. The
+# reproducibility comparison compares the OCI archive, its members, the SBOM and
+# the package inventory; none of those come from image-builder, which is
+# Fedora-only and unavailable on a hosted Ubuntu worker. Rather than pretend a
+# hosted build is impossible, or ship a hosted build that silently produces
+# fewer artifacts than it claims, the mode is named and the omission is
+# explicit: an archive-only build produces no qcow2 or raw image and must never
+# be recorded as a candidate build.
+archive_only="${BUNNY_ARCHIVE_ONLY:-0}"
+
+required_commands=(git podman python3)
+if [[ "${archive_only}" != "1" ]]; then
+  required_commands+=(image-builder)
+fi
+for command in "${required_commands[@]}"; do
   if ! command -v "${command}" >/dev/null 2>&1; then
     echo "missing required build command: ${command}" >&2
     exit 3
@@ -71,16 +89,21 @@ sudo chown "$(id -u):$(id -g)" "${output}/bunny-os.oci.tar"
 # REPRODUCIBLE_BUILD_REPORT.md.
 bash "${repository_root}/build/scripts/normalise-oci-archive.sh" \
   "${output}/bunny-os.oci.tar" "${source_epoch}"
-image_types=(qcow2)
-if [[ "${profile}" == "beta" ]]; then
-  image_types=(qcow2 raw)
+if [[ "${archive_only}" == "1" ]]; then
+  printf 'BUNNY_ARCHIVE_ONLY=1: skipped image-builder; no qcow2 or raw image produced\n' \
+    | tee "${output}/image-builder.log"
+else
+  image_types=(qcow2)
+  if [[ "${profile}" == "beta" ]]; then
+    image_types=(qcow2 raw)
+  fi
+  (
+    cd "${output}"
+    for image_type in "${image_types[@]}"; do
+      sudo image-builder build --bootc-ref "${tag}" --bootc-default-fs ext4 "${image_type}"
+    done
+  ) 2>&1 | tee "${output}/image-builder.log"
 fi
-(
-  cd "${output}"
-  for image_type in "${image_types[@]}"; do
-    sudo image-builder build --bootc-ref "${tag}" --bootc-default-fs ext4 "${image_type}"
-  done
-) 2>&1 | tee "${output}/image-builder.log"
 sudo chown -R "$(id -u):$(id -g)" "${output}"
 
 python3 build/scripts/write-build-provenance.py \

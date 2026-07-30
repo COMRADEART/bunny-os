@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Versioned encrypted-object envelope.
 
 The envelope is what the service stores and routes. Its defining property is that

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Verify stable-candidate structure, file hashes, and detached manifest signature."""
 
 from __future__ import annotations

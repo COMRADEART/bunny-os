@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Per-UID replay and rate controls."""
 
 from __future__ import annotations

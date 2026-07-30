@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Resumable GTK first-run presentation."""
 
 from __future__ import annotations

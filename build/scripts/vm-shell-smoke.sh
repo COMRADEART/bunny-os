@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
 
 "${BASH:-/usr/bin/bash}" build/scripts/vm-smoke.sh shell-test

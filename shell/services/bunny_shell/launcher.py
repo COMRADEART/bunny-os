@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Safe desktop-entry parsing and deterministic launcher intent routing."""
 
 from __future__ import annotations

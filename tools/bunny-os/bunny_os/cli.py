@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 from typing import Any
 
+from . import qualification as qualification_module
 from .client import BrokerClientError, request
 from .info import human as hardware_human, inventory
 
@@ -80,6 +81,7 @@ def parser() -> argparse.ArgumentParser:
     verify.add_argument("--manifest", type=Path, default=Path("/run/initramfs/live/BUNNY-MANIFEST.json"))
     verify.add_argument("--signature", type=Path, default=Path("/run/initramfs/live/BUNNY-MANIFEST.json.sig"))
     verify.add_argument("--public-key", type=Path, default=Path("/usr/share/bunny-os/media-keys/release.pem"))
+    qualification_module.add_arguments(sub)
     return root
 
 
@@ -117,6 +119,15 @@ def main() -> int:
             value = request("logs.export", {"sinceMinutes": args.since_minutes})
         elif args.command == "power":
             value = request(f"power.{args.power_command}")
+        elif args.command == "qualification":
+            # Collection is local and read-only: it does not go through the
+            # broker, because it needs no privilege it does not already have and
+            # a qualification run must work on a system whose broker is the thing
+            # under test.
+            try:
+                value = qualification_module.dispatch(args)
+            except qualification_module.QualificationError as exc:
+                raise BrokerClientError("qualification_refused", str(exc)) from exc
         elif args.command == "media":
             from installer.validation.media import MediaVerificationError, verify_manifest
 

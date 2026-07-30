@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Fleet grouping, update rings, and update-state reporting.
 
 Rings sit *above* the existing update channel rather than replacing it. The

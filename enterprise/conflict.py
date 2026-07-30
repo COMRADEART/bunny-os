@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Policy conflict resolution and precedence.
 
 Precedence is fixed and total:

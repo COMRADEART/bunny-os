@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Strict request and argument validation for the broker wire protocol."""
 
 from __future__ import annotations

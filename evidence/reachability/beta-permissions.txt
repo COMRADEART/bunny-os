@@ -1,0 +1,4 @@
+/usr/sbin/podman 755 root:root
+/usr/sbin/skopeo 755 root:root
+/usr/sbin/bootc 755 root:root
+/usr/sbin/crun 755 root:root

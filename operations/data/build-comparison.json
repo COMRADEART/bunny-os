@@ -1,0 +1,118 @@
+{
+  "baseImageDigest": "quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4",
+  "builders": [
+    "builder-a",
+    "builder-b"
+  ],
+  "collectionNote": "Sixteen of seventeen dimensions were never collected. The previous phase's comparison asked three questions and answered them well; this model asks seventeen, so the same evidence now reports INCONCLUSIVE rather than three-of-four established. That is not a regression: it is the difference between a comparison and a formality. Collecting the remaining sixteen needs a build on each of two independent builders, which is what .github/workflows/independent-builder.yml exists to provide.",
+  "dimensions": {
+    "bootConfiguration": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "desktopEntries": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "extendedAttributes": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "fileDigests": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "filesystemTree": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "initramfs": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "kernel": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "normalisedArchive": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "ociLayers": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "ownership": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "packageInventory": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "permissions": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "rawArchive": {
+      "detail": "Both archives 1,852,006,400 bytes. Measured on the Fedora 44 WSL2 builder across two isolated workspaces at commit 79bb99dd.",
+      "first": "b5c0c502e22b936aa170c58f2240b777235da4c15eb715a4309ee2b859bf87d8",
+      "second": "b5c0c502e22b936aa170c58f2240b777235da4c15eb715a4309ee2b859bf87d8"
+    },
+    "sbom": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "schemas": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "selinuxLabels": {
+      "detail": "",
+      "first": null,
+      "second": null
+    },
+    "systemdUnits": {
+      "detail": "",
+      "first": null,
+      "second": null
+    }
+  },
+  "priorMeasurements": {
+    "archiveMembers": {
+      "differingCount": 0,
+      "differingMembers": [],
+      "memberCount": 83
+    },
+    "note": "Recorded by scripts/reproducibility/compare-builds.py during the previous phase. Real measurements, retained as informational: the per-builder values behind them were not committed in full, so they cannot serve as dimension comparisons here.",
+    "packageManifest": {
+      "counts": [
+        6076,
+        6076
+      ],
+      "identical": true
+    },
+    "sbomFileDigestNote": "The two SBOM file digests differ because syft stamps a fresh UUID namespace, a creation timestamp and a root entry named after the input path. 6076 of 6077 package entries matched exactly; the one that did not was document identity and its content digest was identical in both.",
+    "sbomFileDigests": [
+      "1ae43d00fd796a0ab0f4e58844c460425edc8197912e5c1fcb4c2efc0cae9209",
+      "635e51ff6c0bf15445157c8570363c14f03f31d1a0d5d991237c57e514758cca"
+    ]
+  },
+  "rawVarianceExplanation": "",
+  "schemaVersion": 1,
+  "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8"
+}

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Sync metadata disclosure.
 
 The honest position: end-to-end encryption protects *content*, not the fact that

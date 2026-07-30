@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Deletion semantics.
 
 Six distinct scopes exist because "delete" means six different things and

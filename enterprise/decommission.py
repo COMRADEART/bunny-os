@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Device decommissioning and lost-device response.
 
 Each scenario has a *required* action set. The point of enumerating them is that

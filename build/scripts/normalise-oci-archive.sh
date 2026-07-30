@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Rewrite an OCI archive so its digest depends only on its contents.
 #
 # podman save stamps tar entry mtimes with the wall-clock time of archive

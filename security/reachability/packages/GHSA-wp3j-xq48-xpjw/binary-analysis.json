@@ -1,0 +1,18 @@
+{
+  "advisoryId": "GHSA-wp3j-xq48-xpjw",
+  "collectedTargets": [],
+  "dynamicDependencies": [],
+  "elfBuildId": "unknown",
+  "exportedSymbols": [],
+  "language": "go",
+  "schemaVersion": 1,
+  "strippedState": "unknown",
+  "symbolDiscipline": "An absent symbol is not absent code. For a Go binary the compiler inlines across package boundaries and the linker rewrites call graphs, so neither the presence nor the absence of a module-level name settles whether the vulnerable instructions were emitted. Establishing 'Not present' requires debuginfo and the source build configuration.",
+  "uncollectedTargets": [
+    "podman-5.8.4-1.fc44.x86_64",
+    "skopeo-1.22.2-2.fc44.x86_64",
+    "bootc-1.16.4-1.fc44.x86_64",
+    "kernel-core-7.1.5-200.fc44.x86_64"
+  ],
+  "vulnerableFunctionOrSubsystem": "unknown"
+}

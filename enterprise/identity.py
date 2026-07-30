@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Privacy-preserving device identity.
 
 The hard constraint comes from ``docs/PRIVACY.md``, which prohibits "persistent

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Cryptographic backends for optional encrypted sync.
 
 A backend is a thin adapter over a reviewed implementation. Bunny OS defines no

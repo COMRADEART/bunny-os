@@ -1,0 +1,58 @@
+{
+  "advisoryId": "GHSA-65gg-3w2w-hr4h",
+  "baseImageDigest": "sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4",
+  "files": [
+    {
+      "path": "evidence/vulnerability/beta-grype.json",
+      "present": true,
+      "sha256": "df9c0b9b877def8781dfdd6dfcbcdb7375be0127317a549deb26b457bd93a33c",
+      "sizeBytes": 627491
+    },
+    {
+      "path": "evidence/reachability/beta-facts.txt",
+      "present": true,
+      "sha256": "553ebdda76a649b763b0ed5fe5b40c8885f705f5f17f293c943af6eb9b3eae73",
+      "sizeBytes": 1419
+    },
+    {
+      "path": "evidence/reachability/beta-permissions.txt",
+      "present": true,
+      "sha256": "6f9059162f3adf190ab88a2e2ce4edc0110ffefc77044753063a1866848d5cca",
+      "sizeBytes": 121
+    },
+    {
+      "path": "evidence/reachability/beta-binaries.txt",
+      "present": true,
+      "sha256": "d35826f98f5929028a035bdd4d9a7f58f443236040d12ffeb1f857e420a0d43e",
+      "sizeBytes": 624
+    },
+    {
+      "path": "evidence/reachability/beta-minimised-binaries.txt",
+      "present": true,
+      "sha256": "afa94ce512b32af3c474aeac9531e5e3bf74423bb13a3d73edcda55021c0c2d5",
+      "sizeBytes": 372
+    },
+    {
+      "path": "operations/data/vulnerability-disposition.json",
+      "present": true,
+      "sha256": "66141701a881c50ff05518fdc921a59e63f59fae2a9a6540c0e6ea09c62810d7",
+      "sizeBytes": 122307
+    },
+    {
+      "path": "docs/adr/ADR-027-base-image-security-decision.md",
+      "present": true,
+      "sha256": "ca35b5414e6c007dcf40bd33efa96072950c612d643ebb5e3f7538d14ae75136",
+      "sizeBytes": 7595
+    },
+    {
+      "path": "SECURITY_REACHABILITY_REVIEW.md",
+      "present": true,
+      "sha256": "9668da273bf622b1f86bdefa4769a97c3d18702c5c27ed9c91dbc8118547bb97",
+      "sizeBytes": 5973
+    }
+  ],
+  "generatedAt": "2026-07-30T12:06:46.785256Z",
+  "note": "Digests are recomputed from the files on disk at generation time. A reviewer can verify the bundle describes the repository at the named commit.",
+  "schemaVersion": 1,
+  "sourceCommit": "80df25b09f6578276d18c8a82f15c47dd8959740"
+}

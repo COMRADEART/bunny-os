@@ -3,6 +3,91 @@
 Date: 2026-07-28  
 Host: Windows, Python 3; no Linux systemd/container/KVM runtime
 
+## Current test position — 2026-07-30
+
+Host: Windows 11, Python 3.14.6. No Linux systemd, container or KVM runtime;
+`make`, `systemd-analyze` and `shellcheck` unavailable and their checks skip.
+
+| Command | Result |
+|---|---|
+| `python scripts/task.py validate` | **PASS** — 277 JSON documents parsed, 35 schemas validated, 297 Python files compiled |
+| `python scripts/task.py test` | **PASS** — **1,150 tests**, 1 skipped (was 892) |
+| `python scripts/task.py test-installer` | **PASS** — 60 tests |
+| `python scripts/task.py test-phase5` | **PASS** — 105 tests |
+| `python scripts/task.py test-release-closure` | **PASS** — **510 tests** across 11 suites (was 252 across 9) |
+| `python scripts/task.py phase7-audit` | **PASS** — 47 documents, 18 demonstrations, 11 schemas |
+| `python scripts/phase7.py source-gate` | **PASS** |
+
+**1,315 distinct tests pass, 1 skipped**: 1,150 under `tests/`, plus 60 installer
+and 105 phase-5 tests discovered separately. `test-release-closure` re-runs eleven of
+the `tests/` directories — 510 tests — so it is a subset of the 1,150 rather than an
+addition to it. Those eleven grew from 252 to 510 this phase.
+
+### The eleven qualification suites
+
+| Suite | Tests | Covers |
+|---|---|---|
+| `tests/security` | 52 | vulnerability disposition, severity-reduction refusals |
+| `tests/licensing` | 20 | the seven licence-gate requirements |
+| `tests/reproducibility` | **119** | builder independence, normalisation, 17-dimension comparison, provenance verification |
+| `tests/signing` | **57** | role separation, key lifecycle, two-person approval |
+| `tests/recovery` | 38 | recovery media qualification |
+| `tests/release` | **53** | evidence model, candidate prerequisites, dashboard, source gate |
+| `tests/hardware_evidence` | **62** | intake, redaction, the collector, guided tests, signatures |
+| `tests/accessibility_evidence` | **39** | the matrix and the 17-flow runtime model |
+| `tests/pilot_gates` | **37** | six separated gates, pilot-cannot-bypass-stable |
+| `tests/reachability` | **32** | per-CVE analysis, proof classes, acquisition trust |
+| `tests/review_evidence` | **30** | the self-review wall, signed review records, request completeness |
+
+`reachability` and `review_evidence` are new. Six suites grew.
+
+### All eighteen mandated adversarial cases
+
+| # | Case | Suite |
+|---|---|---|
+| 1 | the same physical host represented as two builders | `reproducibility` |
+| 2 | the same CI run represented twice | `reproducibility` |
+| 3 | a mutable base tag instead of a digest | `reproducibility` |
+| 4 | a mismatched source commit | `reproducibility` |
+| 5 | missing debuginfo | `reachability` |
+| 6 | source and binary version mismatch | `reachability` |
+| 7 | an absent symbol treated as absent code | `reachability` |
+| 8 | a self-review marked independent | `review_evidence` |
+| 9 | an unsigned review report | `review_evidence` |
+| 10 | a fake hardware report | `hardware_evidence` |
+| 11 | a report containing a hardware serial number | `hardware_evidence` |
+| 12 | a `NOT_RUN` hardware test marked `PASS` | `hardware_evidence` |
+| 13 | a development signer used for production | `signing` |
+| 14 | one person supplying two signer identities | `signing` |
+| 15 | a Critical CVE accepted without a reviewer | `reachability` |
+| 16 | a stable candidate built with an unresolved `Unknown` | `release` |
+| 17 | a pilot gate invoked before a stable release | `pilot_gates` |
+| 18 | stale evidence accepted | `release` |
+
+Each rejects the invalid evidence, and each names the mandated case in its docstring.
+
+### Two bugs the new tests found
+
+1. **The normaliser introduced variance of its own.** `gzip.GzipFile` infers the
+   stored original filename from `fileobj.name` and writes it into the gzip header,
+   so two normalised copies written to different paths differed in their headers.
+   Caught by normalising one archive to two destinations and comparing. Fixed with an
+   explicit `filename=""`.
+2. **`WEAK_DIMENSIONS` named a field the schema does not have.** Schema 1 carried a
+   `workspace` path; schema 2 deliberately has nowhere to put one, and the constant
+   still referenced it — raising `AttributeError` on every same-host comparison.
+
+### What is not tested here
+
+No test in this repository builds an image, boots a system, touches hardware, or
+signs anything with a production key. The suites test the *evidence model*: that it
+accepts valid evidence and refuses invalid evidence. They are not a substitute for
+the evidence, and the model's whole purpose is to say so.
+
+---
+
+## Phase 1 test report (2026-07-28)
+
 | Command | Result |
 |---|---|
 | `python scripts/task.py validate` | PASS: 11 JSON documents parsed; 3 schema headers/local-reference graphs validated; 39 Python files compiled in memory |
@@ -180,3 +265,64 @@ This is the clearest argument in the repository for why source tests are not run
 ### Suite totals
 
 671 main-suite tests (from 101 at the start of Phase 7), plus 60 installer and 105 operations tests. New this session: broker 41, settings 40, factory 58, cryptography 46.
+
+## Release blocker closure suites, 2026-07-30
+
+Nine suites, 252 tests, all passing.
+
+| Suite | Tests | Covers |
+|---|---|---|
+| `tests/security/` | 52 | vulnerability dispositions, the ten-question reachability review, plus the inherited security tests |
+| `tests/licensing/` | 20 | licence decision, the seven-requirement gate, the repository's actual licence layout |
+| `tests/reproducibility/` | 29 | four separated claims, independence dimensions, four comparison levels |
+| `tests/signing/` | 29 | seven roles, namespace separation, key lifecycle, rotation overlap, the drill |
+| `tests/recovery/` | 38 | recovery-media matrix and its runtime-only enforcement |
+| `tests/release/` | 24 | the evidence model and its four forgery checks |
+| `tests/hardware_evidence/` | 25 | redaction scanning and claim substantiation |
+| `tests/accessibility_evidence/` | 12 | fourteen workflows, static-evidence refusal |
+| `tests/pilot_gates/` | 23 | four separated gates and the CI closure assertion |
+
+Run with `python scripts/task.py test-release-closure` or
+`make test-release-closure`.
+
+### The fourteen mandated adversarial cases
+
+All are tested and all are refused.
+
+| Case | Suite |
+|---|---|
+| forged evidence record | `tests/release/` - missing artifact, substituted content, and no-digest variants |
+| stale evidence | `tests/release/` |
+| evidence from the wrong commit | `tests/release/` |
+| development key used as a production key | `tests/signing/` |
+| wrong signing-role key | `tests/signing/` |
+| unsigned licence approval | `tests/licensing/` |
+| vulnerability severity reduction without review | `tests/security/` |
+| fake physical-hardware report | `tests/hardware_evidence/` |
+| self-review marked independent | `tests/release/` |
+| same-host builds marked independent | `tests/reproducibility/` |
+| recovery report without boot evidence | `tests/recovery/` |
+| pilot approval without stable release | `tests/pilot_gates/` |
+| OEM approval without hardware | `tests/pilot_gates/` |
+| sync approval without cryptographic review | `tests/pilot_gates/` |
+
+### Two defects the tests found in the code under test
+
+Both were found by writing the test first and watching it fail for the wrong
+reason.
+
+1. **The serial-number heuristic matched RFC 3339 timestamps.** Every hardware
+   report was rejected for carrying `2026-07-29T00` as an "asset tag". Fixed by
+   exempting timestamp-shaped values and time fields.
+2. **An absent qualification matrix reported `ok`.** An empty matrices document
+   has no incomplete matrices, so the stable gate counted the requirement as
+   satisfied. Fixed so an absent matrix blocks.
+
+### Whole-repository totals
+
+| Command | Tests | Result |
+|---|---|---|
+| `python scripts/task.py test` | 892 | PASS, 1 skipped |
+| `python scripts/task.py test-installer` | 60 | PASS |
+| `python scripts/task.py test-phase5` | 105 | PASS |
+| `python scripts/task.py test-release-closure` | 252 | PASS |

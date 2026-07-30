@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """First-run launcher with a useful non-GTK status fallback."""
 
 from __future__ import annotations

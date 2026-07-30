@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Write a deterministic checksum manifest for completed media artifacts."""
 
 from __future__ import annotations

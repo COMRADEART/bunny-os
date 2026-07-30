@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Storage inventory models and strict lsblk parsing."""
 
 from __future__ import annotations

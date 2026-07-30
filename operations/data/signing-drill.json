@@ -1,0 +1,70 @@
+{
+  "checks": [
+    {
+      "check": "release-image-signing",
+      "command": "openssl pkeyutl -sign -rawin",
+      "detail": "signed with dev-bunny-os-release-drill1 over real artifact bunny-os.oci.tar (1852119040 bytes)",
+      "outcome": "PASS"
+    },
+    {
+      "check": "recovery-image-signing",
+      "command": "openssl pkeyutl -sign -rawin",
+      "detail": "signed with dev-recovery-drill1 over real recovery artifact bunny-os.oci.tar (1330872320 bytes)",
+      "outcome": "PASS"
+    },
+    {
+      "check": "update-manifest-signing",
+      "command": "openssl pkeyutl -sign -rawin",
+      "detail": "signed with dev-update-drill1",
+      "outcome": "PASS"
+    },
+    {
+      "check": "catalogue-signing",
+      "command": "openssl pkeyutl -sign -rawin",
+      "detail": "signed with dev-catalogue-drill1",
+      "outcome": "PASS"
+    },
+    {
+      "check": "verification",
+      "command": "openssl pkeyutl -verify -rawin -pubin",
+      "detail": "all four signatures verified against their published public keys",
+      "outcome": "PASS"
+    },
+    {
+      "check": "key-rotation",
+      "command": "release.signing.rotation_overlap",
+      "detail": "overlapping rotation accepted (overlap of 92 days); non-overlapping rotation refused (no overlapping trust period: the replacement is published at or after the predecessor expires, so a device that updates late would trust neither key)",
+      "outcome": "PASS"
+    },
+    {
+      "check": "revoked-key-rejection",
+      "command": "release.signing.usable_key(revokedKeyIds=...)",
+      "detail": "key usable before revocation, refused after: key is revoked",
+      "outcome": "PASS"
+    },
+    {
+      "check": "wrong-role-rejection",
+      "command": "release.signing.parse_key_id(expectedRole=...)",
+      "detail": "recovery key refused for the osRelease role; release key refused for fleetPolicy (key belongs to the osRelease authority, not fleetPolicy)",
+      "outcome": "PASS"
+    },
+    {
+      "check": "corrupted-artifact-rejection",
+      "command": "openssl pkeyutl -verify against a modified artifact",
+      "detail": "signature over the intact artifact does not verify against a truncated copy",
+      "outcome": "PASS"
+    }
+  ],
+  "keyClass": "development",
+  "keyDirectory": "/root/.bunny-dev-keys/drill",
+  "keysUsed": [
+    "dev-bunny-os-release-drill1",
+    "dev-bunny-os-release-drill2",
+    "dev-catalogue-drill1",
+    "dev-recovery-drill1",
+    "dev-update-drill1"
+  ],
+  "note": "Every key here carries the reserved dev- prefix and is refused by require_production_key. This drill proves the signing path works; it is not release signing evidence and no production key ceremony has occurred.",
+  "ranAt": "2026-07-30T03:37:06.948974Z",
+  "schemaVersion": 1
+}

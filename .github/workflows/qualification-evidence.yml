@@ -1,0 +1,381 @@
+name: Qualification evidence closure
+
+# Ten properties this pipeline exists to keep true. Each one is a way a future
+# change could make a gate passable without the evidence that justifies it, and
+# each is asserted rather than trusted.
+#
+# Most jobs here are expected to *fail closed* and are checked for exit 2 rather
+# than exit 0. A green pipeline that reported a passing stable gate would be a
+# worse outcome than a red one.
+
+on:
+  pull_request:
+  push:
+    branches: [main, feature/qualification-evidence-closure]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  suites:
+    name: Qualification evidence suites
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: python -m pip install --disable-pip-version-check jsonschema
+      - name: Repository validation
+        run: python scripts/task.py validate
+      - name: Every qualification suite
+        run: python scripts/task.py test-release-closure
+      - name: Baseline classifies every unmet requirement
+        run: python scripts/release.py qualification-evidence-baseline
+
+  protection:
+    name: Ten CI protections
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # 1. Development keys cannot satisfy production gates.
+      - name: A development key cannot satisfy a production gate
+        run: |
+          set +e
+          python scripts/release.py signing-roles
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "::error::a production signing key is claimed in pull-request CI"; exit 1
+          fi
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, ".")
+          from release.signing import SigningError, parse_key_id, require_production_key
+          for key in ("dev-bunny-os-release-signer-a", "dev-recovery-drill1"):
+              try:
+                  require_production_key(parse_key_id(key))
+              except SigningError:
+                  continue
+              raise SystemExit(f"{key} was accepted as a production key")
+          print("every dev- key is refused on a production path")
+          PY
+
+      # 2. Same-host builds cannot satisfy independent reproducibility.
+      - name: Two builds on one host cannot satisfy independent reproducibility
+        run: |
+          set +e
+          python scripts/release.py verify-builder-independence
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "::error::builder independence reported as verified with no hosted builder record"; exit 1
+          fi
+          [ "$status" -eq 2 ]
+
+      # 3. Self-review cannot satisfy an independent-review gate.
+      - name: A self-review cannot satisfy an independent-review gate
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, ".")
+          from release.reviews import PROJECT_PRINCIPALS, ReviewError, is_self_review, parse_review_record
+          for principal in PROJECT_PRINCIPALS:
+              assert is_self_review(principal, ""), principal
+          try:
+              parse_review_record({
+                  "schemaVersion": 1,
+                  "reviewId": "r", "reviewType": "security",
+                  "reviewerName": "Bunny OS maintainer", "reviewerOrganisation": "ComradeArt",
+                  "independenceDeclaration": "x" * 60,
+                  "scopeCommit": "0" * 40, "scopeArtifacts": ["services/"],
+                  "completedAt": "2026-08-01T00:00:00Z", "findings": [],
+                  "conclusion": "pass", "reportDigest": "a" * 64, "signature": "s",
+              })
+          except ReviewError as exc:
+              print(f"refused: {exc}")
+          else:
+              raise SystemExit("a self-review was accepted as independent")
+          PY
+
+      # 4. Blank hardware evidence cannot pass.
+      - name: Blank hardware evidence cannot pass
+        run: |
+          set +e
+          python scripts/release.py validate-hardware-evidence
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "::error::empty hardware evidence passed"; exit 1; }
+
+      # 5. Timestamp-only evidence cannot pass. A record whose only content is a
+      #    time is not evidence of anything having happened.
+      - name: Timestamp-only evidence cannot pass
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, ".")
+          from release.accessibility import AccessibilityEvidenceError, parse_flow_result
+          from release.hardware import HardwareCollectionError, parse_guided_test
+          try:
+              parse_flow_result({
+                  "flow": "login", "result": "PASS", "failureSeverity": "none",
+                  "startedAt": "2026-08-01T10:00:00Z", "completedAt": "2026-08-01T10:01:00Z",
+                  "steps": [],
+              })
+          except AccessibilityEvidenceError as exc:
+              print(f"accessibility refused: {exc}")
+          else:
+              raise SystemExit("an accessibility PASS with no steps was accepted")
+          try:
+              parse_guided_test({
+                  "test": "boot", "outcome": "PASS",
+                  "startedAt": "2026-08-01T10:00:00Z", "completedAt": "2026-08-01T10:01:00Z",
+                  "operator": "x", "expectedResult": "y", "actualResult": "z",
+              })
+          except HardwareCollectionError as exc:
+              print(f"hardware refused: {exc}")
+          else:
+              raise SystemExit("a hardware PASS with no artifact was accepted")
+          PY
+
+      # 6. Stale reports cannot pass.
+      - name: Stale evidence cannot pass
+        run: |
+          python - <<'PY'
+          import datetime, sys
+          sys.path.insert(0, ".")
+          from release.candidate import CANDIDATE_PREREQUISITES, DEFAULT_MAX_AGE_DAYS, build_row
+          now = datetime.datetime(2026, 7, 30, tzinfo=datetime.timezone.utc)
+          old = (now - datetime.timedelta(days=DEFAULT_MAX_AGE_DAYS + 1)).isoformat()
+          row = build_row(
+              CANDIDATE_PREREQUISITES[0],
+              {"satisfied": True, "commit": "a" * 40, "generatedAt": old},
+              sourceCommit="a" * 40, now=now,
+          )
+          assert row.state == "STALE", row.state
+          assert not row.satisfied
+          print(f"stale evidence reported as {row.state}")
+          PY
+
+      # 7. Wrong-commit evidence cannot pass.
+      - name: Wrong-commit evidence cannot pass
+        run: |
+          python - <<'PY'
+          import datetime, sys
+          sys.path.insert(0, ".")
+          from release.candidate import CANDIDATE_PREREQUISITES, build_row
+          from release.reviews import ReviewError, parse_review_record
+          now = datetime.datetime(2026, 7, 30, tzinfo=datetime.timezone.utc)
+          row = build_row(
+              CANDIDATE_PREREQUISITES[0],
+              {"satisfied": True, "commit": "b" * 40},
+              sourceCommit="a" * 40, now=now,
+          )
+          assert row.state == "STALE", row.state
+          try:
+              parse_review_record({
+                  "schemaVersion": 1, "reviewId": "r", "reviewType": "legal",
+                  "reviewerName": "External Counsel", "reviewerOrganisation": "Chambers",
+                  "independenceDeclaration": "x" * 60,
+                  "scopeCommit": "b" * 40, "scopeArtifacts": ["LICENSE"],
+                  "completedAt": "2026-08-01T00:00:00Z", "findings": [],
+                  "conclusion": "pass", "reportDigest": "a" * 64, "signature": "s",
+              }, expectedCommit="a" * 40)
+          except ReviewError as exc:
+              print(f"refused: {exc}")
+          else:
+              raise SystemExit("a review of another commit was accepted")
+          PY
+
+      # 8. Pilot gates cannot bypass a stable release.
+      - name: A pilot gate cannot bypass the stable gate
+        env:
+          BUNNY_PROTECTED_EVIDENCE: ""
+        run: python scripts/release.py pilot-closure-assertion
+
+      # 9. A Critical vulnerability cannot be waived without an independent review.
+      - name: A Critical finding cannot be cleared without an independent review
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          sys.path.insert(0, ".")
+          from release.cve import CveAnalysisError, parse_analysis
+          findings = pathlib.Path("security/reachability/findings")
+          advisory = "GHSA-5cgq-3rg8-m6cv"
+          record = json.loads((findings / f"{advisory}.json").read_text(encoding="utf-8"))
+          record.update({
+              "conclusion": "Present but unreachable",
+              "reviewer": "Bunny OS maintainer",
+              "sourcePackageVersion": "0.46.0",
+              "activationAnalysis": "no unit enabled",
+              "privilegeAnalysis": "unprivileged only",
+              "invocationGraph": "no path",
+              "systemConfiguration": "socket absent",
+              "sandboxOrMacControl": "SELinux enforcing",
+          })
+          try:
+              parse_analysis(record, criticalAdvisories=[advisory])
+          except CveAnalysisError as exc:
+              print(f"refused: {exc}")
+          else:
+              raise SystemExit("a Critical was cleared without an independent review")
+          PY
+      - name: The vulnerability position still blocks
+        run: |
+          set +e
+          python scripts/release.py cve-disposition
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "::error::the per-CVE disposition no longer blocks; update the reports"; exit 1; }
+
+      # 10. Production signing secrets are unavailable to pull requests.
+      - name: No production signing secret is reachable
+        env:
+          BUNNY_OS_RELEASE_KEY: ${{ secrets.BUNNY_OS_RELEASE_KEY }}
+          BUNNY_RECOVERY_KEY: ${{ secrets.BUNNY_RECOVERY_KEY }}
+          BUNNY_UPDATE_KEY: ${{ secrets.BUNNY_UPDATE_KEY }}
+          BUNNY_CATALOGUE_KEY: ${{ secrets.BUNNY_CATALOGUE_KEY }}
+        run: |
+          for name in BUNNY_OS_RELEASE_KEY BUNNY_RECOVERY_KEY BUNNY_UPDATE_KEY BUNNY_CATALOGUE_KEY; do
+            if [ -n "${!name:-}" ]; then
+              echo "::error::$name is reachable from pull-request CI"; exit 1
+            fi
+          done
+          echo "no production signing secret is reachable"
+
+  two-person-drill:
+    name: Two-person development signing drill
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      # Safe in pull-request CI: it mints its own dev- prefixed keys outside the
+      # working tree and cannot produce a releasable artifact.
+      - name: Run the drill with two separate development keys
+        run: |
+          python scripts/two_person_drill.py \
+            --keydir "$RUNNER_TEMP/bunny-two-person-keys" \
+            --logdir "$RUNNER_TEMP/bunny-two-person-logs" \
+            --out "$RUNNER_TEMP/two-person-signing-drill.json"
+      - name: The committed drill record still passes
+        run: python scripts/release.py two-person-development-signing-drill
+      - name: The drill does not satisfy the production requirement
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          sys.path.insert(0, ".")
+          from release.signing import evaluate_two_person_drill
+          document = json.loads(
+              pathlib.Path("operations/data/two-person-signing-drill.json").read_text(encoding="utf-8")
+          )
+          result = evaluate_two_person_drill(document)
+          assert result["result"] == "PASS", result["failingChecks"]
+          assert result["satisfiesProductionRequirement"] is False
+          print("drill passes and claims nothing about production signing")
+          PY
+
+  reachability:
+    name: Per-CVE reachability framework
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Findings regenerate identically from committed evidence
+        run: |
+          set -euo pipefail
+          python scripts/reachability.py generate-findings
+          # The generator is deterministic apart from generatedAt, so only that
+          # field may differ. A change anywhere else means the committed records
+          # do not follow from the committed evidence.
+          git diff --name-only -- security/reachability/findings | tee /tmp/changed
+          python - <<'PY'
+          import json, pathlib, subprocess
+          changed = [line for line in pathlib.Path("/tmp/changed").read_text().splitlines() if line]
+          for name in changed:
+              before = subprocess.run(["git", "show", f"HEAD:{name}"], capture_output=True, text=True, check=True).stdout
+              after = pathlib.Path(name).read_text(encoding="utf-8")
+              left, right = json.loads(before), json.loads(after)
+              left.pop("generatedAt", None); right.pop("generatedAt", None)
+              if left != right:
+                  raise SystemExit(f"{name} does not regenerate from committed evidence")
+          print(f"{len(changed)} record(s) differ only in generatedAt")
+          PY
+      - name: Acquisition is not complete and says so
+        run: |
+          set +e
+          python scripts/release.py validate-cve-acquisition
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "::error::acquisition reported complete with no manifest"; exit 1; }
+      - name: Symbol analysis reports what it could not collect
+        run: |
+          set +e
+          python scripts/reachability.py analyse-symbols
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "::error::symbol analysis reported complete without the binaries"; exit 1; }
+      - name: Every unresolved advisory has a nine-file review bundle
+        run: |
+          set -euo pipefail
+          python scripts/reachability.py generate-packages
+          python - <<'PY'
+          import json, pathlib
+          index = json.loads(pathlib.Path("security/reachability/packages/index.json").read_text(encoding="utf-8"))
+          for advisory in index["bundles"]:
+              directory = pathlib.Path("security/reachability/packages") / advisory
+              missing = [name for name in index["filesPerBundle"] if not (directory / name).is_file()]
+              if missing:
+                  raise SystemExit(f"{advisory} missing {missing}")
+          print(f"{len(index['bundles'])} bundles complete")
+          PY
+
+  gates:
+    name: Gate state
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Source gate passes
+        run: python scripts/release.py gate --kind source
+      - name: Candidate gate blocks
+        run: |
+          set +e
+          python scripts/release.py gate --kind qualification-candidate
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "::error::candidate gate passed"; exit 1; }
+      - name: Stable gate reports NO-GO
+        run: |
+          set +e
+          python scripts/release.py gate --kind stable-release
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "::error::stable gate reported GO"; exit 1; }
+      - name: Every pilot gate reports BLOCKED
+        run: |
+          for kind in oem-pilot enterprise-pilot sync-pilot; do
+            set +e
+            python scripts/release.py gate --kind "$kind"
+            status=$?
+            set -e
+            [ "$status" -eq 2 ] || { echo "::error::$kind did not report BLOCKED"; exit 1; }
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qualification-evidence
+          path: build/out/qualification/

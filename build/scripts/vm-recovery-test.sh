@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Recovery media qualification harness.
 #
 # Boots the recovery image independently of the installed system, with the

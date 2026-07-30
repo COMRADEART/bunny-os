@@ -1,0 +1,14 @@
+PRESENT  podman           /usr/sbin/podman  45220848 bytes
+PRESENT  skopeo           /usr/sbin/skopeo  26035008 bytes
+ABSENT   buildah         
+PRESENT  bootc            /usr/sbin/bootc  17397824 bytes
+PRESENT  crun             /usr/sbin/crun  595152 bytes
+ABSENT   runc            
+PRESENT  conmon           /usr/sbin/conmon  170984 bytes
+PRESENT  toolbox          /usr/sbin/toolbox  12651096 bytes
+ABSENT   docker          
+ABSENT   containerd      
+ABSENT   netavark        
+ABSENT   aardvark-dns    
+PRESENT  ostree           /usr/sbin/ostree  353496 bytes
+PRESENT  rpm-ostree       /usr/sbin/rpm-ostree  14520600 bytes

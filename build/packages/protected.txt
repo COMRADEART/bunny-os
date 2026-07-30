@@ -1,0 +1,55 @@
+# Packages that must remain installed in every profile that declares them.
+#
+# build/scripts/install-packages.py verifies this list after applying a
+# profile's removePackages, and fails the build if any entry disappeared.
+# Minimisation exists to reduce attack surface, not to reduce a scan score, and
+# these five categories are exactly where the two motives diverge.
+#
+# An entry here is not a promise that the package is in every profile. It is a
+# promise that if a profile installs it, minimisation will not take it away.
+
+# category: recovery tools
+bootc
+cryptsetup
+e2fsprogs
+xfsprogs
+btrfs-progs
+dosfstools
+smartmontools
+nvme-cli
+tar
+gzip
+
+# category: accessibility tools
+orca
+at-spi2-core
+mousetweaks
+
+# category: required firmware
+linux-firmware
+fwupd
+
+# category: installer dependencies
+anaconda
+anaconda-live
+anaconda-webui
+anaconda-dracut
+dracut
+dracut-config-generic
+dracut-network
+plymouth
+xorriso
+squashfs-tools
+grub2-efi-x64
+shim-x64
+efibootmgr
+podman
+
+# category: security tooling
+selinux-policy-targeted
+policycoreutils
+firewalld
+polkit
+bubblewrap
+openssl
+greenboot

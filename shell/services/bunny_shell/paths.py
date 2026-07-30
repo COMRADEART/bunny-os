@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """XDG paths and secure atomic JSON persistence for Bunny Shell."""
 
 from __future__ import annotations

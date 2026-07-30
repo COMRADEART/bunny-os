@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
 
 for command in git podman image-builder python3; do

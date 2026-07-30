@@ -112,10 +112,15 @@ def validate_json() -> None:
         *[path for path in (ROOT / "oem").rglob("*.json")],
         *[path for path in (ROOT / "enterprise").rglob("*.json")],
         *[path for path in (ROOT / "sync").rglob("*.json")],
+        *[path for path in (ROOT / "security").rglob("*.json")],
     })
     for path in paths:
         json.loads(path.read_text(encoding="utf-8"))
-    schema_paths = sorted([*(ROOT / "schemas").rglob("*.schema.json"), *(ROOT / "shell/schemas").glob("*.schema.json")])
+    schema_paths = sorted([
+        *(ROOT / "schemas").rglob("*.schema.json"),
+        *(ROOT / "shell/schemas").glob("*.schema.json"),
+        *(ROOT / "security").rglob("*.schema.json"),
+    ])
     for path in schema_paths:
         schema = json.loads(path.read_text(encoding="utf-8"))
         if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema" or not schema.get("$id") or schema.get("type") != "object":
@@ -225,6 +230,37 @@ def phase5_tests(pattern: str | None = None) -> None:
     run(argv)
 
 
+#: The blocker-closure suites. Three of them carry underscores where the brief
+#: writes hyphens: a hyphenated directory is not an importable Python package,
+#: so ``unittest discover`` would skip it and the tests would silently never
+#: run. A test that does not run is worse than one in a differently-spelled
+#: directory.
+RELEASE_CLOSURE_SUITES = (
+    "security",
+    "licensing",
+    "reproducibility",
+    "signing",
+    "recovery",
+    "release",
+    "hardware_evidence",
+    "accessibility_evidence",
+    "pilot_gates",
+    # Added by the qualification evidence closure. Underscores because these are
+    # imported as Python packages.
+    "reachability",
+    "review_evidence",
+)
+
+
+def release_closure_tests() -> None:
+    """Run every release blocker closure suite, in order."""
+    for component in RELEASE_CLOSURE_SUITES:
+        start = ROOT / "tests" / component
+        if not start.is_dir():
+            raise SystemExit(f"missing release closure suite: tests/{component}")
+        run([sys.executable, "-m", "unittest", "discover", "-s", str(start), "-t", str(ROOT)])
+
+
 def component_tests(component: str) -> None:
     start = ROOT / "tests" / component
     if not start.is_dir():
@@ -252,6 +288,8 @@ def main() -> int:
         "test-policy", "test-fleet", "test-multitenancy", "test-sync", "test-sync-crypto",
         "test-device-revocation", "test-remote-wipe", "test-airgap", "test-kiosk",
         "test-decommission", "test-pilot",
+        "test-release-closure", "test-licensing", "test-reproducibility", "test-signing",
+        "test-release", "test-hardware-evidence", "test-accessibility-evidence", "test-pilot-gates",
     ))
     args = parser.parse_args()
     if args.command == "audit":
@@ -315,6 +353,14 @@ def main() -> int:
         component_tests("decommission")
     elif args.command == "test-remote-wipe":
         component_tests("fleet")
+    elif args.command == "test-release-closure":
+        release_closure_tests()
+    elif args.command == "test-hardware-evidence":
+        component_tests("hardware_evidence")
+    elif args.command == "test-accessibility-evidence":
+        component_tests("accessibility_evidence")
+    elif args.command == "test-pilot-gates":
+        component_tests("pilot_gates")
     elif args.command.startswith("test-"):
         component_tests(args.command.removeprefix("test-"))
     else:

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Authenticated device pairing.
 
 The attack this module is built around is *server-side key substitution*: a

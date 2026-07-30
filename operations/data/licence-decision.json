@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "model": "gpl-os-apache-clients-split",
+  "decidedBy": "Project owner (COMRADEART/bunny-os)",
+  "decidedAt": "2026-07-29T00:00:00Z",
+  "rationale": "The split follows the trust boundary the architecture already draws. The OS layer carries the user-protective guarantees, so copyleft does real work there: an OEM cannot take the privileged broker, weaken its permission enforcement, and ship the result closed. The Phase 7 client packages are integration surfaces that a third-party fleet server, enterprise console or OEM tooling must embed to interoperate at all, and ADR-023 deliberately places those components in separate repositories; a copyleft obligation on enterprise/ would reach into deployments this project neither wrote nor supports.",
+  "layout": {
+    "services": "GPL-3.0-or-later",
+    "installer": "GPL-3.0-or-later",
+    "shell": "GPL-3.0-or-later",
+    "build": "GPL-3.0-or-later",
+    "oem": "Apache-2.0",
+    "enterprise": "Apache-2.0",
+    "sync": "Apache-2.0",
+    "schemas": "Apache-2.0"
+  },
+  "signature": null,
+  "attestationReference": "docs/LICENCE_DECISION.md#owner-decision",
+  "attestationMethod": "interactive-owner-selection",
+  "attestationNote": "The project owner selected this model explicitly on 2026-07-29 from the four options set out in docs/LICENCE_DECISION.md. The decision is attested by the recorded decision document, not by a cryptographic signature: no owner signing key exists, and docs/PRODUCTION_SIGNING_CEREMONY.md records that no key ceremony has been held. Adding a signature is tracked as an open item rather than simulated.",
+  "licenceScanResult": "PASS",
+  "licenceScanEvidence": "evidence/build/beta-license-scan.log",
+  "licenceScanDetail": "6077 SPDX records, 0 unresolved, no prohibited markers, over the beta profile built from base digest sha256:fb71f099.",
+  "outboundCompatibilityReviewed": false,
+  "outboundCompatibilityNote": "build/license-policy.json refuses proprietary, commercial-only, no-redistribution and EULA markers in dependencies, but outbound compatibility of GPL-3.0-or-later against every dependency licence in the SBOM has not been reviewed by a lawyer. This is one of the four packages in reviews/legal/.",
+  "trademarkPolicyReviewed": false,
+  "trademarkPolicyNote": "docs/TRADEMARK_POLICY_DRAFT.md is a draft prepared for legal review. It is not a reviewed policy and no mark has been registered."
+}

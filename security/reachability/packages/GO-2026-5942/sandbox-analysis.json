@@ -1,0 +1,13 @@
+{
+  "advisoryId": "GO-2026-5942",
+  "brokerModel": "The privileged broker exposes typed fixed backends. There is no generic exec path, so a plugin cannot reach a container runtime through it.",
+  "bunnyUnitHardening": "Bunny units carry systemd sandboxing directives",
+  "limits": [
+    "No SELinux denial testing was performed against a deliberate invocation.",
+    "No measurement of what a confined rootless podman can reach was made."
+  ],
+  "residualExposure": "A local user may invoke the binaries directly; SELinux confines what a rootless invocation can do but does not remove the code. Confinement reduces blast radius and is not a reachability answer.",
+  "sandboxReachability": "yes",
+  "schemaVersion": 1,
+  "selinux": "selinux-policy-targeted, enforcing"
+}

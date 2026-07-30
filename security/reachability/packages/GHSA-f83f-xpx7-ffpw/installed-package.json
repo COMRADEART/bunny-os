@@ -1,0 +1,28 @@
+{
+  "advisoryId": "GHSA-f83f-xpx7-ffpw",
+  "binaryPackage": "unknown",
+  "candidateCarriers": [
+    "podman-5.8.4-1.fc44.x86_64 at /usr/sbin/podman",
+    "skopeo-1.22.2-2.fc44.x86_64 at /usr/sbin/skopeo",
+    "bootc-1.16.4-1.fc44.x86_64 at /usr/sbin/bootc"
+  ],
+  "carrierAttributionConfirmed": false,
+  "carrierObjects": [
+    "/sysroot/ostree/repo/objects/8f/bfb47329076d06ea8a11d1beb743cd9e5758c4079135869d0d5d01f51694b4.file"
+  ],
+  "fixedVersion": "1.8.3",
+  "howToConfirm": [
+    "mount or boot the beta deployment built from the pinned base digest",
+    "for each of /usr/sbin/podman, /usr/sbin/skopeo, /usr/sbin/bootc: `find /sysroot/ostree/repo/objects -samefile <binary>`",
+    "or `ostree ls -R <commit> /usr/sbin` and compare object checksums"
+  ],
+  "installedNevrasMeasured": [
+    "podman-5.8.4-1.fc44.x86_64",
+    "skopeo-1.22.2-2.fc44.x86_64",
+    "bootc-1.16.4-1.fc44.x86_64",
+    "kernel-core-7.1.5-200.fc44.x86_64"
+  ],
+  "module": "github.com/sigstore/fulcio",
+  "moduleVersion": "v1.7.1",
+  "schemaVersion": 1
+}

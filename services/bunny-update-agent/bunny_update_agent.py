@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Signed-manifest front end for transactional bootc deployments."""
 
 from __future__ import annotations

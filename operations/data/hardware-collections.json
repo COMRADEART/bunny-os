@@ -1,0 +1,5 @@
+{
+  "collections": [],
+  "note": "Zero collections. `bunny-os qualification collect` exists and runs; no physical machine has run it, because no physical machine has run Bunny OS. This cannot be produced by running more tests: it needs a device.",
+  "schemaVersion": 1
+}

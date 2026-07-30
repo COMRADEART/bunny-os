@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Typed organisation enrolment.
 
 Enrolment is the moment a device gains an organisational relationship, so it is

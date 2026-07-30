@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-07-29",
+  "note": "Each pilot gate requires a passing stable release gate PLUS the requirements below. None of these is satisfied. A passing Phase 7 source gate contributes nothing here: source completeness was never evidence that a device may be manufactured, a fleet deployed, or a hosted service launched.",
+  "oem-pilot": {
+    "requirements": {
+      "qualifiedHardwareModel": false,
+      "oemRecoveryValidation": false,
+      "signedOemProfile": false,
+      "factoryFinalisationOnHardware": false,
+      "brandingAndLicensingApproval": false,
+      "namedSupportOwner": false
+    },
+    "notes": {
+      "qualifiedHardwareModel": "operations/data/hardware-evidence.json contains no reports. No physical machine exists.",
+      "oemRecoveryValidation": "No OEM recovery media has been built or booted on physical hardware.",
+      "signedOemProfile": "No key exists in the oem- namespace, of either class. See operations/data/signing-keys.json.",
+      "factoryFinalisationOnHardware": "bunny-oem inspect settles 17 of 22 checks by inspection; 5 require signed live attestation from a real device. No device exists.",
+      "brandingAndLicensingApproval": "The licence is decided and the licence gate passes, but docs/TRADEMARK_POLICY_DRAFT.md is a draft and reviews/legal/ has not been commissioned. OEM distribution needs both.",
+      "namedSupportOwner": "SUSTAINABILITY_REPORT.md records one maintainer and no funded support rota."
+    }
+  },
+  "enterprise-pilot": {
+    "requirements": {
+      "fleetControlPlaneImplemented": false,
+      "tenantIsolationPenetrationTest": false,
+      "enrolmentServiceDeployed": false,
+      "consoleRoleTesting": false,
+      "incidentResponseOwner": false,
+      "supportCapacity": false
+    },
+    "notes": {
+      "fleetControlPlaneImplemented": "ADR-023 places bunny-fleet-server, bunny-enrolment-service and bunny-enterprise-console in separate repositories. None exists. The device-side agent is implemented; the control plane it talks to is not.",
+      "tenantIsolationPenetrationTest": "tests/multitenancy/ passes 23 source tests written by the same author as the code. That is not a penetration test.",
+      "enrolmentServiceDeployed": "Nothing has been deployed anywhere.",
+      "consoleRoleTesting": "The seven roles are modelled and unit-tested. No console exists to exercise them against.",
+      "incidentResponseOwner": "Not assigned.",
+      "supportCapacity": "One maintainer. The Phase 7 surface exceeds that capacity, as PHASE_7_REPORT.md already records."
+    }
+  },
+  "sync-pilot": {
+    "requirements": {
+      "independentCryptographicReview": false,
+      "operatedSyncService": false,
+      "keyRecoveryDrill": false,
+      "deletionDrill": false,
+      "servicePrivacyReview": false,
+      "dataResidencyDisclosure": false,
+      "incidentResponseOwner": false
+    },
+    "notes": {
+      "independentCryptographicReview": "reviews/cryptography/ is prepared and not commissioned. This is the single hardest requirement in the list: it needs an identified cryptographer and money.",
+      "operatedSyncService": "No sync service has been operated. The client is implemented; there is no server.",
+      "keyRecoveryDrill": "The four recovery methods are unit-tested. No drill has been run against an operated service.",
+      "deletionDrill": "The six deletion scopes have disclosed retention bounds. No drill has verified an operator can meet them.",
+      "servicePrivacyReview": "ENCRYPTED_SYNC_PRIVACY_REVIEW.md reviews the design. A service privacy review requires a service.",
+      "dataResidencyDisclosure": "No residency can be disclosed because no data is stored anywhere.",
+      "incidentResponseOwner": "Not assigned."
+    }
+  }
+}

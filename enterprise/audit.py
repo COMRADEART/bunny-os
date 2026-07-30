@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Tamper-evident fleet audit records.
 
 Four protections are required and each is implemented rather than described:

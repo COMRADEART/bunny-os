@@ -1,0 +1,371 @@
+name: Independent builder
+
+# A hosted, independently administered build of an exact commit.
+#
+# This workflow exists to close one blocker and no others: independent-builder
+# reproducibility. The previous phase established that two isolated workspaces on
+# one WSL2 instance produce byte-identical archives, and that this is *not*
+# independent-builder reproducibility, because both builds share a kernel, a
+# container store, a clock and an operator. A GitHub-hosted runner is
+# administered by GitHub under this repository's settings, which is a genuinely
+# different administrator boundary from a local Fedora builder.
+#
+# Three things this workflow deliberately does not do:
+#
+#   * It does not sign anything. No production signing secret is referenced, and
+#     the guard job asserts none is reachable. The artifacts it produces are
+#     unsigned qualification artifacts and cannot be promoted.
+#   * It does not decide that reproducibility is established. It produces one
+#     builder record and one artifact set. `release/builders.py` decides whether
+#     a *pair* is independent, and it needs the local builder's record too.
+#   * It does not produce a disk image. BUNNY_ARCHIVE_ONLY=1 stops after the
+#     normalised OCI archive, because image-builder is Fedora-only and is not
+#     available on a hosted Ubuntu worker. The comparison compares the archive,
+#     its members, the SBOM and the package inventory; none of those come from
+#     image-builder. An archive-only build is never a candidate build.
+#
+# Running this workflow has not yet happened. Nothing in the repository claims it
+# has: `operations/data/builders.json` carries no hosted-ci record, and
+# `verify-builder-independence` blocks until one is recorded.
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Exact 40-character commit SHA to build
+        required: true
+        type: string
+      profile:
+        description: Image profile
+        required: true
+        default: beta
+        type: choice
+        options: [beta, developer, recovery]
+      base_image:
+        description: Digest-pinned base image
+        required: true
+        default: quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  # Pinned build-tool versions. An unpinned tool is an unrecorded build input:
+  # two builders on different syft releases produce different SBOMs and the
+  # comparison would attribute the difference to the image.
+  SYFT_VERSION: "1.50.0"
+  GRYPE_VERSION: "0.116.1"
+  PYTHON_VERSION: "3.13"
+  BUNNY_ARCHIVE_ONLY: "1"
+  BUNNY_CACHES_DISABLED: "1"
+  BUNNY_WORKFLOW_PATH: .github/workflows/independent-builder.yml
+
+jobs:
+  guard:
+    name: Guard — no production signing access
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Reject a non-exact commit reference
+        run: |
+          commit='${{ inputs.commit }}'
+          if ! printf '%s' "$commit" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::commit must be a full 40-character SHA; a branch name does not pin a build"
+            exit 1
+          fi
+      - name: Reject a mutable base-image tag
+        run: |
+          base='${{ inputs.base_image }}'
+          if ! printf '%s' "$base" | grep -Eq '@sha256:[0-9a-f]{64}$'; then
+            echo "::error::base_image must be digest-pinned; two builders pulling a tag can get different bases"
+            exit 1
+          fi
+      - name: No production signing secret may be reachable
+        env:
+          # Named explicitly rather than iterating over `secrets`: the point is
+          # that these names resolve to nothing in this workflow, and a future
+          # edit that wires one in fails here.
+          BUNNY_OS_RELEASE_KEY: ${{ secrets.BUNNY_OS_RELEASE_KEY }}
+          BUNNY_RECOVERY_KEY: ${{ secrets.BUNNY_RECOVERY_KEY }}
+          BUNNY_UPDATE_KEY: ${{ secrets.BUNNY_UPDATE_KEY }}
+          BUNNY_CATALOGUE_KEY: ${{ secrets.BUNNY_CATALOGUE_KEY }}
+        run: |
+          for name in BUNNY_OS_RELEASE_KEY BUNNY_RECOVERY_KEY BUNNY_UPDATE_KEY BUNNY_CATALOGUE_KEY; do
+            if [ -n "${!name:-}" ]; then
+              echo "::error::$name is reachable from the independent builder; qualification builds must be unsigned"
+              exit 1
+            fi
+          done
+          echo "no production signing secret is reachable"
+
+  build:
+    name: Hosted independent build
+    needs: guard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    outputs:
+      archive-digest: ${{ steps.digests.outputs.raw }}
+      normalised-digest: ${{ steps.digests.outputs.normalised }}
+    steps:
+      - name: Check out the exact commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+          clean: true
+
+      - name: Confirm the checkout is the requested commit
+        run: |
+          actual="$(git rev-parse HEAD)"
+          [ "$actual" = "${{ inputs.commit }}" ] || {
+            echo "::error::checked out $actual, expected ${{ inputs.commit }}"; exit 1; }
+          echo "building $actual"
+
+      - name: Confirm an empty build output tree
+        run: |
+          # build-image.sh refuses a non-empty output directory. Asserting it
+          # here makes the failure legible instead of appearing as exit 5 later.
+          if [ -d build/out ] && [ -n "$(find build/out -mindepth 1 -print -quit 2>/dev/null)" ]; then
+            echo "::error::build/out is not empty on a fresh checkout"; exit 1
+          fi
+          echo "workspace is empty"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          # No pip cache: a warm cache is a build input nobody recorded.
+          cache: ''
+
+      - name: Install pinned build tooling
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends podman skopeo
+          curl -fsSL "https://raw.githubusercontent.com/anchore/syft/main/install.sh" \
+            | sudo sh -s -- -b /usr/local/bin "v${SYFT_VERSION}"
+          curl -fsSL "https://raw.githubusercontent.com/anchore/grype/main/install.sh" \
+            | sudo sh -s -- -b /usr/local/bin "v${GRYPE_VERSION}"
+          podman --version
+          skopeo --version
+          syft version
+          grype version
+
+      - name: Record the runner environment
+        id: environment
+        run: |
+          set -euo pipefail
+          mkdir -p build/out/ci
+          {
+            echo "runnerImage=${ImageOS:-unknown}"
+            echo "runnerArch=${RUNNER_ARCH:-unknown}"
+            echo "runnerName=${RUNNER_NAME:-unknown}"
+            echo "runnerEnvironment=${RUNNER_ENVIRONMENT:-unknown}"
+            echo "kernel=$(uname -r)"
+            echo "os=$(. /etc/os-release && echo "${ID}-${VERSION_ID}")"
+            echo "containerRuntime=$(podman --version)"
+            echo "imageBuilder=absent (BUNNY_ARCHIVE_ONLY=1)"
+            echo "workflowRunId=${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}"
+            echo "cpus=$(nproc)"
+          } | tee build/out/ci/runner-environment.txt
+          echo "started=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Build the normalised OCI archive
+        env:
+          BUNNY_BASE_IMAGE: ${{ inputs.base_image }}
+          BUNNY_RELEASE_BUILD: "0"
+        run: |
+          set -euo pipefail
+          bash build/scripts/build-image.sh '${{ inputs.profile }}' 2>&1 \
+            | tee build/out/ci/build.log
+
+      - name: Generate the SBOM and package inventory
+        run: |
+          set -euo pipefail
+          profile='${{ inputs.profile }}'
+          syft "oci-archive:build/out/${profile}/bunny-os.oci.tar" \
+            -o spdx-json="build/out/ci/sbom.spdx.json" \
+            -o syft-json="build/out/ci/sbom.syft.json"
+          python - <<'PY'
+          import json, os, pathlib
+          document = json.loads(pathlib.Path("build/out/ci/sbom.spdx.json").read_text(encoding="utf-8"))
+          entries = sorted(
+              f"{item.get('name')}@{item.get('versionInfo', 'UNKNOWN')}"
+              for item in document.get("packages", [])
+          )
+          pathlib.Path("build/out/ci/package-inventory.txt").write_text(
+              "\n".join(entries) + "\n", encoding="utf-8"
+          )
+          print(f"{len(entries)} package entries")
+          PY
+
+      - name: Emit raw and normalised archive digests
+        id: digests
+        run: |
+          set -euo pipefail
+          profile='${{ inputs.profile }}'
+          python scripts/release.py normalise-artifact \
+            --source "build/out/${profile}/bunny-os.oci.tar" \
+            --destination "build/out/ci/bunny-os.normalised.tar" \
+            --output build/out/ci/normalisation.json
+          raw=$(python -c "import json;print(json.load(open('build/out/ci/normalisation.json'))['rawDigest'])")
+          normalised=$(python -c "import json;print(json.load(open('build/out/ci/normalisation.json'))['normalisedDigest'])")
+          echo "raw=$raw" >> "$GITHUB_OUTPUT"
+          echo "normalised=$normalised" >> "$GITHUB_OUTPUT"
+          # The normalised copy is large and is reproducible from the raw
+          # archive; the digest is the evidence, so the copy is not uploaded.
+          rm -f build/out/ci/bunny-os.normalised.tar
+
+      - name: Collect the builder record
+        env:
+          BUNNY_BASE_IMAGE: ${{ inputs.base_image }}
+        run: |
+          set -euo pipefail
+          python scripts/reproducibility/collect_builder_record.py builder-record \
+            --builder-id "hosted-ci-${GITHUB_RUN_ID}" \
+            --builder-type hosted-ci \
+            --started-at '${{ steps.environment.outputs.started }}' \
+            --completed-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --output build/out/ci/builder-record.json
+          cat build/out/ci/builder-record.json
+
+      - name: Collect the artifact manifest and provenance
+        env:
+          BUNNY_BASE_IMAGE: ${{ inputs.base_image }}
+        run: |
+          set -euo pipefail
+          profile='${{ inputs.profile }}'
+          python scripts/reproducibility/collect_builder_record.py provenance \
+            --profile "$profile" \
+            --artifact-dir "build/out/${profile}" \
+            --output build/out/ci/ci-provenance.json
+          ( cd "build/out/${profile}" && sha256sum -- * > "${GITHUB_WORKSPACE}/build/out/ci/artifact-manifest.sha256" )
+          cat build/out/ci/artifact-manifest.sha256
+
+      - name: Upload comparison artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-builder-evidence-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            build/out/ci/builder-record.json
+            build/out/ci/ci-provenance.json
+            build/out/ci/artifact-manifest.sha256
+            build/out/ci/normalisation.json
+            build/out/ci/sbom.spdx.json
+            build/out/ci/package-inventory.txt
+            build/out/ci/runner-environment.txt
+            build/out/ci/build.log
+            build/out/${{ inputs.profile }}/oci-build.log
+            build/out/${{ inputs.profile }}/image-builder.log
+            build/out/${{ inputs.profile }}/provenance.json
+            build/out/${{ inputs.profile }}/SHA256SUMS
+
+      - name: Upload the OCI archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: independent-builder-archive-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+          path: build/out/${{ inputs.profile }}/bunny-os.oci.tar
+
+  verify:
+    name: Verify the uploaded evidence in a separate environment
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      # A fresh runner. Verifying a bundle inside the job that produced it proves
+      # nothing about the bundle: the same host would write both the artifact and
+      # the verdict.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: ''
+      - uses: actions/download-artifact@v4
+        with:
+          name: independent-builder-evidence-${{ github.run_id }}
+          path: downloaded/evidence
+      - uses: actions/download-artifact@v4
+        with:
+          name: independent-builder-archive-${{ github.run_id }}
+          path: downloaded/archive
+
+      - name: Verify provenance against the downloaded bytes
+        run: |
+          set -euo pipefail
+          # The provenance describes paths relative to build/out/<profile>, so
+          # the archive is placed where the manifest says it is.
+          mkdir -p downloaded/root
+          cp downloaded/archive/bunny-os.oci.tar downloaded/root/
+          cp downloaded/evidence/provenance.json downloaded/root/ 2>/dev/null || true
+          cp downloaded/evidence/SHA256SUMS downloaded/root/ 2>/dev/null || true
+          cp downloaded/evidence/oci-build.log downloaded/root/ 2>/dev/null || true
+          cp downloaded/evidence/image-builder.log downloaded/root/ 2>/dev/null || true
+          python scripts/release.py verify-ci-artifacts \
+            --provenance downloaded/evidence/ci-provenance.json \
+            --artifact-root downloaded/root \
+            --expected-commit '${{ inputs.commit }}' \
+            --expected-base-digest '${{ inputs.base_image }}' \
+            --verification-environment "verify-${GITHUB_RUN_ID}-${RUNNER_NAME:-runner}" \
+            --output downloaded/ci-verification.json
+
+      - name: The builder record must parse and must not claim independence alone
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib, sys
+          sys.path.insert(0, ".")
+          from release.builders import parse_builder_record
+          record = parse_builder_record(
+              json.loads(pathlib.Path("downloaded/evidence/builder-record.json").read_text(encoding="utf-8"))
+          )
+          assert record.builderType == "hosted-ci", record.builderType
+          assert record.workflowRunId, "a hosted-ci record must carry a workflowRunId"
+          print(f"builder {record.builderId} on {record.builderType}, boundary {record.administratorBoundary[:12]}")
+          print("one builder record is not a pair; independence is decided by verify-builder-independence")
+          PY
+
+      - name: Upload the verification result
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-builder-verification-${{ github.run_id }}
+          path: downloaded/ci-verification.json
+          if-no-files-found: error
+
+  closure:
+    name: Assert no gate was moved by this workflow
+    needs: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: ''
+      # A hosted build is one input to one blocker. If running it made the
+      # stable gate pass, something else is wrong.
+      - name: The stable gate still reports NO-GO
+        run: |
+          set +e
+          python scripts/release.py gate --kind stable-release
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "::error::stable gate reported GO from a hosted archive-only build"; exit 1; }
+      - name: The candidate gate still blocks
+        run: |
+          set +e
+          python scripts/release.py gate --kind qualification-candidate
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "::error::candidate gate passed on an archive-only build"; exit 1; }

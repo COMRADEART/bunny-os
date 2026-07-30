@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Shared QEMU harness helpers.
 #
 # Extracted from vm-smoke.sh, which is the only VM script that was ever proven

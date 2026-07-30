@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Validate a conventional least-privilege Linux user plan."""
 
 from __future__ import annotations

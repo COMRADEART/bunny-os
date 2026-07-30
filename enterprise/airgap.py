@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Air-gapped and partially disconnected fleet management.
 
 The design rule is that being offline never lowers the trust requirement. There

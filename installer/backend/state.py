@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Installer lifecycle with explicit safe cancellation boundaries."""
 
 from __future__ import annotations

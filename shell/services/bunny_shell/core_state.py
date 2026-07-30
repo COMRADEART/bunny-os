@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Strict read-only projection of server-authoritative Bunny task state."""
 
 from __future__ import annotations

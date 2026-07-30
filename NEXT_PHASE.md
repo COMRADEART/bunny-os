@@ -2,6 +2,108 @@
 
 Do not start a custom shell, compositor, visual redesign, installer experience, app store, or consumer release.
 
+## Next work — 2026-07-30
+
+**Do not begin Phase 8. Do not begin an OEM, enterprise or encrypted-sync pilot.**
+
+The qualification evidence closure completed every technically automatable evidence
+task. What remains is ordered below by cost, and the cheapest item is genuinely
+cheap.
+
+### 1. Dispatch the hosted builder — one workflow run
+
+`.github/workflows/independent-builder.yml` is committed and has never run. It is the
+only one of the fourteen candidate prerequisites that needs nothing but a button.
+
+Before dispatching, verify `BUNNY_ARCHIVE_ONLY=1` on the Fedora/KVM builder:
+
+```sh
+BUNNY_ARCHIVE_ONLY=1 \
+BUNNY_BASE_IMAGE=quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4 \
+  bash build/scripts/build-image.sh beta
+```
+
+Then, on the builder, collect the local half and dispatch the hosted half:
+
+```sh
+make collect-builder-record BUNNY_BUILDER_ID=local-fedora
+# dispatch the workflow against this commit and the pinned digest
+make verify-builder-independence
+make compare-independent-builds
+```
+
+The comparison then needs the sixteen uncollected dimensions gathered from both
+builders. That is one build on each side, not more analysis.
+
+### 2. Build a live ISO and a signed recovery ISO — engineering
+
+Unblocks the installation, encryption and recovery matrices in a VM, three evidence
+categories, three candidate prerequisites, and the `recovery-media-failure` blocker
+code. It also makes five of the seven **critical** accessibility flows reachable
+without hardware, which is the single largest reduction in this project's
+accessibility risk available for free.
+
+### 3. Publish a signed update manifest and keep a previous release — engineering
+
+Unblocks update, rollback, migration and data preservation.
+
+### 4. Resolve the CVE carrier attribution — engineering
+
+Mount the beta deployment and run:
+
+```sh
+make analyse-cve-symbols BUNNY_SYSROOT=/mnt/beta
+```
+
+This does **not** answer question 7. It resolves which of the four ostree objects is
+which installed binary, confirms or refutes the `toolbox` attribution for
+`GO-2026-5970`, and collects build IDs, stripped state and dynamic dependencies —
+removing that work from the reviewer's scope and lowering what the review costs.
+
+### 5. Drive the eleven post-install accessibility flows — engineering
+
+Flows 7–17 need an installed system and Orca on GNOME 50, not hardware. Doing this
+before commissioning the review means the reviewer finds the residue rather than the
+obvious failures.
+
+### 6. Commission the four independent reviews — needs a third party and money
+
+All four requests are ready to send:
+
+| Request | Unblocks |
+|---|---|
+| `reviews/security/REQUEST.md` | the only route to dispositioning any Critical finding |
+| `reviews/cryptography/REQUEST.md` | `gate-sync-pilot` outright |
+| `reviews/accessibility/REQUEST.md` | the `Accessibility` category and approval |
+| `reviews/legal/REQUEST.md` | OEM distribution; the anti-tivoisation question |
+
+### 7. Acquire one x86-64 UEFI machine — needs hardware
+
+With Secure Boot and TPM 2.0. Blocks two evidence categories that nothing else
+satisfies, the OEM pilot, and two accessibility flows.
+
+### 8. Find a second production signer — needs a person
+
+`docs/SECOND_SIGNER_ONBOARDING.md` is the material they would need; twelve of its
+fifteen readiness items are done. Four of seven signing roles cannot be provisioned
+at all without them.
+
+### 9. Owner decisions
+
+The nine protected approvals; whether to fund the reviews; whether to acquire
+hardware; and which Phase 7 capabilities to operate, if any. **Operating none remains
+a legitimate answer and is still the recommendation.**
+
+### What not to do next
+
+- Do not change the base image. `docs/adr/ADR-027-base-image-security-decision.md`
+  evaluated three options across fifteen dimensions; none improves the vulnerability
+  position and two make everything else worse.
+- Do not add a feature. No OEM, enterprise, fleet, encrypted-sync or consumer
+  feature belongs in the next pass.
+- Do not weaken a gate. Four of the six are expected to keep blocking, and that is
+  the correct result while the evidence is absent.
+
 The immediate next milestone is **Phase 1 validation closure**:
 
 1. provision trusted Fedora 44/KVM builder with digest-pinned base and unified image-builder;
@@ -75,8 +177,12 @@ The Phase 6 mandatory preflight is recorded in `docs/PHASE_6_BASELINE.md` and `P
 ## Phase 7 entry remains blocked
 
 The Phase 7 mandatory preflight is recorded in `docs/PHASE_7_BASELINE.md` and
-`PHASE_7_REPORT.md`. The requested feature branch exists, but implementation did
-not begin. Complete the Phase 6 closure sequence above, operate the stable
+`PHASE_7_REPORT.md`. That preflight originally stopped before implementation;
+**Phase 7 source was subsequently implemented in full** and is covered by 454
+tests. This paragraph described the preflight stop and is retained for history —
+see "After Phase 7 source" below for the current position.
+
+Complete the Phase 6 closure sequence above, operate the stable
 release, finish the named post-release reviews, and rerun
 `gate-stable-release` successfully before adding OEM, enterprise-management,
 fleet, or encrypted-sync trust boundaries. No pilot, manufacturing, broad fleet
@@ -130,3 +236,60 @@ The critical path is now shorter and better understood:
 6. **Commission independent security, cryptographic and accessibility reviews.** A self-review is a self-review, and the accessibility gap is the one that risks harm rather than merely missing evidence.
 
 Items 1 and 2 are engineering. Item 3 is a decision. Items 4, 5 and 6 need money or hardware. That is the honest shape of what remains.
+
+## Maturity ladder, 2026-07-30
+
+These five states are distinct and this repository is at the first. Every
+document listed below reports the same position; if any of them disagrees, that
+document is wrong.
+
+| State | Meaning | Bunny OS |
+|---|---|---|
+| **Source implemented** | Design, schemas, validators, tests and documentation exist and pass | **yes** — Phases 1–7 |
+| **Runtime validated** | The software has been built and observed doing the thing on real or virtual hardware | **partial** — images build from a digest-pinned base and boot under KVM; installation, encryption, update, rollback and recovery matrices have not run |
+| **Release qualified** | `gate-stable-release` reports `GO` against a complete evidence record | **no** — 2 of 20 evidence categories pass |
+| **Pilot approved** | A pilot gate reports `GO` and a controlled pilot has separate approval | **no** — all three gates `BLOCKED` |
+| **Production operated** | A service or fleet is actually being run and supported | **no** — nothing is operated, and operating nothing remains a legitimate outcome |
+
+Agreeing documents: `README.md`, `NEXT_PHASE.md`, `docs/PHASE_7_BASELINE.md`,
+`PHASE_7_REPORT.md`, `KNOWN_LIMITATIONS.md`, `PILOT_READINESS_REPORT.md`.
+
+Current authority for the closure position: `RELEASE_BLOCKER_CLOSURE_REPORT.md`
+and `STABLE_EVIDENCE_REPORT.md`.
+
+## After release blocker closure, 2026-07-30
+
+Two blockers closed: **licensing** and **package minimisation**. Everything else
+was measured, narrowed, or shown to need something this repository cannot
+produce. `gate-stable-release` is still `NO-GO`; all three pilot gates are still
+`BLOCKED`. See `RELEASE_BLOCKER_CLOSURE_REPORT.md`.
+
+The critical path is now short, and the items are ordered by cost rather than by
+importance - the cheapest one removes a blocker that looked permanent.
+
+1. **Get a second builder from CI.** `scripts/reproducibility/collect-builder-record.sh`
+   already reads `GITHUB_RUN_ID` into `cloudRunner`, which is a *strong*
+   independence dimension. A CI-hosted build of the same commit and pinned base
+   digest satisfies `independent-builder` reproducibility without buying
+   anything. **This costs a workflow file.**
+2. **Build a live ISO and a signed recovery ISO.** That unblocks the
+   installation, encryption and recovery matrices in a VM - three evidence
+   categories and the `recovery-media-failure` blocker code.
+3. **Publish a signed update manifest and retain a previous release**, which
+   unblocks update, rollback, migration and data preservation.
+4. **Acquire one x86-64 UEFI machine with Secure Boot and TPM 2.0.** Blocks the
+   `Hardware` and `Secure Boot` categories, the OEM pilot, and two accessibility
+   workflows. Nothing substitutes for it.
+5. **Commission the four independent reviews.** The security one is the only
+   route by which any of the 8 Critical findings can become non-blocking, and
+   `release/vulnerability.py` enforces that in code.
+6. **Recruit a second release signer.** Four of the seven signing roles require
+   two-person approval and cannot be provisioned at all with one person.
+7. **Decide which Phase 7 capabilities to operate, if any.** Operating none
+   remains a legitimate answer and is still the recommendation.
+
+Items 1-3 are engineering and are within reach today. Items 4-6 need money,
+hardware or people. Item 7 is the owner's.
+
+Do not begin Phase 8. Do not manufacture hardware, deploy a fleet, or launch a
+hosted service.

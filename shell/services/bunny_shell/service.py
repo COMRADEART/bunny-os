@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Small resilient user-session status service."""
 
 from __future__ import annotations

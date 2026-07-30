@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """OEM hardware qualification kit evaluation.
 
 This is distinct from ``operations/hardware.py``, which classifies *community*

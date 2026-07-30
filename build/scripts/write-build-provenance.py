@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Record hashes and tool versions after an image build."""
 
 from __future__ import annotations

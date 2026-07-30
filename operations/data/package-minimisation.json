@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-07-29",
+  "reviewedProfiles": ["developer", "desktop", "beta", "shell", "live"],
+  "method": "Every package in build/packages/ was classified. Removal candidates were required to have no dependent required feature, verified with rpm -q --whatrequires inside the built image rather than by reading the package lists.",
+  "removals": [
+    {
+      "package": "toolbox",
+      "profiles": ["desktop", "beta", "shell", "live"],
+      "category": "developer-tooling",
+      "whyPresent": "Arrives in the quay.io/fedora/fedora-bootc:44 base image. It is not in any consumer package set; build/packages/developer.txt lists it deliberately for the developer profile only.",
+      "dependentsChecked": true,
+      "dependents": [],
+      "rationale": "12.6 MB Go binary providing an interactive container workflow that a consumer Bunny OS installation has no use for. rpm -q --whatrequires toolbox returns nothing, so no required feature depends on it. Removed to reduce executable surface, not to reduce a scan score - the scan count did not move.",
+      "verification": {
+        "rebuilt": true,
+        "booted": true,
+        "testsRun": true,
+        "sbomRegenerated": true,
+        "vulnerabilityScanRerun": true
+      },
+      "evidenceReference": "evidence/reachability/beta-minimised-binaries.txt",
+      "recordedAt": "2026-07-29T23:50:00Z",
+      "measuredEffect": {
+        "binaryPresentAfter": false,
+        "rpmDatabaseEntryAfter": "package toolbox is not installed",
+        "protectedPackagesIntact": 28,
+        "fixableFindingsBefore": 59,
+        "fixableFindingsAfter": 59,
+        "criticalBefore": 8,
+        "criticalAfter": 8,
+        "sbomPackagesBefore": 6077,
+        "sbomPackagesAfter": 6077,
+        "note": "The removal is real at the filesystem and rpmdb level and changed no scan number, which is the honest result and the reason 'reduce the scan count' is a prohibited motive. See docs/PACKAGE_MINIMISATION.md for why the SBOM is unchanged."
+      }
+    }
+  ],
+  "retained": [
+    {
+      "package": "podman",
+      "category": "installer-dependency",
+      "reason": "rpm -q --whatrequires podman returns bootc. bootc is the update mechanism; removing podman removes the ability to update the system. podman is also listed in build/packages/installer.txt. It carries 6 of the 24 blocking Critical/High findings and still cannot be removed.",
+      "profiles": ["developer", "desktop", "beta", "shell", "live"]
+    },
+    {
+      "package": "skopeo",
+      "category": "installer-dependency",
+      "reason": "rpm -q --whatrequires skopeo returns bootc and rpm-ostree. Same argument as podman.",
+      "profiles": ["developer", "desktop", "beta", "shell", "live"]
+    },
+    {
+      "package": "orca",
+      "category": "accessibility-tool",
+      "reason": "Screen reader. Protected: removing it would make the system unusable for blind users, which is not a trade a scan score can justify.",
+      "profiles": ["desktop", "beta", "shell"]
+    },
+    {
+      "package": "at-spi2-core",
+      "category": "accessibility-tool",
+      "reason": "Accessibility bus. Every assistive technology depends on it.",
+      "profiles": ["desktop", "beta", "shell"]
+    },
+    {
+      "package": "mousetweaks",
+      "category": "accessibility-tool",
+      "reason": "Pointer accessibility. Protected for the same reason as orca.",
+      "profiles": ["desktop", "beta", "shell"]
+    },
+    {
+      "package": "cryptsetup",
+      "category": "recovery-tool",
+      "reason": "Required to unlock an encrypted installation, including from recovery media. Removing it would strand users out of their own data.",
+      "profiles": ["developer", "desktop", "beta", "shell", "live", "recovery"]
+    },
+    {
+      "package": "smartmontools",
+      "category": "recovery-tool",
+      "reason": "Storage diagnostics during recovery.",
+      "profiles": ["recovery"]
+    },
+    {
+      "package": "nvme-cli",
+      "category": "recovery-tool",
+      "reason": "NVMe diagnostics during recovery.",
+      "profiles": ["recovery"]
+    },
+    {
+      "package": "linux-firmware",
+      "category": "required-firmware",
+      "reason": "Wi-Fi, graphics and storage controllers need it. Removing it to shrink the image would break hardware support on the machines the project has not yet tested.",
+      "profiles": ["developer", "desktop", "beta", "shell", "live"]
+    },
+    {
+      "package": "fwupd",
+      "category": "required-firmware",
+      "reason": "Firmware updates, including security fixes delivered outside the OS.",
+      "profiles": ["developer", "desktop", "beta", "shell", "live"]
+    },
+    {
+      "package": "selinux-policy-targeted",
+      "category": "security-tooling",
+      "reason": "Mandatory access control. It is part of the mitigation argument for every unresolved container-stack finding.",
+      "profiles": ["developer", "desktop", "beta", "shell", "live"]
+    },
+    {
+      "package": "firewalld",
+      "category": "security-tooling",
+      "reason": "Drops unsolicited inbound traffic by default.",
+      "profiles": ["developer", "desktop", "beta", "shell", "live"]
+    },
+    {
+      "package": "bubblewrap",
+      "category": "security-tooling",
+      "reason": "Sandboxing for Flatpak applications and the plugin boundary.",
+      "profiles": ["developer", "desktop", "beta", "shell", "live"]
+    },
+    {
+      "package": "anaconda",
+      "category": "installer-dependency",
+      "reason": "The installer itself.",
+      "profiles": ["live"]
+    },
+    {
+      "package": "memtest86+",
+      "category": "recovery-tool",
+      "reason": "Diagnostic available without network access, on media a user boots when the installed system will not start.",
+      "profiles": ["live"]
+    }
+  ]
+}

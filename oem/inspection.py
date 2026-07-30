@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Offline factory-state inspection.
 
 Closes the Major finding in ``FACTORY_PROVISIONING_SECURITY_REVIEW.md``: until

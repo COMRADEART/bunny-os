@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-07-29",
+  "principle": "Seven signing authorities with disjoint key-id namespaces. Compromise of one must not grant the powers of another. Development keys carry a reserved dev- prefix and are refused by release.signing.require_production_key, so no drill artifact can satisfy a release gate.",
+  "productionKeyCeremonyHeld": false,
+  "productionKeyCeremonyNote": "No production key has been generated. docs/PRODUCTION_SIGNING_CEREMONY.md defines the procedure; it has not been executed. There is one potential signer, so the two-person approval that four of the seven roles require cannot currently be satisfied.",
+  "keys": [
+    {
+      "keyId": "dev-bunny-os-release-drill1",
+      "state": "active",
+      "publishedAt": "2026-07-29T00:00:00Z",
+      "expiresAt": "2027-07-29T00:00:00Z",
+      "publicKeyReference": "outside the repository at ~/.bunny-dev-keys/drill/dev-bunny-os-release-drill1.pub.pem",
+      "storage": "development-directory",
+      "twoPersonApproval": false
+    },
+    {
+      "keyId": "dev-bunny-os-release-drill2",
+      "state": "pending",
+      "publishedAt": "2026-10-01T00:00:00Z",
+      "expiresAt": "2028-01-01T00:00:00Z",
+      "publicKeyReference": "outside the repository at ~/.bunny-dev-keys/drill/dev-bunny-os-release-drill2.pub.pem",
+      "storage": "development-directory",
+      "twoPersonApproval": false,
+      "supersedes": "dev-bunny-os-release-drill1"
+    },
+    {
+      "keyId": "dev-recovery-drill1",
+      "state": "active",
+      "publishedAt": "2026-07-29T00:00:00Z",
+      "expiresAt": "2027-07-29T00:00:00Z",
+      "publicKeyReference": "outside the repository at ~/.bunny-dev-keys/drill/dev-recovery-drill1.pub.pem",
+      "storage": "development-directory",
+      "twoPersonApproval": false
+    },
+    {
+      "keyId": "dev-update-drill1",
+      "state": "active",
+      "publishedAt": "2026-07-29T00:00:00Z",
+      "expiresAt": "2027-07-29T00:00:00Z",
+      "publicKeyReference": "outside the repository at ~/.bunny-dev-keys/drill/dev-update-drill1.pub.pem",
+      "storage": "development-directory",
+      "twoPersonApproval": false
+    },
+    {
+      "keyId": "dev-catalogue-drill1",
+      "state": "active",
+      "publishedAt": "2026-07-29T00:00:00Z",
+      "expiresAt": "2027-07-29T00:00:00Z",
+      "publicKeyReference": "outside the repository at ~/.bunny-dev-keys/drill/dev-catalogue-drill1.pub.pem",
+      "storage": "development-directory",
+      "twoPersonApproval": false
+    }
+  ],
+  "rolesWithoutAnyKey": [
+    "oemProfile",
+    "fleetPolicy",
+    "syncServiceIdentity"
+  ],
+  "rolesWithoutAnyKeyNote": "These three roles are defined and namespaced but no key of any class exists for them. The OEM, fleet and sync pilot gates depend on them and are blocked independently of this record."
+}

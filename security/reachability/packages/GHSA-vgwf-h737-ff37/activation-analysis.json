@@ -1,0 +1,34 @@
+{
+  "advisoryId": "GHSA-vgwf-h737-ff37",
+  "bunnyInvocationPaths": [
+    "none \u2014 the privileged broker exposes typed fixed backends and has no generic exec path; no backend invokes a container runtime"
+  ],
+  "commandInvocationPaths": [
+    "/usr/sbin/podman \u2014 mode 0755 root:root, no setuid; on PATH for any user",
+    "/usr/sbin/skopeo \u2014 mode 0755 root:root, no setuid",
+    "/usr/sbin/bootc \u2014 mode 0755 root:root, no setuid"
+  ],
+  "dbusActivation": "unknown",
+  "defaultEnablement": "no",
+  "desktopActivation": "no",
+  "desktopActivationEvidence": [
+    "grep '^Exec=.*(podman|skopeo|bootc|toolbox|docker)' over every shipped .desktop at 80df25b09f65: no match"
+  ],
+  "measuredEvidence": "evidence/reachability/beta-facts.txt, beta-permissions.txt",
+  "outstanding": [
+    "D-Bus activation was not enumerated; `busctl --list` inside a booted deployment would settle it"
+  ],
+  "pluginInvocationPaths": [
+    "none \u2014 plugins reach the system only through the broker"
+  ],
+  "schemaVersion": 1,
+  "socketUnits": [
+    "podman.socket \u2014 ListenStream=%t/podman/podman.sock, unix, absent from sockets.target.wants"
+  ],
+  "systemdUnits": [
+    "podman.service (present, not enabled)",
+    "podman.socket (present, not in sockets.target.wants)",
+    "bootc-fetch-apply-updates.timer (present, not enabled)"
+  ],
+  "userInvocability": "yes"
+}

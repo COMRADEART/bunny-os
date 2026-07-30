@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """GTK4 presentation layer for Bunny-owned desktop surfaces.
 
 All launch targets are fixed or validated desktop IDs.  The UI intentionally
