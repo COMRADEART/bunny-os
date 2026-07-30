@@ -48,6 +48,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in os.sys.path:
     os.sys.path.insert(0, str(ROOT))
 
+from release.paths import display_path  # noqa: E402
 from release.signing import (  # noqa: E402
     TWO_PERSON_DRILL_CHECKS,
     SigningError,
@@ -374,7 +375,7 @@ def main() -> int:
         args.out.write_text(
             json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
         )
-        print(f"\nwrote {args.out.relative_to(ROOT)}")
+        print(f"\nwrote {display_path(args.out, ROOT)}")
         print(f"two-person development signing drill: {summary['result']} — {len(checks)}/{len(TWO_PERSON_DRILL_CHECKS)}")
         print("This validates the process. It does not satisfy the production second-signer")
         print("requirement: both keys are development keys and one person ran the drill.")

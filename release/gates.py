@@ -41,7 +41,7 @@ GATES = (
 #: project has been in for most of its life, and it has never been close to a
 #: release.
 SOURCE_GATE_REQUIREMENTS: dict[str, str] = {
-    "repositoryValidation": "every JSON document parses, every schema is well formed, every Python file compiles",
+    "repositoryValidation": "every repository validator passes; see repository-validation.json for the per-validator result",
     "sourceSuitesPass": "the inherited source test suites pass",
     "qualificationSuitesPass": "the qualification evidence suites pass",
     "licenceGatePassed": "the licence gate passes all seven requirements",

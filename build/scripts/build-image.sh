@@ -106,10 +106,15 @@ else
 fi
 sudo chown -R "$(id -u):$(id -g)" "${output}"
 
-python3 build/scripts/write-build-provenance.py \
-  --profile "${profile}" \
-  --output "${output}" \
-  --source-commit "${source_commit}" \
-  --source-date-epoch "${source_epoch}" \
-  --base-image "${base_image}" \
+provenance_arguments=(
+  --profile "${profile}"
+  --output "${output}"
+  --source-commit "${source_commit}"
+  --source-date-epoch "${source_epoch}"
+  --base-image "${base_image}"
   --image-reference "${tag}"
+)
+if [[ "${archive_only}" == "1" ]]; then
+  provenance_arguments+=(--archive-only)
+fi
+python3 build/scripts/write-build-provenance.py "${provenance_arguments[@]}"

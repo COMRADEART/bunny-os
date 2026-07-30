@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install validation dependencies
-        run: python -m pip install --disable-pip-version-check jsonschema
+        run: python -m pip install --disable-pip-version-check jsonschema pyyaml
       - name: Documentation, schema, units, scripts, and tests
         run: make gate-phase-2
       - name: Validate original architecture package
@@ -46,34 +46,26 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      # The verification script installs the programs the image build installs,
+      # so systemd-analyze resolves ExecStart= against the layout the image
+      # actually produces rather than against a bare container.
       - name: Verify installed-form units and record offline security reports
         run: >-
           docker run --rm -v "$PWD:/src:ro" fedora:44
-          bash -lc 'dnf -y install systemd polkit &&
-          cp /src/systemd/*.service /src/systemd/*.socket /src/systemd/*.timer /src/systemd/*.target /etc/systemd/system/ &&
-          cp /src/systemd/user/*.service /src/systemd/user/*.timer /src/systemd/user/*.target /etc/systemd/user/ &&
-          install -m 0755 /src/services/bunny-system-broker/bin/bunny-system-broker /usr/libexec/bunny-system-broker &&
-          install -m 0755 /src/services/bunny-update-agent/bunny_update_agent.py /usr/libexec/bunny-update-agent &&
-          for name in bunny-health-check bunny-recovery-prepare bunny-recovery; do install -m 0755 "/src/scripts/${name}.py" "/usr/libexec/${name}"; done &&
-          install -m 0755 /src/scripts/bunny-first-boot.py /usr/libexec/bunny-first-boot &&
-          install -m 0755 /src/shell/services/bin/bunny-shell-service /usr/libexec/bunny-shell-service &&
-          for name in bunny-search bunny-launcher bunny-workspace bunny-settings bunny-terminal; do install -m 0755 "/src/shell/services/bin/${name}" "/usr/bin/${name}"; done &&
-          mkdir -p /opt/bunny/current && install -m 0755 /usr/bin/true /opt/bunny/current/bunny-desktop &&
-          systemd-analyze verify /etc/systemd/system/bunny-* /etc/systemd/user/bunny-* &&
-          systemd-analyze security --offline=yes bunny-system-broker.service bunny-update-agent@check.service bunny-health-check.service bunny-recovery-prepare.service'
+          bash -lc 'dnf -y install systemd polkit python3 &&
+          bash /src/build/scripts/ci-verify-units.sh /src'
 
   gnome-integration:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      # Session entries and application launchers obey different specifications
+      # and are validated separately; see the script for why.
       - name: Validate GNOME 50 extension, schemas, and desktop entries in Fedora 44
         run: >-
           docker run --rm -v "$PWD:/src:ro" fedora:44
-          bash -lc 'dnf -y install glib2 desktop-file-utils gnome-shell &&
-          cp -a /src/shell/components/gnome-shell-extension /tmp/bunny-shell@bunny-os.org &&
-          glib-compile-schemas --strict /tmp/bunny-shell@bunny-os.org/schemas &&
-          desktop-file-validate /src/shell/session/*.desktop /src/shell/components/applications/*.desktop &&
-          gnome-extensions pack --force --out-dir=/tmp /tmp/bunny-shell@bunny-os.org'
+          bash -lc 'dnf -y install glib2 desktop-file-utils gnome-shell python3 &&
+          bash /src/build/scripts/ci-validate-desktop.sh /src'
 
   # Phases 3, 5 and 7 had no CI coverage: only gate-phase-2 ran, so an installer,
   # operations or Phase 7 regression could merge unnoticed.
@@ -84,7 +76,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: python -m pip install --disable-pip-version-check jsonschema
+      - run: python -m pip install --disable-pip-version-check jsonschema pyyaml
       - name: Installer and application distribution gate
         run: |
           python scripts/task.py installer-audit
@@ -102,7 +94,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: python -m pip install --disable-pip-version-check jsonschema
+      - run: python -m pip install --disable-pip-version-check jsonschema pyyaml
       - name: Phase 5 operations and stable-qualification tooling
         run: |
           python scripts/task.py phase5-audit
@@ -112,11 +104,10 @@ jobs:
           python scripts/phase5.py long-run-plan
       - name: Protected gates must stay closed
         run: |
-          if python scripts/phase5.py stable-gate --evidence operations/data/stable-qualification.json; then
-            echo "::error::the stable gate reported GO; publication must not be unblocked by CI"
-            exit 1
-          fi
-          echo "stable gate correctly reports NO-GO"
+          # Exit 2 exactly. Accepting any non-zero status would let a traceback
+          # or a missing evidence file pass as a correct refusal.
+          bash build/scripts/assert-gate.sh 2 "phase 5 stable gate" -- \
+            python scripts/phase5.py stable-gate --evidence operations/data/stable-qualification.json
 
   phase7-gate:
     runs-on: ubuntu-24.04
@@ -126,7 +117,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install validation and cryptography dependencies
-        run: python -m pip install --disable-pip-version-check jsonschema cryptography
+        run: python -m pip install --disable-pip-version-check jsonschema cryptography pyyaml
       - name: Phase 7 source gate
         run: |
           python scripts/task.py validate
@@ -139,11 +130,10 @@ jobs:
           python scripts/phase7.py source-gate
       - name: Pilot gates must stay closed
         run: |
+          set -euo pipefail
           for kind in oem enterprise sync; do
-            if python scripts/phase7.py pilot-gate --kind "$kind"; then
-              echo "::error::the $kind pilot gate reported GO; pilots must not be unblocked by CI"
-              exit 1
-            fi
+            bash build/scripts/assert-gate.sh 2 "$kind pilot gate" -- \
+              python scripts/phase7.py pilot-gate --kind "$kind"
           done
           echo "all three pilot gates correctly report BLOCKED"
 

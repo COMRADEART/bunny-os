@@ -162,7 +162,7 @@ jobs:
             echo "runnerName=${RUNNER_NAME:-unknown}"
             echo "runnerEnvironment=${RUNNER_ENVIRONMENT:-unknown}"
             echo "kernel=$(uname -r)"
-            echo "os=$(. /etc/os-release && echo "${ID}-${VERSION_ID}")"
+            echo "os=$(sed -n 's/^ID=//p' /etc/os-release | tr -d "\"'" | head -1)-$(sed -n 's/^VERSION_ID=//p' /etc/os-release | tr -d "\"'" | head -1)"
             echo "containerRuntime=$(podman --version)"
             echo "imageBuilder=absent (BUNNY_ARCHIVE_ONLY=1)"
             echo "workflowRunId=${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}"
@@ -357,15 +357,7 @@ jobs:
       # stable gate pass, something else is wrong.
       - name: The stable gate still reports NO-GO
         run: |
-          set +e
-          python scripts/release.py gate --kind stable-release
-          status=$?
-          set -e
-          [ "$status" -eq 2 ] || { echo "::error::stable gate reported GO from a hosted archive-only build"; exit 1; }
+          bash build/scripts/assert-gate.sh 2 "stable release gate after a hosted archive-only build" -- python scripts/release.py gate --kind stable-release
       - name: The candidate gate still blocks
         run: |
-          set +e
-          python scripts/release.py gate --kind qualification-candidate
-          status=$?
-          set -e
-          [ "$status" -eq 2 ] || { echo "::error::candidate gate passed on an archive-only build"; exit 1; }
+          bash build/scripts/assert-gate.sh 2 "qualification candidate gate on an archive-only build" -- python scripts/release.py gate --kind qualification-candidate

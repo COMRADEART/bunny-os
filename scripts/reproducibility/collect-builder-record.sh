@@ -40,6 +40,31 @@ cloud_runner="${GITHUB_RUN_ID:-${CI_JOB_ID:-null}}"
 administrator="$(hash_of "${SALT}:$(id -un)@${virtualisation}")"
 environment_id="$(hash_of "${SALT}:${WORKTREE}:${CONTAINERS_STORAGE_ROOT:-default}")"
 
+# /etc/os-release is read, not sourced.
+#
+# Sourcing it makes ShellCheck emit SC1091 — it cannot follow an absolute
+# runtime path — and `scripts/task.py validate` runs shellcheck with no severity
+# floor, so an `info` finding failed four CI jobs across three workflows.
+# Suppressing SC1091 would silence the same finding everywhere else too.
+#
+# Reading the two fields also confines them to two named variables instead of
+# defining every key in the file as a shell variable, and keeps the `unknown`
+# fallback when the file is absent, unreadable or missing either key.
+os_release_id() {
+    local id="" version=""
+    if [ -r /etc/os-release ]; then
+        id="$(sed -n 's/^ID=//p' /etc/os-release | tr -d "\"'" | head -1)"
+        version="$(sed -n 's/^VERSION_ID=//p' /etc/os-release | tr -d "\"'" | head -1)"
+    fi
+    if [ -n "$id" ] && [ -n "$version" ]; then
+        printf '%s-%s' "$id" "$version"
+    elif [ -n "$id" ]; then
+        printf '%s' "$id"
+    else
+        printf 'unknown'
+    fi
+}
+
 tool_version() {
     local tool="$1"
     if command -v "$tool" >/dev/null 2>&1; then
@@ -60,7 +85,7 @@ cat <<JSON
   "cloudRunner": $( [ "$cloud_runner" = "null" ] && echo null || echo "\"${cloud_runner}\"" ),
   "administrator": "${administrator}",
   "environmentId": "${environment_id}",
-  "operatingSystem": "$(. /etc/os-release 2>/dev/null && echo "${ID}-${VERSION_ID}" || echo unknown) $(uname -r)",
+  "operatingSystem": "$(os_release_id) $(uname -r)",
   "toolchain": {
     "podman": "$(tool_version podman)",
     "image-builder": "$(tool_version image-builder)",

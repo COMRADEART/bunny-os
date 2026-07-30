@@ -14,6 +14,11 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from release.paths import display_path  # noqa: E402
+from release.validation import run_validators  # noqa: E402
 REQUIRED_DOCS = (
     "README.md", "ARCHITECTURE.md", "docs/CURRENT_STATE_AUDIT.md", "docs/IMAGE_ARCHITECTURE.md",
     "docs/FILESYSTEM_LAYOUT.md", "docs/BUNNY_INTEGRATION_CONTRACT.md", "docs/PRIVILEGED_BROKER.md",
@@ -102,106 +107,32 @@ def phase5_audit() -> None:
     print(f"phase5-audit: {len(PHASE5_DOCS)} reports/guides and {len(required_demos)} demos present")
 
 
-def validate_json() -> None:
-    paths = sorted({
-        *[path for path in (ROOT / "schemas").rglob("*.json")],
-        *[path for path in (ROOT / "shell").rglob("*.json")],
-        *[path for path in (ROOT / "build").rglob("*.json") if "out" not in path.parts],
-        *[path for path in (ROOT / "operations").rglob("*.json")],
-        *[path for path in (ROOT / "tests/operations/fixtures").rglob("*.json")],
-        *[path for path in (ROOT / "oem").rglob("*.json")],
-        *[path for path in (ROOT / "enterprise").rglob("*.json")],
-        *[path for path in (ROOT / "sync").rglob("*.json")],
-        *[path for path in (ROOT / "security").rglob("*.json")],
-    })
-    for path in paths:
-        json.loads(path.read_text(encoding="utf-8"))
-    schema_paths = sorted([
-        *(ROOT / "schemas").rglob("*.schema.json"),
-        *(ROOT / "shell/schemas").glob("*.schema.json"),
-        *(ROOT / "security").rglob("*.schema.json"),
-    ])
-    for path in schema_paths:
-        schema = json.loads(path.read_text(encoding="utf-8"))
-        if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema" or not schema.get("$id") or schema.get("type") != "object":
-            raise SystemExit(f"schema header is invalid: {path}")
-        def resolve_local(node: object) -> None:
-            if isinstance(node, dict):
-                reference = node.get("$ref")
-                if isinstance(reference, str) and reference.startswith("#/"):
-                    target: object = schema
-                    for component in reference[2:].split("/"):
-                        component = component.replace("~1", "/").replace("~0", "~")
-                        if not isinstance(target, dict) or component not in target:
-                            raise SystemExit(f"unresolved local reference {reference} in {path}")
-                        target = target[component]
-                for value in node.values():
-                    resolve_local(value)
-            elif isinstance(node, list):
-                for value in node:
-                    resolve_local(value)
-        resolve_local(schema)
-    try:
-        import jsonschema  # type: ignore
-    except ImportError:
-        print("SKIP: jsonschema package unavailable; JSON syntax still validated")
-    else:
-        for path in schema_paths:
-            jsonschema.Draft202012Validator.check_schema(json.loads(path.read_text(encoding="utf-8")))
-    print(f"validate: {len(paths)} JSON documents parsed; {len(schema_paths)} schemas have valid headers and local references")
-
-
-def validate_python() -> None:
-    paths = [path for path in ROOT.rglob("*.py") if not any(part in {"node_modules", ".selfcheck-tmp", ".git"} for part in path.parts)]
-    for path in paths:
-        compile(path.read_text(encoding="utf-8"), str(path), "exec")
-    print(f"validate: {len(paths)} Python files compiled in memory")
-
-
-def validate_external() -> None:
-    unit_paths = [str(path) for path in sorted((ROOT / "systemd").glob("*.*")) if path.suffix in {".service", ".socket", ".timer", ".target"}]
-    if shutil.which("systemd-analyze") and os.environ.get("BUNNY_VERIFY_SYSTEMD") == "1":
-        run(["systemd-analyze", "verify", *unit_paths])
-    else:
-        print("SKIP: systemd-analyze requires BUNNY_VERIFY_SYSTEMD=1 on an installed Fedora fixture")
-    shell_paths = [str(path) for path in sorted(ROOT.rglob("*.sh")) if "node_modules" not in path.parts]
-    if shutil.which("shellcheck"):
-        run(["shellcheck", *shell_paths])
-    else:
-        print("SKIP: shellcheck unavailable on this host")
-    extension = ROOT / "shell/components/gnome-shell-extension/extension.js"
-    if shutil.which("node"):
-        run(["node", "--check", str(extension)])
-    else:
-        print("SKIP: node unavailable for GNOME extension syntax parsing")
-
-
-def validate_shell_assets() -> None:
-    from configparser import ConfigParser
-    desktop_paths = sorted({*(ROOT / "shell").rglob("*.desktop"), *(ROOT / "installer").rglob("*.desktop")})
-    for path in desktop_paths:
-        parser = ConfigParser(interpolation=None, strict=True)
-        parser.optionxform = str
-        parser.read(path, encoding="utf-8")
-        if not parser.has_section("Desktop Entry") or parser["Desktop Entry"].get("Type") != "Application" or not parser["Desktop Entry"].get("Name") or not parser["Desktop Entry"].get("Exec"):
-            raise SystemExit(f"desktop entry is invalid: {path}")
-    xml_paths = [ROOT / "shell/components/gnome-shell-extension/schemas/org.gnome.shell.extensions.bunny-shell.gschema.xml", *sorted((ROOT / "shell/assets").rglob("*.svg")), *sorted((ROOT / "shell/icons").rglob("*.svg"))]
-    for path in xml_paths:
-        ET.parse(path)
-    required_directories = ("session", "services", "components", "schemas", "themes", "assets", "icons")
-    for name in required_directories:
-        if not (ROOT / "shell" / name).is_dir():
-            raise SystemExit(f"missing shell directory: shell/{name}")
-    print(f"validate: {len(desktop_paths)} desktop entries and {len(xml_paths)} XML/SVG assets parsed")
-
-
 def validate() -> None:
-    validate_json()
-    validate_python()
-    validate_shell_assets()
-    validate_external()
-    run([sys.executable, "docs/phase-1/verify.ps1"], required=False) if False else None
-    print("validate: repository-native checks passed")
+    """Run every repository validator and report each one separately.
+
+    This used to be four functions whose failures all collapsed into one
+    Boolean. The source gate then reported `repositoryValidation: FAIL` with a
+    description naming JSON, schemas and Python, when what had failed was
+    ShellCheck on one line of one file. Every validator now names itself and the
+    files it rejected, and the machine-readable form is written for the gate.
+    """
+    report = run_validators(ROOT)
+    print("repository validation:", "PASS" if report.passed else "FAIL")
+    print(report.render())
+
+    destination = ROOT / "build/out/qualification/repository-validation.json"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        json.dumps(report.as_dict(), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8", newline="\n",
+    )
+    print(f"wrote {display_path(destination, ROOT)}")
+
+    if not report.passed:
+        raise SystemExit(
+            "repository validation failed: "
+            + ", ".join(outcome.name for outcome in report.failing)
+        )
 
 
 def tests(pattern: str | None = None) -> None:

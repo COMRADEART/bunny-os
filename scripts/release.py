@@ -29,6 +29,7 @@ if str(ROOT) not in os.sys.path:
 from release import accessibility as accessibility_module
 from release import matrix as matrix_module
 from release.artifacts import ArtifactError, parse_manifest, verify_against_disk
+from release.buildmode import BuildModeError, require_candidate_capable
 from release.builders import (
     ACCEPTED_PAIRINGS,
     BuilderError,
@@ -70,6 +71,8 @@ from release.hardware import (
 from release.licensing import LicenceError, evaluate_licence_gate, parse_decision
 from release.minimisation import MinimisationError, evaluate_minimisation
 from release.normalisation import NormalisationError, normalise_archive
+from release.paths import display_path
+from release.validation import run_validators
 from release.provenance import ProvenanceError, parse_provenance, verify_provenance
 from release.reachability import ReachabilityError, parse_review as parse_reachability, summarise
 from release.reproducibility import (
@@ -792,9 +795,72 @@ def _stable_inputs() -> StableInputs:
     )
 
 
+def validate_repository() -> int:
+    """Run every repository validator and report each one separately.
+
+    The same evaluation the source gate performs, exposed on its own so a
+    failing validator can be identified without running the whole gate — which
+    also runs three test suites.
+    """
+    report = run_validators(ROOT)
+    atomic_json(OUT / "repository-validation.json", report.as_dict())
+    print("repository validation:", "PASS" if report.passed else "FAIL")
+    print(report.render())
+    print(f"\nwrote {display_path(OUT / 'repository-validation.json', ROOT)}")
+    if report.passed:
+        return 0
+    print(
+        "\nBLOCKED: " + ", ".join(outcome.name for outcome in report.failing)
+        + " failed. A SKIP is not a PASS: a validator whose host tool is absent "
+        "reports SKIP with the reason."
+    )
+    return 2
+
+
+def _build_mode_blockers(gateName: str) -> list[str]:
+    """Refuse any built artifact whose build mode could not have qualified it.
+
+    An archive-only build (BUNNY_ARCHIVE_ONLY=1) produces an OCI archive and no
+    disk image. Nothing was installed, nothing booted, no recovery media was
+    written, no hardware was exercised. Such an artifact is evidence for the
+    reproducibility comparison and for nothing else, and the gates say so rather
+    than leaving it to be inferred from which files are absent.
+    """
+    reasons: list[str] = []
+    for path in sorted((ROOT / "build/out").glob("*/provenance.json")):
+        document = load_optional(path, None)
+        if not isinstance(document, dict):
+            continue
+        try:
+            require_candidate_capable(document, gate=gateName)
+        except BuildModeError as exc:
+            reasons.append(f"{display_path(path, ROOT)}: {exc}")
+    return reasons
+
+
 def gate(kind: str) -> int:
     if kind == "source":
         return source_gate()
+
+    # Build-mode refusals are *additional* to the gate's own evaluation, never a
+    # substitute for it. Returning early here would hide the prerequisite count,
+    # which is the number this gate exists to report.
+    buildModeBlockers: list[str] = []
+    if kind in {"qualification-candidate", "stable-release"}:
+        buildModeBlockers = _build_mode_blockers(kind)
+        if buildModeBlockers:
+            atomic_json(
+                OUT / f"gate-{kind}-build-mode.json",
+                {"gate": kind, "result": "BLOCKED", "reasons": buildModeBlockers},
+            )
+
+    def _with_build_mode(status: int) -> int:
+        if not buildModeBlockers:
+            return status
+        print(f"\nBLOCKED: {kind} also refuses the built artifacts present:")
+        for reason in buildModeBlockers:
+            print(f"  {reason}")
+        return 2
 
     if kind == "qualification-candidate":
         try:
@@ -819,7 +885,7 @@ def gate(kind: str) -> int:
                 "\nNo artifact may be labelled release-qualified. Building a candidate for "
                 "examination remains permitted; calling one qualified does not."
             )
-        return 0 if result.passed else 2
+        return _with_build_mode(0 if result.passed else 2)
 
     stable = evaluate_stable_gate(_stable_inputs())
     if kind == "stable-release":
@@ -834,7 +900,7 @@ def gate(kind: str) -> int:
                 "\nStable publication is prohibited. GO requires every requirement above to pass, "
                 "every approval recorded, and no blocker code open."
             )
-        return 0 if stable.passed else 2
+        return _with_build_mode(0 if stable.passed else 2)
 
     requirements = load_optional(DATA / "pilot-requirements.json", {}).get(kind, {}).get("requirements", {})
     try:
@@ -979,7 +1045,7 @@ def independent_builder_ci_manifest() -> int:
     """Describe the hosted workflow, and refuse to imply it has run."""
     workflow = ROOT / ".github/workflows/independent-builder.yml"
     if not workflow.is_file():
-        print(f"BLOCKED: {workflow.relative_to(ROOT)} does not exist")
+        print(f"BLOCKED: {display_path(workflow, ROOT)} does not exist")
         return 2
     text = workflow.read_text(encoding="utf-8")
 
@@ -1073,7 +1139,7 @@ def collect_builder_record(builderId: str, builderType: str | None) -> int:
         print(f"BLOCKED: the collected record does not validate: {exc}")
         return 2
     print(f"builder {parsed.builderId}: {parsed.builderType}, boundary {parsed.administratorBoundary[:12]}")
-    print(f"wrote {output.relative_to(ROOT)}")
+    print(f"wrote {display_path(output, ROOT)}")
     return 0
 
 
@@ -1180,7 +1246,7 @@ def compare_independent_builds() -> int:
             print(f"  {state:14} {len(names)}: {', '.join(names)}")
     for reason in report.reasons:
         print(f"  {reason}")
-    print(f"wrote {(OUT / 'reproducibility-comparison.json').relative_to(ROOT)}")
+    print(f"wrote {display_path(OUT / 'reproducibility-comparison.json', ROOT)}")
     if not report.satisfiesProductionGate:
         print(
             "BLOCKED: only REPRODUCIBLE between independent builders satisfies the production "
@@ -1711,7 +1777,7 @@ def qualification_candidate_readiness() -> int:
         print(f"  {row['state']:24} {row['description']}")
         if not row["satisfied"]:
             print(f"      owner={row['owner']} next={row['nextAction']}")
-    print(f"\nwrote {(OUT / 'stable-evidence-dashboard.md').relative_to(ROOT)}")
+    print(f"\nwrote {display_path(OUT / 'stable-evidence-dashboard.md', ROOT)}")
     if not readiness.ready:
         print(
             "BLOCKED: no artifact may be labelled release-qualified while a prerequisite is "
@@ -1750,9 +1816,17 @@ def source_gate() -> int:
         except MinimisationError:
             minimisation = False
 
+    # Run the validators in process rather than shelling out to `task.py
+    # validate`, so the gate can name the validator and the file that failed.
+    # Shelling out reduced twelve independent checks to one exit code, which is
+    # how "repositoryValidation: FAIL" came to describe JSON, schemas and Python
+    # when the thing that failed was ShellCheck on one line of one file.
+    validation = run_validators(ROOT)
+    atomic_json(OUT / "repository-validation.json", validation.as_dict())
+
     python = os.sys.executable
     requirements = {
-        "repositoryValidation": suite([python, "scripts/task.py", "validate"]),
+        "repositoryValidation": validation.passed,
         "sourceSuitesPass": suite([python, "scripts/task.py", "test"]),
         "qualificationSuitesPass": suite([python, "scripts/task.py", "test-release-closure"]),
         "licenceGatePassed": licence_passed,
@@ -1770,6 +1844,11 @@ def source_gate() -> int:
         print(f"  ok      {name}")
     for name in result.unmet:
         print(f"  FAIL    {name}")
+
+    if not validation.passed:
+        print("\nrepositoryValidation, by validator:")
+        print(validation.render())
+    print(f"\nwrote {display_path(OUT / 'repository-validation.json', ROOT)}")
     print(
         "\nA passing source gate asserts nothing about a built image, a booted system, a review, a "
         "device or a signature."
@@ -1808,6 +1887,7 @@ def main() -> int:
         "analyse-cve-symbols",
         "generate-reachability-packages",
         "validate-cve-acquisition",
+        "validate-repository",
     ):
         commands.add_parser(name)
 
@@ -1878,6 +1958,7 @@ def main() -> int:
         "stable-evidence-report": stable_evidence_report,
         "qualification-candidate-readiness": qualification_candidate_readiness,
         "validate-release-manifest": validate_release_manifest,
+        "validate-repository": validate_repository,
         "pilot-closure-assertion": pilot_closure_assertion,
     }
     if args.command in dispatch:
