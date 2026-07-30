@@ -242,6 +242,29 @@ recorded.
 Removed by: writing the agent, which is Phase 7 enterprise work and a new
 product feature, not a portability repair.
 
+### Both builders install from live repositories
+
+`build/scripts/install-packages.py` uses the pinned snapshot repository only when
+`BUNNY_RELEASE_BUILD=1`, and that mode requires
+`build/repositories/fedora-44-snapshot.repo`, which does not exist. The directory
+contains `fedora-44-snapshot.repo.example` and a README, and nothing else.
+
+Both halves of the independent-builder comparison therefore ran with
+`BUNNY_RELEASE_BUILD=0` and resolved their package sets against live Fedora
+repositories, an hour apart. Fedora publishes continuously: the local build
+installed kernel `7.1.5-201.fc44.x86_64` where earlier recorded evidence names
+`7.1.5-200.fc44.x86_64`.
+
+Two builders cannot be expected to produce identical images while each resolves
+its own package set from a moving repository. The base image being digest-pinned
+fixes the starting layer and nothing above it.
+
+Removed by: provisioning and reviewing a real
+`build/repositories/fedora-44-snapshot.repo`, which the build already knows how to
+use and already validates (HTTPS, `gpgcheck=1`, `repo_gpgcheck=1`, exactly one
+section). Until then a reproducibility comparison measures two builds of
+different package sets and can only report what it measured.
+
 ### SELinux contexts cannot be compared from an archive-only build
 
 A bootc container image carries no `security.selinux` xattrs in its layers —

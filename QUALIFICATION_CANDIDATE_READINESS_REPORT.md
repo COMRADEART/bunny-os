@@ -84,23 +84,37 @@ applied *after* the observed state:
 
 Both are silent failures otherwise: the check passed, once, somewhere.
 
-## The one prerequisite that costs a button
+## The prerequisite that was described as costing a button
 
-`independent-reproducibility` reports `BLOCKED` with the dependency *"hosted CI run
-of .github/workflows/independent-builder.yml"*.
+This section previously read:
 
-The workflow is committed and has never been dispatched. It checks out an exact SHA,
-pins the base digest, pins syft and grype, disables the pip cache, asserts an empty
-output tree, records eleven environment facts, emits a schema-2 builder record with
-a real `workflowRunId`, emits provenance with a 90-day expiry, uploads the archive,
-SBOM, package inventory, manifests and logs, and verifies the bundle on a *second*
-runner.
+> Of the fourteen, this is the only one that needs nothing but a workflow
+> dispatch.
 
-One prerequisite step remains: `BUNNY_ARCHIVE_ONLY=1` was added to
-`build/scripts/build-image.sh` this phase so a hosted Ubuntu runner can build
-without `image-builder`, and that change has not been exercised on a Fedora host.
+That was wrong, and the way it was wrong is worth recording. The workflow was
+committed, carefully written, and had never been executed. Dispatching it took
+five attempts, and each failure was a real defect that could only be found by
+running it:
 
-Of the fourteen, this is the only one that needs nothing but a workflow dispatch.
+1. The pinned base image digest no longer existed. `fedora-bootc:44` is rebuilt
+   daily and old digests are garbage collected. The local Fedora builder still
+   built against it, because podman had the layers cached — **the defect was
+   invisible from the machine that had it.**
+2. `crun` refused the OCI runtime spec version Ubuntu's podman writes.
+3. Podman fell back to the `vfs` storage driver: 2m24s per `COPY`, 32 minutes
+   spent copying directories before failing for another reason.
+4. The storage driver could not be changed under the runner's pre-initialised
+   container store.
+5. The runner ran out of disk during SBOM generation and reported `cancelled`
+   with an empty log.
+
+None of these is exotic. All five are ordinary properties of a hosted Ubuntu
+runner, and none was visible by reading the workflow. "The workflow is committed"
+and "the workflow works" are different claims, and only the second is evidence.
+
+The general lesson for the other thirteen prerequisites: an unexecuted mechanism
+is not a satisfied prerequisite that happens to be waiting. It is an untested
+one. The five `NOT_RUN` rows below should be read with that in mind.
 
 ## The five `NOT_RUN` rows are three actions
 

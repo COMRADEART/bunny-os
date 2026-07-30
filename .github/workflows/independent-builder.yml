@@ -174,6 +174,17 @@ jobs:
           after=$(df --output=avail -BG / | tail -1 | tr -dc '0-9')
           echo "reclaimed $((after - before)) GiB; ${after} GiB free on /"
           df -h / /mnt || true
+          # /mnt on this runner is the same filesystem as /, so relocating work
+          # there buys nothing. Disk was never the constraint: the SBOM step was
+          # killed with 28 GiB still free. Memory is — syft catalogues a 1.85 GB
+          # archive holding 164,962 entries on a 16 GiB runner, and the step ends
+          # with "The operation was canceled" and no other output.
+          free -h
+          sudo fallocate -l 16G /swapfile-bunny
+          sudo chmod 600 /swapfile-bunny
+          sudo mkswap /swapfile-bunny
+          sudo swapon /swapfile-bunny
+          free -h
 
       - name: Configure the container runtime and storage driver
         run: |
@@ -199,12 +210,7 @@ jobs:
           sudo apt-get install --yes --no-install-recommends runc fuse-overlayfs
           sudo install -d /etc/containers
           printf '[engine]\nruntime = "runc"\n' | sudo tee /etc/containers/containers.conf
-          # /mnt is the runner's large ephemeral volume, an order of magnitude
-          # bigger than the root filesystem. The container store is the largest
-          # thing this job writes, so it goes there.
-          sudo install -d /mnt/containers-storage /mnt/containers-run
-          printf '[storage]\ndriver = "overlay"\ngraphroot = "/mnt/containers-storage"\nrunroot = "/mnt/containers-run"\n' \
-            | sudo tee /etc/containers/storage.conf
+          printf '[storage]\ndriver = "overlay"\n' | sudo tee /etc/containers/storage.conf
           # The runner image ships an already-initialised container store whose
           # recorded driver is empty, and podman refuses to change drivers under
           # an existing database:
@@ -255,12 +261,18 @@ jobs:
           # syft extracts the whole archive into a temporary directory, so it is
           # pointed at the large volume. Only spdx-json is produced: the
           # syft-json output was another 70 MB that nothing downstream reads.
-          export TMPDIR=/mnt/syft-tmp
-          sudo install -d -o "$(id -u)" -g "$(id -g)" "$TMPDIR"
-          df -h / /mnt
+          export TMPDIR="${RUNNER_TEMP}/syft"
+          mkdir -p "$TMPDIR"
+          # One worker. syft's default parallelism holds several catalogued
+          # layers in memory at once, and this image is large enough that the
+          # memory matters more than the wall-clock.
+          export SYFT_PARALLELISM=1
+          df -h /
+          free -h
           syft "oci-archive:build/out/${profile}/bunny-os.oci.tar" \
             -o spdx-json="build/out/ci/sbom.spdx.json"
-          df -h / /mnt
+          df -h /
+          free -h
           python - <<'PY'
           import json, os, pathlib
           document = json.loads(pathlib.Path("build/out/ci/sbom.spdx.json").read_text(encoding="utf-8"))
@@ -341,6 +353,10 @@ jobs:
 
       - name: Upload the OCI archive
         uses: actions/upload-artifact@v4
+        # Everything else in the bundle can be derived from the archive, and
+        # rebuilding it costs the whole job. It is uploaded even when a later
+        # step fails.
+        if: always()
         with:
           name: independent-builder-archive-${{ github.run_id }}
           if-no-files-found: error
