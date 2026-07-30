@@ -26,6 +26,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -46,6 +51,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -57,6 +67,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -84,6 +99,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -101,6 +121,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -112,6 +137,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -129,6 +159,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -141,6 +176,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -155,6 +195,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -183,6 +228,11 @@ jobs:
     # evidence, so a GO here means a gate was weakened.
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}

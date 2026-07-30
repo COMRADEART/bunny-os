@@ -20,6 +20,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -35,6 +40,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - name: Compile policy in Fedora 44
         run: >-
           docker run --rm -v "$PWD:/src:ro" fedora:44
@@ -46,6 +56,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       # The verification script installs the programs the image build installs,
       # so systemd-analyze resolves ExecStart= against the layout the image
       # actually produces rather than against a bare container.
@@ -59,6 +74,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       # Session entries and application launchers obey different specifications
       # and are validated separately; see the script for why.
       - name: Validate GNOME 50 extension, schemas, and desktop entries in Fedora 44
@@ -73,6 +93,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -91,6 +116,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -113,6 +143,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -143,6 +178,11 @@ jobs:
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence is bound to a candidate commit that is behind HEAD.
+          # A shallow clone does not contain it, and the checks that
+          # verify the binding then fail closed for the wrong reason.
+          fetch-depth: 0
       - name: Full privileged artifact gate
         env:
           FULL_GATE: "1"
