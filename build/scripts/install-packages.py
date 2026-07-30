@@ -136,6 +136,7 @@ def main() -> int:
     # validity. See docs/adr/ADR-028-deterministic-package-manager-state.md.
     faketime_library = os.environ.get("BUNNY_FAKETIME_LIBRARY", "")
     source_date_epoch = os.environ.get("SOURCE_DATE_EPOCH", "")
+    transaction_environment = dict(environment)
     if faketime_library and source_date_epoch:
         if not Path(faketime_library).is_file():
             raise SystemExit(
@@ -143,15 +144,21 @@ def main() -> int:
                 "present. Continuing would stamp the rpm database with wall-clock install times "
                 "and produce an artifact that cannot reproduce, without saying so."
             )
-        environment["LD_PRELOAD"] = faketime_library
-        environment["FAKETIME"] = f"@{source_date_epoch}"
-        environment["FAKETIME_DONT_FAKE_MONOTONIC"] = "1"
+        # A separate environment for the transaction, not a mutation of the
+        # shared one. The lock declares the override is scoped to the package
+        # transaction; applying it to the rpm queries either side of the
+        # transaction would be broader than declared, and the first version of
+        # this did exactly that — the `before` snapshot ran under LD_PRELOAD and
+        # rpm exited 1 with a message nobody captured.
+        transaction_environment["LD_PRELOAD"] = faketime_library
+        transaction_environment["FAKETIME"] = f"@{source_date_epoch}"
+        transaction_environment["FAKETIME_DONT_FAKE_MONOTONIC"] = "1"
 
     before = installed_nevras(environment)
     subprocess.run(
         ["/usr/bin/dnf", "--assumeyes", "--setopt=install_weak_deps=False", *repository_args, "install", *packages],
         check=True,
-        env=environment,
+        env=transaction_environment,
     )
     after = installed_nevras(environment)
 
@@ -199,8 +206,16 @@ def installed_nevras(environment: dict[str, str]) -> set[str]:
         capture_output=True,
         text=True,
         env=environment,
-        check=True,
     )
+    if result.returncode != 0:
+        # `check=True` would raise CalledProcessError, whose message is the
+        # argument list and an exit status. That is what the first hermetic
+        # build printed, and it named neither the cause nor anything to look at.
+        raise SystemExit(
+            f"rpm --query --all failed with exit {result.returncode}:\n"
+            f"  stdout: {result.stdout.strip()[:500]}\n"
+            f"  stderr: {result.stderr.strip()[:500]}"
+        )
     return {line.strip() for line in result.stdout.splitlines() if line.strip()}
 
 

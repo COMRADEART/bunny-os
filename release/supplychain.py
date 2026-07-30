@@ -801,18 +801,23 @@ def parse_reproducibility_lock(record: Mapping[str, Any]) -> ReproducibilityLock
             f"{what}: appliedTo must name where the epoch is used. An epoch applied to an "
             "unrecorded set of things cannot be reviewed"
         )
-    unknown_applied = sorted(set(applied) - set(EPOCH_APPLICABLE))
-    if unknown_applied:
-        raise SupplyChainError(
-            f"{what}: appliedTo names sites that are not declared epoch-applicable: "
-            + ", ".join(unknown_applied)
-        )
+    # Forbidden first, deliberately. Every forbidden site is also an undeclared
+    # one, so the general check would catch it — and report "not declared
+    # epoch-applicable", which reads as a paperwork problem. Applying a fake
+    # clock to certificate validity is not a paperwork problem, and the message
+    # a reviewer sees should say which of the two they are looking at.
     forbidden = sorted(set(applied) & set(EPOCH_FORBIDDEN))
     if forbidden:
         raise SupplyChainError(
             f"{what}: the build epoch must never be applied to: "
             + ", ".join(forbidden)
             + ". Falsifying these would trade a security decision for a matching digest"
+        )
+    unknown_applied = sorted(set(applied) - set(EPOCH_APPLICABLE))
+    if unknown_applied:
+        raise SupplyChainError(
+            f"{what}: appliedTo names sites that are not declared epoch-applicable: "
+            + ", ".join(unknown_applied)
         )
 
     never = tuple(str(v) for v in record.get("neverAppliedTo") or ())
