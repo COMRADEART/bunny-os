@@ -111,7 +111,31 @@ def main() -> int:
     # The resolution runs inside the retained base, because "which packages does
     # this profile need" is a question about that base and no other. Answering it
     # on the host would resolve against the host's installed set.
-    image = f"oci:{args.base_layout}:retained"
+    #
+    # The base is pulled *from retention*, not from upstream, and the pulled
+    # image's own digest is checked against the lock. That makes this step a
+    # standing test of the mirror: if retention were broken, resolution would
+    # fail here rather than silently fall back to quay.io.
+    print("==> pulling the base from controlled retention")
+    pulled = run(
+        ["podman", "pull", f"oci:{args.base_layout}:retained"],
+        what="pulling the retained base",
+    ).strip().splitlines()[-1]
+
+    inspected = json.loads(
+        run(["podman", "image", "inspect", pulled], what="inspecting the pulled base")
+    )[0]
+    digests = set(inspected.get("RepoDigests") or []) | {inspected.get("Digest", "")}
+    expected = base_lock["retainedDigest"]
+    if not any(expected in str(value) for value in digests):
+        raise SystemExit(
+            f"BLOCKED: the image pulled from retention does not carry the retained digest.\n"
+            f"  expected {expected}\n"
+            f"  observed {sorted(str(v) for v in digests)}\n"
+            "The mirror and the lock describe different images."
+        )
+    print(f"    retained digest confirmed: {expected}")
+
     podman = [
         "podman",
         "run",
@@ -120,7 +144,7 @@ def main() -> int:
         f"{download}:/downloads:z",
         "--env",
         "LC_ALL=C.UTF-8",
-        image,
+        pulled,
         "/usr/bin/dnf",
         "--assumeyes",
         "--setopt=install_weak_deps=False",
