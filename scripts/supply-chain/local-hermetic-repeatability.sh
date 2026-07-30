@@ -77,6 +77,29 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 2
 fi
 
+# The locks have to be *in the commit*, not merely on this disk.
+#
+# Both builds clone the commit, and a hosted builder has nothing else. The first
+# attempt at this comparison ran with the four locks sitting untracked in the
+# workspace and hand-copied into each clone, so the pins came from the operator
+# rather than from the source — which is the same defect as an unpinned input,
+# wearing a lock file's name. `git clean` removing them is what exposed it.
+untracked=()
+for lock in base-image-lock builder-image-lock package-lock package-snapshot-lock \
+            reproducibility-lock mutable-state-policy; do
+  if ! git ls-files --error-unmatch "build/inputs/${lock}.json" >/dev/null 2>&1; then
+    untracked+=("build/inputs/${lock}.json")
+  fi
+done
+if [[ ${#untracked[@]} -gt 0 ]]; then
+  echo "BLOCKED: these input locks are not tracked in this commit:" >&2
+  printf '    %s\n' "${untracked[@]}" >&2
+  echo >&2
+  echo "A build cloning this commit would not receive them, so the inputs it used would" >&2
+  echo "come from wherever the operator put them. Commit the locks." >&2
+  exit 2
+fi
+
 epoch="$(python3 -c '
 import json
 print(json.load(open("build/inputs/reproducibility-lock.json"))["sourceDateEpoch"])
