@@ -194,6 +194,19 @@ class FinalisationProtections(unittest.TestCase):
         self.assertIn("countme", text)
         self.assertIn("countme=0", text, "removing the counter without disabling it regenerates it")
 
+    def test_build_logs_are_removed(self):
+        """Two paths that were invisible to every dimension and changed the layers.
+
+        /var/log and /var/cache are excluded from the compared set as runtime
+        state, which is correct for a dimension and irrelevant to a layer tar —
+        it contains them either way. dnf5.log carries a wall-clock timestamp per
+        line; ldconfig's aux-cache carries an inode number per shared object.
+        Both differed between two builds while every content dimension matched.
+        """
+        text = self._finaliser()
+        self.assertIn("/var/log/dnf5.log", text)
+        self.assertIn("/var/cache/ldconfig", text)
+
     def test_sqlite_residue_is_checkpointed(self):
         text = self._database_finaliser()
         self.assertIn("wal_checkpoint", text)
