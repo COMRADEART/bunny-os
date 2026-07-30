@@ -56,6 +56,33 @@ QUERY_FORMAT = "\\t".join(
 )
 
 
+#: Run inside the retained base to produce the exact transaction set.
+#:
+#: dnf5 rejects `--destdir` on `install` — it exists only on `download` and
+#: `upgrade` — and `dnf download --resolve` answers a subtly different question
+#: than "what would installing these packages pull in". So the transaction is
+#: run with `--downloadonly`, which populates the libdnf5 cache with precisely
+#: the packages the transaction would install, and the cache is then copied out.
+#:
+#: The cache directory name carries the repository id, which is how each package
+#: gets attributed to the repository it actually came from rather than to a
+#: repository somebody assumed.
+_RESOLVE_SCRIPT = r"""
+set -euo pipefail
+shift || true
+/usr/bin/dnf --assumeyes --setopt=install_weak_deps=False --setopt=countme=0 \
+    install --downloadonly "$@"
+mkdir -p /downloads
+found=0
+while IFS= read -r rpm; do
+    repo="$(basename "$(dirname "$(dirname "${rpm}")")")"
+    cp -n "${rpm}" "/downloads/${repo}%%$(basename "${rpm}")"
+    found=$((found + 1))
+done < <(find /var/cache/libdnf5 -type f -name '*.rpm')
+echo "copied ${found} packages out of the transaction cache"
+"""
+
+
 def read_package_sets(root: Path, profile_name: str) -> list[str]:
     profile = json.loads((root / "build" / "profiles" / f"{profile_name}.json").read_text("utf-8"))
     packages: set[str] = set()
@@ -145,23 +172,10 @@ def main() -> int:
         "--env",
         "LC_ALL=C.UTF-8",
         pulled,
-        "/usr/bin/dnf",
-        "--assumeyes",
-        "--setopt=install_weak_deps=False",
-        # countme is disabled at every step that touches a repository, not only
-        # in the image. A resolution that bumped Fedora's counter would be this
-        # project reporting an installation it did not make.
-        "--setopt=countme=0",
-        "install",
-        # dnf5 accepts --downloadonly and --destdir only *after* the subcommand:
-        #
-        #   Unknown argument "--downloadonly" for command "dnf5" ...
-        #   (It has to be placed after the command.)
-        #
-        # dnf4 accepted them in either position, which is why the first version
-        # of this script put them where dnf4 wanted them.
-        "--downloadonly",
-        "--destdir=/downloads",
+        "/usr/bin/bash",
+        "-c",
+        _RESOLVE_SCRIPT,
+        "resolve",
         *packages,
     ]
     print("==> downloading the resolved transaction (this is the only live-repository step)")
@@ -186,6 +200,9 @@ def main() -> int:
         ).strip()
         name, epoch, version, release, arch, source_rpm, licence, signature, size = line.split("\t")
         digest = hashlib.sha256(rpm.read_bytes()).hexdigest()
+        repository, _, file_name = rpm.name.partition("%%")
+        if not file_name:
+            repository, file_name = "unknown", rpm.name
         records.append(
             {
                 "name": name,
@@ -196,10 +213,11 @@ def main() -> int:
                 "checksum": digest,
                 "size": rpm.stat().st_size,
                 "installedSize": int(size),
+                "sourceRepository": repository,
                 "sourceRpm": source_rpm,
                 "licence": licence,
                 "signature": signature,
-                "fileName": rpm.name,
+                "fileName": file_name,
             }
         )
 
