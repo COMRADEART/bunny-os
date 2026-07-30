@@ -129,16 +129,10 @@ echo "==> copying the Fedora signing keys into the snapshot"
 # pinned image the packages were resolved against — not a download, and not
 # whatever the build host happens to trust.
 mkdir -p "${snapshot}/keys"
-base_digest="$(python3 -c '
+base_layout="$(python3 -c '
 import json
-print(json.load(open("build/inputs/base-image-lock.json"))["retainedDigest"])
+print(json.load(open("build/inputs/base-image-lock.json"))["retainedLocation"])
 ')"
-base_tag="localhost/bunny-os-retained-base:${base_digest#sha256:}"
-key_scratch="$(mktemp -d)"
-sudo podman run --rm --network=none --entrypoint /usr/bin/cp \
-  --volume "${key_scratch}:/out:z" "${base_tag}" \
-  -a /etc/pki/rpm-gpg/. /out/
-sudo chown -R "$(id -u):$(id -g)" "${key_scratch}"
 # Only this release's keys, and only the architectures this snapshot is for. A
 # glob of every Fedora key ever published matched 300 of them once, which is the
 # opposite of pinning.
@@ -158,21 +152,19 @@ import json, sys
 print(json.load(open(sys.argv[1])).get("architecture", "x86_64"))
 ' "${lock}")"
 
-copied=0
-for key in "RPM-GPG-KEY-fedora-${release}-primary" \
-           "RPM-GPG-KEY-fedora-${release}-${architecture}"; do
-  if [[ -f "${key_scratch}/${key}" ]]; then
-    cp "${key_scratch}/${key}" "${snapshot}/keys/"
-    echo "    ${key}  $(sha256sum "${snapshot}/keys/${key}" | awk '{print $1}')"
-    copied=$((copied + 1))
-  fi
-done
-rm -rf "${key_scratch}"
-if [[ "${copied}" == "0" ]]; then
-  echo "BLOCKED: the retained base ships none of the expected Fedora signing keys." >&2
-  echo "A snapshot without them cannot be verified by anyone who did not build it." >&2
-  exit 2
-fi
+# Read out of the layout directly rather than through a container runtime. This
+# step runs *inside* the pinned builder, where the host's
+# `localhost/bunny-os-retained-base:…` tag is not an image but a hostname —
+# podman resolves it as a registry and fails with a connection refused, which is
+# a confusing way to say the tag belongs to another machine's store.
+python3 scripts/supply-chain/extract-oci-layout-paths.py \
+  --layout "${base_layout}" \
+  --reference retained \
+  --pattern "etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-${release}-primary" \
+  --pattern "etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-${release}-${architecture}" \
+  --destination "${snapshot}/keys" \
+  --flatten \
+  --require 2
 
 echo "==> generating repository metadata"
 # --excludes keys: the keys are shipped beside the repository, not as part of it.
