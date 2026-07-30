@@ -80,31 +80,74 @@ def select_manifest(layout: Path, reference: str | None) -> dict:
     return manifest
 
 
-def extract(layout: Path, manifest: dict, patterns: list[str]) -> dict[str, bytes]:
-    found: dict[str, bytes] = {}
+def _layers(layout: Path, manifest: dict):
     for layer in manifest.get("layers") or []:
         payload = blob_path(layout, layer["digest"]).read_bytes()
         if layer.get("mediaType", "").endswith("gzip") or payload[:2] == b"\x1f\x8b":
             payload = gzip.decompress(payload)
-        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:") as inner:
-            for member in inner:
+        yield tarfile.open(fileobj=io.BytesIO(payload), mode="r:")
+
+
+def extract(layout: Path, manifest: dict, patterns: list[str]) -> dict[str, bytes]:
+    """Content for every path matching a pattern, hard links resolved.
+
+    A bootc image does not store file content at the path you ask for. Content
+    lives in the ostree repository and the visible path is a **hard link** into
+    it:
+
+        etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-44-primary
+            type=1  size=0
+            link -> sysroot/ostree/repo/objects/12/2779…file
+
+    An extractor that only took regular files found nothing and reported the
+    keys as absent from an image that ships them. So a match that is a link
+    records where to look, and a second pass fetches the target — second pass
+    because the target can appear in an earlier layer than the link.
+    """
+    found: dict[str, bytes] = {}
+    links: dict[str, str] = {}
+
+    for stream in _layers(layout, manifest):
+        with stream:
+            for member in stream:
                 name = _normalise(member.name)
                 base = posixpath.basename(name)
                 parent = posixpath.dirname(name)
                 if base == ".wh..wh..opq":
                     for existing in [e for e in found if e.startswith(parent + "/")]:
                         found.pop(existing, None)
+                        links.pop(existing, None)
                     continue
                 if base.startswith(".wh."):
-                    found.pop(posixpath.join(parent, base[4:]) if parent else base[4:], None)
-                    continue
-                if not member.isreg():
+                    target = posixpath.join(parent, base[4:]) if parent else base[4:]
+                    found.pop(target, None)
+                    links.pop(target, None)
                     continue
                 if not any(fnmatch.fnmatch(name, pattern) for pattern in patterns):
                     continue
-                handle = inner.extractfile(member)
-                if handle is not None:
-                    found[name] = handle.read()
+                if member.isreg():
+                    handle = stream.extractfile(member)
+                    if handle is not None:
+                        found[name] = handle.read()
+                        links.pop(name, None)
+                elif member.islnk():
+                    links[name] = _normalise(member.linkname)
+
+    wanted = {target for name, target in links.items() if name not in found}
+    if wanted:
+        resolved: dict[str, bytes] = {}
+        for stream in _layers(layout, manifest):
+            with stream:
+                for member in stream:
+                    name = _normalise(member.name)
+                    if name in wanted and member.isreg():
+                        handle = stream.extractfile(member)
+                        if handle is not None:
+                            resolved[name] = handle.read()
+        for name, target in links.items():
+            if name not in found and target in resolved:
+                found[name] = resolved[target]
+
     return found
 
 
