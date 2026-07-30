@@ -237,6 +237,12 @@ def approach_rpm_rebuilddb(database: Path) -> None:
         )
 
 
+#: name -> (description, transform, applies to the rpm database only)
+#:
+#: `rpm --rebuilddb` is rpm's database and nothing else. Pointed at libdnf5's
+#: transaction history it does not fail usefully — it creates an empty rpm
+#: database beside it and takes the directory with it — so it is recorded as not
+#: applicable there rather than as an approach that errored.
 APPROACHES: dict[str, tuple[str, Callable[[Path], None], bool]] = {
     "A-rpm-rebuilddb": (
         "rpm --rebuilddb, rpm's own supported reconstruction from the stored headers",
@@ -246,22 +252,22 @@ APPROACHES: dict[str, tuple[str, Callable[[Path], None], bool]] = {
     "C-controlled-vacuum": (
         "VACUUM under explicitly set journal_mode, page_size and auto_vacuum",
         approach_vacuum,
-        True,
+        False,
     ),
     "D-vacuum-into": (
         "VACUUM INTO a new file, which then replaces the original",
         approach_vacuum_into,
-        True,
+        False,
     ),
     "E-dump-restore": (
         "logical dump through sqlite3.iterdump and restore into a fresh database",
         approach_dump_restore,
-        True,
+        False,
     ),
     "F-none": (
         "no transformation; the control the others are measured against",
         approach_none,
-        True,
+        False,
     ),
 }
 
@@ -342,6 +348,12 @@ def trial(
                 residue.unlink()
 
         record: dict[str, Any] = {"approach": name, "error": error}
+        if not error and not staged.is_file():
+            error = (
+                "the transformation removed the database it was given; nothing is left to "
+                "measure and nothing could be shipped"
+            )
+            record["error"] = error
         if error:
             record["fileDigest"] = None
             return record
@@ -374,7 +386,18 @@ def evaluate(
     baseline_logical = logical_digest(source)
     results: dict[str, Any] = {}
 
-    for name, (description, transform, _) in APPROACHES.items():
+    for name, (description, transform, rpmdb_only) in APPROACHES.items():
+        if rpmdb_only and not is_rpmdb:
+            results[name] = {
+                "description": description,
+                "applicable": False,
+                "reason": (
+                    "this approach is rpm's own database maintenance and has no meaning for the "
+                    "libdnf5 transaction history"
+                ),
+                "usable": False,
+            }
+            continue
         runs = [
             trial(name, source, transform, is_rpmdb=is_rpmdb, run_queries=run_queries)
             for _ in range(trials)
@@ -390,6 +413,7 @@ def evaluate(
 
         results[name] = {
             "description": description,
+            "applicable": True,
             "trials": trials,
             "errors": errors,
             "fileDigests": digests,
@@ -483,6 +507,9 @@ def main() -> int:
         print(f"{label} ({Path(result['source']).name}), SQLite {result['sqliteVersion']}:")
         usable_here = []
         for name, entry in result["approaches"].items():
+            if not entry.get("applicable", True):
+                print(f"    {name:24} n/a      {entry['reason']}")
+                continue
             marks = [
                 "bytes=" + ("stable" if entry["byteDeterministic"] else "VARY"),
                 "content=" + ("preserved" if entry["contentPreservedVersusInput"] else "CHANGED"),

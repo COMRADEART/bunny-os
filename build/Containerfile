@@ -37,9 +37,18 @@ COPY tools /tmp/bunny-os/tools
 # for the RUN step and nothing they carry ends up in the image.
 ARG BUNNY_SNAPSHOT_ROOT=
 ARG BUNNY_FAKETIME_LIBRARY=
+# The SQLite version the database finaliser must find in this container. The
+# finalisation runs against this image's own sqlite — never the build host's —
+# and that library is already pinned transitively, by the retained base digest
+# and the package lock. This argument is the cross-check: it comes from the
+# builder lock, so a base or snapshot change that moved SQLite fails the build
+# with the two versions named instead of surfacing later as two databases that
+# lay out identical rows differently.
+ARG BUNNY_EXPECT_SQLITE=
 
 RUN BUNNY_SNAPSHOT_ROOT="${BUNNY_SNAPSHOT_ROOT}" \
     BUNNY_FAKETIME_LIBRARY="${BUNNY_FAKETIME_LIBRARY}" \
+    BUNNY_EXPECT_SQLITE="${BUNNY_EXPECT_SQLITE}" \
     SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}" \
     /usr/bin/python3 /tmp/bunny-os/build/scripts/install-packages.py \
       --profile "${BUNNY_PROFILE}" \

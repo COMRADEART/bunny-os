@@ -212,9 +212,20 @@ mkdir -p "${output}"
 
 hermetic_args=()
 if [[ "${hermetic}" == "1" ]]; then
+  expected_sqlite="$(python3 -c '
+import json
+record = json.load(open("build/inputs/builder-image-lock.json")).get("sqlite") or {}
+print(record.get("libraryVersion", ""))
+')"
+  if [[ -z "${expected_sqlite}" ]]; then
+    echo "build/inputs/builder-image-lock.json records no SQLite identity; rebuild the" >&2
+    echo "builder image. The database finaliser refuses to run against an unpinned SQLite." >&2
+    exit 4
+  fi
   hermetic_args=(
     --build-arg "BUNNY_SNAPSHOT_ROOT=/snapshot"
     --build-arg "BUNNY_FAKETIME_LIBRARY=/run/bunny-faketime.so"
+    --build-arg "BUNNY_EXPECT_SQLITE=${expected_sqlite}"
   )
 fi
 
