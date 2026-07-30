@@ -3,88 +3,79 @@
 Date: 2026-07-28  
 Host: Windows, Python 3; no Linux systemd/container/KVM runtime
 
-## Current test position — 2026-07-30
+## Current test position — 2026-07-30 (CI portability repair)
 
-Host: Windows 11, Python 3.14.6. No Linux systemd, container or KVM runtime;
-`make`, `systemd-analyze` and `shellcheck` unavailable and their checks skip.
+Host: Windows 11, Python 3.14.6, plus Fedora Linux 44 on WSL2 for the checks
+Windows cannot run. `shellcheck`, `podman`, `syft`, `grype` and `image-builder`
+are unavailable on the Windows host and their checks report `SKIP` there; they
+were run under Fedora and are recorded separately below.
 
 | Command | Result |
 |---|---|
-| `python scripts/task.py validate` | **PASS** — 277 JSON documents parsed, 35 schemas validated, 297 Python files compiled |
-| `python scripts/task.py test` | **PASS** — **1,150 tests**, 1 skipped (was 892) |
+| `python scripts/task.py validate` | **PASS** — 13 validators, 277 JSON documents, 35 schemas, 310 Python files, 25 shell scripts |
+| `python scripts/task.py test` | **PASS** — **1,347 tests**, 4 skipped (was 1,150) |
 | `python scripts/task.py test-installer` | **PASS** — 60 tests |
 | `python scripts/task.py test-phase5` | **PASS** — 105 tests |
-| `python scripts/task.py test-release-closure` | **PASS** — **510 tests** across 11 suites (was 252 across 9) |
+| `python scripts/task.py test-release-closure` | **PASS** — **707 tests** across 12 suites (was 510 across 11) |
 | `python scripts/task.py phase7-audit` | **PASS** — 47 documents, 18 demonstrations, 11 schemas |
 | `python scripts/phase7.py source-gate` | **PASS** |
+| `python scripts/release.py validate-repository` | **exit 0** — 11 validators pass, 2 skip on this host |
+| `python scripts/reachability.py verify-findings` | **exit 0** — 25 records, only `generatedAt` differs |
 
-**1,315 distinct tests pass, 1 skipped**: 1,150 under `tests/`, plus 60 installer
-and 105 phase-5 tests discovered separately. `test-release-closure` re-runs eleven of
-the `tests/` directories — 510 tests — so it is a subset of the 1,150 rather than an
-addition to it. Those eleven grew from 252 to 510 this phase.
+**1,512 distinct tests pass, 4 skipped**: 1,347 under `tests/`, plus 60 installer
+and 105 phase-5 tests discovered separately. `test-release-closure` re-runs twelve
+of the `tests/` directories — 707 tests — so it is a subset of the 1,347 rather
+than an addition to it.
 
-### The eleven qualification suites
+### The twelfth suite: `tests/portability`
 
-| Suite | Tests | Covers |
+197 tests added this pass, covering the defects that let CI report something
+other than the truth.
+
+| File | Tests | Covers |
 |---|---|---|
-| `tests/security` | 52 | vulnerability disposition, severity-reduction refusals |
-| `tests/licensing` | 20 | the seven licence-gate requirements |
-| `tests/reproducibility` | **119** | builder independence, normalisation, 17-dimension comparison, provenance verification |
-| `tests/signing` | **57** | role separation, key lifecycle, two-person approval |
-| `tests/recovery` | 38 | recovery media qualification |
-| `tests/release` | **53** | evidence model, candidate prerequisites, dashboard, source gate |
-| `tests/hardware_evidence` | **62** | intake, redaction, the collector, guided tests, signatures |
-| `tests/accessibility_evidence` | **39** | the matrix and the 17-flow runtime model |
-| `tests/pilot_gates` | **37** | six separated gates, pilot-cannot-bypass-stable |
-| `tests/reachability` | **32** | per-CVE analysis, proof classes, acquisition trust |
-| `tests/review_evidence` | **30** | the self-review wall, signed review records, request completeness |
+| `test_display_path.py` | 13 | output inside the repository, in `/tmp`, in a Windows temporary directory, at a relative path, through a resolved symlink; a security-sensitive path still refused; record content unaffected by where it is written |
+| `test_shellcheck_portability.py` | 11 | no `SC1091` suppression, no severity floor, nothing sources `/etc/os-release`, the `unknown` fallback, quoted values, the record stays parseable JSON |
+| `test_commit_context.py` | 21 | local branch, detached exact commit, PR synthetic merge, PR head, evidence after candidate, wrong candidate, missing candidate, evidence bound to a merge ref |
+| `test_cve_regeneration.py` | 27 | the one permitted difference; a changed carrier object, package, advisory, disposition or commit each fail; reorder tolerance; a nested change; the structured diff |
+| `test_repository_validation.py` | 18 | all ten required validators reported; one failure does not implicate the other nine; session entries versus launchers; the machine-readable output |
+| `test_gate_exit_codes.py` | 15 | a refusal accepted, an approval rejected, and a crash, traceback, missing file or odd status never mistaken for a refusal |
+| `test_archive_only.py` | 21 | both protected gates refuse an archive-only artifact; the provenance writer refuses a record its artifacts contradict; an undeclared mode is unknown, not full |
+| `test_hosted_import.py` | 31 | missing and reused run ids, source and base mismatch, a record edited in one place, a shared administrator boundary, an unsigned production claim |
+| `test_dimension_collector.py` | 26 | all seventeen dimensions read from an OCI archive, whiteout semantics, setuid bits, capabilities, and an absent SELinux set reported as not-collected rather than matching |
+| `test_comparison_assembly.py` | 15 | the reduced comparison form preserves equality exactly — one changed member among 20,000 is caught and named |
 
-`reachability` and `review_evidence` are new. Six suites grew.
+### Checks that Windows cannot run, run under Fedora Linux 44 (WSL2)
 
-### All eighteen mandated adversarial cases
+| Check | Result |
+|---|---|
+| `shellcheck` over all 25 shell scripts | **PASS** — 0 findings, no suppression, ShellCheck 0.11.0 |
+| `podman run fedora:44 ci-verify-units.sh` | **PASS** — 18 units verified in installed form, 1 skipped by record |
+| `podman run fedora:44 ci-validate-desktop.sh` | **PASS** — 7 launchers and 2 session entries |
+| `BUNNY_ARCHIVE_ONLY=1 build-image.sh beta` | **PASS** — OCI archive built and normalised, no qcow2, no raw, no ISO |
+| Both protected gates against the archive-only artifact | **exit 2** — refused, naming what the build did not do |
+| 17-dimension collection from the archive | 16 collected, `selinuxLabels` not collected |
 
-| # | Case | Suite |
-|---|---|---|
-| 1 | the same physical host represented as two builders | `reproducibility` |
-| 2 | the same CI run represented twice | `reproducibility` |
-| 3 | a mutable base tag instead of a digest | `reproducibility` |
-| 4 | a mismatched source commit | `reproducibility` |
-| 5 | missing debuginfo | `reachability` |
-| 6 | source and binary version mismatch | `reachability` |
-| 7 | an absent symbol treated as absent code | `reachability` |
-| 8 | a self-review marked independent | `review_evidence` |
-| 9 | an unsigned review report | `review_evidence` |
-| 10 | a fake hardware report | `hardware_evidence` |
-| 11 | a report containing a hardware serial number | `hardware_evidence` |
-| 12 | a `NOT_RUN` hardware test marked `PASS` | `hardware_evidence` |
-| 13 | a development signer used for production | `signing` |
-| 14 | one person supplying two signer identities | `signing` |
-| 15 | a Critical CVE accepted without a reviewer | `reachability` |
-| 16 | a stable candidate built with an unresolved `Unknown` | `release` |
-| 17 | a pilot gate invoked before a stable release | `pilot_gates` |
-| 18 | stale evidence accepted | `release` |
+### GitHub Actions
 
-Each rejects the invalid evidence, and each names the mandated case in its docstring.
+All 22 jobs across the three source workflows pass on `ubuntu-24.04`, and every
+protected gate is verified as *refusing* rather than merely non-zero:
 
-### Two bugs the new tests found
-
-1. **The normaliser introduced variance of its own.** `gzip.GzipFile` infers the
-   stored original filename from `fileobj.name` and writes it into the gzip header,
-   so two normalised copies written to different paths differed in their headers.
-   Caught by normalising one archive to two destinations and comparing. Fixed with an
-   explicit `filename=""`.
-2. **`WEAK_DIMENSIONS` named a field the schema does not have.** Schema 1 carried a
-   `workspace` path; schema 2 deliberately has nowhere to put one, and the constant
-   still referenced it — raising `AttributeError` on every same-host comparison.
-
-### What is not tested here
-
-No test in this repository builds an image, boots a system, touches hardware, or
-signs anything with a production key. The suites test the *evidence model*: that it
-accepts valid evidence and refuses invalid evidence. They are not a substitute for
-the evidence, and the model's whole purpose is to say so.
-
----
+```text
+source gate: passed as expected (exit 0)
+reachability regeneration: passed as expected (exit 0)
+qualification candidate gate: correctly refused (exit 2)
+stable release gate: correctly refused (exit 2)
+oem-pilot gate: correctly refused (exit 2)
+enterprise-pilot gate: correctly refused (exit 2)
+sync-pilot gate: correctly refused (exit 2)
+signing roles: correctly refused (exit 2)
+builder independence: correctly refused (exit 2)
+hardware evidence validation: correctly refused (exit 2)
+per-CVE disposition: correctly refused (exit 2)
+CVE acquisition: correctly refused (exit 2)
+symbol analysis: correctly refused (exit 2)
+```
 
 ## Phase 1 test report (2026-07-28)
 

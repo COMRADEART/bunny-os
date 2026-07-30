@@ -29,6 +29,9 @@ one host establishes determinism, which is a different claim.
 
 from __future__ import annotations
 
+import hashlib
+import json
+
 from dataclasses import dataclass
 from typing import Any, Mapping
 
@@ -118,6 +121,73 @@ def _compare_values(left: Any, right: Any) -> tuple[bool, tuple[str, ...]]:
             return False, ("<same members, different order>",)
         return False, differing
     return left == right, () if left == right else (f"{left!r} vs {right!r}",)
+
+
+#: Above this, a dimension is stored as a digest plus its named differences
+#: rather than verbatim. The full collections run to tens of megabytes per side
+#: — 164,962 filesystem entries and 104,247 file digests for the beta profile —
+#: and a committed evidence file must stay readable.
+_VERBATIM_LIMIT = 256 * 1024
+
+#: How many differing member names to record. The true count is always recorded.
+_DIFFERENCE_SAMPLE = 200
+
+
+def _canonical(value: Any) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def reduce_dimension(left: Any, right: Any) -> tuple[dict[str, Any], str, str]:
+    """A comparable, committable form of one dimension from both builders.
+
+    Equality is preserved exactly: the reduced form carries a digest over the
+    whole collected value, so two dimensions compare equal here if and only if
+    they were equal in full. What is dropped is the bulk of the *matching*
+    members, which nobody reads; every differing member name is kept, up to a
+    recorded cap.
+    """
+    if left is None or right is None:
+        absent = [n for n, v in (("first", left), ("second", right)) if v is None]
+        return (
+            {"first": left, "second": right},
+            "verbatim",
+            f"not collected from: {', '.join(absent)}",
+        )
+
+    encoded = (_canonical(left), _canonical(right))
+    if max(len(text) for text in encoded) <= _VERBATIM_LIMIT:
+        return ({"first": left, "second": right}, "verbatim", "")
+
+    digests = tuple(hashlib.sha256(text.encode("utf-8")).hexdigest() for text in encoded)
+
+    def members(value: Any) -> dict[str, Any]:
+        if isinstance(value, dict):
+            return value
+        if isinstance(value, list):
+            return {str(item): True for item in value}
+        return {}
+
+    first_members, second_members = members(left), members(right)
+    differing = sorted(
+        key for key in set(first_members) | set(second_members)
+        if first_members.get(key) != second_members.get(key)
+    )
+    sample = differing[:_DIFFERENCE_SAMPLE]
+
+    first: dict[str, Any] = {"__digest__": digests[0], "__memberCount__": len(first_members)}
+    second: dict[str, Any] = {"__digest__": digests[1], "__memberCount__": len(second_members)}
+    for key in sample:
+        first[key] = first_members.get(key, "<absent>")
+        second[key] = second_members.get(key, "<absent>")
+
+    detail = (
+        f"{len(first_members)} vs {len(second_members)} members; "
+        f"{len(differing)} differing"
+        + (f", first {len(sample)} recorded" if len(differing) > len(sample) else "")
+        if differing
+        else f"{len(first_members)} members, identical (compared by digest over the full value)"
+    )
+    return ({"first": first, "second": second}, "digest+differences", detail)
 
 
 def compare_dimension(dimension: str, collected: Mapping[str, Any]) -> DimensionResult:

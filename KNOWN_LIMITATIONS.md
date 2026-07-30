@@ -199,6 +199,65 @@ Agreeing documents: `README.md`, `NEXT_PHASE.md`, `docs/PHASE_7_BASELINE.md`,
 Current authority for the closure position: `RELEASE_BLOCKER_CLOSURE_REPORT.md`
 and `STABLE_EVIDENCE_REPORT.md`.
 
+## CI portability and hosted-build limitations, 2026-07-30
+
+### A pinned base-image digest is not durable
+
+`quay.io/fedora/fedora-bootc:44` is rebuilt daily and old digests are garbage
+collected. The digest this project had pinned —
+`sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4` — was
+**unreachable** when the hosted builder tried to pull it:
+
+```text
+reading manifest sha256:fb71f099… in quay.io/fedora/fedora-bootc: manifest unknown
+```
+
+The local Fedora builder still built against it, because it had the layers in its
+local container store. That is the important part: **a build that appears to
+reproduce may only be reachable from one machine's cache.** Pinning a digest
+records *which* base was used; it does not make that base obtainable later.
+
+Consequence: reproducibility evidence against any `fedora-bootc` digest has a
+shelf life measured in days, and an independent builder starting from a clean
+environment can only ever verify a base that is still published.
+
+Removed by: mirroring the pinned base into a registry under this project's
+control, or a content-addressed local mirror both builders pull from. Until then
+every reproducibility comparison is against whatever base was current that week.
+
+### A shipped unit starts a program the build does not install
+
+`systemd/bunny-policy-agent.service` names `/usr/libexec/bunny-policy-agent`.
+`build/scripts/install-root.py` copies `systemd/` wholesale, so the unit ships in
+every profile; nothing installs the program, and `enterprise/policy.py` is a
+library rather than an executable.
+
+The unit is guarded by `ConditionPathExists=/etc/bunny-os/enrolment.json`, no
+device has been enrolled, and the enterprise pilot gate is `BLOCKED`, so it does
+not run on any system that exists. It is recorded in
+`operations/data/unit-program-gaps.json`, and the `systemd unit programs`
+repository validator fails any unit whose program is neither shipped nor
+recorded.
+
+Removed by: writing the agent, which is Phase 7 enterprise work and a new
+product feature, not a portability repair.
+
+### SELinux contexts cannot be compared from an archive-only build
+
+A bootc container image carries no `security.selinux` xattrs in its layers —
+measured: 164,962 entries, 9 carrying `security.capability`, zero carrying
+`security.selinux`. `bootc install` applies contexts on the target from the
+policy shipped in the image.
+
+The `selinuxLabels` comparison dimension is therefore `NOT_COLLECTED` from an
+archive-only build, and the comparison is `INCONCLUSIVE` rather than
+`REPRODUCIBLE`. Reporting the two empty sets as a match would claim a comparison
+that did not happen.
+
+Removed by: comparing two installed systems, which needs a disk image from each
+builder, which needs `image-builder` on both — and `image-builder` is Fedora-only
+and unavailable on a hosted Ubuntu runner.
+
 ## Release blocker closure limitations, 2026-07-30
 
 Each is a limitation of the *evidence* rather than of the design, and each names

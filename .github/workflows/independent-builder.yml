@@ -151,6 +151,35 @@ jobs:
           syft version
           grype version
 
+      - name: Configure the container runtime and storage driver
+        run: |
+          set -euo pipefail
+          # Two defects, both specific to podman as Ubuntu 24.04 packages it.
+          #
+          # 1. crun refuses the OCI spec version podman writes:
+          #      error running container: from /usr/bin/crun creating container
+          #      for [...]: unknown version specified
+          #    runc accepts it. This selects the runtime; it changes nothing
+          #    about what is built.
+          #
+          # 2. Without an explicit storage driver podman fell back to `vfs`,
+          #    which copies the whole image for every layer. Each COPY step took
+          #    2m24s and the build had spent 32 minutes on directory copies
+          #    alone before it failed. `overlay` is supported on the runner's
+          #    ext4 root.
+          #
+          # Neither setting is a build input: the image content is determined by
+          # the Containerfile, the base digest and the source commit. Both are
+          # recorded in the runner environment so the difference from the local
+          # Fedora builder is visible rather than hidden.
+          sudo apt-get install --yes --no-install-recommends runc fuse-overlayfs
+          sudo install -d /etc/containers
+          printf '[engine]\nruntime = "runc"\n' | sudo tee /etc/containers/containers.conf
+          printf '[storage]\ndriver = "overlay"\nrunroot = "/run/containers/storage"\ngraphroot = "/var/lib/containers/storage"\n' \
+            | sudo tee /etc/containers/storage.conf
+          sudo podman info --format 'runtime={{.Host.OCIRuntime.Name}} {{.Host.OCIRuntime.Version}}'
+          sudo podman info --format 'storage={{.Store.GraphDriverName}}'
+
       - name: Record the runner environment
         id: environment
         run: |
@@ -164,6 +193,8 @@ jobs:
             echo "kernel=$(uname -r)"
             echo "os=$(sed -n 's/^ID=//p' /etc/os-release | tr -d "\"'" | head -1)-$(sed -n 's/^VERSION_ID=//p' /etc/os-release | tr -d "\"'" | head -1)"
             echo "containerRuntime=$(podman --version)"
+            echo "ociRuntime=$(sudo podman info --format '{{.Host.OCIRuntime.Name}} {{.Host.OCIRuntime.Version}}' | head -1)"
+            echo "storageDriver=$(sudo podman info --format '{{.Store.GraphDriverName}}')"
             echo "imageBuilder=absent (BUNNY_ARCHIVE_ONLY=1)"
             echo "workflowRunId=${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}"
             echo "cpus=$(nproc)"
@@ -260,6 +291,7 @@ jobs:
             build/out/ci/build.log
             build/out/${{ inputs.profile }}/oci-build.log
             build/out/${{ inputs.profile }}/image-builder.log
+            build/out/${{ inputs.profile }}/oci-inspect.json
             build/out/${{ inputs.profile }}/provenance.json
             build/out/${{ inputs.profile }}/SHA256SUMS
 
@@ -310,6 +342,9 @@ jobs:
           cp downloaded/evidence/SHA256SUMS downloaded/root/ 2>/dev/null || true
           cp downloaded/evidence/oci-build.log downloaded/root/ 2>/dev/null || true
           cp downloaded/evidence/image-builder.log downloaded/root/ 2>/dev/null || true
+          # Described by the CI provenance, so it must be present for the
+          # recomputed-digest check; an absent artifact blocks, correctly.
+          cp downloaded/evidence/oci-inspect.json downloaded/root/ 2>/dev/null || true
           python scripts/release.py verify-ci-artifacts \
             --provenance downloaded/evidence/ci-provenance.json \
             --artifact-root downloaded/root \

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as _datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -42,11 +43,13 @@ from release.candidate import (
     render_dashboard,
 )
 from release.comparison import (
+    reduce_dimension,
     COMPARISON_DIMENSIONS,
     ComparisonError,
     evaluate_comparison,
 )
 from release.cve import CveAnalysisError, evaluate_document as evaluate_cve_document
+from release.hosted import HostedImportError, import_hosted_evidence
 from release.evidence import (
     EVIDENCE_CATEGORIES,
     EvidenceError,
@@ -1181,6 +1184,196 @@ def verify_builder_independence() -> int:
     return 0
 
 
+def import_hosted_builder_evidence(
+    artifactDir: Path,
+    candidateCommit: str,
+    expectedBaseDigest: str | None,
+    expectedRunId: str | None,
+    localArtifactDir: Path | None,
+) -> int:
+    """Import a downloaded hosted-builder bundle, and the local builder's pair.
+
+    Imported through this command rather than by editing ``builders.json``: every
+    field the hosted record claims about itself is cross-checked against another
+    file in the same bundle, and a record edited in one place fails. Hand-editing
+    the JSON skips all of it.
+    """
+    document = load_optional(DATA / "builders.json", {"builderRecords": [], "comparisons": []})
+    existing = list(document.get("builderRecords", []))
+    known = {
+        str(record.get("workflowRunId"))
+        for record in existing
+        if record.get("workflowRunId")
+    }
+
+    try:
+        hosted = import_hosted_evidence(
+            artifactDir,
+            candidateCommit=candidateCommit,
+            expectedBaseDigest=expectedBaseDigest,
+            knownRunIds=known,
+            expectedRunId=expectedRunId,
+        )
+    except HostedImportError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    payload: dict[str, Any] = {"hosted": hosted.as_dict()}
+    print(f"hosted builder {hosted.builder.builderId} ({hosted.builder.builderType})")
+    print(f"  workflow run   {hosted.builder.workflowRunId}")
+    print(f"  runner         {hosted.provenance.runnerImage} {hosted.provenance.runnerArchitecture}")
+    print(f"  source commit  {hosted.builder.sourceCommit[:12]}")
+    print(f"  base digest    {hosted.builder.baseImageDigest[-19:]}")
+    print(f"  raw archive    {hosted.rawArchiveDigest[:16]}")
+    print(f"  normalised     {hosted.normalisedArchiveDigest[:16]}")
+    print(f"  packages       {hosted.packageCount}")
+    print(f"  boundary       {hosted.builder.administratorBoundary[:12]}")
+
+    local = None
+    if localArtifactDir is not None:
+        try:
+            local = import_hosted_evidence(
+                localArtifactDir,
+                candidateCommit=candidateCommit,
+                expectedBaseDigest=expectedBaseDigest,
+            )
+        except HostedImportError as exc:
+            print(f"BLOCKED: the local builder bundle is unusable: {exc}")
+            return 2
+        # The local builder is not hosted CI and legitimately has neither a
+        # workflow run nor a github-hosted environment; those reasons are its
+        # correct description, not a defect.
+        local.reasons = [
+            reason for reason in local.reasons
+            if "workflowRunId" not in reason
+            and "hosted-ci record" not in reason
+            and "github-hosted" not in reason
+            and "the runner reported" not in reason
+        ]
+        payload["local"] = local.as_dict()
+        print(f"\nlocal builder {local.builder.builderId} ({local.builder.builderType})")
+        print(f"  source commit  {local.builder.sourceCommit[:12]}")
+        print(f"  base digest    {local.builder.baseImageDigest[-19:]}")
+        print(f"  raw archive    {local.rawArchiveDigest[:16]}")
+        print(f"  normalised     {local.normalisedArchiveDigest[:16]}")
+        print(f"  packages       {local.packageCount}")
+        print(f"  boundary       {local.builder.administratorBoundary[:12]}")
+
+    rejected = list(hosted.reasons) + list(local.reasons if local else [])
+    atomic_json(OUT / "hosted-builder-import.json", payload)
+    if rejected:
+        print("\nBLOCKED: the evidence was not imported:")
+        for reason in rejected:
+            print(f"  - {reason}")
+        print(f"\nwrote {display_path(OUT / 'hosted-builder-import.json', ROOT)}")
+        return 2
+
+    records = [
+        record for record in existing
+        if record.get("builderId") not in {
+            hosted.builder.builderId, local.builder.builderId if local else None
+        }
+    ]
+    records.append(hosted.builder.as_dict())
+    if local:
+        records.append(local.builder.as_dict())
+    document["builderRecords"] = records
+    document["builderRecordNote"] = (
+        f"Imported by scripts/release.py import-hosted-builder-evidence against candidate "
+        f"{candidateCommit}. The hosted record was cross-checked against the runner's own "
+        "environment report, the CI provenance and the artifact manifest in the same bundle; "
+        "it is not signed, and the import record says so."
+    )
+    atomic_json(DATA / "builders.json", document)
+    print(f"\nimported {len(records)} builder record(s) into {display_path(DATA / 'builders.json', ROOT)}")
+    print("A builder record is not a reproducibility result. Run verify-builder-independence")
+    print("and compare-independent-builds; independence is decided over a pair.")
+    return 0
+
+
+def assemble_build_comparison(
+    first: Path,
+    second: Path,
+    firstLabel: str,
+    secondLabel: str,
+    rawVarianceExplanation: str | None,
+    sourceCommit: str,
+    baseImageDigest: str,
+) -> int:
+    """Build the seventeen-dimension comparison document from two collections.
+
+    Both sides are collected by the same script from each builder's own archive,
+    so a difference in the report is a difference in the images rather than a
+    difference in how they were measured.
+    """
+    try:
+        left = load(first)
+        right = load(second)
+    except FileNotFoundError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    dimensions: dict[str, Any] = {}
+    forms: dict[str, str] = {}
+    for name, _, _ in COMPARISON_DIMENSIONS:
+        pair, form, detail = reduce_dimension(
+            left.get("dimensions", {}).get(name),
+            right.get("dimensions", {}).get(name),
+        )
+        pair["detail"] = detail
+        dimensions[name] = pair
+        forms[name] = form
+
+    document = {
+        "schemaVersion": 1,
+        # The comparison names the commit and the base it compared. Two builders
+        # on different sources or different bases are not comparable, and a
+        # record that does not say which it used cannot be checked later.
+        "sourceCommit": sourceCommit,
+        "baseImageDigest": baseImageDigest,
+        "builders": [firstLabel, secondLabel],
+        "firstBuilder": firstLabel,
+        "secondBuilder": secondLabel,
+        "firstArchiveSha256": left.get("archiveSha256"),
+        "secondArchiveSha256": right.get("archiveSha256"),
+        "collectedBy": "scripts/reproducibility/collect_comparison_dimensions.py",
+        "collectionNote": (
+            "Both sides were read out of each builder's own OCI archive by the same collector, "
+            "with no root, no podman and no mount, so the comparison measures the images and not "
+            "the measuring."
+        ),
+        "storageForms": forms,
+        "storageNote": (
+            "A dimension larger than 256 KiB is stored as a SHA-256 over its whole collected "
+            "value plus every differing member name, capped at 200 with the true count recorded. "
+            "Equality is preserved exactly — two dimensions compare equal here if and only if "
+            "they were equal in full — and what is dropped is the bulk of the matching members. "
+            "The full collections are 71 MB per builder and are not committed."
+        ),
+        "volatilePathsExcluded": sorted(
+            set(left.get("volatilePathsExcluded", [])) | set(right.get("volatilePathsExcluded", []))
+        ),
+        "dimensions": dimensions,
+    }
+    if rawVarianceExplanation:
+        document["rawVarianceExplanation"] = rawVarianceExplanation
+
+    atomic_json(DATA / "build-comparison.json", document)
+    collected = sum(
+        1 for value in dimensions.values()
+        if value["first"] is not None and value["second"] is not None
+    )
+    print(f"assembled {len(dimensions)} dimensions, {collected} collected from both builders")
+    absent = sorted(
+        name for name, value in dimensions.items()
+        if value["first"] is None or value["second"] is None
+    )
+    if absent:
+        print(f"NOT_COLLECTED from one or both: {', '.join(absent)}")
+    print(f"wrote {display_path(DATA / 'build-comparison.json', ROOT)}")
+    return 0
+
+
 # --- Workstream 4: artifact normalisation -------------------------------------
 
 
@@ -1906,6 +2099,26 @@ def main() -> int:
     normalise.add_argument("--destination", required=True, type=Path)
     normalise.add_argument("--output", type=Path)
 
+    hosted_import = commands.add_parser("import-hosted-builder-evidence")
+    hosted_import.add_argument("--artifact-dir", required=True, type=Path)
+    hosted_import.add_argument("--candidate-commit", required=True)
+    hosted_import.add_argument("--expected-base-digest")
+    hosted_import.add_argument("--expected-run-id")
+    hosted_import.add_argument(
+        "--local-artifact-dir",
+        type=Path,
+        help="the local builder's matching bundle; a pair is what establishes independence",
+    )
+
+    assemble = commands.add_parser("assemble-build-comparison")
+    assemble.add_argument("--first", required=True, type=Path)
+    assemble.add_argument("--second", required=True, type=Path)
+    assemble.add_argument("--first-label", default="local")
+    assemble.add_argument("--second-label", default="hosted-ci")
+    assemble.add_argument("--raw-variance-explanation")
+    assemble.add_argument("--source-commit", required=True)
+    assemble.add_argument("--base-image-digest", required=True)
+
     verify_ci = commands.add_parser("verify-ci-artifacts")
     verify_ci.add_argument("--provenance", required=True, type=Path)
     verify_ci.add_argument("--artifact-root", required=True, type=Path)
@@ -1977,6 +2190,19 @@ def main() -> int:
         return independent_builder_prepare(args.builder)
     if args.command == "collect-builder-record":
         return collect_builder_record(args.builder_id, args.builder_type)
+    if args.command == "import-hosted-builder-evidence":
+        return import_hosted_builder_evidence(
+            args.artifact_dir,
+            args.candidate_commit,
+            args.expected_base_digest,
+            args.expected_run_id,
+            args.local_artifact_dir,
+        )
+    if args.command == "assemble-build-comparison":
+        return assemble_build_comparison(
+            args.first, args.second, args.first_label, args.second_label,
+            args.raw_variance_explanation, args.source_commit, args.base_image_digest,
+        )
     if args.command == "normalise-artifact":
         return normalise_artifact(args.source, args.destination, args.output)
     if args.command == "verify-ci-artifacts":

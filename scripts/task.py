@@ -180,6 +180,11 @@ RELEASE_CLOSURE_SUITES = (
     # imported as Python packages.
     "reachability",
     "review_evidence",
+    # Added by the CI portability repair. These are the regressions that keep
+    # the evidence model honest across environments: commit binding, CVE
+    # regeneration, protected-gate exit codes, archive-only refusal and hosted
+    # evidence import.
+    "portability",
 )
 
 
