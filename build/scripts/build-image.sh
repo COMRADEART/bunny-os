@@ -259,8 +259,27 @@ fi
 # that makes the comparison mean anything.
 cache_args=(--no-cache)
 
+# Clamp every layer's timestamps at commit, not just the ones a RUN step can
+# reach.
+#
+# The in-container mtime pass cannot fix a COPY layer: `COPY build /tmp/bunny-os`
+# writes the build context with the wall-clock time of the copy, a later step
+# deletes /tmp/bunny-os, and the deletion does not remove the earlier layer's
+# bytes. Measured on two builds — layer 65 of 80, 87 members, every one differing
+# in mtime alone:
+#
+#   A  tmp/bunny-os/build/Containerfile   1785444473
+#   B  tmp/bunny-os/build/Containerfile   1785444758
+#
+# --rewrite-timestamp clamps rather than sets: anything older than the epoch keeps
+# its own mtime, which matters because file mtimes inside RPMs are packaging
+# information and flattening them would discard a real difference in what was
+# installed. --timestamp would set them all and is the wrong tool here.
+timestamp_args=(--source-date-epoch "${source_epoch}" --rewrite-timestamp)
+
 podman build \
   "${cache_args[@]}" \
+  "${timestamp_args[@]}" \
   --file build/Containerfile \
   --tag "${tag}" \
   "${build_mounts[@]+"${build_mounts[@]}"}" \

@@ -35,7 +35,7 @@ stage of it, and `evaluate_candidate_gate` states it in its own output.
 |---|---|---|---|---|
 | 1 | Licence gate passed | **PASS** | engineering | — |
 | 2 | Vulnerability gate passed | `PENDING_EXTERNAL_REVIEW` | independent-reviewer | commission the review; `reviews/security/REQUEST.md` |
-| 3 | Independent reproducibility passed | `BLOCKED` | ci-infrastructure | measured 2026-07-30: `NON_REPRODUCIBLE`, 15 files of build-environment state differ; stop shipping `brlapi.key` and the `countme` counters, make the rpm/dnf databases reproducible, rebuild the fontconfig caches at first boot |
+| 3 | Independent reproducibility passed | `BLOCKED` | ci-infrastructure | measured 2026-07-30, twice. Attempt 1: `NON_REPRODUCIBLE`, 15 files. Attempt 2: 13 of 15 fixed, 2 remained. Attempt 3 measured *why* rather than assuming — the two databases differed in content, not encoding, and the causes were an unfrozen build clock and an unpinned mtime. Fixed and re-measured; see `LOCAL_HERMETIC_REPEATABILITY_REPORT.md`. Still `BLOCKED` regardless of that result: the retained inputs are not published, so no independent builder can obtain them. One token scope — `gh auth refresh -h github.com -s write:packages,read:packages` |
 | 4 | Development signing drill passed | **PASS** | engineering | — |
 | 5 | Independent recovery media passed | `NOT_RUN` | engineering | build a signed recovery ISO |
 | 6 | Installation matrix passed | `NOT_RUN` | engineering | build a live installer ISO |

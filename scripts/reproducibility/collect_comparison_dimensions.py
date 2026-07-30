@@ -350,6 +350,23 @@ def collect(
 
     volatile = sorted(name for name in entries if VOLATILE.match(name))
 
+    # The excluded paths, digested rather than only listed.
+    #
+    # Excluding /var/cache and friends from the compared *dimensions* is right:
+    # they are runtime state, not build output. Excluding them from the *layers*
+    # is not possible — the tar contains them — so a volatile path that differs
+    # changes ociLayers and rawArchive while every content dimension matches, and
+    # the comparison has nothing to point at.
+    #
+    # That is not hypothetical: /var/cache/ldconfig/aux-cache stores an inode
+    # number per shared object, and inode numbers belong to the filesystem the
+    # build ran on. It differed between two builds and was invisible here.
+    volatile_digests = {
+        name: record.get("sha256", record.get("link", record["type"]))
+        for name, record in sorted(entries.items())
+        if VOLATILE.match(name)
+    }
+
     # Entry modification times, as a diagnostic rather than as a dimension.
     #
     # The seventeen dimensions are fixed by policy and this is not one of them.
@@ -402,6 +419,19 @@ def collect(
             "laterThanEpochCount": len(later_than_epoch) if later_than_epoch is not None else None,
             "laterThanEpoch": later_than_epoch[:200] if later_than_epoch else later_than_epoch,
             "byPath": mtimes,
+        },
+        "volatilePathDigests": {
+            "note": (
+                "Not one of the seventeen dimensions. These paths are excluded from the compared "
+                "set because they are runtime state, and they are still inside the layer tars — "
+                "so one that differs changes ociLayers and rawArchive while every content "
+                "dimension matches. Digested here so that difference has a name."
+            ),
+            "count": len(volatile_digests),
+            "digest": hashlib.sha256(
+                json.dumps(volatile_digests, sort_keys=True).encode("utf-8")
+            ).hexdigest(),
+            "byPath": volatile_digests,
         },
         "volatileNote": (
             "Paths under /var/log, /var/cache, /var/tmp, /tmp and /run, and /etc/machine-id, are "

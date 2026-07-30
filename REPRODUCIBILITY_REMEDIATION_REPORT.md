@@ -193,6 +193,33 @@ Checked from a script file, every exit code is correct.
   rollback or secure boot. An archive-only build qualifies none of them, and both
   protected gates still refuse such an artifact by name.
 
+## Addendum, 2026-07-30 — the measurement was made, and it changed the diagnosis
+
+This report closed with *"whether they work is a two-builder measurement that has
+not been made."* It was made. Three of the mechanisms did not do what this report
+described, and each was invisible by reading:
+
+| Mechanism as described here | What it actually did |
+| --- | --- |
+| "the transaction runs under a frozen clock" | it ran under a clock that *started* at the epoch and then advanced. `FAKETIME` carried an `@` prefix, which is libfaketime's start-at mode, not its freeze mode. `INSTALLTIME` spanned epoch+4 to epoch+18 and fifty of 1,015 packages fell on a different second between two builds. |
+| "the transaction" | there were two. The `dnf remove` minimisation ran with no override at all, and libdnf5 wrote a live wall clock into its transaction history: 1785439455 against 1785439658. |
+| — | `usr/share/bunny-os/finalisation.json` had identical content and mtimes 203 seconds apart. Layer tars carry entry mtimes and no dimension compared them, so the archive difference had no file to attribute it to. |
+
+Two more defects were found in the evidence apparatus rather than the build:
+
+* **The input locks were not in the commit.** All four were untracked and had been
+  hand-copied into each "fresh clone". A hosted builder has nothing but the
+  commit, so the pins pinned nothing a second builder could see.
+* **Both builds shared a container store and a layer cache.** The driver created a
+  store per build and never told podman about it. podman keys its cache on the
+  instruction and the context digest, so the second build could have been served
+  the first one's layers wholesale — a comparison that can only pass.
+
+The full diagnosis is in `docs/SQLITE_DETERMINISM_BASELINE.md` and
+`RPM_DATABASE_DETERMINISM_REPORT.md`. The general point is the one worth
+carrying: this report was accurate about what was *implemented* and every claim
+in it about what that implementation *does* was a claim nobody had checked.
+
 ## Next actions, in order
 
 1. Grant `write:packages` and push the retained base, builder image and snapshot

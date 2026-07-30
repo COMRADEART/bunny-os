@@ -189,6 +189,14 @@ def main() -> int:
         if first_mtimes.get(path) != second_mtimes.get(path)
     )
 
+    first_volatile = (first.get("volatilePathDigests") or {}).get("byPath") or {}
+    second_volatile = (second.get("volatilePathDigests") or {}).get("byPath") or {}
+    differing_volatile = sorted(
+        path
+        for path in set(first_volatile) | set(second_volatile)
+        if first_volatile.get(path) != second_volatile.get(path)
+    )
+
     document: dict[str, Any] = {
         "schemaVersion": 1,
         "claim": args.claim,
@@ -207,6 +215,15 @@ def main() -> int:
             "differing": differing_mtimes[:200],
             "firstDigest": (first.get("entryMtimes") or {}).get("digest"),
             "secondDigest": (second.get("entryMtimes") or {}).get("digest"),
+        },
+        "volatilePathDiagnostic": {
+            "note": (
+                "Not a dimension. Runtime-state paths are excluded from the compared set and are "
+                "still inside the layer tars, so one that differs changes ociLayers and rawArchive "
+                "while every content dimension matches."
+            ),
+            "differingCount": len(differing_volatile),
+            "differing": differing_volatile[:200],
         },
     }
     if args.raw_variance_explanation:
@@ -239,6 +256,11 @@ def main() -> int:
         )
     if differing_mtimes:
         print(f"  entry mtimes differ on {len(differing_mtimes)} paths, e.g. {differing_mtimes[0]}")
+    if differing_volatile:
+        print(
+            f"  excluded runtime-state paths differ on {len(differing_volatile)}: "
+            + ", ".join(differing_volatile[:5])
+        )
     for reason in evaluation["reasons"]:
         print(f"  - {reason}")
     print(f"wrote {args.output}")

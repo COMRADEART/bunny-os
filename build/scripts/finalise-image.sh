@@ -47,7 +47,21 @@ note() { printf '  %s\n' "$1"; }
 record() { removed+=("$1"); }
 
 echo "==> 3. removing package caches"
-for path in /var/cache/dnf /var/cache/libdnf5 /var/cache/PackageKit /var/cache/yum; do
+# /var/cache/ldconfig is here for a reason the others are not: aux-cache stores
+# an inode number, a size and two timestamps per shared object, and inode numbers
+# are allocated by the filesystem the build happened to run on. Measured on two
+# builds, inside layer 79 at offset 47,478,304:
+#
+#   A  glibc-ld.so.auxcache-2.0 … bbc01200… b0b86b6a… 80c20100…
+#   B  glibc-ld.so.auxcache-2.0 … 5cb41200… d0b96b6a… 30070200…
+#
+# It never appeared in the file comparison because /var/cache is excluded from
+# the compared set as runtime state — correctly, for a *dimension*. The layer tar
+# contains it either way, so it changed ociLayers and rawArchive while every
+# content dimension matched. ldconfig regenerates it on demand and its absence
+# costs one slower ldconfig run.
+for path in /var/cache/dnf /var/cache/libdnf5 /var/cache/PackageKit /var/cache/yum \
+            /var/cache/ldconfig; do
   if [[ -e "${path}" ]]; then rm -rf "${path}"; record "${path}"; note "removed ${path}"; fi
 done
 

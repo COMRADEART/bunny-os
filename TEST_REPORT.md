@@ -334,3 +334,64 @@ reason.
 | `python scripts/task.py test-installer` | 60 | PASS |
 | `python scripts/task.py test-phase5` | 105 | PASS |
 | `python scripts/task.py test-release-closure` | 252 | PASS |
+
+## 2026-07-30 — SQLite determinism and comparison-mode tests
+
+`tests/reproducibility/test_sqlite_determinism.py`, 24 cases. Every fixture is
+built rather than recorded, so each one reproduces its defect exactly and a test
+that stops failing is a test whose defect actually went away. Physical variance
+is produced through SQLite's own behaviour — insertion order, page size, WAL
+residue — rather than by editing bytes, because a hand-edited page proves the
+parser wrong and nothing about the finaliser.
+
+| Rejects | Case |
+|---|---|
+| logical equality treated as byte equality | identical rows, different physical layout, `LOGICALLY_IDENTICAL` and different digests |
+| a mismatched SQLite version | finalisation refuses with both versions named |
+| a changed schema hidden by canonicalisation | `schemaMatch` false, verdict `LOGICALLY_DIFFERENT` |
+| a changed row hidden by canonicalisation | one row differs, survives VACUUM, is reported |
+| content changed by finalisation | logical digest compared either side; a move is fatal |
+| a corrupted database passing finalisation | refuses on both the malformed-image and failed-integrity paths |
+| WAL or SHM residue | removed, and the database leaves WAL mode |
+| a transaction living only in the WAL | checkpointed into the database, not deleted with the residue |
+| non-idempotent finalisation | second run byte-identical |
+| an unexpected schema | a missing required table refuses by name |
+| an unsupported table type | a virtual table refuses, with the reason |
+| a missing transaction history | refuses rather than finalising half |
+| insertion-order variance | classified, not missed |
+| page-size variance | header comparison reports it |
+| freelist variance | measured |
+| different content at identical size | caught by rows, not by size |
+| type flattening | `NULL` and the empty string do not compare equal |
+| a qualification comparison missing the SBOM | exit 2 |
+| a qualification comparison missing normalisation | exit 2 |
+| a qualification comparison missing the intended SELinux manifest | exit 2 |
+| a diagnostic collection promoted to qualification | exit 2 |
+| a complete qualification join | succeeds, `REPRODUCIBLE` |
+
+### Two defects the tests found in the code under test
+
+Again by writing the test first and watching it fail for the wrong reason.
+
+1. **`selinuxLabels` could never be satisfied.** The dimension was left as the two
+   nulls the archives honestly report, so a *complete* archive comparison still
+   came out `NOT_COLLECTED` on it and therefore `INCONCLUSIVE` — a verdict no
+   archive build could ever escape, for a subcheck that belongs to
+   installed-system qualification. The dimension now carries the archive-stage
+   subcheck; the composite still keeps the applied subcheck outstanding.
+2. **The mtime sweep excluded `/run`.** Measured inside the retained base, `/run`
+   is not a mount and is ordinary image content. Excluding it left exactly one
+   entry in the artifact with a wall-clock mtime.
+
+A third failure was a bad test rather than a bad guarantee: 64 zero bytes in a
+`-wal` is a header SQLite discards, so the expected refusal never came. It was
+replaced with the guarantee that matters — a transaction living only in the WAL
+must end up in the database.
+
+### Totals
+
+| Command | Tests | Result |
+|---|---|---|
+| `python scripts/task.py test` | 1,431 | PASS, 8 skipped |
+| `python scripts/task.py test-installer` | 60 | PASS |
+| `python -m unittest discover -s tests/reproducibility -t .` | 115 | PASS |
