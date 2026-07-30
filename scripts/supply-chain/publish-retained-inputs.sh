@@ -45,7 +45,7 @@ case "${kind}" in
   *) echo "--kind must be base, builder or snapshot" >&2; exit 2 ;;
 esac
 
-for command in skopeo python3 gh podman; do
+for command in skopeo python3 podman curl; do
   command -v "${command}" >/dev/null 2>&1 || { echo "missing required command: ${command}" >&2; exit 3; }
 done
 
@@ -57,18 +57,35 @@ cd "${repository_root}"
 # Checked before anything is read or packed, so a missing scope costs a message
 # rather than a 514 MB pack that cannot be pushed. The token itself is never
 # printed: `gh auth status` masks it, and nothing here echoes the value.
-scopes="$(gh auth status 2>&1 | sed -n 's/.*Token scopes: //p' | tr -d "'" || true)"
+# The token is read from the environment, and its scopes from the API rather
+# than from a CLI.
+#
+# `gh` is not necessarily on this machine: the build runs on a Fedora builder and
+# the credential may live in a GitHub CLI keyring on another OS entirely. Asking
+# GitHub what the token carries works wherever the token does, and the answer
+# comes from the service that will enforce it rather than from a client's
+# summary of what it believes it has.
+token="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+if [[ -z "${token}" ]] && command -v gh >/dev/null 2>&1; then
+  token="$(gh auth token 2>/dev/null || true)"
+fi
+if [[ -z "${token}" ]]; then
+  echo "BLOCKED: no GitHub token. Set GITHUB_TOKEN, or run where gh is authenticated." >&2
+  exit 2
+fi
 
-# Write is checked by name; read is checked by trying it.
+headers="$(mktemp)"
+trap 'rm -f "${headers}"' EXIT
+identity="$(curl -sS -D "${headers}" -H "Authorization: Bearer ${token}" \
+  -H "Accept: application/vnd.github+json" https://api.github.com/user)"
+scopes="$(sed -n 's/^[Xx]-[Oo][Aa]uth-[Ss]copes: //p' "${headers}" | tr -d '\r')"
+
+# Write is checked by name; read is checked by using it.
 #
 # GitHub's scope hierarchy grants read with write, so a token that can publish
-# lists only `write:packages` and `gh auth status` never shows `read:packages`
-# beside it. An earlier version of this check required both strings and would
-# have refused a token that works — a scope check failing on a token holding the
-# access it is checking for is worse than no check.
-#
-# So the read half is measured: the packages API either answers or it does not,
-# and that is the property that matters rather than the label.
+# carries only `write:packages` and `read:packages` never appears beside it. An
+# earlier version of this check required both strings and would have refused a
+# token holding the access it was checking for, which is worse than no check.
 case ",${scopes//, /,}," in
   *",write:packages,"*) ;;
   *)
@@ -85,7 +102,8 @@ case ",${scopes//, /,}," in
     ;;
 esac
 
-if ! gh api "user/packages?package_type=container" >/dev/null 2>&1; then
+if ! curl -sSf -o /dev/null -H "Authorization: Bearer ${token}" \
+     "https://api.github.com/user/packages?package_type=container"; then
   echo "BLOCKED: the token carries write:packages and cannot read the packages API." >&2
   echo "  present: ${scopes}" >&2
   echo >&2
@@ -93,6 +111,9 @@ if ! gh api "user/packages?package_type=container" >/dev/null 2>&1; then
   echo "push cannot run, and an unverified push is not a publication." >&2
   exit 2
 fi
+
+account="$(printf '%s' "${identity}" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("login",""))')"
+[[ -n "${account}" ]] || { echo "BLOCKED: the token does not resolve to an account" >&2; exit 2; }
 
 # ---------------------------------------------------------------- what to push
 case "${kind}" in
@@ -159,9 +180,9 @@ if [[ "${dry_run}" == "1" ]]; then
   exit 0
 fi
 
-echo "${GITHUB_TOKEN:-$(gh auth token)}" \
-  | skopeo login --username "$(gh api user --jq .login)" --password-stdin ghcr.io >/dev/null
-echo "authenticated to ghcr.io"
+printf '%s' "${token}" \
+  | skopeo login --username "${account}" --password-stdin ghcr.io >/dev/null
+echo "authenticated to ghcr.io as ${account}"
 
 pushed_digest=""
 
@@ -234,6 +255,7 @@ python3 scripts/supply-chain/write-publication-lock.py \
   --pushed-digest "${pushed_digest}" \
   --locked-digest "${locked_digest}" \
   --source-layout "${layout}" \
+  --publisher "${account}" \
   --lock build/inputs/input-publication-lock.json
 
 echo

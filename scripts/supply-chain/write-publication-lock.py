@@ -81,13 +81,14 @@ def main() -> int:
     parser.add_argument("--pushed-digest", required=True)
     parser.add_argument("--locked-digest", required=True)
     parser.add_argument("--source-layout", required=True)
+    parser.add_argument("--publisher", default="")
     parser.add_argument("--lock", required=True, type=Path)
     args = parser.parse_args()
 
-    account = subprocess.run(
-        ["gh", "api", "user", "--jq", ".login"], capture_output=True, text=True
-    )
-    publisher = account.stdout.strip() or "unrecorded"
+    # Passed in rather than asked for. The publisher is whoever the token
+    # resolves to, the pushing script has already established that, and `gh` is
+    # not necessarily present on the machine that runs the push.
+    publisher = args.publisher or "unrecorded"
 
     entry: dict[str, Any] = {
         "kind": args.kind,
