@@ -22,19 +22,22 @@
 # Usage:
 #   publish-retained-inputs.sh --kind base|builder|snapshot
 #                              [--registry ghcr.io/comradeart] [--dry-run]
+#
+# There is no --retention-root. Each lock records the absolute location of what
+# it pins, and an override would let a caller publish something other than what
+# was verified. An earlier version accepted the flag and ignored it, which is
+# worse than not having it.
 
 set -euo pipefail
 
 kind=""
 registry="${BUNNY_REGISTRY:-ghcr.io/comradeart}"
 dry_run=0
-retention_root="${BUNNY_RETENTION_ROOT:-/var/lib/bunny-retention}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --kind) kind="${2:?}"; shift 2 ;;
     --registry) registry="${2:?}"; shift 2 ;;
-    --retention-root) retention_root="${2:?}"; shift 2 ;;
     --dry-run) dry_run=1; shift ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
