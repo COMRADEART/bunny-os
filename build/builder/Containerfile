@@ -1,0 +1,139 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# The Bunny OS qualification builder.
+#
+# Both builders must run the same output-affecting tools while remaining under
+# different administration. That is not achievable by asking a hosted runner to
+# ship the right versions: `ubuntu-24.04` is a label, and two runs an hour apart
+# had podman 4.9.3 and 5.8.4. The 4.9.3 runner wrote `/etc/hostname` into the
+# image and the 5.8.4 one did not, so a reproducibility result changed because
+# GitHub rotated a runner image.
+#
+# So the toolchain moves into an image pinned by digest, and both builders run
+# that image. The host still differs — different kernel, different provider,
+# different administrator — which is the independence the comparison needs. What
+# stops differing is the set of programs that touch the artifact.
+#
+# The base is pinned by digest, not by `:44`, for the same reason the product's
+# base is: a tag is a promise about a channel, not about content.
+
+ARG BUILDER_BASE=registry.fedoraproject.org/fedora@sha256:754c6d7d5767750e57caf10376a72eb347ce5721a4310334aaeedb09ba80e05f
+FROM ${BUILDER_BASE}
+
+ARG BUILDER_BASE
+ARG BUNNY_SOURCE_COMMIT=unknown
+ARG SOURCE_DATE_EPOCH=0
+
+# Pinned exactly. A version range would reintroduce the problem this image
+# exists to remove, one dnf resolution at a time.
+ARG SYFT_VERSION=1.50.0
+ARG SYFT_SHA256=bf7b29ff57f06da30918266a0e1c2885a8f99784798d1bdb1628886aa015d788
+ARG GRYPE_VERSION=0.116.1
+ARG GRYPE_SHA256=0122df7b655981abe547ad3d2190d65551dac6a2bfc80b4dc2a989b5d0587458
+
+LABEL org.opencontainers.image.title="Bunny OS qualification builder" \
+      org.opencontainers.image.revision="${BUNNY_SOURCE_COMMIT}" \
+      org.opencontainers.image.base.name="${BUILDER_BASE}" \
+      art.comrade.bunny-os.builder="1" \
+      art.comrade.bunny-os.builder.contract="1.0.0"
+
+# Every tool that can influence the build output, plus the tools that generate
+# evidence about it. `image-builder` is deliberately absent: it is Fedora-only,
+# the archive-only qualification path never invokes it, and the builder-image
+# lock declares that absence with a reason rather than leaving it unexplained.
+RUN dnf -y install --setopt=install_weak_deps=False \
+        podman \
+        buildah \
+        skopeo \
+        crun \
+        runc \
+        conmon \
+        containers-common \
+        fuse-overlayfs \
+        python3 \
+        python3-libdnf5 \
+        rpm \
+        rpm-sign \
+        dnf5 \
+        dnf5-plugins \
+        createrepo_c \
+        policycoreutils \
+        libselinux-utils \
+        selinux-policy-targeted \
+        tar \
+        gzip \
+        zstd \
+        xz \
+        sqlite \
+        jq \
+        git \
+        ca-certificates \
+        util-linux \
+        diffutils \
+        findutils \
+        procps-ng \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf /var/cache/libdnf5
+
+# syft and grype ship as release tarballs rather than Fedora packages. Each is
+# fetched at an exact version and verified against a checksum recorded in
+# build/builder/toolchain.lock.json before it is unpacked — an unverified
+# download into a builder image is a supply-chain hole in the thing whose job is
+# to close them.
+RUN set -eux; \
+    curl -fsSL -o /tmp/syft.tar.gz \
+      "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.tar.gz"; \
+    echo "${SYFT_SHA256}  /tmp/syft.tar.gz" | sha256sum -c -; \
+    tar -xzf /tmp/syft.tar.gz -C /usr/local/bin syft; \
+    curl -fsSL -o /tmp/grype.tar.gz \
+      "https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_amd64.tar.gz"; \
+    echo "${GRYPE_SHA256}  /tmp/grype.tar.gz" | sha256sum -c -; \
+    tar -xzf /tmp/grype.tar.gz -C /usr/local/bin grype; \
+    rm -f /tmp/syft.tar.gz /tmp/grype.tar.gz; \
+    syft version; \
+    grype version
+
+# The storage driver and OCI runtime are chosen here rather than left to
+# whatever the host's configuration happens to be. On the hosted runner podman
+# selected `vfs` with no configured driver, which copied the whole image for
+# every layer and cost 32 minutes before failing for an unrelated reason; and
+# Ubuntu's crun refused the OCI spec version Ubuntu's own podman writes. Both
+# are properties of the *environment*, which is what this image replaces.
+#
+# A `[storage]` section replaces podman's defaults wholesale, so `runroot` has
+# to be written even when the intent is to keep it — found by a run that failed
+# on exactly that.
+RUN mkdir -p /etc/containers && \
+    printf '%s\n' \
+      '[storage]' \
+      'driver = "overlay"' \
+      'runroot = "/run/containers/storage"' \
+      'graphroot = "/var/lib/containers/storage"' \
+      > /etc/containers/storage.conf && \
+    printf '%s\n' \
+      '[engine]' \
+      'runtime = "crun"' \
+      '[containers]' \
+      'default_capabilities = ["CHOWN","DAC_OVERRIDE","FOWNER","FSETID","KILL","NET_BIND_SERVICE","SETFCAP","SETGID","SETPCAP","SETUID","SYS_CHROOT"]' \
+      > /etc/containers/containers.conf
+
+COPY build/builder/scripts/ /usr/local/lib/bunny-builder/
+
+RUN chmod +x /usr/local/lib/bunny-builder/*.sh && \
+    ln -sf /usr/local/lib/bunny-builder/builder-entrypoint.sh /usr/local/bin/bunny-builder && \
+    ln -sf /usr/local/lib/bunny-builder/record-toolchain.sh /usr/local/bin/bunny-builder-toolchain
+
+# The build never resolves a package from a live repository, so the builder
+# image says so about itself too: a qualification build that reached a Fedora
+# mirror would be a defect, and an environment variable is a cheap place to make
+# the intent visible to anything reading the process.
+ENV BUNNY_BUILDER_IMAGE=1 \
+    BUNNY_CACHES_DISABLED=1 \
+    SYFT_PARALLELISM=1 \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    TZ=UTC
+
+WORKDIR /workspace
+ENTRYPOINT ["/usr/local/bin/bunny-builder"]
