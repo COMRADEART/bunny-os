@@ -84,9 +84,32 @@ done
 shopt -u nullglob
 
 echo "==> 5. removing machine identity"
+
+# Some of these are live bind mounts inside the build container rather than
+# files in the image being built. podman mounts /etc/hostname, and removing a
+# mount point from inside fails:
+#
+#   rm: cannot remove '/etc/hostname': Device or resource busy
+#
+# A mounted path is not in the committed layer — which is exactly why the
+# earlier comparison found no /etc/hostname on the podman 5.8.4 side while the
+# 4.9.3 side had one. So the finaliser truncates what it cannot remove, records
+# it, and does not pretend to have settled the question. Whether the path is in
+# the *artifact* is decided by the machine-identity audit, which reads the built
+# archive rather than the container that produced it.
+is_mounted() {
+  grep -qE "[[:space:]]$1[[:space:]]" /proc/self/mounts 2>/dev/null
+}
+
 for path in /etc/hostname /etc/machine-info /var/lib/dbus/machine-id \
             /var/lib/systemd/random-seed /etc/salt/minion_id; do
-  if [[ -e "${path}" ]]; then rm -f "${path}"; record "${path}"; note "removed ${path}"; fi
+  [[ -e "${path}" ]] || continue
+  if is_mounted "${path}"; then
+    : > "${path}" 2>/dev/null || true
+    note "${path} is a build-container mount, not image content: emptied, not removed"
+    continue
+  fi
+  rm -f "${path}"; record "${path}"; note "removed ${path}"
 done
 for key in /etc/ssh/ssh_host_*; do
   [[ -e "${key}" ]] || continue
@@ -202,7 +225,10 @@ echo "==> 11. verifying no unexpected mutable state remains"
 declare -a leftovers=()
 for path in /etc/brlapi.key /etc/hostname /var/lib/dbus/machine-id \
             /var/lib/systemd/random-seed; do
-  [[ -e "${path}" ]] && leftovers+=("${path}")
+  # A mount point is not image content, and failing here on one would make the
+  # finaliser unable to succeed on any podman that mounts /etc/hostname. The
+  # artifact-level audit is what decides whether it reached the image.
+  [[ -e "${path}" ]] && ! is_mounted "${path}" && leftovers+=("${path}")
 done
 shopt -s nullglob
 for counter in /var/lib/dnf/repos/*/countme; do leftovers+=("${counter}"); done
