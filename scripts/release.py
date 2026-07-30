@@ -1200,10 +1200,16 @@ def import_hosted_builder_evidence(
     """
     document = load_optional(DATA / "builders.json", {"builderRecords": [], "comparisons": []})
     existing = list(document.get("builderRecords", []))
+
+    # Reuse means a *different* builder citing a run another builder already
+    # used. Re-importing the same bundle over its own record is idempotent, and
+    # treating that as reuse would make the command runnable exactly once.
+    incoming = load_optional(Path(artifactDir) / "builder-record.json", {})
+    incomingId = incoming.get("builderId") if isinstance(incoming, dict) else None
     known = {
         str(record.get("workflowRunId"))
         for record in existing
-        if record.get("workflowRunId")
+        if record.get("workflowRunId") and record.get("builderId") != incomingId
     }
 
     try:
@@ -1278,6 +1284,28 @@ def import_hosted_builder_evidence(
     if local:
         records.append(local.builder.as_dict())
     document["builderRecords"] = records
+
+    # Importing two records means declaring which pair is claimed to be
+    # independent. Declaring the pair is not asserting that it *is* independent:
+    # evaluate_independence decides that, and refuses for its own reasons.
+    if local:
+        pairs = [
+            pair for pair in document.get("independencePairs", [])
+            if isinstance(pair, dict)
+            and {pair.get("first"), pair.get("second")}
+            != {local.builder.builderId, hosted.builder.builderId}
+        ]
+        pairs.append({
+            "first": local.builder.builderId,
+            "second": hosted.builder.builderId,
+            "claim": "independent-builder",
+            "declaredBy": "scripts/release.py import-hosted-builder-evidence",
+            "candidateCommit": candidateCommit,
+        })
+        document["independencePairs"] = pairs
+    else:
+        document.setdefault("independencePairs", [])
+
     document["builderRecordNote"] = (
         f"Imported by scripts/release.py import-hosted-builder-evidence against candidate "
         f"{candidateCommit}. The hosted record was cross-checked against the runner's own "

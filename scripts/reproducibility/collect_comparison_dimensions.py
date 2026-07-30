@@ -285,9 +285,25 @@ def collect(
 
     if sbom and sbom.is_file():
         document = json.loads(sbom.read_text(encoding="utf-8"))
+        # The SPDX document root describes the artifact that was scanned, not a
+        # component of the image:
+        #
+        #   "SPDXID": "SPDXRef-DocumentRoot-Image-build-out-beta-bunny-os.oci.tar"
+        #   "name":   "build/out/beta/bunny-os.oci.tar"
+        #   "versionInfo": "sha256:4e6f0ff7…"
+        #
+        # Its version is the archive's own digest, so leaving it in makes the
+        # package inventory self-referential: it could only ever match when the
+        # two archives are byte-identical, which `rawArchive` already measures.
+        # Two builds with identical package sets would report a package
+        # difference. Excluded here, and only here — every real package stays.
+        components = [
+            item for item in document.get("packages", [])
+            if not str(item.get("SPDXID", "")).startswith("SPDXRef-DocumentRoot-")
+        ]
         packages = sorted(
             f"{item.get('name')}@{item.get('versionInfo', 'UNKNOWN')}"
-            for item in document.get("packages", [])
+            for item in components
         )
         dimensions["packageInventory"] = packages
         # Excluding document identity: the SPDX document name and namespace
@@ -297,7 +313,7 @@ def collect(
                 {k: v for k, v in item.items() if k not in {"SPDXID", "documentNamespace"}},
                 sort_keys=True,
             )
-            for item in document.get("packages", [])
+            for item in components
         )
     else:
         dimensions["packageInventory"] = None

@@ -6,8 +6,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
 # Qualification candidate readiness report
 
 Date: 2026-07-30
-Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`
-HEAD: `80df25b09f6578276d18c8a82f15c47dd8959740`
+Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8` (scan-derived evidence)
+Qualification target commit: `9ea5459bdaf122f8c5999683b2c8961555826954` (both builders)
 Result: **2 of 14 prerequisites satisfied. No artifact may be labelled
 release-qualified.**
 
@@ -35,7 +35,7 @@ stage of it, and `evaluate_candidate_gate` states it in its own output.
 |---|---|---|---|---|
 | 1 | Licence gate passed | **PASS** | engineering | — |
 | 2 | Vulnerability gate passed | `PENDING_EXTERNAL_REVIEW` | independent-reviewer | commission the review; `reviews/security/REQUEST.md` |
-| 3 | Independent reproducibility passed | `BLOCKED` | ci-infrastructure | dispatch `.github/workflows/independent-builder.yml` |
+| 3 | Independent reproducibility passed | `BLOCKED` | ci-infrastructure | measured 2026-07-30: `NON_REPRODUCIBLE`, 15 files of build-environment state differ; stop shipping `brlapi.key` and the `countme` counters, make the rpm/dnf databases reproducible, rebuild the fontconfig caches at first boot |
 | 4 | Development signing drill passed | **PASS** | engineering | — |
 | 5 | Independent recovery media passed | `NOT_RUN` | engineering | build a signed recovery ISO |
 | 6 | Installation matrix passed | `NOT_RUN` | engineering | build a live installer ISO |
@@ -92,9 +92,9 @@ This section previously read:
 > dispatch.
 
 That was wrong, and the way it was wrong is worth recording. The workflow was
-committed, carefully written, and had never been executed. Dispatching it took
-five attempts, and each failure was a real defect that could only be found by
-running it:
+committed, carefully written, and had never been executed. Reaching a build that
+completed took seven dispatches, and each failure was a real defect that could
+only be found by running it:
 
 1. The pinned base image digest no longer existed. `fedora-bootc:44` is rebuilt
    daily and old digests are garbage collected. The local Fedora builder still
@@ -105,10 +105,16 @@ running it:
    spent copying directories before failing for another reason.
 4. The storage driver could not be changed under the runner's pre-initialised
    container store.
-5. The runner ran out of disk during SBOM generation and reported `cancelled`
-   with an empty log.
+5. The SBOM step was killed with an empty log and `cancelled`. Diagnosed as disk
+   exhaustion, which was wrong: the next run entered that step with 28 GB free
+   and died anyway. The constraint is memory — 7.8 GiB on the runner against a
+   1.85 GB archive holding 164,962 entries.
+6. A `[storage]` section replaces podman's defaults wholesale, so `runroot` has
+   to be written even when the intent is to keep it.
+7. The verify job used a flat artifact layout that `upload-artifact` never
+   produces; the build job had already succeeded.
 
-None of these is exotic. All five are ordinary properties of a hosted Ubuntu
+None of these is exotic. All seven are ordinary properties of a hosted Ubuntu
 runner, and none was visible by reading the workflow. "The workflow is committed"
 and "the workflow works" are different claims, and only the second is evidence.
 
@@ -161,3 +167,34 @@ python scripts/release.py gate --kind qualification-candidate
 The dashboard is generated from the same evaluation as the evidence report, so the
 two cannot disagree. A report saying `BLOCKED` beside a dashboard saying `PASS` is
 exactly the failure the evidence model exists to prevent.
+
+## 2026-07-30 addendum: after the hosted builder ran
+
+`independent-reproducibility` is still `BLOCKED`, and the reason changed.
+
+Before: no hosted builder record existed, so no pair existed, so no comparison
+was possible. Sixteen of seventeen dimensions were `NOT_COLLECTED`.
+
+After: a hosted builder record exists (`hosted-ci-30566412012`, GitHub-hosted
+`ubuntu-24.04`), a local schema-2 record exists, the pair is declared, and
+sixteen of seventeen dimensions were collected from both. The comparison reports
+`NON_REPRODUCIBLE`:
+
+* **11 dimensions match**, including the file tree (164,356 paths), permissions,
+  ownership, the package inventory (6,076 packages) and the kernel.
+* **5 differ**, driven by fifteen files out of 104,247 — all build-environment
+  state: a random `brlapi.key`, seven fontconfig caches, the rpm and dnf
+  databases, two `countme` counters.
+* **1 is not collectable** from an archive-only build: a bootc image carries no
+  SELinux xattrs in its layers.
+
+The pair is additionally not certified independent, because `skopeo`, `python3`
+and `image-builder` differ between the builders.
+
+**Prerequisite count: unchanged at 2 of 14.** `licence-gate` and
+`development-signing-drill` pass; the other twelve block.
+
+What this addendum adds to the report above is not a changed count but a changed
+kind of evidence. `independent-reproducibility` used to be an absence. It is now
+a measurement, with fifteen named files and a dependency-ordered list of what
+would move it, in `INDEPENDENT_REPRODUCIBILITY_REPORT.md`.

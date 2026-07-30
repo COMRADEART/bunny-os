@@ -163,3 +163,55 @@ candidate build.
 - `tests/reproducibility/` — 119 tests (29 original plus 90 added), including all
   four mandated adversarial cases: same host as two builders, one CI run twice, a
   mutable base tag, and a mismatched source commit
+
+## 2026-07-30 addendum: the fourth claim was tested and did not pass
+
+`INDEPENDENT_REPRODUCIBILITY_REPORT.md` carries the full result. In summary, for
+the four claims this report separates:
+
+| Claim | State |
+|---|---|
+| Same-host repeatability | established previously, unchanged |
+| Filesystem-content | established previously, unchanged |
+| Archive-byte, same host | established previously, unchanged |
+| **Independent-builder** | **tested for the first time — `NON_REPRODUCIBLE`** |
+
+Two builders under different administration built commit
+`9ea5459bdaf122f8c5999683b2c8961555826954` against base digest
+`…@sha256:c466de53`: a local Fedora machine and GitHub-hosted run
+`30566412012`.
+
+**Eleven of seventeen dimensions matched**, including every dimension describing
+the image's shape: the file tree (164,356 paths, identical), permissions and
+ownership (including every setuid bit), the package inventory (6,076 packages at
+the same versions) and the kernel (`7.1.5-201.fc44.x86_64`, same `vmlinuz`
+digest). Also matching: systemd units, desktop entries, schemas, boot
+configuration, extended attributes and initramfs.
+
+**Fifteen files differed, out of 104,247.** Every one is build-environment state
+and none is product code: a randomly generated `brlapi.key`; seven fontconfig
+caches; the rpm and libdnf5 databases, which record install times; and two dnf
+`countme` counters.
+
+Both archive digests differ, and **the difference survives normalisation** —
+which is what the two-digest design exists to distinguish. This is not a packing
+artefact.
+
+`selinuxLabels` is `NOT_COLLECTED` from both sides: a bootc image carries no
+`security.selinux` xattrs in its layers (measured: 164,962 entries, nine with
+`security.capability`, zero with `security.selinux`), because `bootc install`
+applies contexts on the target. Two empty sets would compare equal, so reporting
+a match there would claim a comparison that did not happen.
+
+The builders are additionally **not certified independent**: their toolchains
+differ in `skopeo`, `python3` and `image-builder`, so a content difference cannot
+be attributed to the environment rather than to the tool.
+
+An earlier hosted run on the same commit gave a *worse* result — 8 matching
+dimensions, with `etc/hostname` differing — because that runner shipped podman
+4.9.3, which writes `/etc/hostname` into the build container where 5.8.4 does
+not. GitHub rotated the runner image between the two runs. That is the clearest
+available demonstration of why the toolchain check is not a formality.
+
+Nothing here is claimed to be harmless. The files are build-environment state by
+inspection, and inspection is not proof.

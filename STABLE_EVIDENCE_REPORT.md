@@ -180,3 +180,44 @@ Source record: `operations/data/release-evidence.json`.
 - `QUALIFICATION_EVIDENCE_CLOSURE_REPORT.md` — what this phase built and did not
 - `docs/QUALIFICATION_EVIDENCE_BASELINE.md` — every unmet requirement classified by
   who can produce it
+
+## 2026-07-30 addendum: the reproducibility row moved from absent to measured
+
+The `Build` evidence category and the `independent-reproducibility` candidate
+prerequisite both depended on a hosted builder run that had never happened. It
+has now happened, and the result is recorded rather than assumed.
+
+| | before | after |
+|---|---|---|
+| Hosted builder records | 0 | 1 (`hosted-ci-30566412012`) |
+| Local builder records (schema 2) | 0 | 1 (`local-fedora-wsl`) |
+| Declared independence pairs | 0 | 1 |
+| Comparison dimensions collected | 1 of 17 | 16 of 17 |
+| Comparison outcome | `INCONCLUSIVE` (nothing measured) | `NON_REPRODUCIBLE` (measured) |
+| `independent-reproducibility` | `BLOCKED` | `BLOCKED` |
+
+The prerequisite state did not change. What changed is why. It was blocked
+because no second builder existed; it is blocked because the second builder exists
+and the comparison it made possible reported `NON_REPRODUCIBLE` — eleven
+dimensions matching, five differing, one not collectable from an archive-only
+build.
+
+Fifteen files differ out of 104,247, all build-environment state. The package
+inventory (6,076 packages) and the kernel match exactly. Details in
+`INDEPENDENT_REPRODUCIBILITY_REPORT.md`.
+
+The candidate prerequisite count is unchanged at **2 of 14**:
+`licence-gate` and `development-signing-drill`.
+
+### The evidence commit is not the candidate commit
+
+This addendum is committed after `9ea5459bdaf122f8c5999683b2c8961555826954`, the
+commit both builders built. `operations/data/release-evidence.json` still
+declares its own `candidateCommit` for the scan-derived evidence it covers, and
+neither was moved to the commit that imported these reports.
+
+Promoting an evidence-import commit to candidate would claim that evidence
+describes a tree which did not exist when the evidence was measured.
+`release/commits.py` distinguishes the two, and
+`tests/portability/test_hosted_import.py` asserts the committed candidate is
+never `HEAD`.

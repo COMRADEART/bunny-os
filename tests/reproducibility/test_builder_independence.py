@@ -602,13 +602,29 @@ class SeventeenDimensions(unittest.TestCase):
         self.assertEqual(result.state, "NOT_COLLECTED")
         self.assertIn("second", result.detail)
 
-    def test_the_committed_comparison_is_inconclusive(self) -> None:
+    def test_the_committed_comparison_does_not_satisfy_the_production_gate(self) -> None:
+        # This asserted `INCONCLUSIVE` and had to change when the comparison was
+        # first run against two real builders — it became `NON_REPRODUCIBLE`.
+        # Pinning one measured outcome made the test a record of what happened
+        # to be true rather than of what must be. The invariant is that the
+        # committed comparison never claims more than it measured: only
+        # REPRODUCIBLE between independent builders satisfies the gate, and this
+        # comparison is not that.
         document = json.loads(
             (ROOT / "operations/data/build-comparison.json").read_text(encoding="utf-8")
         )
         report = evaluate_comparison(document, independent=False)
-        self.assertEqual(report.outcome, "INCONCLUSIVE")
+        self.assertIn(report.outcome, OUTCOMES)
+        self.assertNotEqual(report.outcome, "REPRODUCIBLE")
         self.assertFalse(report.satisfiesProductionGate)
+
+    def test_no_committed_comparison_can_pass_without_independent_builders(self) -> None:
+        document = json.loads(
+            (ROOT / "operations/data/build-comparison.json").read_text(encoding="utf-8")
+        )
+        self.assertFalse(
+            evaluate_comparison(document, independent=False).satisfiesProductionGate
+        )
 
 
 def provenance(**overrides: object) -> dict[str, object]:

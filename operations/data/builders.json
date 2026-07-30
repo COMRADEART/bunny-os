@@ -1,6 +1,85 @@
 {
-  "builderRecordNote": "No schema-2 builder record exists. The two builders in `comparisons` were collected with the schema-1 shell collector and never recorded a build start or completion time, so upgrading them would mean inventing two timestamps. They are left as they were measured. A schema-2 record is produced by scripts/reproducibility/collect_builder_record.py, which the local Fedora builder and the hosted CI workflow must each run; neither has.",
-  "builderRecords": [],
+  "builderRecordNote": "Imported by scripts/release.py import-hosted-builder-evidence against candidate 9ea5459bdaf122f8c5999683b2c8961555826954. The hosted record was cross-checked against the runner's own environment report, the CI provenance and the artifact manifest in the same bundle; it is not signed, and the import record says so.",
+  "builderRecords": [
+    {
+      "administratorBoundary": "4d8365eef238b5611864131a1a3b173c",
+      "architecture": "x86_64",
+      "baseImageDigest": "quay.io/fedora/fedora-bootc:44@sha256:c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
+      "buildCompletedAt": "2026-07-30T17:51:46Z",
+      "buildStartedAt": "2026-07-30T17:33:42Z",
+      "builderId": "hosted-ci-30566412012",
+      "builderType": "hosted-ci",
+      "cloudProvider": null,
+      "cloudRunner": "GitHub Actions 1000000615",
+      "dependencyLockHashes": {
+        "build/Containerfile": "d5e66f6dd8c8216f8fc89175373ed09b0abeb0cba85749a805ec604098c9dbb8",
+        "build/license-policy.json": "cf935034da1987d90d33214b77859c4825d4eb05e3d1a238bddba360a44779dc",
+        "build/packages/applications.txt": "0a1d76f8dd369e8334b1cd9f3ae0a1c6101db80ef9e47fd5a0937f873feae857",
+        "build/packages/common.txt": "1f6900c6d4434063362421e301fea788892440a22b39092b34ad312e219ed447",
+        "build/packages/desktop.txt": "db64ebcfaa79da0645357570e7eef09234caf74c084f9b552b910f3d96ffa908",
+        "build/packages/developer.txt": "08da0e8e574ad77a5d0cb097612b84d68d456a9adb4ee9f6becfd468c3213d51",
+        "build/packages/installer.txt": "de92991c011decdededd07094dc8494c48e999ce2d2d771ec635560713610d80",
+        "build/packages/minimal.txt": "f2a7e9d6d5b0685aaff2fd5e2fe83ea2a56db4135e1388d67cc1b291810be5b8",
+        "build/packages/protected.txt": "9098e90d3f73b01a34dac85b1b1b28eac7ed23eb70c736de8b55620ced526db1",
+        "build/packages/recovery.txt": "a764331caa87b2182f69a8654744770b002452299313ad549143e278d88349f1",
+        "build/packages/shell.txt": "d12bf87c16a35efe7757a3aeaccbddf1a9b0d6fcb6ee3d41a4397f333693e0b6"
+      },
+      "environmentId": "a68dde14bdcd43dc77c26f55ce9f0b0a",
+      "kernelVersion": "6.17.0-1020-azure",
+      "operatingSystem": "ubuntu-24.04",
+      "schemaVersion": 2,
+      "sourceCommit": "9ea5459bdaf122f8c5999683b2c8961555826954",
+      "toolchain": {
+        "grype": "Application:         grype",
+        "image-builder": "absent",
+        "podman": "podman version 5.8.4",
+        "python3": "Python 3.13.14",
+        "skopeo": "skopeo version 1.13.3",
+        "syft": "Application:   syft",
+        "tar": "tar (GNU tar) 1.35"
+      },
+      "workflowRunId": "30566412012.1"
+    },
+    {
+      "administratorBoundary": "dcb0c0cc3f17c803b94954fa466eba8b",
+      "architecture": "x86_64",
+      "baseImageDigest": "quay.io/fedora/fedora-bootc:44@sha256:c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
+      "buildCompletedAt": "2026-07-30T16:00:15Z",
+      "buildStartedAt": "2026-07-30T15:53:55Z",
+      "builderId": "local-fedora-wsl",
+      "builderType": "local-machine",
+      "cloudProvider": null,
+      "cloudRunner": null,
+      "dependencyLockHashes": {
+        "build/Containerfile": "d5e66f6dd8c8216f8fc89175373ed09b0abeb0cba85749a805ec604098c9dbb8",
+        "build/license-policy.json": "cf935034da1987d90d33214b77859c4825d4eb05e3d1a238bddba360a44779dc",
+        "build/packages/applications.txt": "0a1d76f8dd369e8334b1cd9f3ae0a1c6101db80ef9e47fd5a0937f873feae857",
+        "build/packages/common.txt": "1f6900c6d4434063362421e301fea788892440a22b39092b34ad312e219ed447",
+        "build/packages/desktop.txt": "db64ebcfaa79da0645357570e7eef09234caf74c084f9b552b910f3d96ffa908",
+        "build/packages/developer.txt": "08da0e8e574ad77a5d0cb097612b84d68d456a9adb4ee9f6becfd468c3213d51",
+        "build/packages/installer.txt": "de92991c011decdededd07094dc8494c48e999ce2d2d771ec635560713610d80",
+        "build/packages/minimal.txt": "f2a7e9d6d5b0685aaff2fd5e2fe83ea2a56db4135e1388d67cc1b291810be5b8",
+        "build/packages/protected.txt": "9098e90d3f73b01a34dac85b1b1b28eac7ed23eb70c736de8b55620ced526db1",
+        "build/packages/recovery.txt": "a764331caa87b2182f69a8654744770b002452299313ad549143e278d88349f1",
+        "build/packages/shell.txt": "d12bf87c16a35efe7757a3aeaccbddf1a9b0d6fcb6ee3d41a4397f333693e0b6"
+      },
+      "environmentId": "02385f6bb77dcf60a56e92585f737201",
+      "kernelVersion": "6.18.33.2-microsoft-standard-WSL2",
+      "operatingSystem": "fedora-44",
+      "schemaVersion": 2,
+      "sourceCommit": "9ea5459bdaf122f8c5999683b2c8961555826954",
+      "toolchain": {
+        "grype": "Application:         grype",
+        "image-builder": "image-builder:",
+        "podman": "podman version 5.8.4",
+        "python3": "Python 3.14.3",
+        "skopeo": "skopeo version 1.22.2 commit: 18684bc549c53facc3c39abbb73eeba7ddf7fea5",
+        "syft": "Application:   syft",
+        "tar": "tar (GNU tar) 1.35"
+      },
+      "workflowRunId": null
+    }
+  ],
   "comparisons": [
     {
       "archiveDigests": [
@@ -189,6 +268,14 @@
       }
     }
   ],
-  "independencePairs": [],
+  "independencePairs": [
+    {
+      "candidateCommit": "9ea5459bdaf122f8c5999683b2c8961555826954",
+      "claim": "independent-builder",
+      "declaredBy": "scripts/release.py import-hosted-builder-evidence",
+      "first": "local-fedora-wsl",
+      "second": "hosted-ci-30566412012"
+    }
+  ],
   "schemaVersion": 1
 }
