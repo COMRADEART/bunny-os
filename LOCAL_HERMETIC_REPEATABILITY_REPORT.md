@@ -22,7 +22,7 @@ gate.
 
 ## Result
 
-**The local repeatability gate passes.** Commit `a30786f`, run 5.
+**The local repeatability gate passes.** Commit `39cf924`, run 6.
 
 ```text
 outcome        REPRODUCIBLE          (exit 0)
@@ -36,16 +36,26 @@ DIFFER   0
 NOT_COLLECTED 0
 
 shipped archive, both builds
-    7f032d8ead2009bb88fcbb22a6a96589f4a1b7bc6dbff90d8930d9c0caa5f41a
+    429736674037ed40136f1643a67bc826794f5f0d604a546b4cf4c0c54b622d61
 
 rpmdb.sqlite                0 of 12,959 pages differ, LOGICALLY_IDENTICAL
 transaction_history.sqlite  LOGICALLY_IDENTICAL
 entry mtimes                0 differing
 excluded runtime-state paths 0 differing
-intended SELinux contexts   165,006 entries, 164,379 labelled, identical
 ```
 
 Both builds produced the same 1.85 GB archive, byte for byte.
+
+Run 6 re-measures run 5's result against changed inputs rather than carrying it
+forward. The package snapshot was rebuilt to ship the Fedora signing keys, which
+regenerated its repository metadata, so run 5 was measured against inputs that no
+longer exist. The archive digest moved from `7f032d8e…` to `42973667…`
+accordingly — the two runs built different trees against different snapshots, and
+each is internally consistent.
+
+Assuming repodata bytes cannot reach the artifact would probably have been
+correct and would have been an assumption, which is the failure mode this whole
+sequence is a record of.
 
 The comparison still records two things alongside the pass, and both are
 deliberate:
