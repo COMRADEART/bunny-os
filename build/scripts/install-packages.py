@@ -99,11 +99,28 @@ def main() -> int:
         # The wrong fix would have been gpgcheck=0. Re-signing the packages with
         # the development snapshot key would have been worse: it would replace
         # Fedora's trust with ours while looking like an improvement.
-        fedora_keys = sorted(Path("/etc/pki/rpm-gpg").glob("RPM-GPG-KEY-fedora-*"))
+        # Scoped to the release that signed this snapshot, not every key Fedora
+        # has ever published. A glob of `RPM-GPG-KEY-fedora-*` matched **300**
+        # keys back to Fedora 7 — which would configure the build to accept a
+        # signature from any of them, and is the opposite of pinning.
+        release = subprocess.run(
+            ["/usr/bin/rpm", "-E", "%fedora"], capture_output=True, text=True
+        ).stdout.strip()
+        architecture = subprocess.run(
+            ["/usr/bin/rpm", "-E", "%_arch"], capture_output=True, text=True
+        ).stdout.strip()
+        fedora_keys = [
+            path
+            for path in (
+                Path(f"/etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-{release}-primary"),
+                Path(f"/etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-{release}-{architecture}"),
+            )
+            if path.is_file()
+        ]
         if not fedora_keys:
             raise SystemExit(
-                "hermetic build: no Fedora signing keys at /etc/pki/rpm-gpg. Every RPM must "
-                "retain its original trusted signature, and without the key that signature "
+                f"hermetic build: no Fedora {release} signing key at /etc/pki/rpm-gpg. Every RPM "
+                "must retain its original trusted signature, and without the key that signature "
                 "cannot be checked. Refusing rather than installing unverified packages."
             )
         Path("/etc/yum.repos.d/bunny-snapshot.repo").write_text(
