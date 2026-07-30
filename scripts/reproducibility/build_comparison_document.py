@@ -127,21 +127,20 @@ def main() -> int:
         record["reductionForm"] = form
         dimensions[name] = record
 
-    # selinuxLabels is the composite; the archive collections both report it as
-    # null by design, so the composite's archive subcheck is fed from the
-    # intended-context manifests and the dimension itself is left as the two
-    # nulls it honestly is. evaluate_selinux_evidence is what turns the subcheck
-    # into the composite state.
-    dimensions["selinuxLabels"] = {
-        "first": first_dimensions.get("selinuxLabels"),
-        "second": second_dimensions.get("selinuxLabels"),
-        "detail": (
-            "No archive carries a security.selinux xattr; bootc install applies contexts on the "
-            "target. The archive-observable half of this dimension is the intended-context "
-            "manifest, recorded under selinux.intendedSelinuxContexts."
-        ),
-    }
-
+    # selinuxLabels is one dimension asked at two stages, and at the archive
+    # stage the answerable half is the intended-context manifest.
+    #
+    # The archive collections both report the dimension as null, correctly: no
+    # bootc image carries a security.selinux xattr, and two empty sets compare
+    # equal. Leaving the dimension at those two nulls would make every complete
+    # archive comparison NOT_COLLECTED on it and therefore INCONCLUSIVE — a
+    # verdict no archive build could ever escape, for a subcheck that belongs to
+    # installed-system qualification.
+    #
+    # So the dimension carries the archive-stage subcheck, which is a real
+    # comparison of a real manifest, and `selinux` below carries the composite
+    # that keeps the installed-system subcheck outstanding. Both are recorded:
+    # satisfying this dimension never reports appliedSelinuxContexts as done.
     selinux: dict[str, Any] = {}
     if args.first_selinux and args.second_selinux:
         first_contexts = load(args.first_selinux, "first SELinux")
@@ -161,6 +160,23 @@ def main() -> int:
             first_contexts.get("resolvedCount"),
             second_contexts.get("resolvedCount"),
         ]
+        dimensions["selinuxLabels"] = dict(record)
+        dimensions["selinuxLabels"]["detail"] = (
+            "The archive-stage subcheck: the context every path is intended to receive, computed "
+            "from the policy the image ships. No archive carries an applied security.selinux "
+            "xattr — bootc install applies them on the target — so the applied subcheck stays "
+            "outstanding under selinux.appliedSelinuxContexts and is not satisfied by this."
+        )
+    else:
+        dimensions["selinuxLabels"] = {
+            "first": first_dimensions.get("selinuxLabels"),
+            "second": second_dimensions.get("selinuxLabels"),
+            "detail": (
+                "No intended-context manifest was supplied, so the archive-observable half of "
+                "this dimension was not collected. The two nulls the archives report are not a "
+                "match; they are two builders both measuring nothing."
+            ),
+        }
 
     # Entry mtimes travel as a diagnostic beside the dimensions, never as one.
     # When every content dimension matches and rawArchive does not, this is the

@@ -88,7 +88,8 @@ SIMPLE_PRAGMAS = (
 
 
 def parse_header(path: Path) -> dict[str, Any]:
-    raw = path.open("rb").read(100)
+    with path.open("rb") as handle:
+        raw = handle.read(100)
     if len(raw) < 100:
         raise SystemExit(f"BLOCKED: {path} is shorter than a SQLite header")
     magic = raw[:16]

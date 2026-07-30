@@ -85,19 +85,35 @@ RUN BUNNY_SNAPSHOT_ROOT="${BUNNY_SNAPSHOT_ROOT}" \
 # assertion afterwards is what makes this a check rather than a sweep — if a
 # path cannot be pinned, the build stops instead of shipping an artifact whose
 # archive digest nobody can explain.
-RUN set -eu; \
+# Mount points are excluded, not pinned. /snapshot is the retained package
+# snapshot bind-mounted read-only for this build, and touching it fails outright:
+#
+#   touch: setting times of '/snapshot': Read-only file system
+#
+# It is also not in the committed layer, which is the actual reason — the same
+# reason finalise-image.sh empties /etc/hostname instead of removing it. The list
+# is read from /proc/self/mounts rather than hard-coded, so a mount added later
+# is excluded without anyone having to remember this step exists. `-xdev` already
+# stops the walk descending into them; what it does not do is stop `find`
+# reporting the mount point itself.
+RUN bash -euo pipefail -c '\
     epoch="${SOURCE_DATE_EPOCH}"; \
-    find / -xdev \
-         \( -path /proc -o -path /sys -o -path /dev -o -path /run \) -prune -o \
-         -newermt "@${epoch}" -print0 \
-      | xargs -0r touch --no-dereference --date="@${epoch}"; \
-    remaining="$(find / -xdev \
-         \( -path /proc -o -path /sys -o -path /dev -o -path /run \) -prune -o \
-         -newermt "@${epoch}" -print | head -20)"; \
-    if [ -n "${remaining}" ]; then \
+    mapfile -t mounts < <(awk "\$2 != \"/\" { print \$2 }" /proc/self/mounts | sort -u); \
+    prune=(); \
+    for point in "${mounts[@]}" /proc /sys /dev /run; do \
+      prune+=(-path "${point}" -o); \
+    done; \
+    unset "prune[${#prune[@]}-1]"; \
+    mapfile -t unpinned < <(find / -xdev \( "${prune[@]}" \) -prune -o -newermt "@${epoch}" -print); \
+    if [ ${#unpinned[@]} -gt 0 ]; then \
+      printf "%s\0" "${unpinned[@]}" | xargs -0r touch --no-dereference --date="@${epoch}"; \
+    fi; \
+    mapfile -t remaining < <(find / -xdev \( "${prune[@]}" \) -prune -o -newermt "@${epoch}" -print); \
+    if [ ${#remaining[@]} -gt 0 ]; then \
       echo "BLOCKED: these paths still carry an mtime later than the build epoch:" >&2; \
-      echo "${remaining}" >&2; \
+      printf "  %s\n" "${remaining[@]:0:20}" >&2; \
       echo "A file the build wrote and did not pin changes the layer digest, and the" >&2; \
       echo "comparison would report an archive difference with no file to attribute it to." >&2; \
       exit 2; \
-    fi
+    fi; \
+    echo "pinned ${#unpinned[@]} path(s) written by this build to ${epoch}"'
