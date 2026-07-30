@@ -46,7 +46,20 @@ if [[ -n "${BUNNY_PODMAN_ROOT:-}" ]]; then
   # containers-storage transport.
   skopeo_store_args=("[overlay@${BUNNY_PODMAN_ROOT}+${BUNNY_PODMAN_RUNROOT}]")
 fi
-podman() { sudo command podman "${podman_store_args[@]+"${podman_store_args[@]}"}" "$@"; }
+# `sudo podman`, not `sudo command podman`.
+#
+# The first version used `command` to reach past this function to the binary,
+# which is unnecessary — `sudo` is the command word here and `podman` is one of
+# its arguments, so nothing recurses — and it is not portable. `command` is a
+# shell builtin, so `sudo command …` needs an executable of that name. Fedora
+# ships /usr/sbin/command and Ubuntu does not, so this worked on the local
+# builder and failed on the hosted one with:
+#
+#   sudo: command: command not found
+#
+# Found by the first hosted hermetic build, which is the kind of difference a
+# second builder exists to surface.
+podman() { sudo podman "${podman_store_args[@]+"${podman_store_args[@]}"}" "$@"; }
 
 repository_root="$(git rev-parse --show-toplevel)"
 cd "${repository_root}"
