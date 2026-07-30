@@ -1,0 +1,23 @@
+[Unit]
+Description=Bunny OS device policy broker socket
+Documentation=file:///usr/share/doc/bunny-os/DEVICE_POLICY.md
+PartOf=bunny-system-broker.service
+
+[Socket]
+# Named so the broker can tell this descriptor from the user socket. Adopting
+# them by descriptor order would silently swap their authentication rules if
+# these units were ever reordered.
+FileDescriptorName=policy.sock
+ListenStream=/run/bunny/policy.sock
+SocketUser=root
+SocketGroup=root
+# 0600, unlike the 0666 user socket. Filesystem permission is the first of two
+# independent barriers; peer uid plus systemd unit match is the second.
+SocketMode=0600
+DirectoryMode=0755
+RemoveOnStop=yes
+Accept=no
+Service=bunny-system-broker.service
+
+[Install]
+WantedBy=sockets.target

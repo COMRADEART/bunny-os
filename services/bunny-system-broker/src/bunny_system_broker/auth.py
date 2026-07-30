@@ -95,3 +95,48 @@ def authorize_polkit(peer: PeerIdentity, action_id: str) -> bool:
 def require_local_user(peer: PeerIdentity) -> None:
     if peer.uid != 0 and peer.uid < 1000:
         raise AuthenticationError("system service identities may not use the user broker API")
+
+
+def proc_unit(pid: int) -> str:
+    """Return the systemd unit owning ``pid``, from its cgroup path.
+
+    Used instead of a logind session check, because a headless system daemon
+    has no session. The cgroup path is kernel-maintained and cannot be forged
+    by the peer process itself.
+    """
+    try:
+        with open(f"/proc/{pid}/cgroup", "r", encoding="ascii") as handle:
+            content = handle.read()
+    except OSError as exc:
+        raise AuthenticationError("peer process disappeared") from exc
+    for line in content.splitlines():
+        # cgroup v2 emits a single "0::<path>" line.
+        _, _, path = line.partition("::")
+        if not path:
+            continue
+        for segment in reversed(path.strip().split("/")):
+            if segment.endswith((".service", ".scope")):
+                return segment
+    raise AuthenticationError("peer process is not owned by a systemd unit")
+
+
+def require_policy_identity(peer: PeerIdentity, *, expected_uid: int, expected_unit: str) -> None:
+    """Authorize a system daemon on the policy socket.
+
+    Deliberately a sibling of ``require_local_user`` rather than a flag on it.
+    A shared function with a mode argument is one bug away from opening the
+    user socket to system identities, which is exactly what that function
+    exists to prevent.
+
+    Two independent facts must hold: the peer runs as the dedicated policy
+    service account, and its process is owned by the expected systemd unit.
+    Neither alone is sufficient — a uid can be shared by a compromised helper,
+    and a unit name proves nothing without the matching account.
+    """
+    if peer.uid != expected_uid:
+        raise AuthenticationError("caller is not the policy agent service identity")
+    if peer.uid >= 1000:
+        raise AuthenticationError("the policy socket does not accept interactive user identities")
+    unit = proc_unit(peer.pid)
+    if unit != expected_unit:
+        raise AuthenticationError("caller is not running under the policy agent unit")
