@@ -151,6 +151,30 @@ jobs:
           syft version
           grype version
 
+      - name: Reclaim disk before building
+        run: |
+          set -euo pipefail
+          # The SBOM step was killed after 419 seconds with no error and the job
+          # reported "cancelled" — the runner ran out of disk. A 1.85 GB OCI
+          # archive plus the container store plus syft extracting the archive
+          # does not fit in the ~14 GB free on the root volume.
+          #
+          # The runner image ships around 25 GB of toolchains this build never
+          # uses. /opt/hostedtoolcache is left alone: setup-python installed the
+          # interpreter this job runs on.
+          before=$(df --output=avail -BG / | tail -1 | tr -dc '0-9')
+          sudo rm -rf \
+            /usr/share/dotnet \
+            /usr/local/lib/android \
+            /opt/ghc \
+            /usr/local/share/boost \
+            /usr/local/lib/node_modules \
+            /usr/share/swift || true
+          sudo apt-get clean
+          after=$(df --output=avail -BG / | tail -1 | tr -dc '0-9')
+          echo "reclaimed $((after - before)) GiB; ${after} GiB free on /"
+          df -h / /mnt || true
+
       - name: Configure the container runtime and storage driver
         run: |
           set -euo pipefail
@@ -175,7 +199,12 @@ jobs:
           sudo apt-get install --yes --no-install-recommends runc fuse-overlayfs
           sudo install -d /etc/containers
           printf '[engine]\nruntime = "runc"\n' | sudo tee /etc/containers/containers.conf
-          printf '[storage]\ndriver = "overlay"\n' | sudo tee /etc/containers/storage.conf
+          # /mnt is the runner's large ephemeral volume, an order of magnitude
+          # bigger than the root filesystem. The container store is the largest
+          # thing this job writes, so it goes there.
+          sudo install -d /mnt/containers-storage /mnt/containers-run
+          printf '[storage]\ndriver = "overlay"\ngraphroot = "/mnt/containers-storage"\nrunroot = "/mnt/containers-run"\n' \
+            | sudo tee /etc/containers/storage.conf
           # The runner image ships an already-initialised container store whose
           # recorded driver is empty, and podman refuses to change drivers under
           # an existing database:
@@ -223,9 +252,15 @@ jobs:
         run: |
           set -euo pipefail
           profile='${{ inputs.profile }}'
+          # syft extracts the whole archive into a temporary directory, so it is
+          # pointed at the large volume. Only spdx-json is produced: the
+          # syft-json output was another 70 MB that nothing downstream reads.
+          export TMPDIR=/mnt/syft-tmp
+          sudo install -d -o "$(id -u)" -g "$(id -g)" "$TMPDIR"
+          df -h / /mnt
           syft "oci-archive:build/out/${profile}/bunny-os.oci.tar" \
-            -o spdx-json="build/out/ci/sbom.spdx.json" \
-            -o syft-json="build/out/ci/sbom.syft.json"
+            -o spdx-json="build/out/ci/sbom.spdx.json"
+          df -h / /mnt
           python - <<'PY'
           import json, os, pathlib
           document = json.loads(pathlib.Path("build/out/ci/sbom.spdx.json").read_text(encoding="utf-8"))
