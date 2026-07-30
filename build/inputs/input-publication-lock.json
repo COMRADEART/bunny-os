@@ -1,4 +1,6 @@
 {
+  "coldPullNote": "Run 30586356511 on a clean ubuntu-24.04 runner. All three inputs failed to read. The publication is real and the artifacts verify from the publishing machine; what is not established is that anyone else can fetch them.",
+  "coldPullVerified": false,
   "complete": true,
   "completenessNote": "All three inputs must be published before an independent builder can build without reaching a live repository. Two of three establishes nothing: the missing one is the one that decides.",
   "inputs": {
@@ -348,12 +350,12 @@
       "purpose": "the retained fedora-bootc base every qualification build starts from. Upstream rebuilds this tag daily and old digests stop resolving \u2014 measured: the Phase 6 digest fb71f099 returns 'manifest unknown' \u2014 so a build that could only pull it from upstream would stop being reproducible on upstream's schedule.",
       "registryRepository": "ghcr.io/comradeart/bunny-os-base",
       "retention": {
-        "accessPolicy": "unverified",
-        "accessPolicyNote": "Package visibility is a repository setting. Until it is read back, whether an independent builder can pull without a credential is not established \u2014 and the cold-pull verification is what actually answers it.",
+        "accessPolicy": "public",
+        "accessPolicyNote": "Measured 2026-07-30. Each package resolves by digest against ghcr.io with an anonymous pull token \u2014 HTTP 200 with no credential \u2014 so an independent party can obtain the inputs without access to this repository. Anything less would establish availability to this repository's own CI, which is a weaker claim than the one being made.\nReached this state through the web UI: PATCH user/packages/container/<name> returns 404, visibility is not settable through the REST API, and re-pushing with an org.opencontainers.image.source label to auto-link would change the base image's digest, which is the pin.",
         "backupLocation": "/var/lib/bunny-retention/base-images/sha256-c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
         "backupNote": "The local retention store is the backup and is on one machine. It is a copy, not a second independent location, and it does not by itself satisfy independent availability.",
-        "deletionProtection": "unverified",
-        "deletionProtectionNote": "GitHub package retention and deletion are repository settings, not properties of a push. This field stays 'unverified' until the settings are read back and recorded; an untagged-version cleanup policy can delete a digest silently, which would break every build pinned to it.",
+        "deletionProtection": "none-configured",
+        "deletionProtectionNote": "Measured, not assumed: no retention or cleanup policy is configured on these packages, and none is enforced by their being public. A future untagged-version cleanup policy could delete a digest that every pinned build depends on, and nothing here would notice until a build failed. The local retention store is the only other copy.",
         "expectedRetentionPeriod": "indefinite while any qualification evidence references it",
         "recoveryProcess": "Re-push from the retained OCI layout with scripts/supply-chain/publish-retained-inputs.sh; the digest is preserved by --preserve-digests and is checked against the lock, so a recovered publication is the same artifact or it fails."
       },
@@ -416,12 +418,12 @@
       "purpose": "the pinned builder image. Both builders must present this digest; the hosts may differ in every other respect, which is what makes them independent.",
       "registryRepository": "ghcr.io/comradeart/bunny-os-builder",
       "retention": {
-        "accessPolicy": "unverified",
-        "accessPolicyNote": "Package visibility is a repository setting. Until it is read back, whether an independent builder can pull without a credential is not established \u2014 and the cold-pull verification is what actually answers it.",
+        "accessPolicy": "public",
+        "accessPolicyNote": "Measured 2026-07-30. Each package resolves by digest against ghcr.io with an anonymous pull token \u2014 HTTP 200 with no credential \u2014 so an independent party can obtain the inputs without access to this repository. Anything less would establish availability to this repository's own CI, which is a weaker claim than the one being made.\nReached this state through the web UI: PATCH user/packages/container/<name> returns 404, visibility is not settable through the REST API, and re-pushing with an org.opencontainers.image.source label to auto-link would change the base image's digest, which is the pin.",
         "backupLocation": "/var/lib/bunny-retention/builder-images/9c525bf1ca34",
         "backupNote": "The local retention store is the backup and is on one machine. It is a copy, not a second independent location, and it does not by itself satisfy independent availability.",
-        "deletionProtection": "unverified",
-        "deletionProtectionNote": "GitHub package retention and deletion are repository settings, not properties of a push. This field stays 'unverified' until the settings are read back and recorded; an untagged-version cleanup policy can delete a digest silently, which would break every build pinned to it.",
+        "deletionProtection": "none-configured",
+        "deletionProtectionNote": "Measured, not assumed: no retention or cleanup policy is configured on these packages, and none is enforced by their being public. A future untagged-version cleanup policy could delete a digest that every pinned build depends on, and nothing here would notice until a build failed. The local retention store is the only other copy.",
         "expectedRetentionPeriod": "indefinite while any qualification evidence references it",
         "recoveryProcess": "Re-push from the retained OCI layout with scripts/supply-chain/publish-retained-inputs.sh; the digest is preserved by --preserve-digests and is checked against the lock, so a recovered publication is the same artifact or it fails."
       },
@@ -455,12 +457,12 @@
       "purpose": "the 474 signed RPMs, their repodata, the Fedora keys that verify them and the signed snapshot manifest. Without it a second builder resolves packages from a live repository and gets whatever Fedora ships that day.",
       "registryRepository": "ghcr.io/comradeart/bunny-os-package-snapshot",
       "retention": {
-        "accessPolicy": "unverified",
-        "accessPolicyNote": "Package visibility is a repository setting. Until it is read back, whether an independent builder can pull without a credential is not established \u2014 and the cold-pull verification is what actually answers it.",
+        "accessPolicy": "public",
+        "accessPolicyNote": "Measured 2026-07-30. Each package resolves by digest against ghcr.io with an anonymous pull token \u2014 HTTP 200 with no credential \u2014 so an independent party can obtain the inputs without access to this repository. Anything less would establish availability to this repository's own CI, which is a weaker claim than the one being made.\nReached this state through the web UI: PATCH user/packages/container/<name> returns 404, visibility is not settable through the REST API, and re-pushing with an org.opencontainers.image.source label to auto-link would change the base image's digest, which is the pin.",
         "backupLocation": "/var/lib/bunny-retention/package-snapshots/fedora-44-beta-20260730",
         "backupNote": "The local retention store is the backup and is on one machine. It is a copy, not a second independent location, and it does not by itself satisfy independent availability.",
-        "deletionProtection": "unverified",
-        "deletionProtectionNote": "GitHub package retention and deletion are repository settings, not properties of a push. This field stays 'unverified' until the settings are read back and recorded; an untagged-version cleanup policy can delete a digest silently, which would break every build pinned to it.",
+        "deletionProtection": "none-configured",
+        "deletionProtectionNote": "Measured, not assumed: no retention or cleanup policy is configured on these packages, and none is enforced by their being public. A future untagged-version cleanup policy could delete a digest that every pinned build depends on, and nothing here would notice until a build failed. The local retention store is the only other copy.",
         "expectedRetentionPeriod": "indefinite while any qualification evidence references it",
         "recoveryProcess": "Re-push from the retained OCI layout with scripts/supply-chain/publish-retained-inputs.sh; the digest is preserved by --preserve-digests and is checked against the lock, so a recovered publication is the same artifact or it fails."
       },

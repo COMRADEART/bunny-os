@@ -1,0 +1,34 @@
+{
+  "inputs": {
+    "base": {
+      "blobsVerified": 66,
+      "manifestDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+      "reference": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+      "result": "PASS"
+    },
+    "builder": {
+      "blobsVerified": 8,
+      "manifestDigest": "sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+      "reference": "ghcr.io/comradeart/bunny-os-builder@sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+      "result": "PASS"
+    },
+    "snapshot": {
+      "blobsVerified": 2,
+      "checksumsVerified": 474,
+      "manifestDigest": "sha256:4fa4fbc1f14cf0b5406475778eda708c303143d5c5ec2c5ec783ddfdb3af501b",
+      "packagesExpected": 474,
+      "packagesFound": 474,
+      "reference": "ghcr.io/comradeart/bunny-os-package-snapshot@sha256:4fa4fbc1f14cf0b5406475778eda708c303143d5c5ec2c5ec783ddfdb3af501b",
+      "repodataPresent": true,
+      "result": "PASS",
+      "signatures": {
+        "failed": [],
+        "verified": 474
+      }
+    }
+  },
+  "note": "Every digest is recomputed from the bytes the registry returned and every package checksum is re-derived from the RPM, rather than read from a lock's summary of itself. Run on a machine holding the retention store this proves the push worked; run on a clean runner it proves the inputs are independently retrievable, which is the claim that matters.",
+  "publication": "build/inputs/input-publication-lock.json",
+  "result": "PASS",
+  "schemaVersion": 1
+}

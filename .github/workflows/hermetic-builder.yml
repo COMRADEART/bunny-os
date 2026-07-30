@@ -1,0 +1,279 @@
+name: Hermetic builder (H1/H2)
+
+# A hosted, independently administered *hermetic* build of the qualification
+# target.
+#
+# The existing independent-builder workflow resolves its packages from live
+# repositories and pulls its base from wherever the reference points. That was
+# the right thing when there was nothing else, and it is not comparable to a
+# local hermetic build: two builders resolving their own package sets from a
+# moving repository are measuring the repository.
+#
+# This one fetches the three published inputs by digest, puts each where its lock
+# says it lives, and runs the same build script the local builder runs, with the
+# same BUNNY_HERMETIC_BUILD=1. A build that took a different route to its inputs
+# on one builder would be a different build.
+#
+# It asserts the commit is the qualification target before it starts. A runner
+# pointed at the wrong commit would otherwise produce a perfectly good artifact
+# of something nobody asked for, and the comparison would report a
+# reproducibility failure that is really a dispatch mistake.
+#
+# The `label` input distinguishes H1 from H2. It is recorded in the evidence and
+# changes nothing about the build: two runs that differed because they were
+# labelled differently would be the defect this workflow exists to detect.
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Exact 40-character SHA of the qualification target (Commit C)
+        required: true
+        type: string
+      label:
+        description: Which hosted build this is
+        required: true
+        default: H1
+        type: choice
+        options: [H1, H2]
+      profile:
+        description: Image profile
+        required: true
+        default: beta
+        type: choice
+        options: [beta]
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  PYTHON_VERSION: "3.13"
+  BUNNY_ARCHIVE_ONLY: "1"
+  BUNNY_CACHES_DISABLED: "1"
+
+jobs:
+  guard:
+    name: Guard — target and no signing access
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Reject a non-exact commit reference
+        run: |
+          commit='${{ inputs.commit }}'
+          if ! printf '%s' "$commit" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::commit must be a full 40-character SHA; a branch name does not pin a build"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: ''
+      - name: The commit must be the qualification target it claims to be
+        run: python scripts/supply-chain/assert-target-commit.py --commit '${{ inputs.commit }}'
+      - name: No production signing secret may be reachable
+        env:
+          BUNNY_OS_RELEASE_KEY: ${{ secrets.BUNNY_OS_RELEASE_KEY }}
+          BUNNY_RECOVERY_KEY: ${{ secrets.BUNNY_RECOVERY_KEY }}
+          BUNNY_UPDATE_KEY: ${{ secrets.BUNNY_UPDATE_KEY }}
+          BUNNY_CATALOGUE_KEY: ${{ secrets.BUNNY_CATALOGUE_KEY }}
+        run: |
+          for name in BUNNY_OS_RELEASE_KEY BUNNY_RECOVERY_KEY BUNNY_UPDATE_KEY BUNNY_CATALOGUE_KEY; do
+            if [ -n "${!name:-}" ]; then
+              echo "::error::$name is reachable; qualification builds must be unsigned"
+              exit 1
+            fi
+          done
+          echo "no production signing secret is reachable"
+
+  build:
+    name: Hermetic build ${{ inputs.label }}
+    needs: guard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+          clean: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: ''
+
+      - name: Install podman, skopeo and syft
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends podman skopeo runc fuse-overlayfs
+          # syft is pinned by the builder lock; the version installed here must
+          # match it or the SBOM dimension compares two tools rather than two
+          # images.
+          version="$(python -c "
+          import json
+          lock = json.load(open('build/inputs/builder-image-lock.json'))
+          print(next(t['version'] for t in lock['tools'] if t['name'] == 'syft'))
+          ")"
+          curl -fsSL "https://raw.githubusercontent.com/anchore/syft/main/install.sh" \
+            | sudo sh -s -- -b /usr/local/bin "v${version}"
+          syft version
+          echo "syft pinned to ${version} from the builder lock"
+
+      - name: Reclaim disk and add swap
+        run: |
+          set -euo pipefail
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost /usr/local/lib/node_modules /usr/share/swift || true
+          sudo apt-get clean
+          df -h /
+          # syft catalogues a 1.85 GB archive holding 165,000 entries on a 16 GiB
+          # runner and was killed for memory once with 28 GiB of disk still free.
+          sudo fallocate -l 16G /swapfile-bunny
+          sudo chmod 600 /swapfile-bunny
+          sudo mkswap /swapfile-bunny
+          sudo swapon /swapfile-bunny
+          free -h
+
+      - name: Configure the container runtime
+        run: |
+          set -euo pipefail
+          # Ubuntu's crun refuses the OCI spec version Ubuntu's own podman
+          # writes, and podman falls back to the vfs storage driver without an
+          # explicit one, which copies the whole image per layer. Neither is a
+          # build input: the image content is determined by the Containerfile,
+          # the base digest and the source commit.
+          sudo install -d /etc/containers
+          printf '[engine]\nruntime = "runc"\n' | sudo tee /etc/containers/containers.conf
+          printf '[storage]\ndriver = "overlay"\nrunroot = "/run/containers/storage"\ngraphroot = "/var/lib/containers/storage"\n' \
+            | sudo tee /etc/containers/storage.conf
+          sudo rm -rf /var/lib/containers/storage /run/containers/storage
+          sudo podman info --format 'runtime={{.Host.OCIRuntime.Name}} {{.Host.OCIRuntime.Version}}'
+
+      - name: Authenticate to the registry, read-only
+        run: |
+          set -euo pipefail
+          echo '${{ secrets.GITHUB_TOKEN }}' \
+            | skopeo login --username '${{ github.actor }}' --password-stdin ghcr.io >/dev/null
+
+      - name: Fetch the retained inputs by digest and put them where the locks say
+        run: |
+          set -euo pipefail
+          sudo mkdir -p /var/lib/bunny-retention
+          sudo chown "$(id -u):$(id -g)" /var/lib/bunny-retention
+          python scripts/supply-chain/hydrate-retained-inputs.py \
+            --publication build/inputs/input-publication-lock.json \
+            --report build/out/qualification/hydrated-inputs.json
+
+      - name: Verify every input lock against what was fetched
+        run: python scripts/supplychain.py verify-input-locks
+
+      - name: Record the runner environment
+        id: environment
+        run: |
+          set -euo pipefail
+          mkdir -p build/out/ci
+          {
+            echo "label=${{ inputs.label }}"
+            echo "runnerImage=${ImageOS:-unknown}"
+            echo "runnerName=${RUNNER_NAME:-unknown}"
+            echo "kernel=$(uname -r)"
+            echo "containerRuntime=$(podman --version)"
+            echo "workflowRunId=${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}"
+          } | tee build/out/ci/runner-environment.txt
+          echo "started=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Build hermetically
+        env:
+          BUNNY_HERMETIC_BUILD: "1"
+          BUNNY_RELEASE_BUILD: "0"
+        run: |
+          set -euo pipefail
+          bash build/scripts/build-image.sh '${{ inputs.profile }}' 2>&1 \
+            | tee build/out/ci/build.log
+
+      - name: Generate the SBOM
+        run: |
+          set -euo pipefail
+          profile='${{ inputs.profile }}'
+          export TMPDIR="${RUNNER_TEMP}/syft"
+          mkdir -p "$TMPDIR" "build/out/${profile}/sbom"
+          export SYFT_PARALLELISM=1
+          syft "oci-archive:build/out/${profile}/bunny-os.oci.tar" \
+            -o "spdx-json=build/out/${profile}/sbom/bunny-os.spdx.json"
+
+      - name: Collect the intended SELinux manifest
+        run: |
+          set -euo pipefail
+          sudo apt-get install --yes --no-install-recommends policycoreutils || true
+          python scripts/reproducibility/collect_intended_selinux.py \
+            --archive "build/out/${{ inputs.profile }}/bunny-os.oci.tar" \
+            --output "build/out/ci/intended-selinux.json"
+
+      - name: Collect every archive-stage dimension, in qualification mode
+        run: |
+          set -euo pipefail
+          profile='${{ inputs.profile }}'
+          epoch="$(python -c "
+          import json
+          print(json.load(open('build/inputs/reproducibility-lock.json'))['sourceDateEpoch'])
+          ")"
+          python scripts/reproducibility/collect_comparison_dimensions.py \
+            --archive "build/out/${profile}/bunny-os.oci.tar" \
+            --sbom "build/out/${profile}/sbom/bunny-os.spdx.json" \
+            --normalisation "build/out/${profile}/normalisation.json" \
+            --epoch "$epoch" \
+            --mode qualification \
+            --output build/out/ci/dimensions.json
+
+      - name: Extract the package databases for direct comparison
+        run: |
+          set -euo pipefail
+          python scripts/reproducibility/extract_archive_paths.py \
+            --archive "build/out/${{ inputs.profile }}/bunny-os.oci.tar" \
+            --path usr/share/rpm/rpmdb.sqlite \
+            --path usr/lib/sysimage/libdnf5/transaction_history.sqlite \
+            --destination build/out/ci/databases \
+            --manifest build/out/ci/databases/extraction.json \
+            --require-all
+
+      - name: Collect the builder record
+        run: |
+          set -euo pipefail
+          python scripts/reproducibility/collect_builder_record.py builder-record \
+            --builder-id "hosted-${{ inputs.label }}-${GITHUB_RUN_ID}" \
+            --builder-type hosted-ci \
+            --started-at '${{ steps.environment.outputs.started }}' \
+            --completed-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --output build/out/ci/builder-record.json
+
+      - name: Upload the comparison evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hermetic-${{ inputs.label }}-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            build/out/ci/dimensions.json
+            build/out/ci/intended-selinux.json
+            build/out/ci/builder-record.json
+            build/out/ci/runner-environment.txt
+            build/out/ci/hydrated-inputs.json
+            build/out/qualification/hydrated-inputs.json
+            build/out/ci/databases/**
+            build/out/${{ inputs.profile }}/normalisation.json
+            build/out/${{ inputs.profile }}/provenance.json
+            build/out/${{ inputs.profile }}/SHA256SUMS
+
+      - name: Assert no gate moved
+        run: |
+          set -euo pipefail
+          bash build/scripts/assert-gate.sh 2 "stable release after a hosted hermetic build" -- python scripts/release.py gate --kind stable-release
+          bash build/scripts/assert-gate.sh 2 "qualification candidate after a hosted hermetic build" -- python scripts/release.py gate --kind qualification-candidate
