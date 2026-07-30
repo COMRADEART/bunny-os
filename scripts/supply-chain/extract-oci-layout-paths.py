@@ -132,6 +132,15 @@ def extract(layout: Path, manifest: dict, patterns: list[str]) -> dict[str, byte
                         links.pop(name, None)
                 elif member.islnk():
                     links[name] = _normalise(member.linkname)
+                elif member.issym():
+                    # Fedora ships one real key per release and names the
+                    # per-architecture files as symlinks to it, so a caller
+                    # asking for `…-44-x86_64` is asking for `…-44-primary`.
+                    # Relative targets resolve against the link's own directory.
+                    target = member.linkname
+                    if not target.startswith("/"):
+                        target = posixpath.join(parent, target)
+                    links[name] = _normalise(target)
 
     wanted = {target for name, target in links.items() if name not in found}
     if wanted:

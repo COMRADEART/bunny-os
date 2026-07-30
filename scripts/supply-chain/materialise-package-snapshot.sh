@@ -164,7 +164,15 @@ python3 scripts/supply-chain/extract-oci-layout-paths.py \
   --pattern "etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-${release}-${architecture}" \
   --destination "${snapshot}/keys" \
   --flatten \
-  --require 2
+  --require 1
+
+# One key is the expected result, not a shortfall. Fedora ships a single real
+# key per release and names the per-architecture files as symlinks to it, so
+# `RPM-GPG-KEY-fedora-44-x86_64` and `RPM-GPG-KEY-fedora-44-primary` are the
+# same bytes. Both patterns are asked for so a release that ever separated them
+# would be picked up; requiring two would fail on every release that does not.
+key_count="$(find "${snapshot}/keys" -type f | wc -l)"
+echo "    ${key_count} signing key(s) shipped with the snapshot"
 
 echo "==> generating repository metadata"
 # --excludes keys: the keys are shipped beside the repository, not as part of it.
