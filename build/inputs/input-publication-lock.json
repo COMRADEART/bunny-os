@@ -1,4 +1,6 @@
 {
+  "coldPullNote": "Run 30586356511 on a clean ubuntu-24.04 runner. All three inputs failed to read. The publication is real and the artifacts verify from the publishing machine; what is not established is that anyone else can fetch them.",
+  "coldPullVerified": false,
   "complete": true,
   "completenessNote": "All three inputs must be published before an independent builder can build without reaching a live repository. Two of three establishes nothing: the missing one is the one that decides.",
   "inputs": {
@@ -348,8 +350,9 @@
       "purpose": "the retained fedora-bootc base every qualification build starts from. Upstream rebuilds this tag daily and old digests stop resolving \u2014 measured: the Phase 6 digest fb71f099 returns 'manifest unknown' \u2014 so a build that could only pull it from upstream would stop being reproducible on upstream's schedule.",
       "registryRepository": "ghcr.io/comradeart/bunny-os-base",
       "retention": {
-        "accessPolicy": "unverified",
-        "accessPolicyNote": "Package visibility is a repository setting. Until it is read back, whether an independent builder can pull without a credential is not established \u2014 and the cold-pull verification is what actually answers it.",
+        "accessPolicy": "private-and-unlinked",
+        "accessPolicyNote": "Measured 2026-07-30 by the cold-pull workflow, which is what this field was waiting for. All three packages are private and not linked to COMRADEART/bunny-os, so a workflow's GITHUB_TOKEN has no path to them and the cold pull failed on all three with 'reading manifest ... in ghcr.io/comradeart/'. Publishing a digest nobody else can resolve is not independent availability; it is the same single-machine retention wearing a registry URL.",
+        "accessPolicyRemedy": "Container package visibility cannot be changed through the REST API \u2014 PATCH user/packages/container/<name> returns 404 \u2014 and re-pushing with an org.opencontainers.image.source label to auto-link would change the base image's digest, which is the pin. It is a web-UI operation: github.com/users/COMRADEART/packages/container/<name>/settings, Danger Zone, Change visibility.",
         "backupLocation": "/var/lib/bunny-retention/base-images/sha256-c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
         "backupNote": "The local retention store is the backup and is on one machine. It is a copy, not a second independent location, and it does not by itself satisfy independent availability.",
         "deletionProtection": "unverified",
@@ -416,8 +419,9 @@
       "purpose": "the pinned builder image. Both builders must present this digest; the hosts may differ in every other respect, which is what makes them independent.",
       "registryRepository": "ghcr.io/comradeart/bunny-os-builder",
       "retention": {
-        "accessPolicy": "unverified",
-        "accessPolicyNote": "Package visibility is a repository setting. Until it is read back, whether an independent builder can pull without a credential is not established \u2014 and the cold-pull verification is what actually answers it.",
+        "accessPolicy": "private-and-unlinked",
+        "accessPolicyNote": "Measured 2026-07-30 by the cold-pull workflow, which is what this field was waiting for. All three packages are private and not linked to COMRADEART/bunny-os, so a workflow's GITHUB_TOKEN has no path to them and the cold pull failed on all three with 'reading manifest ... in ghcr.io/comradeart/'. Publishing a digest nobody else can resolve is not independent availability; it is the same single-machine retention wearing a registry URL.",
+        "accessPolicyRemedy": "Container package visibility cannot be changed through the REST API \u2014 PATCH user/packages/container/<name> returns 404 \u2014 and re-pushing with an org.opencontainers.image.source label to auto-link would change the base image's digest, which is the pin. It is a web-UI operation: github.com/users/COMRADEART/packages/container/<name>/settings, Danger Zone, Change visibility.",
         "backupLocation": "/var/lib/bunny-retention/builder-images/9c525bf1ca34",
         "backupNote": "The local retention store is the backup and is on one machine. It is a copy, not a second independent location, and it does not by itself satisfy independent availability.",
         "deletionProtection": "unverified",
@@ -455,8 +459,9 @@
       "purpose": "the 474 signed RPMs, their repodata, the Fedora keys that verify them and the signed snapshot manifest. Without it a second builder resolves packages from a live repository and gets whatever Fedora ships that day.",
       "registryRepository": "ghcr.io/comradeart/bunny-os-package-snapshot",
       "retention": {
-        "accessPolicy": "unverified",
-        "accessPolicyNote": "Package visibility is a repository setting. Until it is read back, whether an independent builder can pull without a credential is not established \u2014 and the cold-pull verification is what actually answers it.",
+        "accessPolicy": "private-and-unlinked",
+        "accessPolicyNote": "Measured 2026-07-30 by the cold-pull workflow, which is what this field was waiting for. All three packages are private and not linked to COMRADEART/bunny-os, so a workflow's GITHUB_TOKEN has no path to them and the cold pull failed on all three with 'reading manifest ... in ghcr.io/comradeart/'. Publishing a digest nobody else can resolve is not independent availability; it is the same single-machine retention wearing a registry URL.",
+        "accessPolicyRemedy": "Container package visibility cannot be changed through the REST API \u2014 PATCH user/packages/container/<name> returns 404 \u2014 and re-pushing with an org.opencontainers.image.source label to auto-link would change the base image's digest, which is the pin. It is a web-UI operation: github.com/users/COMRADEART/packages/container/<name>/settings, Danger Zone, Change visibility.",
         "backupLocation": "/var/lib/bunny-retention/package-snapshots/fedora-44-beta-20260730",
         "backupNote": "The local retention store is the backup and is on one machine. It is a copy, not a second independent location, and it does not by itself satisfy independent availability.",
         "deletionProtection": "unverified",
