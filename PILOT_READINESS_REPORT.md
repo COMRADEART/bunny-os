@@ -74,3 +74,51 @@ In order of dependency:
 7. Confirm support capacity, or reduce Phase 7 scope to what one maintainer can sustain.
 
 Steps 1 to 4 are Phase 6 work, not Phase 7 work. Phase 7 cannot unblock itself.
+
+## Maturity ladder, 2026-07-30
+
+These five states are distinct and this repository is at the first. Every
+document listed below reports the same position; if any of them disagrees, that
+document is wrong.
+
+| State | Meaning | Bunny OS |
+|---|---|---|
+| **Source implemented** | Design, schemas, validators, tests and documentation exist and pass | **yes** — Phases 1–7 |
+| **Runtime validated** | The software has been built and observed doing the thing on real or virtual hardware | **partial** — images build from a digest-pinned base and boot under KVM; installation, encryption, update, rollback and recovery matrices have not run |
+| **Release qualified** | `gate-stable-release` reports `GO` against a complete evidence record | **no** — 2 of 20 evidence categories pass |
+| **Pilot approved** | A pilot gate reports `GO` and a controlled pilot has separate approval | **no** — all three gates `BLOCKED` |
+| **Production operated** | A service or fleet is actually being run and supported | **no** — nothing is operated, and operating nothing remains a legitimate outcome |
+
+Agreeing documents: `README.md`, `NEXT_PHASE.md`, `docs/PHASE_7_BASELINE.md`,
+`PHASE_7_REPORT.md`, `KNOWN_LIMITATIONS.md`, `PILOT_READINESS_REPORT.md`.
+
+Current authority for the closure position: `RELEASE_BLOCKER_CLOSURE_REPORT.md`
+and `STABLE_EVIDENCE_REPORT.md`.
+
+## Separated pilot gates, 2026-07-30
+
+`scripts/phase7.py pilot-gate` remains in place and is unchanged. A second,
+separated gate now runs alongside it: `scripts/release.py gate --kind <pilot>`,
+which requires a passing **stable release gate** plus each pilot's own
+additional requirements. Both must pass. `make gate-oem-pilot`,
+`make gate-enterprise-pilot` and `make gate-sync-pilot` run both.
+
+The point of the separation is that a passing Phase 7 *source* gate contributes
+nothing to a pilot decision. Source completeness was never evidence that a
+device may be manufactured, a fleet deployed, or a service launched.
+
+| Gate | Additional requirements | Met |
+|---|---|---|
+| OEM pilot | qualified hardware model, OEM recovery validation, signed OEM profile, factory finalisation on hardware, branding and licensing approval, named support owner | **0 of 6** |
+| Enterprise pilot | fleet control plane implemented, tenant isolation penetration test, enrolment service deployed, console role testing, incident-response owner, support capacity | **0 of 6** |
+| Sync pilot | independent cryptographic review, operated sync service, key-recovery drill, deletion drill, service privacy review, data-residency disclosure, incident-response owner | **0 of 7** |
+
+Every unmet requirement carries a recorded note explaining why, and
+`tests/pilot_gates/` asserts both that no requirement is claimed as satisfied and
+that each unmet one has a note.
+
+The three mandated adversarial cases are tested and all three are refused: pilot
+approval without a stable release, OEM approval without hardware, and sync
+approval without a cryptographic review.
+
+**Recommendation unchanged: begin no pilot.**

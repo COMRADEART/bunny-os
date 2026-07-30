@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-07-29",
+  "note": "Four reviews are required. All four packages are prepared and none has been commissioned, because commissioning one requires money and an identified external party. A self-review is recorded nowhere in this file: release/reviews.py rejects any reviewer affiliated with the project.",
+  "reviews": [
+    {
+      "reviewId": "review-security-architecture",
+      "kind": "security",
+      "state": "package-prepared",
+      "reviewer": null,
+      "organisation": null,
+      "commissionedAt": null,
+      "deliveredAt": null,
+      "reportReference": null,
+      "findingsSummary": "",
+      "package": {
+        "scope": "The privileged broker, the root update agent, the installer secret channel, the SELinux domains, the update trust chain, and the Phase 7 enrolment, policy and remote-administration boundaries.",
+        "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+        "threatModel": "docs/THREAT_MODEL.md, docs/ENTERPRISE_THREAT_MODEL.md",
+        "designDocuments": [
+          "docs/PRIVILEGED_BROKER.md",
+          "docs/USER_AND_PRIVILEGE_MODEL.md",
+          "docs/SECURITY_BASELINE.md",
+          "docs/UPDATES.md",
+          "docs/adr/ADR-003-privileged-broker-authentication.md",
+          "docs/adr/ADR-022-enterprise-policy-agent.md",
+          "docs/adr/ADR-026-remote-administration-boundary.md"
+        ],
+        "testResults": [
+          "TEST_REPORT.md",
+          "tests/security/",
+          "tests/broker/",
+          "evidence/vulnerability/beta-grype.json"
+        ],
+        "knownLimitations": "KNOWN_LIMITATIONS.md; SECURITY_REACHABILITY_REVIEW.md records 24 Critical/High findings whose reachability could not be resolved without symbol analysis of stripped Go binaries.",
+        "explicitQuestions": [
+          "Are the 8 Critical golang.org/x/crypto findings in the vendored podman and skopeo binaries reachable in a Bunny OS deployment where no podman unit is enabled?",
+          "Does the broker's peer-credential rebinding close the PID-reuse race under adversarial load?",
+          "Can the two-socket broker design leak authority between the local-user and policy-agent method tables?",
+          "Is the update trust chain resistant to a fully compromised fleet control plane?",
+          "Does the installer secret channel leak the primary user's passphrase into any log, journal or crash artifact?"
+        ],
+        "expectedDeliverables": [
+          "A written report identifying the reviewer and the review dates",
+          "Findings rated by severity with reproduction steps",
+          "An explicit statement on each of the five questions above",
+          "A per-CVE reachability determination for the 8 Critical findings"
+        ]
+      }
+    },
+    {
+      "reviewId": "review-sync-cryptography",
+      "kind": "cryptography",
+      "state": "package-prepared",
+      "reviewer": null,
+      "organisation": null,
+      "commissionedAt": null,
+      "deliveredAt": null,
+      "reportReference": null,
+      "findingsSummary": "",
+      "package": {
+        "scope": "The encrypted-sync envelope format, the key hierarchy, device pairing, account recovery, and the deletion semantics.",
+        "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+        "threatModel": "docs/SYNC_CRYPTOGRAPHY.md, ENCRYPTED_SYNC_SECURITY_REVIEW.md",
+        "designDocuments": [
+          "docs/ENCRYPTED_SYNC.md",
+          "docs/SYNC_CRYPTOGRAPHY.md",
+          "docs/SYNC_RECOVERY.md",
+          "docs/DEVICE_PAIRING.md",
+          "docs/DATA_DELETION.md",
+          "docs/adr/ADR-020-end-to-end-encrypted-sync.md",
+          "schemas/sync-envelope.schema.json"
+        ],
+        "testResults": [
+          "tests/sync/",
+          "tests/cryptography/",
+          "ENCRYPTED_SYNC_SECURITY_REVIEW.md"
+        ],
+        "knownLimitations": "The AEAD backend is AES-256-GCM with HKDF-SHA256 and RFC 3394 key wrap. No third party has examined it. The design is explicitly not described as zero knowledge.",
+        "explicitQuestions": [
+          "Does the associated data binding of object identifier and version prevent envelope substitution and rollback across collections?",
+          "Is the recovery-secret-to-root-key derivation resistant to an offline attack by an operator holding all uploaded ciphertext?",
+          "Does the locally recomputed pairing authenticator actually defeat server key substitution, and under what assumptions?",
+          "Are the disclosed retention bounds for the six deletion scopes achievable by an honest operator, and detectable if violated?",
+          "Is per-collection key separation sufficient to prevent a compromised device from decrypting collections it was never paired for?"
+        ],
+        "expectedDeliverables": [
+          "A written cryptographic review identifying the reviewer and their credentials",
+          "An explicit statement on each of the five questions above",
+          "A judgement on whether the construction is sound as specified and as implemented",
+          "Any recommended changes before a sync service is operated"
+        ]
+      }
+    },
+    {
+      "reviewId": "review-accessibility",
+      "kind": "accessibility",
+      "state": "package-prepared",
+      "reviewer": null,
+      "organisation": null,
+      "commissionedAt": null,
+      "deliveredAt": null,
+      "reportReference": null,
+      "findingsSummary": "",
+      "package": {
+        "scope": "The fourteen essential workflows in the accessibility matrix, from installer keyboard navigation through recovery UI and diagnostics export.",
+        "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+        "threatModel": "Not applicable. The risk here is exclusion rather than compromise: an inaccessible encryption prompt or recovery tool locks a user out of their own machine.",
+        "designDocuments": [
+          "docs/ACCESSIBILITY.md",
+          "docs/FIRST_RUN.md",
+          "docs/INSTALLATION.md",
+          "docs/RECOVERY.md",
+          "ACCESSIBILITY_REPORT.md",
+          "FIRST_RUN_ACCESSIBILITY_REPORT.md"
+        ],
+        "testResults": [
+          "tests/accessibility/",
+          "ACCESSIBILITY_QUALIFICATION_REPORT.md"
+        ],
+        "knownLimitations": "Every accessibility result to date is static. No Orca session has been driven through the installer, the encryption prompt, or the recovery tool, and release/matrix.py refuses to accept a source-inspection pass in this matrix for that reason.",
+        "explicitQuestions": [
+          "Can a screen-reader user complete an encrypted installation unaided, including entering and confirming a passphrase and recording a recovery key?",
+          "Is the recovery environment usable without sight, given it runs before a full desktop session exists?",
+          "Do the Bunny approval dialogs announce what is being approved, or only that approval is requested?",
+          "Does text scaling above 150% break any essential workflow?",
+          "Is reduced-motion honoured through the first-run and update flows?"
+        ],
+        "expectedDeliverables": [
+          "A written audit identifying the auditor and the assistive technologies used",
+          "A per-workflow pass or fail with reproduction steps",
+          "WCAG-referenced findings where applicable",
+          "An explicit statement on whether an encrypted installation is completable by a screen-reader user"
+        ]
+      }
+    },
+    {
+      "reviewId": "review-licensing-trademark",
+      "kind": "legal",
+      "state": "package-prepared",
+      "reviewer": null,
+      "organisation": null,
+      "commissionedAt": null,
+      "deliveredAt": null,
+      "reportReference": null,
+      "findingsSummary": "",
+      "package": {
+        "scope": "The GPL-3.0-or-later / Apache-2.0 split selected by the owner, its outbound compatibility against the dependency set, and the trademark policy draft.",
+        "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+        "threatModel": "Not applicable. The exposure is distribution risk: an incompatible outbound licence or an unenforceable mark surfaces only once someone else ships the software.",
+        "designDocuments": [
+          "LICENSE",
+          "LICENSES/GPL-3.0-or-later.txt",
+          "LICENSES/Apache-2.0.txt",
+          "docs/LICENCE_DECISION.md",
+          "docs/LICENSING.md",
+          "docs/TRADEMARK_POLICY_DRAFT.md",
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "testResults": [
+          "evidence/build/beta-license-scan.log",
+          "evidence/sbom/beta-license-report.json",
+          "LICENSE_COMPLIANCE_REPORT.md"
+        ],
+        "knownLimitations": "The licence scan checks for prohibited markers in dependencies. It does not check outbound compatibility of GPL-3.0-or-later against every licence in the 6077-record SBOM, and no lawyer has reviewed the split or the trademark draft.",
+        "explicitQuestions": [
+          "Is GPL-3.0-or-later outbound-compatible with every licence present in the beta SBOM, including the Apache-2.0 and GPL-2.0-only components?",
+          "Does the split create a combined-work problem where an Apache-2.0 package under enterprise/ imports a GPL-3.0-or-later module?",
+          "Is the trademark policy draft enforceable, and does it adequately separate 'built from Bunny OS source' from 'is Bunny OS'?",
+          "Do the GPL-3.0 anti-tivoisation terms conflict with shipping Secure Boot with a vendor-controlled key on OEM hardware?",
+          "What source-distribution obligations attach to an OEM shipping a modified image, and is the current build tooling sufficient to discharge them?"
+        ],
+        "expectedDeliverables": [
+          "A written opinion identifying the reviewing firm or counsel",
+          "An explicit statement on outbound compatibility",
+          "A judgement on the anti-tivoisation question, which is load-bearing for the OEM programme",
+          "Recommended changes to the trademark draft before it is published"
+        ]
+      }
+    }
+  ]
+}

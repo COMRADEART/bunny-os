@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Backup, restore, and device-to-device migration.
 
 The rule that shapes the design: a restore never overwrites the destination

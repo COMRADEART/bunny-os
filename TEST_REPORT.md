@@ -180,3 +180,64 @@ This is the clearest argument in the repository for why source tests are not run
 ### Suite totals
 
 671 main-suite tests (from 101 at the start of Phase 7), plus 60 installer and 105 operations tests. New this session: broker 41, settings 40, factory 58, cryptography 46.
+
+## Release blocker closure suites, 2026-07-30
+
+Nine suites, 252 tests, all passing.
+
+| Suite | Tests | Covers |
+|---|---|---|
+| `tests/security/` | 52 | vulnerability dispositions, the ten-question reachability review, plus the inherited security tests |
+| `tests/licensing/` | 20 | licence decision, the seven-requirement gate, the repository's actual licence layout |
+| `tests/reproducibility/` | 29 | four separated claims, independence dimensions, four comparison levels |
+| `tests/signing/` | 29 | seven roles, namespace separation, key lifecycle, rotation overlap, the drill |
+| `tests/recovery/` | 38 | recovery-media matrix and its runtime-only enforcement |
+| `tests/release/` | 24 | the evidence model and its four forgery checks |
+| `tests/hardware_evidence/` | 25 | redaction scanning and claim substantiation |
+| `tests/accessibility_evidence/` | 12 | fourteen workflows, static-evidence refusal |
+| `tests/pilot_gates/` | 23 | four separated gates and the CI closure assertion |
+
+Run with `python scripts/task.py test-release-closure` or
+`make test-release-closure`.
+
+### The fourteen mandated adversarial cases
+
+All are tested and all are refused.
+
+| Case | Suite |
+|---|---|
+| forged evidence record | `tests/release/` - missing artifact, substituted content, and no-digest variants |
+| stale evidence | `tests/release/` |
+| evidence from the wrong commit | `tests/release/` |
+| development key used as a production key | `tests/signing/` |
+| wrong signing-role key | `tests/signing/` |
+| unsigned licence approval | `tests/licensing/` |
+| vulnerability severity reduction without review | `tests/security/` |
+| fake physical-hardware report | `tests/hardware_evidence/` |
+| self-review marked independent | `tests/release/` |
+| same-host builds marked independent | `tests/reproducibility/` |
+| recovery report without boot evidence | `tests/recovery/` |
+| pilot approval without stable release | `tests/pilot_gates/` |
+| OEM approval without hardware | `tests/pilot_gates/` |
+| sync approval without cryptographic review | `tests/pilot_gates/` |
+
+### Two defects the tests found in the code under test
+
+Both were found by writing the test first and watching it fail for the wrong
+reason.
+
+1. **The serial-number heuristic matched RFC 3339 timestamps.** Every hardware
+   report was rejected for carrying `2026-07-29T00` as an "asset tag". Fixed by
+   exempting timestamp-shaped values and time fields.
+2. **An absent qualification matrix reported `ok`.** An empty matrices document
+   has no incomplete matrices, so the stable gate counted the requirement as
+   satisfied. Fixed so an absent matrix blocks.
+
+### Whole-repository totals
+
+| Command | Tests | Result |
+|---|---|---|
+| `python scripts/task.py test` | 892 | PASS, 1 skipped |
+| `python scripts/task.py test-installer` | 60 | PASS |
+| `python scripts/task.py test-phase5` | 105 | PASS |
+| `python scripts/task.py test-release-closure` | 252 | PASS |

@@ -1,0 +1,14 @@
+build/ — GPL-3.0-or-later
+
+SPDX-License-Identifier: GPL-3.0-or-later
+
+Every file in this directory and its subdirectories is licensed under
+the GNU General Public License, version 3 or (at your option) any later version, unless that file carries a different
+SPDX-License-Identifier of its own.
+
+The full licence text is in LICENSES/GPL-3.0-or-later.txt at the repository root.
+
+This directory is part of the Bunny OS system layer. Copyleft applies here so that a
+modified system layer shipped to users stays available to those users.
+
+Copyright (C) 2026 The Bunny OS project.

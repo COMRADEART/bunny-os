@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """One-time recovery-key creation and confirmation helpers."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Bunny OS installer planning and policy package.
 
 The package is deliberately safe to import on a developer host.  It contains no

@@ -86,3 +86,43 @@ Phase 7 delivered OEM, enterprise-management, and encrypted-sync **source, schem
 - Fleet simulation is arithmetic over synthetic counts and is never production-readiness evidence.
 
 All inherited limitations above remain unchanged, including the stable-release `NO-GO`, the five blocker codes, the 31 missing evidence entries, and the 59 fixable vulnerability findings.
+
+## Maturity ladder, 2026-07-30
+
+These five states are distinct and this repository is at the first. Every
+document listed below reports the same position; if any of them disagrees, that
+document is wrong.
+
+| State | Meaning | Bunny OS |
+|---|---|---|
+| **Source implemented** | Design, schemas, validators, tests and documentation exist and pass | **yes** — Phases 1–7 |
+| **Runtime validated** | The software has been built and observed doing the thing on real or virtual hardware | **partial** — images build from a digest-pinned base and boot under KVM; installation, encryption, update, rollback and recovery matrices have not run |
+| **Release qualified** | `gate-stable-release` reports `GO` against a complete evidence record | **no** — 2 of 20 evidence categories pass |
+| **Pilot approved** | A pilot gate reports `GO` and a controlled pilot has separate approval | **no** — all three gates `BLOCKED` |
+| **Production operated** | A service or fleet is actually being run and supported | **no** — nothing is operated, and operating nothing remains a legitimate outcome |
+
+Agreeing documents: `README.md`, `NEXT_PHASE.md`, `docs/PHASE_7_BASELINE.md`,
+`PHASE_7_REPORT.md`, `KNOWN_LIMITATIONS.md`, `PILOT_READINESS_REPORT.md`.
+
+Current authority for the closure position: `RELEASE_BLOCKER_CLOSURE_REPORT.md`
+and `STABLE_EVIDENCE_REPORT.md`.
+
+## Release blocker closure limitations, 2026-07-30
+
+Each is a limitation of the *evidence* rather than of the design, and each names
+what would remove it.
+
+| Limitation | Consequence | Removed by |
+|---|---|---|
+| 8 Critical and 28 High fixable findings inherited from the base image, all dispositioned `Unknown` | `gate-stable-release` blocks on `vulnerability-position` | Fedora rebuilding the container stack, or an independent security review answering reachability per CVE |
+| The "is the vulnerable code path active" question could not be answered | 24 findings stay `Unknown` rather than reaching a disposition | per-CVE symbol analysis of stripped Go binaries, by a reviewer |
+| Package removal does not remove bytes from the base's ostree object store | minimisation cannot reduce image size, SBOM contents or scan counts on this base | a base rebuilt without the package |
+| Archive-derived and SBOM-derived scan counts disagree, 59 against 84 | two numbers exist for one image; the archive scan is authoritative | investigating syft's cataloguing of ostree objects |
+| Only one builder machine exists | `independent-builder` reproducibility cannot be established | a CI runner, a second machine, or a second administrator |
+| No production signing key of any role | the `Signing` evidence row records `FAIL` | a key ceremony, which needs a second person for four of the seven roles |
+| No live ISO and no signed recovery ISO | installation, encryption and recovery matrices cannot run even in a VM | building them |
+| No published update manifest and no previous release | update, rollback, migration and preservation matrices cannot run | publishing one and keeping the other |
+| No physical machine, ever | `Hardware` and `Secure Boot` categories block; the OEM pilot blocks | one x86-64 UEFI machine |
+| No independent review of any kind | four evidence positions rest on self-assessment | commissioning them |
+| Accessibility evidence is entirely static | 14 essential workflows unverified; this is the limitation that risks harming a user rather than merely leaving a box unticked | driving them with assistive technology |
+| `tests/hardware_evidence/`, `tests/accessibility_evidence/` and `tests/pilot_gates/` use underscores where the brief writes hyphens | directory names differ from the brief | nothing - a hyphenated directory is not an importable Python package, so `unittest discover` would skip it and the tests would silently never run |

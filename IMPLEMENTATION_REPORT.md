@@ -100,3 +100,50 @@ Real artifacts were produced on the Fedora WSL builder: a 2.3 GB QCOW2, a 2.0 GB
 A regression introduced by the two-socket work was caught by a real boot rather than by any test: systemd names an inherited descriptor after the socket unit when `FileDescriptorName=` is unset, and the new code rejected it, so the broker crash-looped and the health check failed with it. Fixed, regression-tested against the real name, rebuilt and re-verified.
 
 Suite total is now 671 main-suite tests plus 60 installer and 105 operations tests, passing identically on Windows and Fedora.
+
+## Release blocker closure, 2026-07-30
+
+A `release/` package was added - standard-library only, like `operations/`,
+`enterprise/`, `oem/` and `sync/` - implementing the evidence model and the gates
+that consume it.
+
+| Module | Responsibility |
+|---|---|
+| `release/vulnerability.py` | per-finding disposition; refuses a severity reduction or a non-blocking Critical without a completed independent review |
+| `release/reachability.py` | the ten-question bounded review; an unanswered question cannot become a negative answer |
+| `release/minimisation.py` | package removal with five protected categories refused at parse time |
+| `release/licensing.py` | the seven-requirement licence gate; refuses an unattributed approval |
+| `release/reproducibility.py` | four separated claims; refuses `independent-builder` without a strong dimension |
+| `release/signing.py` | seven roles, disjoint namespaces, the `dev-` wall, rotation overlap |
+| `release/artifacts.py` | candidate manifests, nine mandatory fields, naming discipline |
+| `release/matrix.py` | seven qualification matrices; recovery and accessibility cannot pass on source inspection |
+| `release/hardware.py` | redaction scanning and claim substantiation |
+| `release/reviews.py` | review packages and the self-review wall |
+| `release/evidence.py` | 20 categories with forgery, staleness, wrong-commit and self-review detection |
+| `release/gates.py` | four separated gates |
+
+Entry points: `scripts/release.py` with 14 commands, `scripts/signing_drill.py`,
+`scripts/generate_disposition.py`, `scripts/build_evidence_record.py`,
+`scripts/write_qualification_reports.py`, and `scripts/reproducibility/`.
+
+24 new `make` targets. A CI workflow with nine jobs, every one of which expects
+to fail closed, plus an assertion that no gate reports `GO` without protected
+evidence.
+
+Changes outside the new package:
+
+- `build/scripts/install-packages.py` gained profile-driven package removal with
+  a post-removal check that every protected package survived.
+- `build/packages/protected.txt` added.
+- Four consumer profiles gained `removePackages`.
+- `LICENSE`, `LICENSES/`, eight directory licences, 127 SPDX headers.
+- `scripts/reproducibility/compare-builds.py` compares package manifests
+  semantically, excluding syft's path-named document-root entry.
+
+Two behaviours were corrected after tests exposed them: a redaction heuristic
+that rejected timestamps, and an absent qualification matrix that reported as
+satisfied.
+
+Result: `gate-stable-release` reports `NO-GO` and all three pilot gates report
+`BLOCKED` - both now produced by an evidence model that can say precisely which
+of twenty categories is missing and why.

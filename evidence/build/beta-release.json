@@ -1,0 +1,19 @@
+{
+  "baseDistribution": "Fedora",
+  "baseImageReference": "quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4",
+  "baseVersion": "44",
+  "brokerVersion": "0.1.0",
+  "buildTimestamp": "2026-07-30T02:45:40Z",
+  "buildTool": "OCI Containerfile + unified image-builder",
+  "bunnyArtifactStatus": "placeholder",
+  "bunnyProtocolVersion": 3,
+  "bunnyVersion": "0.2.0",
+  "contractVersion": "1.0.0",
+  "imageVersion": "0.1.0-beta.79bb99ddb39d",
+  "osVersion": "0.1.0",
+  "profile": "beta",
+  "recoveryVersion": "0.1.0",
+  "schemaVersion": 1,
+  "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+  "sourceDateEpoch": 1785379540
+}

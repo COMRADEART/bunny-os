@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Bunny Shell user-session services.
 
 The package intentionally contains no privileged execution primitive.  System

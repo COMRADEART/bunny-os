@@ -1,0 +1,1232 @@
+{
+  "coveredNoAssertion": [
+    {
+      "package": "build/out/beta/bunny-os.oci.tar",
+      "reason": "spdx-described-artifact"
+    },
+    {
+      "package": "dario.cat/mergo",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "dario.cat/mergo",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "dasbus",
+      "reason": "licensed-owner:python3-dasbus"
+    },
+    {
+      "package": "github.com/BurntSushi/toml",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/BurntSushi/toml",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/HarryMichal/go-version",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/Masterminds/semver/v3",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/NVIDIA/go-nvlib",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/NVIDIA/go-nvml",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/NVIDIA/nvidia-container-toolkit",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/VividCortex/ewma",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/VividCortex/ewma",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/acarl005/stripansi",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/acarl005/stripansi",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/acobaugh/osrelease",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/aead/serpent",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/blang/semver/v4",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/briandowns/spinner",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/cespare/xxhash/v2",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/checkpoint-restore/checkpointctl",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/checkpoint-restore/go-criu/v7",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/chzyer/readline",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containerd/errdefs",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containerd/errdefs",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/containerd/errdefs/pkg",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containerd/errdefs/pkg",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/containerd/log",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containerd/platforms",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containerd/stargz-snapshotter/estargz",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containerd/stargz-snapshotter/estargz",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/containerd/typeurl/v2",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containernetworking/plugins",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containernetworking/plugins",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/buildah",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/conmon",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/gvisor-tap-vsock",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/libtrust",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/libtrust",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/containers/luksy",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/ocicrypt",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/ocicrypt",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/containers/podman/v5",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/podman/v5",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/podman/v5",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/psgo",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/containers/skopeo",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/containers/toolbox",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/coreos/go-oidc/v3",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/coreos/go-oidc/v3",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/coreos/go-systemd",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/coreos/go-systemd/v22",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/cyberphone/json-canonicalization",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/cyberphone/json-canonicalization",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/cyphar/filepath-securejoin",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/cyphar/filepath-securejoin",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/davecgh/go-spew",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/digitalocean/go-libvirt",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/digitalocean/go-qemu",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/disiqueira/gotree/v3",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/distribution/reference",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/distribution/reference",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/docker/distribution",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/docker/distribution",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/docker/docker",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/docker/docker",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/docker/docker-credential-helpers",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/docker/docker-credential-helpers",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/docker/go-connections",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/docker/go-connections",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/docker/go-plugins-helpers",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/docker/go-units",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/docker/go-units",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/docker/go-units",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/fatih/color",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/felixge/httpsnoop",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/felixge/httpsnoop",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/fsnotify/fsnotify",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/fsnotify/fsnotify",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/fsouza/go-dockerclient",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/go-jose/go-jose/v4",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/go-jose/go-jose/v4",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/go-logfmt/logfmt",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/go-logr/logr",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/go-logr/logr",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/go-logr/stdr",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/go-logr/stdr",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/go-viper/mapstructure/v2",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/godbus/dbus/v5",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/godbus/dbus/v5",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/gogo/protobuf",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/golang/protobuf",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/golang/protobuf",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/google/go-containerregistry",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/google/go-containerregistry",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/google/go-intervals",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/google/go-intervals",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/google/renameio/v2",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/google/shlex",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/google/uuid",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/google/uuid",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/google/uuid",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/gorilla/handlers",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/gorilla/mux",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/gorilla/mux",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/gorilla/schema",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/hashicorp/errwrap",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/hashicorp/go-cleanhttp",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/hashicorp/go-cleanhttp",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/hashicorp/go-multierror",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/hashicorp/go-multierror",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/hashicorp/go-retryablehttp",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/hashicorp/go-retryablehttp",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/jinzhu/copier",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/json-iterator/go",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/json-iterator/go",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/kevinburke/ssh_config",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/klauspost/compress",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/klauspost/compress",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/klauspost/pgzip",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/klauspost/pgzip",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/kr/fs",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/letsencrypt/boulder",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/letsencrypt/boulder",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/manifoldco/promptui",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/mattn/go-colorable",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/mattn/go-isatty",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/mattn/go-runewidth",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/mattn/go-runewidth",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/mattn/go-shellwords",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/mattn/go-sqlite3",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/mattn/go-sqlite3",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/mdlayher/socket",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/mdlayher/vsock",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/miekg/pkcs11",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/miekg/pkcs11",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/mistifyio/go-zfs/v3",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/mistifyio/go-zfs/v3",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/moby/buildkit",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/moby/docker-image-spec",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/moby/docker-image-spec",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/moby/go-archive",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/moby/patternmatcher",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/moby/sys/capability",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/moby/sys/capability",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/moby/sys/mountinfo",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/moby/sys/mountinfo",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/moby/sys/sequential",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/moby/sys/user",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/moby/sys/user",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/moby/sys/userns",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/moby/term",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/modern-go/concurrent",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/modern-go/concurrent",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/modern-go/reflect2",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/modern-go/reflect2",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/morikuni/aec",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/nxadm/tail",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/opencontainers/cgroups",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/opencontainers/go-digest",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/opencontainers/go-digest",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/opencontainers/image-spec",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/opencontainers/image-spec",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/opencontainers/runc",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/opencontainers/runtime-spec",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/opencontainers/runtime-spec",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/opencontainers/runtime-spec",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/opencontainers/runtime-tools",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/opencontainers/runtime-tools",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/opencontainers/selinux",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/opencontainers/selinux",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/openshift/imagebuilder",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/pelletier/go-toml/v2",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/pkg/errors",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/pkg/errors",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/pkg/sftp",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/planetscale/vtprotobuf",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/pmezard/go-difflib",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/proglottis/gpgme",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/proglottis/gpgme",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/rivo/uniseg",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/rivo/uniseg",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/rootless-containers/rootlesskit/v2",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/sagikazarmark/locafero",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/seccomp/libseccomp-golang",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/secure-systems-lab/go-securesystemslib",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/secure-systems-lab/go-securesystemslib",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/segmentio/ksuid",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/segmentio/ksuid",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/shirou/gopsutil/v4",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/sigstore/fulcio",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/sigstore/fulcio",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/sigstore/protobuf-specs",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/sigstore/protobuf-specs",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/sigstore/sigstore",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/sigstore/sigstore",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/sirupsen/logrus",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/sirupsen/logrus",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/sirupsen/logrus",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/sirupsen/logrus",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/skeema/knownhosts",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/skratchdot/open-golang",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/skratchdot/open-golang",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/smallstep/pkcs7",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/smallstep/pkcs7",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/sourcegraph/conc",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/spf13/afero",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/spf13/cast",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/spf13/cobra",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/spf13/cobra",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/spf13/cobra",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/spf13/pflag",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/spf13/pflag",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/spf13/pflag",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/spf13/viper",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/stefanberger/go-pkcs11uri",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/stefanberger/go-pkcs11uri",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/subosito/gotenv",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/sylabs/sif/v2",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/sylabs/sif/v2",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/syndtr/gocapability",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "github.com/tchap/go-patricia/v2",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/tchap/go-patricia/v2",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/titanous/rocacheck",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/titanous/rocacheck",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/tklauser/go-sysconf",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/tklauser/numcpus",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/ulikunitz/xz",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/ulikunitz/xz",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/vbatts/tar-split",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/vbatts/tar-split",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/vbauerster/mpb/v8",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/vbauerster/mpb/v8",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "github.com/vishvananda/netlink",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "github.com/vishvananda/netns",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.etcd.io/bbolt",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.opentelemetry.io/auto/sdk",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.opentelemetry.io/auto/sdk",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "go.opentelemetry.io/otel",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.opentelemetry.io/otel",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "go.opentelemetry.io/otel/metric",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.opentelemetry.io/otel/metric",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "go.opentelemetry.io/otel/trace",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.opentelemetry.io/otel/trace",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "go.podman.io/common",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.podman.io/common",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.podman.io/common",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "go.podman.io/image/v5",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.podman.io/image/v5",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "go.podman.io/storage",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.podman.io/storage",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.podman.io/storage",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "go.podman.io/storage",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "go.yaml.in/yaml/v2",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "golang.org/x/crypto",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "golang.org/x/crypto",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "golang.org/x/mod",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "golang.org/x/mod",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "golang.org/x/net",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "golang.org/x/net",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "golang.org/x/oauth2",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "golang.org/x/oauth2",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "golang.org/x/sync",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "golang.org/x/sync",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "golang.org/x/sys",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "golang.org/x/sys",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "golang.org/x/sys",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "golang.org/x/sys",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "golang.org/x/term",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "golang.org/x/term",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "golang.org/x/term",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "golang.org/x/text",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "golang.org/x/text",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "golang.org/x/text",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "golang.org/x/time",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "google.golang.org/genproto/googleapis/api",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "google.golang.org/genproto/googleapis/api",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "google.golang.org/genproto/googleapis/rpc",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "google.golang.org/genproto/googleapis/rpc",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "google.golang.org/grpc",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "google.golang.org/grpc",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "google.golang.org/protobuf",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "google.golang.org/protobuf",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "gopkg.in/inf.v0",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "gopkg.in/tomb.v1",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "gopkg.in/yaml.v2",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "gopkg.in/yaml.v3",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "gopkg.in/yaml.v3",
+      "reason": "licensed-owner:skopeo"
+    },
+    {
+      "package": "gopkg.in/yaml.v3",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "libdnf5",
+      "reason": "licensed-owner:python3-libdnf5"
+    },
+    {
+      "package": "libtirpc",
+      "reason": "duplicate-identity-with-declared-license"
+    },
+    {
+      "package": "linux-kernel",
+      "reason": "licensed-fedora-kernel-rpm"
+    },
+    {
+      "package": "nftables",
+      "reason": "licensed-owner:python3-nftables"
+    },
+    {
+      "package": "packaging",
+      "reason": "licensed-owner:python3-packaging"
+    },
+    {
+      "package": "ptyprocess",
+      "reason": "licensed-owner:python3-ptyprocess"
+    },
+    {
+      "package": "selinux",
+      "reason": "licensed-owner:python3-libselinux"
+    },
+    {
+      "package": "sepolicy",
+      "reason": "licensed-owner:python3-policycoreutils"
+    },
+    {
+      "package": "setools",
+      "reason": "licensed-owner:python3-setools"
+    },
+    {
+      "package": "sigs.k8s.io/yaml",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "sigs.k8s.io/yaml",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "tags.cncf.io/container-device-interface",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "tags.cncf.io/container-device-interface",
+      "reason": "licensed-owner:toolbox"
+    },
+    {
+      "package": "tags.cncf.io/container-device-interface/specs-go",
+      "reason": "licensed-owner:podman"
+    },
+    {
+      "package": "tags.cncf.io/container-device-interface/specs-go",
+      "reason": "licensed-owner:toolbox"
+    }
+  ],
+  "packages": 6077,
+  "prohibited": [],
+  "schemaVersion": 1,
+  "unknownLicenses": []
+}

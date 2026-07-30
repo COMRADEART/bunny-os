@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Factory finalisation evaluation for ``bunny-oem finalize``.
 
 ``docs/OEM_MODE.md`` already states the intended contract: sealing removes the

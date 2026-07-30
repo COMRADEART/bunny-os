@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Fixed policy operations for the policy socket.
 
 Like ``backend.py``, no operation accepts an executable, argv, or a

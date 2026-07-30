@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Fail-closed verification for an upstream Bunny release directory."""
 
 from __future__ import annotations

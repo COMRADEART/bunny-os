@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """``bunny-oem`` command-line interface.
 
 Validation, evaluation, and reporting are implemented here and run anywhere.

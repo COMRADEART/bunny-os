@@ -64,3 +64,123 @@ Producing an hour figure without a staffed team to measure against would be inve
 ## Recommendation
 
 Before any pilot, decide explicitly which Phase 7 capabilities the project will actually operate. The design supports all of them; the project can currently operate none of them. A reduced scope — for example, OEM profiles and air-gapped management, with no hosted service at all — would be sustainable in a way that a hosted multi-tenant sync service would not.
+
+## Sustainability decision, 2026-07-30
+
+Updated from verified information only. Where a number is not known, it is
+recorded as not known rather than estimated, because an invented operating cost
+would be worse than an absent one.
+
+### Current maintainers
+
+**One.** No funded rota, no on-call, no second reviewer. Every review in this
+repository is a self-review, which `release/reviews.py` now refuses to record as
+independent.
+
+### Available release signers
+
+**One potential signer. Zero provisioned keys.**
+
+Four of the seven signing roles — `osRelease`, `updateMetadata`,
+`recoveryImage`, `oemProfile` — require two-person approval, and
+`release/signing.py` refuses a production key record for those roles without it.
+With one person those roles **cannot be provisioned at all**. This is not a
+policy that could be relaxed; it is the reason a compromised or unavailable
+single signer would be unrecoverable.
+
+### Available test hardware
+
+**None.** `operations/data/hardware-evidence.json` contains zero reports. One
+Windows workstation hosts a Fedora 44 WSL2 builder with nested KVM, 22 cores and
+895 GB free. That builder can build and boot virtual machines. It is not test
+hardware and cannot produce a physical result.
+
+### Infrastructure actually provisioned
+
+| Item | State |
+|---|---|
+| Build machine | one, shared with the developer's workstation |
+| CI | GitHub Actions workflows defined; no self-hosted runner |
+| Registry | none |
+| Update server | none |
+| Fleet control plane | none — ADR-023 places it outside this repository and it does not exist |
+| Enrolment service | none |
+| Sync service | none |
+| Signing infrastructure | none; no hardware token, no HSM, no signing service |
+| Artifact hosting | none |
+
+### Recurring costs actually incurred
+
+**None.** No service is operated, no infrastructure is rented, no domain is
+registered for a service, and no support commitment exists. The build machine
+already existed.
+
+This is not a claim that operating would be cheap. It is a statement that
+nothing has been spent, so no cost model derived from experience exists.
+
+### Independent-review costs
+
+**Not quoted.** Four reviews are prepared and none has been priced, because
+pricing one requires approaching a reviewer and none has been approached. Any
+figure here would be invented.
+
+What is known is the ordering: the cryptographic review blocks the sync pilot
+outright, and the security review is the only route by which any of the 8
+Critical findings can become non-blocking.
+
+### Support capacity
+
+**Unconfirmed, and the honest reading is that it is zero for a supported
+release.** A stable release implies a security-response commitment. With one
+maintainer, no rota and no second signer, a security fix requiring a signed
+update could not be issued if that person were unavailable.
+
+### Release-maintenance burden
+
+Per release, from what this phase actually observed rather than from an estimate:
+
+- a full profile build takes roughly 10 minutes of machine time, and three
+  profiles were built;
+- SBOM generation over a 1.85 GB archive produces a 60 MB SPDX document;
+- vulnerability scanning, licence scanning and inspection add several minutes;
+- a two-workspace reproducibility comparison requires hashing both archives in
+  full;
+- the twelve-artifact candidate set requires a live ISO and a recovery ISO that
+  have not been built, so the full candidate cost is **not yet known**.
+
+Human time is the real burden and it is not measured, because no release has
+been made.
+
+### Decision
+
+**Operate no Phase 7 services.**
+
+This is one of the five permitted conclusions and it is the correct one. Every
+alternative requires capacity that demonstrably does not exist:
+
+| Option | Blocked by |
+|---|---|
+| Operate OEM tooling only | no hardware, no `oem-` key, no support owner, unresolved anti-tivoisation question |
+| Operate enterprise tooling only | no control plane, no enrolment service, no penetration test, no incident-response owner |
+| Operate encrypted sync only | no cryptographic review, no service, no key-recovery or deletion drill, no residency disclosure |
+| Operate a limited combination | strictly harder than any single option above |
+| **Operate none** | **nothing — this is achievable today** |
+
+Operating none is not a failure state. The Phase 7 source is complete, tested
+and correct; it simply is not accompanied by the capacity to run the services it
+describes, and the gates enforce that rather than describing it.
+
+### What would change this decision
+
+In order of leverage:
+
+1. **A second person.** It unblocks two-person signing, makes independent
+   builder reproducibility trivial, and converts support capacity from zero to
+   something. It is the single highest-leverage change available.
+2. **One x86-64 UEFI machine.** Unblocks two evidence categories and the OEM
+   pilot's first requirement.
+3. **Funding for one independent review.** The security one, because it is the
+   only route to the Critical findings.
+
+None of these is an engineering task, which is why they are recorded here rather
+than in `NEXT_PHASE.md` as work items.

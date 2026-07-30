@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Wrong-disk and destructive-operation protections."""
 
 from __future__ import annotations

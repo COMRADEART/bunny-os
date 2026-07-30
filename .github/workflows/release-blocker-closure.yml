@@ -1,0 +1,256 @@
+name: Release blocker closure
+
+# Every job here is expected to *fail closed* while the blockers are open. That
+# is the point: a green pipeline must not be reachable by removing evidence.
+#
+# Pull-request CI deliberately has no production signing access. The
+# pilot-gate-closure job asserts that no gate reports GO in this environment,
+# so a change that accidentally makes a pilot gate passable fails the build
+# instead of quietly authorising a pilot.
+
+on:
+  pull_request:
+  push:
+    branches: [main, feature/release-blocker-closure]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  closure-tests:
+    name: Blocker closure test suites
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install validation dependencies
+        run: python -m pip install --disable-pip-version-check jsonschema
+      - name: Repository-native validation
+        run: python scripts/task.py validate
+      - name: Inherited source suites
+        run: |
+          python scripts/task.py test
+          python scripts/task.py test-installer
+          python scripts/task.py test-phase5
+      - name: Release blocker closure suites
+        run: python scripts/task.py test-release-closure
+
+  licence-gate:
+    name: Licence gate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Licence gate must pass
+        run: python scripts/release.py licence-gate
+
+  vulnerability-report:
+    name: Vulnerability report generation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      # The disposition record must still cover every finding in the committed
+      # scan. A new finding with no disposition fails here rather than being
+      # discovered at release time.
+      - name: Disposition covers the recorded scan
+        run: python scripts/generate_disposition.py --check --image x --base-digest x --commit x --scanned-at x
+      - name: Generate the vulnerability report
+        run: |
+          set +e
+          python scripts/release.py vulnerability-position
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "::warning::the vulnerability position no longer blocks; update the reports"
+          elif [ "$status" -ne 2 ]; then
+            echo "unexpected exit $status"; exit 1
+          fi
+      - name: Bounded reachability review is well formed
+        run: |
+          set +e
+          python scripts/release.py reachability-review
+          status=$?
+          set -e
+          [ "$status" -eq 0 ] || [ "$status" -eq 2 ]
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: vulnerability-report
+          path: build/out/qualification/vulnerability-report.*
+
+  deterministic-build-inputs:
+    name: Deterministic build checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Archive normalisation regression tests
+        run: python -m unittest discover -s tests/image -t .
+      - name: Reproducibility comparison must not overclaim
+        run: |
+          set +e
+          python scripts/release.py reproducibility-compare
+          status=$?
+          set -e
+          # Exit 2 is correct while only one machine exists. Exit 0 would mean
+          # independent-builder reproducibility was established, which needs a
+          # second machine that CI does not have.
+          if [ "$status" -eq 0 ]; then
+            echo "::error::independent-builder reproducibility reported as established in CI"
+            exit 1
+          fi
+          [ "$status" -eq 2 ]
+
+  package-minimisation:
+    name: Package minimisation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Minimisation record is complete and touches no protected category
+        run: python scripts/release.py package-minimisation-check
+
+  development-signing-drill:
+    name: Development signing drill
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      # No production key material is available to pull-request CI, and the
+      # drill must never need any. It mints its own dev- prefixed keys outside
+      # the working tree.
+      - name: Run the drill with development keys
+        run: python scripts/signing_drill.py --keydir "$RUNNER_TEMP/bunny-dev-keys"
+      - name: Signing roles are separated and no production key is claimed
+        run: |
+          set +e
+          python scripts/release.py signing-roles
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "::error::a production signing key is claimed in pull-request CI"
+            exit 1
+          fi
+
+  release-manifest:
+    name: Release manifest validation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Candidate manifest validation fails closed with no candidate
+        run: |
+          set +e
+          python scripts/release.py validate-release-manifest
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "expected the manifest gate to block"; exit 1; }
+
+  recovery-image-validation:
+    name: Recovery image validation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Recovery matrix must not pass on source inspection
+        run: |
+          set +e
+          python scripts/release.py test-matrix --name recovery-media
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "recovery media reported qualified without a boot"; exit 1; }
+      - name: Recovery qualification tests
+        run: python -m unittest discover -s tests/recovery -t .
+
+  stable-evidence:
+    name: Stable evidence validation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Evidence record is well formed
+        run: |
+          set +e
+          python scripts/release.py stable-evidence-report
+          status=$?
+          set -e
+          # 2 means blocking evidence, which is expected. Any other non-zero
+          # exit means the record itself is malformed.
+          [ "$status" -eq 0 ] || [ "$status" -eq 2 ]
+      - name: Hardware evidence intake
+        run: |
+          set +e
+          python scripts/release.py validate-hardware-evidence
+          status=$?
+          set -e
+          [ "$status" -eq 0 ] || [ "$status" -eq 2 ]
+      - name: Independent review status
+        run: |
+          set +e
+          python scripts/release.py validate-independent-reviews
+          status=$?
+          set -e
+          [ "$status" -eq 0 ] || [ "$status" -eq 2 ]
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stable-evidence
+          path: build/out/qualification/
+
+  pilot-gate-closure:
+    name: Pilot gate closure assertion
+    runs-on: ubuntu-24.04
+    # This job is the backstop. It fails if any gate reports GO without the
+    # protected evidence that would justify it. Pull-request CI never has that
+    # evidence, so a GO here means a gate was weakened.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: No gate may report GO without protected evidence
+        env:
+          BUNNY_PROTECTED_EVIDENCE: ""
+        run: python scripts/release.py pilot-closure-assertion
+      - name: Each pilot gate individually reports BLOCKED
+        run: |
+          for kind in oem-pilot enterprise-pilot sync-pilot; do
+            set +e
+            python scripts/release.py gate --kind "$kind"
+            status=$?
+            set -e
+            if [ "$status" -ne 2 ]; then
+              echo "::error::$kind did not report BLOCKED (exit $status)"
+              exit 1
+            fi
+          done
+      - name: Stable release gate reports NO-GO
+        run: |
+          set +e
+          python scripts/release.py gate --kind stable-release
+          status=$?
+          set -e
+          [ "$status" -eq 2 ] || { echo "::error::stable gate reported GO in pull-request CI"; exit 1; }

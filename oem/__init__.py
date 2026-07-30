@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bunny OS OEM customisation, validation, and factory-finalisation tooling.
 
 This package is device- and build-host-side only. It contains no fleet-server,

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Flatpak-first application policy with honest enforcement labels."""
 
 from __future__ import annotations

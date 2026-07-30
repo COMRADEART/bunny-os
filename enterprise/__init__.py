@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bunny OS device-side enterprise management.
 
 This package is the *device* half of the optional organisation control plane. It

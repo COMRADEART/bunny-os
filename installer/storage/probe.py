@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Fixed-command, read-only block-device probe."""
 
 from __future__ import annotations

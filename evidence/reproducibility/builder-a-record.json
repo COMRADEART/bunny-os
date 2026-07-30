@@ -1,0 +1,19 @@
+{
+  "builderId": "builder-a",
+  "machineId": "331981094da1acaa1dd1d054eb118b63",
+  "virtualisationInstance": "wsl:FedoraLinux-44",
+  "cloudRunner": null,
+  "administrator": "bd4c15ed4ff08f90573929c2b2621347",
+  "environmentId": "13b4f73576c07c96c5bbdfbfb81d2f21",
+  "operatingSystem": "fedora-44 6.18.33.2-microsoft-standard-WSL2",
+  "toolchain": {
+    "podman": "podman version 5.8.4",
+    "image-builder": "image-builder:",
+    "syft": "1.50.0",
+    "grype": "0.116.1",
+    "python3": "Python 3.14.3"
+  },
+  "workspace": "/var/tmp/bunny-builder-a",
+  "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+  "baseImageDigest": "quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4"
+}

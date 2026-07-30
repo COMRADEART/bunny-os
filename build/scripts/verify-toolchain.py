@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Verify exact release build tool versions declared by release engineering."""
 
 import argparse

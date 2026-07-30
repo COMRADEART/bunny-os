@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """OEM profile validation.
 
 The JSON Schema in ``schemas/oem-profile.schema.json`` makes unrepresentable the

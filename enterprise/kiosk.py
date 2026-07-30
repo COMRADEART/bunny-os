@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Kiosk, dedicated-purpose, and shared laboratory device profiles.
 
 A restricted profile removes *user-facing* capability. It never removes a

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """First-run state and privacy defaults."""
 
 from __future__ import annotations

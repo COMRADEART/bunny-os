@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Multi-tenant isolation for the optional fleet service.
 
 The dangerous failure in a multi-tenant control plane is not a missing check but

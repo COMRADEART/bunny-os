@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Fixed broker operations.  No operation accepts an executable or argv."""
 
 from __future__ import annotations

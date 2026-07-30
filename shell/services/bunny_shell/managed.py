@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Organisation-managed settings overlay.
 
 The overlay is written by the privileged broker (``policy_backend.apply_policy``)

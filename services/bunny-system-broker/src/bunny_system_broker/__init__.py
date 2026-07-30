@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Bunny OS privileged broker.
 
 The package deliberately uses only the Python standard library.  OS authority

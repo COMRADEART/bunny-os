@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Remote administration boundary and destructive-operation gating.
 
 Two separate concerns live here because they fail differently.

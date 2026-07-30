@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Quiet-boot network capture.
 #
 # docs/PRIVACY_REGRESSION_TESTING.md requires a quiet packet capture with

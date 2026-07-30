@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Sync account recovery.
 
 Recovery is the hardest trade-off in the design. Any mechanism that lets a user

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """OEM overlay validation.
 
 An overlay is the only way an OEM adds files to an image. Because a privacy or

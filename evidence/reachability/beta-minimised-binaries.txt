@@ -1,0 +1,12 @@
+ABSENT   toolbox     
+PRESENT  podman       /usr/sbin/podman
+PRESENT  skopeo       /usr/sbin/skopeo
+PRESENT  bootc        /usr/sbin/bootc
+PRESENT  orca         /usr/sbin/orca
+PRESENT  cryptsetup   /usr/sbin/cryptsetup
+--- rpm ---
+package toolbox is not installed
+podman-5.8.4-1.fc44.x86_64
+bootc-1.16.4-1.fc44.x86_64
+orca-50.2-1.fc44.noarch
+cryptsetup-2.8.7-1.fc44.x86_64

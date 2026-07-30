@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Optional device attestation.
 
 Modelled on ``operations/crash.py``, which uses exact-set equality against a

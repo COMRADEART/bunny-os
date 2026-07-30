@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Accessible live-session landing surface.
 
 Anaconda Web UI remains the selected graphical installer.  This Bunny-owned

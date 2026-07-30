@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Local-only/offline policy decisions consumed by Bunny Shell clients."""
 
 from __future__ import annotations

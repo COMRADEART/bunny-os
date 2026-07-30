@@ -1,0 +1,622 @@
+{
+  "blockedReasons": {
+    "accessibility": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+    "encryption": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
+    "installation": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+    "preservation": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+    "recovery-media": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+    "rollback": "vm-rollback-test.sh exits 3: BUNNY_PREVIOUS_BETA_DISK must name an existing QCOW2. There is no previous release to roll back to.",
+    "update": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable."
+  },
+  "matrices": {
+    "accessibility": [
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "installer-keyboard-navigation"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "installer-screen-reader"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "encryption-prompt"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "first-run"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "login"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "bunny-launcher"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "bunny-approvals"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "update-ui"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "rollback-ui"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "recovery-ui"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "diagnostics-export"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "high-contrast"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "text-scaling"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "reduced-motion"
+      }
+    ],
+    "encryption": [
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "luks-password-unlock"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "recovery-key"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "incorrect-password"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "missing-recovery-key"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "tpm-fallback"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "secure-boot-interaction"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "update-after-encryption"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "rollback-after-encryption"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "recovery-media-access"
+      }
+    ],
+    "installation": [
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "empty-uefi-disk"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "encrypted-uefi-installation"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "unencrypted-installation"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "offline-installation"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "multiple-disks"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "nvme-like-virtual-disk"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "sata-like-virtual-disk"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "existing-linux-replacement"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "supported-free-space-installation"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "interrupted-installation"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "bootloader-failure"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "recovery-installation"
+      }
+    ],
+    "preservation": [
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "home"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "bunny-database"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "bunny-memory"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "provider-aliases"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "local-models"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "plugins"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "workspaces"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "applications"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "settings"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "checkpoints"
+      }
+    ],
+    "recovery-media": [
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "boots-independently"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "verifies-own-signature"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "encrypted-access-requires-credentials"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "mounts-user-data-read-only-by-default"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "inspects-deployments"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "selects-previous-deployment"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "repairs-boot-entries"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "disables-bunny"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "disables-plugins"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "enters-safe-graphics"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "exports-redacted-diagnostics"
+      }
+    ],
+    "rollback": [
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-rollback-test.sh exits 3: BUNNY_PREVIOUS_BETA_DISK must name an existing QCOW2. There is no previous release to roll back to.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "manual-rollback"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-rollback-test.sh exits 3: BUNNY_PREVIOUS_BETA_DISK must name an existing QCOW2. There is no previous release to roll back to.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "automatic-rollback-recommendation"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-rollback-test.sh exits 3: BUNNY_PREVIOUS_BETA_DISK must name an existing QCOW2. There is no previous release to roll back to.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "recovery-assisted-rollback"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-rollback-test.sh exits 3: BUNNY_PREVIOUS_BETA_DISK must name an existing QCOW2. There is no previous release to roll back to.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "rollback-after-encryption"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-rollback-test.sh exits 3: BUNNY_PREVIOUS_BETA_DISK must name an existing QCOW2. There is no previous release to roll back to.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "rollback-preserves-user-data"
+      }
+    ],
+    "update": [
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "current-to-next-candidate"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "interrupted-download"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "interrupted-staging"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "insufficient-disk"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "invalid-signature"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "expired-metadata"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "wrong-architecture"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "failed-service-health"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "failed-graphical-session"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "failed-bunny-contract"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "automatic-rollback-recommendation"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "manual-rollback"
+      },
+      {
+        "evidenceReference": null,
+        "method": "source-inspection",
+        "notes": "vm-upgrade-test.sh exits 3: BUNNY_UPDATE_MANIFEST must name a signed update manifest. No manifest has been published and no registry is reachable.",
+        "outcome": "NOT_RUN",
+        "recordedAt": "2026-07-29T00:00:00Z",
+        "scenario": "recovery-assisted-rollback"
+      }
+    ]
+  },
+  "note": "Every scenario that has not been executed is recorded as NOT_RUN with the reason it could not run. NOT_RUN is blocking. A scenario is never resolved by inspecting the code that would handle it.",
+  "recordedOn": "2026-07-29",
+  "schemaVersion": 1
+}

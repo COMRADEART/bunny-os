@@ -1,0 +1,191 @@
+{
+  "comparisons": [
+    {
+      "archiveDigests": [
+        "b5c0c502e22b936aa170c58f2240b777235da4c15eb715a4309ee2b859bf87d8",
+        "b5c0c502e22b936aa170c58f2240b777235da4c15eb715a4309ee2b859bf87d8"
+      ],
+      "claim": "independent-builder",
+      "fileComparisonSummary": {
+        "differingCount": 0,
+        "differingMembers": [],
+        "memberCount": 83
+      },
+      "fileDigests": [
+        {
+          "blobs/sha256/031f8dbde3765e06ed31ec294e2a569934f1d01e7097f3968bee732608cabb24": "031f8dbde3765e06ed31ec294e2a569934f1d01e7097f3968bee732608cabb24",
+          "blobs/sha256/03f759b242f0b57f458d8139115ccdb8ebef6ebc2e0260d10f3c4d2e7b666ef8": "03f759b242f0b57f458d8139115ccdb8ebef6ebc2e0260d10f3c4d2e7b666ef8",
+          "blobs/sha256/0707e1a623464dd0e13c1105158c8cb6dc69fdc6ef2a2d797de4c6aca3db71ac": "0707e1a623464dd0e13c1105158c8cb6dc69fdc6ef2a2d797de4c6aca3db71ac",
+          "blobs/sha256/0b928df9c1c8ea06cb161d3f9c63ea45d1a8d234133a3a75e7230572b31a7003": "0b928df9c1c8ea06cb161d3f9c63ea45d1a8d234133a3a75e7230572b31a7003",
+          "blobs/sha256/14229420fdf0cbfeaea1345dfb54bad0187f7a397130eca349ba85a11590f09e": "14229420fdf0cbfeaea1345dfb54bad0187f7a397130eca349ba85a11590f09e"
+        },
+        {
+          "blobs/sha256/031f8dbde3765e06ed31ec294e2a569934f1d01e7097f3968bee732608cabb24": "031f8dbde3765e06ed31ec294e2a569934f1d01e7097f3968bee732608cabb24",
+          "blobs/sha256/03f759b242f0b57f458d8139115ccdb8ebef6ebc2e0260d10f3c4d2e7b666ef8": "03f759b242f0b57f458d8139115ccdb8ebef6ebc2e0260d10f3c4d2e7b666ef8",
+          "blobs/sha256/0707e1a623464dd0e13c1105158c8cb6dc69fdc6ef2a2d797de4c6aca3db71ac": "0707e1a623464dd0e13c1105158c8cb6dc69fdc6ef2a2d797de4c6aca3db71ac",
+          "blobs/sha256/0b928df9c1c8ea06cb161d3f9c63ea45d1a8d234133a3a75e7230572b31a7003": "0b928df9c1c8ea06cb161d3f9c63ea45d1a8d234133a3a75e7230572b31a7003",
+          "blobs/sha256/14229420fdf0cbfeaea1345dfb54bad0187f7a397130eca349ba85a11590f09e": "14229420fdf0cbfeaea1345dfb54bad0187f7a397130eca349ba85a11590f09e"
+        }
+      ],
+      "first": {
+        "administrator": "bd4c15ed4ff08f90573929c2b2621347",
+        "baseImageDigest": "quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4",
+        "builderId": "builder-a",
+        "cloudRunner": null,
+        "environmentId": "13b4f73576c07c96c5bbdfbfb81d2f21",
+        "machineId": "331981094da1acaa1dd1d054eb118b63",
+        "operatingSystem": "fedora-44 6.18.33.2-microsoft-standard-WSL2",
+        "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+        "toolchain": {
+          "grype": "0.116.1",
+          "image-builder": "image-builder:",
+          "podman": "podman version 5.8.4",
+          "python3": "Python 3.14.3",
+          "syft": "1.50.0"
+        },
+        "virtualisationInstance": "wsl:FedoraLinux-44",
+        "workspace": "/var/tmp/bunny-builder-a"
+      },
+      "packageManifestSummary": {
+        "counts": [
+          6076,
+          6076
+        ],
+        "identical": true
+      },
+      "packageManifests": [
+        [
+          "3c59x@UNKNOWN",
+          "3w_9xxx@2.26.02.014",
+          "3w_sas@3.26.02.000",
+          "3w_xxxx@1.26.02.003",
+          "6lowpan@UNKNOWN"
+        ],
+        [
+          "3c59x@UNKNOWN",
+          "3w_9xxx@2.26.02.014",
+          "3w_sas@3.26.02.000",
+          "3w_xxxx@1.26.02.003",
+          "6lowpan@UNKNOWN"
+        ]
+      ],
+      "sbomDigests": [
+        "1ae43d00fd796a0ab0f4e58844c460425edc8197912e5c1fcb4c2efc0cae9209",
+        "635e51ff6c0bf15445157c8570363c14f03f31d1a0d5d991237c57e514758cca"
+      ],
+      "second": {
+        "administrator": "bd4c15ed4ff08f90573929c2b2621347",
+        "baseImageDigest": "quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4",
+        "builderId": "builder-b",
+        "cloudRunner": null,
+        "environmentId": "0388bd8432f3cf17aaabf1e7092a5d08",
+        "machineId": "331981094da1acaa1dd1d054eb118b63",
+        "operatingSystem": "fedora-44 6.18.33.2-microsoft-standard-WSL2",
+        "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+        "toolchain": {
+          "grype": "0.116.1",
+          "image-builder": "image-builder:",
+          "podman": "podman version 5.8.4",
+          "python3": "Python 3.14.3",
+          "syft": "1.50.0"
+        },
+        "virtualisationInstance": "wsl:FedoraLinux-44",
+        "workspace": "/var/tmp/bunny-builder-b"
+      }
+    },
+    {
+      "archiveDigests": [
+        "b5c0c502e22b936aa170c58f2240b777235da4c15eb715a4309ee2b859bf87d8",
+        "b5c0c502e22b936aa170c58f2240b777235da4c15eb715a4309ee2b859bf87d8"
+      ],
+      "claim": "same-host-repeatability",
+      "fileComparisonSummary": {
+        "differingCount": 0,
+        "differingMembers": [],
+        "memberCount": 83
+      },
+      "fileDigests": [
+        {
+          "blobs/sha256/031f8dbde3765e06ed31ec294e2a569934f1d01e7097f3968bee732608cabb24": "031f8dbde3765e06ed31ec294e2a569934f1d01e7097f3968bee732608cabb24",
+          "blobs/sha256/03f759b242f0b57f458d8139115ccdb8ebef6ebc2e0260d10f3c4d2e7b666ef8": "03f759b242f0b57f458d8139115ccdb8ebef6ebc2e0260d10f3c4d2e7b666ef8",
+          "blobs/sha256/0707e1a623464dd0e13c1105158c8cb6dc69fdc6ef2a2d797de4c6aca3db71ac": "0707e1a623464dd0e13c1105158c8cb6dc69fdc6ef2a2d797de4c6aca3db71ac",
+          "blobs/sha256/0b928df9c1c8ea06cb161d3f9c63ea45d1a8d234133a3a75e7230572b31a7003": "0b928df9c1c8ea06cb161d3f9c63ea45d1a8d234133a3a75e7230572b31a7003",
+          "blobs/sha256/14229420fdf0cbfeaea1345dfb54bad0187f7a397130eca349ba85a11590f09e": "14229420fdf0cbfeaea1345dfb54bad0187f7a397130eca349ba85a11590f09e"
+        },
+        {
+          "blobs/sha256/031f8dbde3765e06ed31ec294e2a569934f1d01e7097f3968bee732608cabb24": "031f8dbde3765e06ed31ec294e2a569934f1d01e7097f3968bee732608cabb24",
+          "blobs/sha256/03f759b242f0b57f458d8139115ccdb8ebef6ebc2e0260d10f3c4d2e7b666ef8": "03f759b242f0b57f458d8139115ccdb8ebef6ebc2e0260d10f3c4d2e7b666ef8",
+          "blobs/sha256/0707e1a623464dd0e13c1105158c8cb6dc69fdc6ef2a2d797de4c6aca3db71ac": "0707e1a623464dd0e13c1105158c8cb6dc69fdc6ef2a2d797de4c6aca3db71ac",
+          "blobs/sha256/0b928df9c1c8ea06cb161d3f9c63ea45d1a8d234133a3a75e7230572b31a7003": "0b928df9c1c8ea06cb161d3f9c63ea45d1a8d234133a3a75e7230572b31a7003",
+          "blobs/sha256/14229420fdf0cbfeaea1345dfb54bad0187f7a397130eca349ba85a11590f09e": "14229420fdf0cbfeaea1345dfb54bad0187f7a397130eca349ba85a11590f09e"
+        }
+      ],
+      "first": {
+        "administrator": "bd4c15ed4ff08f90573929c2b2621347",
+        "baseImageDigest": "quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4",
+        "builderId": "builder-a",
+        "cloudRunner": null,
+        "environmentId": "13b4f73576c07c96c5bbdfbfb81d2f21",
+        "machineId": "331981094da1acaa1dd1d054eb118b63",
+        "operatingSystem": "fedora-44 6.18.33.2-microsoft-standard-WSL2",
+        "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+        "toolchain": {
+          "grype": "0.116.1",
+          "image-builder": "image-builder:",
+          "podman": "podman version 5.8.4",
+          "python3": "Python 3.14.3",
+          "syft": "1.50.0"
+        },
+        "virtualisationInstance": "wsl:FedoraLinux-44",
+        "workspace": "/var/tmp/bunny-builder-a"
+      },
+      "packageManifestSummary": {
+        "counts": [
+          6076,
+          6076
+        ],
+        "identical": true
+      },
+      "packageManifests": [
+        [
+          "3c59x@UNKNOWN",
+          "3w_9xxx@2.26.02.014",
+          "3w_sas@3.26.02.000",
+          "3w_xxxx@1.26.02.003",
+          "6lowpan@UNKNOWN"
+        ],
+        [
+          "3c59x@UNKNOWN",
+          "3w_9xxx@2.26.02.014",
+          "3w_sas@3.26.02.000",
+          "3w_xxxx@1.26.02.003",
+          "6lowpan@UNKNOWN"
+        ]
+      ],
+      "sbomDigests": [
+        "1ae43d00fd796a0ab0f4e58844c460425edc8197912e5c1fcb4c2efc0cae9209",
+        "635e51ff6c0bf15445157c8570363c14f03f31d1a0d5d991237c57e514758cca"
+      ],
+      "second": {
+        "administrator": "bd4c15ed4ff08f90573929c2b2621347",
+        "baseImageDigest": "quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4",
+        "builderId": "builder-b",
+        "cloudRunner": null,
+        "environmentId": "0388bd8432f3cf17aaabf1e7092a5d08",
+        "machineId": "331981094da1acaa1dd1d054eb118b63",
+        "operatingSystem": "fedora-44 6.18.33.2-microsoft-standard-WSL2",
+        "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+        "toolchain": {
+          "grype": "0.116.1",
+          "image-builder": "image-builder:",
+          "podman": "podman version 5.8.4",
+          "python3": "Python 3.14.3",
+          "syft": "1.50.0"
+        },
+        "virtualisationInstance": "wsl:FedoraLinux-44",
+        "workspace": "/var/tmp/bunny-builder-b"
+      }
+    }
+  ],
+  "schemaVersion": 1
+}

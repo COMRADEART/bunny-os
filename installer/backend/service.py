@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Authenticated, allowlisted local installer protocol service.
 
 The reference executor is deliberately simulation-only.  A production live

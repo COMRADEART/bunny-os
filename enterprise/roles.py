@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Administrative roles, console views, and enterprise authentication.
 
 Three rules shape this module:

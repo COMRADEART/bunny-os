@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Nautilus menu provider using explicit selections and Bunny URI handoff."""
 
 try:

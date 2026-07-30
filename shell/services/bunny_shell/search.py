@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Private metadata-only desktop search with explicit location grants."""
 
 from __future__ import annotations

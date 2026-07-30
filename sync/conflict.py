@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Deterministic sync conflict resolution.
 
 Version vectors decide *whether* two versions conflict; per-domain rules decide

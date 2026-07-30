@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Selective sync and syncable domains.
 
 Default posture: nothing syncs. Enabling sync enables an *account*, not a data

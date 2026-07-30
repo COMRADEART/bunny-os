@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Reference cryptographic backend built on the ``cryptography`` package.
 
 Everything here is parameter selection over reviewed code. No cipher, mode, KDF

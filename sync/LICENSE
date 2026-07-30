@@ -1,0 +1,16 @@
+sync/ — Apache-2.0
+
+SPDX-License-Identifier: Apache-2.0
+
+Every file in this directory and its subdirectories is licensed under
+the Apache License, Version 2.0, unless that file carries a different
+SPDX-License-Identifier of its own.
+
+The full licence text is in LICENSES/Apache-2.0.txt at the repository root.
+
+This directory is an integration surface that third parties must be able to embed
+to interoperate — a fleet control plane, an enterprise console, or OEM tooling in a
+separate repository. Permissive licensing here removes that friction without
+weakening the system layer.
+
+Copyright (C) 2026 The Bunny OS project.

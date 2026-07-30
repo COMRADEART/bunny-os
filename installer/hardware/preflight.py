@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Hardware classification without turning detection into support claims."""
 
 from __future__ import annotations

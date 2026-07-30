@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Rollback qualification harness.
 #
 # Two modes, because they prove different things and conflating them would

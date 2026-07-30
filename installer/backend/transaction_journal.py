@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Redacted installer transaction journal with irreversible-boundary truth."""
 
 from __future__ import annotations

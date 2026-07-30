@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Read-only Linux hardware preflight probe."""
 
 from __future__ import annotations

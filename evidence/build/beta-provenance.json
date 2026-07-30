@@ -1,0 +1,33 @@
+{
+  "artifacts": [
+    {
+      "path": "bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2",
+      "sha256": "5e75e4e0b7de0a8fee1ca888ba57b97681bc97c98d4b6010861195dc31fdd0f2",
+      "size": 2101030912
+    },
+    {
+      "path": "bootc-fedora-44-raw-x86_64/bootc-fedora-44-raw-x86_64.raw",
+      "sha256": "80428fdfbf188db984d7b4ea2746c9625184468591c0befa9476a212c102c2bc",
+      "size": 10737418240
+    },
+    {
+      "path": "bunny-os.oci.tar",
+      "sha256": "4ef248b2384d5d6a7c847dc9f7fa16e252963587c5d629debb2544bbf91dd703",
+      "size": 1852119040
+    }
+  ],
+  "baseImage": "quay.io/fedora/fedora-bootc:44@sha256:fb71f099f40360b5e1e2e78e845ccf4f0f80fbe1b09de721d8954cddb89ee9c4",
+  "imageReference": "localhost/bunny-os-beta:79bb99ddb39d",
+  "profile": "beta",
+  "recordedAt": "2026-07-30T03:21:01.697521Z",
+  "reproducibility": {
+    "repeatedBuildComparisonPerformed": false
+  },
+  "schemaVersion": 1,
+  "sourceCommit": "79bb99ddb39d8a5dbc279629f43b23346fb0e5e8",
+  "sourceDateEpoch": 1785379540,
+  "tools": {
+    "imageBuilder": "{\n  \"image-builder\": {\n    \"version\": \"76.0.0\",\n    \"commit\": \"unknown\",\n    \"dependencies\": {\n      \"images\": \"unknown\",\n      \"osbuild\": \"185\"\n    }\n  }\n}",
+    "podman": "podman version 5.8.4"
+  }
+}

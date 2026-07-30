@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Bounded read-only Git projection for the project dashboard."""
 
 from __future__ import annotations

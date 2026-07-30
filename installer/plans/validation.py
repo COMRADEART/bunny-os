@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Cross-component installation plan validation."""
 
 from __future__ import annotations

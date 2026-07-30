@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Start the Bunny or Bunny Safe Shell GNOME session."""
 
 from __future__ import annotations

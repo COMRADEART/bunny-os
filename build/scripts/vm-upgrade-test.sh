@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Update-path qualification harness.
 #
 # A real update means: a signed manifest is fetched, verified against an

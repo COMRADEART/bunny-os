@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Install Bunny OS-owned files into a bootc container filesystem."""
 
 from __future__ import annotations

@@ -138,3 +138,73 @@ An Ed25519 development keypair was generated **outside the repository** at `~/.b
 The key-hygiene control is therefore enforced in practice and not only asserted by a test that greps the source.
 
 **This is not release signing evidence.** These are development keys, there has been no key ceremony, there is still only one potential signer, and no twelve-artifact candidate exists to sign — that needs the live ISO, beta raw and recovery ISO, none of which have been built. `signature_verification` remains not-run in both tracks.
+
+## 2026-07-30 release blocker closure security addendum
+
+### The base image was rebuilt during this phase, and the position did not move
+
+`quay.io/fedora/fedora-bootc:44` now resolves to `sha256:fb71f099…`, created
+2026-07-29T11:06:05Z. The previous measurement recorded `sha256:5cd90a82…`.
+Fedora genuinely rebuilt the base — and the scan is identical: 59 fixable, 8
+Critical, 28 High, 23 Medium.
+
+That single observation changes how "wait for Fedora" should be read. It is no
+longer a plan with an implied date; a rebuild has now been watched to land
+without moving the vulnerability position. `docs/adr/ADR-027-base-image-security-decision.md`
+records the decision to retain the base regardless, with four checkable
+conditions that would reopen it.
+
+### The reachability review narrowed the problem to one question
+
+`SECURITY_REACHABILITY_REVIEW.md` answered nine of the ten mandated questions
+with evidence measured on the built beta image:
+
+- podman, skopeo and bootc are installed at `/usr/sbin`, mode 0755, **no setuid**;
+- **no podman or bootc unit is enabled** — `/etc/systemd` contains no symlink for
+  either and no preset enables them;
+- `podman.socket` is a unix socket at `%t/podman/podman.sock` and is **not** in
+  `sockets.target.wants`;
+- nothing in Bunny invokes a container runtime; the broker has no generic exec path;
+- SELinux targeted policy is enforcing;
+- **the packages cannot be removed**: `bootc` requires podman and skopeo, and
+  `rpm-ostree` requires skopeo.
+
+The tenth — whether the vulnerable code path is compiled in and active — was not
+answered, because it needs per-CVE symbol analysis of a 45 MB stripped Go
+binary. All 24 unique Critical/High pairs are therefore `Unknown`, which blocks.
+
+**No waiver was created and no severity was reduced.**
+`release/vulnerability.py` refuses a severity reduction without a completed
+independent review, and refuses a non-blocking disposition on a Critical for the
+same reason. Both refusals are tested.
+
+### Controls added this phase
+
+| Control | Enforces |
+|---|---|
+| Seven signing roles with disjoint namespaces | a key from one authority cannot be presented for another; checked at parse time |
+| The reserved `dev-` prefix | a development key can never satisfy a production release gate |
+| Rotation overlap requirement | a replacement published after its predecessor expires is refused, so devices that update late are not stranded |
+| Evidence digest verification | a record naming a missing or substituted artifact blocks |
+| Commit binding on evidence | evidence does not transfer between commits |
+| Self-review wall | a reviewer affiliated with the project cannot be recorded as independent |
+| Protected package categories | recovery, accessibility, firmware, installer and security packages cannot be removed, and a dependency cascade into them fails the build |
+
+### An SBOM observation with security consequences
+
+Removing `toolbox` removed the binary from `/usr/bin` and the entry from the rpm
+database — verified in a running container — and syft still reports the package,
+located at `/sysroot/ostree/repo/objects/…` in a base layer.
+
+The `fedora-bootc` base ships an ostree object store, so `dnf remove` cannot
+remove content baked into a lower layer. Two consequences worth carrying
+forward: minimisation on this base reduces what *executes* but not what *ships*,
+and archive-derived and SBOM-derived scan counts disagree (59 against 84). The
+archive scan is treated as authoritative and the discrepancy is recorded rather
+than averaged away.
+
+### Position
+
+Unchanged and blocking. 8 Critical and 28 High fixable findings, neither waived
+nor converted to PASS. `gate-stable-release` reports `NO-GO`. No release
+approval is given and no pilot may begin.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Optional end-to-end encrypted sync — device-side client.
 
 Scope and non-scope, stated up front because this is the subsystem most likely to

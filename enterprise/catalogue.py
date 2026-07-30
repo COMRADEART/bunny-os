@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Organisation application catalogue layered over the Bunny OS catalogue.
 
 Distinct from ``operations/catalogue.py``, which curates the project-wide

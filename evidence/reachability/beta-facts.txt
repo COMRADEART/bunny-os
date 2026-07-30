@@ -1,0 +1,51 @@
+=== timers.target.wants (etc) ===
+fstrim.timer
+logrotate.timer
+raid-check.timer
+rpm-ostree-countme.timer
+=== any enabled symlink mentioning podman/bootc anywhere under /etc ===
+(end)
+=== presets that would enable them ===
+# Disable dnf-makecache.timer on bootc/image mode systems
+# Enable  kernel-bootcfg-boot-successful.service
+enable kernel-bootcfg-boot-successful.service
+(no preset lines)
+=== bootc timer content ===
+[Unit]
+Description=Apply bootc updates
+Documentation=man:bootc(8)
+ConditionPathExists=/run/ostree-booted
+
+[Timer]
+OnBootSec=1h
+# This time is relatively arbitrary and obviously expected to be overridden/changed
+OnUnitInactiveSec=8h
+# When deploying a large number of systems, it may be beneficial to increase this value to help with load on the registry.
+RandomizedDelaySec=2h
+
+[Install]
+WantedBy=timers.target
+=== podman.socket content ===
+[Unit]
+Description=Podman API Socket
+Documentation=man:podman-system-service(1)
+
+[Socket]
+ListenStream=%t/podman/podman.sock
+SocketMode=0660
+
+[Install]
+WantedBy=sockets.target
+=== what requires podman ===
+bootc-1.16.4-1.fc44.x86_64
+toolbox-0.3-4.fc44.x86_64
+=== what requires skopeo ===
+bootc-1.16.4-1.fc44.x86_64
+rpm-ostree-2026.2-1.fc44.x86_64
+=== what requires toolbox ===
+no package requires toolbox
+(nothing)
+=== bunny update agent uses bootc? ===
+/usr/lib/bunny-os/packages.txt
+/usr/lib/bunny-os/python/bunny_os/info.py
+/usr/lib/bunny-os/release.json

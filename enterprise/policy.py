@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Typed device policy agent.
 
 The central rule: every policy maps to exactly one typed, named operation with a

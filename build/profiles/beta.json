@@ -2,10 +2,21 @@
   "schemaVersion": 1,
   "name": "beta",
   "base": "fedora-bootc-44",
-  "packageSets": ["common", "desktop", "shell", "applications"],
+  "packageSets": [
+    "common",
+    "desktop",
+    "shell",
+    "applications"
+  ],
   "desktop": "bunny-gnome-wayland",
-  "imageTypes": ["qcow2", "raw"],
+  "imageTypes": [
+    "qcow2",
+    "raw"
+  ],
   "rootFilesystem": "ext4",
   "channel": "beta-candidate",
-  "bunnyArtifact": "verified-or-explicit-placeholder"
+  "bunnyArtifact": "verified-or-explicit-placeholder",
+  "removePackages": [
+    "toolbox"
+  ]
 }

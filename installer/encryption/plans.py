@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Encryption planning without handling plaintext secrets in protocol data."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Opt-in private clipboard history; never a clipboard monitor by itself."""
 
 from __future__ import annotations

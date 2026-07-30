@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Privacy-preserving fleet health reporting.
 
 Follows the ``operations/crash.py`` pattern of exact-set equality against a

@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot gate-dev-qualification dev-qualification-gaps qualification-compare
+.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot gate-dev-qualification dev-qualification-gaps qualification-compare release-blocker-baseline vulnerability-position reachability-review package-minimisation-check licence-gate independent-builder-prepare reproducibility-compare development-signing-drill signing-roles build-qualification-candidate build-independent-recovery validate-release-manifest test-installation-matrix test-encryption-matrix test-update-matrix test-rollback-matrix test-recovery-matrix test-preservation-matrix test-accessibility-matrix validate-hardware-evidence validate-independent-reviews stable-evidence-report pilot-closure-assertion test-release-closure
 
 audit:
 	$(PYTHON) scripts/task.py audit
@@ -285,6 +285,95 @@ gate-stable-candidate: gate-phase-5
 
 gate-stable-release: gate-stable-candidate
 	$(PYTHON) scripts/phase5.py stable-gate --evidence operations/data/stable-qualification.json
+	$(PYTHON) scripts/release.py gate --kind stable-release
+
+# --- Release blocker closure ---------------------------------------------------
+# Every target below fails closed. A target that cannot find the evidence it
+# needs prints what is missing and exits 2.
+
+release-blocker-baseline:
+	$(PYTHON) scripts/release.py baseline
+
+vulnerability-position:
+	$(PYTHON) scripts/release.py vulnerability-position
+
+reachability-review:
+	$(PYTHON) scripts/release.py reachability-review
+
+package-minimisation-check:
+	$(PYTHON) scripts/release.py package-minimisation-check
+
+licence-gate:
+	$(PYTHON) scripts/release.py licence-gate
+
+# Emit the exact inputs a second builder must reproduce. Requires a
+# digest-pinned BUNNY_BASE_IMAGE so both builders pin the same base.
+independent-builder-prepare:
+	@test -n "$${BUNNY_BUILDER_ID:-}" || { echo "set BUNNY_BUILDER_ID to name this builder" >&2; exit 1; }
+	$(PYTHON) scripts/release.py independent-builder-prepare --builder "$${BUNNY_BUILDER_ID}"
+
+reproducibility-compare:
+	$(PYTHON) scripts/release.py reproducibility-compare
+
+development-signing-drill:
+	$(PYTHON) scripts/signing_drill.py \
+	  --release-artifact "$${BUNNY_RELEASE_ARTIFACT:-build/out/beta/bunny-os.oci.tar}" \
+	  --recovery-artifact "$${BUNNY_RECOVERY_ARTIFACT:-build/out/recovery/bunny-os.oci.tar}"
+	$(PYTHON) scripts/release.py development-signing-drill
+
+signing-roles:
+	$(PYTHON) scripts/release.py signing-roles
+
+# Candidate artifacts. Named stable-rc or qualification-candidate; never
+# "stable", which only gate-stable-release can authorise.
+build-qualification-candidate:
+	@test "$${BUNNY_RELEASE_BUILD:-0}" = "1" || { echo "set BUNNY_RELEASE_BUILD=1 and a digest-pinned BUNNY_BASE_IMAGE" >&2; exit 1; }
+	BUNNY_CANDIDATE_NAME=qualification-candidate bash build/scripts/build-stable-rc.sh
+	$(PYTHON) scripts/release.py validate-release-manifest
+
+build-independent-recovery:
+	bash build/scripts/build-image.sh recovery
+	bash build/scripts/verify-install-media.sh recovery
+
+validate-release-manifest:
+	$(PYTHON) scripts/release.py validate-release-manifest
+
+test-installation-matrix:
+	$(PYTHON) scripts/release.py test-matrix --name installation
+
+test-encryption-matrix:
+	$(PYTHON) scripts/release.py test-matrix --name encryption
+
+test-update-matrix:
+	$(PYTHON) scripts/release.py test-matrix --name update
+
+test-rollback-matrix:
+	$(PYTHON) scripts/release.py test-matrix --name rollback
+
+test-recovery-matrix:
+	$(PYTHON) scripts/release.py test-matrix --name recovery-media
+
+test-preservation-matrix:
+	$(PYTHON) scripts/release.py test-matrix --name preservation
+
+test-accessibility-matrix:
+	$(PYTHON) scripts/release.py test-matrix --name accessibility
+
+validate-hardware-evidence:
+	$(PYTHON) scripts/release.py validate-hardware-evidence
+
+validate-independent-reviews:
+	$(PYTHON) scripts/release.py validate-independent-reviews
+
+stable-evidence-report:
+	$(PYTHON) scripts/release.py stable-evidence-report
+
+# CI backstop: a gate reporting GO without protected evidence is a defect.
+pilot-closure-assertion:
+	$(PYTHON) scripts/release.py pilot-closure-assertion
+
+test-release-closure:
+	$(PYTHON) scripts/task.py test-release-closure
 
 # --- Development qualification track ------------------------------------------
 # A second, clearly-labelled evidence track. It can reach GO on virtual,
@@ -384,9 +473,12 @@ gate-phase-7: gate-phase-7-source gate-stable-release
 
 gate-oem-pilot: gate-phase-7-source
 	$(PYTHON) scripts/phase7.py pilot-gate --kind oem
+	$(PYTHON) scripts/release.py gate --kind oem-pilot
 
 gate-enterprise-pilot: gate-phase-7-source
 	$(PYTHON) scripts/phase7.py pilot-gate --kind enterprise
+	$(PYTHON) scripts/release.py gate --kind enterprise-pilot
 
 gate-sync-pilot: gate-phase-7-source
 	$(PYTHON) scripts/phase7.py pilot-gate --kind sync
+	$(PYTHON) scripts/release.py gate --kind sync-pilot
