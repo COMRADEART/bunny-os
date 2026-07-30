@@ -58,23 +58,39 @@ cd "${repository_root}"
 # rather than a 514 MB pack that cannot be pushed. The token itself is never
 # printed: `gh auth status` masks it, and nothing here echoes the value.
 scopes="$(gh auth status 2>&1 | sed -n 's/.*Token scopes: //p' | tr -d "'" || true)"
-missing=()
-for scope in write:packages read:packages; do
-  case ",${scopes//, /,}," in
-    *",${scope},"*) ;;
-    *) missing+=("${scope}") ;;
-  esac
-done
-if [[ ${#missing[@]} -gt 0 ]]; then
-  echo "BLOCKED: the GitHub token does not carry ${missing[*]}." >&2
-  echo "  present: ${scopes:-none}" >&2
+
+# Write is checked by name; read is checked by trying it.
+#
+# GitHub's scope hierarchy grants read with write, so a token that can publish
+# lists only `write:packages` and `gh auth status` never shows `read:packages`
+# beside it. An earlier version of this check required both strings and would
+# have refused a token that works — a scope check failing on a token holding the
+# access it is checking for is worse than no check.
+#
+# So the read half is measured: the packages API either answers or it does not,
+# and that is the property that matters rather than the label.
+case ",${scopes//, /,}," in
+  *",write:packages,"*) ;;
+  *)
+    echo "BLOCKED: the GitHub token does not carry write:packages." >&2
+    echo "  present: ${scopes:-none}" >&2
+    echo >&2
+    echo "The repository owner must grant it:" >&2
+    echo >&2
+    echo "    gh auth refresh -h github.com -s write:packages,read:packages" >&2
+    echo >&2
+    echo "Until then the retained inputs exist on one machine, independent" >&2
+    echo "availability is not established, and the reproducibility gate stays blocked." >&2
+    exit 2
+    ;;
+esac
+
+if ! gh api "user/packages?package_type=container" >/dev/null 2>&1; then
+  echo "BLOCKED: the token carries write:packages and cannot read the packages API." >&2
+  echo "  present: ${scopes}" >&2
   echo >&2
-  echo "The repository owner must grant them:" >&2
-  echo >&2
-  echo "    gh auth refresh -h github.com -s write:packages,read:packages" >&2
-  echo >&2
-  echo "Until then the retained inputs exist on one machine, independent" >&2
-  echo "availability is not established, and the reproducibility gate stays blocked." >&2
+  echo "Publishing without being able to read back means the digest check after the" >&2
+  echo "push cannot run, and an unverified push is not a publication." >&2
   exit 2
 fi
 
