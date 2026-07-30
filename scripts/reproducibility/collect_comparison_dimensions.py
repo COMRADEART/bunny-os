@@ -98,6 +98,14 @@ class Rootfs:
                 "uid": member.uid,
                 "gid": member.gid,
                 "type": _member_type(member),
+                # Not a dimension, and deliberately so — the seventeen are fixed
+                # by policy. It is carried because a layer's tar bytes depend on
+                # it: measured on two builds, usr/share/bunny-os/finalisation.json
+                # had identical content and mtimes 203 seconds apart, so
+                # ociLayers and rawArchive differed while every dimension that
+                # looks at content matched. Without this the report can say the
+                # archives differ and cannot say which file made them differ.
+                "mtime": member.mtime,
             }
             if member.linkname:
                 record["link"] = member.linkname
@@ -185,6 +193,7 @@ def collect(
     *,
     sbom: Path | None,
     normalisation: Path | None,
+    epoch: int | None = None,
 ) -> dict[str, Any]:
     rootfs, layers, config = read_image(archive)
     entries = rootfs.entries
@@ -335,6 +344,20 @@ def collect(
 
     volatile = sorted(name for name in entries if VOLATILE.match(name))
 
+    # Entry modification times, as a diagnostic rather than as a dimension.
+    #
+    # The seventeen dimensions are fixed by policy and this is not one of them.
+    # It is collected because when every content dimension matches and
+    # `rawArchive` does not, this is where the answer is, and a comparison that
+    # cannot answer "which file?" sends the next person back to `cmp` on a
+    # 1.8 GB archive.
+    mtimes = {name: record.get("mtime", 0) for name, record in sorted(stable.items())}
+    later_than_epoch = (
+        sorted(name for name, value in mtimes.items() if epoch is not None and value > epoch)
+        if epoch is not None
+        else None
+    )
+
     return {
         "schemaVersion": 1,
         "archive": archive.name,
@@ -359,6 +382,21 @@ def collect(
             )
             if dimensions.get(name) is None
         },
+        "entryMtimes": {
+            "note": (
+                "Not one of the seventeen dimensions. A layer's tar bytes include entry mtimes, "
+                "so a file whose content matches and whose mtime does not still changes ociLayers "
+                "and rawArchive. Collected so that difference has a name instead of being "
+                "attributed to whichever content difference happens to be nearby."
+            ),
+            "digest": hashlib.sha256(
+                json.dumps(mtimes, sort_keys=True).encode("utf-8")
+            ).hexdigest(),
+            "declaredEpoch": epoch,
+            "laterThanEpochCount": len(later_than_epoch) if later_than_epoch is not None else None,
+            "laterThanEpoch": later_than_epoch[:200] if later_than_epoch else later_than_epoch,
+            "byPath": mtimes,
+        },
         "volatileNote": (
             "Paths under /var/log, /var/cache, /var/tmp, /tmp and /run, and /etc/machine-id, are "
             "excluded from the compared set: they are runtime state, not build output. They are "
@@ -368,18 +406,81 @@ def collect(
     }
 
 
+#: Dimensions an archive-stage build is required to collect. `selinuxLabels` is
+#: absent because no archive can carry an applied context — that subcheck belongs
+#: to the installed-system stage, and the archive-stage half is collected
+#: separately by collect_intended_selinux.py.
+REQUIRED_IN_QUALIFICATION = (
+    "bootConfiguration",
+    "desktopEntries",
+    "extendedAttributes",
+    "fileDigests",
+    "filesystemTree",
+    "initramfs",
+    "kernel",
+    "normalisedArchive",
+    "ociLayers",
+    "ownership",
+    "packageInventory",
+    "permissions",
+    "rawArchive",
+    "sbom",
+    "schemas",
+    "systemdUnits",
+)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="collect_comparison_dimensions")
     parser.add_argument("--archive", required=True, type=Path)
     parser.add_argument("--sbom", type=Path)
     parser.add_argument("--normalisation", type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument(
+        "--epoch",
+        type=int,
+        help="the declared build epoch, so entry mtimes later than it can be named",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=("qualification", "diagnostic"),
+        default="diagnostic",
+        help=(
+            "qualification refuses to write an incomplete collection; diagnostic records what is "
+            "missing as NOT_COLLECTED. Only qualification-mode evidence may reach a gate."
+        ),
+    )
     args = parser.parse_args()
 
     if not args.archive.is_file():
         raise SystemExit(f"archive does not exist: {args.archive}")
 
-    payload = collect(args.archive, sbom=args.sbom, normalisation=args.normalisation)
+    payload = collect(
+        args.archive, sbom=args.sbom, normalisation=args.normalisation, epoch=args.epoch
+    )
+    payload["collectionMode"] = args.mode
+
+    # A comparison missing a dimension cannot support a reproducibility claim,
+    # and the previous local run proved that a collector invoked without --sbom
+    # and --normalisation will happily produce one and say so in a line nobody
+    # reads. In qualification mode the omission is a refusal instead.
+    absent_required = sorted(
+        name
+        for name in REQUIRED_IN_QUALIFICATION
+        if payload["dimensions"].get(name) is None
+    )
+    payload["requiredDimensions"] = list(REQUIRED_IN_QUALIFICATION)
+    payload["missingRequiredDimensions"] = absent_required
+
+    if args.mode == "qualification" and absent_required:
+        raise SystemExit(
+            "BLOCKED: qualification mode requires every archive-stage dimension and these were "
+            "not collected: "
+            + ", ".join(absent_required)
+            + ".\nPass --sbom and --normalisation, or run with --mode diagnostic and do not "
+            "submit the result as qualification evidence."
+        )
+
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
@@ -390,13 +491,23 @@ def main() -> int:
         if value is not None and value != {} and value != []
     ]
     print(f"{payload['entryCount']} entries, {payload['comparedEntryCount']} compared")
+    print(f"mode: {args.mode}")
     print(f"collected {len(collected)} of 17 dimensions: {', '.join(sorted(collected))}")
     absent = sorted(set(payload["dimensions"]) - set(collected))
     if absent:
         print(f"not collected: {', '.join(absent)}")
+    later = payload["entryMtimes"]["laterThanEpochCount"]
+    if later:
+        print(f"entry mtimes later than the declared epoch: {later}")
     print(f"wrote {args.output}")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except SystemExit as exc:
+        if isinstance(exc.code, str):
+            print(exc.code, file=sys.stderr)
+            raise SystemExit(2) from None
+        raise

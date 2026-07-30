@@ -94,14 +94,84 @@ print(json.load(open("build/inputs/package-snapshot-lock.json"))["retainedLocati
 
   python3 scripts/supply-chain/verify-package-snapshot.py || exit 4
 
-  faketime_library="${BUNNY_FAKETIME_LIBRARY:-}"
-  if [[ -z "${faketime_library}" ]]; then
-    faketime_library="$(find /usr/lib64 /usr/lib -name 'libfaketime.so.1' 2>/dev/null | head -1 || true)"
+  # The frozen clock comes out of the pinned builder image, by digest.
+  #
+  # It used to come from `find /usr/lib64 /usr/lib`, so whichever libfaketime the
+  # build host happened to carry entered the qualification path. That is not a
+  # theoretical hazard: libfaketime's own semantics decide whether the clock
+  # freezes or merely starts at the epoch and then runs, and the second of those
+  # put fifty package headers on different seconds between two builds. A library
+  # that can do that to the artifact is pinned like podman is, not discovered.
+  #
+  # BUNNY_FAKETIME_LIBRARY still says *where* the library is, for an environment
+  # that has already extracted it. It does not say *what* it is: the checksum is
+  # verified against the builder lock either way, so an override cannot smuggle a
+  # different library past the pin.
+  expected_faketime="$(python3 -c '
+import json
+lock = json.load(open("build/inputs/builder-image-lock.json"))
+record = lock.get("faketimeLibrary") or {}
+print(record.get("sha256", ""))
+')"
+  if [[ -z "${expected_faketime}" ]]; then
+    echo "build/inputs/builder-image-lock.json records no faketimeLibrary checksum." >&2
+    echo "Rebuild the builder image with scripts/supply-chain/build-builder-image.sh; a" >&2
+    echo "hermetic build cannot pin a clock the lock does not describe." >&2
+    exit 4
   fi
+
+  faketime_library="${BUNNY_FAKETIME_LIBRARY:-}"
+  faketime_scratch=""
   if [[ -z "${faketime_library}" ]]; then
+    builder_reference="$(python3 -c '
+import json
+print(json.load(open("build/inputs/builder-image-lock.json"))["builderReference"])
+')"
+    builder_digest="$(python3 -c '
+import json
+print(json.load(open("build/inputs/builder-image-lock.json"))["builderDigest"])
+')"
+    builder_layout="${builder_reference%@sha256:*}"
+    if [[ ! -d "${builder_layout}" ]]; then
+      echo "the builder image layout ${builder_layout} is not present on this machine." >&2
+      echo "Pull it from the controlled registry by digest, or rebuild it." >&2
+      exit 4
+    fi
+    builder_tag="localhost/bunny-os-builder-pinned:${builder_digest#sha256:}"
+    builder_id="$(sudo podman pull "oci:${builder_layout}:builder" 2>/dev/null | tail -1)"
+    sudo podman tag "${builder_id}" "${builder_tag}"
+    observed_builder="$(sudo skopeo inspect --raw "containers-storage:${builder_tag}" |
+      python3 -c 'import hashlib,sys; print("sha256:"+hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')"
+    if [[ "${observed_builder}" != "${builder_digest}" ]]; then
+      echo "the builder image pulled from retention does not carry the locked digest:" >&2
+      echo "  locked   ${builder_digest}" >&2
+      echo "  observed ${observed_builder}" >&2
+      exit 4
+    fi
+    faketime_scratch="$(mktemp -d)"
+    trap '[[ -n "${faketime_scratch:-}" ]] && rm -rf "${faketime_scratch}" || true' EXIT
+    sudo podman run --rm --network=none --entrypoint /usr/bin/cp \
+      --volume "${faketime_scratch}:/out:z" "${builder_tag}" \
+      /usr/local/lib/bunny-faketime/libfaketime.so.1 /out/libfaketime.so.1
+    sudo chown "$(id -u):$(id -g)" "${faketime_scratch}/libfaketime.so.1"
+    faketime_library="${faketime_scratch}/libfaketime.so.1"
+  fi
+
+  if [[ ! -f "${faketime_library}" ]]; then
     echo "hermetic build requires libfaketime; without it the rpm database records" >&2
-    echo "wall-clock install times and the build cannot reproduce. Install libfaketime" >&2
-    echo "or set BUNNY_FAKETIME_LIBRARY." >&2
+    echo "wall-clock install times and the build cannot reproduce. ${faketime_library}" >&2
+    echo "does not exist." >&2
+    exit 4
+  fi
+  observed_faketime="$(sha256sum "${faketime_library}" | awk '{print $1}')"
+  if [[ "${observed_faketime}" != "${expected_faketime}" ]]; then
+    echo "the libfaketime library does not match the builder lock:" >&2
+    echo "  locked   ${expected_faketime}" >&2
+    echo "  observed ${observed_faketime}  (${faketime_library})" >&2
+    echo >&2
+    echo "Two builders must freeze the clock with the same library. A different build of" >&2
+    echo "libfaketime can freeze differently, and the artifact would differ for a reason" >&2
+    echo "nothing in the evidence would name." >&2
     exit 4
   fi
 
@@ -175,7 +245,7 @@ sudo chown "$(id -u):$(id -g)" "${output}/bunny-os.oci.tar"
 # already deterministic; only the wrapper was not. See
 # REPRODUCIBLE_BUILD_REPORT.md.
 bash "${repository_root}/build/scripts/normalise-oci-archive.sh" \
-  "${output}/bunny-os.oci.tar" "${source_epoch}"
+  "${output}/bunny-os.oci.tar" "${source_epoch}" "${output}/normalisation.json"
 if [[ "${archive_only}" == "1" ]]; then
   printf 'BUNNY_ARCHIVE_ONLY=1: skipped image-builder; no qcow2 or raw image produced\n' \
     | tee "${output}/image-builder.log"

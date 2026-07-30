@@ -58,3 +58,37 @@ RUN BUNNY_SNAPSHOT_ROOT="${BUNNY_SNAPSHOT_ROOT}" \
       --epoch "${SOURCE_DATE_EPOCH}" \
       --report /usr/share/bunny-os/finalisation.json && \
     rm -rf /var/cache/dnf /tmp/bunny-os
+
+# Pin every mtime the build itself wrote, as the last thing that happens.
+#
+# It has to be a separate step and it has to be last, because the step above
+# ends by deleting /tmp/bunny-os and that deletion updates /tmp's own mtime
+# after finalisation has already run. Measured on two hermetic builds:
+# usr/share/bunny-os/finalisation.json had identical content and mtimes of
+# 1785439457 and 1785439660 — wall clock, 203 seconds apart. The dimension
+# collector does not compare mtimes, so nothing reported it; the layer tar
+# contains them, so ociLayers and rawArchive differed and the difference was
+# attributed entirely to the two databases.
+#
+# `-newermt` selects exactly what this build wrote: anything RPM installed
+# carries the mtime from its package, which is earlier than the epoch and is
+# packaging information rather than build noise, so it is left alone. The
+# assertion afterwards is what makes this a check rather than a sweep — if a
+# path cannot be pinned, the build stops instead of shipping an artifact whose
+# archive digest nobody can explain.
+RUN set -eu; \
+    epoch="${SOURCE_DATE_EPOCH}"; \
+    find / -xdev \
+         \( -path /proc -o -path /sys -o -path /dev -o -path /run \) -prune -o \
+         -newermt "@${epoch}" -print0 \
+      | xargs -0r touch --no-dereference --date="@${epoch}"; \
+    remaining="$(find / -xdev \
+         \( -path /proc -o -path /sys -o -path /dev -o -path /run \) -prune -o \
+         -newermt "@${epoch}" -print | head -20)"; \
+    if [ -n "${remaining}" ]; then \
+      echo "BLOCKED: these paths still carry an mtime later than the build epoch:" >&2; \
+      echo "${remaining}" >&2; \
+      echo "A file the build wrote and did not pin changes the layer digest, and the" >&2; \
+      echo "comparison would report an archive difference with no file to attribute it to." >&2; \
+      exit 2; \
+    fi

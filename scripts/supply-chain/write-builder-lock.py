@@ -129,6 +129,16 @@ def main() -> int:
         .isoformat()
         .replace("+00:00", "Z"),
         "runtimeRequirements": declared.get("runtimeRequirements") or {},
+        # The SQLite build and the faketime library get their own fields rather
+        # than a version string in the tool list. Both write into the artifact
+        # through something other than their own output — SQLite through the
+        # rpm and libdnf5 databases, faketime through every INSTALLTIME rpm
+        # records — and for both, two builds at the same upstream version can
+        # behave differently. The finaliser and the build clock check against
+        # these, so a builder image that changed either without anyone noticing
+        # fails closed instead of producing an artifact nobody can explain.
+        "sqlite": measured.get("sqlite"),
+        "faketimeLibrary": measured.get("faketimeLibrary"),
         "verificationStatus": "verified",
         "notes": (
             "Measured from inside the built image, joined to the declared classifications. Both "

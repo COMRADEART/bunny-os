@@ -133,35 +133,26 @@ if [[ -e /etc/brlapi.key ]]; then
 fi
 
 echo "==> 7. canonicalising package-manager state"
-# The WAL and shared-memory files are transaction residue, not state. Left
-# behind they differ between builds for reasons that have nothing to do with
-# what was installed; checkpointed, the database contains everything and the
-# residue is gone. The history table itself is kept — it is what supports
-# repair, audit and licence inventory, and the brief is explicit that
-# package-manager state may not be discarded merely for being inconvenient.
-for database in /usr/share/rpm/rpmdb.sqlite /usr/lib/sysimage/libdnf5/transaction_history.sqlite; do
-  [[ -f "${database}" ]] || continue
-  if command -v sqlite3 >/dev/null 2>&1; then
-    sqlite3 "${database}" "PRAGMA wal_checkpoint(TRUNCATE); VACUUM;" >/dev/null
-    note "checkpointed and vacuumed ${database}"
-  else
-    python3 - "${database}" <<'PYTHON'
-import sqlite3
-import sys
-
-connection = sqlite3.connect(sys.argv[1])
-connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-connection.execute("VACUUM")
-connection.close()
-PYTHON
-    note "checkpointed and vacuumed ${database} (python sqlite3)"
-  fi
-  for residue in "${database}-wal" "${database}-shm"; do
-    if [[ -e "${residue}" && ! -s "${residue}" ]]; then
-      rm -f "${residue}"; record "${residue}"; note "removed empty ${residue}"
-    fi
-  done
-done
+# Delegated, because this step has a contract the rest of finalisation does not:
+# it must be idempotent, it must fail closed on an unexpected schema, a failed
+# integrity check, a changed package inventory or a broken rpm query, and it must
+# be able to prove it altered no content. The three lines it used to be could do
+# none of that — and would have reported success while the databases still
+# differed, which is what happened.
+#
+# The history table itself is kept. It supports repair, audit and licence
+# inventory, and the brief is explicit that package-manager state may not be
+# discarded merely for being inconvenient.
+database_report=""
+if [[ -n "${report}" ]]; then
+  database_report="$(dirname "${report}")/package-databases.json"
+fi
+bash "$(dirname "${BASH_SOURCE[0]}")/finalise-package-databases.sh" \
+  ${database_report:+--report "${database_report}"} \
+  ${BUNNY_EXPECT_SQLITE:+--expect-sqlite "${BUNNY_EXPECT_SQLITE}"}
+# Which residue files it actually removed is in its own manifest. They are not
+# added to `removed` here, because that list is what this script removed and a
+# path recorded on the assumption it existed is a claim nobody checked.
 # system.toml carries an rpmdb_cookie derived from the rpmdb. It is not
 # independent state: once the rpmdb is deterministic this follows. Left alone
 # deliberately, so that if it still differs the comparison reports a real

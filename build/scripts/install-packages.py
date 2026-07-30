@@ -195,8 +195,8 @@ def main() -> int:
         # transaction would be broader than declared, and the first version of
         # this did exactly that — the `before` snapshot ran under LD_PRELOAD and
         # rpm exited 1 with a message nobody captured.
-        # libfaketime's `@` prefix means "absolute, frozen", and the value after
-        # it is a *formatted date*, not a Unix timestamp:
+        # The value is a *formatted date*, not a Unix timestamp — libfaketime
+        # rejects the seconds form outright:
         #
         #   libfaketime: In parse_ft_string(), failed to parse FAKETIME timestamp.
         #
@@ -204,11 +204,27 @@ def main() -> int:
         # the two builders are in different time zones, and a local-time
         # rendering would give them different frozen clocks from the same epoch —
         # which is the exact class of difference this is meant to remove.
+        #
+        # No `@` prefix. An earlier version set one on the belief that `@` meant
+        # "absolute, frozen"; it means the opposite. In libfaketime `@` selects
+        # FT_START_AT — begin at this instant and then run in real time — and the
+        # *unprefixed* absolute date is the frozen mode. Measured on
+        # libfaketime-0.9.12-12.fc44 across a real 2.5-second sleep:
+        #
+        #   FAKETIME="2026-07-30 19:03:26"    advanced 0.000 s
+        #   FAKETIME="@2026-07-30 19:03:26"   advanced 2.500 s
+        #
+        # With the prefix, rpm stamped INSTALLTIME with epoch+4 through epoch+18
+        # — the elapsed seconds of the transaction — and 50 of 1015 packages fell
+        # on a different second between two builds. `date` in a child shell is not
+        # a valid check here: libfaketime makes `sleep` return immediately, so the
+        # clock looks frozen under both settings. tests/supplychain/test_build_clock.py
+        # asserts the prefix is absent for that reason.
         frozen = datetime.datetime.fromtimestamp(
             int(source_date_epoch), datetime.timezone.utc
         ).strftime("%Y-%m-%d %H:%M:%S")
         transaction_environment["LD_PRELOAD"] = faketime_library
-        transaction_environment["FAKETIME"] = f"@{frozen}"
+        transaction_environment["FAKETIME"] = frozen
         transaction_environment["FAKETIME_FMT"] = "%Y-%m-%d %H:%M:%S"
         # Monotonic clocks drive timeouts and progress reporting rather than
         # recorded state. Freezing them makes dnf's own waits misbehave and
@@ -242,10 +258,16 @@ def main() -> int:
             raise SystemExit(
                 "refusing to remove protected packages: " + ", ".join(overlap)
             )
+        # Under the same frozen clock as the install. Minimisation is a package
+        # transaction, and libdnf5 writes its own `dt_begin` and `dt_end` into
+        # transaction_history.sqlite from the system clock. Running it with the
+        # unfrozen environment was measured: it put a live wall-clock time into
+        # the second history row, 1785439455 in one build and 1785439658 in the
+        # other, while the install transaction the clock *did* cover matched.
         subprocess.run(
             ["/usr/bin/dnf", "--assumeyes", "remove", *removals],
             check=True,
-            env=environment,
+            env=transaction_environment,
         )
         after = installed_subset(protected, environment)
         lost = sorted(before - after)

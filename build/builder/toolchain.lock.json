@@ -88,6 +88,16 @@
       "reason": "it generates the snapshot repository metadata the build resolves against. Different metadata can produce a different dependency solution.",
       "test": "tests/supplychain/test_package_snapshot.py::test_metadata_digest_is_locked"
     },
+    "sqlite3": {
+      "classification": "output-affecting",
+      "reason": "rpm and libdnf5 both keep their databases in SQLite, and those databases are files in the artifact. The library's version, page size, threading mode and compiled-in extensions all determine the bytes a transaction leaves on disk, so two builders running different SQLite builds can produce different files from identical package operations. build/scripts/finalise-package-databases.sh refuses to run against a SQLite whose recorded identity does not match this lock.",
+      "test": "tests/supplychain/test_sqlite_toolchain.py::test_sqlite_is_output_affecting"
+    },
+    "libfaketime": {
+      "classification": "output-affecting",
+      "reason": "it supplies the frozen clock the package transaction reads, and rpm writes what that clock says into every installed header as INSTALLTIME. Its semantics are load-bearing rather than incidental: measured on 0.9.12, FAKETIME with a leading '@' starts at the given instant and then runs, and without one it freezes, and the difference put fifty package headers on different seconds between two builds. It was previously located on the build host with `find /usr/lib64 /usr/lib`, so whichever library the machine carried entered the qualification path; it is pinned in this image for the same reason podman is.",
+      "test": "tests/supplychain/test_build_clock.py::test_faketime_library_is_pinned_to_the_builder"
+    },
     "syft": {
       "classification": "evidence-generation-only",
       "reason": "syft reads the finished archive and writes an SBOM to a separate file. It is never invoked before or during image construction, it is never given a writable path inside the image, and the build does not consume its output. A syft difference changes the SBOM document, which is compared as its own dimension, and cannot change the artifact the SBOM describes.",
