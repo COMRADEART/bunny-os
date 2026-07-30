@@ -367,3 +367,91 @@ declare the field at all is treated as *unknown*, not as a full build.
 
 This matters because an archive-only artifact is otherwise indistinguishable from
 a complete one: same filename, same digest discipline, same provenance shape.
+
+## 2026-07-30 — SQLite determinism and input publication
+
+Reviewed: the build clock, the database finaliser, the libfaketime and SQLite
+pins, the publication path, and the cold-pull workflow.
+
+### The build clock is still scoped to the package transaction
+
+ADR-028 declares the override applies to the package transaction and to nothing
+else, and lists five sites it must never reach: certificate validity, advisory
+freshness, signature verification, update-metadata expiry and evidence
+timestamps. Two changes touched it this pass and neither widened it.
+
+* The `@` prefix was removed from `FAKETIME`. That changes the override from
+  *start-at* to *frozen* — a narrower effect, not a wider one.
+* The minimisation `dnf remove` now runs under the same override. That is a
+  second package transaction, which is inside the declared scope; the rpm
+  queries either side of both transactions still run with the real environment.
+
+No network operation happens under the override: the snapshot is a `file://`
+repository, so no TLS handshake and no certificate check occurs while the clock
+is overridden. `gpgcheck=1` stays on and every RPM's Fedora signature is verified
+against Fedora's own key. The epoch is a commit timestamp inside every relevant
+key's validity.
+
+### A library that decides the artifact was coming from the host
+
+`build/scripts/build-image.sh` located libfaketime with
+`find /usr/lib64 /usr/lib`. Whatever the build machine carried was `LD_PRELOAD`ed
+into the package transaction.
+
+That is a supply-chain hole in the mechanism that exists to close one. It is not
+a large one — the library is not reachable from the product image and the
+override ends with the transaction — but its *version* decides fifty package
+headers, and an unpinned input whose version changes the artifact is the class
+this remediation exists to remove. It is now pinned in the builder image,
+recorded by checksum in the builder lock, and verified before it is preloaded.
+`BUNNY_FAKETIME_LIBRARY` can say where the library is and cannot change what it
+is.
+
+### The finaliser must not be able to launder a difference
+
+`finalise-package-databases.sh` applies one transformation, `VACUUM`, and
+verifies it changed nothing: the logical content — every row, tagged by SQLite
+storage class — is digested before and after, and a move fails the build.
+
+That check is the security-relevant part. A canonicaliser that could rewrite
+content would be a way to make two different artifacts compare equal, and the
+one difference this pass actually found was a *content* difference that a
+plausible canonicalisation would have erased. `rpm --rebuilddb` demonstrates the
+hazard concretely: byte-deterministic, leaves `rpm -qa` identical, and moves 594
+of 1,015 header rows.
+
+### Semantic comparison was not adopted
+
+ADR-029 is written and **not approved**. It would change what this project claims
+when it says a build is reproducible, and it would make invisible exactly the
+regions of a database no SQL query returns — free space, unallocated page
+remnants, anything outside a b-tree. The gate still compares bytes.
+
+### Publication: what is granted and what is not
+
+The publication path requires `write:packages` and `read:packages` and nothing
+else. It checks the scopes before reading or packing anything, exits 2 naming the
+command, and prints no token value at any point. The cold-pull workflow requests
+`contents: read` and `packages: read`, references no signing secret, and asserts
+it produced no image.
+
+Two retention properties are recorded as `unverified` rather than asserted:
+deletion protection and access policy. Both are repository settings rather than
+properties of a push, and an untagged-version cleanup policy can delete a digest
+that every pinned build depends on. Writing "protected" without reading the
+settings back would be a claim nobody checked.
+
+### The offline install probe is a control, not a configuration
+
+`--network=none` at the container boundary, with `gpgcheck=1` against the keys
+the snapshot itself ships. A configuration mistake can undo a policy; a container
+with no network cannot reach a mirror however it is configured. The cold-pull
+workflow additionally blackholes six Fedora mirror hostnames and verifies the
+block took effect before proceeding.
+
+### Unchanged
+
+No production signing identity was created. No gate was moved. The stable-release
+and qualification-candidate gates are re-asserted as exiting 2 by the cold-pull
+workflow, so a run that fetched some files and made a release gate pass would
+fail there.

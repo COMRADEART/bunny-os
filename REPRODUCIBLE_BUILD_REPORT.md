@@ -215,3 +215,46 @@ available demonstration of why the toolchain check is not a formality.
 
 Nothing here is claimed to be harmless. The files are build-environment state by
 inspection, and inspection is not proof.
+
+## 2026-07-30 — what the archive digest depends on, measured
+
+This report established that `podman save` stamps tar entry mtimes with the
+wall-clock time of archive creation, so two builds of one commit produced
+byte-identical blobs and different archive digests. Normalising the archive
+wrapper fixed that, and it turned out to be the outermost of four layers of the
+same problem.
+
+The archive digest depends on the layer digests. The layer digests depend on more
+than the files the comparison compares.
+
+| What changed a layer digest | Visible in a dimension? | Fix |
+| --- | --- | --- |
+| file content | yes — `fileDigests` | the build clock; see `RPM_DATABASE_DETERMINISM_REPORT.md` |
+| entry mtimes inside a layer | **no** | pinned in-container, then clamped at commit with `--source-date-epoch --rewrite-timestamp` |
+| a `COPY` layer's mtimes | **no** | the in-container pass cannot reach a layer whose files a later step deleted; only the commit-time clamp does |
+| runtime-state paths | **no** — excluded as volatile | `/var/cache/ldconfig/aux-cache` holds inode numbers; removed with the other caches |
+
+Three of the four were invisible to the seventeen dimensions, and all three
+surfaced as "the archives differ and every content dimension matches" — which is
+the least useful thing a comparison can say. Both classes are now collected as
+named diagnostics beside the dimensions rather than inside them: the seventeen
+are fixed by policy, and a difference still needs somewhere to be reported.
+
+### The normalisation manifest records three digests
+
+```text
+preNormalisationDigest   what podman save emitted; build residue
+rawDigest                the archive as shipped
+normalisedDigest         that same file put through normalisation again
+```
+
+The last two are equal whenever normalisation is idempotent, and that equality is
+the claim rather than a redundancy: it says the deliverable is already in normal
+form. An earlier version recorded podman's digest as `rawDigest`, nothing on disk
+matched it afterwards, and the dimension collector refused the pair — correctly,
+and for a reason that had nothing to do with the build.
+
+Idempotence is checked by inspecting what normalisation pins — entry order,
+mtimes, ownership, pax `atime`/`ctime` headers — rather than by repacking a
+1.8 GB archive a second time. It answers the same question and names the property
+and the entry rather than reporting two different digests.
