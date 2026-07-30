@@ -311,22 +311,31 @@ The runner image ships an already-initialised container store. It holds nothing
 this build needs — the base is pulled by digest — so it is removed rather than
 migrated, which is also what `BUNNY_CACHES_DISABLED=1` asks for.
 
-### F13 — The runner ran out of disk, and reported `cancelled`
+### F13 — The SBOM step was killed, and the first diagnosis was wrong
 
-The SBOM step ran for 419 seconds and the job reported `cancelled` with an empty
+The step ran for 419 seconds and the job reported `cancelled` with an empty
 failure log and every later step skipped. The build itself had succeeded in 387
 seconds.
 
-The `ubuntu-24.04` runner has about 14 GB free on its root volume. The job writes
-a 1.85 GB archive, a container store holding the base and the built image, and
-then syft extracts that archive to catalogue it. The runner was killed, which
-surfaces as `cancelled` rather than as an error — a step that produced no message
-and no exit code is indistinguishable from one somebody deliberately stopped.
+Disk was the obvious explanation — the runner has ~14 GB free and the job writes
+a 1.85 GB archive plus a container store — so ~25 GB of unused toolchains were
+removed, the SBOM was cut to one output format, and free space was printed around
+the heavy steps.
 
-About 25 GB of unused preinstalled toolchains are now removed first, the
-container store and syft's temporary directory move to `/mnt`, and syft produces
-only the one SBOM format anything reads. Free space is printed around the heavy
-steps so the next such failure reports itself.
+The next run reclaimed 19 GiB, entered the SBOM step with **28 GiB free**, and
+was killed anyway. Measuring also showed that `/mnt` on this runner is the same
+filesystem as `/`, so relocating the container store there had done nothing; that
+change was reverted rather than left in place looking as though it had helped.
+
+The cause is memory: syft catalogues a 1.85 GB archive holding 164,962 entries on
+a 16 GB runner, and the kernel kills it, which surfaces as `cancelled` with no
+message. The fix is 16 GB of swap, `SYFT_PARALLELISM=1`, and `free -h` printed
+alongside `df -h` around every heavy step.
+
+The disk reduction was kept: it was a real constraint even though it was not this
+one. Recording both the wrong diagnosis and the right one is the point — a step
+that reports nothing invites a plausible answer, and the plausible answer here
+was wrong.
 
 ### One more, found by reading the provenance
 

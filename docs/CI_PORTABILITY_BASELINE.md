@@ -505,28 +505,45 @@ cancelled  Generate the SBOM and package inventory
 with every subsequent step skipped and an empty failure log. The build itself had
 succeeded in 387 seconds.
 
-**Root cause.** The `ubuntu-24.04` runner has roughly 14 GB free on its root
-volume. The job writes a 1.85 GB OCI archive, a container store holding the
-2 GB base plus the built image, and then syft extracts that archive into a
-temporary directory to catalogue it. The runner exhausted its disk and was
-killed, which surfaces as `cancelled` rather than as an error.
+**First diagnosis, and it was wrong.** The `ubuntu-24.04` runner has roughly
+14 GB free on its root volume, and the job writes a 1.85 GB archive plus a
+container store holding the base and the built image. Disk exhaustion was the
+obvious explanation, so ~25 GB of unused preinstalled toolchains were removed,
+the SBOM was reduced to one output format, and free space was printed around the
+heavy steps.
 
-That silence is the reportable part: a step that produced no message and no exit
-code is indistinguishable from a step that was deliberately cancelled.
+The next run then reported:
 
-**Fix applied.** Three changes, none of them a build input:
+```text
+reclaimed 19 GiB; 34 GiB free on /
+...
+Generate the SBOM and package inventory
+  /dev/root  72G  44G  28G  62% /
+  ##[error]The operation was canceled.
+```
 
-* ~25 GB of preinstalled toolchains the build never uses are removed first.
-  `/opt/hostedtoolcache` is left alone — `setup-python` installed the
-  interpreter the job runs on.
-* The container store and syft's temporary directory move to `/mnt`, the
-  runner's large ephemeral volume.
-* syft produces only `spdx-json`; the `syft-json` output was another 70 MB that
-  nothing downstream reads.
+**It started the SBOM step with 28 GB free and was killed anyway.** Disk was
+tight, the reduction was worth keeping, and it was not the cause.
 
-**Regression test required.** Free space is now printed before and after the
-heavy steps, so the next disk-exhaustion failure reports itself rather than
-appearing as a bare `cancelled`.
+Two things were learned by measuring rather than assuming. `/mnt` on this runner
+is the same filesystem as `/` — `df -h / /mnt` prints `/dev/root` twice — so
+relocating the container store and syft's temporary directory there did nothing
+at all. That change was reverted rather than left in place looking as though it
+had helped.
+
+**Root cause.** Memory. syft catalogues a 1.85 GB archive holding 164,962
+entries, and the runner has 16 GB of RAM. The step is killed by the kernel, which
+surfaces as `cancelled` with no message — a step that produced no output and no
+exit code is indistinguishable from one somebody deliberately stopped.
+
+**Fix applied.** 16 GB of swap, `SYFT_PARALLELISM=1`, and `free -h` printed
+around the heavy steps alongside `df -h`. The OCI archive is also uploaded even
+when a later step fails: everything else in the bundle can be derived from it,
+and rebuilding it costs the whole job.
+
+**Regression test required.** None available in this repository — the constraint
+is the runner's memory. Both disk and memory are now reported around every heavy
+step, so the next such failure names itself.
 
 ---
 

@@ -210,7 +210,11 @@ jobs:
           sudo apt-get install --yes --no-install-recommends runc fuse-overlayfs
           sudo install -d /etc/containers
           printf '[engine]\nruntime = "runc"\n' | sudo tee /etc/containers/containers.conf
-          printf '[storage]\ndriver = "overlay"\n' | sudo tee /etc/containers/storage.conf
+          # graphroot and runroot are their usual defaults and are written
+          # explicitly: a [storage] section replaces the built-in one wholesale,
+          # and a section carrying only `driver` fails with "runroot must be set".
+          printf '[storage]\ndriver = "overlay"\nrunroot = "/run/containers/storage"\ngraphroot = "/var/lib/containers/storage"\n' \
+            | sudo tee /etc/containers/storage.conf
           # The runner image ships an already-initialised container store whose
           # recorded driver is empty, and podman refuses to change drivers under
           # an existing database:
