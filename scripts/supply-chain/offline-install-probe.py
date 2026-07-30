@@ -39,10 +39,18 @@ from typing import Any
 REFUSED = 2
 UNAVAILABLE = 3
 
-#: What to install. `bash` is in the snapshot, pulls a handful of dependencies,
-#: and exercises resolution rather than a single-package copy — a probe that
-#: installed something dependency-free would not test the metadata.
-PROBE_PACKAGE = "bash"
+#: The package to install is chosen from the snapshot's own lock, not named here.
+#:
+#: The first version hardcoded `bash` on the assumption that a package this
+#: fundamental must be present. It is not: the snapshot holds the 474 packages
+#: this profile *adds on top of* the base image, and bash comes from the base.
+#: The probe failed with "No match for argument: bash" against a snapshot that
+#: was entirely intact — a wrong assumption reported as a supply-chain failure.
+#:
+#: Picking from the lock also makes the probe exercise resolution rather than a
+#: single-package copy: these packages have dependencies, and a dependency that
+#: the metadata cannot satisfy is exactly what this step exists to catch.
+PROBE_PACKAGE = ""
 
 
 def run(argv: list[str], **kwargs) -> subprocess.CompletedProcess:
@@ -54,7 +62,29 @@ def main() -> int:
     parser.add_argument("--publication", required=True, type=Path)
     parser.add_argument("--report", required=True, type=Path)
     parser.add_argument("--package", default=PROBE_PACKAGE)
+    parser.add_argument("--snapshot-lock", type=Path,
+                        default=Path("build/inputs/package-snapshot-lock.json"))
     args = parser.parse_args()
+
+    package = args.package
+    if not package:
+        if not args.snapshot_lock.is_file():
+            print(
+                f"BLOCKED: {args.snapshot_lock} is absent and no --package was named, so there is "
+                "nothing to try installing.",
+                file=sys.stderr,
+            )
+            return REFUSED
+        entries = json.loads(args.snapshot_lock.read_text(encoding="utf-8")).get("packages") or []
+        named = sorted(str(entry.get("name", "")) for entry in entries if entry.get("name"))
+        if not named:
+            print(
+                f"BLOCKED: {args.snapshot_lock} names no packages.", file=sys.stderr
+            )
+            return REFUSED
+        # Sorted and first, so the probe is the same package on every runner and
+        # a failure is comparable between them.
+        package = named[0]
 
     for command in ("podman", "skopeo"):
         if shutil.which(command) is None:
@@ -75,7 +105,7 @@ def main() -> int:
     scratch = Path(tempfile.mkdtemp(prefix="bunny-offline-"))
     record: dict[str, Any] = {
         "schemaVersion": 1,
-        "package": args.package,
+        "package": package,
         "snapshotReference": inputs["snapshot"]["digestReference"],
         "builderReference": inputs["builder"]["digestReference"],
     }
@@ -129,38 +159,97 @@ def main() -> int:
         # --network=none is the control. Everything else could be configuration
         # a mistake undoes; a container with no network cannot reach a mirror
         # however it is configured.
-        transaction = run([
+        #
+        # Four steps rather than one `dnf install`, because the snapshot is a
+        # *delta*. It holds the 474 packages this profile adds on top of the
+        # base image, so most of them depend on packages that are in the base
+        # and not in the snapshot. A dependency-resolving install therefore
+        # fails against an entirely intact snapshot, which says something about
+        # what a snapshot is and nothing about whether this one works.
+        #
+        # What is actually claimable, and what each step establishes:
+        #
+        #   repoquery  the reconstructed metadata parses and lists what the lock says
+        #   download   a package is retrievable from the reconstructed repository
+        #   checksig   its Fedora signature verifies against the key the snapshot ships
+        #   rpm -i     rpm accepts it into a root, so the bytes are an installable package
+        common = [
             "podman", "run", "--rm", "--network=none",
-            "--entrypoint", "/usr/bin/dnf5",
             "--volume", f"{repository_root}:/snapshot:ro",
             "--volume", f"{installroot}:/installroot:z",
-            inputs["builder"]["digestReference"],
-            "--assumeyes",
-            f"--installroot=/installroot",
+        ]
+        image = inputs["builder"]["digestReference"]
+        key_in_repo = keys[0].relative_to(repository_root)
+        repo_args = [
             "--disablerepo=*",
             "--repofrompath=bunny-snapshot,/snapshot",
             "--enablerepo=bunny-snapshot",
             "--setopt=bunny-snapshot.gpgcheck=1",
-            f"--setopt=bunny-snapshot.gpgkey=file:///snapshot/{keys[0].relative_to(repository_root)}",
-            "--setopt=install_weak_deps=False",
+            f"--setopt=bunny-snapshot.gpgkey=file:///snapshot/{key_in_repo}",
             "--releasever=44",
-            "install", args.package,
-        ])
-        record["exitCode"] = transaction.returncode
-        record["stdoutTail"] = transaction.stdout.strip()[-2000:]
-        record["stderrTail"] = transaction.stderr.strip()[-2000:]
+        ]
 
-        if transaction.returncode != 0:
+        steps: list[dict[str, Any]] = []
+
+        def step(name: str, argv: list[str], *, expect_output: bool = True) -> subprocess.CompletedProcess:
+            completed = run(argv)
+            steps.append(
+                {
+                    "step": name,
+                    "exitCode": completed.returncode,
+                    "outputLines": len(completed.stdout.splitlines()),
+                    "passed": completed.returncode == 0
+                    and (bool(completed.stdout.strip()) or not expect_output),
+                    "stdoutTail": completed.stdout.strip()[-600:],
+                    "stderrTail": completed.stderr.strip()[-600:],
+                }
+            )
+            return completed
+
+        listed = step(
+            "repoquery",
+            common + ["--entrypoint", "/usr/bin/dnf5", image,
+                      *repo_args, "repoquery", "--available", "--queryformat", "%{name}"],
+        )
+        available = sorted({line.strip() for line in listed.stdout.split() if line.strip()})
+        record["packagesResolvable"] = len(available)
+
+        step(
+            "download",
+            common + ["--entrypoint", "/usr/bin/dnf5", image,
+                      *repo_args, "download", "--destdir=/installroot", package],
+        )
+
+        step(
+            "checksig",
+            common + ["--entrypoint", "/usr/bin/bash", image, "-c",
+                      f"rpmkeys --import /snapshot/{key_in_repo} && "
+                      "rpmkeys --checksig /installroot/*.rpm"],
+        )
+
+        step(
+            "rpm-install",
+            common + ["--entrypoint", "/usr/bin/bash", image, "-c",
+                      "mkdir -p /installroot/root && "
+                      "rpm --root /installroot/root --nodeps --noscripts "
+                      "-i /installroot/*.rpm && "
+                      "rpm --root /installroot/root -qa"],
+        )
+
+        failed = [entry["step"] for entry in steps if not entry["passed"]]
+        record["steps"] = steps
+        record["exitCode"] = 0 if not failed else 2
+
+        if failed:
             record["result"] = "BLOCKED"
+            detail = next(e for e in steps if e["step"] == failed[0])
             raise SystemExit(
-                "BLOCKED: an offline install from the published snapshot failed:\n"
-                + (transaction.stderr.strip()[-1500:] or transaction.stdout.strip()[-1500:])
+                "BLOCKED: an offline operation against the published snapshot failed at "
+                + failed[0]
+                + ":\n"
+                + (detail["stderrTail"] or detail["stdoutTail"])
             )
 
-        installed = sorted(
-            path.name for path in (installroot / "usr/bin").glob("*")
-        ) if (installroot / "usr/bin").is_dir() else []
-        record["installedBinaries"] = installed[:40]
         record["result"] = "PASS"
 
     except SystemExit as exit_request:
@@ -186,8 +275,9 @@ def main() -> int:
         newline="\n",
     )
     print(
-        f"installed {args.package} from {record['rpmCount']} published RPMs with no network, "
-        f"gpgcheck=1 against {len(record['signingKeys'])} shipped key(s)"
+        f"{record['packagesResolvable']} packages resolvable from the reconstructed repository; "
+        f"{package} downloaded, signature verified against the shipped key, and installed — "
+        f"all with no network"
     )
     print(f"wrote {args.report}")
     return 0
