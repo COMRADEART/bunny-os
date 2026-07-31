@@ -48,7 +48,7 @@ if [[ -n "${BUNNY_PODMAN_ROOT:-}" ]]; then
 fi
 # `sudo podman`, not `sudo command podman`.
 #
-# The first version used `command` to reach past this function to the binary,
+# The first version used `command` to reach past a wrapper to the binary,
 # which is unnecessary — `sudo` is the command word here and `podman` is one of
 # its arguments, so nothing recurses — and it is not portable. `command` is a
 # shell builtin, so `sudo command …` needs an executable of that name. Fedora
@@ -59,7 +59,12 @@ fi
 #
 # Found by the first hosted hermetic build, which is the kind of difference a
 # second builder exists to surface.
-podman() { sudo podman "${podman_store_args[@]+"${podman_store_args[@]}"}" "$@"; }
+#
+# The wrapper does not shadow the binary's name. A function named `podman`
+# reads as the binary at every call site while quietly rewriting each call,
+# and ShellCheck flags the shape (SC2032/SC2033) because a name that means two
+# things is exactly how a call escapes the wrapper unnoticed.
+bunny_podman() { sudo podman "${podman_store_args[@]+"${podman_store_args[@]}"}" "$@"; }
 
 repository_root="$(git rev-parse --show-toplevel)"
 cd "${repository_root}"
@@ -104,9 +109,9 @@ import json
 print(json.load(open("build/inputs/base-image-lock.json"))["retainedDigest"])
 ')"
   base_tag="localhost/bunny-os-retained-base:${retained_digest#sha256:}"
-  podman pull "oci:${retained_layout}:retained" >/dev/null
-  pulled_id="$(podman pull "oci:${retained_layout}:retained" 2>/dev/null | tail -1)"
-  podman tag "${pulled_id}" "${base_tag}"
+  bunny_podman pull "oci:${retained_layout}:retained" >/dev/null
+  pulled_id="$(bunny_podman pull "oci:${retained_layout}:retained" 2>/dev/null | tail -1)"
+  bunny_podman tag "${pulled_id}" "${base_tag}"
   observed="$(sudo skopeo inspect --raw "containers-storage:${skopeo_store_args[0]-}${base_tag}" |
     python3 -c 'import hashlib,sys; print("sha256:"+hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')"
   if [[ "${observed}" != "${retained_digest}" ]]; then
@@ -167,8 +172,8 @@ print(json.load(open("build/inputs/builder-image-lock.json"))["builderDigest"])
       exit 4
     fi
     builder_tag="localhost/bunny-os-builder-pinned:${builder_digest#sha256:}"
-    builder_id="$(podman pull "oci:${builder_layout}:builder" 2>/dev/null | tail -1)"
-    podman tag "${builder_id}" "${builder_tag}"
+    builder_id="$(bunny_podman pull "oci:${builder_layout}:builder" 2>/dev/null | tail -1)"
+    bunny_podman tag "${builder_id}" "${builder_tag}"
     observed_builder="$(sudo skopeo inspect --raw "containers-storage:${skopeo_store_args[0]-}${builder_tag}" |
       python3 -c 'import hashlib,sys; print("sha256:"+hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')"
     if [[ "${observed_builder}" != "${builder_digest}" ]]; then
@@ -179,7 +184,7 @@ print(json.load(open("build/inputs/builder-image-lock.json"))["builderDigest"])
     fi
     faketime_scratch="$(mktemp -d)"
     trap '[[ -n "${faketime_scratch:-}" ]] && rm -rf "${faketime_scratch}" || true' EXIT
-    podman run --rm --network=none --entrypoint /usr/bin/cp \
+    bunny_podman run --rm --network=none --entrypoint /usr/bin/cp \
       --volume "${faketime_scratch}:/out:z" "${builder_tag}" \
       /usr/local/lib/bunny-faketime/libfaketime.so.1 /out/libfaketime.so.1
     sudo chown "$(id -u):$(id -g)" "${faketime_scratch}/libfaketime.so.1"
@@ -290,7 +295,7 @@ cache_args=(--no-cache)
 # installed. --timestamp would set them all and is the wrong tool here.
 timestamp_args=(--source-date-epoch "${source_epoch}" --rewrite-timestamp)
 
-podman build \
+bunny_podman build \
   "${cache_args[@]}" \
   "${timestamp_args[@]}" \
   --file build/Containerfile \
@@ -306,8 +311,8 @@ podman build \
   "${hermetic_args[@]+"${hermetic_args[@]}"}" \
   . 2>&1 | tee "${output}/oci-build.log"
 
-podman image inspect "${tag}" | tee "${output}/oci-inspect.json" >/dev/null
-podman save --format oci-archive --output "${output}/bunny-os.oci.tar" "${tag}"
+bunny_podman image inspect "${tag}" | tee "${output}/oci-inspect.json" >/dev/null
+bunny_podman save --format oci-archive --output "${output}/bunny-os.oci.tar" "${tag}"
 sudo chown "$(id -u):$(id -g)" "${output}/bunny-os.oci.tar"
 
 # Normalise the archive wrapper so the artifact digest is reproducible.
