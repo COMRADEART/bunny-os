@@ -650,11 +650,15 @@ cold-pull-input-test:
 create-reproducibility-target:
 	$(PYTHON) scripts/supply-chain/create-reproducibility-target.py --output build/inputs/qualification-target.json
 
+# The dispatch ref selects which branch's *workflow file* runs; the commit
+# being built is pinned separately by the commit field. Without an explicit
+# ref, gh dispatches the default branch's copy, which silently ignores any
+# workflow fix that has not merged yet.
 dispatch-hosted-h1:
-	gh workflow run hermetic-builder.yml --repo COMRADEART/bunny-os --field commit="$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}" --field label=H1
+	gh workflow run hermetic-builder.yml --repo COMRADEART/bunny-os --ref "$${BUNNY_DISPATCH_REF:-main}" --field commit="$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}" --field label=H1
 
 dispatch-hosted-h2:
-	gh workflow run hermetic-builder.yml --repo COMRADEART/bunny-os --field commit="$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}" --field label=H2
+	gh workflow run hermetic-builder.yml --repo COMRADEART/bunny-os --ref "$${BUNNY_DISPATCH_REF:-main}" --field commit="$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}" --field label=H2
 
 import-three-builder-evidence:
 	$(PYTHON) scripts/release.py import-hosted-builder-evidence --artifact-dir "$${BUNNY_ARTIFACT_DIR:?set BUNNY_ARTIFACT_DIR}" --candidate-commit "$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}"

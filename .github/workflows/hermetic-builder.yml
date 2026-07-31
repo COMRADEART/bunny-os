@@ -203,10 +203,13 @@ jobs:
           set -euo pipefail
           profile='${{ inputs.profile }}'
           export TMPDIR="${RUNNER_TEMP}/syft"
-          mkdir -p "$TMPDIR" "build/out/${profile}/sbom"
+          # The SBOM lives in build/out/ci, not in the profile directory: the
+          # artifact manifest below is `sha256sum -- *` over the profile
+          # directory, and a subdirectory there would break it.
+          mkdir -p "$TMPDIR" build/out/ci
           export SYFT_PARALLELISM=1
           syft "oci-archive:build/out/${profile}/bunny-os.oci.tar" \
-            -o "spdx-json=build/out/${profile}/sbom/bunny-os.spdx.json"
+            -o "spdx-json=build/out/ci/sbom.spdx.json"
 
       - name: Collect the intended SELinux manifest
         run: |
@@ -226,7 +229,7 @@ jobs:
           ")"
           python scripts/reproducibility/collect_comparison_dimensions.py \
             --archive "build/out/${profile}/bunny-os.oci.tar" \
-            --sbom "build/out/${profile}/sbom/bunny-os.spdx.json" \
+            --sbom build/out/ci/sbom.spdx.json \
             --normalisation "build/out/${profile}/normalisation.json" \
             --epoch "$epoch" \
             --mode qualification \
@@ -246,12 +249,63 @@ jobs:
       - name: Collect the builder record
         run: |
           set -euo pipefail
+          # The record must pin the base the build actually consumed. The
+          # published digest reference is that pin; an empty or tag-only value
+          # is refused at import, and both builders must record the same one.
+          BUNNY_BASE_IMAGE="$(python -c "
+          import json
+          lock = json.load(open('build/inputs/input-publication-lock.json'))
+          print(lock['inputs']['base']['digestReference'])
+          ")"
+          export BUNNY_BASE_IMAGE
           python scripts/reproducibility/collect_builder_record.py builder-record \
             --builder-id "hosted-${{ inputs.label }}-${GITHUB_RUN_ID}" \
             --builder-type hosted-ci \
             --started-at '${{ steps.environment.outputs.started }}' \
             --completed-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --output build/out/ci/builder-record.json
+
+      - name: Collect what the evidence import requires
+        run: |
+          set -euo pipefail
+          profile='${{ inputs.profile }}'
+          # release/hosted.py refuses a bundle missing any of its required
+          # artifacts, and the first hosted attempts uploaded a bundle that
+          # could never have been imported. Everything named there is produced
+          # here, the same way the independent-builder workflow produces it.
+          python - <<'PY'
+          import json, pathlib
+          document = json.loads(pathlib.Path("build/out/ci/sbom.spdx.json").read_text(encoding="utf-8"))
+          entries = sorted(
+              f"{item.get('name')}@{item.get('versionInfo', 'UNKNOWN')}"
+              for item in document.get("packages", [])
+          )
+          pathlib.Path("build/out/ci/package-inventory.txt").write_text(
+              "\n".join(entries) + "\n", encoding="utf-8"
+          )
+          print(f"{len(entries)} package entries")
+          PY
+          # The bundle's normalisation.json is the operator-side pass over the
+          # shipped archive, so its rawDigest matches the artifact manifest's
+          # entry for bunny-os.oci.tar. The build's own normalisation.json
+          # records the pre-shipping normalisation and stays where it is.
+          python scripts/release.py normalise-artifact \
+            --source "build/out/${profile}/bunny-os.oci.tar" \
+            --destination build/out/ci/bunny-os.normalised.tar \
+            --output build/out/ci/normalisation.json
+          rm -f build/out/ci/bunny-os.normalised.tar
+          BUNNY_BASE_IMAGE="$(python -c "
+          import json
+          lock = json.load(open('build/inputs/input-publication-lock.json'))
+          print(lock['inputs']['base']['digestReference'])
+          ")"
+          export BUNNY_BASE_IMAGE
+          python scripts/reproducibility/collect_builder_record.py provenance \
+            --profile "$profile" \
+            --artifact-dir "build/out/${profile}" \
+            --output build/out/ci/ci-provenance.json
+          ( cd "build/out/${profile}" && sha256sum -- * > "${GITHUB_WORKSPACE}/build/out/ci/artifact-manifest.sha256" )
+          cat build/out/ci/artifact-manifest.sha256
 
       - name: Upload the comparison evidence
         uses: actions/upload-artifact@v4
@@ -268,6 +322,12 @@ jobs:
             build/out/ci/hydrated-inputs.json
             build/out/qualification/hydrated-inputs.json
             build/out/ci/databases/**
+            build/out/ci/sbom.spdx.json
+            build/out/ci/package-inventory.txt
+            build/out/ci/ci-provenance.json
+            build/out/ci/artifact-manifest.sha256
+            build/out/ci/normalisation.json
+            build/out/ci/build.log
             build/out/${{ inputs.profile }}/normalisation.json
             build/out/${{ inputs.profile }}/provenance.json
             build/out/${{ inputs.profile }}/SHA256SUMS
