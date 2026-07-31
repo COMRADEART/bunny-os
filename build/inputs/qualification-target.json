@@ -24,8 +24,8 @@
   "packageCount": 474,
   "packageSnapshotDigest": "b6fbf2ae637a288cc8184ccf9142e47414db5196976a9d53b2d8422df1c2949b",
   "packageSnapshotId": "fedora-44-beta-20260730",
-  "parentCommit": "6c47322f34393906d136d32f82e336972fe2421c",
-  "parentCommitShort": "6c47322f3439",
+  "parentCommit": "0b845fcf632327af25c062462d3ba7e0451ccbbe",
+  "parentCommitShort": "0b845fcf6323",
   "profile": "beta",
   "publishedInputs": {
     "base": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
@@ -34,7 +34,7 @@
   },
   "retainedBaseDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
   "schemaVersion": 1,
-  "selinuxPolicyDigest": "88185873a73249b89bb7285dc0870e4a0fca1cedb6db671010123742e58e3405",
+  "selinuxPolicyDigest": "9ecce3654a7cc6da974749c7b988c2ae3ad8f7dd5b03360cee6022c844d9ef37",
   "targetCommit": "the child of parentCommit \u2014 the commit that contains this file. Recorded in THREE_BUILDER_REPRODUCIBILITY_REPORT.md and asserted by scripts/supply-chain/assert-target-commit.py, which refuses a commit whose qualification-target.json does not name that commit's own parent.",
   "targetKind": "reproducibility-qualification",
   "toolchain": {
