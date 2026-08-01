@@ -79,7 +79,7 @@ no unobserved segment:
 | Fresh vs reused OVMF variables | fresh → exactly 1 reset; reused post-restoration → 0 resets (`crb-reused-cold`, `tis-reused-cold` 5/5 each) |
 | Fresh vs reused TPM state | no effect in either direction; the branch tests protocol presence, not TPM contents |
 | Firmware-only control | OVMF + swtpm with no disk: stable for the whole window, no reset (`fw-only-crb`, `fw-only-tis`) |
-| Known-good-disk control | stock Fedora Cloud 44 disk (`Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2`, sha256 `28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f`), same harness, diagnostic cells `fedora-*` — see `TPM_BOOT_REGRESSION_REPORT.md` for the measured counts |
+| Known-good-disk control | **measured**: stock Fedora Cloud 44 disk (`Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2`, sha256 `28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f`) under the identical harness — without a TPM, 3/3 boot to `multi-user.target` with zero resets; with `tpm-crb` and fresh variables, the same "Boot Option Restoration" dialog and one `BOOTLOADER_REBOOT_COMMAND` reset. A disk Bunny did not build reproduces the behaviour exactly (diagnostic cells `fedora-*`) |
 | Last confirmed boot-chain stage in failing runs | `fbx64.efi` executing after `BdsDxe: starting Boot0002`; GRUB never entered |
 | Component that issues the reset | `EFI/BOOT/fbx64.efi`, sha256 `ea9b772575900eeb526faef865ac18ecd2130711e4e9e42c974fb5d31f69927c`, from `shim-x64-16.1-5.x86_64` |
 
@@ -104,10 +104,11 @@ no unobserved segment:
   same wiring completes full boots. Rejected by the traces.
 * **Artifact corruption or a Bunny image defect.** The no-TPM control boots
   the identical bytes, and the TPM boots complete once the designed reboot
-  is permitted. Rejected by those controls alone; the separately sourced
-  Fedora disk is a corroborating diagnostic whose measured counts are in
-  `TPM_BOOT_REGRESSION_REPORT.md`, not a load-bearing part of this
-  rejection.
+  is permitted — that alone rejects it. Independently corroborated: a stock
+  Fedora Cloud 44 disk, which Bunny did not build, shows the same dialog and
+  the same single classified reset under the identical harness, and boots
+  cleanly without a TPM. A defect present in someone else's disk too is not
+  a defect in this artifact.
 
 ## Why the symptom was misattributed to GRUB
 

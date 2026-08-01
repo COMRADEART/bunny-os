@@ -48,8 +48,14 @@ Observation:    stop-on-reset instrumentation, stability expectation
 The firmware layer is exonerated as an autonomous reset source: OVMF with
 this swtpm never resets on its own. The reset therefore requires something
 the disk supplies, and the executable-isolation evidence identifies it as
-shim's fallback (`TPM_GRUB_RESET_ROOT_CAUSE.md`). The known-good-disk
-control is a separate, corroborating diagnostic; its measured counts are in
-`TPM_BOOT_REGRESSION_REPORT.md`. "OVMF TPM boot path" is qualifiable:
+shim's fallback (`TPM_GRUB_RESET_ROOT_CAUSE.md`).
+
+The known-good-disk control, now measured, completes the pair from the
+other side: a stock Fedora Cloud 44 disk under this identical firmware and
+harness boots 3/3 with zero resets when no TPM is attached, and produces the
+same restoration dialog and one classified reset when one is. The firmware
+is constant across both; only the disk's ESP payload and the TPM's presence
+change, and both changes move the result. "OVMF TPM boot path" is
+qualifiable:
 the firmware exposes a working TCG2 protocol that the boot chain consumes
 correctly through completed boots.
