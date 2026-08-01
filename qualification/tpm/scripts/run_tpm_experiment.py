@@ -106,6 +106,15 @@ class QmpClient:
         #: and a run that cannot see a reset must not be scored as one that
         #: saw none.
         self.reader_died = False
+        #: Monotonic command counter. QMP replies carry back the id they were
+        #: sent with, and matching on it is the only way to know a reply
+        #: belongs to the command in hand: without it, a reply that arrives
+        #: after its own command timed out is handed to the NEXT command, so
+        #: a screendump's empty return can be read as a query-status answer.
+        self.command_id = 0
+        #: Ids of commands that timed out. Their replies may still arrive;
+        #: they belong to nobody and are discarded rather than handed on.
+        self.stale_ids: set[str] = set()
         greeting = self._read_message()
         self._record({"event": "_QMP_GREETING", "qmp": greeting.get("QMP", {}),
                       "hostTime": now()})
@@ -163,18 +172,26 @@ class QmpClient:
 
     def execute(self, command: str, arguments: dict | None = None,
                 timeout: float = 15) -> dict:
-        payload: dict = {"execute": command}
+        with self.lock:
+            self.command_id += 1
+            identifier = f"tpmq-{self.command_id}"
+        payload: dict = {"execute": command, "id": identifier}
         if arguments:
             payload["arguments"] = arguments
-        with self.lock:
-            self.responses.clear()
         self._send(payload)
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             with self.lock:
-                if self.responses:
-                    return self.responses.pop(0)
+                for index, message in enumerate(self.responses):
+                    if message.get("id") == identifier:
+                        return self.responses.pop(index)
+                # Drop replies to commands that already timed out; keeping
+                # them would grow the list without bound over a long run.
+                self.responses = [m for m in self.responses
+                                  if m.get("id") not in self.stale_ids]
             time.sleep(0.05)
+        with self.lock:
+            self.stale_ids.add(identifier)
         raise TimeoutError(f"QMP {command} got no response")
 
     def event_names(self) -> list[str]:
