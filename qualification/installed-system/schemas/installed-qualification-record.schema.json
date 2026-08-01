@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.invalid/schemas/installed-qualification-record.schema.json",
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt. SPDX-License-Identifier: GPL-3.0-or-later. One installed-system evidence record. The conditional requirements below are the point of the schema: they encode, structurally, the two relabellings the adversarial tests refuse — a VM run presented as physical evidence, and a PASS with nothing measured behind it.",
+  "title": "Bunny OS installed-system qualification record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "evidenceId",
+    "sourceCommit",
+    "sourceArchiveDigest",
+    "installationArtifactDigest",
+    "environment",
+    "firmwareMode",
+    "secureBootState",
+    "tpmState",
+    "encryptionState",
+    "scenario",
+    "scenarioVersion",
+    "startedAt",
+    "completedAt",
+    "result",
+    "assertions",
+    "evidenceFiles",
+    "operator"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "evidenceId": {
+      "type": "string",
+      "pattern": "^ISQ-\\d{8}-[a-z0-9-]+-\\d{3}$",
+      "$comment": "Produced only by release.installed.evidence_id; a record minting its own identifier format is a record nothing can index."
+    },
+    "sourceCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sourceArchiveDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "installationArtifactDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "recoveryArtifactDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "$comment": "Optional because a scenario that never touches recovery media has nothing honest to put here; absent and wrong stay distinguishable."
+    },
+    "environment": {
+      "enum": ["qemu-kvm", "physical"],
+      "$comment": "A qemu-kvm record can never satisfy a physical prerequisite. The two values are not grades of the same evidence; they are different claims, and the physical one carries a mandatory device identity (see the allOf below)."
+    },
+    "hardwareRecord": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Names the hardware qualification record the physical machine was described in. Required whenever environment is physical: a physical claim without a device identity is indistinguishable from a VM run relabelled."
+    },
+    "firmwareMode": { "enum": ["uefi", "uefi-secure-boot-development"] },
+    "secureBootState": {
+      "enum": ["disabled", "development-keys", "not-tested"],
+      "$comment": "not-tested is recorded, never inferred: 'disabled' and 'nobody looked' must stay distinguishable."
+    },
+    "tpmState": {
+      "enum": ["absent", "swtpm", "physical-tpm2", "not-tested"],
+      "$comment": "swtpm evidence must never satisfy a physical-TPM requirement. A software TPM proves the code path; only physical-tpm2 proves the device interaction, and the gate that consumes this field must treat them as different claims."
+    },
+    "encryptionState": { "enum": ["none", "luks2-passphrase"] },
+    "scenario": { "type": "string", "minLength": 1 },
+    "scenarioVersion": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "A scenario change is a new context; a record naming another scenarioVersion is stale, whatever its result."
+    },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "result": { "enum": ["PASS", "FAIL", "PARTIAL", "NOT_RUN"] },
+    "assertions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "expected", "observed", "result"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "expected": { "type": "string", "minLength": 1 },
+          "observed": { "type": "string", "minLength": 1 },
+          "result": { "enum": ["PASS", "FAIL"] }
+        }
+      }
+    },
+    "evidenceFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "createdAt", "collectionCommand", "redactionStatus", "retentionClass"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "collectionCommand": {
+            "type": "string",
+            "minLength": 1,
+            "$comment": "How the file was produced, so a reviewer can reproduce the observation instead of trusting the label on it."
+          },
+          "redactionStatus": { "enum": ["not-required", "redacted", "verified-clean"] },
+          "retentionClass": { "enum": ["evidence", "diagnostic", "transient"] }
+        }
+      }
+    },
+    "operator": { "type": "string", "minLength": 1 },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "$comment": "What this record deliberately does not claim, recorded so the boundary of the evidence travels with the evidence."
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "The 'VM evidence labelled physical' refusal: a physical record must name its hardware record.",
+      "if": {
+        "properties": { "environment": { "const": "physical" } },
+        "required": ["environment"]
+      },
+      "then": { "required": ["hardwareRecord"] }
+    },
+    {
+      "$comment": "A PASS with no assertions is screenshot-only evidence: something looked right, nothing was measured. Refused structurally so no importer needs to remember to check.",
+      "if": {
+        "properties": { "result": { "const": "PASS" } },
+        "required": ["result"]
+      },
+      "then": {
+        "properties": { "assertions": { "minItems": 1 } }
+      }
+    }
+  ]
+}

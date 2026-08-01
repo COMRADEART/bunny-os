@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.invalid/schemas/installed-scenario.schema.json",
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt. SPDX-License-Identifier: GPL-3.0-or-later. One installed-system scenario definition. Scenarios are data, not code, so that changing what a scenario means is a reviewable edit that bumps scenarioVersion and stales prior evidence — never a silent drift inside a runner script.",
+  "title": "Bunny OS installed-system scenario definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "title",
+    "description",
+    "scenarioVersion",
+    "environment",
+    "disk",
+    "resources",
+    "firmware",
+    "tpm",
+    "network",
+    "media",
+    "timeoutSeconds",
+    "markers",
+    "expectedOutcome",
+    "destructive"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "$comment": "Slug form so the name embeds directly into an ISQ evidence identifier without transformation."
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "scenarioVersion": { "type": "string", "minLength": 1 },
+    "environment": {
+      "const": "qemu-kvm",
+      "$comment": "const, not enum: this schema version only defines VM scenarios. Physical scenarios need a hardware record binding this schema has no fields for, and widening the enum before those fields exist would invite physical claims with VM-shaped evidence."
+    },
+    "disk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sizeGiB", "blank", "preExistingData"],
+      "properties": {
+        "sizeGiB": { "type": "integer", "minimum": 1 },
+        "blank": { "type": "boolean" },
+        "preExistingData": {
+          "type": "boolean",
+          "$comment": "blank and preExistingData are both explicit because 'blank: false' alone does not say whether the non-blank content is meant to survive; a preservation scenario and an overwrite scenario differ exactly here."
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vcpus", "memoryMiB"],
+      "properties": {
+        "vcpus": { "type": "integer", "minimum": 1 },
+        "memoryMiB": { "type": "integer", "minimum": 256 }
+      }
+    },
+    "firmware": { "enum": ["uefi", "uefi-secure-boot-development"] },
+    "tpm": {
+      "enum": ["none", "swtpm"],
+      "$comment": "swtpm exercises the code path only; evidence produced under it records tpmState swtpm and never satisfies a physical-TPM requirement."
+    },
+    "network": {
+      "enum": ["enabled", "absent"],
+      "$comment": "absent means no NIC at all, not an unplugged one — offline scenarios must be structurally offline so a runner cannot quietly fetch anything."
+    },
+    "media": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "digestField"],
+        "properties": {
+          "kind": { "enum": ["installer-iso", "recovery-iso", "installed-disk"] },
+          "digestField": {
+            "type": "string",
+            "minLength": 1,
+            "$comment": "Names the evidence-context field that pins this medium (e.g. installationArtifactDigest). The scenario never carries a digest of its own: the context is the single authority, and a scenario with its own digest would be a second one."
+          }
+        }
+      }
+    },
+    "timeoutSeconds": {
+      "type": "integer",
+      "minimum": 1,
+      "$comment": "A hit timeout is a FAIL, never a retry-until-green; retrying converts a flaky behaviour into a pass without anyone deciding to."
+    },
+    "markers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "regex", "required"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "regex": { "type": "string", "minLength": 1 },
+          "required": {
+            "type": "boolean",
+            "$comment": "A required marker that never appears fails the scenario; an optional one is recorded either way so its absence stays visible."
+          }
+        }
+      }
+    },
+    "expectedOutcome": {
+      "enum": ["PASS", "FAIL"],
+      "$comment": "Some scenarios EXPECT refusal — a wrong-credential unlock must fail, and the scenario passes qualification only when it does. Encoding the expectation here keeps 'the installer refused' distinguishable from 'the scenario broke'."
+    },
+    "destructive": {
+      "type": "boolean",
+      "$comment": "True when the scenario intentionally destroys disk content; a runner must refuse to point a destructive scenario at anything but scratch media."
+    },
+    "notes": { "type": "string" }
+  }
+}
