@@ -643,20 +643,21 @@ class SeventeenDimensions(unittest.TestCase):
         self.assertEqual(result.state, "NOT_COLLECTED")
         self.assertIn("second", result.detail)
 
-    def test_the_committed_comparison_does_not_satisfy_the_production_gate(self) -> None:
-        # This asserted `INCONCLUSIVE` and had to change when the comparison was
-        # first run against two real builders — it became `NON_REPRODUCIBLE`.
-        # Pinning one measured outcome made the test a record of what happened
-        # to be true rather than of what must be. The invariant is that the
-        # committed comparison never claims more than it measured: only
-        # REPRODUCIBLE between independent builders satisfies the gate, and this
-        # comparison is not that.
+    def test_the_committed_comparison_cannot_pass_without_independence(self) -> None:
+        # This asserted `INCONCLUSIVE`, then `NON_REPRODUCIBLE`, and each pin
+        # became a record of what happened to be true rather than of what must
+        # be. As of the three-builder result the committed comparison *is*
+        # REPRODUCIBLE — three builders presented identical archives — so the
+        # outcome is no longer an invariant at all. What must remain true is
+        # that the document alone can never satisfy the production gate:
+        # independence is decided over the builder records by
+        # verify-builder-independence, and a comparison evaluated without it
+        # stays unsatisfying no matter how perfectly its dimensions match.
         document = json.loads(
             (ROOT / "operations/data/build-comparison.json").read_text(encoding="utf-8")
         )
         report = evaluate_comparison(document, independent=False)
         self.assertIn(report.outcome, OUTCOMES)
-        self.assertNotEqual(report.outcome, "REPRODUCIBLE")
         self.assertFalse(report.satisfiesProductionGate)
 
     def test_no_committed_comparison_can_pass_without_independent_builders(self) -> None:
