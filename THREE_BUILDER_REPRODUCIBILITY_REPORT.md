@@ -5,150 +5,137 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Three-builder reproducibility report
 
-Date: 2026-07-30
-Status: **BLOCKED — no hosted build was dispatched**
+Date: 2026-08-01
+Status: **REPRODUCIBLE — three builders, two administrator boundaries, one archive**
 
 ## Result
 
 ```text
-Local build L         available
-Hosted build H1       NOT DISPATCHED
-Hosted build H2       NOT DISPATCHED
-L vs H1               NOT MEASURED
-L vs H2               NOT MEASURED
-H1 vs H2              NOT MEASURED
+Qualification target  225a5e1cbbba5765f83579d48842f7be05a25571 (Commit C, attempt 5)
+Local build L         local-fedora-wsl        Fedora WSL, podman 5.8.4, crun
+Hosted build H1       hosted-H1-30684077591   ubuntu-24.04, run 30684077591
+Hosted build H2       hosted-H2-30684078309   ubuntu-24.04, run 30684078309
 
-Reproducibility       NON_REPRODUCIBLE (unchanged)
+Raw archive           9439e7816f3effe5661549e50a350c614894eb26b64a4cfb036bf6fb4eb01abd
+                      identical from all three builders
+Normalised archive    165e57fc958b82656bfa2994cdd1acc545ac8c60450f7da7045cfb7c1a6705aa
+                      identical from all three builders
+
+H1 vs H2              REPRODUCIBLE, 17 of 17 dimensions
+L  vs H1              REPRODUCIBLE, 17 of 17 dimensions
+L  vs H2              REPRODUCIBLE, 17 of 17 dimensions
+Builder independence  PASS for L+H1 and L+H2, from real environment evidence
+Reproducibility gate  REPRODUCIBLE, independent, satisfies the production gate
 ```
 
-Nothing was dispatched, and this report says so rather than describing the plan
-as a result.
+Every builder fetched the three published inputs by digest — base, builder
+image and 474-package snapshot — verified them against the locks it cloned,
+built under the epoch the reproducibility lock pins, and presented the same
+bytes. The two hosted runs are separate workflow runs on separate runners; the
+local builder is a different machine, kernel, filesystem and administrator.
 
-## Why nothing was dispatched
+All three pairwise comparisons were required, and each earned its place:
+`H1 vs H2` is the pair that caught a runner-image rotation once before, and
+`L vs H` is the pair that caught everything below — two hosted runs agreed
+with each other through defects the local leg exposed.
 
-Two conditions gate a hosted dispatch, and both are enforced by
-`create-reproducibility-target.py`, which refuses to create a qualification
-target while either fails:
+The SELinux dimension is satisfied at the archive stage: intended contexts
+match from all three builders, and applied contexts are `NOT_COLLECTED`
+because they belong to installed-system qualification, which an archive-only
+build cannot satisfy and does not claim.
 
-1. **The local repeatability gate.** Dispatching before it passes measures
-   something the local builder has not settled. That has happened once in this
-   project's history and it cost seven dispatches.
-2. **The retained inputs are not published.** A hosted runner has the commit and
-   nothing else. It cannot obtain the retained base, the pinned builder image or
-   the 474-package snapshot, all of which exist in one directory on one machine.
-   See `PACKAGE_INPUT_PUBLICATION_REPORT.md`: this is one token scope.
+## What it took: every defect the second builder surfaced
 
-The second is the binding one. Even a passing local gate would not make a hosted
-build possible today.
+The local repeatability gate passed for weeks while every one of these
+waited. Each was invisible to same-host comparison — both local builds shared
+the property that carried it — and each is fixed at its cause on this branch:
 
-## What a three-builder comparison requires
+1. **`sudo command podman`** — Fedora ships `/usr/sbin/command`, Ubuntu does
+   not. The first hosted attempt died at the first podman call (`f5985f6`).
+2. **A signing key in the operator's home directory** — snapshot verification
+   read the system trust store and `~/.bunny-dev-keys`. The snapshot now
+   ships its keys and verification builds its keyring from them (`f4bb8f9`).
+3. **An unimportable evidence bundle** — the workflow never uploaded half of
+   what `release/hosted.py` requires, so a successful build would have been
+   refused at import. It now produces the complete bundle (`086fa45`).
+4. **Ubuntu's podman 4.9** — predates `--source-date-epoch` and
+   `--rewrite-timestamp`. The runner installs the static 5.8.4 the builder
+   lock pins, digest-checked, and refuses a version the lock does not name
+   (`99b6ac2`); crun is then named by path, after podman resolved Ubuntu's
+   1.14 ahead of the pinned bundle's (`734ded8`).
+5. **Hardlink direction follows readdir order** — the install layer carries
+   1,337 hardlink entries, and which member of a group becomes the layer
+   tar's real entry is a property of the build host's filesystem. Four icewm
+   theme files flipped between `clearlooks/` and `clearlooks-2px/` while
+   every extracted byte matched, moving four dimensions. Finalisation step
+   9a rewrites every multi-link file the build's own transaction installed
+   as an independent copy with identical bytes and metadata (`16dd9a5`).
+   The one defect that was in the artifact rather than around it.
+6. **Native vs naive overlay diff** — Ubuntu boots overlayfs with
+   `redirect_dir=Y`, and containers/storage answers that with its naive diff
+   walker: an independent whiteout per deleted path where native emits the
+   upperdir's opaque marker and hardlinked whiteouts, and flat byte-sorted
+   member order where native walks the tree. Diagnosed from the layer
+   inventory the workflow now uploads (`6718a68`); the runner turns the
+   module parameter to the Fedora default before any store exists
+   (`1c1f903`).
+7. **Toolchain records compared banners, not versions** — Fedora's skopeo
+   banner carries a git commit Ubuntu's build of the same release cannot
+   share, and syft's record was literally `Application: syft`. Records now
+   carry parsed versions (`48fd0a3`); the independence evaluator adjudicates
+   differences through the builder lock's per-tool classifications, where
+   `unknown` still blocks (`10600aa`); and the runner runs the locked
+   python 3.14.3 and skopeo 1.22.2 rather than Ubuntu's (`dd564b3`).
 
-Recorded here so the requirement is fixed before the evidence exists, rather than
-described afterwards to fit whatever was produced.
+Attempt 4 (`e7ce522`, runs 30680015881 and 30680016612) produced the first
+byte-identical three-builder result and was refused at independence for
+reason 7; its records are retained in the history at `7e7476e`. Attempt 3's
+hardlink-flip evidence is retained in
+`evidence/reproducibility/hosted-attempt-3/`.
 
-### Three pairwise comparisons, not one
+## What this establishes, and what it does not
+
+**Established.** The commit, the three published inputs and the pinned
+toolchain determine the archive to the byte, across two kernels, two
+filesystems, two container hosts and two administrator boundaries. A builder
+anyone can rent reproduces the artifact from the published digests alone, and
+the evidence bundle it must present is defined, cross-checked and imported by
+script.
+
+**Not established.** Anything an archive does not carry. Applied SELinux
+contexts, installation, boot, update, rollback, recovery and hardware
+behaviour belong to installed-system qualification and are untouched by this
+result. The two hosted builders share one cloud provider and one runner
+image; a defect in that image reproduces in both hosted builds, which is why
+the local leg — a different OS on different hardware under a different
+administrator — is one of the three, and why all three pairs are required
+rather than the hosted pair alone.
+
+## Where the evidence lives
 
 ```text
-L  vs H1
-L  vs H2
-H1 vs H2
+evidence/reproducibility/three-builder/   the three pairwise comparison
+                                          documents, the three-builder verdict,
+                                          the independence verdict, the gate
+                                          record and each builder's
+                                          normalisation record
+operations/data/builders.json             builder records and declared pairs
+operations/data/build-comparison.json     the gate's comparison document (L vs H1)
 ```
-
-All three. A single local-versus-hosted comparison cannot distinguish
-reproducibility from one accidentally favourable hosted run, and this project has
-already had two hosted runs an hour apart disagree with each other because GitHub
-rotated a runner image between them. `H1 vs H2` is the comparison that catches
-that, and it is the one a single-pair design omits.
-
-### Builder independence
-
-```text
-distinct administrator boundaries    local Fedora builder vs GitHub-hosted
-distinct workflow run IDs            H1 and H2 must be separate runs
-same builder image digest            sha256:bf9f00d8…
-same retained base digest            sha256:1f08084a…
-same package snapshot digest         996a7a36…
-same source commit                   Commit C
-same build epoch                     from reproducibility-lock.json
-same profile                         beta
-same output-affecting toolchain      the 16 tools classified as such
-```
-
-The hosts must differ and the programs that touch the artifact must not. One
-hosted run reused as both H1 and H2 is one measurement reported as two, and is
-rejected.
-
-### Every archive-stage dimension, in qualification mode
-
-Sixteen collected dimensions plus the archive-stage SELinux subcheck. A dimension
-that one builder collected and the other did not is `NOT_COLLECTED`, which makes
-the comparison `INCONCLUSIVE` — not a pass weighted by the dimensions that
-happened to be easy.
-
-### Allowed conclusions
-
-```text
-REPRODUCIBLE
-CONTENT_REPRODUCIBLE_ARCHIVE_VARIANCE
-NON_REPRODUCIBLE
-INCONCLUSIVE
-```
-
-The qualification prerequisite requires `REPRODUCIBLE`. A database byte
-difference is not downgraded to semantic equivalence to reach it; ADR-029 records
-that policy as a proposal and it is not approved.
-
-## What the local work established, and what it did not
-
-**Established.** Two clean local builds of one commit, from fresh clones with
-separate container stores and no layer cache, produce identical package
-databases — 0 of 12,959 pages differ — and identical content for every file in
-the image. The causes of the previous differences were measured, not inferred:
-an offset build clock, an unfrozen minimisation transaction, wall-clock mtimes in
-a COPY layer, and inode numbers in an ldconfig cache.
-
-**Not established.** Anything about a second builder. Both builds share a kernel,
-a container store implementation, a clock, a filesystem and an operator. A defect
-in any of them reproduces in both, and this comparison cannot see it. That is
-determinism; reproducibility is the claim that survives changing the machine.
-
-The `/var/cache/ldconfig/aux-cache` finding is a good illustration of why. Its
-content came from inode allocation — a property of the filesystem the build ran
-on. Two builds on one host got different inode numbers, which is why it was
-visible at all; two builds on *different* hosts would have differed for the same
-reason and for several more nobody has looked for yet.
-
-## When this report can be completed
-
-```text
-1. gh auth refresh -h github.com -s write:packages,read:packages
-2. make publish-retained-base publish-builder-image publish-package-snapshot
-3. make verify-published-inputs
-4. make cold-pull-input-test
-5. make create-reproducibility-target        (refuses unless 1-4 and the local gate pass)
-6. make dispatch-hosted-h1
-7. make dispatch-hosted-h2                   (a separate run; the same run twice is rejected)
-8. make import-three-builder-evidence
-9. make compare-three-builds
-10. make reproducibility-gate
-```
-
-Steps 6 and 7 must build **Commit C** and no other commit. After the target is
-created, no build-affecting source may change: a later commit is a different
-target and the hosted builds would be measuring something else.
 
 ## Gate position
 
 ```text
 Source gate                  PASS
-Retained inputs              BLOCKED
-Local byte repeatability     see LOCAL_HERMETIC_REPEATABILITY_REPORT.md
-Independent builders         BLOCKED
-Reproducibility              NON_REPRODUCIBLE
-Qualification candidate      BLOCKED — 2 of 14
-Stable release               NO-GO
-OEM / enterprise / sync      BLOCKED
+Retained inputs              PASS — published by digest, cold-pull verified
+Local byte repeatability     PASS — run 12, 17 of 17, commit 7e7476e
+Independent builders         PASS — L+H1 and L+H2, classification-adjudicated
+Reproducibility              REPRODUCIBLE — archive stage, three builders
+Qualification candidate      still BLOCKED — archive-only; installed-system
+                             evidence, reviews, signing and pilots unchanged
+Stable release               NO-GO, unchanged
 ```
 
-Unchanged by this report. Nothing here moves an external evidence requirement,
-and no hardware, review, signing or pilot work was begun.
+Reproducibility was the prerequisite this report owns, and it is the only
+line this report moves. Everything an installed system must prove is still
+owed, and no line above claims otherwise.

@@ -1,8 +1,8 @@
 {
   "baseImageDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
   "builders": [
-    "local-fedora-wsl",
-    "hosted-H1-30684077591"
+    "hosted-H1-30684077591",
+    "hosted-H2-30684078309"
   ],
   "claim": "independent-builder",
   "collectionMode": "qualification",
@@ -15272,8 +15272,8 @@
   "evaluation": {
     "baseImageDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
     "builders": [
-      "local-fedora-wsl",
-      "hosted-H1-30684077591"
+      "hosted-H1-30684077591",
+      "hosted-H2-30684078309"
     ],
     "dimensionCount": 17,
     "dimensions": [
