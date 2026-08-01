@@ -296,6 +296,47 @@ class MismatchedSourceCommit(unittest.TestCase):
         self.assertFalse(verdict.independent)
         self.assertIn("toolchain.syft", verdict.mismatchedInputs)
 
+    def test_an_unclassified_difference_blocks_even_with_classifications(self) -> None:
+        # Passing classifications does not soften the default: a tool the lock
+        # never classified is still an unestablished effect, and blocks.
+        verdict = evaluate_independence(
+            parse_builder_record(builder()),
+            parse_builder_record(hosted(toolchain={"podman": "5.8.4", "syft": "1.49.0"})),
+            toolClassifications={"podman": "output-affecting"},
+        )
+        self.assertFalse(verdict.independent)
+        self.assertIn("toolchain.syft", verdict.mismatchedInputs)
+
+    def test_an_output_affecting_difference_blocks_under_classification(self) -> None:
+        verdict = evaluate_independence(
+            parse_builder_record(builder()),
+            parse_builder_record(hosted(toolchain={"podman": "5.9.0", "syft": "1.50.0"})),
+            toolClassifications={"podman": "output-affecting", "syft": "evidence-generation-only"},
+        )
+        self.assertFalse(verdict.independent)
+        self.assertIn("toolchain.podman", verdict.mismatchedInputs)
+
+    def test_a_classified_evidence_only_difference_is_recorded_not_blocking(self) -> None:
+        # grype and image-builder never write the archive, and the lock says
+        # so with a class, a reason and a test. The verdict records the
+        # difference instead of refusing the pair for it — silently equal and
+        # loudly different are not the only two states.
+        left = parse_builder_record(builder())
+        right = parse_builder_record(hosted(toolchain=dict(left.toolchain, grype="absent")))
+        verdict = evaluate_independence(
+            left,
+            right,
+            toolClassifications={"grype": "evidence-generation-only"},
+        )
+        self.assertNotIn("toolchain.grype", verdict.mismatchedInputs)
+        self.assertIn(
+            "grype", verdict.as_dict()["recorded"]["toolchainRecordedOnlyDifferences"]
+        )
+        self.assertTrue(
+            all("toolchain" not in reason for reason in verdict.reasons),
+            verdict.reasons,
+        )
+
 
 class RequiredFieldsAndBoundaries(unittest.TestCase):
     def test_a_missing_administrator_boundary_is_refused(self) -> None:
