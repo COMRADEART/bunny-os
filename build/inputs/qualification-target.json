@@ -24,8 +24,8 @@
   "packageCount": 474,
   "packageSnapshotDigest": "b6fbf2ae637a288cc8184ccf9142e47414db5196976a9d53b2d8422df1c2949b",
   "packageSnapshotId": "fedora-44-beta-20260730",
-  "parentCommit": "0156316ab298b006ade22aa0cf1f542a2b196992",
-  "parentCommitShort": "0156316ab298",
+  "parentCommit": "438f8a6519bb52156312344fac4e9bc6534ef54c",
+  "parentCommitShort": "438f8a6519bb",
   "profile": "beta",
   "publishedInputs": {
     "base": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
