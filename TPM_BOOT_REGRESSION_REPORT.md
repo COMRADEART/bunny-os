@@ -72,6 +72,25 @@ expected to reset zero times. A cell that missed its expectation in either
 direction fails; the expectation is declared in the matrix definition, not
 inferred after the fact.
 
+## An asymmetry in the state matrix, stated rather than glossed
+
+The four fresh/reused combinations of OVMF variables × TPM state were run
+in full for `tpm-crb` (`crb-fresh-cold`, `crb-reused-cold`,
+`crb-fresh-vars-reused-state`, `crb-reused-vars-fresh-state`). For
+`tpm-tis` only the two diagonal combinations were run
+(`tis-fresh-cold`, `tis-reused-cold`).
+
+The justification, which is an argument and not a measurement: every paired
+CRB/TIS cell that was run produced identical behaviour, and the mechanism —
+`fallback_should_prefer_reset()` testing for the presence of a TCG protocol
+— cannot distinguish the two interfaces, because both expose the same
+protocol to the same firmware. The two missing TIS cells would test a
+variable the code path does not read.
+
+That is a reasoned expectation, not evidence. If a future pass needs TIS
+state-combination evidence, it must run the cells rather than cite this
+paragraph.
+
 ## What is not covered, and is therefore not claimed
 
 **OS-level `reboot` from a logged-in session is not measured.** Driving it
