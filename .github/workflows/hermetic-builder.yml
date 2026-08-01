@@ -48,7 +48,12 @@ permissions:
   packages: read
 
 env:
-  PYTHON_VERSION: "3.13"
+  # The exact interpreter the local builder runs, not a floating minor. The
+  # host python is classified output-affecting — the shipped archive passes
+  # through its tarfile during normalisation — so the independence evaluator
+  # requires the pair to match, and "3.13" was a version the local builder
+  # never had.
+  PYTHON_VERSION: "3.14.3"
   BUNNY_ARCHIVE_ONLY: "1"
   BUNNY_CACHES_DISABLED: "1"
 
@@ -141,6 +146,29 @@ jobs:
             exit 1
           fi
           echo "podman pinned to ${podman_version} from the builder lock"
+          # skopeo is classified output-affecting — it copies the base into
+          # and out of retention — so the independence evaluator requires both
+          # builders to run the same version. Ubuntu's archive carries 1.13;
+          # the lock pins 1.22.2. Built from the upstream tag with the openpgp
+          # tag so no gpgme system dependency enters, and asserted against the
+          # lock the same way podman is.
+          skopeo_version="$(python -c "
+          import json
+          lock = json.load(open('build/inputs/builder-image-lock.json'))
+          print(next(t['version'] for t in lock['tools'] if t['name'] == 'skopeo'))
+          ")"
+          git clone --quiet --depth 1 --branch "v${skopeo_version}" \
+            https://github.com/containers/skopeo /tmp/skopeo-src
+          make -C /tmp/skopeo-src bin/skopeo \
+            BUILDTAGS='containers_image_openpgp exclude_graphdriver_btrfs exclude_graphdriver_devicemapper' \
+            >/dev/null
+          sudo install /tmp/skopeo-src/bin/skopeo /usr/local/bin/skopeo
+          actual_skopeo="$(skopeo --version | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)"
+          if [ "${actual_skopeo}" != "${skopeo_version}" ]; then
+            echo "::error::skopeo is ${actual_skopeo} but the builder lock pins ${skopeo_version}"
+            exit 1
+          fi
+          echo "skopeo pinned to ${skopeo_version} from the builder lock"
           # syft is pinned by the builder lock; the version installed here must
           # match it or the SBOM dimension compares two tools rather than two
           # images.
