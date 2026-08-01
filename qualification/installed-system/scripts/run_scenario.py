@@ -104,6 +104,7 @@ def wait_for_markers(
     checkpoint: callable,
     serial_inputs: list[dict] | None = None,
     serial_socket: Path | None = None,
+    process: subprocess.Popen | None = None,
 ) -> tuple[dict[str, bool], list[str]]:
     """Scan the serial log until every required marker appears or time runs out.
 
@@ -157,6 +158,12 @@ def wait_for_markers(
                     raise SystemExit(f"BLOCKED: serial send failed: {exc}")
         if all(found[m["label"]] for m in markers if m.get("required", True)) \
                 and not pending_inputs:
+            break
+        # A guest that has exited cannot produce another marker. Waiting out
+        # the remaining timeout would only turn a fast, complete answer into
+        # a slow one — measured at fifteen minutes per scenario against a
+        # QEMU that had already gone.
+        if process is not None and process.poll() is not None:
             break
         time.sleep(5)
     if connection is not None:
@@ -309,15 +316,31 @@ def main() -> int:
         tpm_dir = work / "tpm"
         tpm_dir.mkdir()
         tpm_sock = work / "swtpm.sock"
+        tpm_log = evidence_dir / "swtpm.log"
+        # tpm-crb, not tpm-tis: CRB is the interface a TPM 2.0 device
+        # presents on modern platforms, and the first attempt with tpm-tis
+        # produced a guest that emitted GRUB and then nothing — the same
+        # disk booting fully with no TPM attached. The swtpm log is kept as
+        # evidence either way, and the socket is waited for rather than
+        # slept at, because a TPM that is not listening yet is a device the
+        # guest finds broken rather than absent.
         swtpm_process = subprocess.Popen(
             ["swtpm", "socket", "--tpmstate", f"dir={tpm_dir}", "--tpm2",
-             "--ctrl", f"type=unixio,path={tpm_sock}"],
+             "--ctrl", f"type=unixio,path={tpm_sock}",
+             "--log", f"file={tpm_log},level=1"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
-        time.sleep(1)
+        ready = time.monotonic() + 15
+        while not tpm_sock.exists() and time.monotonic() < ready:
+            if swtpm_process.poll() is not None:
+                raise SystemExit("BLOCKED: swtpm exited before the socket appeared; "
+                                 f"see {tpm_log.name}")
+            time.sleep(0.2)
+        if not tpm_sock.exists():
+            raise SystemExit("BLOCKED: swtpm did not create its control socket in 15s")
         qemu += ["-chardev", f"socket,id=chrtpm,path={tpm_sock}",
                  "-tpmdev", "emulator,id=tpm0,chardev=chrtpm",
-                 "-device", "tpm-tis,tpmdev=tpm0"]
+                 "-device", "tpm-crb,tpmdev=tpm0"]
 
     if args.installer_iso:
         qemu += ["-cdrom", str(pinned(args.installer_iso, "installationArtifactDigest"))]
@@ -356,6 +379,7 @@ def main() -> int:
             serial_log, scenario.get("markers", []),
             scenario.get("timeoutSeconds", 600), checkpoint,
             serial_inputs=serial_inputs, serial_socket=serial_socket,
+            process=process,
         )
         for marker in scenario.get("markers", []):
             assertions.append({
