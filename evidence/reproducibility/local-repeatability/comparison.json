@@ -335,15 +335,15 @@
       }
     },
     "fileDigests": {
-      "detail": "104255 members, identical (compared by digest over the full value)",
+      "detail": "105592 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "e470fbe08f9beeae224f5be01262ddbc5be6b4877225510ffce7f78579c30012",
-        "__memberCount__": 104255
+        "__digest__": "6e6b160a9eb9f3c4c029a58790cc6cfef173a63e705af34c2bfedd66752d29b3",
+        "__memberCount__": 105592
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "e470fbe08f9beeae224f5be01262ddbc5be6b4877225510ffce7f78579c30012",
-        "__memberCount__": 104255
+        "__digest__": "6e6b160a9eb9f3c4c029a58790cc6cfef173a63e705af34c2bfedd66752d29b3",
+        "__memberCount__": 105592
       }
     },
     "filesystemTree": {
@@ -387,9 +387,9 @@
       }
     },
     "normalisedArchive": {
-      "first": "9ac121af58304da53d8a9cc0e1eada03b53d070c489f66a25146ec91006bf7a2",
+      "first": "642a305311f954d9ac44e43a50d54d421cee76280108efa15ff80eb62d2ea1a2",
       "reductionForm": "verbatim",
-      "second": "9ac121af58304da53d8a9cc0e1eada03b53d070c489f66a25146ec91006bf7a2"
+      "second": "642a305311f954d9ac44e43a50d54d421cee76280108efa15ff80eb62d2ea1a2"
     },
     "ociLayers": {
       "first": [
@@ -458,7 +458,7 @@
         "sha256:5d54fd4b57ae38321730975e9301cbaa13be19423f5bbac56fd9c150b19aaa81",
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
-        "sha256:77c8c8b3846742e5fd67a38411fa0bad852a430e37eba499cd4109a2eb85ffef",
+        "sha256:c093d2b2580387b01f4bfdb743a90e147b2a6effa6a619c98ad5618fb8d12b59",
         "sha256:77089bd08aff6836b9bec6fb933b7ec8d0fd7668bcc268b9a33691c7970a0f1c",
         "sha256:0c916b66b4d392a053eed54413769a89cb6410cf7f88d52ece500a094c750313",
         "sha256:f127c0a6e6b4f6b7675bdcdc3499f7584a45fab344d4c4c6163dae978c771038",
@@ -471,7 +471,7 @@
         "sha256:7f9217a7b91f117d61cafccb5959f1e44f70dd7682aee9454cf0a6e42c8fdd74",
         "sha256:89617b95f3dbe144763f8bab359db0ad7565342f2290c49c2f181382e6267000",
         "sha256:4ce9e0a7121413afe8d9e1aa10c10fc7a154e207f11d020f2d6425e275a946e8",
-        "sha256:a5d3414c461eb1febd0ff31097091644af0b86ade058edb7e6026f6cd6910f14",
+        "sha256:844c5257112c432603cc331e106e0e579834413fdd57d440333ce159affb5471",
         "sha256:5f75694ade70f0809db2e979dbd19cdd8f6273585af633cd05c15e6cd3aebed7"
       ],
       "reductionForm": "verbatim",
@@ -541,7 +541,7 @@
         "sha256:5d54fd4b57ae38321730975e9301cbaa13be19423f5bbac56fd9c150b19aaa81",
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
-        "sha256:77c8c8b3846742e5fd67a38411fa0bad852a430e37eba499cd4109a2eb85ffef",
+        "sha256:c093d2b2580387b01f4bfdb743a90e147b2a6effa6a619c98ad5618fb8d12b59",
         "sha256:77089bd08aff6836b9bec6fb933b7ec8d0fd7668bcc268b9a33691c7970a0f1c",
         "sha256:0c916b66b4d392a053eed54413769a89cb6410cf7f88d52ece500a094c750313",
         "sha256:f127c0a6e6b4f6b7675bdcdc3499f7584a45fab344d4c4c6163dae978c771038",
@@ -554,7 +554,7 @@
         "sha256:7f9217a7b91f117d61cafccb5959f1e44f70dd7682aee9454cf0a6e42c8fdd74",
         "sha256:89617b95f3dbe144763f8bab359db0ad7565342f2290c49c2f181382e6267000",
         "sha256:4ce9e0a7121413afe8d9e1aa10c10fc7a154e207f11d020f2d6425e275a946e8",
-        "sha256:a5d3414c461eb1febd0ff31097091644af0b86ade058edb7e6026f6cd6910f14",
+        "sha256:844c5257112c432603cc331e106e0e579834413fdd57d440333ce159affb5471",
         "sha256:5f75694ade70f0809db2e979dbd19cdd8f6273585af633cd05c15e6cd3aebed7"
       ]
     },
@@ -12742,19 +12742,19 @@
       }
     },
     "rawArchive": {
-      "first": "9ac121af58304da53d8a9cc0e1eada03b53d070c489f66a25146ec91006bf7a2",
+      "first": "642a305311f954d9ac44e43a50d54d421cee76280108efa15ff80eb62d2ea1a2",
       "reductionForm": "verbatim",
-      "second": "9ac121af58304da53d8a9cc0e1eada03b53d070c489f66a25146ec91006bf7a2"
+      "second": "642a305311f954d9ac44e43a50d54d421cee76280108efa15ff80eb62d2ea1a2"
     },
     "sbom": {
       "detail": "6076 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "40caa7ba3354b69ee1b9f458f089dfd70fecbd184c1a1109571d3e7858c001d5",
+        "__digest__": "adfbe62879da6f449d4fd31008d69e96b4f9258dd55d6c74b26777a2200fc7a3",
         "__memberCount__": 6076
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "40caa7ba3354b69ee1b9f458f089dfd70fecbd184c1a1109571d3e7858c001d5",
+        "__digest__": "adfbe62879da6f449d4fd31008d69e96b4f9258dd55d6c74b26777a2200fc7a3",
         "__memberCount__": 6076
       }
     },
@@ -13981,7 +13981,7 @@
         "usr/lib/systemd/user/app-flatpak-.scope.d": "dir",
         "usr/lib/systemd/user/app-flatpak-.scope.d/override.conf": "01ac96e59745030068d8b4af951258604f4a8ccc9cb6c7920e32742964072b39",
         "usr/lib/systemd/user/app-gnome-.scope.d": "dir",
-        "usr/lib/systemd/user/app-gnome-.scope.d/override.conf": "usr/lib/systemd/user/app-flatpak-.scope.d/override.conf",
+        "usr/lib/systemd/user/app-gnome-.scope.d/override.conf": "01ac96e59745030068d8b4af951258604f4a8ccc9cb6c7920e32742964072b39",
         "usr/lib/systemd/user/app.slice": "sysroot/ostree/repo/objects/ac/2a089a61c0c4b7db583f8d711ffa051b6f202b3097eb5dd0d933f8c7e8f47b.file",
         "usr/lib/systemd/user/at-spi-dbus-bus.service": "23ebce4385cf58411c02ed79a2b612ef5985651c769835a2ed9e2b083c18f8c7",
         "usr/lib/systemd/user/background.slice": "sysroot/ostree/repo/objects/3c/9d5265def2bfb1c62bdc2c72125a737d8abf79bb942fb7608b448b584fd0b9.file",
@@ -15085,7 +15085,7 @@
         "usr/lib/systemd/user/app-flatpak-.scope.d": "dir",
         "usr/lib/systemd/user/app-flatpak-.scope.d/override.conf": "01ac96e59745030068d8b4af951258604f4a8ccc9cb6c7920e32742964072b39",
         "usr/lib/systemd/user/app-gnome-.scope.d": "dir",
-        "usr/lib/systemd/user/app-gnome-.scope.d/override.conf": "usr/lib/systemd/user/app-flatpak-.scope.d/override.conf",
+        "usr/lib/systemd/user/app-gnome-.scope.d/override.conf": "01ac96e59745030068d8b4af951258604f4a8ccc9cb6c7920e32742964072b39",
         "usr/lib/systemd/user/app.slice": "sysroot/ostree/repo/objects/ac/2a089a61c0c4b7db583f8d711ffa051b6f202b3097eb5dd0d933f8c7e8f47b.file",
         "usr/lib/systemd/user/at-spi-dbus-bus.service": "23ebce4385cf58411c02ed79a2b612ef5985651c769835a2ed9e2b083c18f8c7",
         "usr/lib/systemd/user/background.slice": "sysroot/ostree/repo/objects/3c/9d5265def2bfb1c62bdc2c72125a737d8abf79bb942fb7608b448b584fd0b9.file",
@@ -15265,9 +15265,9 @@
   "entryMtimeDiagnostic": {
     "differing": [],
     "differingCount": 0,
-    "firstDigest": "ac238b0583e105cff19707ea95db0a2ead51cb16ee53f701d76926b4bd7a91ae",
+    "firstDigest": "a8d0203ba4a39040d2ac010077b983ef94c00b53d1369bc5f559caef95900b39",
     "note": "Not a dimension. Layer tar bytes include entry mtimes, so a file whose content matches and whose mtime does not still changes ociLayers and rawArchive.",
-    "secondDigest": "ac238b0583e105cff19707ea95db0a2ead51cb16ee53f701d76926b4bd7a91ae"
+    "secondDigest": "a8d0203ba4a39040d2ac010077b983ef94c00b53d1369bc5f559caef95900b39"
   },
   "evaluation": {
     "baseImageDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
@@ -15288,7 +15288,7 @@
       },
       {
         "description": "the SHA-256 of every regular file's contents",
-        "detail": "104255 members, identical (compared by digest over the full value)",
+        "detail": "105592 members, identical (compared by digest over the full value)",
         "differenceCount": 0,
         "differences": [],
         "dimension": "fileDigests",
@@ -15496,7 +15496,7 @@
         }
       ]
     },
-    "sourceCommit": "8255ee9bde6bccfadf4be245b64c28b2e4461743"
+    "sourceCommit": "16dd9a5a7dffb1e55479332fd55e6745d62662fd"
   },
   "schemaVersion": 1,
   "selinux": {
@@ -15520,7 +15520,7 @@
       "file_contexts"
     ]
   },
-  "sourceCommit": "8255ee9bde6bccfadf4be245b64c28b2e4461743",
+  "sourceCommit": "16dd9a5a7dffb1e55479332fd55e6745d62662fd",
   "volatilePathDiagnostic": {
     "differing": [],
     "differingCount": 0,
