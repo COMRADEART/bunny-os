@@ -170,17 +170,34 @@ def main() -> int:
     # An ExecStart naming a program the deployed root does not carry is the
     # defect the brlapi gap was; it is checked here on the installed system
     # rather than inferred from the build.
+    # A gap the repository already records is a tracked limitation, not a new
+    # discovery; an unrecorded one is a defect. Same standard the repository
+    # validator applies, applied here to the installed system instead of the
+    # tree — which is the only place the difference between "ships a unit" and
+    # "installs its program" can actually be observed.
+    recorded_gaps = set()
+    gaps_path = Path(__file__).resolve().parents[3] / "operations/data/unit-program-gaps.json"
+    if gaps_path.is_file():
+        recorded_gaps = {
+            str(gap.get("unit"))
+            for gap in json.loads(gaps_path.read_text(encoding="utf-8")).get("gaps", [])
+        }
+
     missing_programs = []
+    recorded_missing = []
     for record in unit_records:
         exec_start = record.get("execStart") or ""
         program = exec_start.split()[0].lstrip("-@!+") if exec_start else ""
         if program.startswith("/"):
             exists = guestfish(args.disk, "exists", f"{deployment}{program}").strip()
             if exists != "true":
-                missing_programs.append(f"{record['unit']} -> {program}")
+                target = recorded_missing if record["unit"] in recorded_gaps else missing_programs
+                target.append(f"{record['unit']} -> {program}")
     check("every-unit-program-installed", not missing_programs,
-          "every shipped unit's ExecStart exists on the deployed root",
-          ", ".join(missing_programs) or "all present")
+          "every shipped unit's ExecStart exists on the deployed root, or is a recorded gap",
+          ", ".join(missing_programs) or
+          (f"all present; {len(recorded_missing)} recorded gap(s): "
+           + ", ".join(recorded_missing) if recorded_missing else "all present"))
 
     unsandboxed = [r["unit"] for r in unit_records
                    if r["sandboxDirectiveCount"] == 0 and r["unit"].endswith(".service")]
@@ -195,6 +212,7 @@ def main() -> int:
         "disk": args.disk.name,
         "assertions": assertions,
         "failedUnits": failed_units,
+        "recordedUnitProgramGaps": recorded_missing,
         "units": unit_records,
         "limitations": limitations,
         "result": result_value,
