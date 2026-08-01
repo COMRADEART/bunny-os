@@ -83,12 +83,22 @@ coverage.
 <!-- regenerated with the matrix table -->
 <!-- END FAILED UNITS -->
 
-Unit failures here are consistent with the BrlAPI pass's finding that `gdm`
-and `avahi-daemon` fail intermittently on identical images
-(`dispose_failed_units.py` methodology): the same image, booted repeatedly
-under the same harness, produces different unit outcomes. None of them
-correlate with TPM presence, interface or state — which is the only claim
-this report makes about them.
+**What this measurement is, and what it is not.** The counts above are
+parsed from the serial transcript of each boot: systemd's `[FAILED] Failed
+to start …` and `unit: Failed with result …` console output. They are not
+the journal. The authoritative per-unit classification across boots is
+`dispose_failed_units.py`, which reads `systemctl --failed` and the journal
+from the booted disk offline, and it was not re-run in this pass — this pass
+is about the TPM boot path, and re-deriving the unit landscape would have
+meant mounting seventy per-run overlays.
+
+So the honest statement is narrow: across these boots, the serial console
+reported the failures counted above, and no TPM cell reported more of them
+than the no-TPM control. The BrlAPI pass's finding stands unchanged —
+`gdm` and `avahi-daemon` fail intermittently on identical images — and
+nothing here contradicts or re-qualifies it. What this report does claim is
+that no unit failure it observed correlates with TPM presence, interface or
+state.
 
 ## Reset classifications
 

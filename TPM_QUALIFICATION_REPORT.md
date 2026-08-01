@@ -75,6 +75,22 @@ record can move it, and `tests/tpm/` proves the relabelling frauds
 (VM-as-physical, TCG-as-KVM, no-TPM-as-TPM, disabled-TPM-as-qualified) are
 refused by structure.
 
+## Coverage this pass does not have
+
+* **OS-level `reboot` from a logged-in session** is not measured; the
+  harness cannot drive it without login injection. Guest-initiated reset
+  (shim's in-guest `ResetSystem`) and platform reset (QMP `system_reset`)
+  are measured instead. `TPM_BOOT_REGRESSION_REPORT.md` states the gap, and
+  so does the gate's own machine-readable output.
+* **Failed-unit data is the serial console's view**, not the journal's. The
+  offline journal classification (`dispose_failed_units.py`) was not re-run
+  in this pass, so this pass neither confirms nor revises the BrlAPI pass's
+  `gdm`/`avahi-daemon` intermittency finding.
+* **Secure Boot** was not exercised at all: no development-firmware boots
+  were run, no keys of any kind were created, and `secureBootState` is
+  `disabled` in every record. The consistency layer refuses any record
+  claiming otherwise.
+
 ## User-visible behaviour worth knowing
 
 First boot of the shipped disk image on a TPM-equipped machine with empty

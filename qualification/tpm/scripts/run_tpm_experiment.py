@@ -697,6 +697,11 @@ def main() -> int:
     # them together is one of the exact confusions the adversarial tests
     # refuse. Names only — the classification across boots happens in
     # dispose_failed_units.py, never inside a single run.
+    #
+    # Scope: this is the serial console's view, not the journal's. A unit
+    # that failed quietly does not appear here, so an empty list means "the
+    # console reported none", not "none failed". The offline journal
+    # collector remains the authority on the unit landscape.
     failed_units = sorted({m.group(1) for m in re.finditer(
         r"\[FAILED\][^\n]*?Failed to start ([^\n\r.]+)", serial_text)}
         | {m.group(1) for m in re.finditer(

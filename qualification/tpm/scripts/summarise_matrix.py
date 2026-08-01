@@ -48,7 +48,8 @@ def main() -> int:
         print(f"| `{cell}` | {diag} | {len(runs)} | " + " | ".join(counts)
               + f" | {resets} | {passes}/{len(runs)} |")
 
-    print("\n### Failed units per boot (recorded separately from boot success)\n")
+    print("\n### Failed units per boot (serial console view, recorded "
+          "separately from boot success)\n")
     unit_counts: dict[str, int] = collections.Counter()
     boots_with_units = 0
     total_boots = 0
@@ -66,7 +67,9 @@ def main() -> int:
         print(f"\n{boots_with_units} of {total_boots} boots recorded at least "
               "one failed unit.")
     else:
-        print(f"No failed units were parsed from any of {total_boots} boots.")
+        print(f"The serial console reported no failed units on any of "
+              f"{total_boots} boots. This is the console's view, not the "
+              "journal's: a unit that failed quietly would not appear here.")
 
     print("\n### Reset classifications\n")
     classes: dict[str, int] = collections.Counter()
