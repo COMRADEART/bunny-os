@@ -2,12 +2,11 @@
   "absentTools": {
     "grub2-mkconfig": "grub2-tools is not installed on the collection host. A scenario requiring it must refuse to run rather than substitute.",
     "grub2-mkrescue": "grub2-tools-extra is not installed on the collection host. A scenario requiring it must refuse to run rather than substitute.",
-    "guestfish": "guestfish is not installed on the collection host. A scenario requiring it must refuse to run rather than substitute.",
     "shim": "shim-x64 is not installed on the collection host. A scenario requiring it must refuse to run rather than substitute.",
     "systemd-boot": "systemd-boot-unsigned is not installed on the collection host. A scenario requiring it must refuse to run rather than substitute.",
     "virtiofsd": "virtiofsd is not installed on the collection host. A scenario requiring it must refuse to run rather than substitute."
   },
-  "collectedAt": "2026-08-01T08:29:22.959059Z",
+  "collectedAt": "2026-08-01T08:31:04.253591Z",
   "collectedOn": "6.18.33.2-microsoft-standard-WSL2",
   "note": "Every tool that can influence installed media, pinned from the machine that runs them. A tool listed in absentTools is declared, with the reason; a tool absent and undeclared fails the collection, because a missing entry is indistinguishable from a forgotten one.",
   "schemaVersion": 1,
@@ -47,6 +46,18 @@
       "signingStatus": "distribution-signed",
       "sourceRepository": "Fedora Project",
       "version": "2.8.7"
+    },
+    {
+      "architecture": "x86_64",
+      "classification": "test-environment-only",
+      "name": "guestfish",
+      "nevra": "guestfs-tools-0:1.56.0-1.fc44.x86_64",
+      "package": "guestfs-tools",
+      "payloadDigest": "",
+      "purpose": "inspects installed disks without booting them; reads applied SELinux labels",
+      "signingStatus": "distribution-signed",
+      "sourceRepository": "Fedora Project",
+      "version": "1.56.0"
     },
     {
       "architecture": "x86_64",
