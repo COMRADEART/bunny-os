@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "TPMQ-20260801-fedora-crb-continue-003",
+  "files": [
+    {
+      "path": "screenshots/final.ppm",
+      "sha256": "72334a6e9ffc176422a2de24f130c68ec0d92e8fc00c29380f4ab8126c79d4c0",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-crb-continue-003/screenshots/final.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/post-reset-1.ppm",
+      "sha256": "a6087ec5178c7619d8136de2aa159dde7161d56f9e4c3b899b7165935d0353d8",
+      "sizeBytes": 921615,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-crb-continue-003/screenshots/post-reset-1.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "c5a64dfdcd6115a9551ccc60be8adca8a36fe4ac5dc5d5bd521869928488e63d",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-crb-continue-003/screenshots/stage-boot-option-started.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "eadea52287d4781765f8aaefb034859b624b6b6ddaa792c1a4f03ea46f361ce6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-crb-continue-003/screenshots/stage-firmware-bds.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "21ee1e4c74215b5dec005338728da03fe40a2cb68a64dcaee811befc245ac80a",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-crb-continue-003/screenshots/stage-initramfs.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "d202fd753f1027ba99af0596477f730a5172a956e21d20eea8cc9b7476e9b0bf",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-crb-continue-003/screenshots/stage-kernel-loaded.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "72334a6e9ffc176422a2de24f130c68ec0d92e8fc00c29380f4ab8126c79d4c0",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-crb-continue-003/screenshots/stage-multi-user.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-reset-announced.ppm",
+      "sha256": "5d7d732b6065090c1cc779f3df3ae09f82101b9091f3283375b74cf40807b142",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-crb-continue-003/screenshots/stage-reset-announced.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-restoration-dialog.ppm",
+      "sha256": "826b543f552cc671f7477da330f7be53c1fa70e600aa104c07860abee6ed2013",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-crb-continue-003/screenshots/stage-restoration-dialog.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "swtpm.log",
+      "sha256": "32b0168c9e756972b3b0b746754fa0b48f6830fad06532bf9c6babcbdaeb5ed2",
+      "sizeBytes": 381135,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-crb-continue-003/swtpm.log",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    }
+  ]
+}

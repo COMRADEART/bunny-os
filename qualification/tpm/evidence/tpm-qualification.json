@@ -1,0 +1,245 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-01T22:49:05+00:00",
+  "context": {
+    "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
+    "sourceArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
+    "installationArtifactDigest": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217",
+    "qemuDigest": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+    "ovmfCodeDigest": "6551948da24a02553476c1c1edccb0bb92a57dce9d722d7b396ac14547e6d9af",
+    "ovmfVarsTemplateDigest": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb",
+    "swtpmDigest": "32c411b8d1b269ca6b5ae922e84459dec5669dc96ca17bb5cf8119f830ab7ce0",
+    "libtpmsVersion": "0.10.2",
+    "scenarioVersion": "tpmq-1",
+    "machineType": "pc-q35-10.2",
+    "cpuMode": "host",
+    "schemaVersion": 1
+  },
+  "recordCount": 93,
+  "problems": [],
+  "supportedCells": {
+    "no-tpm-cold": {
+      "required": 5,
+      "present": 5,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "resets": 0,
+      "classifications": [],
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-no-tpm-cold-001": [],
+        "TPMQ-20260801-no-tpm-cold-002": [],
+        "TPMQ-20260801-no-tpm-cold-003": [],
+        "TPMQ-20260801-no-tpm-cold-004": [],
+        "TPMQ-20260801-no-tpm-cold-005": []
+      },
+      "satisfied": true
+    },
+    "crb-fresh-cold": {
+      "required": 5,
+      "present": 5,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "resets": 5,
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-crb-fresh-cold-001": [],
+        "TPMQ-20260801-crb-fresh-cold-002": [],
+        "TPMQ-20260801-crb-fresh-cold-003": [],
+        "TPMQ-20260801-crb-fresh-cold-004": [],
+        "TPMQ-20260801-crb-fresh-cold-005": []
+      },
+      "satisfied": true
+    },
+    "tis-fresh-cold": {
+      "required": 5,
+      "present": 5,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "resets": 5,
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-tis-fresh-cold-001": [],
+        "TPMQ-20260801-tis-fresh-cold-002": [],
+        "TPMQ-20260801-tis-fresh-cold-003": [],
+        "TPMQ-20260801-tis-fresh-cold-004": [],
+        "TPMQ-20260801-tis-fresh-cold-005": []
+      },
+      "satisfied": true
+    },
+    "crb-reused-cold": {
+      "required": 5,
+      "present": 5,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "resets": 0,
+      "classifications": [],
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-crb-reused-cold-001": [],
+        "TPMQ-20260801-crb-reused-cold-002": [],
+        "TPMQ-20260801-crb-reused-cold-003": [],
+        "TPMQ-20260801-crb-reused-cold-004": [],
+        "TPMQ-20260801-crb-reused-cold-005": []
+      },
+      "satisfied": true
+    },
+    "tis-reused-cold": {
+      "required": 5,
+      "present": 5,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "resets": 0,
+      "classifications": [],
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-tis-reused-cold-001": [],
+        "TPMQ-20260801-tis-reused-cold-002": [],
+        "TPMQ-20260801-tis-reused-cold-003": [],
+        "TPMQ-20260801-tis-reused-cold-004": [],
+        "TPMQ-20260801-tis-reused-cold-005": []
+      },
+      "satisfied": true
+    },
+    "crb-qemu-reset": {
+      "required": 5,
+      "present": 5,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "resets": 0,
+      "classifications": [],
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-crb-qemu-reset-001": [],
+        "TPMQ-20260801-crb-qemu-reset-002": [],
+        "TPMQ-20260801-crb-qemu-reset-003": [],
+        "TPMQ-20260801-crb-qemu-reset-004": [],
+        "TPMQ-20260801-crb-qemu-reset-005": []
+      },
+      "satisfied": true
+    },
+    "tis-qemu-reset": {
+      "required": 5,
+      "present": 5,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "resets": 0,
+      "classifications": [],
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-tis-qemu-reset-001": [],
+        "TPMQ-20260801-tis-qemu-reset-002": [],
+        "TPMQ-20260801-tis-qemu-reset-003": [],
+        "TPMQ-20260801-tis-qemu-reset-004": [],
+        "TPMQ-20260801-tis-qemu-reset-005": []
+      },
+      "satisfied": true
+    }
+  },
+  "investigationControls": {
+    "crb-fresh-continue": {
+      "runs": 1,
+      "pass": 1
+    },
+    "crb-fresh-repro-stop": {
+      "runs": 3,
+      "pass": 3
+    },
+    "crb-fresh-stop": {
+      "runs": 1,
+      "pass": 0
+    },
+    "crb-fresh-vars-reused-state": {
+      "runs": 3,
+      "pass": 3
+    },
+    "crb-reuse-vars": {
+      "runs": 1,
+      "pass": 1
+    },
+    "crb-reused-vars-fresh-state": {
+      "runs": 3,
+      "pass": 3
+    },
+    "fw-only-crb": {
+      "runs": 6,
+      "pass": 5
+    },
+    "fw-only-tis": {
+      "runs": 3,
+      "pass": 3
+    },
+    "tis-fresh-repro-stop": {
+      "runs": 3,
+      "pass": 3
+    },
+    "tis-fresh-stop": {
+      "runs": 1,
+      "pass": 0
+    }
+  },
+  "diagnosticCells": {
+    "cpu-named-crb": {
+      "runs": 3,
+      "pass": 3,
+      "diagnostic": true
+    },
+    "fedora-crb-continue": {
+      "runs": 3,
+      "pass": 3,
+      "diagnostic": true
+    },
+    "fedora-crb-fresh-repro": {
+      "runs": 3,
+      "pass": 3,
+      "diagnostic": true
+    },
+    "fedora-no-tpm": {
+      "runs": 3,
+      "pass": 3,
+      "diagnostic": true
+    },
+    "machine-q35-10-1-crb": {
+      "runs": 3,
+      "pass": 3,
+      "diagnostic": true
+    },
+    "machine-q35-9-2-crb": {
+      "runs": 3,
+      "pass": 3,
+      "diagnostic": true
+    },
+    "smm-on-crb": {
+      "runs": 6,
+      "pass": 6,
+      "diagnostic": true
+    },
+    "tcg-crb-fresh": {
+      "runs": 3,
+      "pass": 3,
+      "diagnostic": true
+    },
+    "tcg-no-tpm": {
+      "runs": 6,
+      "pass": 3,
+      "diagnostic": true
+    }
+  },
+  "softwareTpmBoot": "PASS",
+  "qemuKvmTpmIntegration": "PASS",
+  "retainedEvidenceVerified": 894,
+  "retainedEvidenceUnverifiable": [],
+  "physicalTpm": "NOT_RUN",
+  "productionSecureBoot": "NOT_QUALIFIED",
+  "tpmBoundDiskUnlock": "NOT_QUALIFIED",
+  "limitations": [
+    "Every record is qemu-kvm or qemu-tcg evidence; nothing here counts toward physical TPM hardware, OEM firmware compatibility, production Secure Boot, TPM-bound disk unlock, TPM recovery behaviour or global hardware qualification.",
+    "Guest-initiated reset with a TPM attached is covered by the fresh-variable cells (shim's in-guest ResetSystem followed by a complete boot) and platform reset by the qemu-reset cells. OS-level `reboot` from a logged-in session is NOT covered: the harness has no login injection, ctrl-alt-del does not reach PID 1 through the graphical session, and Fedora masks sysrq reboot. No cell claims it."
+  ]
+}

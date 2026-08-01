@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "TPMQ-20260801-crb-reuse-vars-001",
+  "files": [
+    {
+      "path": "screenshots/final.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-reuse-vars-001/screenshots/final.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "491d7c31390d9cf964caa927ec0ee55c69f35d60357766e268e9529a3fbe133b",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-reuse-vars-001/screenshots/stage-boot-option-started.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-reuse-vars-001/screenshots/stage-firmware-bds.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-graphical.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-reuse-vars-001/screenshots/stage-graphical.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-grub-menu.ppm",
+      "sha256": "491d7c31390d9cf964caa927ec0ee55c69f35d60357766e268e9529a3fbe133b",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-reuse-vars-001/screenshots/stage-grub-menu.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-health-check.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-reuse-vars-001/screenshots/stage-health-check.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "68f3daf7b046b26a1de6b96a5e47100cd479525663ce9ef9133d82670bea3ea2",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-reuse-vars-001/screenshots/stage-initramfs.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "491d7c31390d9cf964caa927ec0ee55c69f35d60357766e268e9529a3fbe133b",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-reuse-vars-001/screenshots/stage-kernel-loaded.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-reuse-vars-001/screenshots/stage-multi-user.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "swtpm.log",
+      "sha256": "f324926986c25ce370f167722a0b0a1ae5262951c46433047e3eb1707d846763",
+      "sizeBytes": 251504,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-reuse-vars-001/swtpm.log",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    }
+  ]
+}

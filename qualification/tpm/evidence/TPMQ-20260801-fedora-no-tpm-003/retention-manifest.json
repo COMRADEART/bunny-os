@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "TPMQ-20260801-fedora-no-tpm-003",
+  "files": [
+    {
+      "path": "screenshots/final.ppm",
+      "sha256": "6ab15fb41f2d3e1bb10272e75dee21fc876018fd38138f1090b508f1f9f718a0",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-no-tpm-003/screenshots/final.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "e194f76207dc32c7297a870ab80ac3ab6a54bd51cd23f56f13a45b3b75770ba1",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-no-tpm-003/screenshots/stage-boot-option-started.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "e194f76207dc32c7297a870ab80ac3ab6a54bd51cd23f56f13a45b3b75770ba1",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-no-tpm-003/screenshots/stage-firmware-bds.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "7b9a10797a07a97296e08aaacb6f48d7842ff2ace913b81a3b17a2e64ef794c1",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-no-tpm-003/screenshots/stage-initramfs.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "fc8039e4395e89e0e516fc8a2822316bc957f9e19dd3e605b0a8261509309de1",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-no-tpm-003/screenshots/stage-kernel-loaded.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "6ab15fb41f2d3e1bb10272e75dee21fc876018fd38138f1090b508f1f9f718a0",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fedora-no-tpm-003/screenshots/stage-multi-user.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    }
+  ]
+}

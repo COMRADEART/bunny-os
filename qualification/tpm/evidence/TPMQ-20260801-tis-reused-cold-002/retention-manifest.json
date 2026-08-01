@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "TPMQ-20260801-tis-reused-cold-002",
+  "files": [
+    {
+      "path": "screenshots/final.ppm",
+      "sha256": "db26a82bf6a8ea79fd3b2bcd58c5024b008585848debc12b5494440ab9065b7e",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-tis-reused-cold-002/screenshots/final.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:11+00:00"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-tis-reused-cold-002/screenshots/stage-boot-option-started.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:11+00:00"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-tis-reused-cold-002/screenshots/stage-firmware-bds.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:11+00:00"
+    },
+    {
+      "path": "screenshots/stage-graphical.ppm",
+      "sha256": "db26a82bf6a8ea79fd3b2bcd58c5024b008585848debc12b5494440ab9065b7e",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-tis-reused-cold-002/screenshots/stage-graphical.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:11+00:00"
+    },
+    {
+      "path": "screenshots/stage-grub-menu.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-tis-reused-cold-002/screenshots/stage-grub-menu.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:11+00:00"
+    },
+    {
+      "path": "screenshots/stage-health-check.ppm",
+      "sha256": "db26a82bf6a8ea79fd3b2bcd58c5024b008585848debc12b5494440ab9065b7e",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-tis-reused-cold-002/screenshots/stage-health-check.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:11+00:00"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "62951884e032c5bb55c1d4375f4cac348a8d2471c838a7ee54ac9bfb0cacca97",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-tis-reused-cold-002/screenshots/stage-initramfs.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:11+00:00"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "e5f48f133bf6e335f9d65f3e7ba965a2a2a99894c00051639ccef2d411e1aead",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-tis-reused-cold-002/screenshots/stage-kernel-loaded.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:11+00:00"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "db26a82bf6a8ea79fd3b2bcd58c5024b008585848debc12b5494440ab9065b7e",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-tis-reused-cold-002/screenshots/stage-multi-user.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:11+00:00"
+    },
+    {
+      "path": "swtpm.log",
+      "sha256": "45747efef88d9b9a866165929f582fb469671aa7c2dc0b5e599263559b4a10dc",
+      "sizeBytes": 263566,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-tis-reused-cold-002/swtpm.log",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:11+00:00"
+    }
+  ]
+}

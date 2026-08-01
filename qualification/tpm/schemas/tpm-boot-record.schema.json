@@ -1,0 +1,104 @@
+{
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bunny-os/qualification/tpm/tpm-boot-record.schema.json",
+  "title": "TPM boot experiment record",
+  "description": "One QEMU boot of the frozen qualified disk (or a declared control) with a declared TPM configuration. The record binds to the TPM evidence context by digest; a record naming any other artifact, firmware, emulator or scenario version is stale. Nothing conforming to this schema can ever satisfy a physical-TPM requirement: environment is structurally limited to emulated machines.",
+  "type": "object",
+  "required": [
+    "schemaVersion", "evidenceId", "sourceCommit", "sourceArchiveDigest",
+    "installationArtifactDigest", "qemuDigest", "ovmfCodeDigest",
+    "ovmfVarsTemplateDigest", "swtpmDigest", "scenarioVersion", "environment",
+    "acceleration", "machineType", "cpuModel", "diagnostic", "diskAttached",
+    "ovmfVarsState", "ovmfVarsSourceDigest", "tpmInterface", "tpmState",
+    "secureBootState", "smmState", "bootType",
+    "guestResetCount", "stagesReached", "lastStage", "result",
+    "startedAt", "completedAt", "operator", "evidenceFiles"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "evidenceId": {"type": "string", "pattern": "^TPMQ-\\d{8}-[a-z0-9-]+-\\d{3}$"},
+    "sourceCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sourceArchiveDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "installationArtifactDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "qemuDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "qemuVersion": {"type": "string"},
+    "ovmfCodeDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "ovmfVarsTemplateDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "swtpmDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "swtpmVersion": {"type": "string"},
+    "libtpmsVersion": {"type": "string"},
+    "scenarioVersion": {"type": "string"},
+    "environment": {"enum": ["qemu-kvm", "qemu-tcg"]},
+    "acceleration": {"enum": ["kvm", "tcg"]},
+    "machineType": {"type": "string"},
+    "cpuModel": {"type": "string"},
+    "diagnostic": {
+      "type": "boolean",
+      "description": "true when any of acceleration, machine type, CPU model or disk deviates from the pinned supported path; a diagnostic record can never satisfy a supported-path requirement"
+    },
+    "diskAttached": {"type": "boolean"},
+    "altDiskSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "ovmfVarsState": {"enum": ["fresh", "reused"]},
+    "ovmfVarsSourceDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Digest of the variable store this run started from. Required: without it the fresh-versus-reused consistency check has nothing to compare and a reused store labelled fresh passes by omission."
+    },
+    "ovmfVarsAfterDigest": {"type": ["string", "null"]},
+    "tpmInterface": {"enum": ["none", "crb", "tis"]},
+    "tpmState": {"enum": ["none", "fresh", "reused"]},
+    "secureBootState": {"type": "string"},
+    "smmState": {"enum": ["on", "off"]},
+    "bootType": {"enum": ["cold", "guest-reboot", "qemu-reset"]},
+    "onReset": {"enum": ["stop", "continue"]},
+    "expectation": {
+      "enum": ["target", "stable", "reset"],
+      "description": "What the run was judged against: 'target' — it had to boot; 'stable' — it had to survive the window without a terminal event; 'reset' — it had to reproduce and classify a reset. NOT in 'required': six early investigation runs predate the field, and backfilling it would state how a run was judged from outside the run. Enforcement lives where it matters instead — CELL_SHAPE in import_tpm_results.py demands 'target' for every supported cell, so a record that omits the field cannot fill one."
+    },
+    "expectedResets": {"type": "integer", "minimum": 0},
+    "guestResetCount": {"type": "integer", "minimum": 0},
+    "stagesReached": {"type": "array", "items": {"type": "string"}},
+    "lastStage": {"type": "string"},
+    "failedUnits": {"type": "array", "items": {"type": "string"}},
+    "secondBootTargetReached": {"type": ["boolean", "null"]},
+    "resetClassification": {
+      "enum": [
+        "FIRMWARE_REQUESTED_RESET", "QEMU_DEVICE_RESET", "GUEST_TRIPLE_FAULT",
+        "WATCHDOG_RESET", "BOOTLOADER_REBOOT_COMMAND", "HOST_TERMINATED",
+        "HARNESS_TIMEOUT", "UNKNOWN"
+      ]
+    },
+    "classificationBasis": {"type": "array", "items": {"type": "string"}},
+    "result": {"enum": ["PASS", "FAIL", "INCONCLUSIVE"]},
+    "startedAt": {"type": "string"},
+    "completedAt": {"type": "string"},
+    "operator": {"type": "string", "minLength": 1},
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "evidenceFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256", "sizeBytes"],
+        "properties": {
+          "path": {"type": "string"},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "sizeBytes": {"type": "integer"},
+          "createdAt": {"type": "string"},
+          "collectionCommand": {"type": "string"},
+          "retentionClass": {"type": "string"}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"tpmInterface": {"const": "none"}}},
+      "then": {"properties": {"tpmState": {"const": "none"}}}
+    },
+    {
+      "if": {"properties": {"tpmInterface": {"enum": ["crb", "tis"]}}},
+      "then": {"properties": {"tpmState": {"enum": ["fresh", "reused"]}}}
+    }
+  ]
+}

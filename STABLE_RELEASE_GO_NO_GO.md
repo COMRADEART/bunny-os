@@ -12,3 +12,11 @@ Supported architectures: none qualified; source target x86-64 UEFI only. Support
 Open issue counts and accepted risks are unknown because no public-beta operations dataset exists. Known source blockers are not accepted for stable release. Maintenance readiness is incomplete and all nine approvals are pending.
 
 Stable publication is prohibited. `GO` is allowed only after every automated requirement passes, every approval is recorded, no stable blocker exists, and the report is regenerated for an immutable signed candidate.
+
+Update 2026-08-01 (TPM boot-reset investigation): the software-TPM boot
+finding that previously read "resets at GRUB" is root-caused (CONFIRMED,
+harness-side; `TPM_GRUB_RESET_ROOT_CAUSE.md`) and the software-TPM
+regression matrix passes under the `tpmq-1` authority. This closes one
+measured VM finding and changes nothing above: physical TPM, Secure Boot,
+encryption, hardware, reviews and signing are untouched, and the
+recommendation remains **NO-GO**.

@@ -1,0 +1,5 @@
+{"event": "_QMP_GREETING", "qmp": {"version": {"qemu": {"micro": 2, "minor": 2, "major": 10}, "package": "qemu-10.2.2-1.fc44"}, "capabilities": ["oob"]}, "hostTime": "2026-08-01T21:56:38.402Z"}
+{"timestamp": {"seconds": 1785621399, "microseconds": 262773}, "event": "RTC_CHANGE", "data": {"offset": 0, "qom-path": "/machine/unattached/device[6]/rtc"}, "hostTime": "2026-08-01T21:56:39.262Z"}
+{"timestamp": {"seconds": 1785621406, "microseconds": 572444}, "event": "SHUTDOWN", "data": {"guest": true, "reason": "guest-reset"}, "hostTime": "2026-08-01T21:56:46.572Z"}
+{"timestamp": {"seconds": 1785621406, "microseconds": 575251}, "event": "STOP", "hostTime": "2026-08-01T21:56:46.575Z"}
+{"timestamp": {"seconds": 1785621408, "microseconds": 759541}, "event": "SHUTDOWN", "data": {"guest": false, "reason": "host-qmp-quit"}, "hostTime": "2026-08-01T21:56:48.759Z"}

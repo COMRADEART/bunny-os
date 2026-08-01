@@ -198,3 +198,35 @@ What this addendum adds to the report above is not a changed count but a changed
 kind of evidence. `independent-reproducibility` used to be an absence. It is now
 a measurement, with fifteen named files and a dependency-ordered list of what
 would move it, in `INDEPENDENT_REPRODUCIBILITY_REPORT.md`.
+
+## Addendum — 2026-08-01, the TPM boot-reset investigation
+
+The software-TPM boot reset that had been carried as a measured product
+`FAIL` is root-caused and closed: it was shim `fbx64.efi`'s designed
+one-time boot-option-restoration reboot, taken because a TPM is present,
+recorded as a dead guest by a harness running QEMU with `-no-reboot`
+(`TPM_GRUB_RESET_ROOT_CAUSE.md`, confidence `CONFIRMED`). GRUB never ran in
+any failing boot.
+
+**Prerequisite count: this addendum does not change it, and does not predict
+it.** Software-TPM boot is not one of the fourteen prerequisites. The count
+is whatever `python scripts/release.py gate --kind qualification-candidate`
+calculates from the evidence in the tree; nothing here was written to move
+it, and no evidence was relabelled to make it move. Specifically:
+
+* No artifact byte changed. The fix is Path A, harness-only, so the archive
+  authority (Commits G/H/I/J) and every digest bound to it are untouched.
+* Prerequisite 10, `physical-hardware`, is unchanged at `PENDING_HARDWARE`.
+  Every record this pass produced is `qemu-kvm` or `qemu-tcg` evidence, and
+  the importer emits `physicalTpm: NOT_RUN` unconditionally — no
+  software-TPM record can move a hardware claim, by construction rather
+  than by convention.
+* Prerequisite 7, `encryption-matrix`, is unchanged at `NOT_RUN`. Its
+  `tpm-fallback` row still has nothing to rest on: no TPM feature exists in
+  the product to test.
+
+What this addendum adds is the same kind of change the reproducibility
+addendum above describes — not a moved count, but a changed kind of
+evidence. A blocking symptom that was a measured failure of unknown cause is
+now a measured, classified, reproduced-and-explained behaviour with a
+mechanism, a source citation, and a regression matrix behind it.

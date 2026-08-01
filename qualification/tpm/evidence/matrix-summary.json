@@ -1,0 +1,350 @@
+{
+  "matrixVersion": "tpmq-1",
+  "startedAt": "2026-08-01T21:21:35+00:00",
+  "cells": {
+    "fw-only-crb": {
+      "bootsAttempted": 3,
+      "reachedGrub": 0,
+      "loadedKernel": 0,
+      "reachedInitramfs": 0,
+      "reachedMultiUser": 0,
+      "reachedGraphical": 0,
+      "healthCheck": 0,
+      "resets": 0,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-fw-only-crb-004": [],
+        "TPMQ-20260801-fw-only-crb-005": [],
+        "TPMQ-20260801-fw-only-crb-006": []
+      },
+      "classifications": [],
+      "runs": [
+        "TPMQ-20260801-fw-only-crb-004",
+        "TPMQ-20260801-fw-only-crb-005",
+        "TPMQ-20260801-fw-only-crb-006"
+      ]
+    },
+    "fw-only-tis": {
+      "bootsAttempted": 3,
+      "reachedGrub": 0,
+      "loadedKernel": 0,
+      "reachedInitramfs": 0,
+      "reachedMultiUser": 0,
+      "reachedGraphical": 0,
+      "healthCheck": 0,
+      "resets": 0,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-fw-only-tis-001": [],
+        "TPMQ-20260801-fw-only-tis-002": [],
+        "TPMQ-20260801-fw-only-tis-003": []
+      },
+      "classifications": [],
+      "runs": [
+        "TPMQ-20260801-fw-only-tis-001",
+        "TPMQ-20260801-fw-only-tis-002",
+        "TPMQ-20260801-fw-only-tis-003"
+      ]
+    },
+    "crb-fresh-repro-stop": {
+      "bootsAttempted": 3,
+      "reachedGrub": 0,
+      "loadedKernel": 0,
+      "reachedInitramfs": 0,
+      "reachedMultiUser": 0,
+      "reachedGraphical": 0,
+      "healthCheck": 0,
+      "resets": 3,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-crb-fresh-repro-stop-001": [],
+        "TPMQ-20260801-crb-fresh-repro-stop-002": [],
+        "TPMQ-20260801-crb-fresh-repro-stop-003": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260801-crb-fresh-repro-stop-001",
+        "TPMQ-20260801-crb-fresh-repro-stop-002",
+        "TPMQ-20260801-crb-fresh-repro-stop-003"
+      ]
+    },
+    "tis-fresh-repro-stop": {
+      "bootsAttempted": 3,
+      "reachedGrub": 0,
+      "loadedKernel": 0,
+      "reachedInitramfs": 0,
+      "reachedMultiUser": 0,
+      "reachedGraphical": 0,
+      "healthCheck": 0,
+      "resets": 3,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-tis-fresh-repro-stop-001": [],
+        "TPMQ-20260801-tis-fresh-repro-stop-002": [],
+        "TPMQ-20260801-tis-fresh-repro-stop-003": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260801-tis-fresh-repro-stop-001",
+        "TPMQ-20260801-tis-fresh-repro-stop-002",
+        "TPMQ-20260801-tis-fresh-repro-stop-003"
+      ]
+    },
+    "fedora-no-tpm": {
+      "bootsAttempted": 3,
+      "reachedGrub": 0,
+      "loadedKernel": 3,
+      "reachedInitramfs": 3,
+      "reachedMultiUser": 3,
+      "reachedGraphical": 0,
+      "healthCheck": 0,
+      "resets": 0,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-fedora-no-tpm-001": [],
+        "TPMQ-20260801-fedora-no-tpm-002": [],
+        "TPMQ-20260801-fedora-no-tpm-003": []
+      },
+      "classifications": [],
+      "runs": [
+        "TPMQ-20260801-fedora-no-tpm-001",
+        "TPMQ-20260801-fedora-no-tpm-002",
+        "TPMQ-20260801-fedora-no-tpm-003"
+      ]
+    },
+    "fedora-crb-fresh-repro": {
+      "bootsAttempted": 3,
+      "reachedGrub": 0,
+      "loadedKernel": 0,
+      "reachedInitramfs": 0,
+      "reachedMultiUser": 0,
+      "reachedGraphical": 0,
+      "healthCheck": 0,
+      "resets": 3,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-fedora-crb-fresh-repro-001": [],
+        "TPMQ-20260801-fedora-crb-fresh-repro-002": [],
+        "TPMQ-20260801-fedora-crb-fresh-repro-003": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260801-fedora-crb-fresh-repro-001",
+        "TPMQ-20260801-fedora-crb-fresh-repro-002",
+        "TPMQ-20260801-fedora-crb-fresh-repro-003"
+      ]
+    },
+    "fedora-crb-continue": {
+      "bootsAttempted": 3,
+      "reachedGrub": 0,
+      "loadedKernel": 3,
+      "reachedInitramfs": 3,
+      "reachedMultiUser": 3,
+      "reachedGraphical": 0,
+      "healthCheck": 0,
+      "resets": 3,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-fedora-crb-continue-001": [],
+        "TPMQ-20260801-fedora-crb-continue-002": [],
+        "TPMQ-20260801-fedora-crb-continue-003": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260801-fedora-crb-continue-001",
+        "TPMQ-20260801-fedora-crb-continue-002",
+        "TPMQ-20260801-fedora-crb-continue-003"
+      ]
+    },
+    "tcg-no-tpm": {
+      "bootsAttempted": 3,
+      "reachedGrub": 3,
+      "loadedKernel": 3,
+      "reachedInitramfs": 3,
+      "reachedMultiUser": 3,
+      "reachedGraphical": 3,
+      "healthCheck": 0,
+      "resets": 0,
+      "timeouts": 0,
+      "pass": 0,
+      "fail": 0,
+      "inconclusive": 3,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-tcg-no-tpm-001": [],
+        "TPMQ-20260801-tcg-no-tpm-002": [],
+        "TPMQ-20260801-tcg-no-tpm-003": []
+      },
+      "classifications": [],
+      "runs": [
+        "TPMQ-20260801-tcg-no-tpm-001",
+        "TPMQ-20260801-tcg-no-tpm-002",
+        "TPMQ-20260801-tcg-no-tpm-003"
+      ]
+    },
+    "tcg-crb-fresh": {
+      "bootsAttempted": 3,
+      "reachedGrub": 0,
+      "loadedKernel": 0,
+      "reachedInitramfs": 0,
+      "reachedMultiUser": 0,
+      "reachedGraphical": 0,
+      "healthCheck": 0,
+      "resets": 3,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-tcg-crb-fresh-001": [],
+        "TPMQ-20260801-tcg-crb-fresh-002": [],
+        "TPMQ-20260801-tcg-crb-fresh-003": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260801-tcg-crb-fresh-001",
+        "TPMQ-20260801-tcg-crb-fresh-002",
+        "TPMQ-20260801-tcg-crb-fresh-003"
+      ]
+    },
+    "cpu-named-crb": {
+      "bootsAttempted": 3,
+      "reachedGrub": 3,
+      "loadedKernel": 3,
+      "reachedInitramfs": 3,
+      "reachedMultiUser": 3,
+      "reachedGraphical": 3,
+      "healthCheck": 3,
+      "resets": 3,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-cpu-named-crb-001": [],
+        "TPMQ-20260801-cpu-named-crb-002": [],
+        "TPMQ-20260801-cpu-named-crb-003": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260801-cpu-named-crb-001",
+        "TPMQ-20260801-cpu-named-crb-002",
+        "TPMQ-20260801-cpu-named-crb-003"
+      ]
+    },
+    "machine-q35-10-1-crb": {
+      "bootsAttempted": 3,
+      "reachedGrub": 3,
+      "loadedKernel": 3,
+      "reachedInitramfs": 3,
+      "reachedMultiUser": 3,
+      "reachedGraphical": 3,
+      "healthCheck": 3,
+      "resets": 3,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-machine-q35-10-1-crb-001": [],
+        "TPMQ-20260801-machine-q35-10-1-crb-002": [],
+        "TPMQ-20260801-machine-q35-10-1-crb-003": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260801-machine-q35-10-1-crb-001",
+        "TPMQ-20260801-machine-q35-10-1-crb-002",
+        "TPMQ-20260801-machine-q35-10-1-crb-003"
+      ]
+    },
+    "machine-q35-9-2-crb": {
+      "bootsAttempted": 3,
+      "reachedGrub": 3,
+      "loadedKernel": 3,
+      "reachedInitramfs": 3,
+      "reachedMultiUser": 3,
+      "reachedGraphical": 3,
+      "healthCheck": 3,
+      "resets": 3,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-machine-q35-9-2-crb-001": [],
+        "TPMQ-20260801-machine-q35-9-2-crb-002": [],
+        "TPMQ-20260801-machine-q35-9-2-crb-003": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260801-machine-q35-9-2-crb-001",
+        "TPMQ-20260801-machine-q35-9-2-crb-002",
+        "TPMQ-20260801-machine-q35-9-2-crb-003"
+      ]
+    },
+    "smm-on-crb": {
+      "bootsAttempted": 3,
+      "reachedGrub": 3,
+      "loadedKernel": 3,
+      "reachedInitramfs": 3,
+      "reachedMultiUser": 3,
+      "reachedGraphical": 3,
+      "healthCheck": 3,
+      "resets": 3,
+      "timeouts": 0,
+      "pass": 3,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260801-smm-on-crb-001": [],
+        "TPMQ-20260801-smm-on-crb-002": [],
+        "TPMQ-20260801-smm-on-crb-003": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260801-smm-on-crb-001",
+        "TPMQ-20260801-smm-on-crb-002",
+        "TPMQ-20260801-smm-on-crb-003"
+      ]
+    }
+  },
+  "completedAt": "2026-08-01T22:24:50+00:00"
+}

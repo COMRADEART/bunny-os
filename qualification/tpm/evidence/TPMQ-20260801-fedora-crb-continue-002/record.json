@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "TPMQ-20260801-fedora-crb-continue-002",
+  "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
+  "sourceArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
+  "installationArtifactDigest": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217",
+  "qemuDigest": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+  "qemuVersion": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)",
+  "ovmfCodeDigest": "6551948da24a02553476c1c1edccb0bb92a57dce9d722d7b396ac14547e6d9af",
+  "ovmfVarsTemplateDigest": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb",
+  "swtpmDigest": "32c411b8d1b269ca6b5ae922e84459dec5669dc96ca17bb5cf8119f830ab7ce0",
+  "swtpmVersion": "0.10.1",
+  "libtpmsVersion": "0.10.2",
+  "scenarioVersion": "tpmq-1",
+  "environment": "qemu-kvm",
+  "acceleration": "kvm",
+  "machineType": "pc-q35-10.2",
+  "cpuModel": "host",
+  "diagnostic": true,
+  "diskAttached": true,
+  "altDiskSha256": "28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f",
+  "ovmfVarsState": "fresh",
+  "ovmfVarsSourceDigest": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb",
+  "ovmfVarsAfterDigest": "09167375b162ca66411693f5c21564262723c1cd6d2a036e6153ac9170699132",
+  "tpmInterface": "crb",
+  "tpmState": "fresh",
+  "secureBootState": "disabled",
+  "smmState": "off",
+  "bootType": "cold",
+  "onReset": "continue",
+  "expectation": "target",
+  "expectedResets": 1,
+  "guestResetCount": 1,
+  "stagesReached": [
+    "firmware-bds",
+    "boot-option-started",
+    "restoration-dialog",
+    "reset-announced",
+    "kernel-loaded",
+    "initramfs",
+    "multi-user"
+  ],
+  "lastStage": "multi-user",
+  "failedUnits": [],
+  "secondBootTargetReached": null,
+  "resetClassification": "BOOTLOADER_REBOOT_COMMAND",
+  "classificationBasis": [
+    "QMP RESET at 2026-08-01T21:57:15.948Z (guest reset #1 of 1): {\"guest\": true, \"reason\": \"guest-reset\"}",
+    "judged on the transcript segment for boot #1 (7500 bytes), not the whole log",
+    "this segment shows a boot option was started and the resetting component printed its intent ('Reset System', 'Boot Option Restoration' dialog) before the event",
+    "classification places the reset in the loaded boot chain, not the firmware core; the issuing binary is identified by the executable-isolation evidence, not by this event"
+  ],
+  "result": "PASS",
+  "startedAt": "2026-08-01T21:57:08.313Z",
+  "completedAt": "2026-08-01T21:57:27.530Z",
+  "operator": "allamsettiraviteja2009",
+  "limitations": [
+    "diagnostic alternative disk; this record is not Bunny qualification evidence",
+    "the QMP event reader stopped before the run ended; events after that point were not observed and this run cannot be treated as having seen everything that happened"
+  ],
+  "evidenceFiles": [
+    {
+      "path": "host-dmesg-tail.log",
+      "sha256": "d37eae735e87025ed836a762bfc2b68e4dfa1953fbb01e2a6b62e634a199f1ac",
+      "sizeBytes": 9454,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-command.json",
+      "sha256": "d8f9cd1d7f4c48d9ca7119e91f59c62eaea1731aa2f16824aafd2100f6807e87",
+      "sizeBytes": 2216,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-debug.log",
+      "sha256": "67a7a64cddc03dcb9be96445fc10cb515c37327c25214249968ba97cb17425be",
+      "sizeBytes": 16200,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qmp-events.jsonl",
+      "sha256": "6b32579bce855c1f6804c24b60484c90773d5fb078869c83a9ca41c498309c51",
+      "sizeBytes": 1148,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/final.ppm",
+      "sha256": "63765fdeb94d3329d181bf128a90dad20b68fefdece00a50f2319bec824e5373",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/post-reset-1.ppm",
+      "sha256": "d202fd753f1027ba99af0596477f730a5172a956e21d20eea8cc9b7476e9b0bf",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "676599814799abbdf1ee358019cfcee0bd603471029f7ab0ee04e3aef27dd523",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "676599814799abbdf1ee358019cfcee0bd603471029f7ab0ee04e3aef27dd523",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "1d7df8f3b819442d99369853451ba63f0f70c7b5801defdabbf355f246c47ca2",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-reset-announced.ppm",
+      "sha256": "d202fd753f1027ba99af0596477f730a5172a956e21d20eea8cc9b7476e9b0bf",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-restoration-dialog.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "serial.log",
+      "sha256": "1bb271245f6b26d5b400a839020f4925d2e6f3ffd381b8d0233c4c6183d9bd75",
+      "sizeBytes": 96894,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "swtpm-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "swtpm-stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "swtpm.log",
+      "sha256": "53a2e74df35ef2ba72f31be0982b5c97d2f55cabd5313961b0126fbf27c087f0",
+      "sizeBytes": 381135,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "work-manifest.json",
+      "sha256": "305050f9a054bef255e5d31f981a83a6b95c0c3f8e4e2ededacd12b731d1abbb",
+      "sizeBytes": 624,
+      "createdAt": "2026-08-01T21:57:27.530Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    }
+  ]
+}

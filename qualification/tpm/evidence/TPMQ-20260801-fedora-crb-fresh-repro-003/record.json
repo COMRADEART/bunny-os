@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "TPMQ-20260801-fedora-crb-fresh-repro-003",
+  "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
+  "sourceArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
+  "installationArtifactDigest": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217",
+  "qemuDigest": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+  "qemuVersion": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)",
+  "ovmfCodeDigest": "6551948da24a02553476c1c1edccb0bb92a57dce9d722d7b396ac14547e6d9af",
+  "ovmfVarsTemplateDigest": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb",
+  "swtpmDigest": "32c411b8d1b269ca6b5ae922e84459dec5669dc96ca17bb5cf8119f830ab7ce0",
+  "swtpmVersion": "0.10.1",
+  "libtpmsVersion": "0.10.2",
+  "scenarioVersion": "tpmq-1",
+  "environment": "qemu-kvm",
+  "acceleration": "kvm",
+  "machineType": "pc-q35-10.2",
+  "cpuModel": "host",
+  "diagnostic": true,
+  "diskAttached": true,
+  "altDiskSha256": "28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f",
+  "ovmfVarsState": "fresh",
+  "ovmfVarsSourceDigest": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb",
+  "ovmfVarsAfterDigest": "bc584c7a07233a0ceffb94d6d41134fb09c0e0b98d228d7a8a3780eda137ce61",
+  "tpmInterface": "crb",
+  "tpmState": "fresh",
+  "secureBootState": "disabled",
+  "smmState": "off",
+  "bootType": "cold",
+  "onReset": "stop",
+  "expectation": "reset",
+  "expectedResets": 0,
+  "guestResetCount": 1,
+  "stagesReached": [
+    "firmware-bds",
+    "boot-option-started",
+    "restoration-dialog",
+    "reset-announced"
+  ],
+  "lastStage": "reset-announced",
+  "failedUnits": [],
+  "secondBootTargetReached": null,
+  "resetClassification": "BOOTLOADER_REBOOT_COMMAND",
+  "classificationBasis": [
+    "QMP SHUTDOWN at 2026-08-01T21:56:46.572Z (guest reset #1 of 1): {\"guest\": true, \"reason\": \"guest-reset\"}",
+    "judged on the transcript segment for boot #1 (7500 bytes), not the whole log",
+    "this segment shows a boot option was started and the resetting component printed its intent ('Reset System', 'Boot Option Restoration' dialog) before the event",
+    "classification places the reset in the loaded boot chain, not the firmware core; the issuing binary is identified by the executable-isolation evidence, not by this event"
+  ],
+  "result": "PASS",
+  "startedAt": "2026-08-01T21:56:37.601Z",
+  "completedAt": "2026-08-01T21:56:48.758Z",
+  "operator": "allamsettiraviteja2009",
+  "limitations": [
+    "diagnostic alternative disk; this record is not Bunny qualification evidence",
+    "the QMP event reader stopped before the run ended; events after that point were not observed and this run cannot be treated as having seen everything that happened"
+  ],
+  "evidenceFiles": [
+    {
+      "path": "host-dmesg-tail.log",
+      "sha256": "d37eae735e87025ed836a762bfc2b68e4dfa1953fbb01e2a6b62e634a199f1ac",
+      "sizeBytes": 9454,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-command.json",
+      "sha256": "bc4a473f0d648b672e4d12528666dcc776a3541583fe7b52a4d785394acad99e",
+      "sizeBytes": 2265,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-debug.log",
+      "sha256": "a32e8781e7a9a324e9d373e2d685521d665380b23ee339b707abd9330da16290",
+      "sizeBytes": 10800,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qmp-events.jsonl",
+      "sha256": "767beb092d85152347e4b0aa2cf95039b09970226fc603cfe38062773acfe31a",
+      "sizeBytes": 863,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/final.ppm",
+      "sha256": "3782612dc40deb1067d9ff5dab7d17710761967140da3bc67e816a9fd56d8e74",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/post-event.ppm",
+      "sha256": "3782612dc40deb1067d9ff5dab7d17710761967140da3bc67e816a9fd56d8e74",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "eadea52287d4781765f8aaefb034859b624b6b6ddaa792c1a4f03ea46f361ce6",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "eadea52287d4781765f8aaefb034859b624b6b6ddaa792c1a4f03ea46f361ce6",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-reset-announced.ppm",
+      "sha256": "3782612dc40deb1067d9ff5dab7d17710761967140da3bc67e816a9fd56d8e74",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-restoration-dialog.ppm",
+      "sha256": "826b543f552cc671f7477da330f7be53c1fa70e600aa104c07860abee6ed2013",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "serial.log",
+      "sha256": "2801fea520739259de2cd1362010aacce3b0fa2d211c966329517d163fdd133e",
+      "sizeBytes": 8301,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "swtpm-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "swtpm-stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "swtpm.log",
+      "sha256": "f0baadc1e6f1526b2b96d37ebbc6ea0d3cac56395117a6e7f63159ade6723a83",
+      "sizeBytes": 95966,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "work-manifest.json",
+      "sha256": "84b357f560454fa8015c049632d685d76a37d4e8483b174149ca8e6573bd578d",
+      "sizeBytes": 622,
+      "createdAt": "2026-08-01T21:56:48.758Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    }
+  ]
+}

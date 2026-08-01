@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "TPMQ-20260801-crb-fresh-repro-stop-001",
+  "files": [
+    {
+      "path": "screenshots/final.ppm",
+      "sha256": "3782612dc40deb1067d9ff5dab7d17710761967140da3bc67e816a9fd56d8e74",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-fresh-repro-stop-001/screenshots/final.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/post-event.ppm",
+      "sha256": "3782612dc40deb1067d9ff5dab7d17710761967140da3bc67e816a9fd56d8e74",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-fresh-repro-stop-001/screenshots/post-event.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-fresh-repro-stop-001/screenshots/stage-boot-option-started.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-fresh-repro-stop-001/screenshots/stage-firmware-bds.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-reset-announced.ppm",
+      "sha256": "3782612dc40deb1067d9ff5dab7d17710761967140da3bc67e816a9fd56d8e74",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-fresh-repro-stop-001/screenshots/stage-reset-announced.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "screenshots/stage-restoration-dialog.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-fresh-repro-stop-001/screenshots/stage-restoration-dialog.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    },
+    {
+      "path": "swtpm.log",
+      "sha256": "31303b868a38b5fcef9ac87dfa0e9b2555d1b1578e7a2e6393492e5f85d6f302",
+      "sizeBytes": 95966,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-crb-fresh-repro-stop-001/swtpm.log",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:08+00:00"
+    }
+  ]
+}

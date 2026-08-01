@@ -20,3 +20,11 @@ __pycache__/
 # from the pinned artifact and the installation record that made them, and
 # never evidence in themselves — the record.json beside them is.
 qualification/installed-system/evidence/*/work/
+
+# TPM experiment working state: per-run disk overlays live in work/ and are
+# deleted after digest capture; the retained OVMF variable store and swtpm
+# state directory live in state/ so a later experiment can deliberately
+# reuse them. Both are writable state, recorded by digest in the run's
+# record.json and work-manifest.json, and never evidence in themselves.
+qualification/tpm/evidence/*/work/
+qualification/tpm/evidence/*/state/
