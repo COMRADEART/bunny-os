@@ -1,0 +1,36 @@
+{
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later. Declared expected traffic at the VM boundary for installed-system scenarios. Anything observed that matches no entry is UNEXPECTED and fails the privacy assertion. Adding an entry is a reviewed change carrying a reason — the fixture is the documentation the requirement asks for.",
+  "schemaVersion": 1,
+  "expected": [
+    {
+      "kind": "udp",
+      "pattern": "10\\.0\\.2\\.3:53",
+      "reason": "QEMU user-mode DNS resolver; queries themselves are separately inventoried"
+    },
+    {
+      "kind": "dns",
+      "pattern": "^(.*\\.)?fedoraproject\\.org$",
+      "reason": "NetworkManager connectivity check host shipped by the Fedora base; documented, carries no identity, and local-only mode is measured separately"
+    },
+    {
+      "kind": "udp",
+      "pattern": "10\\.0\\.2\\.2:123|.*:123$",
+      "reason": "chrony NTP time synchronisation on first boot; documented base behaviour"
+    },
+    {
+      "kind": "udp",
+      "pattern": "255\\.255\\.255\\.255:67|10\\.0\\.2\\.255:67",
+      "reason": "DHCP on the user-mode network; how the VM gets its address at all"
+    },
+    {
+      "kind": "udp",
+      "pattern": "224\\.0\\.0\\.251:5353|ff02::fb:5353",
+      "reason": "Avahi mDNS on the local link only; never leaves the segment"
+    },
+    {
+      "kind": "udp",
+      "pattern": "\\[?ff02::1:2\\]?:547",
+      "reason": "DHCPv6 solicitation on the local link"
+    }
+  ]
+}

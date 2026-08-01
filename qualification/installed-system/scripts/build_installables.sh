@@ -2,117 +2,95 @@
 # SPDX-FileCopyrightText: 2026 ComradeArt
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Build the installable disk artifacts — QCOW2 and raw — from the qualified
-# archive target, and prove the root filesystem inside them is the qualified
-# one.
+# Wrap the qualified archive — the exact bytes — in installable disk images.
 #
-# The full hermetic build reruns the pinned archive build and then hands the
-# result to image-builder. The archive step is deterministic — that is what
-# the three-builder evidence established — so the shipped archive digest of
-# this build must equal the qualified target's digest exactly, and this
-# script refuses to emit disk artifacts when it does not: a disk image
-# wrapping an unverified root is an installation artifact of nothing.
+# Earlier versions rebuilt the archive and checked the digest afterwards, and
+# the check kept refusing for environmental reasons worth recording: a
+# rebuild in Fedora's default container store came out naive-diff (mountopt
+# metacopy=on), and an isolated store handed down through
+# CONTAINERS_STORAGE_CONF never reached podman because the build script's
+# sudo wrapper strips the environment. Both failures were the guard working;
+# neither was necessary. The qualified archive already exists as a file with
+# a measured digest, `podman load` preserves its layers and config
+# byte-for-byte, and image-builder deploys from the loaded image — so the
+# root filesystem inside the disk images is the qualified one by
+# construction, and the verification is of file digest and loaded image
+# identity, not of a rebuild's luck.
 #
-# Disk-image byte reproducibility is NOT inferred from root-filesystem
-# reproducibility. image-builder writes filesystems with their own identities
-# (partition GUIDs, filesystem UUIDs); the record lists which identifiers are
-# legitimately unique per generation, and INSTALLABLE_IMAGE_REPORT.md keeps
-# the two claims apart.
-#
-# Usage: build_installables.sh --commit <sha> --expected-archive <sha256>
-#                              --output <dir> [--workspace-root DIR]
+# Usage: build_installables.sh --archive <qualified bunny-os.oci.tar>
+#                              --expected-archive <sha256>
+#                              --commit <target sha> --output <dir>
 
 set -euo pipefail
 
-commit=""
+archive=""
 expected=""
+commit=""
 output=""
-workspace_root="/var/tmp"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --commit) commit="${2:?}"; shift 2 ;;
+    --archive) archive="${2:?}"; shift 2 ;;
     --expected-archive) expected="${2:?}"; shift 2 ;;
+    --commit) commit="${2:?}"; shift 2 ;;
     --output) output="${2:?}"; shift 2 ;;
-    --workspace-root) workspace_root="${2:?}"; shift 2 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
-[[ -n "${commit}" && -n "${expected}" && -n "${output}" ]] || {
-  echo "BLOCKED: --commit, --expected-archive and --output are required." >&2
-  echo "The expected archive digest comes from the qualification target's" >&2
-  echo "evidence, not from this build's own output describing itself." >&2
+[[ -n "${archive}" && -n "${expected}" && -n "${commit}" && -n "${output}" ]] || {
+  echo "BLOCKED: --archive, --expected-archive, --commit and --output are required." >&2
+  echo "The expected digest comes from the qualification target's evidence, not" >&2
+  echo "from this script's input describing itself." >&2
   exit 2; }
 
-for required in git podman image-builder qemu-img sha256sum python3; do
+for required in podman image-builder qemu-img sha256sum python3; do
   command -v "${required}" >/dev/null || { echo "BLOCKED: ${required} missing" >&2; exit 3; }
 done
 
-repository_root="$(git rev-parse --show-toplevel)"
-workspace="${workspace_root}/bunny-installables"
-storage="${workspace_root}/storage-installables"
-
-echo "==> installable build: ${workspace}"
-rm -rf "${workspace}" "${storage}"
-mkdir -p "${storage}"
-git clone --quiet --no-hardlinks "${repository_root}" "${workspace}"
-git -C "${workspace}" checkout --quiet "${commit}"
-
-started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-# One isolated store, shared by podman and image-builder through
-# CONTAINERS_STORAGE_CONF — and with no metacopy. Both halves are measured:
-# an image built into a store image-builder cannot see dies in a
-# localhost-registry fallback, and a build in Fedora's default store produced
-# archive f49b8fcf where the qualified target is 0258f92a, because the
-# default store's mountopt metacopy=on flips containers/storage onto its
-# naive diff — the same mechanism that once separated the Ubuntu runners
-# from the local builder (missing opaque marker, unlinked whiteouts, flat
-# member order, and an empty mtime-only layer naive diff cannot see).
-# The store configuration is part of the toolchain, whether or not anyone
-# wrote it down; here it is written down.
-mkdir -p "${storage}/graph" "${storage}/run"
-cat > "${storage}/storage.conf" <<CONF
-[storage]
-driver = "overlay"
-graphroot = "${storage}/graph"
-runroot = "${storage}/run"
-CONF
-export CONTAINERS_STORAGE_CONF="${storage}/storage.conf"
-(
-  cd "${workspace}"
-  BUNNY_HERMETIC_BUILD=1 \
-  bash build/scripts/build-image.sh beta
-) 2>&1 | tee "${output}.build.log" | tail -5
-
-archive="${workspace}/build/out/beta/bunny-os.oci.tar"
-[[ -f "${archive}" ]] || { echo "BLOCKED: no archive produced" >&2; exit 4; }
-
 actual="$(sha256sum "${archive}" | awk '{print $1}')"
 if [[ "${actual}" != "${expected}" ]]; then
-  echo "BLOCKED: this build's archive is ${actual:0:12} but the qualified target's" >&2
-  echo "archive is ${expected:0:12}. The root filesystem inside these disk images" >&2
-  echo "would not be the qualified one, so no disk image is emitted." >&2
+  echo "BLOCKED: ${archive} digests to ${actual:0:12}, expected ${expected:0:12}." >&2
+  echo "Disk images may only wrap the qualified archive." >&2
   exit 4
 fi
-echo "root filesystem verified: ${actual:0:16} == qualified target"
+echo "qualified archive verified: ${actual:0:16}"
 
+tag="localhost/bunny-os-beta:${commit:0:12}"
+started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+loaded="$(podman load --quiet -i "${archive}" | awk '{print $NF}')"
+podman tag "${loaded}" "${tag}"
+image_id="$(podman image inspect --format '{{.Id}}' "${tag}")"
+echo "loaded ${loaded} as ${tag} (id ${image_id:0:16})"
+
+workdir="$(mktemp -d /var/tmp/bunny-installables.XXXXXX)"
 mkdir -p "${output}"
-shopt -s nullglob
+
+for image_type in qcow2 raw; do
+  echo "==> image-builder ${image_type}"
+  ( cd "${workdir}" && image-builder build \
+      --bootc-ref "${tag}" \
+      --bootc-default-fs ext4 \
+      "${image_type}" ) 2>&1 | tee -a "${output}/image-builder.log" | tail -2
+done
+
+shopt -s globstar nullglob
 artifacts=()
-for artifact in "${workspace}"/build/out/beta/*.qcow2 "${workspace}"/build/out/beta/*.raw \
-                "${workspace}"/build/out/beta/*/disk.qcow2 "${workspace}"/build/out/beta/*/disk.raw; do
-  name="$(basename "${artifact}")"
-  [[ "${name}" == disk.* ]] && name="bunny-os-$(basename "$(dirname "${artifact}")").${name##*.}"
+for artifact in "${workdir}"/**/*.qcow2 "${workdir}"/**/*.raw; do
+  name="bunny-os-${commit:0:12}.${artifact##*.}"
   cp --sparse=always "${artifact}" "${output}/${name}"
   artifacts+=("${output}/${name}")
 done
-[[ ${#artifacts[@]} -gt 0 ]] || { echo "BLOCKED: image-builder produced no qcow2/raw" >&2; exit 4; }
+[[ ${#artifacts[@]} -ge 2 ]] || {
+  echo "BLOCKED: expected qcow2 and raw, found ${#artifacts[@]} artifact(s)" >&2
+  exit 4; }
 
 completed="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-python3 - "${output}/installables.json" "${commit}" "${expected}" "${started}" "${completed}" "${artifacts[@]}" <<'PY'
+python3 - "${output}/installables.json" "${commit}" "${expected}" "${image_id}" \
+  "${started}" "${completed}" "${artifacts[@]}" <<'PY'
 import hashlib, json, subprocess, sys
-output, commit, archive_digest, started, completed, *artifacts = sys.argv[1:]
+output, commit, archive_digest, image_id, started, completed, *artifacts = sys.argv[1:]
 
 def digest(path):
     value = hashlib.sha256()
@@ -138,17 +116,21 @@ json.dump({
     "sourceCommit": commit,
     "sourceArchiveDigest": archive_digest,
     "sourceArchiveVerified": True,
+    "deployedImageId": image_id,
+    "mechanism": (
+        "podman load of the qualified archive (layers and config preserved "
+        "byte-for-byte), deployed by image-builder --bootc-ref; the root "
+        "filesystem is the qualified archive's by construction"
+    ),
     "firmwareMode": "uefi",
     "partitioning": "GPT: ESP + boot + root (image-builder bootc default, ext4)",
     "bootloader": "bootupd-managed GRUB2, BLS entries",
     "encryption": "none in generated images; encrypted installation is a separate, prepared path",
-    "creationCommand": "BUNNY_HERMETIC_BUILD=1 build/scripts/build-image.sh beta (image-builder qcow2/raw)",
+    "creationCommand": "image-builder build --bootc-ref localhost/bunny-os-beta:<sha12> --bootc-default-fs ext4 {qcow2,raw}",
     "startedAt": started,
     "completedAt": completed,
     "artifacts": records,
-    "uniquePerGeneration": [
-        "partition GUIDs", "filesystem UUIDs", "ESP volume id",
-    ],
+    "uniquePerGeneration": ["partition GUIDs", "filesystem UUIDs", "ESP volume id"],
     "note": (
         "Root-filesystem reproducibility is established evidence; disk-image "
         "byte reproducibility is a separate claim this record does not make. "
@@ -162,5 +144,5 @@ for record in records:
     print(f"  {record['artifact']}: {record['sha256'][:16]} ({record['format']})")
 PY
 
-rm -rf "${storage}"
+rm -rf "${workdir}"
 echo "installable artifacts in ${output}"
