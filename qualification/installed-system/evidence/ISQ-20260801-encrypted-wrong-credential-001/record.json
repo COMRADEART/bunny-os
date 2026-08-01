@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "ISQ-20260801-encrypted-wrong-credential-001",
+  "sourceCommit": "619065e068e2153de461545f5b8950b985db4dfd",
+  "sourceArchiveDigest": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a",
+  "installationArtifactDigest": "7739e15f92627afa633043f2148f89be1fd9316b3f6809b066a9041a3456cf0b",
+  "environment": "qemu-kvm",
+  "firmwareMode": "uefi",
+  "secureBootState": "disabled",
+  "tpmState": "absent",
+  "encryptionState": "luks2-passphrase",
+  "scenario": "encrypted-wrong-credential",
+  "scenarioVersion": "isq-1",
+  "startedAt": "2026-08-01T14:10:23Z",
+  "completedAt": "2026-08-01T14:22:26Z",
+  "result": "PASS",
+  "installationRecordSha256": "58cbed3cc92f144e35a3b45af29aa80cc5e6422cbd00ef41f19c27614743bcf4",
+  "assertions": [
+    {
+      "name": "marker:luks-prompt",
+      "expected": "Please enter passphrase for disk",
+      "observed": "matched",
+      "result": "PASS"
+    },
+    {
+      "name": "serial-input:wrong-passphrase",
+      "expected": "prompt 'Please enter passphrase for disk' answered",
+      "observed": "sent",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:boot-succeeded",
+      "expected": "absent: Reached target .*(Multi-User System|Graphical Interface)",
+      "observed": "absent",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:root-mounted",
+      "expected": "absent: Mounted .*sysroot",
+      "observed": "absent",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:credential-echo",
+      "expected": "absent: BUNNY-TEST-CREDENTIAL",
+      "observed": "absent",
+      "result": "PASS"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "installation-record.json",
+      "sha256": "58cbed3cc92f144e35a3b45af29aa80cc5e6422cbd00ef41f19c27614743bcf4",
+      "createdAt": "2026-08-01T14:22:26Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "network.pcap",
+      "sha256": "ca9f4ff936f8ca226f9935d2b9d8cecd423aa1a14360510f77e63dd299c43da1",
+      "createdAt": "2026-08-01T14:22:26Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-command.json",
+      "sha256": "2f6e07f9f72cb3e2b202d8dca37ce450d681c7220a7b56697a4b6c0d9b71e931",
+      "createdAt": "2026-08-01T14:22:26Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/luks-prompt.ppm",
+      "sha256": "671222446ef8db0cdd32fdcceb110615c4a0028f30e771c39ad8d28006fc7e2f",
+      "createdAt": "2026-08-01T14:22:26Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "serial.log",
+      "sha256": "41259cc961ae903b5f97a496d3439df336edea7dc8a9b01a59e2836a9765b319",
+      "createdAt": "2026-08-01T14:22:26Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    }
+  ],
+  "operator": "allamsettiraviteja2009",
+  "limitations": [
+    "guest did not power down within 120s; QEMU was quit"
+  ]
+}

@@ -37,8 +37,85 @@ same-host repeatability and **not** independent-builder reproducibility: a defec
 the shared kernel, storage or clock reproduces in both builds and the comparison
 cannot detect it.
 
-The seventeen-dimension comparison reports `INCONCLUSIVE` because sixteen dimensions
-were never collected. A hosted CI workflow exists and **has not been executed**.
+*Closed 2026-08-01 for the archive stage:* three builders under two
+administrator boundaries produced identical archives at target 619065e, and
+`verify-builder-independence` passes on both local+hosted pairs. The
+statement above remains true about same-host pairs and is kept because the
+distinction is the reason the hosted runs exist.
+
+### The BrlAPI key was never minted on an installed system
+
+Measured 2026-08-01 from the journal of an installed first boot: the archive
+qualified at 619065e reaches `graphical.target` in 9.6 seconds and starts
+GDM, and `bunny-brlapi-key.service` does not run at all. The unit ships with
+`WantedBy=sysinit.target`, nothing enabled it, and systemd disables what no
+preset names — so `/etc/brlapi.key` is absent on the installed system and
+BRLTTY has no authorisation key for the whole session.
+
+This is the second half of one accessibility defect. The first half — the
+unit's `ExecStart` naming a program the build never installed — was visible
+to CI and is fixed. The second half was visible only by booting an installed
+system and reading its journal, which is what this workstream exists to do.
+
+Both halves are now fixed in source: the program is installed, and the
+service is enabled both by preset and by the explicit `systemctl enable`
+list. **The fix post-dates the qualified archive**, so every installed-system
+record in this pass correctly reports `brlapi-key-service-ran` as `FAIL`, and
+the per-installation state comparison correctly reports the key absent. The
+next re-qualification carries the fix; nothing here claims it does.
+
+### LUKS2 unlock is prohibitively slow in the qualification VM
+
+Measured across three runs of one encrypted installation. The refusal path is
+sound: a wrong passphrase is consumed and rejected, the console reprompts,
+nothing mounts and nothing leaks — that scenario passes. The correct
+passphrase is also consumed and *not* rejected, which is how a correct
+passphrase looks; what follows is the problem. One run completed, reaching
+`multi-user.target` and finishing the Bunny health check about twenty
+minutes into the boot. Two later runs produced no further console output at
+all and were still unfinished at a forty-five-minute deadline.
+
+The likely cause is recorded rather than assumed: LUKS2 defaults to argon2id
+with a memory and time cost that `cryptsetup` benchmarks on the machine
+formatting the volume. That machine is a fast, many-cored builder; the
+qualification VM is neither, and the derivation appears to run for tens of
+minutes there.
+
+If that reading is right, it is not only a test-environment artifact. A disk
+encrypted on a fast machine and unlocked on a slower one is a real user
+situation, and "the passphrase works but the machine appears dead for twenty
+minutes" is indistinguishable from a failure to anyone using it. Confirming
+or refuting that on real hardware is precisely what physical qualification is
+for.
+
+Recorded outcome: encrypted unlock is **not qualified**. One success is not
+reproducibility, and a suspected harness interaction is not a pass.
+
+### The image does not boot with a TPM 2.0 attached
+
+Measured 2026-08-01 in QEMU/OVMF against the qualified installation artifact:
+with a software TPM 2.0 attached, the guest runs GRUB and then resets before
+loading a kernel. Reproduced with both `tpm-crb` and `tpm-tis`; the same disk
+with no TPM attached boots to `graphical.target` and finishes the Bunny
+health check. Evidence: `qualification/installed-system/evidence/
+ISQ-20260801-tpm-present-001/`.
+
+This matters more than a VM curiosity should, because the declared minimum
+physical target **is** an x86-64 UEFI machine with TPM 2.0. Whether the reset
+reproduces against a discrete hardware TPM is unknown and is one of the
+questions physical qualification exists to answer; it is recorded as a
+measured `FAIL`, never as `NOT_RUN`, and it blocks the encryption matrix's
+`tpm-fallback` row from resting on a TPM-present pass.
+
+No TPM feature is claimed by the product today — there is no TPM enrolment,
+no measured-boot policy and no sealed key — so this is a boot-path finding
+rather than a feature regression.
+
+### No physical machine has ever run Bunny OS
+
+Zero hardware reports, zero collections. The `Hardware` and `Secure Boot` evidence
+categories block, and the OEM pilot cannot begin without a device even if every
+other blocker closed tomorrow.
 
 ### No physical machine has ever run Bunny OS
 

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.invalid/qualification/hardware/test-run.schema.json",
+  "title": "Physical hardware test run record",
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt — SPDX-License-Identifier: GPL-3.0-or-later. One record per test per device. NOT_PRESENT is a statement about the device, never a pass. A NOT_RUN row must carry NO observation fields: a row that claims it was not run while carrying a timestamp or evidence is either a mistake or a fabrication, and the schema refuses both rather than guessing which. A PASS must carry at least one evidence file, because a PASS with no artifact is an assertion, not a result — the same rule release/hardware.py enforces at intake.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["testId", "result"],
+  "properties": {
+    "testId": {
+      "$comment": "The fixed physical test list. Fixed so that a report cannot invent a flattering test, and so that every report answers the same questions; adding a test is an edit to this schema, which is a reviewable act.",
+      "enum": [
+        "installer-boot",
+        "blank-disk-installation",
+        "encrypted-installation",
+        "first-boot",
+        "gdm-login",
+        "gnome-session",
+        "wifi",
+        "ethernet",
+        "bluetooth",
+        "audio-io",
+        "display-brightness",
+        "hidpi-scaling",
+        "external-display",
+        "usb-storage",
+        "suspend",
+        "resume",
+        "hibernate",
+        "reboot",
+        "shutdown",
+        "lid-close-open",
+        "battery-status",
+        "tpm-detection",
+        "secure-boot-development-path",
+        "update",
+        "rollback",
+        "recovery-media-boot",
+        "encrypted-volume-recovery",
+        "keyboard-only-operation",
+        "orca-operation"
+      ]
+    },
+    "result": {
+      "$comment": "PARTIAL means the feature worked with caveats that the notes must describe. NOT_PRESENT means the device lacks the hardware (no camera, no battery). NOT_SUPPORTED means the hardware exists but the OS cannot drive it. None of the three is a pass, and none of the three counts toward qualification.",
+      "enum": ["PASS", "FAIL", "PARTIAL", "NOT_PRESENT", "NOT_SUPPORTED", "NOT_RUN"]
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time",
+      "$comment": "When the operator observed the result. Required for every result except NOT_RUN, and forbidden for NOT_RUN — nothing was observed."
+    },
+    "operator": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Who observed the result. Required for every result except NOT_RUN (Stage-26 adversarial rule 17: an observation without an observer is refused)."
+    },
+    "evidenceFiles": {
+      "type": "array",
+      "minItems": 1,
+      "$comment": "Files produced by the collectors or by the operator, each bound to its sha256 so a later edit to the artifact is detectable. An empty list is forbidden even where the field is optional: an empty claim of evidence is worse than no claim.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "$comment": "Relative to hardware/evidence/, matching the intake's substantiation check; absolute paths would leak usernames and are refused there anyway."
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "$comment": "Free text. Never the word certified or its family — release/hardware.py refuses it; the permitted vocabulary is tested, qualified for pilot, supported based on evidence."
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "The NOT_RUN rule, encoded with the not construction so a validator enforces the ABSENCE of the fields, not merely their optionality. If the row says NOT_RUN it must carry no observedAt and no evidenceFiles; if it says anything else it must name when and by whom. This is the single conversion this framework exists to prevent: NOT_RUN quietly dressed up as an observation.",
+      "if": {
+        "properties": { "result": { "const": "NOT_RUN" } },
+        "required": ["result"]
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["observedAt"] },
+            { "required": ["evidenceFiles"] }
+          ]
+        }
+      },
+      "else": {
+        "required": ["observedAt", "operator"]
+      }
+    },
+    {
+      "$comment": "A PASS must be substantiated: at least one evidence file (minItems 1 comes from the property definition). A page of PASS values with no artifacts is the fake-physical-report case and it fails here, before it ever reaches intake.",
+      "if": {
+        "properties": { "result": { "const": "PASS" } },
+        "required": ["result"]
+      },
+      "then": {
+        "required": ["evidenceFiles"]
+      }
+    }
+  ]
+}

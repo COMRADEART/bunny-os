@@ -1,0 +1,57 @@
+{
+ "agentEntryPoint": "bunny_update_agent._validate_manifest(manifest, config, enforce_new_sequence=True)",
+ "assertions": [
+  {
+   "expected": "rejected: signing key is not in the trust store",
+   "name": "wrong-key-unregistered-keyid-rejected",
+   "observed": "rejected (unknown_key: manifest signing key is not trusted)",
+   "result": "PASS"
+  },
+  {
+   "expected": "rejected: signature does not verify under the trusted key",
+   "name": "wrong-key-forged-keyid-rejected",
+   "observed": "rejected (bad_signature: manifest signature verification failed)",
+   "result": "PASS"
+  },
+  {
+   "expected": "rejected: canonical payload changed under the signature",
+   "name": "modified-version-after-signing-rejected",
+   "observed": "rejected (bad_signature: manifest signature verification failed)",
+   "result": "PASS"
+  },
+  {
+   "expected": "rejected: canonical payload changed under the signature",
+   "name": "modified-image-digest-rejected",
+   "observed": "rejected (bad_signature: manifest signature verification failed)",
+   "result": "PASS"
+  },
+  {
+   "expected": "rejected: truncated document does not parse or validate",
+   "name": "truncated-manifest-rejected",
+   "observed": "rejected (invalid_document: truncated-manifest.json is not valid JSON)",
+   "result": "PASS"
+  },
+  {
+   "expected": "rejected: signature is a required field",
+   "name": "missing-signature-rejected",
+   "observed": "rejected (invalid_manifest: manifest fields do not match schema version 1)",
+   "result": "PASS"
+  },
+  {
+   "expected": "rejected: expiresAt is in the past",
+   "name": "expired-metadata-rejected",
+   "observed": "rejected (expired_manifest: manifest is expired)",
+   "result": "PASS"
+  }
+ ],
+ "collection": "update-invalid-signature",
+ "keyClass": "development",
+ "limitations": [
+  "development keys only; production signing remains unclaimed",
+  "metadata validation exercised directly against the agent's validator; the in-guest download path is not exercised",
+  "the agent's on-device trust-store and sequence-state paths were redirected into a temporary directory for host execution; the validator code itself ran unmodified"
+ ],
+ "result": "PASS",
+ "schemaVersion": 1,
+ "signatureFormat": "embedded base64 Ed25519 signature over agent._canonical_payload(): the manifest minus its signature field, JSON with sorted keys and compact separators, UTF-8"
+}

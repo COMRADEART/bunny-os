@@ -51,7 +51,11 @@ def main() -> int:
     copy_file(source / "services/bunny-update-agent/bunny_update_agent.py", Path("/usr/libexec/bunny-update-agent"), 0o555)
     copy_file(source / "tools/bunny-os/bin/bunny-os", Path("/usr/bin/bunny-os"), 0o555)
     copy_file(source / "tools/bunny-os/bin/bunny-os-info", Path("/usr/bin/bunny-os-info"), 0o555)
-    script_names = ("bunny-health-check", "bunny-first-boot", "bunny-recovery-generator", "bunny-recovery-prepare", "bunny-recovery", "bunny-safe-graphics", "bunny-live-session")
+    # bunny-brlapi-key is here because its absence was measured, not noticed:
+    # the unit shipped, finalisation removes /etc/brlapi.key from the archive,
+    # and nothing installed the program that mints it on first boot — so an
+    # installed system would have left BRLTTY users without a working key.
+    script_names = ("bunny-health-check", "bunny-first-boot", "bunny-brlapi-key", "bunny-recovery-generator", "bunny-recovery-prepare", "bunny-recovery", "bunny-safe-graphics", "bunny-live-session")
     for name in script_names:
         destination = Path("/usr/lib/systemd/system-generators/bunny-recovery-generator") if name == "bunny-recovery-generator" else Path(f"/usr/libexec/{name}")
         copy_file(source / f"scripts/{name}.py", destination, 0o555)
@@ -114,6 +118,13 @@ def main() -> int:
     copy_file(source / "build/manifests/update.disabled.json", Path("/etc/bunny-os/update.json"), 0o600)
     copy_file(artifact_manifest_path, Path("/usr/share/bunny-os/bunny-artifact.json"), 0o444)
     copy_file(source / "build/keys/revoked-keys.json", Path("/usr/share/bunny-os/update-keys/revoked-keys.json"), 0o444)
+    # Qualification scaffolding, not a feature: the marker is how an update
+    # and a rollback are observed to have changed the deployed root rather
+    # than assumed to have. It ships because the N+1 fixture image must be a
+    # real, separately qualified build differing from N in one harmless,
+    # identifiable way — an arbitrary image handed to the update path would
+    # test the path against nothing.
+    copy_file(source / "config/qualification-update-marker.json", Path("/usr/share/bunny-os/qualification-update-marker.json"), 0o444)
     copy_tree(source / "schemas", Path("/usr/share/bunny-os/schemas"), 0o444)
     copy_tree(source / "docs", Path("/usr/share/doc/bunny-os"), 0o444)
     copy_file(source / "ARCHITECTURE.md", Path("/usr/share/doc/bunny-os/ARCHITECTURE.md"), 0o444)
@@ -170,7 +181,15 @@ def main() -> int:
         path.mkdir(parents=True, exist_ok=True, mode=mode)
         os.chmod(path, mode)
 
-    subprocess.run(["/usr/bin/systemctl", "enable", "NetworkManager.service", "firewalld.service", "bunny-system-broker.socket", "bunny-health-check.service"], check=True)
+    # bunny-brlapi-key.service is enabled here because an installed system
+    # measured it never running: the unit ships with WantedBy=sysinit.target,
+    # nothing enabled it, and systemd's default preset policy disables what no
+    # preset names — so /etc/brlapi.key was never minted and BRLTTY had no
+    # authorisation key for the whole session. This is the second half of the
+    # same accessibility defect as the missing program: CI could see the
+    # ExecStart that pointed nowhere, and only booting an installed system
+    # could see the service that nothing started.
+    subprocess.run(["/usr/bin/systemctl", "enable", "NetworkManager.service", "firewalld.service", "bunny-system-broker.socket", "bunny-health-check.service", "bunny-brlapi-key.service"], check=True)
     subprocess.run(["/usr/bin/systemctl", "enable", "bunny-recovery-shell.service"], check=True)
     subprocess.run(["/usr/bin/systemctl", "--global", "enable", "bunny-first-boot.service"], check=True)
     if args.profile == "recovery":

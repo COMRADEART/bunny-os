@@ -40,7 +40,7 @@ install -m 0755 "${SRC}/services/bunny-system-broker/bin/bunny-system-broker" \
 install -m 0755 "${SRC}/services/bunny-update-agent/bunny_update_agent.py" \
     /usr/libexec/bunny-update-agent
 for name in bunny-health-check bunny-recovery-prepare bunny-recovery \
-            bunny-first-boot bunny-safe-graphics bunny-live-session; do
+            bunny-first-boot bunny-brlapi-key bunny-safe-graphics bunny-live-session; do
     install -m 0755 "${SRC}/scripts/${name}.py" "/usr/libexec/${name}"
 done
 install -m 0755 "${SRC}/shell/services/bin/bunny-shell-service" /usr/libexec/bunny-shell-service

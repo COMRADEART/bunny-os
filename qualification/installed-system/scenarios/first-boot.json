@@ -1,0 +1,25 @@
+{
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+  "name": "first-boot",
+  "title": "First boot of the freshly installed system",
+  "description": "Boot the installed disk under UEFI and require the system to reach its boot targets with the Bunny health check finished. Serial output is the primary evidence; the offline journal collection afterwards owns the deeper assertions.",
+  "scenarioVersion": "isq-1",
+  "environment": "qemu-kvm",
+  "disk": {"sizeGiB": 64, "blank": false, "preExistingData": false},
+  "resources": {"vcpus": 4, "memoryMiB": 8192},
+  "firmware": "uefi",
+  "tpm": "none",
+  "network": "enabled",
+  "timeoutSeconds": 900,
+  "markers": [
+    {"label": "boot-target", "regex": "Reached target .*(Multi-User System|Graphical Interface)", "required": true},
+    {"label": "health-check", "regex": "Finished .*Bunny OS boot health check", "required": true}
+  ],
+  "$markerNote": "'Startup finished in' is a journal line, not a console status line — measured absent from serial while every status marker flowed — so startup completion is carried by the boot-target marker and the timing line belongs to the offline journal collection.",
+  "forbiddenMarkers": [
+    {"label": "emergency-mode", "regex": "emergency mode|Emergency Shell"},
+    {"label": "fs-repair", "regex": "UNEXPECTED INCONSISTENCY"}
+  ],
+  "expectedOutcome": "PASS",
+  "destructive": false
+}

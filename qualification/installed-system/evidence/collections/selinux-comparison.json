@@ -1,0 +1,5376 @@
+{
+ "counts": {
+  "EXPECTED_RUNTIME_PATH": 76605,
+  "FIRST_BOOT_GENERATED": 11,
+  "INSTALLER_LABELING_DEFECT": 0,
+  "POLICY_DEFECT": 58,
+  "UNRESOLVED": 12369
+ },
+ "differences": {
+  "EXPECTED_RUNTIME_PATH": [
+   {
+    "applied": null,
+    "intended": "system_u:object_r:cupsd_var_run_t:s0",
+    "path": "/run/cups"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:cupsd_var_run_t:s0",
+    "path": "/run/cups/certs"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:var_run_t:s0",
+    "path": "/run/dnf"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:var_run_t:s0",
+    "path": "/run/selinux-policy"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:var_run_t:s0",
+    "path": "/run/selinux-policy/extra_varrun.cil"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:var_run_t:s0",
+    "path": "/run/selinux-policy/extra_varrun_entries.txt"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:var_run_t:s0",
+    "path": "/run/selinux-policy/extra_varrun_entries_dup.txt"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:var_run_t:s0",
+    "path": "/run/selinux-policy/file_contexts_unified"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:init_var_run_t:s0",
+    "path": "/run/systemd"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:systemd_resolved_var_run_t:s0",
+    "path": "/run/systemd/resolve"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:net_conf_t:s0",
+    "path": "/run/systemd/resolve/stub-resolv.conf"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/config"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/extensions"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/000720bf4f3ece277a19c53f8f89340d130cab4b9fec8afcf84817718b6a5b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/000720bf4f3ece277a19c53f8f89340d130cab4b9fec8afcf84817718b6a5b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/01421b3c14fb4a53b2bc5f09062e7c1a30961f8501df2fb735334a4bf42b7b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/01421b3c14fb4a53b2bc5f09062e7c1a30961f8501df2fb735334a4bf42b7b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/01c633b255fbba0ccf606435a1d28ad4e77232f78deb9b3489b5312dea182e.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/01c633b255fbba0ccf606435a1d28ad4e77232f78deb9b3489b5312dea182e.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/0246d7ffc4138b8c04066f8d49e7af214ea872b9d479938707b52cf1e5f969.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/0246d7ffc4138b8c04066f8d49e7af214ea872b9d479938707b52cf1e5f969.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/03098fe6409edd9a2f90321f0065438ee16a3f830c1554b95d5f641f8b6d43.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/03098fe6409edd9a2f90321f0065438ee16a3f830c1554b95d5f641f8b6d43.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/041c6e1a4d072da7cfd814dba86374b66ce401f4497e7ee8125e14baa84269.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/041c6e1a4d072da7cfd814dba86374b66ce401f4497e7ee8125e14baa84269.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/0663e823bcdc5ebf9f159ecb78d7aebe944b61671cb06e79e47882fdf3bb9b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/0663e823bcdc5ebf9f159ecb78d7aebe944b61671cb06e79e47882fdf3bb9b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/07c23f0d3129d57efcd7e920e0501e0fd3c63dcdd5964f6f9b6f9a624298c1.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/07c23f0d3129d57efcd7e920e0501e0fd3c63dcdd5964f6f9b6f9a624298c1.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/0ae35c7197c69ef3e47b6ddd17d8796cb1e75b2bf7a50b42d3ff9391b275b7.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/0ae35c7197c69ef3e47b6ddd17d8796cb1e75b2bf7a50b42d3ff9391b275b7.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/0bd6fbc957569f7de88429652a1eab2af322424df31d0c08037232179e2811.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/0e6b6827bb12a55a342ac58e077a5dcd102e842ca92b44dac47a03d9d7b25b.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/0e79ea718e3966740df3aa8dde652a351912b7cf8a5004e42260bc87c2653a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/0e79ea718e3966740df3aa8dde652a351912b7cf8a5004e42260bc87c2653a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/12bfbdf361630c5ecde2ba4d5bf0b0ecf44bbe83ead1179c4e9be4720c27e2.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/12bfbdf361630c5ecde2ba4d5bf0b0ecf44bbe83ead1179c4e9be4720c27e2.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/14be91454c09d292676d1acc11be83777a2ba763f56ff7f1457598d2f813fd.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/14be91454c09d292676d1acc11be83777a2ba763f56ff7f1457598d2f813fd.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/14beb56f74e55ba849715bf507be78dd56ac41db630cb520a6bc3e60e3a056.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/14beb56f74e55ba849715bf507be78dd56ac41db630cb520a6bc3e60e3a056.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/169051570c339dca622b939fc14f875e69a5e824095c46760362b10a6cbd23.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/169051570c339dca622b939fc14f875e69a5e824095c46760362b10a6cbd23.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/16d4ded67c75cfb5d195b498408d280e7731aa2cffc4fd94442ad748f56032.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/16d4ded67c75cfb5d195b498408d280e7731aa2cffc4fd94442ad748f56032.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/18a2912a323f1bae70aed76c1d24aabe792d43fe86676c2bb67ff8cfb2e25a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/18a2912a323f1bae70aed76c1d24aabe792d43fe86676c2bb67ff8cfb2e25a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/1941ddbbc2d92241aec60a3898f0128e3c4b741b4bab7e97d0af1aceffe79a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/1941ddbbc2d92241aec60a3898f0128e3c4b741b4bab7e97d0af1aceffe79a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/19bc4ccba679df03f5e313c52f73db309aaebf904b7929d81c222380a6b5a0.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/19bc4ccba679df03f5e313c52f73db309aaebf904b7929d81c222380a6b5a0.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/1d9f69eb47d0edd9c2a433fc8601688d2c235a4c28d3df1084a6cb2fb0bb63.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/1d9f69eb47d0edd9c2a433fc8601688d2c235a4c28d3df1084a6cb2fb0bb63.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/1dc90c969b4eafb7ffdb462bc7f26e788d8d86212cd7c7f2aa53b00e8dadaa.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/1dc90c969b4eafb7ffdb462bc7f26e788d8d86212cd7c7f2aa53b00e8dadaa.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/1e837868d276de2f4fbb000683ec236350a4ead0d0a4cfc3fb0277ae6ad6a3.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/1e837868d276de2f4fbb000683ec236350a4ead0d0a4cfc3fb0277ae6ad6a3.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/1f41c7c527ffb6abf28bf6ab9eee36cac03ecb998ec754582df86eae579339.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/1f41c7c527ffb6abf28bf6ab9eee36cac03ecb998ec754582df86eae579339.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/2040ba962a00ffb5b36cc3e339af9a31aa495a8be6e10b56d3fef3a48cc3ad.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/2040ba962a00ffb5b36cc3e339af9a31aa495a8be6e10b56d3fef3a48cc3ad.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/20644afd095b33c8dad18a990afb96ba19e78ba159b80c6843abd9e559b9fc.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/20644afd095b33c8dad18a990afb96ba19e78ba159b80c6843abd9e559b9fc.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/2168614cbfedccc6d6b2b7a8583eae550576d255e19016476c96bfca763ffa.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/2168614cbfedccc6d6b2b7a8583eae550576d255e19016476c96bfca763ffa.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/233fa40814ac57420cb0d77817ac2aeea99721680baab8c018f4d492411607.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/233fa40814ac57420cb0d77817ac2aeea99721680baab8c018f4d492411607.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/23fa0a023929194f5033fbf4bcc21277291db1d6cc960b11fa2fb78e3e98c8.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/23fa0a023929194f5033fbf4bcc21277291db1d6cc960b11fa2fb78e3e98c8.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/249a8b468afaaf40b378d36bc783cdc5d59fe6268a89007fcc78a23c894c59.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/249a8b468afaaf40b378d36bc783cdc5d59fe6268a89007fcc78a23c894c59.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/2e3caa6d28592a3fcf5d5678a589ba7a61556640fe889d10dc36d6f0d28004.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/2e3caa6d28592a3fcf5d5678a589ba7a61556640fe889d10dc36d6f0d28004.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/2f5cc6a3ef86769b6c0635ea7d3a099a0b3b9619a11d2198f49b69d47b37c1.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/31963ab1a51f35756075683f882d81f650844f8460fd9b798971f3821057a4.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/36381bc5c8168f6805ade5a9d927647e4cc74d16506e8e9da02603d88b247b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/36381bc5c8168f6805ade5a9d927647e4cc74d16506e8e9da02603d88b247b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/385705a9b8d492db2039f5902b3a117b02af1a242687d6662ebf1b1f1da7f4.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/385705a9b8d492db2039f5902b3a117b02af1a242687d6662ebf1b1f1da7f4.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/388bd4c47d1066bfe15d15063dc3e6fd3927e58f6666a478c0c74dbd93a5ea.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/388bd4c47d1066bfe15d15063dc3e6fd3927e58f6666a478c0c74dbd93a5ea.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/395f9ee08156456d93087f76ee41cb226186111526f0e65381e08989539a36.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/395f9ee08156456d93087f76ee41cb226186111526f0e65381e08989539a36.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/3a04884c28cd3401712d9bb63d9b4243c61047e4c3b21a3d4c718261c9aec3.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/3a04884c28cd3401712d9bb63d9b4243c61047e4c3b21a3d4c718261c9aec3.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/3a60f102a04faa392808389dbc9e10249ca0d556b43ffa9de4623779397837.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/3c47bc9c6182b58156887154626d0c90a2e55d2df4258c9006c460625acc72.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/3c47bc9c6182b58156887154626d0c90a2e55d2df4258c9006c460625acc72.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/3cd623dcc224c248225d076d30bce36e2230b38c7a1de2b10645f39b3bc829.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/3cd623dcc224c248225d076d30bce36e2230b38c7a1de2b10645f39b3bc829.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/3cd79202abd76b50bfb7e3d3a0d96934add00da4046f90bb854162b4bc2489.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/3cd79202abd76b50bfb7e3d3a0d96934add00da4046f90bb854162b4bc2489.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/422ca34d796c519de3485c0ef1b382a5f93c2b3f0bc3a22954f0316ef1af8d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/422ca34d796c519de3485c0ef1b382a5f93c2b3f0bc3a22954f0316ef1af8d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4770cc3baaef69817b386adb5c2bd9d85b83f29b856d2120df206b6d4c7593.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4770cc3baaef69817b386adb5c2bd9d85b83f29b856d2120df206b6d4c7593.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4942eb50f2ad724a5bfac6718abeaf14299bbb85051300e64d43ce8843d952.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4942eb50f2ad724a5bfac6718abeaf14299bbb85051300e64d43ce8843d952.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4a00c8055e6d5617c5e1e557a15e3fe6f07c27e2dffa5ed483f7e25fa2ee10.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4a00c8055e6d5617c5e1e557a15e3fe6f07c27e2dffa5ed483f7e25fa2ee10.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4a5271b4aecb70ccfa310ad06643e8d0e3889bbaba9df3d99cb020d668c76d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4a5271b4aecb70ccfa310ad06643e8d0e3889bbaba9df3d99cb020d668c76d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4befd8e7ba68a01154276f32bd849e196e973eca238608fb65113d4c813500.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4befd8e7ba68a01154276f32bd849e196e973eca238608fb65113d4c813500.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4d6801778d5223deb7405401e2914562ad80bf7401dd7d2e7ff95657c4a4de.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4fed85e445522a6b60ba286cc0e94f87e690008782b787052fbe0cba1d6781.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/4fed85e445522a6b60ba286cc0e94f87e690008782b787052fbe0cba1d6781.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/53a87b4b6705bf55497ad2b66929f9058a4aff3c8446ebb305f6196c3ff7df.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/53a87b4b6705bf55497ad2b66929f9058a4aff3c8446ebb305f6196c3ff7df.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/53df106b0a761d24104d9c8a892aaa8f2ebea78aa1a588dff7bf282035271a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/53df106b0a761d24104d9c8a892aaa8f2ebea78aa1a588dff7bf282035271a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/545c40ce89ef6914b00013fc062baf682527409740d7a4eb02e03bd1e9441a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/545c40ce89ef6914b00013fc062baf682527409740d7a4eb02e03bd1e9441a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/5673c9194fe78b7035adb6ab38ff329335ee15a291d86224c694fcce62d8f8.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/5673c9194fe78b7035adb6ab38ff329335ee15a291d86224c694fcce62d8f8.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/57be85c48aa9189d616675df8a911bfe5be26ea31c2c4f402543bd6066c76e.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/57be85c48aa9189d616675df8a911bfe5be26ea31c2c4f402543bd6066c76e.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/586e88d70898c40b12b08beac4827253c06198806817fe9f60b6af9cc87ba6.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/591e403906c4c4a6e1c4750f27693ad421e5a6e117d82bed76d7d5d3609061.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/5db519105bf03b8dc5f027a7adf40ee1db05f75ff99ff48daa1a37af36eb08.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/5f4706134efbc189bbcda479083cc60f4a5e8290dde1d7ad75814b99704623.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/5f4706134efbc189bbcda479083cc60f4a5e8290dde1d7ad75814b99704623.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/5f928ebefcdfd5fce6ae2f82a5f2111e78ac1dba75fe17b2721987a9f83f18.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/5f928ebefcdfd5fce6ae2f82a5f2111e78ac1dba75fe17b2721987a9f83f18.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6114e30e174223184e43bd2783c41c72066d3e27ccace391f3bbb37f5b53ef.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6114e30e174223184e43bd2783c41c72066d3e27ccace391f3bbb37f5b53ef.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/62022f44f47633033f52c1a3d142d44eeea8a5c31bd5a25eb99ab3a5befb66.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/62022f44f47633033f52c1a3d142d44eeea8a5c31bd5a25eb99ab3a5befb66.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/62cbb994c7d724e7036b8d317ed0f68c54365045e762ee942c21f5ff2e1c1a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/62cbb994c7d724e7036b8d317ed0f68c54365045e762ee942c21f5ff2e1c1a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6479b109e699250864f6b7aae584ee00f1834d771f8d40d953c236ff2b13c8.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6479b109e699250864f6b7aae584ee00f1834d771f8d40d953c236ff2b13c8.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/64f4a556714f6d14a2a276da7b62a3c73d7c85dd129298889936134ed8597b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/64f4a556714f6d14a2a276da7b62a3c73d7c85dd129298889936134ed8597b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/655e909b24cdce177bad7fa633deed850ab31c3f400d129bc7a6e5a80feed3.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/655e909b24cdce177bad7fa633deed850ab31c3f400d129bc7a6e5a80feed3.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/65625c0f15d4f8f7c35c5610965238cba1f7077478930be1b5f645bf7d5f68.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/68a15d1f5aad6a139bfbb14c588e9f2a13fbcfc130d718179b589118ba1047.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/68a15d1f5aad6a139bfbb14c588e9f2a13fbcfc130d718179b589118ba1047.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/68f45224f6f0a413e8b32946326a613b31eb2b01be910887b5feba66c5448f.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/68f45224f6f0a413e8b32946326a613b31eb2b01be910887b5feba66c5448f.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/694c1adeb45e2d2f0180f1eb535b82781590d7a7c9af10088a224f10f97d16.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/694c1adeb45e2d2f0180f1eb535b82781590d7a7c9af10088a224f10f97d16.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6aa7403c69dafa1864dfbbffabe069da945a963d9f7d0b165a48445ac0d6f2.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6aa7403c69dafa1864dfbbffabe069da945a963d9f7d0b165a48445ac0d6f2.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6ad99f5f3c4cd6333fdf5f558d0e71843aacc1c806cfe4db70cb9f0f5e554d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6ad99f5f3c4cd6333fdf5f558d0e71843aacc1c806cfe4db70cb9f0f5e554d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6ca05dfd5bb096d0b24f27d57aa585ad6f0368306df33b5d9253a4b1af6208.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6ca05dfd5bb096d0b24f27d57aa585ad6f0368306df33b5d9253a4b1af6208.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6e750a23247876b2f57d5b4a3f36ab8c56a51c6628438cba09900fd7fbb2fd.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6e750a23247876b2f57d5b4a3f36ab8c56a51c6628438cba09900fd7fbb2fd.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6ef6983b8a41893a30a4367e5de0b7fc61f0d39f2c9664c888e2f0b1dc28b4.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/6ef6983b8a41893a30a4367e5de0b7fc61f0d39f2c9664c888e2f0b1dc28b4.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/767be6962f6dc148ce3fb4c402e16c26649eaf196daeae3c8a5a24bee78943.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/767be6962f6dc148ce3fb4c402e16c26649eaf196daeae3c8a5a24bee78943.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/78eeeda2d175478d093afaa7d46a56132f10d020573a619bc673ff5c302b24.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/78eeeda2d175478d093afaa7d46a56132f10d020573a619bc673ff5c302b24.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/791848db78238435a6bc66a89515171708c25327a95a36743f9fab57ffe446.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/791848db78238435a6bc66a89515171708c25327a95a36743f9fab57ffe446.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/7b451528eb07f8968dbfa4faa80a92f76b59c9817b7912aaaf0c480b1d3808.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/7b451528eb07f8968dbfa4faa80a92f76b59c9817b7912aaaf0c480b1d3808.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/7cc6183fed492638fc3c5962cab510407b6a664cd5152f6b679dd3d2f64fe7.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/7cc6183fed492638fc3c5962cab510407b6a664cd5152f6b679dd3d2f64fe7.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/7d09efa2662da1f0ecfd85d83329dd8af441d278181281346fa1d2fabb2f58.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/7d09efa2662da1f0ecfd85d83329dd8af441d278181281346fa1d2fabb2f58.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/7d9bfa8baf639f8b1af87d05b6d4aa9c9a9aed2b639d466ad527705a3663e5.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/7d9bfa8baf639f8b1af87d05b6d4aa9c9a9aed2b639d466ad527705a3663e5.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/7ee02d66760a57d8234da65ce4058cb3028ee601cfb5116fa51958095e8ded.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/7ee02d66760a57d8234da65ce4058cb3028ee601cfb5116fa51958095e8ded.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/81c1a83411321017175ff5ace49fcfefddc26d6ff8e434d8c83a61dd49bf70.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/81c1a83411321017175ff5ace49fcfefddc26d6ff8e434d8c83a61dd49bf70.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/831f6452bf3b6e08338983b340afe3968966914b5d5acb47b07f41ee4808af.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/831f6452bf3b6e08338983b340afe3968966914b5d5acb47b07f41ee4808af.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/84a291adfe1e9b9031f96a03c96ac192193549ff532966beecf5aee164ffad.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/84a291adfe1e9b9031f96a03c96ac192193549ff532966beecf5aee164ffad.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/86e8d84fdb5cb5caedfa95d24c758ff777af6aec9009cd28e9d6d5673531c8.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/86e8d84fdb5cb5caedfa95d24c758ff777af6aec9009cd28e9d6d5673531c8.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/8d383a6bbc006c731b89cf63695010290703c331644035e3893b89987b688f.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/8d383a6bbc006c731b89cf63695010290703c331644035e3893b89987b688f.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/8dc9db6fcca59c9744b35d78e2d2ef3aba7bd055c9042a985112c7493addd9.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/8dc9db6fcca59c9744b35d78e2d2ef3aba7bd055c9042a985112c7493addd9.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/8df1736d659e8e883dbcc65833db21ee8e07a6458c9970c25c4bf31b6310a5.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/8f7c5c5777775a8972700f38fbc4bc8623d8df92646437309f74f8a93c28bc.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/8f7c5c5777775a8972700f38fbc4bc8623d8df92646437309f74f8a93c28bc.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/9001a5244b56551990f6347660cb1fc14dce9ff4a0ef76928194901afa6b44.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/90eaec1b53392798f55cdd2671b27ebded38e9f424611a248f4a92c91178cc.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/90eaec1b53392798f55cdd2671b27ebded38e9f424611a248f4a92c91178cc.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/91be6c5d1faa0aa7a5b1ce3b406fe6264a16c3517bcd16ce585d5e2f6f34b9.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/91be6c5d1faa0aa7a5b1ce3b406fe6264a16c3517bcd16ce585d5e2f6f34b9.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/920d718b62ae530c4b50bec85968b32871382050a8c4b15884c7d4eeef4685.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/920d718b62ae530c4b50bec85968b32871382050a8c4b15884c7d4eeef4685.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/92d7a0923f1c8f07229eed980b56074284bfd2dc529a7ef052d6b510dd1a5d.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/9354922a49efc84b457466877a0d8cc07207e58054191b459fc0b4a8d50f25.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/9354922a49efc84b457466877a0d8cc07207e58054191b459fc0b4a8d50f25.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/952baa624c8afd9f51ebb5d2883f018366a4950444c449b28288b38782f6d4.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/952baa624c8afd9f51ebb5d2883f018366a4950444c449b28288b38782f6d4.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/967eabcb41c2e48ee689871e4f7137a4efd92dfffd09f55fd75416e13cc827.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/976f5a15285a077bcad742e93dfc2f4b539460ff49fa79787c983c3ea5dd6e.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/976f5a15285a077bcad742e93dfc2f4b539460ff49fa79787c983c3ea5dd6e.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/9bf2c67bc9db474f03acf6d06fcd491d8a01049a497aba34fa5ff238c4272d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/9bf2c67bc9db474f03acf6d06fcd491d8a01049a497aba34fa5ff238c4272d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/9fa768b727a491719b78fce17f5b971861e0b0f8cf80992544b4a0e9bd6e65.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/9fa768b727a491719b78fce17f5b971861e0b0f8cf80992544b4a0e9bd6e65.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a0e366488df359f3087cc8da01800979922a0d6d859da262aeb7e275721804.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a0e366488df359f3087cc8da01800979922a0d6d859da262aeb7e275721804.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a3701beac7ddab69f11c8b417b8d4b0091e0125d0998eb0f8a9e7a2d6254e6.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a3701beac7ddab69f11c8b417b8d4b0091e0125d0998eb0f8a9e7a2d6254e6.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a429ed4f1128e9211013b685df7c5ebfb2954cf56706238e6f66576122c91a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a429ed4f1128e9211013b685df7c5ebfb2954cf56706238e6f66576122c91a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a611aef3bc8a32e0b09bdc125c62322e6300a901c796ef84980c79e40acf69.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a611aef3bc8a32e0b09bdc125c62322e6300a901c796ef84980c79e40acf69.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a6c4c015c84d6229da84ae2a621e7a7359abef388684040870beeae1272157.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a6c4c015c84d6229da84ae2a621e7a7359abef388684040870beeae1272157.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a6d3880e71e629737beed927d7a4a42f1db3b94227668989ca5676fdcaee5b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/a6d3880e71e629737beed927d7a4a42f1db3b94227668989ca5676fdcaee5b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ab83d7db91c62eddadf53e0382722009d8985c98ca6bc7e4073e18a7291a4a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ab83d7db91c62eddadf53e0382722009d8985c98ca6bc7e4073e18a7291a4a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/af545019b2ff271083ef79411ccd20f80ace1cb3d5f652c001e9aecc77f771.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/af545019b2ff271083ef79411ccd20f80ace1cb3d5f652c001e9aecc77f771.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/afec020660f2033a3f9b1efade81e9bd3371253428856f8f62fb60c14afecc.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/afec020660f2033a3f9b1efade81e9bd3371253428856f8f62fb60c14afecc.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/b11677de462f4675a6a15ddafa851717700e71ff2c9087f0304835ca6769e5.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/b11677de462f4675a6a15ddafa851717700e71ff2c9087f0304835ca6769e5.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/b197fa610c56b2349fb20553afc8848f40db2a35a8fa144099a5c55b9d70f3.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/b197fa610c56b2349fb20553afc8848f40db2a35a8fa144099a5c55b9d70f3.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/b201cc91a9be8cbad2d221848ffa4214d6fd098c7fedc601f56981cdc48101.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/b201cc91a9be8cbad2d221848ffa4214d6fd098c7fedc601f56981cdc48101.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/b51b4ca8433942fb8db76b8ced8df74929897e2a10968a0520026400f81017.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/b51b4ca8433942fb8db76b8ced8df74929897e2a10968a0520026400f81017.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/bee5873b41843f2d9eaba4193171ba934557163a06d003bf4351f814837c82.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/bee5873b41843f2d9eaba4193171ba934557163a06d003bf4351f814837c82.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/c23a2dfb2de7d0ba38f260373ec72262458fe662062868e55454bc4f91718b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/c23a2dfb2de7d0ba38f260373ec72262458fe662062868e55454bc4f91718b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/c316328967d50af55b4b3162a18a3182598fe0372b1acfe5cacd588660d891.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/c316328967d50af55b4b3162a18a3182598fe0372b1acfe5cacd588660d891.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/c4f4dc3aa164862b74544f3619ffd70eba53082ee2d31b3bcd7c11f406d5a0.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/c4f4dc3aa164862b74544f3619ffd70eba53082ee2d31b3bcd7c11f406d5a0.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/c8c18d7c24be0bd495a5895bd69e7927f046a7d3970c35c505d2d288243883.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/c8c18d7c24be0bd495a5895bd69e7927f046a7d3970c35c505d2d288243883.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/c97147f86e499db79863d90ec4687bc5308d50bd7dded17e3f1ab7e884d86d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/c97147f86e499db79863d90ec4687bc5308d50bd7dded17e3f1ab7e884d86d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ca8e7becd1b4adeddfeea2e3f512c73094d8295de9f1c39234a32b4d534de8.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ca8e7becd1b4adeddfeea2e3f512c73094d8295de9f1c39234a32b4d534de8.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/cc692193c93ecdbeac0d5f3ff1bdb64939485c070154ed626168304b832e39.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/cc692193c93ecdbeac0d5f3ff1bdb64939485c070154ed626168304b832e39.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/cdb24a6151c4f07b37969f01b38bb4e452982e955a7323dbec21259dfb398d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/cdb24a6151c4f07b37969f01b38bb4e452982e955a7323dbec21259dfb398d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/cf986d4ef002c245883b4f05e14ce71d10fab32e10a7be3b91655d8b7bce8d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/cf986d4ef002c245883b4f05e14ce71d10fab32e10a7be3b91655d8b7bce8d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d12d8101a09428ae4b7c383c9b1b357fbbc03b285da605877c70e2fd05a3bd.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d26c7281d255f21092b680b82efdbe79d4bafa0349b041cf42a00113be1cff.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d26c7281d255f21092b680b82efdbe79d4bafa0349b041cf42a00113be1cff.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d2cf7f5a253ca666b4d05ccf329f637fc58709a8e5686cb2ef103670e6c7fe.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d2cf7f5a253ca666b4d05ccf329f637fc58709a8e5686cb2ef103670e6c7fe.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d34772ea2c799eb278df17d8c66a5df27a0e36921e9906f087c567d2fc0e90.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d34772ea2c799eb278df17d8c66a5df27a0e36921e9906f087c567d2fc0e90.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d3cb78852cc8ef1fd6ea13a62b8cb3a6e78212d85730456657faa1d32341d8.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d3cb78852cc8ef1fd6ea13a62b8cb3a6e78212d85730456657faa1d32341d8.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d4d55ac8d18bcad24fda108ca094bf08abde791187bb0371fbc67a03989d8b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d4d55ac8d18bcad24fda108ca094bf08abde791187bb0371fbc67a03989d8b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d52f3516b05132dfb5f7fc3581c0d3c66f230ad5d62bd79f9a51ac87137191.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d52f3516b05132dfb5f7fc3581c0d3c66f230ad5d62bd79f9a51ac87137191.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d7ae619735173f01c83a36b94b764edb6bab01bca57e1f41a7c3187c6f9666.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d7ae619735173f01c83a36b94b764edb6bab01bca57e1f41a7c3187c6f9666.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d7e5a811fbe3f43408e5de52ac1dd01d10c677c9a921e613116eaa1f8a0c0e.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d7e5a811fbe3f43408e5de52ac1dd01d10c677c9a921e613116eaa1f8a0c0e.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d83a86d4acbd19a4fd8b3fc450785279589182de1bd74d287fcf6840d736de.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/d83a86d4acbd19a4fd8b3fc450785279589182de1bd74d287fcf6840d736de.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/da1105c6f55b3d1a60b2961acf2a2b0a7ff553f8356e6cecb31cd233cc0137.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/da1105c6f55b3d1a60b2961acf2a2b0a7ff553f8356e6cecb31cd233cc0137.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/da41e48da13b37fa4e9eceb2888dff7f20d003ea94906082f1cf8154a24863.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/da41e48da13b37fa4e9eceb2888dff7f20d003ea94906082f1cf8154a24863.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/daf1bbd211dbc1fa5e335a63bc7654e98535a4cec5454ca13b59029d117c3e.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/daf1bbd211dbc1fa5e335a63bc7654e98535a4cec5454ca13b59029d117c3e.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/dc189ba42097b22d1a1342c64801d0048fa62767c72adf76b69b1e475aaa14.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/dc189ba42097b22d1a1342c64801d0048fa62767c72adf76b69b1e475aaa14.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/dc9c371805d7fa3dcbf89d5d2934f6e5a81267d7cb9a8322f8ba37ea531512.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/dc9c371805d7fa3dcbf89d5d2934f6e5a81267d7cb9a8322f8ba37ea531512.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/de5d669855831d281ce4ea129c85c12db1b9841e320b09bac81f6dd3975d4a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/de5d669855831d281ce4ea129c85c12db1b9841e320b09bac81f6dd3975d4a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/de9e864f2a8a79e3dfee8ca16da90090ca9ed95be843f7eda2ecf99adbb0af.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/de9e864f2a8a79e3dfee8ca16da90090ca9ed95be843f7eda2ecf99adbb0af.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e0b0b1ef7e80527a032e109c507b737e0280987b156f8f37890596fcc395c6.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e0b0b1ef7e80527a032e109c507b737e0280987b156f8f37890596fcc395c6.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e1fe4a6541e9ff89b48995df0bbc2529aa206b1020e3aec347f36f4397f76b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e1fe4a6541e9ff89b48995df0bbc2529aa206b1020e3aec347f36f4397f76b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e50091f70076f79a8d5cdf2c728a9e655a0a95935494148ede696e77fef3cc.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e50091f70076f79a8d5cdf2c728a9e655a0a95935494148ede696e77fef3cc.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e5d0c75bc35b490c4c850cb655aeb6735f5833ee3d0ffb6fe3e3f6a6bb2513.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e5d0c75bc35b490c4c850cb655aeb6735f5833ee3d0ffb6fe3e3f6a6bb2513.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e7dfe241c2530f6929a0bc4b129cf8aa9cfa60e720f240e19e8bb99201cc56.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e7dfe241c2530f6929a0bc4b129cf8aa9cfa60e720f240e19e8bb99201cc56.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e8871631f5237d12772aea30d9cba3a14c4bb99d7b3a3d1cd0b6249c78b99c.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/e8871631f5237d12772aea30d9cba3a14c4bb99d7b3a3d1cd0b6249c78b99c.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/eaa18885eca6fa0ab175a7b62e126f997bb30716cfc0387eb83b1506d9088f.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/eaa18885eca6fa0ab175a7b62e126f997bb30716cfc0387eb83b1506d9088f.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/eb32cc5835caa44be30f3f30f886b642179a7cef950740b207ed5d0a8b99fa.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/eb32cc5835caa44be30f3f30f886b642179a7cef950740b207ed5d0a8b99fa.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ebe49404169cf61c148a1cbbb06d43e02fb3577ba8fe7e55ae306960a8f172.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ebe49404169cf61c148a1cbbb06d43e02fb3577ba8fe7e55ae306960a8f172.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ed0ed74cf92fbf588c0edfcd03e22bd435a712c5af0af5054c6a340d941775.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ed0ed74cf92fbf588c0edfcd03e22bd435a712c5af0af5054c6a340d941775.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ed3d2b2c8f168843eb2d5d99e3f86ddb0d3b62cea9c671a1211ca4548b15ba.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ed3d2b2c8f168843eb2d5d99e3f86ddb0d3b62cea9c671a1211ca4548b15ba.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ed62099e5d60d509ee0dbcde30703ef853411ac8fda5e3cb74c4414a507e87.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ed62099e5d60d509ee0dbcde30703ef853411ac8fda5e3cb74c4414a507e87.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ef183c45ea15c8c9d3cda3c7b01cfd4ee790d8016978d70e2278813d1b4790.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ef183c45ea15c8c9d3cda3c7b01cfd4ee790d8016978d70e2278813d1b4790.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/efa565c3cc0aed51e3dfbbeb9b09f6c0bcc6e082cfb3a2ec7d107fa37e7699.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/efa565c3cc0aed51e3dfbbeb9b09f6c0bcc6e082cfb3a2ec7d107fa37e7699.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f17f6079c9606e7dfb51f6fe6ceee5afe41d20147e5e69bc7bfa952e005db8.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f17f6079c9606e7dfb51f6fe6ceee5afe41d20147e5e69bc7bfa952e005db8.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f3e9b6af9841fbdcf519a1870f1fc07c1ab6df1345bd717c469b5557185073.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f3e9b6af9841fbdcf519a1870f1fc07c1ab6df1345bd717c469b5557185073.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f528832be2a41d32f232710680148e41e2e2e9037b4b34b77e53414bb01a0c.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f528832be2a41d32f232710680148e41e2e2e9037b4b34b77e53414bb01a0c.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f86a3c437b05d3ca7f8fd7d7f4b2a9c84ce9ebaf9a4866389eb06414dac282.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f86a3c437b05d3ca7f8fd7d7f4b2a9c84ce9ebaf9a4866389eb06414dac282.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f8956f923835d736f7204df47b8150dc0bdcec43c5d7439acbcdcf821d73a6.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f8956f923835d736f7204df47b8150dc0bdcec43c5d7439acbcdcf821d73a6.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/f99fc6b3f4b3540510c01d976be9504ae9a357a648a0bedf791db24b5c95a1.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/fb2592fe979b4b91525de273221bb6ff2695fc1d9e2e290dadbf87cf16190c.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/fb2592fe979b4b91525de273221bb6ff2695fc1d9e2e290dadbf87cf16190c.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/fdfda373623d9b14b1a59f6da773bbcf7d025386436c4bcdd5848f0ae375e4.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/fdfda373623d9b14b1a59f6da773bbcf7d025386436c4bcdd5848f0ae375e4.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ffe29edcb35e26f6a4ca98b21effeba1ad66fd13b9ee4ae092412a36a7344e.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/00/ffe29edcb35e26f6a4ca98b21effeba1ad66fd13b9ee4ae092412a36a7344e.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/00da0d047f5846ee8c5daa7a0509857730d9004318958304fad4bca3a4f009.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/00da0d047f5846ee8c5daa7a0509857730d9004318958304fad4bca3a4f009.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/0112486ea5c4c4c4bbb5ed3ab6d3e04fe6ea8e096447ee39b71e371ba97ec1.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/01c7f30eaaf1a57a963371158ef5607fd7e4a0afa8dbc1de25f0154befbf63.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/01c7f30eaaf1a57a963371158ef5607fd7e4a0afa8dbc1de25f0154befbf63.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/04030e74caf3a8bf3790d2c48ca45e49a5184b3a0840669d89b4a66be9b6d4.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/04030e74caf3a8bf3790d2c48ca45e49a5184b3a0840669d89b4a66be9b6d4.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/04b7b5576706b0e9b5cc99dda8e26fe2ab00182fd059888b62defd872bd83b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/04b7b5576706b0e9b5cc99dda8e26fe2ab00182fd059888b62defd872bd83b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/0604350ac00298e74609e940eb4c8569bc72f5fdd1ef2d54ec2c1655870831.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/0604350ac00298e74609e940eb4c8569bc72f5fdd1ef2d54ec2c1655870831.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/07409c94f04e0d0a546010f3970c18c00216028981d3d9b840d94ebe63d006.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/07409c94f04e0d0a546010f3970c18c00216028981d3d9b840d94ebe63d006.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/07463c9dd513012efb97c4625680439eb15b2f559bd14416fccb02ddc6244a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/07463c9dd513012efb97c4625680439eb15b2f559bd14416fccb02ddc6244a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/0748c3d130e958ac59f876cff64be8cf6c43e2eb34b605c26faa70d8ea21e9.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/0748c3d130e958ac59f876cff64be8cf6c43e2eb34b605c26faa70d8ea21e9.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/0915eba0533bf6620ae15f2fb46230650a3358ab176405d764705bb45f85f4.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/0d5e1d80b74d21ec65ef66e2932ec4b06aa5ffa5113849cf4d371d744916cd.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/0d5e1d80b74d21ec65ef66e2932ec4b06aa5ffa5113849cf4d371d744916cd.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/0e01f85f9d46474ebb43fe4d0527775849402db0df42b98c5cee7d852b2693.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/0e01f85f9d46474ebb43fe4d0527775849402db0df42b98c5cee7d852b2693.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/123d7e40132b41c6b6b7abf37604d70518c0f458358719d2de8d913ced654d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/123d7e40132b41c6b6b7abf37604d70518c0f458358719d2de8d913ced654d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/17869d898d27316ce376e5e52d472373e3b995ad93648056d013c884d4b373.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/17869d898d27316ce376e5e52d472373e3b995ad93648056d013c884d4b373.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/17b6b10a21596753ce7f045304fa1da8b84194d4b50c5fc8aa31d444f12925.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/17b6b10a21596753ce7f045304fa1da8b84194d4b50c5fc8aa31d444f12925.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1b88761a45652f1120e869a2abafcf3429f5118de74b118c23fcec0a253b85.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1b88761a45652f1120e869a2abafcf3429f5118de74b118c23fcec0a253b85.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1c7010dffd8c9c8553fd446d7e7950db8ae5edf96c7358208ea86fa44beb45.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1c7010dffd8c9c8553fd446d7e7950db8ae5edf96c7358208ea86fa44beb45.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1cc3f1a92c8090daa0fc6aec45995d05b0a2e11a5b0907846cf369fa5b6ead.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1cc3f1a92c8090daa0fc6aec45995d05b0a2e11a5b0907846cf369fa5b6ead.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1d3da458a835610bff9d4c8e01ab4e05067cf347709353b50e5c6dcf2c884b.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1d3da458a835610bff9d4c8e01ab4e05067cf347709353b50e5c6dcf2c884b.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1dcc309bb4a8d9fd0d76311a3bb90bc1d5a5956ca439023db134fe642a2752.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1de1cf4d8eb0cbca26121ffab4006fb09ab4c39a6d4e865e984e4639691714.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1de1cf4d8eb0cbca26121ffab4006fb09ab4c39a6d4e865e984e4639691714.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1de46bd5094187b0dc12ff2e7ca83fdaf04a3e6633c226ee7f9a429caf911b.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1f0a91a47a89d689c4f46313055224a984f52edc442c1c8cd43db51bf8c4a6.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/1f0a91a47a89d689c4f46313055224a984f52edc442c1c8cd43db51bf8c4a6.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/202ee9033e451ac69df0db756919e881b187e9b275269a9d8646bc2ef89439.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/202ee9033e451ac69df0db756919e881b187e9b275269a9d8646bc2ef89439.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/213cb9279ed0030082669a7603940c72cd8b5f5b1f23317cf90f6f0fe588d7.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/213cb9279ed0030082669a7603940c72cd8b5f5b1f23317cf90f6f0fe588d7.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/26b22328c23ab44bc7b4a1d825ddb09714afe3f9dceaa5dec0aebe5103d7f5.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/26b22328c23ab44bc7b4a1d825ddb09714afe3f9dceaa5dec0aebe5103d7f5.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/28dabca8a29c230bdf818d4733e3a98c35f9136bb86216c1b4bdc478f47abc.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/28dabca8a29c230bdf818d4733e3a98c35f9136bb86216c1b4bdc478f47abc.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/29c0577719a6772fac0fa6acc8581b0b16867b94ceceb850f896060c635d13.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/2a89a3919d7eb8628d4f8466dd515572c2d71597d2b507d41012839bd2d091.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/2a89a3919d7eb8628d4f8466dd515572c2d71597d2b507d41012839bd2d091.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/2b91eccbff2fb032c31b52a29479b6a5d6a89bda1652875970dc510e38f574.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/2c861417e63aad3b45bd3eadfbc30e5dfefc91c6046aa61df57b6b73122583.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/2c861417e63aad3b45bd3eadfbc30e5dfefc91c6046aa61df57b6b73122583.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/2cea4e6f3ea6881c6d2303141c08d12fcaf7a2b0d781566f81f76364b8ff59.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/2cea4e6f3ea6881c6d2303141c08d12fcaf7a2b0d781566f81f76364b8ff59.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3033294076a136c83f2481905db8fca7c0bd3dabcef6eb294516499b6941da.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3033294076a136c83f2481905db8fca7c0bd3dabcef6eb294516499b6941da.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/309070092acf2436ab6ece4bb920f36dc4f287b1d7e68ed82e2817c94536ee.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/309070092acf2436ab6ece4bb920f36dc4f287b1d7e68ed82e2817c94536ee.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/30cb2034e5f48eef604cbae5c21194aff9db6b6e1541d8d9c2bfcc7b4483b7.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/30cb2034e5f48eef604cbae5c21194aff9db6b6e1541d8d9c2bfcc7b4483b7.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3248afbfe443893e53e5133f52eb505b33d04b5ddee939694f9e6056b173cd.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3248afbfe443893e53e5133f52eb505b33d04b5ddee939694f9e6056b173cd.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/32fb61a1dcab598963ec184b42ada3747703664874e4a9da33f82ab6e2783e.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/32fb61a1dcab598963ec184b42ada3747703664874e4a9da33f82ab6e2783e.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/36300069fc3091d79fa9dfa5d48a62c27ee5af237dbff1ae3944201e62cd42.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/36300069fc3091d79fa9dfa5d48a62c27ee5af237dbff1ae3944201e62cd42.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/37765dfbcda5851aa43414569745b09b5a80fa1d50c3a833dd960e365bfb4d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/37765dfbcda5851aa43414569745b09b5a80fa1d50c3a833dd960e365bfb4d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/38c8dc72a9735c068a95e9721fc42550f67abd5867dbc11fb9e6120070e225.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/393b2e3cf105aa444f0e53510475990a0c3a6bd82250c4cbfb9a0e8a973ec1.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/393b2e3cf105aa444f0e53510475990a0c3a6bd82250c4cbfb9a0e8a973ec1.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3b370176a812ac7f2ca7412e606305ed0158c301e1c1ca681e693f02e19979.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3b370176a812ac7f2ca7412e606305ed0158c301e1c1ca681e693f02e19979.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3b3aa5190e0f54d310bfda093366937368d5b1ce9405d97c4c3c62e716c9d9.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3b3aa5190e0f54d310bfda093366937368d5b1ce9405d97c4c3c62e716c9d9.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3b3fb5cfc1a9064ca41d24598c01c2bc54ab764e686ee8465b44415edf4622.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3b3fb5cfc1a9064ca41d24598c01c2bc54ab764e686ee8465b44415edf4622.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3f7d8fc1008e71d93d68c290637a20c7bb4906de35c774302cb29801d34a36.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3f7d8fc1008e71d93d68c290637a20c7bb4906de35c774302cb29801d34a36.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3fa22f29e94670aacecc78aa09da96a5b9a672865832c04f13ed37ddf4424d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/3fa22f29e94670aacecc78aa09da96a5b9a672865832c04f13ed37ddf4424d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/425fa502d1492fa9c5caaa696b499aaf903d565fe4af893e625b036c3a2187.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/425fa502d1492fa9c5caaa696b499aaf903d565fe4af893e625b036c3a2187.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/44b6df989cc3d5516e7e904128baf270e680ea7bdefc4a9fdc7e02eaf6a8f5.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/44b6df989cc3d5516e7e904128baf270e680ea7bdefc4a9fdc7e02eaf6a8f5.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/47aae045fcb1b1a0bea2d3f9c71a22e9bc41560b8eb2a3a7378a0092aa4f03.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/47aae045fcb1b1a0bea2d3f9c71a22e9bc41560b8eb2a3a7378a0092aa4f03.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/4817caee7b152159423ec027e2dc9c24489ff7c923b1cc564a75183b0cb9d6.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/4817caee7b152159423ec027e2dc9c24489ff7c923b1cc564a75183b0cb9d6.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/4891e3cb611c9b35889c75e3420c933c142c9983cac624d553805f65c94a12.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/4891e3cb611c9b35889c75e3420c933c142c9983cac624d553805f65c94a12.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/48d9ca37a55e95fa74bcb6f8baaf8bf3935104a5bfde9781eb0bb1c960c95c.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/49eeac32b7e12415ec03a724f0cbeb9dec90918396b19a1c0039c65267e2d4.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/49eeac32b7e12415ec03a724f0cbeb9dec90918396b19a1c0039c65267e2d4.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/4b1e65372d96f1877437a7e14da24dc19f3aa17f2a7d29f86864796720e487.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/4b1e65372d96f1877437a7e14da24dc19f3aa17f2a7d29f86864796720e487.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/4cae7b21633ea556bf9e6196d7513c22c75a9cf00ff96950af01e46646d05d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/4cae7b21633ea556bf9e6196d7513c22c75a9cf00ff96950af01e46646d05d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/4caf8b286106f99f6b7d0dd83e86381b02b7497953e8e7a0b4f5a41560a2ad.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5083168937c3fcd43a44c42b2b8b15115aa61bbbdb9ac7a7f0890d4acfad94.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5083168937c3fcd43a44c42b2b8b15115aa61bbbdb9ac7a7f0890d4acfad94.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/53422d6a3d6655c5cd23ad12ef31d42e3ab031e05dde8f72c1e94d43c216da.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/53422d6a3d6655c5cd23ad12ef31d42e3ab031e05dde8f72c1e94d43c216da.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/55482d3952bc6a68e82451e5e5082046bf277979fa4f1f09473c97fadb7975.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/55482d3952bc6a68e82451e5e5082046bf277979fa4f1f09473c97fadb7975.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5873176989cd311a90dbe6d70b7e3b5dc34e1a9892451839d308af91cde316.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5873176989cd311a90dbe6d70b7e3b5dc34e1a9892451839d308af91cde316.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/58ac9cf356e452f44727d8336d020e177461cb9928d016320e849a8eb04729.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5a39546c305df143e2ac096197fd5a8f1ad0034cd9934230db39e9b2c61b25.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5a39546c305df143e2ac096197fd5a8f1ad0034cd9934230db39e9b2c61b25.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5a5fac26853cfd5dbfecbe5e23d1c13f372c6cafc0610cfdf69bb201cf7424.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5a5fac26853cfd5dbfecbe5e23d1c13f372c6cafc0610cfdf69bb201cf7424.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5a99dd1ac191ba91572bddf47fe40d0d652224daad07355e21147eceaced58.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5a99dd1ac191ba91572bddf47fe40d0d652224daad07355e21147eceaced58.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5bdac64abf6419e471c634c1c7a3694d169fc244ec1a18496cab1ce818d201.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5ede3ab1dbd423dc3272b11203ff697e369d0f43941260513ab0f44b8d0e93.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/5ede3ab1dbd423dc3272b11203ff697e369d0f43941260513ab0f44b8d0e93.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/630c51ad5e88393ffe655970db01ace5cd8f43096844febe53d9f4ea88cff0.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/630c51ad5e88393ffe655970db01ace5cd8f43096844febe53d9f4ea88cff0.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/63a934948400020dcc5081192142e2664e9e96b976068fd960e0e384acb741.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/63a934948400020dcc5081192142e2664e9e96b976068fd960e0e384acb741.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6400e250a170ae69fe446f2ec150588bdd78419bf9f2ec7b5e27c4c1cc09c9.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6400e250a170ae69fe446f2ec150588bdd78419bf9f2ec7b5e27c4c1cc09c9.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/650326f71144135e715a7fa60b1089d02c70cfcd710f3edb064b3d212e8c68.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/650326f71144135e715a7fa60b1089d02c70cfcd710f3edb064b3d212e8c68.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6683408d1e27bfc8aa73f705df211c55841f96256f8a6e1e691513e598af28.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6683408d1e27bfc8aa73f705df211c55841f96256f8a6e1e691513e598af28.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/67c2962a87de9001cf811f807a078fc6a23ff985cdb0db5b9d7c59ac71dd81.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/67c2962a87de9001cf811f807a078fc6a23ff985cdb0db5b9d7c59ac71dd81.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6b8c9a87557d9f15b06f8c607ce0e3530cda6045c3bca2a669a39044e81dfb.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6b8c9a87557d9f15b06f8c607ce0e3530cda6045c3bca2a669a39044e81dfb.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6c289712fc2d9df4c36ed7e8102f52c72445f8711ba0186a1b3e5f3cef7a01.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6c289712fc2d9df4c36ed7e8102f52c72445f8711ba0186a1b3e5f3cef7a01.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6c2966f315677c789f19c21611c3ebb5f25d3802a10fef8f7e687327193445.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6c2966f315677c789f19c21611c3ebb5f25d3802a10fef8f7e687327193445.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6cb5f11287d895f753b3bd72f0de7c838bf42a5c035bd72091488456fbe7ee.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6cb5f11287d895f753b3bd72f0de7c838bf42a5c035bd72091488456fbe7ee.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6d3f48d3fa57c7e9a3daee8b9f097e3f923fb889d21896d56807d3f6202f11.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6d3f48d3fa57c7e9a3daee8b9f097e3f923fb889d21896d56807d3f6202f11.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6d9e8ac6bdb38c1b09c766c4caa74b111e10d2ab6131fda4f04c524a1c93b1.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6d9e8ac6bdb38c1b09c766c4caa74b111e10d2ab6131fda4f04c524a1c93b1.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6ec5864cb2f65b291f61eb92a0a09594343b7a04005749111b5bc149a23ed0.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6ec5864cb2f65b291f61eb92a0a09594343b7a04005749111b5bc149a23ed0.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6f300d5e46965eb6d92a084cf3609d1c79c7558b51baf544d946dd3306104a.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/6f300d5e46965eb6d92a084cf3609d1c79c7558b51baf544d946dd3306104a.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/715b823b151a7b60faf1ee5169956a405fbde25f9d276aecce0fe6f176b182.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/715b823b151a7b60faf1ee5169956a405fbde25f9d276aecce0fe6f176b182.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/716bd68ce3a12c362e25583baf5f06a8ae4e962b90833af2374442fac9bebd.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/71b18cb1c558d905874f7ce301e4f4de13613fd80fe1333d3af96c235fa2b5.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/71b18cb1c558d905874f7ce301e4f4de13613fd80fe1333d3af96c235fa2b5.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/75e670c77ab8586201805d4f99f04c56e40930aa55039b07cca94268f6961b.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/7cbb7e95d8ee6e1e5f81f7471361e745b5f4eee1299813b6a5e6eb2a508630.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/7cbb7e95d8ee6e1e5f81f7471361e745b5f4eee1299813b6a5e6eb2a508630.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/7e24b036b932bb4762f53901b0857aec853a52163cbeb9f2729631b033bc0d.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/7e24b036b932bb4762f53901b0857aec853a52163cbeb9f2729631b033bc0d.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/7ece7cf148c06756be635e5761ad0c76cc60f9924cc9bfd817546ca2043829.dirtree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/80d0bb54c1dcb4e6d4cd53251508368801bb403cc8bb00c7bda3472871fdc6.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/80d0bb54c1dcb4e6d4cd53251508368801bb403cc8bb00c7bda3472871fdc6.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/83e1f100d22601802be0e01396e6b6f8435d902e38fde00b1642a25e0fe1fa.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/83e1f100d22601802be0e01396e6b6f8435d902e38fde00b1642a25e0fe1fa.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/842403a285139f28bfd1dec5cc513aaab3fed57fd081b08fc2697ceec160b3.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/842403a285139f28bfd1dec5cc513aaab3fed57fd081b08fc2697ceec160b3.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/854c71ffb4a57040202ed33782dc6655cb8af3f957111366e5b681716d61d2.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/854c71ffb4a57040202ed33782dc6655cb8af3f957111366e5b681716d61d2.file-xattrs-link"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/856d67014c2f7c93cfc8cdd7116c6447fa652881e61d59cc43167c3f993cf8.file"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo/objects/01/856d67014c2f7c93cfc8cdd7116c6447fa652881e61d59cc43167c3f993cf8.file-xattrs-link"
+   }
+  ],
+  "FIRST_BOOT_GENERATED": [
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/etc/.rpm-ostree-shadow-mode-fixed2.stamp"
+   },
+   {
+    "applied": "system_u:object_r:etc_runtime_t:s0",
+    "intended": null,
+    "path": "/etc/.updated"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/etc/issue.d/22_clhm_enp0s2.issue"
+   },
+   {
+    "applied": "system_u:object_r:locale_t:s0",
+    "intended": null,
+    "path": "/etc/locale.conf"
+   },
+   {
+    "applied": "system_u:object_r:sshd_key_t:s0",
+    "intended": null,
+    "path": "/etc/ssh/ssh_host_ecdsa_key"
+   },
+   {
+    "applied": "system_u:object_r:sshd_key_t:s0",
+    "intended": null,
+    "path": "/etc/ssh/ssh_host_ecdsa_key.pub"
+   },
+   {
+    "applied": "system_u:object_r:sshd_key_t:s0",
+    "intended": null,
+    "path": "/etc/ssh/ssh_host_ed25519_key"
+   },
+   {
+    "applied": "system_u:object_r:sshd_key_t:s0",
+    "intended": null,
+    "path": "/etc/ssh/ssh_host_ed25519_key.pub"
+   },
+   {
+    "applied": "system_u:object_r:sshd_key_t:s0",
+    "intended": null,
+    "path": "/etc/ssh/ssh_host_rsa_key"
+   },
+   {
+    "applied": "system_u:object_r:sshd_key_t:s0",
+    "intended": null,
+    "path": "/etc/ssh/ssh_host_rsa_key.pub"
+   },
+   {
+    "applied": "system_u:object_r:locale_t:s0",
+    "intended": null,
+    "path": "/etc/vconsole.conf"
+   }
+  ],
+  "INSTALLER_LABELING_DEFECT": [],
+  "POLICY_DEFECT": [
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": "system_u:object_r:etc_runtime_t:s0",
+    "path": "/etc/mtab"
+   },
+   {
+    "applied": "system_u:object_r:systemd_unit_file_t:s0",
+    "intended": "system_u:object_r:bluetooth_unit_file_t:s0",
+    "path": "/etc/systemd/system/bluetooth.target.wants/bluetooth.service"
+   },
+   {
+    "applied": "system_u:object_r:systemd_unit_file_t:s0",
+    "intended": "system_u:object_r:getty_unit_file_t:s0",
+    "path": "/etc/systemd/system/getty.target.wants/getty@tty1.service"
+   },
+   {
+    "applied": "system_u:object_r:home_root_t:s0",
+    "intended": "system_u:object_r:var_t:s0",
+    "path": "/home"
+   },
+   {
+    "applied": "system_u:object_r:mnt_t:s0",
+    "intended": "system_u:object_r:etc_runtime_t:s0",
+    "path": "/media"
+   },
+   {
+    "applied": "system_u:object_r:mnt_t:s0",
+    "intended": "system_u:object_r:etc_runtime_t:s0",
+    "path": "/mnt"
+   },
+   {
+    "applied": "system_u:object_r:mnt_t:s0",
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/proc"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/arptables"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/arptables-restore"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/arptables-save"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/dosfsck"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ebtables"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ebtables-restore"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/fsck.ntfs"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:gpg_exec_t:s0",
+    "path": "/usr/bin/gpg2"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:bootloader_exec_t:s0",
+    "path": "/usr/bin/grub2-setpassword"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:init_exec_t:s0",
+    "path": "/usr/bin/init"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ip6tables"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ip6tables-apply"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ip6tables-restore"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ip6tables-save"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/iptables"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/iptables-nft-save"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/iptables-restore"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/iptables-save"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/mkdosfs"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/mkfs.ntfs"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/mkfs.udf"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:mount_exec_t:s0",
+    "path": "/usr/bin/mount.lowntfs-3g"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:mount_exec_t:s0",
+    "path": "/usr/bin/mount.ntfs"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:mount_exec_t:s0",
+    "path": "/usr/bin/mount.ntfs-3g"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:ping_exec_t:s0",
+    "path": "/usr/bin/ping6"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:setfiles_exec_t:s0",
+    "path": "/usr/bin/restorecon"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:kmod_exec_t:s0",
+    "path": "/usr/bin/rmmod"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:sudo_exec_t:s0",
+    "path": "/usr/bin/sudoedit"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:traceroute_exec_t:s0",
+    "path": "/usr/bin/tracepath6"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:mount_exec_t:s0",
+    "path": "/usr/bin/umount.nfs"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgrename"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:admin_passwd_exec_t:s0",
+    "path": "/usr/bin/vigr"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": "system_u:object_r:rpm_exec_t:s0",
+    "path": "/usr/bin/yum"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_dispatcher_script_t:s0",
+    "intended": "system_u:object_r:NetworkManager_dispatcher_cloud_script_t:s0",
+    "path": "/usr/lib/NetworkManager/dispatcher.d/90-nm-cloud-setup.sh"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_dispatcher_script_t:s0",
+    "intended": "system_u:object_r:NetworkManager_dispatcher_cloud_script_t:s0",
+    "path": "/usr/lib/NetworkManager/dispatcher.d/no-wait.d/90-nm-cloud-setup.sh"
+   },
+   {
+    "applied": "system_u:object_r:systemd_unit_file_t:s0",
+    "intended": "system_u:object_r:power_unit_file_t:s0",
+    "path": "/usr/lib/systemd/system/dracut-shutdown-onfailure.service"
+   },
+   {
+    "applied": "system_u:object_r:systemd_unit_file_t:s0",
+    "intended": "system_u:object_r:power_unit_file_t:s0",
+    "path": "/usr/lib/systemd/system/dracut-shutdown.service"
+   },
+   {
+    "applied": "system_u:object_r:systemd_unit_file_t:s0",
+    "intended": "system_u:object_r:power_unit_file_t:s0",
+    "path": "/usr/lib/systemd/system/sysinit.target.wants/dracut-shutdown.service"
+   },
+   {
+    "applied": "system_u:object_r:systemd_unit_file_t:s0",
+    "intended": "system_u:object_r:power_unit_file_t:s0",
+    "path": "/usr/lib/systemd/system/sysinit.target.wants/systemd-hibernate-clear.service"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/lib/systemd/systemd-cryptsetup"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:init_exec_t:s0",
+    "path": "/usr/lib/systemd/systemd-sysroot-fstab-check"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:udev_exec_t:s0",
+    "path": "/usr/lib/systemd/systemd-udevd"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:crack_db_t:s0",
+    "path": "/usr/lib64/cracklib_dict.hwm"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:crack_db_t:s0",
+    "path": "/usr/lib64/cracklib_dict.pwd"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:crack_db_t:s0",
+    "path": "/usr/lib64/cracklib_dict.pwi"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:textrel_shlib_t:s0",
+    "path": "/usr/lib64/libavahi-client.so.3"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:textrel_shlib_t:s0",
+    "path": "/usr/lib64/libavahi-common.so.3"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:textrel_shlib_t:s0",
+    "path": "/usr/lib64/libavahi-core.so.7"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:textrel_shlib_t:s0",
+    "path": "/usr/lib64/libavahi-libevent.so.1"
+   },
+   {
+    "applied": "system_u:object_r:lib_t:s0",
+    "intended": "system_u:object_r:textrel_shlib_t:s0",
+    "path": "/usr/lib64/sasl2/libsasldb.so.3"
+   },
+   {
+    "applied": "system_u:object_r:var_run_t:s0",
+    "intended": "system_u:object_r:etc_runtime_t:s0",
+    "path": "/var/run"
+   }
+  ],
+  "UNRESOLVED": [
+   {
+    "applied": "system_u:object_r:root_t:s0",
+    "intended": null,
+    "path": "/"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:usr_t:s0",
+    "path": "/ostree"
+   },
+   {
+    "applied": "system_u:object_r:usr_t:s0",
+    "intended": null,
+    "path": "/ostree.cfs"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:default_t:s0",
+    "path": "/sysroot/ostree/repo"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/arptables-nft"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/arptables-nft-restore"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/arptables-nft-save"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/arptables-translate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bootupd_exec_t:s0",
+    "path": "/usr/bin/bootupctl"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/bunny-shell-service"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/bunzip2"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/bzfgrep"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/cache_check"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/cache_dump"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/cache_metadata_size"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/cache_repair"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/cache_restore"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/cache_writeback"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/captoinfo"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/clevis-decrypt-tpm2plus"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/cupsdisable"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/cupsreject"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/ddns-confgen"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:kmod_exec_t:s0",
+    "path": "/usr/bin/depmod"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:rpm_exec_t:s0",
+    "path": "/usr/bin/dnf"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/dnsdomainname"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/domainname"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/dump.f2fs"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/e2fsck"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/e2label"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/e2mmpstatus"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/ebtables-nft"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/ebtables-nft-restore"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/ebtables-nft-save"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/ebtables-translate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/era_check"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/era_dump"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/era_invalidate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/era_restore"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/ex"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/f2fslabel"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/fsck.ext2"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/fsck.ext4"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/fsck.msdos"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/fsck.vfat"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/getconf"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/halt"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/i386"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:kmod_exec_t:s0",
+    "path": "/usr/bin/insmod"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ip6tables-nft"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ip6tables-nft-restore"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ip6tables-nft-save"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ip6tables-restore-translate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/ip6tables-translate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/iptables-nft"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/iptables-nft-restore"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/iptables-restore-translate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:iptables_exec_t:s0",
+    "path": "/usr/bin/iptables-translate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/linux32"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/linux64"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/lsmod"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvchange"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/lvconvert"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvcreate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvdisplay"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvextend"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/lvmconfig"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/lvmdevices"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvmdiskscan"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvmsadc"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvmsar"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvreduce"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvremove"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvrename"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvresize"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvs"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/lvscan"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/microdnf"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/mke2fs"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/mkfs.ext2"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/mkfs.ext3"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/mkfs.msdos"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/mkfs.vfat"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/modinfo"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:kmod_exec_t:s0",
+    "path": "/usr/bin/modprobe"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:mount_exec_t:s0",
+    "path": "/usr/bin/mount.nfs4"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:mount_exec_t:s0",
+    "path": "/usr/bin/mount.ntfs-fuse"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/named-checkzone"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/nisdomainname"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/nmtui-edit"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/nmtui-hostname"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/pipewire-avb"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/pipewire-vulkan"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/poweroff"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/psfaddtable"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/psfstriptable"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/pvchange"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/pvck"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/pvcreate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/pvdisplay"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/pvmove"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/pvremove"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/pvresize"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/pvs"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/pvscan"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/python-html2text"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:fsadm_exec_t:s0",
+    "path": "/usr/bin/resize.f2fs"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/rpmquery"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/rtstat"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/rview"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/shutdown"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/sload.f2fs"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_check"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_delta"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_ls"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_metadata_pack"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_metadata_size"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_metadata_unpack"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_migrate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_repair"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_restore"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_rmap"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/thin_trim"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_activatecredential"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_certify"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_certifyX509certutil"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_certifycreation"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_changeauth"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_changeeps"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_changepps"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_checkquote"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_clear"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_clearcontrol"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_clockrateadjust"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_commit"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_create"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_createak"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_createek"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_createpolicy"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_createprimary"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_dictionarylockout"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_duplicate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_ecdhkeygen"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_ecdhzgen"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_ecephemeral"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_encodeobject"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_encryptdecrypt"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_eventlog"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_evictcontrol"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_flushcontext"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_getcap"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_getcommandauditdigest"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_geteccparameters"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_getekcertificate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_getpolicydigest"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_getrandom"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_getsessionauditdigest"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_gettestresult"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_gettime"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_hash"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_hierarchycontrol"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_hmac"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_import"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_incrementalselftest"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_load"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_makecredential"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvcertify"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvdefine"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvextend"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvincrement"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvread"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvreadlock"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvreadpublic"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvsetbits"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvundefine"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvwrite"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_nvwritelock"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_pcrallocate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_pcrevent"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_pcrextend"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_pcrread"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_pcrreset"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policyauthorize"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policyauthorizenv"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policyauthvalue"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policycommandcode"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policycountertimer"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policycphash"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policyduplicationselect"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policylocality"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policynamehash"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policynv"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policynvwritten"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policyor"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policypassword"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policypcr"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policyrestart"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policysecret"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policysigned"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policytemplate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_policyticket"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_print"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_quote"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_rc_decode"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_readclock"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_readpublic"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_rsadecrypt"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_rsaencrypt"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_selftest"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_send"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_sessionconfig"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_setclock"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_setcommandauditstatus"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_setprimarypolicy"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_shutdown"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_sign"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_startauthsession"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_startup"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_stirrandom"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_testparms"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_tr_encode"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_unseal"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_verifysignature"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tpm2_zgen2phase"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_authorizepolicy"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_changeauth"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_createkey"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_createseal"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_decrypt"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_delete"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_encrypt"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_exportkey"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_exportpolicy"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_getappdata"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_getcertificate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_getdescription"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_getinfo"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_getplatformcertificates"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_getrandom"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_gettpm2object"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_gettpmblobs"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_import"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_list"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_nvextend"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_nvincrement"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_nvread"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_nvsetbits"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_nvwrite"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_pcrextend"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_pcrread"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_provision"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_quote"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_setappdata"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_setcertificate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_setdescription"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_sign"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_unseal"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_verifyquote"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_verifysignature"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/tss2_writeauthorizenv"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:mount_exec_t:s0",
+    "path": "/usr/bin/umount.nfs4"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/unzstd"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgcfgbackup"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgcfgrestore"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgchange"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgck"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/vgconvert"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgcreate"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgdisplay"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgexport"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgextend"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgimport"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/vgimportclone"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/vgimportdevices"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgmerge"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgmknodes"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgreduce"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgremove"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgs"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgscan"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:lvm_exec_t:s0",
+    "path": "/usr/bin/vgsplit"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/x86_64"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/xtables-monitor"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/xzcat"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/xzegrep"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/zipinfo"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/zsoelim"
+   },
+   {
+    "applied": null,
+    "intended": "system_u:object_r:bin_t:s0",
+    "path": "/usr/bin/zstdmt"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc"
+   },
+   {
+    "applied": "system_u:object_r:passwd_file_t:s0",
+    "intended": null,
+    "path": "/usr/etc/.pwd.lock"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/DIR_COLORS"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/DIR_COLORS.lightbgcolor"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/GREP_COLORS"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_etc_rw_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager/NetworkManager.conf"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager/conf.d"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_dispatcher_script_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager/dispatcher.d"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_dispatcher_console_script_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager/dispatcher.d/90-console-login-helper-messages-gensnippet_if"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_dispatcher_script_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager/dispatcher.d/no-wait.d"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_dispatcher_script_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager/dispatcher.d/pre-down.d"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_dispatcher_script_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager/dispatcher.d/pre-up.d"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager/dnsmasq-shared.d"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager/dnsmasq.d"
+   },
+   {
+    "applied": "system_u:object_r:NetworkManager_etc_rw_t:s0",
+    "intended": null,
+    "path": "/usr/etc/NetworkManager/system-connections"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/UPower"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/UPower/UPower.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/UPower/UPower.conf.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/UPower/UPower.conf.d/README.md"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/Xmodmap"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/Xresources"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/applnk"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/fontpath.d"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/xinit"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/xinit/Xclients"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/xinit/Xclients.d"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/xinit/Xsession"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/xinit/xinitrc"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/xinit/xinitrc-common"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/xinit/xinitrc.d"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/xinit/xinitrc.d/50-systemd-user.sh"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/xinit/xinitrc.d/localuser.sh"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/X11/xinit/xinput.d"
+   },
+   {
+    "applied": "system_u:object_r:adjtime_t:s0",
+    "intended": null,
+    "path": "/usr/etc/adjtime"
+   },
+   {
+    "applied": "system_u:object_r:etc_aliases_t:s0",
+    "intended": null,
+    "path": "/usr/etc/aliases"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives-admindir"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives-admindir/arptables"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives-admindir/cifs-idmap-plugin"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives-admindir/ebtables"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives-admindir/iptables"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives-admindir/libnssckbi.so.x86_64"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives-admindir/man"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives-admindir/print"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives-admindir/soelim"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/apropos"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/apropos.1.gz"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/arptables"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/arptables-man"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/arptables-restore"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/arptables-restore-man"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/arptables-save"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/arptables-save-man"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/cifs-idmap-plugin"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/ebtables"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/ebtables-man"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/ebtables-restore"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/ebtables-save"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/ip6tables"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/ip6tables-restore"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/ip6tables-save"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/iptables"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/iptables-restore"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/iptables-save"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/libnssckbi.so.x86_64"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/man"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/man.1.gz"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-cancel"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-cancelman"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lp"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lpc"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lpcman"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lpman"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lpq"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lpqman"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lprm"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lprman"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lprmman"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lpstat"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/print-lpstatman"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/soelim"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/soelim.1.gz"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/whatis"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/alternatives/whatis.1.gz"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/asound.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/authselect"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/authselect/authselect.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/authselect/custom"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/authselect/dconf-db"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/authselect/dconf-locks"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/authselect/nsswitch.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/authselect/postlogin"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/authselect/switchable-auth"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/authselect/system-auth"
+   },
+   {
+    "applied": "system_u:object_r:avahi_conf_t:s0",
+    "intended": null,
+    "path": "/usr/etc/avahi"
+   },
+   {
+    "applied": "system_u:object_r:avahi_conf_t:s0",
+    "intended": null,
+    "path": "/usr/etc/avahi/avahi-daemon.conf"
+   },
+   {
+    "applied": "system_u:object_r:avahi_conf_t:s0",
+    "intended": null,
+    "path": "/usr/etc/avahi/etc"
+   },
+   {
+    "applied": "system_u:object_r:avahi_conf_t:s0",
+    "intended": null,
+    "path": "/usr/etc/avahi/hosts"
+   },
+   {
+    "applied": "system_u:object_r:avahi_conf_t:s0",
+    "intended": null,
+    "path": "/usr/etc/avahi/services"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bash_completion.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bash_completion.d/000_bash_completion_compat.bash"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bash_completion.d/_python-argcomplete"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bash_completion.d/authselect-completion.sh"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bashrc"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bindresvport.blacklist"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/binfmt.d"
+   },
+   {
+    "applied": "system_u:object_r:bluetooth_conf_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bluetooth"
+   },
+   {
+    "applied": "system_u:object_r:bluetooth_conf_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bluetooth/input.conf"
+   },
+   {
+    "applied": "system_u:object_r:bluetooth_conf_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bluetooth/main.conf"
+   },
+   {
+    "applied": "system_u:object_r:bluetooth_conf_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bluetooth/network.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bunny-os"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/bunny-os/update.json"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/chrony.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cifs-utils"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cifs-utils/idmap-plugin"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/certs.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/networks"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/oci"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/oci/hooks.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/policy.json"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/registries.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/registries.conf.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/registries.conf.d/000-shortnames.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/registries.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/registries.d/default.yaml"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/registries.d/registry.access.redhat.com.yaml"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/registries.d/registry.redhat.io.yaml"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/containers/systemd"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/credstore"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/credstore.encrypted"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/bind.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/gnutls.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/java.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/krb5.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/libreswan.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/libssh.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/nss.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/openssh.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/opensshserver.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/openssl_fips.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/opensslcnf.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/rpm-sequoia.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/back-ends/sequoia.config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/config"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/local.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/policies"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/policies/modules"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/state"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/state/CURRENT.pol"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/crypto-policies/state/current"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/csh.cshrc"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/csh.login"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_rw_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/classes.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/client.conf"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/cups-files.conf"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_rw_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/cupsd.conf.default"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_rw_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/lpoptions"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_rw_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/ppd"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_rw_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/printers.conf"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/snmp.conf"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/snmp.conf.default"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/ssl"
+   },
+   {
+    "applied": "system_u:object_r:cupsd_rw_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/cups/subscriptions.conf"
+   },
+   {
+    "applied": "system_u:object_r:dbusd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dbus-1"
+   },
+   {
+    "applied": "system_u:object_r:dbusd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dbus-1/session.conf"
+   },
+   {
+    "applied": "system_u:object_r:dbusd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dbus-1/session.d"
+   },
+   {
+    "applied": "system_u:object_r:dbusd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dbus-1/system.conf"
+   },
+   {
+    "applied": "system_u:object_r:dbusd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dbus-1/system.d"
+   },
+   {
+    "applied": "system_u:object_r:dbusd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dbus-1/system.d/cups.conf"
+   },
+   {
+    "applied": "system_u:object_r:dbusd_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dbus-1/system.d/org.selinux.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/distro"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/distro.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/distro.d/20-authselect"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/distro.d/locks"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/distro.d/locks/20-authselect"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/gdm.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/gdm.d/locks"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/local"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/local.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/local.d/10-bunny-shell"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/local.d/locks"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/site"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/site.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/db/site.d/locks"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/profile"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dconf/profile/user"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/debuginfod"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/debuginfod/elfutils.certpath"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/debuginfod/elfutils.urls"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/default"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/default/useradd"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/depmod.d"
+   },
+   {
+    "applied": "system_u:object_r:dhcp_etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dhcp"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dhcp/dhclient.d"
+   },
+   {
+    "applied": "system_u:object_r:bin_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dhcp/dhclient.d/chrony.sh"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dleyna-server-service.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dnf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dnf/dnf.conf"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dnf/dnf5-aliases.d"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dnf/dnf5-aliases.d/README"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dnf/dnf5-plugins"
+   },
+   {
+    "applied": "system_u:object_r:etc_t:s0",
+    "intended": null,
+    "path": "/usr/etc/dnf/dnf5daemon-server.conf"
+   }
+  ]
+ },
+ "matchedPaths": 78844,
+ "note": "UNRESOLVED blocks: a difference nobody classified is a difference nobody understands. Expected states come from the declared fixture, which is a reviewed file, not a heuristic.",
+ "result": "BLOCKED",
+ "schemaVersion": 1,
+ "truncated": {
+  "EXPECTED_RUNTIME_PATH": 76105,
+  "FIRST_BOOT_GENERATED": 0,
+  "INSTALLER_LABELING_DEFECT": 0,
+  "POLICY_DEFECT": 0,
+  "UNRESOLVED": 11869
+ }
+}

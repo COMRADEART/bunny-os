@@ -1,0 +1,1 @@
+/ostree/deploy/default/deploy/b3d0136e3f7a57898a75b22ef2046619cc790486f7a4ac6f1b39dc6ac1d95b44.0/

@@ -1,0 +1,97 @@
+{
+  "argv": [
+    "qemu-system-x86_64",
+    "-machine",
+    "q35,accel=kvm",
+    "-cpu",
+    "host",
+    "-smp",
+    "4",
+    "-m",
+    "8192",
+    "-drive",
+    "if=pflash,format=qcow2,readonly=on,file=/usr/share/edk2/ovmf/OVMF_CODE_4M.qcow2",
+    "-drive",
+    "if=pflash,format=qcow2,file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-encrypted-first-boot-001/work/OVMF_VARS.qcow2",
+    "-drive",
+    "file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-encrypted-first-boot-001/work/target-disk.qcow2,format=qcow2,if=virtio",
+    "-chardev",
+    "socket,id=ser0,path=/tmp/isq-_axhy286/ser.sock,server=on,wait=off,logfile=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-encrypted-first-boot-001/serial.log",
+    "-serial",
+    "chardev:ser0",
+    "-qmp",
+    "unix:/tmp/isq-_axhy286/qmp.sock,server,nowait",
+    "-display",
+    "none",
+    "-vga",
+    "virtio",
+    "-no-reboot",
+    "-netdev",
+    "user,id=n0",
+    "-device",
+    "virtio-net-pci,netdev=n0",
+    "-object",
+    "filter-dump,id=fd0,netdev=n0,file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-encrypted-first-boot-001/network.pcap"
+  ],
+  "scenario": {
+    "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+    "name": "encrypted-first-boot",
+    "title": "Unlock and first boot of an encrypted installation",
+    "description": "The disk was produced by install_encrypted.sh (LUKS2 under root, bootc install to-filesystem) and rides in as a derived disk with its installation record. The passphrase prompt must appear on the console, the correct passphrase must unlock and boot, and no credential may appear anywhere in the evidence \u2014 the runner sends but never logs it, and the forbidden marker hunts for the test passphrase file's marker string in case anything ever echoes it.",
+    "scenarioVersion": "isq-1",
+    "environment": "qemu-kvm",
+    "disk": {
+      "sizeGiB": 64,
+      "blank": false,
+      "preExistingData": false
+    },
+    "resources": {
+      "vcpus": 4,
+      "memoryMiB": 8192
+    },
+    "firmware": "uefi",
+    "tpm": "none",
+    "network": "enabled",
+    "encryption": "luks2-passphrase",
+    "timeoutSeconds": 2700,
+    "serialInputs": [
+      {
+        "label": "luks-passphrase",
+        "promptRegex": "Please enter passphrase for disk",
+        "sendFromEnv": "BUNNY_TEST_PASSPHRASE",
+        "required": true
+      }
+    ],
+    "markers": [
+      {
+        "label": "luks-prompt",
+        "regex": "Please enter passphrase for disk",
+        "required": true
+      },
+      {
+        "label": "boot-target",
+        "regex": "Reached target .*(Multi-User System|Graphical Interface)",
+        "required": true
+      },
+      {
+        "label": "health-check",
+        "regex": "Finished .*Bunny OS boot health check",
+        "required": true
+      }
+    ],
+    "forbiddenMarkers": [
+      {
+        "label": "credential-echo",
+        "regex": "BUNNY-TEST-CREDENTIAL"
+      },
+      {
+        "label": "emergency-mode",
+        "regex": "emergency mode|Emergency Shell"
+      }
+    ],
+    "expectedOutcome": "PASS",
+    "destructive": false,
+    "$timeoutNote": "LUKS2 defaults to argon2id with parameters cryptsetup benchmarks on the machine that formats the volume. The build host is fast and many-cored; the scenario VM is neither, so unlock alone took minutes and the whole boot ran past a 1200s deadline while succeeding. Measured, not guessed: the run reached multi-user.target and finished the health check at ~1211s."
+  },
+  "startedAt": "2026-08-01T13:23:19Z"
+}

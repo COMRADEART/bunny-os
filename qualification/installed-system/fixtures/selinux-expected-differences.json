@@ -1,0 +1,52 @@
+{
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later. Declared, reviewed classifications for applied-vs-intended SELinux differences. A path matching no entry here is UNRESOLVED, and UNRESOLVED blocks. Adding a glob is a reviewed change with a reason — that is the point of this being a fixture rather than a heuristic in the comparison script.",
+  "schemaVersion": 1,
+  "expectedRuntimePaths": [
+    "/dev/*",
+    "/proc/*",
+    "/sys/*",
+    "/run/*",
+    "/tmp/*",
+    "/var/tmp/*",
+    "/var/run/*",
+    "/ostree/deploy/*/var/*",
+    "/sysroot/ostree/repo/*"
+  ],
+  "reasons": {
+    "/dev/*": "device nodes are labelled by the kernel and udev at runtime; no archive carries them",
+    "/proc/* /sys/*": "virtual filesystems; labels are policy-computed, never stored",
+    "/run/* /tmp/* /var/tmp/* /var/run/*": "volatile trees recreated each boot",
+    "/ostree/deploy/*/var/*": "the deployment's mutable /var is populated on first boot by systemd-tmpfiles, not shipped",
+    "/sysroot/ostree/repo/*": "the ostree object store is the deployment mechanism's own state, outside the intended-context manifest's domain",
+    "/etc/locale.conf /etc/vconsole.conf /etc/adjtime": "written by systemd-firstboot on the first boot of an installed system; the archive ships none of them",
+    "/etc/.rpm-ostree-shadow-mode-fixed*.stamp": "rpm-ostree's own first-boot marker",
+    "/etc/issue.d/*": "NetworkManager writes a per-interface issue fragment naming the interface it configured",
+    "/etc/resolv.conf /etc/NetworkManager/system-connections/*": "network configuration created when the installed system first configures an interface"
+  },
+  "firstBootGenerated": [
+    "/etc/machine-id",
+    "/etc/brlapi.key",
+    "/etc/ssh/ssh_host_*",
+    "/var/lib/systemd/random-seed",
+    "/etc/.updated",
+    "/var/.updated",
+    "/etc/lvm/devices/*",
+    "/var/lib/chrony/*",
+    "/var/log/journal/*",
+    "/var/lib/gdm/*",
+    "/var/lib/AccountsService/*",
+    "/var/lib/bunny-os/*",
+    "/etc/locale.conf",
+    "/etc/vconsole.conf",
+    "/etc/hostname",
+    "/etc/adjtime",
+    "/etc/.rpm-ostree-shadow-mode-fixed*.stamp",
+    "/etc/issue.d/*",
+    "/etc/resolv.conf",
+    "/etc/localtime",
+    "/etc/NetworkManager/system-connections/*",
+    "/etc/sysconfig/network-scripts/*",
+    "/etc/crypttab"
+  ],
+  "unclassifiedNote": "Two classes remain deliberately unclassified and therefore blocking. Symlink-versus-target label divergence — /etc/mtab, /home, /media, /mnt and the *.wants/*.service unit symlinks — is where matchpathcon resolves the archive's symlink by pattern while the installed system labels the object the symlink became; it is very likely benign and 'very likely' is not a classification. Everything else UNRESOLVED is a path an installed system carries that the archive manifest does not describe, and each needs a reviewed reason before it stops blocking. Widening a glob to make a count go down would be the one thing this fixture exists to prevent."
+}

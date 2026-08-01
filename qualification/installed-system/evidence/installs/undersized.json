@@ -1,0 +1,16 @@
+{
+  "completedAt": "2026-08-01T08:59:05Z",
+  "detail": "installer exited 1 on a 4G target without partial deployment",
+  "exitStatus": 1,
+  "image": "localhost/bunny-os-beta:619065e068e2",
+  "imageDigest": "sha256:bf3f68caf2c22cedc5d04f4f4b1c2c7a67f946378f219f172f84fcee8f418a19",
+  "installCommand": "podman run ... bootc install to-disk --via-loopback",
+  "mode": "undersized",
+  "note": "The deployed root filesystem is the image's own, installed by bootc running from the image. No secret appears in this record: encrypted mode reads its passphrase from a file descriptor and never echoes it.",
+  "outcome": "REFUSED_AS_EXPECTED",
+  "schemaVersion": 1,
+  "startedAt": "2026-08-01T08:59:04Z",
+  "target": "/var/tmp/bunny-install-disks/undersized.raw",
+  "targetDigestAfter": "8479e43911dc45e89f934fe48d01297e16f51d17aa561d4d1c216b1ae0fcddca",
+  "targetSizeRequested": "64G"
+}

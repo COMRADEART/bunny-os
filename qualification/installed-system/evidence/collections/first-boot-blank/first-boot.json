@@ -1,0 +1,87 @@
+{
+ "assertions": [
+  {
+   "expected": "kernel Command line present",
+   "name": "kernel-cmdline-recorded",
+   "observed": "BOOT_IMAGE=(hd0,gpt3)/boot/ostree/default-dd33960330844f1ec11b6e93710464634d03be",
+   "result": "PASS"
+  },
+  {
+   "expected": "systemd reports startup finished",
+   "name": "startup-finished",
+   "observed": "Startup finished in 1.585s (kernel) + 2.458s (initrd) + 5.524s (userspace) = 9.568s.",
+   "result": "PASS"
+  },
+  {
+   "expected": "multi-user or graphical target reached",
+   "name": "boot-target",
+   "observed": "graphical",
+   "result": "PASS"
+  },
+  {
+   "expected": "GDM starts on first boot",
+   "name": "gdm-started",
+   "observed": "Started gdm.service - GNOME Display Manager",
+   "result": "PASS"
+  },
+  {
+   "expected": "no emergency mode",
+   "name": "no-emergency-mode",
+   "observed": "clean",
+   "result": "PASS"
+  },
+  {
+   "expected": "no repair prompt",
+   "name": "no-filesystem-repair",
+   "observed": "clean",
+   "result": "PASS"
+  },
+  {
+   "expected": "every failed unit listed, none omitted",
+   "name": "failed-units-enumerated",
+   "observed": "2 failed unit(s): 1.2-org.gnome.Shell.Screencast@0.service, gdm.service",
+   "result": "PASS"
+  },
+  {
+   "expected": "bunny health check completed",
+   "name": "bunny-health-check",
+   "observed": "completed",
+   "result": "PASS"
+  },
+  {
+   "expected": "bunny-brlapi-key.service ran on first boot",
+   "name": "brlapi-key-service-ran",
+   "observed": "absent from journal",
+   "result": "FAIL"
+  },
+  {
+   "expected": "no key material in the journal",
+   "name": "brlapi-key-not-logged",
+   "observed": "clean",
+   "result": "PASS"
+  },
+  {
+   "expected": "at least one BLS entry",
+   "name": "bls-entry-present",
+   "observed": "1 entries",
+   "result": "PASS"
+  },
+  {
+   "expected": "exactly one deployment after installation",
+   "name": "single-deployment",
+   "observed": "1 deployment(s)",
+   "result": "PASS"
+  }
+ ],
+ "collection": "first-boot-offline",
+ "disk": "target-disk.qcow2",
+ "failedUnits": [
+  "1.2-org.gnome.Shell.Screencast@0.service",
+  "gdm.service"
+ ],
+ "limitations": [
+  "live socket listeners and runtime unit state require an in-guest collection; this record does not claim them"
+ ],
+ "result": "FAIL",
+ "schemaVersion": 1
+}

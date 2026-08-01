@@ -1,0 +1,16 @@
+{
+  "completedAt": "2026-08-01T09:00:18Z",
+  "detail": "killed after 25s during deployment",
+  "exitStatus": 137,
+  "image": "localhost/bunny-os-beta:619065e068e2",
+  "imageDigest": "sha256:bf3f68caf2c22cedc5d04f4f4b1c2c7a67f946378f219f172f84fcee8f418a19",
+  "installCommand": "podman run ... bootc install to-disk --via-loopback",
+  "mode": "interrupted",
+  "note": "The deployed root filesystem is the image's own, installed by bootc running from the image. No secret appears in this record: encrypted mode reads its passphrase from a file descriptor and never echoes it.",
+  "outcome": "INTERRUPTED",
+  "schemaVersion": 1,
+  "startedAt": "2026-08-01T08:59:53Z",
+  "target": "/var/tmp/bunny-install-disks/interrupted.raw",
+  "targetDigestAfter": "5db3bc7f28b45c5de177d7de35f2d8291eeb7cfad69ed76933731ec0ed9042ab",
+  "targetSizeRequested": "24G"
+}

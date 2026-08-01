@@ -1,0 +1,83 @@
+{
+ "findings": [
+  {
+   "check": "present:/etc/machine-id",
+   "detail": "systemd machine identity, minted at first boot",
+   "result": "PASS"
+  },
+  {
+   "check": "differs:/etc/machine-id",
+   "detail": "identity must be unique per installation",
+   "result": "PASS"
+  },
+  {
+   "check": "present:/etc/brlapi.key",
+   "detail": "BRLTTY API key, minted by bunny-brlapi-key.service: absent on at least one installation \u2014 first boot did not mint it",
+   "result": "FAIL"
+  },
+  {
+   "check": "present:/var/lib/systemd/random-seed",
+   "detail": "boot entropy seed",
+   "result": "PASS"
+  },
+  {
+   "check": "differs:/var/lib/systemd/random-seed",
+   "detail": "secret must be unique per installation",
+   "result": "PASS"
+  },
+  {
+   "check": "differs:/etc/ssh/ssh_host_ecdsa_key",
+   "detail": "SSH host keys must be unique per installation",
+   "result": "PASS"
+  },
+  {
+   "check": "differs:/etc/ssh/ssh_host_ed25519_key",
+   "detail": "SSH host keys must be unique per installation",
+   "result": "PASS"
+  },
+  {
+   "check": "differs:/etc/ssh/ssh_host_rsa_key",
+   "detail": "SSH host keys must be unique per installation",
+   "result": "PASS"
+  },
+  {
+   "check": "mode:target-disk.qcow2:/etc/ssh/ssh_host_ecdsa_key",
+   "detail": "mode 0o600, uid 0; forbidden bits 0o177",
+   "result": "PASS"
+  },
+  {
+   "check": "mode:target-disk.qcow2:/etc/ssh/ssh_host_ed25519_key",
+   "detail": "mode 0o600, uid 0; forbidden bits 0o177",
+   "result": "PASS"
+  },
+  {
+   "check": "mode:target-disk.qcow2:/etc/ssh/ssh_host_rsa_key",
+   "detail": "mode 0o600, uid 0; forbidden bits 0o177",
+   "result": "PASS"
+  },
+  {
+   "check": "mode:target-disk.qcow2:/etc/ssh/ssh_host_ecdsa_key",
+   "detail": "mode 0o600, uid 0; forbidden bits 0o177",
+   "result": "PASS"
+  },
+  {
+   "check": "mode:target-disk.qcow2:/etc/ssh/ssh_host_ed25519_key",
+   "detail": "mode 0o600, uid 0; forbidden bits 0o177",
+   "result": "PASS"
+  },
+  {
+   "check": "mode:target-disk.qcow2:/etc/ssh/ssh_host_rsa_key",
+   "detail": "mode 0o600, uid 0; forbidden bits 0o177",
+   "result": "PASS"
+  }
+ ],
+ "first": "target-disk.qcow2",
+ "hostnames": [
+  "",
+  ""
+ ],
+ "note": "Secret material is never retained: differences are proven through per-comparison salted digests, and the salt dies with this process.",
+ "result": "FAIL",
+ "schemaVersion": 1,
+ "second": "target-disk.qcow2"
+}

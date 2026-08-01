@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "ISQ-20260801-first-boot-004",
+  "sourceCommit": "619065e068e2153de461545f5b8950b985db4dfd",
+  "sourceArchiveDigest": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a",
+  "installationArtifactDigest": "7739e15f92627afa633043f2148f89be1fd9316b3f6809b066a9041a3456cf0b",
+  "environment": "qemu-kvm",
+  "firmwareMode": "uefi",
+  "secureBootState": "disabled",
+  "tpmState": "absent",
+  "encryptionState": "none",
+  "scenario": "first-boot",
+  "scenarioVersion": "isq-1",
+  "startedAt": "2026-08-01T10:59:07Z",
+  "completedAt": "2026-08-01T11:00:14Z",
+  "result": "PASS",
+  "installationRecordSha256": "960a4f409c09ccd69dad7202f968faa03e50281d1313693c2dc021f75c22bbd8",
+  "assertions": [
+    {
+      "name": "marker:boot-target",
+      "expected": "Reached target .*(Multi-User System|Graphical Interface)",
+      "observed": "matched",
+      "result": "PASS"
+    },
+    {
+      "name": "marker:health-check",
+      "expected": "Finished .*Bunny OS boot health check",
+      "observed": "matched",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:emergency-mode",
+      "expected": "absent: emergency mode|Emergency Shell",
+      "observed": "absent",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:fs-repair",
+      "expected": "absent: UNEXPECTED INCONSISTENCY",
+      "observed": "absent",
+      "result": "PASS"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "installation-record.json",
+      "sha256": "960a4f409c09ccd69dad7202f968faa03e50281d1313693c2dc021f75c22bbd8",
+      "createdAt": "2026-08-01T11:00:14Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "network.pcap",
+      "sha256": "820dd647b0d89b89174270c273dab8b6d7da1d8b1c4941ebe076687cccddc8f2",
+      "createdAt": "2026-08-01T11:00:14Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-command.json",
+      "sha256": "432a30ccb8aef1051d097a2371d7497556a5cb6d688900c35d113d4fac0d3e9a",
+      "createdAt": "2026-08-01T11:00:14Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/boot-target.ppm",
+      "sha256": "1f01380cff02250b9624ac4ae7705db6edbdac36a80ee398e5ffe4e1b3d60bd9",
+      "createdAt": "2026-08-01T11:00:14Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/health-check.ppm",
+      "sha256": "1f01380cff02250b9624ac4ae7705db6edbdac36a80ee398e5ffe4e1b3d60bd9",
+      "createdAt": "2026-08-01T11:00:14Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "serial.log",
+      "sha256": "7765207688f849d347be9cd9ebe8167e2bfddaec6aff5bf95ed9852a7103a7e5",
+      "createdAt": "2026-08-01T11:00:14Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    }
+  ],
+  "operator": "allamsettiraviteja2009",
+  "limitations": []
+}
