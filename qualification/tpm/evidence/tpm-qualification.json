@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-01T22:25:16+00:00",
+  "generatedAt": "2026-08-01T22:49:05+00:00",
   "context": {
     "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
     "sourceArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
@@ -15,7 +15,7 @@
     "cpuMode": "host",
     "schemaVersion": 1
   },
-  "recordCount": 87,
+  "recordCount": 93,
   "problems": [],
   "supportedCells": {
     "no-tpm-cold": {
@@ -175,10 +175,6 @@
       "runs": 3,
       "pass": 3
     },
-    "smm-on-crb": {
-      "runs": 3,
-      "pass": 3
-    },
     "tis-fresh-repro-stop": {
       "runs": 3,
       "pass": 3
@@ -219,20 +215,25 @@
       "pass": 3,
       "diagnostic": true
     },
+    "smm-on-crb": {
+      "runs": 6,
+      "pass": 6,
+      "diagnostic": true
+    },
     "tcg-crb-fresh": {
       "runs": 3,
       "pass": 3,
       "diagnostic": true
     },
     "tcg-no-tpm": {
-      "runs": 3,
-      "pass": 0,
+      "runs": 6,
+      "pass": 3,
       "diagnostic": true
     }
   },
   "softwareTpmBoot": "PASS",
   "qemuKvmTpmIntegration": "PASS",
-  "retainedEvidenceVerified": 831,
+  "retainedEvidenceVerified": 894,
   "retainedEvidenceUnverifiable": [],
   "physicalTpm": "NOT_RUN",
   "productionSecureBoot": "NOT_QUALIFIED",

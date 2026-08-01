@@ -48,9 +48,9 @@ Reading rules for this report:
 | `machine-q35-10-1-crb` | D | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3/3 |
 | `machine-q35-9-2-crb` | D | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3/3 |
 | `no-tpm-cold` |  | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 0 | 5/5 |
-| `smm-on-crb` |  | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3/3 |
+| `smm-on-crb` | D | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6/6 |
 | `tcg-crb-fresh` | D | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 3/3 |
-| `tcg-no-tpm` | D | 3 | 3 | 3 | 3 | 3 | 3 | 0 | 0 | 0/3 |
+| `tcg-no-tpm` | D | 6 | 6 | 6 | 6 | 6 | 6 | 0 | 0 | 3/6 |
 | `tis-fresh-cold` |  | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5/5 |
 | `tis-fresh-repro-stop` |  | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 3/3 |
 | `tis-fresh-stop` |  | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0/1 |
@@ -75,17 +75,18 @@ wrong, the cell was re-run and both runs are kept.
   predates the stability expectation and was scored INCONCLUSIVE despite
   behaving exactly as a firmware control should. The other five are clean
   (`TPM_FIRMWARE_CONTROL_REPORT.md`).
-* **`tcg-no-tpm` (0/3 at the time of the first rendering).** All three were
-  downgraded to INCONCLUSIVE by a reader-death rule that fired on the
-  harness's own clean shutdown — a defect in this pass's own instrumentation,
-  found by reading the results instead of trusting them. The transcripts
-  show what the cell was asked to show: booted to `graphical.target` under
-  pure emulation with no TPM and no reset. Superseded by runs 4–6 under the
-  corrected rule.
-* **`smm-on-crb`.** The first three runs were not flagged diagnostic, though
-  SMM on is a deviation from the supported configuration. Superseded by
-  runs 4–6 that carry the flag; a varied run presented as the pinned one is
-  what the flag exists to prevent.
+* **`tcg-no-tpm` (6 boots, 3/6).** Runs 1–3 were downgraded to INCONCLUSIVE
+  by a reader-death rule that fired on the harness's own clean shutdown — a
+  defect in this pass's own instrumentation, found by reading the results
+  instead of trusting them. Their transcripts show exactly what the cell was
+  asked to show, so the measurement was never in doubt; only the verdict rule
+  was. Runs 4–6, under the corrected rule, are 3/3: booted to
+  `graphical.target` under pure emulation with no TPM and **zero resets**.
+* **`smm-on-crb` (6 boots, 6/6).** Runs 1–3 were not flagged diagnostic,
+  though SMM on deviates from the supported configuration. Runs 4–6 carry
+  the flag. All six reset exactly once and reach `graphical.target`; a
+  varied run presented as the pinned one is what the flag exists to prevent,
+  not a different result.
 * **`crb-fresh-continue`, `crb-reuse-vars` (1 boot each).** The two
   discriminating experiments that identified the mechanism, kept because the
   root-cause statement cites them.
@@ -105,9 +106,9 @@ whether the restoration reset still occurred:
 | TCG instead of KVM (`tcg-crb-fresh`, 3/3, 1 reset each) | yes | hardware acceleration, and any KVM-specific timing |
 | Named generic CPU instead of `-cpu host` (`cpu-named-crb`, 3/3) | yes | the CPU model |
 | `pc-q35-10.1` and `pc-q35-9.2` (3/3 each) | yes | the machine version |
-| SMM enabled (`smm-on-crb`, 3/3) | yes | SMM configuration |
+| SMM enabled (`smm-on-crb`, 6/6, 1 reset each) | yes | SMM configuration |
 | A stock Fedora Cloud 44 disk (`fedora-crb-fresh-repro`, 3/3) | yes | anything specific to the Bunny artifact |
-| No TPM, under TCG (`tcg-no-tpm`) | no | — the reset needs a TPM even without KVM |
+| No TPM, under TCG (`tcg-no-tpm`, runs 4–6, 3/3, 0 resets) | no | — the reset needs a TPM even without KVM |
 | No disk at all (`fw-only-*`) | no | — the firmware alone never resets |
 
 Every variation that leaves a TPM present and the variable store fresh
@@ -182,7 +183,7 @@ coverage.
 ## Failed units, quantified separately
 
 <!-- BEGIN FAILED UNITS -->
-The serial console reported no failed units on any of 87 boots. This is the console's view, not the journal's: a unit that failed quietly would not appear here.
+The serial console reported no failed units on any of 93 boots. This is the console's view, not the journal's: a unit that failed quietly would not appear here.
 <!-- END FAILED UNITS -->
 
 **What this measurement is, and what it is not.** The counts above are
@@ -205,7 +206,7 @@ state.
 ## Reset classifications
 
 <!-- BEGIN CLASSIFICATIONS -->
-* `BOOTLOADER_REBOOT_COMMAND` — 43 runs
+* `BOOTLOADER_REBOOT_COMMAND` — 46 runs
 * `HOST_TERMINATED` — 1 runs
 <!-- END CLASSIFICATIONS -->
 
