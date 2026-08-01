@@ -1,0 +1,13 @@
+{
+  "installationArtifactDigest": "7739e15f92627afa633043f2148f89be1fd9316b3f6809b066a9041a3456cf0b",
+  "installationArtifactName": "bunny-os-619065e068e2.qcow2",
+  "installerToolchainDigest": "5ea15dda4031b33844004a862a46c32c7fcebcf1086df1487d648952b0b56c80",
+  "notes": "Authority for every installed-system evidence record. The installation artifact lives outside the repository by size; its digest is recomputed by every consumer that attaches it.",
+  "scenarioVersion": "isq-1",
+  "schemaVersion": 1,
+  "sourceArchiveDigest": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a",
+  "sourceCommit": "619065e068e2153de461545f5b8950b985db4dfd",
+  "subjects": {
+    "installerToolchainDigest": "build/installer/toolchain.lock.json"
+  }
+}
