@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "TPMQ-20260801-fw-only-crb-001",
+  "files": [
+    {
+      "path": "screenshots/final.ppm",
+      "sha256": "bf13a79c7e45f70ca3b29541fb87fe8e7369cafcb3092b9deb37b72eec7c2b6f",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fw-only-crb-001/screenshots/final.ppm",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    },
+    {
+      "path": "swtpm.log",
+      "sha256": "a37842e2005ea62ffc6c02e76258f55b9db1d5c13096ff5b2bf496fccea5702e",
+      "sizeBytes": 86683,
+      "retainedAt": "/root/tpm-traces/TPMQ-20260801-fw-only-crb-001/swtpm.log",
+      "host": "comrade",
+      "lifecycle": "raw evidence retained outside git on the builder",
+      "movedAt": "2026-08-01T22:25:09+00:00"
+    }
+  ]
+}

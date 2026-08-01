@@ -83,6 +83,26 @@ no unobserved segment:
 | Last confirmed boot-chain stage in failing runs | `fbx64.efi` executing after `BdsDxe: starting Boot0002`; GRUB never entered |
 | Component that issues the reset | `EFI/BOOT/fbx64.efi`, sha256 `ea9b772575900eeb526faef865ac18ecd2130711e4e9e42c974fb5d31f69927c`, from `shim-x64-16.1-5.x86_64` |
 
+## Seven axes varied; the mechanism predicts all seven
+
+Each diagnostic comparator changed one thing and asked whether the reset
+still happened (`TPM_BOOT_REGRESSION_REPORT.md` for counts):
+
+```text
+TCG instead of KVM                    reset still occurs   → not an acceleration artifact
+named generic CPU instead of host     reset still occurs   → not the CPU model
+pc-q35-10.1 / pc-q35-9.2              reset still occurs   → not the machine version
+SMM enabled                           reset still occurs   → not SMM configuration
+stock Fedora Cloud 44 disk            reset still occurs   → not the Bunny artifact
+TPM removed (any configuration)       reset does not occur → the TPM is necessary
+variable store already restored       reset does not occur → the empty NVRAM is necessary
+no disk at all                        reset does not occur → the firmware alone never resets
+```
+
+Necessary and sufficient, measured: a TPM exposed to firmware **and** a boot
+through the fallback path. That is exactly the branch condition in
+`fallback.c`, and nothing else in the configuration space moves the result.
+
 ## Alternative hypotheses, rejected
 
 * **A GRUB TPM-module defect.** GRUB never executed in any failing boot —

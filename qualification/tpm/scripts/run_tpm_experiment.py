@@ -444,11 +444,17 @@ def main() -> int:
 
     machine = args.machine or context.machineType
     cpu = args.cpu or (context.cpuMode if args.accel == "kvm" else "max")
+    # Any deviation from the supported configuration makes a run diagnostic,
+    # and SMM is one: the supported path runs with it off, so a run that
+    # turns it on is exploring, not qualifying. Leaving it out marked those
+    # runs as ordinary controls — a deliberately varied configuration
+    # presented as the pinned one.
     diagnostic = bool(
         args.alt_disk
         or args.accel != "kvm"
         or machine != context.machineType
         or cpu != context.cpuMode
+        or args.smm
     )
 
     run_id = experiment_id(args.name, date=datetime.date.today().strftime("%Y%m%d"),
