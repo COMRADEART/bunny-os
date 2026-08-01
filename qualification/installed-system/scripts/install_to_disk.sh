@@ -123,6 +123,11 @@ install_cmd=(
   "${image}"
   bootc install to-disk --via-loopback --generic-image
   --filesystem ext4
+  # The serial console karg is the qualification harness's one addition to
+  # the installed system, and it is why the evidence stream exists at all:
+  # without it the kernel boots silently past GRUB and a passing boot is
+  # indistinguishable from a hang. Recorded here and in the record below.
+  --karg console=ttyS0,115200 --karg console=tty0
   "${wipe_args[@]+"${wipe_args[@]}"}"
   --skip-fetch-check "/output/$(basename "${target}")"
 )

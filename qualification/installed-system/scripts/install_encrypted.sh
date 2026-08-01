@@ -94,6 +94,7 @@ podman run --rm --privileged --pid=host \
   "${image}" \
   bootc install to-filesystem --skip-fetch-check --generic-image \
   --karg "rd.luks.uuid=${luks_uuid}" \
+  --karg console=ttyS0,115200 --karg console=tty0 \
   /target
 status=$?
 
