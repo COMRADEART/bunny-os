@@ -59,12 +59,25 @@ git clone --quiet --no-hardlinks "${repository_root}" "${workspace}"
 git -C "${workspace}" checkout --quiet "${commit}"
 
 started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-# No isolated container store here, deliberately: image-builder resolves the
-# bootc ref from the default store, and an image built into a private root is
-# invisible to it — measured as a localhost-registry fallback and a dead
-# build. Store isolation exists to make repeatability pairs honest; this is
-# artifact generation, and the identity guard is the archive digest check
-# below, not the store.
+# One isolated store, shared by podman and image-builder through
+# CONTAINERS_STORAGE_CONF — and with no metacopy. Both halves are measured:
+# an image built into a store image-builder cannot see dies in a
+# localhost-registry fallback, and a build in Fedora's default store produced
+# archive f49b8fcf where the qualified target is 0258f92a, because the
+# default store's mountopt metacopy=on flips containers/storage onto its
+# naive diff — the same mechanism that once separated the Ubuntu runners
+# from the local builder (missing opaque marker, unlinked whiteouts, flat
+# member order, and an empty mtime-only layer naive diff cannot see).
+# The store configuration is part of the toolchain, whether or not anyone
+# wrote it down; here it is written down.
+mkdir -p "${storage}/graph" "${storage}/run"
+cat > "${storage}/storage.conf" <<CONF
+[storage]
+driver = "overlay"
+graphroot = "${storage}/graph"
+runroot = "${storage}/run"
+CONF
+export CONTAINERS_STORAGE_CONF="${storage}/storage.conf"
 (
   cd "${workspace}"
   BUNNY_HERMETIC_BUILD=1 \
