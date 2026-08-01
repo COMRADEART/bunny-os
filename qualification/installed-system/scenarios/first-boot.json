@@ -13,9 +13,9 @@
   "timeoutSeconds": 900,
   "markers": [
     {"label": "boot-target", "regex": "Reached target .*(Multi-User System|Graphical Interface)", "required": true},
-    {"label": "health-check", "regex": "Finished .*Bunny OS boot health check", "required": true},
-    {"label": "no-emergency", "regex": "Startup finished in", "required": true}
+    {"label": "health-check", "regex": "Finished .*Bunny OS boot health check", "required": true}
   ],
+  "$markerNote": "'Startup finished in' is a journal line, not a console status line — measured absent from serial while every status marker flowed — so startup completion is carried by the boot-target marker and the timing line belongs to the offline journal collection.",
   "forbiddenMarkers": [
     {"label": "emergency-mode", "regex": "emergency mode|Emergency Shell"},
     {"label": "fs-repair", "regex": "UNEXPECTED INCONSISTENCY"}
