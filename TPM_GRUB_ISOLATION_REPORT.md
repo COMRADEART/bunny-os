@@ -51,11 +51,20 @@ Restoration data: `EFI/fedora/BOOTX64.CSV` (`282a3b28…`), UTF-16, one row —
    locates "Boot Option Restoration" / "Press any key to stop system
    reset" / "Reset System" in `fbx64.efi` only; `grubx64.efi` contains
    none of them in either encoding.
-3. **When GRUB does run with the TPM attached, it completes.** In every
-   continuation, reused-variables and regression boot (25+ boots), GRUB
-   with its TPM verifier active loads the BLS entry, measures, and boots to
-   `graphical.target` with the TPM present and functional. `tpm_fail_fatal`
-   never triggers.
+3. **When GRUB does run with the TPM attached, it completes.** Across
+   thirty-plus TPM-attached boots — the continuation run, the
+   reused-variable cells, the state-combination cells and the regression
+   cells — GRUB loads the BLS entry and the system reaches
+   `graphical.target` with the TPM present and enumerated. No GRUB TPM
+   error string (`tpm_fail_fatal`, `TPM unavailable`, `Cannot open TPM
+   protocol`, `unknown TPM error`) appears in any transcript.
+
+   Stated precisely, because the difference matters: this shows GRUB's TPM
+   path does not *fail*. It does not independently prove measurements were
+   written, because no PCR values were read back before and after. That
+   check would need an in-guest agent this pass deliberately did not add,
+   and no product feature consumes a measurement today, so no claim here
+   rests on it.
 
 Command-by-command GRUB stepping and module-by-module load tests were
 therefore unnecessary: the failing boots never reach GRUB (nothing to
