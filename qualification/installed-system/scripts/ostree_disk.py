@@ -26,8 +26,19 @@ produce evidence about a disk nobody chose.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import subprocess
+
+# libguestfs' libvirt backend runs its appliance qemu as an unprivileged
+# user, which cannot read an evidence disk under /root — measured as
+# "Cannot access backing file ... (as uid ...)" on every collector at once.
+# The direct backend runs qemu as this process, which is the only way an
+# operator-owned evidence tree is readable at all. Set here rather than in
+# each caller: it is a property of reading these disks, not of any one
+# collector, and a collector that forgot it would fail for a reason that
+# looks like a disk defect.
+os.environ.setdefault("LIBGUESTFS_BACKEND", "direct")
 
 __all__ = [
     "DiskLayoutError",

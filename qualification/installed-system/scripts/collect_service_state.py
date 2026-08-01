@@ -31,6 +31,18 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+# Imported for the layout helpers and for the libguestfs backend it sets:
+# reading an evidence disk under /root needs the direct backend, and every
+# collector needs it for the same reason.
+from ostree_disk import (  # noqa: E402
+    DiskLayoutError,
+    root_partition,
+    single_deployment_root,
+    stateroot_var,
+)
+
 #: The directives that decide how much of the system a unit can reach. Their
 #: presence is what this reads; their sufficiency is a review, not a script.
 SANDBOX_DIRECTIVES = (
@@ -44,8 +56,14 @@ SANDBOX_DIRECTIVES = (
 
 
 def guestfish(disk: Path, *commands: str) -> str:
+    """Read the disk with an explicit root mount; -i finds nothing here."""
+    try:
+        root = root_partition(disk)
+    except DiskLayoutError:
+        return ""
     result = subprocess.run(
-        ["guestfish", "--ro", "-a", str(disk), "-i", *commands],
+        ["guestfish", "--ro", "-a", str(disk), "run", ":",
+         "mount-ro", root, "/", ":", *commands],
         capture_output=True, text=True,
     )
     return result.stdout if result.returncode == 0 else ""
@@ -74,9 +92,16 @@ def main() -> int:
     failed_units: list[str] = []
     with tempfile.TemporaryDirectory() as scratch:
         journal_tar = Path(scratch) / "journal.tar"
+        try:
+            journal_path = f"{stateroot_var(args.disk)}/log/journal"
+            root = root_partition(args.disk)
+        except DiskLayoutError as exc:
+            print(f"BLOCKED: {exc}", file=sys.stderr)
+            return 2
         result = subprocess.run(
-            ["guestfish", "--ro", "-a", str(args.disk), "-i",
-             "tar-out", "/var/log/journal", str(journal_tar)],
+            ["guestfish", "--ro", "-a", str(args.disk), "run", ":",
+             "mount-ro", root, "/", ":",
+             "tar-out", journal_path, str(journal_tar)],
             capture_output=True, text=True,
         )
         if result.returncode != 0:
@@ -109,7 +134,13 @@ def main() -> int:
               ", ".join(failed_units) or "clean")
 
     # --- what was shipped --------------------------------------------------
-    listing = guestfish(args.disk, "glob-expand", "/usr/lib/systemd/system/bunny-*")
+    try:
+        deployment = single_deployment_root(args.disk)
+    except DiskLayoutError as exc:
+        print(f"BLOCKED: {exc}", file=sys.stderr)
+        return 2
+    listing = guestfish(args.disk, "glob-expand",
+                        f"{deployment}/usr/lib/systemd/system/bunny-*")
     units = [line.strip() for line in listing.splitlines() if line.strip().endswith(
         (".service", ".socket", ".timer", ".target"))]
     unit_records = []
@@ -144,7 +175,7 @@ def main() -> int:
         exec_start = record.get("execStart") or ""
         program = exec_start.split()[0].lstrip("-@!+") if exec_start else ""
         if program.startswith("/"):
-            exists = guestfish(args.disk, "exists", program).strip()
+            exists = guestfish(args.disk, "exists", f"{deployment}{program}").strip()
             if exists != "true":
                 missing_programs.append(f"{record['unit']} -> {program}")
     check("every-unit-program-installed", not missing_programs,

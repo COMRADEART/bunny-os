@@ -1,7 +1,7 @@
 {
-  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later. Declared expected traffic at the VM boundary for installed-system scenarios. Anything observed that matches no entry is UNEXPECTED and fails the privacy assertion. Adding an entry is a reviewed change carrying a reason — the fixture is the documentation the requirement asks for.",
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later. Declared expected traffic at the VM boundary for installed-system scenarios; the key is 'entries' because that is the analyzer's contract. Anything observed that matches no entry is UNEXPECTED and fails the privacy assertion. Adding an entry is a reviewed change carrying a reason: the fixture is the documentation the requirement asks for.",
   "schemaVersion": 1,
-  "expected": [
+  "entries": [
     {
       "kind": "udp",
       "pattern": "10\\.0\\.2\\.3:53",
