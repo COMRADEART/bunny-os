@@ -135,7 +135,7 @@ install_cmd=(
   # multi-user, ran logind, user-sessions and wpa_supplicant, and the
   # scenario still failed for want of a marker that was being written to a
   # display nobody was reading. tty0 first, ttyS0 last.
-  --karg console=tty0 --karg console=ttyS0,115200
+  --karg console=tty0 --karg "console=ttyS0,115200"
   "${wipe_args[@]+"${wipe_args[@]}"}"
   --skip-fetch-check "/output/$(basename "${target}")"
 )

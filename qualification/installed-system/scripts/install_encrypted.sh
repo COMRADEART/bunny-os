@@ -63,6 +63,10 @@ rm -f "${target}"
 truncate -s "${size}" "${target}"
 
 loop="$(losetup --find --show --partscan "${target}")"
+# Reached only through the EXIT trap below, which is the point: every exit
+# path — including a failure between luksOpen and the unmount — must close
+# the mapper and release the loop device, or the next run inherits them.
+# shellcheck disable=SC2329  # invoked indirectly, by trap
 cleanup() {
   set +e
   umount -R /mnt/bunny-encrypted-install 2>/dev/null
