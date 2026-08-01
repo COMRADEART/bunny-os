@@ -91,31 +91,40 @@ for.
 Recorded outcome: encrypted unlock is **not qualified**. One success is not
 reproducibility, and a suspected harness interaction is not a pass.
 
-### The image does not boot with a TPM 2.0 attached
+### First boot with a TPM and empty NVRAM performs one automatic reboot
 
-Measured 2026-08-01 in QEMU/OVMF against the qualified installation artifact:
-with a software TPM 2.0 attached, the guest runs GRUB and then resets before
-loading a kernel. Reproduced with both `tpm-crb` and `tpm-tis`; the same disk
-with no TPM attached boots to `graphical.target` and finishes the Bunny
-health check. Evidence: `qualification/installed-system/evidence/
-ISQ-20260801-tpm-present-001/`.
+Superseded finding: the 2026-08-01 record that "the image does not boot with
+a TPM 2.0 attached" (`ISQ-20260801-tpm-present-*`) was a harness
+misinterpretation, and its serial evidence never showed GRUB. The
+investigation (`TPM_GRUB_RESET_ROOT_CAUSE.md`, confidence CONFIRMED)
+established what actually happens: when the disk is booted through the
+removable path with no OS boot entry in NVRAM — which is every first boot of
+the QCOW2/raw image in a fresh VM — shim's `fbx64.efi` restores the boot
+entries from `BOOTX64.CSV` and then, **because a TPM is present**,
+deliberately cold-resets once so the restored entry boots with cleanly
+measured PCRs. The second boot proceeds normally. Without a TPM, fallback
+chainloads directly and no reset occurs. The prior harness ran QEMU with
+`-no-reboot`, which turned the designed single reboot into a dead guest.
 
-This matters more than a VM curiosity should, because the declared minimum
-physical target **is** an x86-64 UEFI machine with TPM 2.0. Whether the reset
-reproduces against a discrete hardware TPM is unknown and is one of the
-questions physical qualification exists to answer; it is recorded as a
-measured `FAIL`, never as `NOT_RUN`, and it blocks the encryption matrix's
-`tpm-fallback` row from resting on a TPM-present pass.
+Measured under the `tpmq-1` matrix (`TPM_BOOT_REGRESSION_REPORT.md`): with
+the reboot permitted, TPM-attached cold boots complete 5/5 on both
+`tpm-crb` and `tpm-tis` with exactly one restoration reset each; with an
+already-restored variable store, 5/5 with zero resets; the no-TPM control
+5/5 with zero resets.
 
-No TPM feature is claimed by the product today — there is no TPM enrolment,
-no measured-boot policy and no sealed key — so this is a boot-path finding
-rather than a feature regression.
+What remains a real limitation:
 
-### No physical machine has ever run Bunny OS
-
-Zero hardware reports, zero collections. The `Hardware` and `Secure Boot` evidence
-categories block, and the OEM pilot cannot begin without a device even if every
-other blocker closed tomorrow.
+* A user's first boot of the shipped disk image on a TPM-equipped machine
+  with empty NVRAM shows a five-second "Boot Option Restoration" countdown
+  and reboots once before the OS appears. That is upstream shim 16.1
+  behaviour, not a Bunny defect, but it is user-visible and undocumented
+  until now.
+* All of this is software-TPM (swtpm/QEMU/OVMF) evidence. Whether a
+  discrete hardware TPM behaves the same is exactly what physical
+  qualification exists to answer and remains `NOT_RUN`.
+* No TPM feature is claimed by the product today — there is no TPM
+  enrolment, no measured-boot policy and no sealed key. The encryption
+  matrix's `tpm-fallback` row still cannot rest on any of this.
 
 ### No physical machine has ever run Bunny OS
 

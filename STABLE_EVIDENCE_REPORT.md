@@ -250,3 +250,20 @@ describes a tree which did not exist when the evidence was measured.
 `release/commits.py` distinguishes the two, and
 `tests/portability/test_hosted_import.py` asserts the committed candidate is
 never `HEAD`.
+
+## Addendum — 2026-08-01, TPM boot-reset investigation
+
+The software-TPM boot category moves from a measured `FAIL` to a passing
+software-TPM regression under the dedicated `tpmq-1` authority
+(`TPM_QUALIFICATION_REPORT.md`); the root cause was a harness
+misinterpretation of shim fallback's designed restoration reboot, confidence
+`CONFIRMED` (`TPM_GRUB_RESET_ROOT_CAUSE.md`). No artifact byte changed, so
+no archive-bound evidence in this report is disturbed, and nothing here is
+relabelled: the invalidated `ISQ-20260801-tpm-present-*` records remain in
+the tree as invalidated harness evidence.
+
+Software-TPM boot is not one of the fourteen candidate prerequisites, so the
+candidate count is whatever the gate recalculates from evidence — this
+addendum predicts nothing. Physical TPM evidence remains `NOT_RUN`, and the
+importer that produced the TPM verdict emits that state unconditionally: no
+software-TPM record can move a physical claim.

@@ -234,7 +234,108 @@ def verify_record_binding(record: Mapping[str, Any], context: TpmContext) -> lis
     return reasons
 
 
+def verify_internal_consistency(record: Mapping[str, Any],
+                                argv: list[str] | None) -> list[str]:
+    """Every way a TPM record can contradict the run that produced it.
+
+    The record's claims are checked against the recorded QEMU invocation and
+    against each other. These are exactly the relabellings the adversarial
+    battery refuses: no-TPM logs imported as TPM evidence, CRB labelled TIS,
+    reused state labelled fresh, TCG labelled KVM, a timeout labelled a
+    reset, a dead emulator labelled a guest reset, a screenshot-only "reset"
+    with no event behind it.
+    """
+    reasons: list[str] = []
+    interface = str(record.get("tpmInterface", ""))
+    if argv is not None:
+        joined = " ".join(argv)
+        has_crb = "tpm-crb" in joined
+        has_tis = "tpm-tis" in joined
+        if interface == "none" and (has_crb or has_tis):
+            reasons.append("record claims tpmInterface=none but the QEMU invocation "
+                           "attached a TPM device; a no-TPM label on a TPM run is "
+                           "the exact fraud the control cells exist to catch")
+        if interface == "crb" and not has_crb:
+            reasons.append("record claims tpmInterface=crb but no tpm-crb device is "
+                           "in the QEMU invocation")
+        if interface == "tis" and not has_tis:
+            reasons.append("record claims tpmInterface=tis but no tpm-tis device is "
+                           "in the QEMU invocation")
+        accel = str(record.get("acceleration", ""))
+        if accel and f"accel={accel}" not in joined:
+            reasons.append(f"record claims acceleration={accel} but the QEMU "
+                           "invocation does not; TCG evidence relabelled KVM would "
+                           "pass exactly this way")
+        machine = str(record.get("machineType", ""))
+        if machine and f"-machine {machine}," not in joined \
+                and f"-machine {machine} " not in joined:
+            reasons.append(f"record claims machineType={machine} absent from the "
+                           "QEMU invocation")
+    vars_state = str(record.get("ovmfVarsState", ""))
+    vars_source = str(record.get("ovmfVarsSourceDigest", ""))
+    template = str(record.get("ovmfVarsTemplateDigest", ""))
+    if vars_state == "fresh" and vars_source and template and vars_source != template:
+        reasons.append("record claims fresh OVMF variables but the copied store's "
+                       "digest is not the template's; reused variables labelled "
+                       "fresh would pass exactly this way")
+    if vars_state == "reused" and vars_source == template:
+        reasons.append("record claims reused OVMF variables but the source digest "
+                       "is the pristine template; that is a fresh store")
+    tpm_state = str(record.get("tpmState", ""))
+    if tpm_state == "reused" and not record.get("tpmStateSourceManifest"):
+        reasons.append("record claims reused TPM state but carries no source-state "
+                       "manifest; unprovenanced reuse is indistinguishable from a "
+                       "mislabel")
+    if tpm_state == "fresh" and record.get("tpmStateSourceManifest"):
+        reasons.append("record claims fresh TPM state but carries a source-state "
+                       "manifest; that is a reused state labelled fresh")
+    classification = record.get("resetClassification")
+    reset_count = int(record.get("guestResetCount", 0) or 0)
+    if classification == "HARNESS_TIMEOUT" and reset_count > 0:
+        reasons.append("HARNESS_TIMEOUT with a non-zero guest reset count: a "
+                       "timeout is not a reset and a reset is not a timeout")
+    if classification == "HOST_TERMINATED" and reset_count > 0:
+        reasons.append("HOST_TERMINATED with a non-zero guest reset count: an "
+                       "emulator the host killed did not observe a guest reset")
+    if reset_count > 0:
+        basis = record.get("classificationBasis") or []
+        if not any("QMP" in str(line) for line in basis):
+            reasons.append("a guest reset is claimed but no QMP event appears in "
+                           "the classification basis; a reset inferred from a "
+                           "screenshot alone is refused")
+    stages = record.get("stagesReached") or []
+    target_stages = {"multi-user", "graphical"}
+    if str(record.get("result")) == "PASS" \
+            and str(record.get("expectation", "target")) == "target" \
+            and record.get("diskAttached") \
+            and not (target_stages & set(stages)):
+        reasons.append("result PASS on a boot expectation without a boot target "
+                       "stage; reaching GRUB is not booting")
+    if classification == "HARNESS_TIMEOUT" and (target_stages & set(stages)):
+        reasons.append("HARNESS_TIMEOUT claimed although the transcript reached a "
+                       "boot target; a late success judged from a truncated log is "
+                       "refused — judge the complete log")
+    if str(record.get("secureBootState", "")) not in ("disabled",
+                                                      "development-firmware"):
+        reasons.append("secureBootState must be 'disabled' or 'development-firmware'; "
+                       "nothing in this harness can produce production Secure Boot "
+                       "evidence")
+    return reasons
+
+
 def experiment_id(name: str, *, date: str, sequence: int) -> str:
     """The canonical experiment identifier. One format, produced in one place."""
     slug = re.sub(r"[^a-z0-9-]", "-", name.lower()).strip("-")
     return f"TPMQ-{date}-{slug}-{sequence:03d}"
+
+
+if __name__ == "__main__":
+    # `make tpm-baseline` — resolve and verify the context on this machine,
+    # loudly. Exit 0 with the authority printed, or 2 with the refusal.
+    import sys as _sys
+    try:
+        _context = resolve_context(Path.cwd())
+    except ContextError as _exc:
+        print(f"BLOCKED: {_exc}", file=_sys.stderr)
+        raise SystemExit(2)
+    print(json.dumps(_context.as_dict(), indent=2))

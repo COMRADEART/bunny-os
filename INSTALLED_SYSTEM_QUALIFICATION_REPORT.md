@@ -78,6 +78,18 @@ here still reports the failure rather than being backdated.
 disk with no TPM reaches `graphical.target`. The declared minimum physical
 target is a machine with TPM 2.0.
 
+*Superseded 2026-08-01 by the TPM investigation
+(`TPM_GRUB_RESET_ROOT_CAUSE.md`, confidence CONFIRMED): the reset was
+shim `fbx64.efi`'s deliberate one-time boot-option-restoration reboot on a
+fresh NVRAM with a TPM present — GRUB never ran in the failing boots — and
+this harness's `-no-reboot` turned that designed reboot into a dead guest.
+The `ISQ-20260801-tpm-present-*` records stay as invalidated harness
+evidence; TPM boot qualification now lives under the `tpmq-1` authority
+(`TPM_QUALIFICATION_REPORT.md`), where the same image passes 5/5 on both
+interfaces with the reboot permitted. The finding's text above is preserved
+as written because this report describes what this pass measured and
+believed at the time.*
+
 **Encrypted unlock is not qualified.** The refusal path is sound and passes —
 a wrong passphrase is consumed, rejected, reprompted, with nothing mounted
 and nothing leaked. The correct passphrase is accepted, and the boot then

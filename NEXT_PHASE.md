@@ -2,6 +2,38 @@
 
 Do not start a custom shell, compositor, visual redesign, installer experience, app store, or consumer release.
 
+## Next work after the TPM boot-reset investigation — 2026-08-01
+
+**Do not begin Phase 8. Do not begin a pilot. Do not create production keys.**
+
+The "TPM GRUB reset" is closed as a qualification blocker: root cause
+CONFIRMED (shim fallback's designed one-time boot-option-restoration reboot,
+misread by a `-no-reboot` harness; `TPM_GRUB_RESET_ROOT_CAUSE.md`), harness
+corrected under the `tpmq-1` authority, software-TPM regression matrix green
+on both interfaces (`TPM_BOOT_REGRESSION_REPORT.md`). The artifact did not
+change; Commit G/H/I/J remain the archive authority. Physical TPM remains
+`NOT_RUN` — nothing software-TPM can move it.
+
+The next blockers, in the order they were already queued:
+
+1. **gdm/screencast intermittent boot failures** — now separately quantified
+   per boot in the TPM matrix records (`failedUnits`), same classification
+   discipline as `dispose_failed_units.py`.
+2. **Encrypted unlock KDF cost** — unchanged; one success is not
+   reproducibility.
+3. **Global SELinux** — 12,369 unresolved paths.
+4. **Harness login injection, desktop smoke, accessibility flows,
+   update/rollback, recovery ISO** — unchanged.
+5. **Physical hardware** — one x86-64 UEFI machine with Secure Boot and
+   TPM 2.0; now also the only way to answer whether a discrete TPM's
+   restoration reboot behaves like swtpm's.
+
+One operational note for whoever boots the shipped image on real hardware
+first: with a TPM present and empty NVRAM, the first boot shows a
+five-second "Boot Option Restoration" countdown and reboots once. That is
+designed shim 16.1 behaviour, not the defect returning. It is in
+`KNOWN_LIMITATIONS.md` now; do not re-open the investigation for it.
+
 ## Next work after the SQLite determinism pass — 2026-07-30
 
 **Do not begin Phase 8. Do not begin an OEM, enterprise or encrypted-sync pilot.**

@@ -2,7 +2,7 @@
   "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
   "name": "tpm-absent",
   "title": "Boot with no TPM: the fallback must be predictable",
-  "description": "Identical to first-boot except that the absence of a TPM is the point: the system must boot cleanly, no unit may fail for want of one, and nothing may hang waiting for a device that is not there.",
+  "description": "RETIRED 2026-08-01: superseded by the tpmq-1 authority (qualification/tpm/), whose no-tpm-cold cell is the paired control for every TPM cell; the ISQ-20260801-tpm-absent-* records remain valid for what they measured. Original intent: identical to first-boot except that the absence of a TPM is the point — the system must boot cleanly, no unit may fail for want of one, and nothing may hang waiting for a device that is not there.",
   "scenarioVersion": "isq-1",
   "environment": "qemu-kvm",
   "disk": {"sizeGiB": 64, "blank": false, "preExistingData": false},

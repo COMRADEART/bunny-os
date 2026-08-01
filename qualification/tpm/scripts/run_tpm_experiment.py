@@ -536,7 +536,26 @@ def main() -> int:
         second_boot_offset: int | None = None
         second_target = False
         reboot_requested = False
+        reboot_attempts = 0
+        last_reboot_attempt = 0.0
         deadline = time.monotonic() + args.timeout
+
+        def send_ctrl_alt_del() -> None:
+            # ctrl-alt-del reaches PID 1 only from a text VT in translated
+            # keyboard mode. A Wayland compositor holds its VT in raw mode
+            # and may or may not yield to ctrl-alt-f3 depending on session
+            # state — measured: the identical sequence rebooted one boot and
+            # was swallowed by the next. So the request is attempted, watched
+            # for effect, and retried; the caller counts attempts.
+            qmp.execute("send-key", {"keys": [
+                {"type": "qcode", "data": "ctrl"},
+                {"type": "qcode", "data": "alt"},
+                {"type": "qcode", "data": "f3"}]})
+            time.sleep(4)
+            qmp.execute("send-key", {"keys": [
+                {"type": "qcode", "data": "ctrl"},
+                {"type": "qcode", "data": "alt"},
+                {"type": "qcode", "data": "delete"}]})
         while time.monotonic() < deadline:
             text = read_serial(serial_log)
             for stage in stage_reached(text):
@@ -576,19 +595,25 @@ def main() -> int:
                 if "health-check" in seen_stages:
                     reboot_requested = True
                     screendump("pre-reboot")
+                    second_boot_offset = len(text)
                     if args.reboot_after_target:
-                        qmp.execute("send-key", {"keys": [
-                            {"type": "qcode", "data": "ctrl"},
-                            {"type": "qcode", "data": "alt"},
-                            {"type": "qcode", "data": "delete"}]})
-                        second_boot_offset = len(text)
+                        send_ctrl_alt_del()
+                        reboot_attempts = 1
+                        last_reboot_attempt = time.monotonic()
                     else:
                         qmp.execute("system_reset")
-                        second_boot_offset = len(text)
             elif target_hit and not (args.reboot_after_target
                                      or args.qemu_reset_after_target):
                 if "health-check" in seen_stages:
                     break
+            if reboot_requested and args.reboot_after_target and reset_count == 0 \
+                    and not [e for e in qmp.find_events("RESET")
+                             if e.get("data", {}).get("reason") == "guest-reset"] \
+                    and time.monotonic() - last_reboot_attempt > 30 \
+                    and reboot_attempts < 6:
+                send_ctrl_alt_del()
+                reboot_attempts += 1
+                last_reboot_attempt = time.monotonic()
             if second_boot_offset is not None:
                 tail = text[second_boot_offset:]
                 if re.search(r"Reached target .*(Multi-User System|Graphical Interface)",
@@ -636,6 +661,11 @@ def main() -> int:
             shutil.rmtree(socket_dir, ignore_errors=True)
 
     # --------------------------------------------------------- post capture
+    if reboot_attempts > 1:
+        limitations.append(
+            f"guest reboot needed {reboot_attempts} ctrl-alt-del attempts; the "
+            "graphical session swallows the sequence until the VT yields")
+
     dmesg = subprocess.run(["dmesg"], capture_output=True, text=True)
     if dmesg.returncode == 0:
         tail = "\n".join(dmesg.stdout.splitlines()[-120:])
@@ -691,9 +721,17 @@ def main() -> int:
     # event — an earlier version classified its own cleanup as HOST_TERMINATED.
     names_seen = {e.get("event") for e in events}
     unexpected_death = not process_alive
+    # A reboot this run commanded (ctrl-alt-del, QMP system_reset) is not an
+    # anomalous event: it needs no classification, the same way an operator
+    # typing `reboot` is not a finding. Only resets BEYOND the commanded
+    # budget are classified — an earlier version classified its own
+    # commanded reboot as UNKNOWN, which the importer correctly blocks on.
+    commanded_resets = 1 if (args.reboot_after_target
+                             or args.qemu_reset_after_target) else 0
+    anomalous_resets = len(guest_reset_events) > commanded_resets
     classification = None
     basis: list[str] = []
-    if guest_reset_events or {"WATCHDOG", "GUEST_PANICKED"} & names_seen \
+    if anomalous_resets or {"WATCHDOG", "GUEST_PANICKED"} & names_seen \
             or unexpected_death \
             or (timed_out and not args.no_disk and not
                 ("graphical" in stages or "multi-user" in stages)):

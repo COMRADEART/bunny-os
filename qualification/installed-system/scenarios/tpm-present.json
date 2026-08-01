@@ -2,7 +2,7 @@
   "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
   "name": "tpm-present",
   "title": "Boot with a software TPM 2.0 attached",
-  "description": "swtpm is attached and the installed system must enumerate it without error. This qualifies only behaviour the product actually uses today — device presence and clean enumeration. It is recorded as tpmState swtpm and can never satisfy a physical-TPM requirement.",
+  "description": "RETIRED 2026-08-01: superseded by the tpmq-1 authority (qualification/tpm/). This scenario's harness ran QEMU with -no-reboot, which records shim fallback's designed one-time boot-option-restoration reboot (taken when a TPM is present and the OVMF variable store is fresh) as a dead guest — see TPM_GRUB_RESET_ROOT_CAUSE.md. The ISQ-20260801-tpm-present-* records remain as invalidated harness evidence; do not run this scenario for TPM evidence. Original intent: swtpm is attached and the installed system must enumerate it without error. It is recorded as tpmState swtpm and can never satisfy a physical-TPM requirement.",
   "scenarioVersion": "isq-1",
   "environment": "qemu-kvm",
   "disk": {"sizeGiB": 64, "blank": false, "preExistingData": false},

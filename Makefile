@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot gate-dev-qualification dev-qualification-gaps qualification-compare release-blocker-baseline vulnerability-position reachability-review package-minimisation-check licence-gate independent-builder-prepare reproducibility-compare development-signing-drill signing-roles build-qualification-candidate build-independent-recovery validate-release-manifest test-installation-matrix test-encryption-matrix test-update-matrix test-rollback-matrix test-recovery-matrix test-preservation-matrix test-accessibility-matrix validate-hardware-evidence validate-independent-reviews stable-evidence-report pilot-closure-assertion test-release-closure qualification-evidence-baseline independent-builder-ci-manifest collect-builder-record verify-builder-independence compare-independent-builds acquire-cve-sources validate-cve-acquisition analyse-cve-symbols generate-reachability-packages collect-hardware-evidence accessibility-evidence-plan validate-accessibility-evidence two-person-development-signing-drill qualification-candidate-readiness gate-source gate-qualification-candidate test-qualification-evidence test-reachability test-review-evidence mirror-base-image verify-retained-base build-builder-image verify-builder-image resolve-package-lock materialise-package-snapshot verify-package-snapshot verify-input-locks hermetic-build image-finalisation machine-identity-check mutable-state-check rpmdb-determinism-check font-cache-determinism-check intended-selinux-manifest deterministic-sbom inspect-sqlite-databases compare-sqlite-logical compare-sqlite-pages compare-rpm-headers finalise-package-databases sqlite-determinism-check test-rpmdb-rebuild test-libdnf-history-rebuild complete-local-comparison publish-retained-base publish-builder-image publish-package-snapshot verify-published-inputs cold-pull-input-test create-reproducibility-target dispatch-hosted-h1 dispatch-hosted-h2 collect-local-bundle import-three-builder-evidence local-hermetic-repeatability dispatch-hosted-reproducibility import-reproducibility-evidence compare-three-builds toolchain-independence reproducibility-gate test-supplychain
+.PHONY: audit installer-audit installer-schema phase5-audit phase-5-baseline import-beta-feedback triage-report release-dashboard validate test test-security test-broker test-shell test-launcher test-search test-workspace test-panel test-notifications test-approvals test-settings test-terminal test-accessibility test-performance test-desktop-security test-installer test-storage test-encryption test-dual-boot test-first-run test-app-distribution test-installer-security test-phase5 test-update-security test-rollbacks test-recovery test-migrations test-hardware-report test-diagnostics test-redaction test-crash-reporting test-network-privacy test-application-catalogue test-release-signing test-installer-regressions test-update-regressions test-multi-user test-bunny-disabled test-local-only test-privacy-regressions test-accessibility-regressions test-hardware-matrix long-run-tests installer-performance build-developer-image build-shell-image build-shell-test-image build-live-image build-beta-image build-recovery-image build-stable-rc sign-stable-rc verify-stable-rc stable-artifacts inspect-image inspect-shell-image verify-install-media vm-smoke vm-shell-smoke vm-install-smoke vm-encrypted-install vm-upgrade-test vm-rollback-test vm-recovery-test reproducible-build-check sbom shell-sbom security-scan shell-security-scan license-scan shell-license-scan malware-scan performance-baseline gate gate-phase-2 gate-phase-3 gate-phase-4 gate-public-beta gate-phase-5 gate-stable-candidate gate-stable-release phase7-audit phase-7-baseline test-oem test-factory test-device-identity test-enrolment test-policy test-fleet test-multitenancy test-sync test-sync-crypto test-device-revocation test-remote-wipe test-airgap test-kiosk test-decommission test-pilot fleet-simulation pilot-readiness build-oem-image gate-phase-7-source gate-phase-7 gate-oem-pilot gate-enterprise-pilot gate-sync-pilot gate-dev-qualification dev-qualification-gaps qualification-compare release-blocker-baseline vulnerability-position reachability-review package-minimisation-check licence-gate independent-builder-prepare reproducibility-compare development-signing-drill signing-roles build-qualification-candidate build-independent-recovery validate-release-manifest test-installation-matrix test-encryption-matrix test-update-matrix test-rollback-matrix test-recovery-matrix test-preservation-matrix test-accessibility-matrix validate-hardware-evidence validate-independent-reviews stable-evidence-report pilot-closure-assertion test-release-closure qualification-evidence-baseline independent-builder-ci-manifest collect-builder-record verify-builder-independence compare-independent-builds acquire-cve-sources validate-cve-acquisition analyse-cve-symbols generate-reachability-packages collect-hardware-evidence accessibility-evidence-plan validate-accessibility-evidence two-person-development-signing-drill qualification-candidate-readiness gate-source gate-qualification-candidate test-qualification-evidence test-reachability test-review-evidence mirror-base-image verify-retained-base build-builder-image verify-builder-image resolve-package-lock materialise-package-snapshot verify-package-snapshot verify-input-locks hermetic-build image-finalisation machine-identity-check mutable-state-check rpmdb-determinism-check font-cache-determinism-check intended-selinux-manifest deterministic-sbom inspect-sqlite-databases compare-sqlite-logical compare-sqlite-pages compare-rpm-headers finalise-package-databases sqlite-determinism-check test-rpmdb-rebuild test-libdnf-history-rebuild complete-local-comparison publish-retained-base publish-builder-image publish-package-snapshot verify-published-inputs cold-pull-input-test create-reproducibility-target dispatch-hosted-h1 dispatch-hosted-h2 collect-local-bundle import-three-builder-evidence local-hermetic-repeatability dispatch-hosted-reproducibility import-reproducibility-evidence compare-three-builds toolchain-independence reproducibility-gate test-supplychain tpm-baseline tpm-no-device-control tpm-crb-cold tpm-tis-cold tpm-crb-reused-state tpm-tis-reused-state tpm-firmware-control tpm-known-good-disk-control tpm-grub-isolation tpm-reset-classify tpm-regression-matrix tpm-evidence-gate tpm-qualification-gate test-tpm tpm-summarise-matrix tpm-render-regression-report tpm-retain-bulky-evidence
 
 audit:
 	$(PYTHON) scripts/task.py audit
@@ -754,3 +754,64 @@ collect-physical-hardware:
 
 test-installed:
 	$(PYTHON) -m unittest discover -s tests/installed -t .
+
+# TPM boot-reset investigation and qualification. Every target reads its
+# authority from qualification/tpm/evidence-context.json through
+# qualification/tpm/scripts/tpm_context.py — no target decides for itself
+# what is being tested, and a record about any other disk, firmware image,
+# emulator build or scenario version is refused as stale. The VM-running
+# targets require QEMU/KVM, OVMF and swtpm on this machine (the WSL
+# builder); the gates and tests run anywhere.
+TPMQ := qualification/tpm
+TPMQ_SCRIPTS := $(TPMQ)/scripts
+
+tpm-baseline:
+	$(PYTHON) $(TPMQ_SCRIPTS)/tpm_context.py
+
+tpm-no-device-control:
+	$(PYTHON) $(TPMQ_SCRIPTS)/run_matrix.py --only no-tpm-cold
+
+tpm-crb-cold:
+	$(PYTHON) $(TPMQ_SCRIPTS)/run_matrix.py --only crb-fresh-cold
+
+tpm-tis-cold:
+	$(PYTHON) $(TPMQ_SCRIPTS)/run_matrix.py --only tis-fresh-cold
+
+tpm-crb-reused-state:
+	$(PYTHON) $(TPMQ_SCRIPTS)/run_matrix.py --only crb-reused-cold
+
+tpm-tis-reused-state:
+	$(PYTHON) $(TPMQ_SCRIPTS)/run_matrix.py --only tis-reused-cold
+
+tpm-firmware-control:
+	$(PYTHON) $(TPMQ_SCRIPTS)/run_matrix.py --only fw-only-crb --only fw-only-tis
+
+tpm-known-good-disk-control:
+	$(PYTHON) $(TPMQ_SCRIPTS)/run_matrix.py --only fedora-no-tpm --only fedora-crb-fresh-repro --only fedora-crb-continue
+
+tpm-grub-isolation:
+	bash $(TPMQ_SCRIPTS)/extract_boot_chain.sh "$${BUNNY_QUALIFIED_QCOW2:?set BUNNY_QUALIFIED_QCOW2}" "$${BUNNY_QCOW2_DIGEST:?set BUNNY_QCOW2_DIGEST}" "$${BUNNY_BOOT_CHAIN_OUT:-build/out/tpm/boot-chain}"
+
+tpm-reset-classify:
+	$(PYTHON) $(TPMQ_SCRIPTS)/run_matrix.py --only crb-fresh-repro-stop --only tis-fresh-repro-stop
+
+tpm-regression-matrix:
+	$(PYTHON) $(TPMQ_SCRIPTS)/run_matrix.py
+
+tpm-summarise-matrix:
+	$(PYTHON) $(TPMQ_SCRIPTS)/summarise_matrix.py --evidence-root $(TPMQ)/evidence
+
+tpm-render-regression-report:
+	$(PYTHON) $(TPMQ_SCRIPTS)/render_regression_report.py --evidence-root $(TPMQ)/evidence --report TPM_BOOT_REGRESSION_REPORT.md
+
+tpm-retain-bulky-evidence:
+	$(PYTHON) $(TPMQ_SCRIPTS)/retain_bulky_evidence.py --evidence-root $(TPMQ)/evidence --trace-root "$${BUNNY_TPM_TRACE_ROOT:-/root/tpm-traces}"
+
+tpm-evidence-gate:
+	$(PYTHON) $(TPMQ_SCRIPTS)/import_tpm_results.py --dry-run
+
+tpm-qualification-gate:
+	$(PYTHON) $(TPMQ_SCRIPTS)/import_tpm_results.py
+
+test-tpm:
+	$(PYTHON) -m unittest discover -s tests/tpm -t .
