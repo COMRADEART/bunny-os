@@ -1,0 +1,27 @@
+{
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+  "name": "brlapi-first-boot",
+  "title": "First boot of the corrected image, with the key generator running",
+  "description": "The same first-boot requirements as before, plus the one the previous pass measured failing: bunny-brlapi-key.service must actually run. The marker is required rather than optional because a boot that reaches its targets without minting the key is exactly the outcome that shipped before — a system that looks healthy and leaves a braille user with no authorisation key.",
+  "scenarioVersion": "isq-1",
+  "environment": "qemu-kvm",
+  "disk": {"sizeGiB": 24, "blank": false, "preExistingData": false},
+  "resources": {"vcpus": 4, "memoryMiB": 8192},
+  "firmware": "uefi",
+  "tpm": "none",
+  "network": "enabled",
+  "timeoutSeconds": 900,
+  "markers": [
+    {"label": "boot-target", "regex": "Reached target .*(Multi-User System|Graphical Interface)", "required": true},
+    {"label": "health-check", "regex": "Finished .*Bunny OS boot health check", "required": true},
+    {"label": "brlapi-key-service", "regex": "(Starting|Started|Finished).*[Bb]rl[Aa][Pp][Ii]", "required": true}
+  ],
+  "forbiddenMarkers": [
+    {"label": "emergency-mode", "regex": "emergency mode|Emergency Shell"},
+    {"label": "fs-repair", "regex": "UNEXPECTED INCONSISTENCY"},
+    {"label": "brlapi-key-service-failed", "regex": "bunny-brlapi-key\\.service: Failed"},
+    {"label": "key-value-on-console", "regex": "brlapi[^\\n]*\\b[0-9a-f]{32}\\b"}
+  ],
+  "expectedOutcome": "PASS",
+  "destructive": false
+}
