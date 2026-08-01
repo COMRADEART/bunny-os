@@ -64,6 +64,33 @@ record in this pass correctly reports `brlapi-key-service-ran` as `FAIL`, and
 the per-installation state comparison correctly reports the key absent. The
 next re-qualification carries the fix; nothing here claims it does.
 
+### LUKS2 unlock is prohibitively slow in the qualification VM
+
+Measured across three runs of one encrypted installation. The refusal path is
+sound: a wrong passphrase is consumed and rejected, the console reprompts,
+nothing mounts and nothing leaks — that scenario passes. The correct
+passphrase is also consumed and *not* rejected, which is how a correct
+passphrase looks; what follows is the problem. One run completed, reaching
+`multi-user.target` and finishing the Bunny health check about twenty
+minutes into the boot. Two later runs produced no further console output at
+all and were still unfinished at a forty-five-minute deadline.
+
+The likely cause is recorded rather than assumed: LUKS2 defaults to argon2id
+with a memory and time cost that `cryptsetup` benchmarks on the machine
+formatting the volume. That machine is a fast, many-cored builder; the
+qualification VM is neither, and the derivation appears to run for tens of
+minutes there.
+
+If that reading is right, it is not only a test-environment artifact. A disk
+encrypted on a fast machine and unlocked on a slower one is a real user
+situation, and "the passphrase works but the machine appears dead for twenty
+minutes" is indistinguishable from a failure to anyone using it. Confirming
+or refuting that on real hardware is precisely what physical qualification is
+for.
+
+Recorded outcome: encrypted unlock is **not qualified**. One success is not
+reproducibility, and a suspected harness interaction is not a pass.
+
 ### The image does not boot with a TPM 2.0 attached
 
 Measured 2026-08-01 in QEMU/OVMF against the qualified installation artifact:
