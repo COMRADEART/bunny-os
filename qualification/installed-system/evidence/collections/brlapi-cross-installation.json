@@ -1,0 +1,44 @@
+{
+ "collection": "brlapi-cross-installation",
+ "findings": [
+  {
+   "check": "key-present:installation-a",
+   "detail": "a key was minted on this installation",
+   "result": "PASS"
+  },
+  {
+   "check": "key-present:installation-b",
+   "detail": "a key was minted on this installation",
+   "result": "PASS"
+  },
+  {
+   "check": "key-present:installation-offline",
+   "detail": "a key was minted on this installation",
+   "result": "PASS"
+  },
+  {
+   "check": "keys-differ:a-vs-b",
+   "detail": "two installations of one archive must not share a key",
+   "result": "PASS"
+  },
+  {
+   "check": "keys-differ:a-vs-offline",
+   "detail": "an offline installation must still mint its own key",
+   "result": "PASS"
+  },
+  {
+   "check": "key-stable-across-reboot",
+   "detail": "a second boot must not rotate a valid key",
+   "result": "PASS"
+  }
+ ],
+ "keyDigests": {
+  "installation-a": "b570c485048542d1510127e9f84dfac72bb8f53263deed8676af58ce013500ee",
+  "installation-a-after-reboot": "b570c485048542d1510127e9f84dfac72bb8f53263deed8676af58ce013500ee",
+  "installation-b": "f41e4d7df5572015817f10ffa4eeb059a083820a14d54af4efc47716b264851b",
+  "installation-offline": "63c6dc02805bd1d8da62c227245d31428edba9ee008d87a04cb740710add304d"
+ },
+ "note": "Decided from SHA-256 digests recorded by the per-installation collectors. No key value is read, compared or stored here.",
+ "result": "PASS",
+ "schemaVersion": 1
+}

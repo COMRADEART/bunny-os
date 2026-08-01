@@ -1,0 +1,84 @@
+{
+  "argv": [
+    "qemu-system-x86_64",
+    "-machine",
+    "q35,accel=kvm",
+    "-cpu",
+    "host",
+    "-smp",
+    "4",
+    "-m",
+    "8192",
+    "-drive",
+    "if=pflash,format=qcow2,readonly=on,file=/usr/share/edk2/ovmf/OVMF_CODE_4M.qcow2",
+    "-drive",
+    "if=pflash,format=qcow2,file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-tpm-present-002/work/OVMF_VARS.qcow2",
+    "-drive",
+    "file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-tpm-present-002/work/target-disk.qcow2,format=qcow2,if=virtio",
+    "-chardev",
+    "socket,id=ser0,path=/tmp/isq-kmxs3dpz/ser.sock,server=on,wait=off,logfile=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-tpm-present-002/serial.log",
+    "-serial",
+    "chardev:ser0",
+    "-qmp",
+    "unix:/tmp/isq-kmxs3dpz/qmp.sock,server,nowait",
+    "-display",
+    "none",
+    "-vga",
+    "virtio",
+    "-no-reboot",
+    "-netdev",
+    "user,id=n0",
+    "-device",
+    "virtio-net-pci,netdev=n0",
+    "-object",
+    "filter-dump,id=fd0,netdev=n0,file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-tpm-present-002/network.pcap",
+    "-chardev",
+    "socket,id=chrtpm,path=/tmp/isq-kmxs3dpz/tpm.sock",
+    "-tpmdev",
+    "emulator,id=tpm0,chardev=chrtpm",
+    "-device",
+    "tpm-crb,tpmdev=tpm0"
+  ],
+  "scenario": {
+    "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+    "name": "tpm-present",
+    "title": "Boot with a software TPM 2.0 attached",
+    "description": "swtpm is attached and the installed system must enumerate it without error. This qualifies only behaviour the product actually uses today \u2014 device presence and clean enumeration. It is recorded as tpmState swtpm and can never satisfy a physical-TPM requirement.",
+    "scenarioVersion": "isq-1",
+    "environment": "qemu-kvm",
+    "disk": {
+      "sizeGiB": 64,
+      "blank": false,
+      "preExistingData": false
+    },
+    "resources": {
+      "vcpus": 4,
+      "memoryMiB": 8192
+    },
+    "firmware": "uefi",
+    "tpm": "swtpm",
+    "network": "enabled",
+    "timeoutSeconds": 900,
+    "markers": [
+      {
+        "label": "boot-target",
+        "regex": "Reached target .*(Multi-User System|Graphical Interface)",
+        "required": true
+      },
+      {
+        "label": "health-check",
+        "regex": "Finished .*Bunny OS boot health check",
+        "required": true
+      }
+    ],
+    "forbiddenMarkers": [
+      {
+        "label": "tpm-error",
+        "regex": "tpm.*(error|failed to|self test failed)"
+      }
+    ],
+    "expectedOutcome": "PASS",
+    "destructive": false
+  },
+  "startedAt": "2026-08-01T19:56:52Z"
+}

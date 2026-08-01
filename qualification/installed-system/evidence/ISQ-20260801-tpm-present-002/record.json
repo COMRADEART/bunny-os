@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "ISQ-20260801-tpm-present-002",
+  "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
+  "sourceArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
+  "installationArtifactDigest": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217",
+  "environment": "qemu-kvm",
+  "firmwareMode": "uefi",
+  "secureBootState": "disabled",
+  "tpmState": "swtpm",
+  "encryptionState": "none",
+  "scenario": "tpm-present",
+  "scenarioVersion": "isq-1",
+  "startedAt": "2026-08-01T19:56:52Z",
+  "completedAt": "2026-08-01T19:57:03Z",
+  "result": "FAIL",
+  "assertions": [
+    {
+      "name": "marker:boot-target",
+      "expected": "Reached target .*(Multi-User System|Graphical Interface)",
+      "observed": "absent from the complete log",
+      "result": "FAIL"
+    },
+    {
+      "name": "marker:health-check",
+      "expected": "Finished .*Bunny OS boot health check",
+      "observed": "absent from the complete log",
+      "result": "FAIL"
+    },
+    {
+      "name": "forbidden:tpm-error",
+      "expected": "absent: tpm.*(error|failed to|self test failed)",
+      "observed": "absent",
+      "result": "PASS"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "network.pcap",
+      "sha256": "c0b715eaf3947f04d3ff69c0daa70a2c317ac276247fa9e192b4f11d12c431d2",
+      "createdAt": "2026-08-01T19:57:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-command.json",
+      "sha256": "03a017865ccde1d123e3e3b66e665f719c4ff6e8e907c60a5c871ef0ca1fdfb4",
+      "createdAt": "2026-08-01T19:57:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "serial.log",
+      "sha256": "2801fea520739259de2cd1362010aacce3b0fa2d211c966329517d163fdd133e",
+      "createdAt": "2026-08-01T19:57:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "swtpm.log",
+      "sha256": "dabf5a3cdd5e21c4e7407af2fd64e75028e1c202ab5efa3f22a02234764a8cba",
+      "createdAt": "2026-08-01T19:57:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    }
+  ],
+  "operator": "allamsettiraviteja2009",
+  "limitations": []
+}

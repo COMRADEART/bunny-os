@@ -1,0 +1,95 @@
+{
+  "argv": [
+    "qemu-system-x86_64",
+    "-machine",
+    "q35,accel=kvm",
+    "-cpu",
+    "host",
+    "-smp",
+    "2",
+    "-m",
+    "4096",
+    "-drive",
+    "if=pflash,format=qcow2,readonly=on,file=/usr/share/edk2/ovmf/OVMF_CODE_4M.qcow2",
+    "-drive",
+    "if=pflash,format=qcow2,file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-brlapi-reduced-resources-004/work/OVMF_VARS.qcow2",
+    "-drive",
+    "file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-brlapi-reduced-resources-004/work/target-disk.qcow2,format=qcow2,if=virtio",
+    "-chardev",
+    "socket,id=ser0,path=/tmp/isq-is9289ta/ser.sock,server=on,wait=off,logfile=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-brlapi-reduced-resources-004/serial.log",
+    "-serial",
+    "chardev:ser0",
+    "-qmp",
+    "unix:/tmp/isq-is9289ta/qmp.sock,server,nowait",
+    "-display",
+    "none",
+    "-vga",
+    "virtio",
+    "-no-reboot",
+    "-netdev",
+    "user,id=n0",
+    "-device",
+    "virtio-net-pci,netdev=n0",
+    "-object",
+    "filter-dump,id=fd0,netdev=n0,file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-brlapi-reduced-resources-004/network.pcap"
+  ],
+  "scenario": {
+    "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+    "name": "brlapi-reduced-resources",
+    "title": "Corrected image at the resource floor, key still minted",
+    "description": "The reduced-resource floor with the key requirement attached. Entropy and writable-filesystem availability are the two things that could plausibly make key generation behave differently on a small machine, and both are exercised here rather than assumed to scale down.",
+    "scenarioVersion": "isq-1",
+    "environment": "qemu-kvm",
+    "disk": {
+      "sizeGiB": 24,
+      "blank": false,
+      "preExistingData": false
+    },
+    "resources": {
+      "vcpus": 2,
+      "memoryMiB": 4096
+    },
+    "firmware": "uefi",
+    "tpm": "none",
+    "network": "enabled",
+    "timeoutSeconds": 1200,
+    "markers": [
+      {
+        "label": "boot-target",
+        "regex": "Reached target .*(Multi-User System|Graphical Interface)",
+        "required": true
+      },
+      {
+        "label": "health-check",
+        "regex": "Finished .*Bunny OS boot health check",
+        "required": true
+      },
+      {
+        "label": "brlapi-key-service",
+        "regex": "(Starting|Started|Finished).*[Bb]rl[Aa][Pp][Ii]",
+        "required": true
+      }
+    ],
+    "forbiddenMarkers": [
+      {
+        "label": "emergency-mode",
+        "regex": "emergency mode|Emergency Shell"
+      },
+      {
+        "label": "fs-repair",
+        "regex": "UNEXPECTED INCONSISTENCY"
+      },
+      {
+        "label": "brlapi-key-service-failed",
+        "regex": "bunny-brlapi-key\\.service: Failed"
+      },
+      {
+        "label": "key-value-on-console",
+        "regex": "brlapi[^\\n]*\\b[0-9a-f]{32}\\b"
+      }
+    ],
+    "expectedOutcome": "PASS",
+    "destructive": false
+  },
+  "startedAt": "2026-08-01T19:51:24Z"
+}

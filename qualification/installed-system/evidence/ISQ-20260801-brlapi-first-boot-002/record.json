@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "ISQ-20260801-brlapi-first-boot-002",
+  "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
+  "sourceArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
+  "installationArtifactDigest": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217",
+  "environment": "qemu-kvm",
+  "firmwareMode": "uefi",
+  "secureBootState": "disabled",
+  "tpmState": "absent",
+  "encryptionState": "none",
+  "scenario": "brlapi-first-boot",
+  "scenarioVersion": "isq-1",
+  "startedAt": "2026-08-01T19:49:43Z",
+  "completedAt": "2026-08-01T19:50:03Z",
+  "result": "PASS",
+  "installationRecordSha256": "094be8d0afa43f7020af80259d3e3d7962caf39fd23559e382f72fd3663928c9",
+  "assertions": [
+    {
+      "name": "marker:boot-target",
+      "expected": "Reached target .*(Multi-User System|Graphical Interface)",
+      "observed": "matched",
+      "result": "PASS"
+    },
+    {
+      "name": "marker:health-check",
+      "expected": "Finished .*Bunny OS boot health check",
+      "observed": "matched",
+      "result": "PASS"
+    },
+    {
+      "name": "marker:brlapi-key-service",
+      "expected": "(Starting|Started|Finished).*[Bb]rl[Aa][Pp][Ii]",
+      "observed": "matched",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:emergency-mode",
+      "expected": "absent: emergency mode|Emergency Shell",
+      "observed": "absent",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:fs-repair",
+      "expected": "absent: UNEXPECTED INCONSISTENCY",
+      "observed": "absent",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:brlapi-key-service-failed",
+      "expected": "absent: bunny-brlapi-key\\.service: Failed",
+      "observed": "absent",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:key-value-on-console",
+      "expected": "absent: brlapi[^\\n]*\\b[0-9a-f]{32}\\b",
+      "observed": "absent",
+      "result": "PASS"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "installation-record.json",
+      "sha256": "094be8d0afa43f7020af80259d3e3d7962caf39fd23559e382f72fd3663928c9",
+      "createdAt": "2026-08-01T19:50:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "network.pcap",
+      "sha256": "817ef633db0fcff103f7577143f9c791c25c7d47cee14b9fc55c4bbacc5cb282",
+      "createdAt": "2026-08-01T19:50:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-command.json",
+      "sha256": "7438886738707670bcb81ec0bdaa60de3475c758808d3adfae9665eb097d55a0",
+      "createdAt": "2026-08-01T19:50:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/boot-target.ppm",
+      "sha256": "61e959337b4036ad1d459bbba4d977f26d2321003d8ecbc63d74086248cb7dd9",
+      "createdAt": "2026-08-01T19:50:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/brlapi-key-service.ppm",
+      "sha256": "61e959337b4036ad1d459bbba4d977f26d2321003d8ecbc63d74086248cb7dd9",
+      "createdAt": "2026-08-01T19:50:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/health-check.ppm",
+      "sha256": "61e959337b4036ad1d459bbba4d977f26d2321003d8ecbc63d74086248cb7dd9",
+      "createdAt": "2026-08-01T19:50:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "serial.log",
+      "sha256": "72a53cc28439998ecacb0551504a9a50d3721c183f2f0357d1f889232058b7e0",
+      "createdAt": "2026-08-01T19:50:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "work/OVMF_VARS.qcow2",
+      "sha256": "8d1953e99e1d73e84e34735650a931dfcde1585b0ad83b70c1cfd537d166eb86",
+      "createdAt": "2026-08-01T19:50:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "work/target-disk.qcow2",
+      "sha256": "7e6e1b68d993a0a6931f488e0da928058fa25a1cf00f99b70a8a069b007efee0",
+      "createdAt": "2026-08-01T19:50:03Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    }
+  ],
+  "operator": "allamsettiraviteja2009",
+  "limitations": []
+}

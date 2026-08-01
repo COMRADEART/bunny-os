@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "ISQ-20260801-tpm-absent-002",
+  "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
+  "sourceArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
+  "installationArtifactDigest": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217",
+  "environment": "qemu-kvm",
+  "firmwareMode": "uefi",
+  "secureBootState": "disabled",
+  "tpmState": "absent",
+  "encryptionState": "none",
+  "scenario": "tpm-absent",
+  "scenarioVersion": "isq-1",
+  "startedAt": "2026-08-01T19:55:41Z",
+  "completedAt": "2026-08-01T19:56:51Z",
+  "result": "PASS",
+  "assertions": [
+    {
+      "name": "marker:boot-target",
+      "expected": "Reached target .*(Multi-User System|Graphical Interface)",
+      "observed": "matched",
+      "result": "PASS"
+    },
+    {
+      "name": "marker:health-check",
+      "expected": "Finished .*Bunny OS boot health check",
+      "observed": "matched",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:tpm-wait",
+      "expected": "absent: (Timed out waiting for device.*tpm|dependency failed.*tpm)",
+      "observed": "absent",
+      "result": "PASS"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "network.pcap",
+      "sha256": "094a19bbea9df51167e0bd55330cb18efd8c058f9753c72a4c78ba3c67d4a5fc",
+      "createdAt": "2026-08-01T19:56:51Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-command.json",
+      "sha256": "7336ba5dd9310db7bc49a3a9aeec1f1d2c1572aa3e7fa6790132c283ab966e84",
+      "createdAt": "2026-08-01T19:56:51Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/boot-target.ppm",
+      "sha256": "db26a82bf6a8ea79fd3b2bcd58c5024b008585848debc12b5494440ab9065b7e",
+      "createdAt": "2026-08-01T19:56:51Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/health-check.ppm",
+      "sha256": "db26a82bf6a8ea79fd3b2bcd58c5024b008585848debc12b5494440ab9065b7e",
+      "createdAt": "2026-08-01T19:56:51Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "serial.log",
+      "sha256": "69d5ea6a79995ad7d931ff4ddbe48e99cd9abc5d3f30167212ebd883072a66fc",
+      "createdAt": "2026-08-01T19:56:51Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    }
+  ],
+  "operator": "allamsettiraviteja2009",
+  "limitations": []
+}

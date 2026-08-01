@@ -1,0 +1,108 @@
+{
+ "assertions": [
+  {
+   "expected": "/ostree/deploy/default/deploy/f41de91266c8a0042674608becc9aab637ae43e7fb697e418414dc647f77a38b.0/etc/systemd/system/sysinit.target.wants/bunny-brlapi-key.service exists",
+   "name": "unit-enabled-in-deployed-filesystem",
+   "observed": "present",
+   "result": "PASS"
+  },
+  {
+   "expected": "/ostree/deploy/default/deploy/f41de91266c8a0042674608becc9aab637ae43e7fb697e418414dc647f77a38b.0/usr/lib/systemd/system/bunny-brlapi-key.service exists",
+   "name": "unit-shipped",
+   "observed": "present",
+   "result": "PASS"
+  },
+  {
+   "expected": "/ostree/deploy/default/deploy/f41de91266c8a0042674608becc9aab637ae43e7fb697e418414dc647f77a38b.0/usr/libexec/bunny-brlapi-key exists",
+   "name": "helper-installed",
+   "observed": "present",
+   "result": "PASS"
+  },
+  {
+   "expected": "executable, not group- or world-writable",
+   "name": "helper-executable-and-not-writable",
+   "observed": "0o555",
+   "result": "PASS"
+  },
+  {
+   "expected": "uid 0",
+   "name": "helper-root-owned",
+   "observed": "uid 0",
+   "result": "PASS"
+  },
+  {
+   "expected": "bunny-brlapi-key.service appears in the boot journal",
+   "name": "unit-executed-this-boot",
+   "observed": "succeeded",
+   "result": "PASS"
+  },
+  {
+   "expected": "no failure result recorded",
+   "name": "unit-succeeded",
+   "observed": "succeeded",
+   "result": "PASS"
+  },
+  {
+   "expected": "no key-shaped value beside a brlapi mention",
+   "name": "key-not-in-journal",
+   "observed": "clean",
+   "result": "PASS"
+  },
+  {
+   "expected": "/etc/brlapi.key exists on the installed system",
+   "name": "key-exists",
+   "observed": "present",
+   "result": "PASS"
+  },
+  {
+   "expected": "a non-empty key",
+   "name": "key-non-empty",
+   "observed": "33 bytes",
+   "result": "PASS"
+  },
+  {
+   "expected": "32 hex characters",
+   "name": "key-well-formed",
+   "observed": "32 characters",
+   "result": "PASS"
+  },
+  {
+   "expected": "0o640",
+   "name": "key-mode-0640",
+   "observed": "0o640",
+   "result": "PASS"
+  },
+  {
+   "expected": "uid 0",
+   "name": "key-root-owned",
+   "observed": "uid 0",
+   "result": "PASS"
+  }
+ ],
+ "classification": {
+  "keyGeneration": "PASS",
+  "physicalBrailleDevice": "NOT_RUN",
+  "serviceIntegration": "PASS"
+ },
+ "collection": "brlapi-installed-offline",
+ "deploymentRoot": "/ostree/deploy/default/deploy/f41de91266c8a0042674608becc9aab637ae43e7fb697e418414dc647f77a38b.0",
+ "disk": "target-disk.qcow2",
+ "installation": "installation-b",
+ "key": {
+  "createdAt": null,
+  "gid": "971",
+  "mode": "0o640",
+  "note": "The key value is deliberately absent. This record carries a digest over its bytes, which is what proves two installations differ and a reboot did not rotate it.",
+  "present": true,
+  "selinuxContext": "system_u:object_r:etc_t:s0",
+  "sha256": "f41e4d7df5572015817f10ffa4eeb059a083820a14d54af4efc47716b264851b",
+  "sizeBytes": 33,
+  "uid": "0"
+ },
+ "limitations": [
+  "no braille display is attached: this establishes key generation and service integration, never physical braille-device compatibility.",
+  "brltty did not start in this boot: no braille device is attached and the service is socket/udev driven. Its ordering relative to the generator is therefore asserted from the unit's Before= directive, not from timestamps."
+ ],
+ "result": "PASS",
+ "schemaVersion": 1
+}
