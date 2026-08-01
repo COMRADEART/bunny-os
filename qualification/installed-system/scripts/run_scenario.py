@@ -34,6 +34,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -202,7 +203,13 @@ def main() -> int:
     run_id = evidence_id(name, date=datetime.date.today().strftime("%Y%m%d"),
                          sequence=args.sequence)
     evidence_dir = args.evidence_root / run_id
-    evidence_dir.mkdir(parents=True, exist_ok=False)
+    if evidence_dir.exists():
+        raise SystemExit(
+            f"BLOCKED: {evidence_dir.name} already exists. Two runs sharing an "
+            "evidence id would overwrite one measurement with another; pass a "
+            "different --sequence, or remove the earlier run deliberately."
+        )
+    evidence_dir.mkdir(parents=True)
     work = evidence_dir / "work"
     work.mkdir()
 
@@ -271,8 +278,15 @@ def main() -> int:
     shutil.copy(OVMF_VARS, vars_copy)
 
     serial_log = evidence_dir / "serial.log"
-    serial_socket = work / "serial.sock"
-    qmp_socket = work / "qmp.sock"
+    # Sockets live in a short private directory, not beside the evidence: a
+    # UNIX socket path is limited to 108 bytes and the evidence tree's own
+    # paths exceed it — measured, as QEMU refusing to start at all on the
+    # encrypted scenarios, whose names are the longest. The logfile the
+    # chardev writes is still the evidence file in the evidence tree; only
+    # the rendezvous point moves.
+    socket_dir = Path(tempfile.mkdtemp(prefix="isq-", dir="/tmp"))
+    serial_socket = socket_dir / "ser.sock"
+    qmp_socket = socket_dir / "qmp.sock"
 
     # Scenarios that answer a prompt (a LUKS passphrase, a confirmation) get a
     # writable serial: a chardev socket whose logfile still captures every
@@ -315,7 +329,7 @@ def main() -> int:
     if scenario.get("tpm") == "swtpm":
         tpm_dir = work / "tpm"
         tpm_dir.mkdir()
-        tpm_sock = work / "swtpm.sock"
+        tpm_sock = socket_dir / "tpm.sock"
         tpm_log = evidence_dir / "swtpm.log"
         # tpm-crb, not tpm-tis: CRB is the interface a TPM 2.0 device
         # presents on modern platforms, and the first attempt with tpm-tis
@@ -439,6 +453,7 @@ def main() -> int:
             qmp.close()
         if swtpm_process is not None:
             swtpm_process.terminate()
+        shutil.rmtree(socket_dir, ignore_errors=True)
 
     completed = now()
 

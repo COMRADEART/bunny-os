@@ -34,6 +34,14 @@ import subprocess
 import sys
 import tarfile
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from ostree_disk import (  # noqa: E402
+    DiskLayoutError,
+    root_partition,
+    single_deployment_root,
+)
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="collect_applied_selinux")
@@ -49,29 +57,26 @@ def main() -> int:
         print(f"BLOCKED: {args.disk} does not exist", file=sys.stderr)
         return 2
 
-    root = args.root
-    if not root:
-        probe = subprocess.run(
-            ["guestfish", "--ro", "-a", str(args.disk), "run", ":", "inspect-os"],
-            capture_output=True, text=True,
-        )
-        candidates = [line.strip() for line in probe.stdout.splitlines() if line.strip()]
-        if len(candidates) != 1:
-            print(
-                "BLOCKED: could not discover exactly one operating system root "
-                f"(found {candidates!r}). Name it with --root; guessing which system "
-                "is being measured is how evidence ends up about the wrong disk.",
-                file=sys.stderr,
-            )
-            return 2
-        root = candidates[0]
+    # inspect-os finds nothing on a bootc disk — measured — so the layout
+    # comes from ostree_disk, which mounts explicitly and refuses to guess.
+    try:
+        root = args.root or root_partition(args.disk)
+        subtree = args.subtree
+        if subtree == "/":
+            # The deployed root, not the physical filesystem: /ostree/repo is
+            # the deployment mechanism's own store and its labels are not what
+            # the intended-context manifest describes.
+            subtree = single_deployment_root(args.disk)
+    except DiskLayoutError as exc:
+        print(f"BLOCKED: {exc}", file=sys.stderr)
+        return 2
 
     # tar-out with xattrs:true carries every security.selinux label in PAX
     # headers. Streaming through tarfile keeps memory flat at ~one member.
     process = subprocess.Popen(
         ["guestfish", "--ro", "-a", str(args.disk),
          "run", ":", "mount-ro", root, "/", ":",
-         "tar-out", args.subtree, "-", "xattrs:true"],
+         "tar-out", subtree, "-", "xattrs:true"],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
     assert process.stdout is not None
@@ -120,7 +125,7 @@ def main() -> int:
         "collectionMode": "installed-system-offline",
         "collectedFrom": str(args.disk.name),
         "rootDevice": root,
-        "subtree": args.subtree,
+        "subtree": subtree,
         "entryCount": total,
         "labelledCount": len(contexts),
         "unlabelledCount": unlabelled,

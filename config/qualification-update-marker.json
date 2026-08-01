@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "fixtureGeneration": 0,
+  "purpose": "Identifies which qualification update generation an installed system is running, so an update and a rollback can be observed to have changed the deployed root rather than assumed to have.",
+  "notAFeature": "Qualification scaffolding. No product behaviour reads this file; it exists so that the N+1 image differs from N in exactly one harmless, identifiable way, and so that both images remain real, separately reproducibility-qualified builds."
+}

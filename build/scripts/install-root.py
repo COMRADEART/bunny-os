@@ -118,6 +118,13 @@ def main() -> int:
     copy_file(source / "build/manifests/update.disabled.json", Path("/etc/bunny-os/update.json"), 0o600)
     copy_file(artifact_manifest_path, Path("/usr/share/bunny-os/bunny-artifact.json"), 0o444)
     copy_file(source / "build/keys/revoked-keys.json", Path("/usr/share/bunny-os/update-keys/revoked-keys.json"), 0o444)
+    # Qualification scaffolding, not a feature: the marker is how an update
+    # and a rollback are observed to have changed the deployed root rather
+    # than assumed to have. It ships because the N+1 fixture image must be a
+    # real, separately qualified build differing from N in one harmless,
+    # identifiable way — an arbitrary image handed to the update path would
+    # test the path against nothing.
+    copy_file(source / "config/qualification-update-marker.json", Path("/usr/share/bunny-os/qualification-update-marker.json"), 0o444)
     copy_tree(source / "schemas", Path("/usr/share/bunny-os/schemas"), 0o444)
     copy_tree(source / "docs", Path("/usr/share/doc/bunny-os"), 0o444)
     copy_file(source / "ARCHITECTURE.md", Path("/usr/share/doc/bunny-os/ARCHITECTURE.md"), 0o444)

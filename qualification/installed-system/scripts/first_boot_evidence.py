@@ -32,24 +32,31 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from ostree_disk import DiskLayoutError, guestfish, root_partition, stateroot_var  # noqa: E402
+
 
 def guestfish_tar(disk: Path, guest_path: str, destination: Path) -> bool:
+    # -i finds nothing on a bootc disk; the root partition is resolved by
+    # content through ostree_disk and mounted explicitly.
+    try:
+        root = root_partition(disk)
+    except DiskLayoutError:
+        return False
     result = subprocess.run(
-        ["guestfish", "--ro", "-a", str(disk), "-i",
-         "tar-out", guest_path, str(destination)],
+        ["guestfish", "--ro", "-a", str(disk), "run", ":",
+         "mount-ro", root, "/", ":", "tar-out", guest_path, str(destination)],
         capture_output=True, text=True,
     )
     return result.returncode == 0
 
 
 def guestfish_lines(disk: Path, *commands: str) -> list[str]:
-    result = subprocess.run(
-        ["guestfish", "--ro", "-a", str(disk), "-i", *commands],
-        capture_output=True, text=True,
-    )
-    if result.returncode != 0:
+    try:
+        return [line.rstrip() for line in guestfish(disk, *commands).splitlines()]
+    except DiskLayoutError:
         return []
-    return [line.rstrip() for line in result.stdout.splitlines()]
 
 
 def main() -> int:
@@ -72,8 +79,17 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as scratch:
         journal_tar = Path(scratch) / "journal.tar"
-        if not guestfish_tar(args.disk, "/var/log/journal", journal_tar):
-            print("BLOCKED: /var/log/journal could not be read from the disk. A boot "
+        # The journal lives in the stateroot's mutable /var, not at /var of
+        # the physical filesystem: /var is composed at boot from
+        # /ostree/deploy/<stateroot>/var, and only the latter exists on a
+        # disk that is not running.
+        try:
+            journal_path = f"{stateroot_var(args.disk)}/log/journal"
+        except DiskLayoutError as exc:
+            print(f"BLOCKED: {exc}", file=sys.stderr)
+            return 2
+        if not guestfish_tar(args.disk, journal_path, journal_tar):
+            print(f"BLOCKED: {journal_path} could not be read from the disk. A boot "
                   "that left no journal produced no evidence, and an empty result "
                   "must not read as a quiet pass.", file=sys.stderr)
             return 2

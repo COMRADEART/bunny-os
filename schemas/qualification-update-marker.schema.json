@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.example/schemas/qualification-update-marker.schema.json",
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later. The update fixture's version marker, and nothing else. It exists so that an N+1 image differs from N in a way that is harmless, identifiable inside a deployed system, and honest about being a test fixture. schemas/ is copied into /usr/share/bunny-os/schemas, so a change here changes the artifact — which is the point: the N+1 image must be a real, separately qualified build, not an arbitrary image handed to the update path.",
+  "title": "Qualification update marker",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "fixtureGeneration", "purpose"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "fixtureGeneration": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "N is 0; each qualified update fixture increments it. The only field the update fixture changes between generations."
+    },
+    "purpose": {
+      "type": "string",
+      "description": "Why this marker exists, carried in the image so an installed system can say what it is."
+    },
+    "notAFeature": {
+      "type": "string",
+      "description": "A statement that this marker is qualification scaffolding and carries no product behaviour."
+    }
+  }
+}

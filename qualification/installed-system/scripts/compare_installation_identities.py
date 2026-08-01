@@ -26,6 +26,16 @@ from pathlib import Path
 import subprocess
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from ostree_disk import (  # noqa: E402
+    DiskLayoutError,
+    guestfish,
+    root_partition,
+    single_deployment_root,
+    stateroot_var,
+)
+
 #: Paths that must differ between two installations. (path, kind, note)
 MUST_DIFFER = (
     ("/etc/machine-id", "identity", "systemd machine identity, minted at first boot"),
@@ -44,20 +54,30 @@ SECRET_PERMISSIONS = (
 )
 
 
-def guestfish(disk: Path, *commands: str) -> str:
-    result = subprocess.run(
-        ["guestfish", "--ro", "-a", str(disk), "-i", *commands],
-        capture_output=True, text=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"guestfish on {disk.name}: {result.stderr.strip()[:300]}")
-    return result.stdout
-
-
 def read_state(disk: Path, salt: bytes) -> dict:
     state: dict = {"disk": disk.name, "files": {}}
+    # Identity and secret material live in the stateroot's mutable /var and
+    # in the deployment's own /etc, both inside the ostree layout; -i finds
+    # neither, so the paths are resolved rather than assumed.
+    var = stateroot_var(disk)
+    deployment = single_deployment_root(disk)
 
-    def probe(path: str) -> dict | None:
+    def guest_path(path: str) -> str:
+        """Where a running system's path actually lives on a quiet disk.
+
+        /etc is the deployment's own writable copy, made when the deployment
+        was created; /var is the stateroot's, shared across deployments —
+        which is exactly why a rollback preserves it and why the identity
+        comparison has to read them from different places.
+        """
+        if path.startswith("/etc/"):
+            return f"{deployment}{path}"
+        if path.startswith("/var/"):
+            return f"{var}{path[4:]}"
+        return f"{deployment}{path}"
+
+    def probe(logical: str) -> dict | None:
+        path = guest_path(logical)
         try:
             exists = guestfish(disk, "exists", path).strip()
         except RuntimeError as exc:
@@ -71,10 +91,12 @@ def read_state(disk: Path, salt: bytes) -> dict:
         )
         try:
             content = subprocess.run(
-                ["guestfish", "--ro", "-a", str(disk), "-i", "download", path, "/dev/stdout"],
+                ["guestfish", "--ro", "-a", str(disk), "run", ":",
+                 "mount-ro", root_partition(disk), "/", ":",
+                 "download", path, "/dev/stdout"],
                 capture_output=True, check=True,
             ).stdout
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, DiskLayoutError):
             content = b""
         return {
             "present": True,
@@ -89,15 +111,20 @@ def read_state(disk: Path, salt: bytes) -> dict:
     for path, kind, note in MUST_DIFFER:
         state["files"][path] = probe(path)
 
-    ssh_keys = guestfish(disk, "glob-expand", SSH_KEY_GLOB).strip().splitlines()
+    ssh_keys = guestfish(disk, "glob-expand", guest_path(SSH_KEY_GLOB)).strip().splitlines()
     state["sshHostKeys"] = {}
     for key in ssh_keys:
         key = key.strip()
         if key:
-            state["sshHostKeys"][key] = probe(key)
+            # Keyed by the logical path so two installations compare like for
+            # like; the deployment checksum differs between them and is not
+            # part of what is being compared.
+            logical = "/etc/ssh/" + key.rsplit("/", 1)[-1]
+            state["sshHostKeys"][logical] = probe(logical)
 
-    hostname = guestfish(disk, "cat", "/etc/hostname") if guestfish(
-        disk, "exists", "/etc/hostname").strip() == "true" else ""
+    hostname_path = guest_path("/etc/hostname")
+    hostname = (guestfish(disk, "cat", hostname_path)
+                if guestfish(disk, "exists", hostname_path).strip() == "true" else "")
     state["hostname"] = hostname.strip()
 
     fs_uuids = guestfish(disk, "list-filesystems")
