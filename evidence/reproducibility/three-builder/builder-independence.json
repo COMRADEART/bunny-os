@@ -1,5 +1,5 @@
 {
-  "builderCount": 6,
+  "builderCount": 8,
   "builderTypes": [
     "hosted-ci",
     "local-machine"
@@ -116,6 +116,66 @@
     },
     {
       "first": "local-fedora-wsl",
+      "independent": false,
+      "mismatchedInputs": [
+        "sourceCommit"
+      ],
+      "note": "Independence is a property of the pair, not of either record. A second workspace, container, or consecutive run on one host is separation, not independence.",
+      "pairing": "a local physical builder paired with hosted CI",
+      "reasons": [
+        "the builders did not build the same thing: sourceCommit differ"
+      ],
+      "recorded": {
+        "artifactComparisonAvailable": false,
+        "baseDigestEquality": true,
+        "configurationEquality": false,
+        "environmentIndependence": true,
+        "sourceCommitEquality": false,
+        "toolchainEquality": true,
+        "toolchainRecordedOnlyDifferences": [
+          "grype",
+          "image-builder"
+        ]
+      },
+      "result": "BLOCKED",
+      "schemaVersion": 2,
+      "second": "hosted-H1-30684077591",
+      "sharedInputs": [
+        "baseImageDigest"
+      ]
+    },
+    {
+      "first": "local-fedora-wsl",
+      "independent": false,
+      "mismatchedInputs": [
+        "sourceCommit"
+      ],
+      "note": "Independence is a property of the pair, not of either record. A second workspace, container, or consecutive run on one host is separation, not independence.",
+      "pairing": "a local physical builder paired with hosted CI",
+      "reasons": [
+        "the builders did not build the same thing: sourceCommit differ"
+      ],
+      "recorded": {
+        "artifactComparisonAvailable": false,
+        "baseDigestEquality": true,
+        "configurationEquality": false,
+        "environmentIndependence": true,
+        "sourceCommitEquality": false,
+        "toolchainEquality": true,
+        "toolchainRecordedOnlyDifferences": [
+          "grype",
+          "image-builder"
+        ]
+      },
+      "result": "BLOCKED",
+      "schemaVersion": 2,
+      "second": "hosted-H2-30684078309",
+      "sharedInputs": [
+        "baseImageDigest"
+      ]
+    },
+    {
+      "first": "local-fedora-wsl",
       "independent": true,
       "mismatchedInputs": [],
       "note": "Independence is a property of the pair, not of either record. A second workspace, container, or consecutive run on one host is separation, not independence.",
@@ -135,7 +195,7 @@
       },
       "result": "PASS",
       "schemaVersion": 2,
-      "second": "hosted-H1-30684077591",
+      "second": "hosted-H1-30691438160",
       "sharedInputs": [
         "sourceCommit",
         "baseImageDigest"
@@ -162,7 +222,7 @@
       },
       "result": "PASS",
       "schemaVersion": 2,
-      "second": "hosted-H2-30684078309",
+      "second": "hosted-H2-30691438881",
       "sharedInputs": [
         "sourceCommit",
         "baseImageDigest"

@@ -11,7 +11,7 @@
   ],
   "gzipped": false,
   "memberCount": 86,
-  "normalisedDigest": "165e57fc958b82656bfa2994cdd1acc545ac8c60450f7da7045cfb7c1a6705aa",
+  "normalisedDigest": "4f4d7b8d9906df58d070b594c583714740f8a7523468a3cf91550ff51b323729",
   "normalisedPath": "build/out/ci/bunny-os.normalised.tar",
   "note": "The normalised digest is comparable between builders. The raw digest is not discarded: a normalised match with differing raw digests is a packing difference that must still be explained.",
   "protectedProperties": [
@@ -23,7 +23,7 @@
     "sourceCommitMetadata",
     "imageFilesystemDifferences"
   ],
-  "rawDigest": "9439e7816f3effe5661549e50a350c614894eb26b64a4cfb036bf6fb4eb01abd",
+  "rawDigest": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a",
   "schemaVersion": 1,
   "source": "build/out/beta/bunny-os.oci.tar"
 }
