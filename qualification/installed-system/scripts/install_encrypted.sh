@@ -56,31 +56,35 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# GPT: ESP (512M) + /boot (1G, clear-text — the bootloader must read the
-# kernel before the passphrase exists) + LUKS2 root (rest).
+# GPT: BIOS boot (1M — bootupd installs the BIOS half unconditionally and
+# grub2-install refuses a GPT disk without an embedding target; measured) +
+# ESP (512M) + /boot (1G, clear-text — the bootloader must read the kernel
+# before the passphrase exists) + LUKS2 root (rest). Matches the layout the
+# generated disk images carry.
 sgdisk --zap-all "${loop}" >/dev/null
-sgdisk --new=1:0:+512M --typecode=1:ef00 --change-name=1:EFI-SYSTEM \
-       --new=2:0:+1G   --typecode=2:8300 --change-name=2:boot \
-       --new=3:0:0     --typecode=3:8309 --change-name=3:root "${loop}" >/dev/null
+sgdisk --new=1:0:+1M   --typecode=1:ef02 --change-name=1:BIOS-BOOT \
+       --new=2:0:+512M --typecode=2:ef00 --change-name=2:EFI-SYSTEM \
+       --new=3:0:+1G   --typecode=3:8300 --change-name=3:boot \
+       --new=4:0:0     --typecode=4:8309 --change-name=4:root "${loop}" >/dev/null
 partprobe "${loop}"
 sleep 1
 
-mkfs.fat -F32 -n EFI-SYSTEM "${loop}p1" >/dev/null
-mkfs.ext4 -q -L boot "${loop}p2"
+mkfs.fat -F32 -n EFI-SYSTEM "${loop}p2" >/dev/null
+mkfs.ext4 -q -L boot "${loop}p3"
 
 cryptsetup luksFormat --type luks2 --batch-mode \
-  --key-file "${BUNNY_TEST_PASSPHRASE_FILE}" "${loop}p3"
-cryptsetup open --key-file "${BUNNY_TEST_PASSPHRASE_FILE}" "${loop}p3" bunny-install-root
+  --key-file "${BUNNY_TEST_PASSPHRASE_FILE}" "${loop}p4"
+cryptsetup open --key-file "${BUNNY_TEST_PASSPHRASE_FILE}" "${loop}p4" bunny-install-root
 mkfs.ext4 -q -L root /dev/mapper/bunny-install-root
 
 mkdir -p /mnt/bunny-encrypted-install
 mount /dev/mapper/bunny-install-root /mnt/bunny-encrypted-install
 mkdir -p /mnt/bunny-encrypted-install/boot
-mount "${loop}p2" /mnt/bunny-encrypted-install/boot
+mount "${loop}p3" /mnt/bunny-encrypted-install/boot
 mkdir -p /mnt/bunny-encrypted-install/boot/efi
-mount "${loop}p1" /mnt/bunny-encrypted-install/boot/efi
+mount "${loop}p2" /mnt/bunny-encrypted-install/boot/efi
 
-luks_uuid="$(blkid -s UUID -o value "${loop}p3")"
+luks_uuid="$(blkid -s UUID -o value "${loop}p4")"
 
 podman run --rm --privileged --pid=host \
   --security-opt label=type:unconfined_t \
