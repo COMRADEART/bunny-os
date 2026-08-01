@@ -395,13 +395,29 @@ def main() -> int:
             serial_inputs=serial_inputs, serial_socket=serial_socket,
             process=process,
         )
+        # Judge every marker against the complete log, once the guest has
+        # stopped writing to it. The polling loop decides when to stop
+        # waiting; it does not decide what happened. An earlier version left
+        # required markers frozen at their state when the timer expired while
+        # forbidden markers were re-read afterwards, and an encrypted boot
+        # that reached both its targets — slowly, because LUKS unlock is
+        # expensive in a small VM — was recorded as having reached neither.
+        final_text = serial_log.read_text(encoding="utf-8", errors="replace") \
+            if serial_log.exists() else ""
         for marker in scenario.get("markers", []):
+            label = marker["label"]
+            matched = bool(re.search(marker["regex"], final_text))
+            if matched and not found[label]:
+                limitations.append(
+                    f"marker {label} appeared after the {scenario.get('timeoutSeconds')}s "
+                    "deadline; the run was stopped on time and judged on the whole log"
+                )
+            found[label] = matched
             assertions.append({
-                "name": f"marker:{marker['label']}",
+                "name": f"marker:{label}",
                 "expected": marker["regex"],
-                "observed": "matched" if found[marker["label"]] else "absent within timeout",
-                "result": "PASS" if found[marker["label"]] or not marker.get("required", True)
-                          else "FAIL",
+                "observed": "matched" if matched else "absent from the complete log",
+                "result": "PASS" if matched or not marker.get("required", True) else "FAIL",
             })
         for entry in serial_inputs:
             assertions.append({
