@@ -63,10 +63,10 @@ rm -f "${target}"
 truncate -s "${size}" "${target}"
 
 loop="$(losetup --find --show --partscan "${target}")"
-# Reached only through the EXIT trap below, which is the point: every exit
-# path — including a failure between luksOpen and the unmount — must close
-# the mapper and release the loop device, or the next run inherits them.
-# shellcheck disable=SC2329  # invoked indirectly, by trap
+# One teardown, used by both paths. The EXIT trap covers every failure
+# between luksOpen and the end; the success path calls it directly rather
+# than repeating the same three commands, which is also why shellcheck can
+# see that it is invoked.
 cleanup() {
   set +e
   umount -R /mnt/bunny-encrypted-install 2>/dev/null
@@ -113,13 +113,11 @@ podman run --rm --privileged --pid=host \
   "${image}" \
   bootc install to-filesystem --skip-fetch-check --generic-image \
   --karg "rd.luks.uuid=${luks_uuid}" \
-  --karg console=tty0 --karg console=ttyS0,115200 \
+  --karg console=tty0 --karg "console=ttyS0,115200" \
   /target
 status=$?
 
-umount -R /mnt/bunny-encrypted-install
-cryptsetup close bunny-install-root
-losetup -d "${loop}"
+cleanup
 trap - EXIT
 
 completed="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
