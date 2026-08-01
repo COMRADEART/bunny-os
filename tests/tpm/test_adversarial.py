@@ -470,6 +470,19 @@ class ImporterAggregation(unittest.TestCase):
         self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
         self.assertIn("shape", proc.stdout + proc.stderr)
 
+    def test_a_record_without_an_expectation_cannot_fill_a_cell(self) -> None:
+        # The schema does not require `expectation` — six early investigation
+        # runs predate it and backfilling would state how a run was judged
+        # from outside the run. The bypass is closed at the cell instead, so
+        # this test pins that the omission still cannot fill a boot cell.
+        documents = full_passing_matrix()
+        for document in documents:
+            if cell_name(document) == "crb-fresh-cold":
+                del document["expectation"]
+        proc = run_importer(synthetic_tree(documents))
+        self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+        self.assertIn("shape", proc.stdout + proc.stderr)
+
     def test_deleting_the_failures_leaves_a_detectable_hole(self) -> None:
         # Run a cell ten times, delete the five that failed, present 5/5.
         # Sequence numbers exist so that fraud leaves a gap.

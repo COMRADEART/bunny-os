@@ -11,7 +11,7 @@
     "ovmfVarsTemplateDigest", "swtpmDigest", "scenarioVersion", "environment",
     "acceleration", "machineType", "cpuModel", "diagnostic", "diskAttached",
     "ovmfVarsState", "ovmfVarsSourceDigest", "tpmInterface", "tpmState",
-    "secureBootState", "smmState", "bootType", "expectation",
+    "secureBootState", "smmState", "bootType",
     "guestResetCount", "stagesReached", "lastStage", "result",
     "startedAt", "completedAt", "operator", "evidenceFiles"
   ],
@@ -54,7 +54,7 @@
     "onReset": {"enum": ["stop", "continue"]},
     "expectation": {
       "enum": ["target", "stable", "reset"],
-      "description": "What the run was judged against: 'target' — it had to boot; 'stable' — it had to survive the window without a terminal event; 'reset' — it had to reproduce and classify a reset. A supported boot cell requires 'target'; a record judged by a different rule cannot fill one."
+      "description": "What the run was judged against: 'target' — it had to boot; 'stable' — it had to survive the window without a terminal event; 'reset' — it had to reproduce and classify a reset. NOT in 'required': six early investigation runs predate the field, and backfilling it would state how a run was judged from outside the run. Enforcement lives where it matters instead — CELL_SHAPE in import_tpm_results.py demands 'target' for every supported cell, so a record that omits the field cannot fill one."
     },
     "expectedResets": {"type": "integer", "minimum": 0},
     "guestResetCount": {"type": "integer", "minimum": 0},
