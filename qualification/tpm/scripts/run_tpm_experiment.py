@@ -682,11 +682,15 @@ def main() -> int:
             if shutdown_events and args.on_reset == "continue":
                 break
             target_hit = ("graphical" in seen_stages or "multi-user" in seen_stages)
+            # Bunny's health check is the signal that its first boot has
+            # settled. An alternative comparator disk cannot print it, and
+            # waiting for a marker that will never appear costs the whole
+            # timeout per run — measured at fifteen minutes against a Fedora
+            # cloud image that had reached its target in ninety seconds.
+            settled = "health-check" in seen_stages or bool(args.alt_disk)
             if target_hit and (args.reboot_after_target or args.qemu_reset_after_target) \
                     and not reboot_requested:
-                # Let the first boot settle before disturbing it, so the
-                # health check has appeared in the log for phase judgement.
-                if "health-check" in seen_stages:
+                if settled:
                     reboot_requested = True
                     screendump("pre-reboot")
                     second_boot_offset = len(text)
@@ -698,7 +702,7 @@ def main() -> int:
                         qmp.execute("system_reset")
             elif target_hit and not (args.reboot_after_target
                                      or args.qemu_reset_after_target):
-                if "health-check" in seen_stages:
+                if settled:
                     break
             if reboot_requested and args.reboot_after_target and reset_count == 0 \
                     and not [e for e in qmp.find_events("RESET")
