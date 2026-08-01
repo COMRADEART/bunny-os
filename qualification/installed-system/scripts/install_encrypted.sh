@@ -39,6 +39,21 @@ done
   echo "never taken from an argument: arguments land in shell history and ps." >&2
   exit 2; }
 
+# The key file must not end with a newline, and this refuses one rather than
+# silently creating a volume nobody can unlock by typing.
+#
+# cryptsetup --key-file uses every byte of the file, newline included; an
+# interactive prompt sends the line without it. Measured: an installation
+# whose key file ended in \n presented its passphrase prompt, rejected the
+# correct passphrase typed at that prompt, and prompted again — with the
+# file form accepted and the typed form refused on the same keyslot.
+if [[ "$(tail -c 1 "${BUNNY_TEST_PASSPHRASE_FILE}" | od -An -tu1 | tr -d ' ')" == "10" ]]; then
+  echo "BLOCKED: ${BUNNY_TEST_PASSPHRASE_FILE} ends with a newline." >&2
+  echo "cryptsetup would make that byte part of the key, and nobody typing the" >&2
+  echo "passphrase at the boot prompt can send it. Write the file with printf." >&2
+  exit 2
+fi
+
 for command in podman cryptsetup sgdisk mkfs.fat mkfs.ext4 losetup blkid; do
   command -v "${command}" >/dev/null || { echo "BLOCKED: ${command} missing" >&2; exit 3; }
 done
