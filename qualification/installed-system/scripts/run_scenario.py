@@ -136,6 +136,17 @@ def wait_for_markers(
             # trigger the next input, so three wrong-passphrase sends need
             # three distinct prompts rather than one prompt read three times.
             if re.search(entry["promptRegex"], text[last_prompt_offset:]):
+                # A printed prompt does not mean a reader is attached. Measured:
+                # the same encrypted disk unlocked on one run and sat at the
+                # prompt on the next, with the passphrase sent both times — the
+                # bytes arriving before the password agent starts reading are
+                # taken by the line discipline and lost. Settle, then send.
+                settle = float(entry.get("settleSeconds", 8))
+                if entry.get("_seenAt") is None:
+                    entry["_seenAt"] = time.monotonic()
+                    continue
+                if time.monotonic() - entry["_seenAt"] < settle:
+                    continue
                 payload = os.environ.get(entry["sendFromEnv"], "")
                 if not payload and entry.get("required", True):
                     raise SystemExit(
@@ -153,6 +164,15 @@ def wait_for_markers(
                     repeat = int(entry.get("repeat", 1)) - 1
                     if repeat > 0:
                         entry["repeat"] = repeat
+                        entry["_seenAt"] = None
+                    elif not entry.get("_resent"):
+                        # One resend, because a lost first send and a refused
+                        # passphrase look identical from outside and only one
+                        # of them is a finding. A second refusal reprompts,
+                        # which the log records either way.
+                        entry["_resent"] = True
+                        entry["_seenAt"] = None
+                        entry["settleSeconds"] = 45
                     else:
                         pending_inputs.remove(entry)
                 except OSError as exc:
