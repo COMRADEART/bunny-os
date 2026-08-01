@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.invalid/qualification/hardware/hardware-record.schema.json",
+  "title": "Physical hardware device record",
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt — SPDX-License-Identifier: GPL-3.0-or-later. Serial numbers, MAC addresses and any personally identifying device identifier must be redacted before commit; a record without operator and timestamps is refused (Stage-26 adversarial rule 17). This schema shapes the device record that FEEDS the release/hardware.py intake — it does not replace that gate, which additionally walks every string in a submission for identifier leaks and rejects the report if any is found. additionalProperties is false so that a fabricated or copy-pasted record with extra fields fails validation instead of slipping through.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manufacturer",
+    "model",
+    "motherboard",
+    "firmwareVendor",
+    "firmwareVersion",
+    "firmwareSettings",
+    "cpu",
+    "gpu",
+    "storageController",
+    "storageDevice",
+    "tpm",
+    "wifiDevice",
+    "ethernetDevice",
+    "bluetoothDevice",
+    "audioDevice",
+    "display",
+    "kernel",
+    "driverVersions",
+    "installedArtifactDigest",
+    "collectedAt",
+    "collectedBy",
+    "redactionStatus"
+  ],
+  "properties": {
+    "manufacturer": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "The vendor name, e.g. a laptop maker. Never an asset tag or an owner."
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "The marketing model name. The model narrows the device to a product line, which the qualification needs; the serial narrows it to one unit, which it never needs."
+    },
+    "motherboard": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Board vendor and product name from DMI. board_serial must already be REDACTED by collect-hardware.sh."
+    },
+    "firmwareVendor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "firmwareVersion": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Version strings are permitted to look serial-like; release/hardware.py allow-lists the firmwareVersion field for exactly this reason."
+    },
+    "firmwareSettings": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "$comment": "Setting name to value, e.g. secure-boot: enabled, tpm: enabled, sata-mode: ahci. Recorded because a test result is meaningless without the firmware configuration it was observed under: the same machine passes or fails secure-boot-development-path depending on a toggle."
+    },
+    "cpu": {
+      "type": "string",
+      "minLength": 1
+    },
+    "gpu": {
+      "type": "string",
+      "minLength": 1
+    },
+    "storageController": {
+      "type": "string",
+      "minLength": 1
+    },
+    "storageDevice": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Model name only. NVMe and SATA device serials are device identifiers and must be redacted."
+    },
+    "tpm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manufacturer", "firmwareVersion", "spec"],
+      "$comment": "spec is const 2.0 because the minimum target device requires TPM 2.0; a record for a device without one cannot validate, which is intended — that device is not the qualification target.",
+      "properties": {
+        "manufacturer": { "type": "string", "minLength": 1 },
+        "firmwareVersion": { "type": "string", "minLength": 1 },
+        "spec": { "const": "2.0" }
+      }
+    },
+    "wifiDevice": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Chipset or device name, never a MAC address and never a network name."
+    },
+    "ethernetDevice": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Chipset or device name, never a MAC address."
+    },
+    "bluetoothDevice": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Chipset or device name, never a Bluetooth address."
+    },
+    "audioDevice": {
+      "type": "string",
+      "minLength": 1
+    },
+    "camera": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Optional: a device may have no camera. Omitting the field means no camera was recorded; the test-run record for the camera-dependent tests then says NOT_PRESENT, which is a statement about the device, never a pass."
+    },
+    "display": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolution", "scale"],
+      "properties": {
+        "resolution": {
+          "type": "string",
+          "pattern": "^[0-9]{3,5}x[0-9]{3,5}$",
+          "$comment": "WIDTHxHEIGHT in pixels, e.g. 2256x1504. Needed to judge the hidpi-scaling test."
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 1,
+          "$comment": "The scale factor the session actually applied (1, 1.5, 2, ...)."
+        }
+      }
+    },
+    "battery": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Optional: desktops have none. Record the class — chemistry and design capacity band — not the battery serial number, which upower and the kernel both expose and which must be redacted."
+    },
+    "kernel": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "The uname -r string of the installed system under test."
+    },
+    "driverVersions": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "$comment": "Kernel module name to version, from modinfo of the loaded GPU and network modules. Driver names are classes, not identities."
+    },
+    "installedArtifactDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "$comment": "The sha256 of the installed Bunny OS artifact, lower-case hex, no sha256: prefix. This is what binds the record to a build: physical evidence for an artifact nobody can name is not evidence. It is also the binding that makes the record physical — a DMI directory exists in a VM too, but a VM cannot honestly carry the digest of an image installed onto real firmware."
+    },
+    "collectedAt": {
+      "type": "string",
+      "format": "date-time",
+      "$comment": "RFC 3339. Required without exception: a record without a timestamp is refused (Stage-26 adversarial rule 17)."
+    },
+    "collectedBy": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "The operator's name or handle — a person who can be asked what they saw. Required without exception: a record without an operator is refused (Stage-26 adversarial rule 17). Never a system username harvested from the device."
+    },
+    "redactionStatus": {
+      "enum": ["redacted", "verified-clean"],
+      "$comment": "Required, and there is deliberately no not-required value for hardware: every physical record passes through a redaction step. redacted means identifiers were found and removed; verified-clean means a human checked and found none. Either way, someone looked."
+    }
+  }
+}
