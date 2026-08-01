@@ -277,6 +277,7 @@ def main() -> int:
             ),
         },
         "selinuxPolicyDigest": _selinux_policy_digest(),
+        "accessibilityActivation": _accessibility_activation_digests(),
         "publishedInputs": {
             kind: entry.get("digestReference")
             for kind, entry in ((publication or {}).get("inputs") or {}).items()
@@ -325,6 +326,33 @@ def main() -> int:
     print("Do not change build-affecting source after this point. A later commit is a")
     print("different target, and the hosted builds would be measuring something else.")
     return 0
+
+
+#: The three files that decide whether an installed system has a BrlAPI key:
+#: the program that mints it, the unit that runs it, and the preset that
+#: enables the unit. Each was, at some point in this project's history, the
+#: single reason the key did not exist — the program uninstalled, the unit
+#: unenabled, and the unit skipped by its own condition. A target that names
+#: them makes a change to any of the three visible as a change of target
+#: rather than as a surprise on a device.
+ACCESSIBILITY_ACTIVATION = (
+    ("brlapiHelper", "scripts/bunny-brlapi-key.py"),
+    ("brlapiUnit", "systemd/bunny-brlapi-key.service"),
+    ("brlapiPreset", "config/systemd/60-bunny-os.preset"),
+)
+
+
+def _file_digest(relative: str) -> str:
+    import hashlib
+
+    path = Path(relative)
+    if not path.is_file():
+        return f"absent: {relative}"
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _accessibility_activation_digests() -> dict[str, str]:
+    return {name: _file_digest(relative) for name, relative in ACCESSIBILITY_ACTIVATION}
 
 
 def _selinux_policy_digest() -> str:
