@@ -10,8 +10,9 @@
     "installationArtifactDigest", "qemuDigest", "ovmfCodeDigest",
     "ovmfVarsTemplateDigest", "swtpmDigest", "scenarioVersion", "environment",
     "acceleration", "machineType", "cpuModel", "diagnostic", "diskAttached",
-    "ovmfVarsState", "tpmInterface", "tpmState", "secureBootState", "smmState",
-    "bootType", "guestResetCount", "stagesReached", "lastStage", "result",
+    "ovmfVarsState", "ovmfVarsSourceDigest", "tpmInterface", "tpmState",
+    "secureBootState", "smmState", "bootType", "expectation",
+    "guestResetCount", "stagesReached", "lastStage", "result",
     "startedAt", "completedAt", "operator", "evidenceFiles"
   ],
   "properties": {
@@ -39,7 +40,11 @@
     "diskAttached": {"type": "boolean"},
     "altDiskSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "ovmfVarsState": {"enum": ["fresh", "reused"]},
-    "ovmfVarsSourceDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "ovmfVarsSourceDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Digest of the variable store this run started from. Required: without it the fresh-versus-reused consistency check has nothing to compare and a reused store labelled fresh passes by omission."
+    },
     "ovmfVarsAfterDigest": {"type": ["string", "null"]},
     "tpmInterface": {"enum": ["none", "crb", "tis"]},
     "tpmState": {"enum": ["none", "fresh", "reused"]},
@@ -47,6 +52,10 @@
     "smmState": {"enum": ["on", "off"]},
     "bootType": {"enum": ["cold", "guest-reboot", "qemu-reset"]},
     "onReset": {"enum": ["stop", "continue"]},
+    "expectation": {
+      "enum": ["target", "stable", "reset"],
+      "description": "What the run was judged against: 'target' — it had to boot; 'stable' — it had to survive the window without a terminal event; 'reset' — it had to reproduce and classify a reset. A supported boot cell requires 'target'; a record judged by a different rule cannot fill one."
+    },
     "expectedResets": {"type": "integer", "minimum": 0},
     "guestResetCount": {"type": "integer", "minimum": 0},
     "stagesReached": {"type": "array", "items": {"type": "string"}},

@@ -81,25 +81,52 @@ COVERAGE_LIMITATIONS = [
 #: must have attached and the vars state it must declare. This is the
 #: structural refusal of "CRB evidence labelled TIS" and "reused labelled
 #: fresh" at the aggregation layer, on top of the per-record consistency.
+#: Every supported cell demands `expectation: "target"` — the run had to be
+#: judged against actually booting. Without that pin, five records carrying
+#: `expectation: "stable"` and nothing past `grub-menu` fill a boot cell and
+#: the gate reports PASS: measured, and the runner itself produces exactly
+#: such a record if invoked with `--expect stable` under a boot cell's name.
+#: The reset cells additionally demand that the second boot was reached.
 CELL_SHAPE = {
-    "no-tpm-cold": {"tpmInterface": "none"},
+    "no-tpm-cold": {"tpmInterface": "none", "expectation": "target",
+                    "bootType": "cold"},
     "crb-fresh-cold": {"tpmInterface": "crb", "ovmfVarsState": "fresh",
-                       "tpmState": "fresh"},
+                       "tpmState": "fresh", "expectation": "target",
+                       "bootType": "cold"},
     "tis-fresh-cold": {"tpmInterface": "tis", "ovmfVarsState": "fresh",
-                       "tpmState": "fresh"},
+                       "tpmState": "fresh", "expectation": "target",
+                       "bootType": "cold"},
     "crb-reused-cold": {"tpmInterface": "crb", "ovmfVarsState": "reused",
-                        "tpmState": "reused"},
+                        "tpmState": "reused", "expectation": "target",
+                        "bootType": "cold"},
     "tis-reused-cold": {"tpmInterface": "tis", "ovmfVarsState": "reused",
-                        "tpmState": "reused"},
-    "crb-qemu-reset": {"tpmInterface": "crb", "bootType": "qemu-reset"},
-    "tis-qemu-reset": {"tpmInterface": "tis", "bootType": "qemu-reset"},
+                        "tpmState": "reused", "expectation": "target",
+                        "bootType": "cold"},
+    "crb-qemu-reset": {"tpmInterface": "crb", "bootType": "qemu-reset",
+                       "expectation": "target", "secondBootTargetReached": "True"},
+    "tis-qemu-reset": {"tpmInterface": "tis", "bootType": "qemu-reset",
+                       "expectation": "target", "secondBootTargetReached": "True"},
 }
 
 
-def cell_of(evidence_id: str) -> str:
-    # TPMQ-YYYYMMDD-<cell>-NNN
-    middle = evidence_id.split("-", 2)[2]
-    return middle.rsplit("-", 1)[0]
+def cell_of(evidence_id: str) -> str | None:
+    """TPMQ-YYYYMMDD-<cell>-NNN → <cell>, or None if the id is malformed.
+
+    A malformed id is already reported as a binding problem; returning None
+    here keeps the aggregation from raising on it, because a traceback loses
+    the very diagnostic output the gate exists to produce.
+    """
+    parts = evidence_id.split("-")
+    if len(parts) < 4 or parts[0] != "TPMQ":
+        return None
+    return "-".join(parts[2:-1]) or None
+
+
+def sequence_of(evidence_id: str) -> int | None:
+    parts = evidence_id.rsplit("-", 1)
+    if len(parts) != 2 or not parts[1].isdigit():
+        return None
+    return int(parts[1])
 
 
 def main() -> int:
@@ -136,13 +163,43 @@ def main() -> int:
 
     problems: list[str] = []
     records: list[dict] = []
+    seen_ids: dict[str, str] = {}
+    verified_retained = 0
+    unverified_retained: list[str] = []
     entries = sorted(args.evidence_root.iterdir()) if args.evidence_root.is_dir() else []
     for entry in entries:
         record_path = entry / "record.json"
         if not entry.is_dir() or not record_path.is_file():
             continue
-        record = json.loads(record_path.read_text(encoding="utf-8"))
-        rid = record.get("evidenceId", entry.name)
+        try:
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            problems.append(f"{entry.name}: record.json is not valid JSON: {exc}")
+            continue
+        if not isinstance(record, dict):
+            problems.append(f"{entry.name}: record.json is not an object")
+            continue
+        rid = str(record.get("evidenceId", "")) or entry.name
+
+        # Identity. A record must be the record of the directory it sits in,
+        # and no two runs may share an id. Without both rules a single
+        # passing run copied into four more directories fills a five-boot
+        # cell — measured, and it produced softwareTpmBoot PASS. Counting
+        # directories is not counting boots unless each directory is a
+        # distinct run.
+        if str(record.get("evidenceId", "")) != entry.name:
+            problems.append(
+                f"{entry.name}: record claims evidenceId "
+                f"{record.get('evidenceId')!r}; a record must be the record of "
+                "the directory it sits in, or copies of one run would count as "
+                "several")
+        if rid in seen_ids:
+            problems.append(
+                f"{rid}: duplicate evidence id, also in {seen_ids[rid]}; two "
+                "directories describing one run are one boot, not two")
+        else:
+            seen_ids[rid] = entry.name
+
         for reason in verify_record_binding(record, context):
             problems.append(f"{rid}: {reason}")
         argv = None
@@ -181,6 +238,27 @@ def main() -> int:
                         problems.append(
                             f"{rid}: retention manifest digest for {rel} does not "
                             "match the record; a swapped retained file is refused")
+                    else:
+                        # A manifest that merely echoes the record's digests
+                        # would waive the existence check for bytes that exist
+                        # nowhere. When the retained path is reachable, verify
+                        # it; when it is not, say so rather than imply it was
+                        # checked.
+                        target = Path(str(retained.get("retainedAt", "")))
+                        if target.is_file():
+                            actual = sha256_file(target)
+                            if actual != entry_file.get("sha256"):
+                                problems.append(
+                                    f"{rid}: retained file {target} digests to "
+                                    f"{actual[:12]}, record says "
+                                    f"{str(entry_file.get('sha256'))[:12]}")
+                            else:
+                                verified_retained += 1
+                        else:
+                            unverified_retained.append(
+                                f"{rid}:{rel} retained on "
+                                f"{retained.get('host', 'an unnamed host')} at "
+                                f"{retained.get('retainedAt')}, not reachable here")
                     continue
                 actual = sha256_file(path)
                 if actual != entry_file.get("sha256"):
@@ -189,7 +267,7 @@ def main() -> int:
                                     f"{str(entry_file.get('sha256'))[:12]}")
         records.append(record)
 
-    unknowns = [r["evidenceId"] for r in records
+    unknowns = [str(r.get("evidenceId", "?")) for r in records
                 if r.get("resetClassification") == "UNKNOWN"]
     for rid in unknowns:
         problems.append(f"{rid}: resetClassification UNKNOWN is blocking; an "
@@ -201,13 +279,34 @@ def main() -> int:
     for r in records:
         if not r.get("diagnostic") and r.get("diskAttached") \
                 and r.get("altDiskSha256"):
-            problems.append(f"{r['evidenceId']}: an alternative disk in a "
-                            "non-diagnostic record")
+            problems.append(f"{str(r.get('evidenceId', '?'))}: an alternative "
+                            "disk in a non-diagnostic record")
 
     cells: dict[str, dict] = {}
     for r in records:
-        name = cell_of(r["evidenceId"])
+        name = cell_of(str(r.get("evidenceId", "")))
+        if name is None:
+            problems.append(f"{str(r.get('evidenceId', '?'))}: cannot be "
+                            "attributed to a cell; it fills nothing")
+            continue
         cells.setdefault(name, {"records": []})["records"].append(r)
+
+    # Sequence contiguity. Evidence ids carry a sequence number precisely so
+    # a deleted run leaves a hole. Without this check the cheapest fraud in
+    # the system is: run a cell ten times, delete the five that failed, and
+    # present a clean 5/5.
+    for name, data in cells.items():
+        numbers = sorted(n for n in (sequence_of(str(r.get("evidenceId", "")))
+                                     for r in data["records"]) if n is not None)
+        if not numbers:
+            continue
+        expected = list(range(1, max(numbers) + 1))
+        gaps = sorted(set(expected) - set(numbers))
+        if gaps:
+            problems.append(
+                f"{name}: sequence gaps at {gaps} (highest present is "
+                f"{max(numbers)}); a missing run in the middle of a cell is a "
+                "deleted result until it is explained")
 
     cell_reports: dict[str, dict] = {}
     supported_ok = True
@@ -219,9 +318,12 @@ def main() -> int:
                   if all(str(r.get(k)) == v for k, v in shape.items())]
         for r in cell_records:
             if r not in shaped:
-                problems.append(f"{r['evidenceId']}: does not match the declared "
-                                f"shape of cell {name} ({shape}); a mislabelled "
-                                "record cannot fill a cell")
+                mismatched = {k: r.get(k) for k, v in shape.items()
+                              if str(r.get(k)) != v}
+                problems.append(f"{str(r.get('evidenceId', '?'))}: does not match "
+                                f"the declared shape of cell {name} — {mismatched} "
+                                f"against {shape}; a mislabelled record cannot "
+                                "fill a cell")
         passes = [r for r in shaped if r.get("result") == "PASS"]
         report = {
             "required": needed,
@@ -232,8 +334,8 @@ def main() -> int:
             "resets": sum(int(r.get("guestResetCount", 0)) for r in shaped),
             "classifications": sorted({r["resetClassification"] for r in shaped
                                        if r.get("resetClassification")}),
-            "failedUnitsPerBoot": {r["evidenceId"]: r.get("failedUnits", [])
-                                   for r in shaped},
+            "failedUnitsPerBoot": {str(r.get("evidenceId", "?")):
+                                   r.get("failedUnits", []) for r in shaped},
         }
         report["satisfied"] = report["present"] >= needed and \
             report["pass"] == report["present"]
@@ -276,6 +378,8 @@ def main() -> int:
         "diagnosticCells": diagnostics,
         "softwareTpmBoot": "PASS" if (supported_ok and not problems) else "BLOCKED",
         "qemuKvmTpmIntegration": "PASS" if (supported_ok and not problems) else "BLOCKED",
+        "retainedEvidenceVerified": verified_retained,
+        "retainedEvidenceUnverifiable": unverified_retained,
         "physicalTpm": "NOT_RUN",
         "productionSecureBoot": "NOT_QUALIFIED",
         "tpmBoundDiskUnlock": "NOT_QUALIFIED",

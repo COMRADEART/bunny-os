@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -212,6 +213,40 @@ class Consistency(unittest.TestCase):
         self.assertTrue(any("reaching GRUB is not booting" in r for r in reasons),
                         reasons)
 
+    def test_a_missing_vars_source_digest_is_refused(self) -> None:
+        # Omission is the cheapest bypass: with no source digest, the
+        # fresh-versus-reused comparison has nothing to compare.
+        tampered = record()
+        del tampered["ovmfVarsSourceDigest"]
+        reasons = verify_internal_consistency(tampered, ARGV_CRB)
+        self.assertTrue(any("no source digest" in r for r in reasons), reasons)
+
+    def test_a_reproduction_that_reproduced_nothing_is_refused(self) -> None:
+        reasons = verify_internal_consistency(
+            record(expectation="reset", guestResetCount=0,
+                   resetClassification=None, classificationBasis=None), ARGV_CRB)
+        self.assertTrue(any("reproduced nothing" in r for r in reasons), reasons)
+
+    def test_a_stability_run_that_reset_is_refused(self) -> None:
+        reasons = verify_internal_consistency(
+            record(expectation="stable"), ARGV_CRB)
+        self.assertTrue(any("was not stable" in r for r in reasons), reasons)
+
+    def test_a_guest_reboot_with_no_reset_never_rebooted(self) -> None:
+        # A session restart re-printing "Reached target Graphical Interface"
+        # is indistinguishable in the transcript from a second boot. Only a
+        # guest reset proves the machine actually rebooted.
+        reasons = verify_internal_consistency(
+            record(bootType="guest-reboot", secondBootTargetReached=True,
+                   guestResetCount=0, resetClassification=None,
+                   classificationBasis=None), ARGV_CRB)
+        self.assertTrue(any("never did" in r for r in reasons), reasons)
+
+    def test_a_reset_run_must_record_its_second_boot(self) -> None:
+        reasons = verify_internal_consistency(
+            record(bootType="qemu-reset"), ARGV_CRB)
+        self.assertTrue(any("second boot" in r for r in reasons), reasons)
+
     def test_15_late_target_cannot_be_omitted_as_timeout(self) -> None:
         reasons = verify_internal_consistency(
             record(resetClassification="HARNESS_TIMEOUT", guestResetCount=0,
@@ -286,6 +321,10 @@ def synthetic_tree(records: list[dict]) -> Path:
         (run_dir / "qemu-command.json").write_text(
             json.dumps({"argv": argv}), encoding="utf-8")
     return root
+
+
+def cell_name(document: dict) -> str:
+    return str(document["evidenceId"]).split("-", 2)[2].rsplit("-", 1)[0]
 
 
 def cell_records(cell: str, count: int, **overrides: object) -> list[dict]:
@@ -380,6 +419,74 @@ class ImporterAggregation(unittest.TestCase):
             capture_output=True, text=True)
         self.assertEqual(proc.returncode, 2)
         self.assertIn("missing", proc.stdout + proc.stderr)
+
+    def test_a_run_copied_into_five_directories_is_one_boot(self) -> None:
+        # Found by review, confirmed against the real importer: the gate
+        # counted directories, not boots. One passing run copied into four
+        # more directories satisfied a five-boot cell and produced
+        # softwareTpmBoot PASS, with every file hash intact because the
+        # files were copied too. Identity — record id equals directory name,
+        # ids unique — is what makes a count a count.
+        documents = full_passing_matrix()
+        thinned = [d for d in documents
+                   if cell_name(d) != "crb-fresh-cold"
+                   or str(d["evidenceId"]).endswith("001")]
+        original = next(d for d in thinned if cell_name(d) == "crb-fresh-cold")
+        root = synthetic_tree(thinned)
+        source = root / "qualification/tpm/evidence" / str(original["evidenceId"])
+        for index in range(2, 6):
+            clone = source.parent / f"TPMQ-20260801-crb-fresh-cold-{index:03d}"
+            shutil.copytree(source, clone)
+        proc = run_importer(root)
+        self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+        self.assertIn("directory it sits in", proc.stdout + proc.stderr)
+
+    def test_a_record_in_the_wrong_directory_is_refused(self) -> None:
+        documents = full_passing_matrix()
+        root = synthetic_tree(documents)
+        evidence = root / "qualification/tpm/evidence"
+        (evidence / "TPMQ-20260801-crb-fresh-cold-001").rename(
+            evidence / "TPMQ-20260801-crb-fresh-cold-009")
+        proc = run_importer(root)
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("directory it sits in", proc.stdout + proc.stderr)
+
+    def test_stable_expectation_records_cannot_fill_a_boot_cell(self) -> None:
+        # Found by review, confirmed against the real importer: CELL_SHAPE did
+        # not pin the expectation, so five records judged by the stability
+        # rule — none of which had to boot — filled a boot cell. The runner
+        # itself produces exactly such a record when invoked with
+        # --expect stable under a boot cell's name.
+        documents = full_passing_matrix()
+        for document in documents:
+            if cell_name(document) == "crb-fresh-cold":
+                document["expectation"] = "stable"
+                document["stagesReached"] = ["firmware-bds", "grub-menu"]
+                document["lastStage"] = "grub-menu"
+                document["guestResetCount"] = 0
+                document.pop("resetClassification", None)
+                document.pop("classificationBasis", None)
+        proc = run_importer(synthetic_tree(documents))
+        self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+        self.assertIn("shape", proc.stdout + proc.stderr)
+
+    def test_deleting_the_failures_leaves_a_detectable_hole(self) -> None:
+        # Run a cell ten times, delete the five that failed, present 5/5.
+        # Sequence numbers exist so that fraud leaves a gap.
+        documents = full_passing_matrix()
+        extra = record(evidenceId="TPMQ-20260801-crb-fresh-cold-007")
+        documents.append(extra)
+        proc = run_importer(synthetic_tree(documents))
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("sequence gaps", proc.stdout + proc.stderr)
+
+    def test_a_malformed_evidence_id_does_not_crash_the_gate(self) -> None:
+        # A traceback loses the diagnostic output the gate exists to produce.
+        documents = full_passing_matrix()
+        documents.append(record(evidenceId="NOT-AN-ID"))
+        proc = run_importer(synthetic_tree(documents))
+        self.assertEqual(proc.returncode, 2)
+        self.assertNotIn("Traceback", proc.stderr)
 
     def test_unknown_classification_blocks(self) -> None:
         documents = full_passing_matrix()

@@ -101,6 +101,11 @@ class QmpClient:
         self.lock = threading.Lock()
         self.responses: list[dict] = []
         self.closed = False
+        #: Set when the reader thread stops before the run does. From that
+        #: moment the event list is frozen, so a later reset is invisible —
+        #: and a run that cannot see a reset must not be scored as one that
+        #: saw none.
+        self.reader_died = False
         greeting = self._read_message()
         self._record({"event": "_QMP_GREETING", "qmp": greeting.get("QMP", {}),
                       "hostTime": now()})
@@ -146,6 +151,8 @@ class QmpClient:
             except (socket.timeout,):
                 continue
             except (ConnectionError, OSError, json.JSONDecodeError):
+                if not self.closed:
+                    self.reader_died = True
                 return
             with self.lock:
                 if "return" in message or "error" in message:
@@ -207,13 +214,36 @@ def stage_reached(text: str) -> list[str]:
     return [name for name, regex in STAGE_MARKERS if re.search(regex, text)]
 
 
+def split_boot_segments(serial_text: str) -> list[str]:
+    """Split a multi-boot transcript at each firmware restart.
+
+    In continuation mode one serial log holds several boots. Every boot
+    begins with OVMF's BDS announcing a boot option, so that line is the
+    seam. Classification judges one segment, never the whole log: boot #1's
+    restoration dialog must not explain boot #3's reset.
+    """
+    marks = [m.start() for m in re.finditer(r"BdsDxe: loading Boot", serial_text)]
+    if len(marks) <= 1:
+        return [serial_text]
+    bounds = marks + [len(serial_text)]
+    return [serial_text[bounds[i]:bounds[i + 1]] for i in range(len(marks))]
+
+
 def classify(events: list[dict], serial_text: str, process_alive: bool,
-             timed_out: bool, qemu_stderr: str) -> tuple[str, list[str]]:
+             timed_out: bool, qemu_stderr: str, *, classify_index: int = 0,
+             boot_segments: list[str] | None = None,
+             debug_text: str = "") -> tuple[str, list[str]]:
     """Mechanical classification of what ended (or froze) the boot.
 
     Returns (classification, basis). The basis lists the exact observations
     the classification rests on, so a reader can re-derive it. Anything the
     events cannot decide stays UNKNOWN — a blocking answer, deliberately.
+
+    ``classify_index`` names which guest reset is the anomalous one (resets
+    within a run's commanded budget are not anomalies). ``boot_segments``
+    supplies the per-boot transcript slices so a later reset is judged on
+    its own boot's output. ``debug_text`` is the QEMU debug log, which is
+    where a triple fault is visible at all.
     """
     basis: list[str] = []
     names = [e.get("event") for e in events]
@@ -231,9 +261,15 @@ def classify(events: list[dict], serial_text: str, process_alive: bool,
 
     resets = [e for e in events if e.get("event") == "RESET"]
     shutdowns = [e for e in events if e.get("event") == "SHUTDOWN"]
+    # Only reason=guest-reset is a guest reset. A guest that powered itself
+    # off also reports guest: true, with reason guest-shutdown, and treating
+    # that as a reset would classify an orderly poweroff as a reboot command.
     guest_resets = [e for e in resets + shutdowns
-                    if e.get("data", {}).get("reason") == "guest-reset"
-                    or (e.get("event") == "SHUTDOWN" and e.get("data", {}).get("guest"))]
+                    if e.get("data", {}).get("reason") == "guest-reset"]
+    guest_shutdowns = [e for e in shutdowns
+                       if e.get("data", {}).get("reason") == "guest-shutdown"
+                       or (e.get("data", {}).get("guest")
+                           and e.get("data", {}).get("reason") != "guest-reset")]
     host_resets = [e for e in resets
                    if str(e.get("data", {}).get("reason", "")).startswith("host-qmp")]
 
@@ -242,14 +278,36 @@ def classify(events: list[dict], serial_text: str, process_alive: bool,
         return "QEMU_DEVICE_RESET", basis
 
     if guest_resets:
-        event = guest_resets[0]
-        basis.append(f"QMP {event['event']} at {event.get('hostTime')}: "
+        # Classify the event that made this run anomalous, not the first one:
+        # in continuation mode the first reset is often the expected,
+        # budgeted one and the anomaly is a later reset.
+        index = min(classify_index, len(guest_resets) - 1)
+        event = guest_resets[index]
+        basis.append(f"QMP {event['event']} at {event.get('hostTime')} "
+                     f"(guest reset #{index + 1} of {len(guest_resets)}): "
                      f"{json.dumps(event.get('data', {}))}")
-        started = re.search(r"BdsDxe: starting Boot", serial_text)
-        announced = re.search(r"Reset System", serial_text)
-        dialog = re.search(r"Boot Option Restoration", serial_text)
+
+        # Judge from the transcript segment that belongs to THIS reset — the
+        # text between the preceding guest reset and this one. In continuation
+        # mode the whole log spans several boots, and boot #1's restoration
+        # dialog would otherwise justify calling a later, unrelated reset a
+        # bootloader reboot.
+        segment = serial_text
+        if boot_segments and index < len(boot_segments):
+            segment = boot_segments[index]
+            basis.append(f"judged on the transcript segment for boot "
+                         f"#{index + 1} ({len(segment)} bytes), not the whole log")
+
+        started = re.search(r"BdsDxe: starting Boot", segment)
+        announced = re.search(r"Reset System", segment)
+        dialog = re.search(r"Boot Option Restoration", segment)
+        fault = re.search(r"(Triple fault|triple fault)", debug_text or "")
+        if fault:
+            basis.append(f"QEMU debug log records a triple fault: "
+                         f"{fault.group(0)!r}")
+            return "GUEST_TRIPLE_FAULT", basis
         if announced and started:
-            basis.append("serial transcript shows a boot option was started and the "
+            basis.append("this segment shows a boot option was started and the "
                          "resetting component printed its intent "
                          "('Reset System'" + (", 'Boot Option Restoration' dialog"
                                               if dialog else "") + ") before the event")
@@ -258,7 +316,7 @@ def classify(events: list[dict], serial_text: str, process_alive: bool,
                          "the executable-isolation evidence, not by this event")
             return "BOOTLOADER_REBOOT_COMMAND", basis
         if not started:
-            basis.append("serial transcript shows no boot option was ever started; "
+            basis.append("this segment shows no boot option was ever started; "
                          "the reset was requested before any handoff")
             return "FIRMWARE_REQUESTED_RESET", basis
         basis.append("a boot option was started but no component printed a reset "
@@ -269,13 +327,11 @@ def classify(events: list[dict], serial_text: str, process_alive: bool,
     if timed_out and process_alive:
         basis.append("timeout expired with QEMU alive and no reset/shutdown event")
         return "HARNESS_TIMEOUT", basis
+    if guest_shutdowns:
+        basis.append(f"guest-initiated shutdown, not a reset: "
+                     f"{json.dumps(guest_shutdowns[0].get('data', {}))}")
+        return "UNKNOWN", basis
     if not process_alive:
-        if any(n == "SHUTDOWN" for n in names):
-            data = shutdowns[0].get("data", {}) if shutdowns else {}
-            basis.append(f"SHUTDOWN event: {json.dumps(data)}")
-            if data.get("guest"):
-                basis.append("guest-initiated shutdown, not a reset")
-                return "UNKNOWN", basis
         basis.append(f"QEMU process exited without a guest reset event; stderr: "
                      f"{qemu_stderr[:300]!r}")
         return "HOST_TERMINATED", basis
@@ -446,6 +502,21 @@ def main() -> int:
     events_path = evidence_dir / "qmp-events.jsonl"
     debug_log = evidence_dir / "qemu-debug.log"
 
+    def abandon(message: str) -> int:
+        """Leave nothing running and nothing lying around. Every early exit
+        after swtpm starts goes through here — a returned-from run that left
+        a TPM emulator alive would contaminate the next experiment's state,
+        which is the one thing this harness exists to keep separate."""
+        print(f"BLOCKED: {message}", file=sys.stderr)
+        if swtpm_process is not None and swtpm_process.poll() is None:
+            swtpm_process.terminate()
+            try:
+                swtpm_process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                swtpm_process.kill()
+        shutil.rmtree(socket_dir, ignore_errors=True)
+        return 2
+
     if args.tpm != "none":
         swtpm_stdout = (evidence_dir / "swtpm-stdout.log").open("wb")
         swtpm_stderr = (evidence_dir / "swtpm-stderr.log").open("wb")
@@ -458,12 +529,10 @@ def main() -> int:
         ready = time.monotonic() + 15
         while not tpm_sock.exists() and time.monotonic() < ready:
             if swtpm_process.poll() is not None:
-                print("BLOCKED: swtpm exited before its socket appeared", file=sys.stderr)
-                return 2
+                return abandon("swtpm exited before its socket appeared")
             time.sleep(0.2)
         if not tpm_sock.exists():
-            print("BLOCKED: swtpm did not create its control socket in 15s", file=sys.stderr)
-            return 2
+            return abandon("swtpm did not create its control socket in 15s")
 
     # ------------------------------------------------------------------ qemu
     machine_arg = f"{machine},accel={args.accel}" + (",smm=on" if args.smm else "")
@@ -499,15 +568,24 @@ def main() -> int:
                  "-tpmdev", "emulator,id=tpm0,chardev=chrtpm",
                  "-device", f"{device},tpmdev=tpm0"]
 
-    (evidence_dir / "qemu-command.json").write_text(json.dumps({
-        "argv": qemu, "startedAt": started, "experiment": vars(args) | {
-            "disk_source": str(args.disk_source), "alt_disk": str(args.alt_disk or ""),
-            "evidence_root": str(args.evidence_root), "trace_root": str(args.trace_root)},
-    }, indent=2, default=str) + "\n", encoding="utf-8")
-
-    process = subprocess.Popen(qemu, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-    screenshots = evidence_dir / "screenshots"
-    screenshots.mkdir()
+    # Everything from here to the cleanup block can fail — a missing
+    # emulator binary, an unwritable evidence directory — and swtpm is
+    # already running. Any exception in this window goes through abandon()
+    # so no TPM emulator outlives the run that started it.
+    try:
+        (evidence_dir / "qemu-command.json").write_text(json.dumps({
+            "argv": qemu, "startedAt": started, "experiment": vars(args) | {
+                "disk_source": str(args.disk_source),
+                "alt_disk": str(args.alt_disk or ""),
+                "evidence_root": str(args.evidence_root),
+                "trace_root": str(args.trace_root)},
+        }, indent=2, default=str) + "\n", encoding="utf-8")
+        process = subprocess.Popen(qemu, stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.PIPE)
+        screenshots = evidence_dir / "screenshots"
+        screenshots.mkdir()
+    except OSError as exc:
+        return abandon(f"could not start the run: {exc}")
     qmp: QmpClient | None = None
 
     def screendump(label: str) -> None:
@@ -525,8 +603,7 @@ def main() -> int:
         while not qmp_socket.exists() and time.monotonic() < deadline:
             if process.poll() is not None:
                 stderr = process.stderr.read().decode(errors="replace") if process.stderr else ""
-                print(f"BLOCKED: QEMU exited immediately: {stderr[:500]}", file=sys.stderr)
-                return 2
+                return abandon(f"QEMU exited immediately: {stderr[:500]}")
             time.sleep(0.2)
         qmp = QmpClient(qmp_socket, events_path)
 
@@ -673,6 +750,7 @@ def main() -> int:
 
     tpm_state_after = manifest(tpm_state_dir) if tpm_state_dir else []
     vars_after_digest = sha256_file(vars_copy) if vars_copy.exists() else None
+    reader_died = qmp.reader_died if qmp is not None else False
 
     if debug_log.exists() and debug_log.stat().st_size > DEBUG_LOG_RETENTION_BYTES:
         args.trace_root.mkdir(parents=True, exist_ok=True)
@@ -708,11 +786,14 @@ def main() -> int:
             r"([-\w\\.@]+\.(?:service|socket|mount|target)): Failed with result",
             serial_text)})
     events = qmp.events if qmp is not None else []
+    # A guest reset is a guest RESET, or the SHUTDOWN that QEMU emits in its
+    # place under -no-reboot — but only with reason guest-reset. A guest that
+    # powered itself off also carries guest: true, with reason guest-shutdown,
+    # and calling that a reset would let a reproduction cell "reproduce" a
+    # reset by observing an orderly poweroff.
     guest_reset_events = [e for e in events
-                          if (e.get("event") == "RESET"
-                              and e.get("data", {}).get("reason") == "guest-reset")
-                          or (e.get("event") == "SHUTDOWN"
-                              and e.get("data", {}).get("guest"))]
+                          if e.get("data", {}).get("reason") == "guest-reset"
+                          and e.get("event") in ("RESET", "SHUTDOWN")]
     reset_total = len([e for e in events
                        if e.get("event") == "RESET"
                        and e.get("data", {}).get("reason") == "guest-reset"])
@@ -726,13 +807,18 @@ def main() -> int:
     # event — an earlier version classified its own cleanup as HOST_TERMINATED.
     names_seen = {e.get("event") for e in events}
     unexpected_death = not process_alive
-    # A reboot this run commanded (ctrl-alt-del, QMP system_reset) is not an
-    # anomalous event: it needs no classification, the same way an operator
-    # typing `reboot` is not a finding. Only resets BEYOND the commanded
-    # budget are classified — an earlier version classified its own
-    # commanded reboot as UNKNOWN, which the importer correctly blocks on.
-    commanded_resets = 1 if (args.reboot_after_target
-                             or args.qemu_reset_after_target) else 0
+    # A reboot this run commanded IN THE GUEST is not an anomalous event: it
+    # needs no classification, the same way an operator typing `reboot` is
+    # not a finding. Only resets beyond that budget are classified — an
+    # earlier version classified its own commanded reboot as UNKNOWN, which
+    # the importer correctly blocks on.
+    #
+    # A QMP system_reset is NOT in this budget: QEMU reports it with a host
+    # reason, so it never enters guest_reset_events in the first place.
+    # Budgeting for it would silently excuse one genuine spontaneous guest
+    # reset per qemu-reset run — precisely the event these cells exist to
+    # detect.
+    commanded_resets = 1 if args.reboot_after_target else 0
     anomalous_resets = len(guest_reset_events) > commanded_resets
     classification = None
     basis: list[str] = []
@@ -740,8 +826,21 @@ def main() -> int:
             or unexpected_death \
             or (timed_out and not args.no_disk and not
                 ("graphical" in stages or "multi-user" in stages)):
-        classification, basis = classify(events, serial_text,
-                                         process_alive, timed_out, qemu_stderr)
+        debug_text = ""
+        for candidate in (debug_log, evidence_dir / "qemu-debug-excerpt.log"):
+            if candidate.exists():
+                debug_text = candidate.read_text(encoding="utf-8", errors="replace")
+                break
+        classification, basis = classify(
+            events, serial_text, process_alive, timed_out, qemu_stderr,
+            classify_index=commanded_resets,
+            boot_segments=split_boot_segments(serial_text),
+            debug_text=debug_text)
+    if reader_died:
+        limitations.append(
+            "the QMP event reader stopped before the run ended; events after "
+            "that point were not observed and this run cannot be treated as "
+            "having seen everything that happened")
 
     target_reached = "graphical" in stages or "multi-user" in stages
     health = "health-check" in stages
@@ -762,12 +861,32 @@ def main() -> int:
         # guest reset. A run where nothing reset did not reproduce.
         result = "PASS" if guest_reset_events else "FAIL"
     elif second_boot_required:
-        result = "PASS" if (target_reached and health_ok and second_target) else "FAIL"
+        # A commanded guest reboot must actually have rebooted the guest. The
+        # serial marker alone is not enough: systemd re-reaching a target on
+        # the FIRST boot (a session restart re-printing "Reached target
+        # Graphical Interface") looks identical in the transcript, and would
+        # claim a machine survived a reboot it never took. A platform reset
+        # is host-side and leaves no guest-reset event, so it is exempt.
+        rebooted = bool(guest_reset_events) if args.reboot_after_target else True
+        result = "PASS" if (target_reached and health_ok and second_target
+                            and rebooted) else "FAIL"
+        if args.reboot_after_target and second_target and not rebooted:
+            limitations.append(
+                "the boot target was re-reached without any guest reset: the "
+                "commanded reboot never took effect, so this run proves "
+                "nothing about surviving a reboot")
     else:
         ok = target_reached and health_ok and reset_total <= args.expected_resets
         result = "PASS" if ok else "FAIL"
         if timed_out and not target_reached and not guest_reset_events:
             result = "INCONCLUSIVE"
+
+    # A run whose event stream went blind cannot assert that nothing further
+    # happened. Any PASS that rests on the ABSENCE of an event is downgraded;
+    # a PASS that rests on positive observations (it booted, it reached its
+    # target) still stands, with the limitation recorded either way.
+    if reader_died and result == "PASS" and args.expect in ("stable",):
+        result = "INCONCLUSIVE"
 
     # Writable state is not evidence: record digests, sizes and lifecycle,
     # then remove the working copies.

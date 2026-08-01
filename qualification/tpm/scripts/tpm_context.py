@@ -274,6 +274,12 @@ def verify_internal_consistency(record: Mapping[str, Any],
     vars_state = str(record.get("ovmfVarsState", ""))
     vars_source = str(record.get("ovmfVarsSourceDigest", ""))
     template = str(record.get("ovmfVarsTemplateDigest", ""))
+    if not vars_source:
+        # Omission is the cheapest bypass there is: with no source digest
+        # the fresh-versus-reused comparison below has nothing to compare
+        # and a reused store labelled fresh passes silently.
+        reasons.append("ovmfVarsSourceDigest is absent; a variable-store claim "
+                       "with no source digest cannot be checked and is refused")
     if vars_state == "fresh" and vars_source and template and vars_source != template:
         reasons.append("record claims fresh OVMF variables but the copied store's "
                        "digest is not the template's; reused variables labelled "
@@ -305,12 +311,31 @@ def verify_internal_consistency(record: Mapping[str, Any],
                            "screenshot alone is refused")
     stages = record.get("stagesReached") or []
     target_stages = {"multi-user", "graphical"}
+    expectation = str(record.get("expectation", "target"))
     if str(record.get("result")) == "PASS" \
-            and str(record.get("expectation", "target")) == "target" \
+            and expectation == "target" \
             and record.get("diskAttached") \
             and not (target_stages & set(stages)):
         reasons.append("result PASS on a boot expectation without a boot target "
                        "stage; reaching GRUB is not booting")
+    if str(record.get("result")) == "PASS" and expectation == "reset" \
+            and reset_count == 0:
+        reasons.append("result PASS on a reset expectation with no guest reset; "
+                       "a reproduction cell that reproduced nothing did not pass")
+    if str(record.get("result")) == "PASS" and expectation == "stable" \
+            and reset_count > 0:
+        reasons.append("result PASS on a stability expectation with a guest "
+                       "reset; a run that reset was not stable")
+    if str(record.get("bootType")) in ("guest-reboot", "qemu-reset") \
+            and str(record.get("result")) == "PASS" \
+            and not record.get("secondBootTargetReached"):
+        reasons.append("a reboot/reset run passed without recording that the "
+                       "second boot reached its target; surviving a reboot is "
+                       "the claim, and it is unmade here")
+    if str(record.get("bootType")) == "guest-reboot" \
+            and str(record.get("result")) == "PASS" and reset_count == 0:
+        reasons.append("a guest-reboot run passed with zero guest resets; the "
+                       "machine that is claimed to have rebooted never did")
     if classification == "HARNESS_TIMEOUT" and (target_stages & set(stages)):
         reasons.append("HARNESS_TIMEOUT claimed although the transcript reached a "
                        "boot target; a late success judged from a truncated log is "

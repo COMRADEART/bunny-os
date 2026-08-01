@@ -147,9 +147,29 @@ def main() -> int:
     out = args.summary_out or (args.evidence_root / "matrix-summary.json")
     out.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(f"[matrix] summary written to {out}")
-    any_missing = any(c.get("skipped") or c.get("inconclusive")
-                      for c in summary["cells"].values() if isinstance(c, dict))
-    return 1 if any_missing else 0
+    # A crashed run leaves no record and would otherwise vanish into a
+    # smaller sample: a cell whose five runs all died would exit 0 with
+    # pass: 0 buried in the summary. Every way a cell can be short of the
+    # evidence it owes is a non-zero exit.
+    incomplete: list[str] = []
+    for name, cell in summary["cells"].items():
+        if not isinstance(cell, dict):
+            continue
+        if cell.get("skipped"):
+            incomplete.append(f"{name}: {cell['skipped']}")
+            continue
+        missing = sum(1 for r in cell.get("runs", []) if r is None)
+        attempted = int(cell.get("bootsAttempted", 0))
+        passed = int(cell.get("pass", 0))
+        if cell.get("inconclusive"):
+            incomplete.append(f"{name}: {cell['inconclusive']} inconclusive run(s)")
+        if missing:
+            incomplete.append(f"{name}: {missing} run(s) produced no record")
+        if passed < attempted:
+            incomplete.append(f"{name}: {passed}/{attempted} passed")
+    for line in incomplete:
+        print(f"[matrix] incomplete: {line}")
+    return 1 if incomplete else 0
 
 
 if __name__ == "__main__":
