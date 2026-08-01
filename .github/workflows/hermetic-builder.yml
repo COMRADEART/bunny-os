@@ -250,6 +250,66 @@ jobs:
           syft "oci-archive:build/out/${profile}/bunny-os.oci.tar" \
             -o "spdx-json=build/out/ci/sbom.spdx.json"
 
+      - name: Inventory the layers
+        run: |
+          set -euo pipefail
+          # Per-layer compressed and uncompressed digests, plus ordered entry
+          # metadata for the layers this build itself wrote. When two builders'
+          # blobs differ, this is what says whether the difference is bytes,
+          # metadata, member order or only compression — without shipping a
+          # 1.8 GB archive to find out.
+          python - "build/out/${{ inputs.profile }}/bunny-os.oci.tar" build/out/ci/layer-inventory.json 3 <<'PY'
+          import gzip, hashlib, json, sys, tarfile
+          archive, output, detail_last = sys.argv[1], sys.argv[2], int(sys.argv[3])
+          outer = tarfile.open(archive)
+          index = json.load(outer.extractfile("index.json"))
+          manifest_digest = index["manifests"][0]["digest"].split(":")[1]
+          manifest = json.load(outer.extractfile(f"blobs/sha256/{manifest_digest}"))
+          layers = [l["digest"].split(":")[1] for l in manifest["layers"]]
+          report = {"layers": []}
+          for position, blob in enumerate(layers):
+              fh = outer.extractfile(f"blobs/sha256/{blob}")
+              head = fh.read(2)
+              fh = outer.extractfile(f"blobs/sha256/{blob}")
+              raw = gzip.open(fh) if head == b"\x1f\x8b" else fh
+              entries = []
+              inner = tarfile.open(fileobj=raw, mode="r|")
+              count = 0
+              for member in inner:
+                  count += 1
+                  if position >= len(layers) - detail_last:
+                      entries.append({
+                          "name": member.name, "type": member.type.decode(),
+                          "size": member.size, "mtime": member.mtime,
+                          "mode": member.mode, "uid": member.uid, "gid": member.gid,
+                          "linkname": member.linkname,
+                          "paxXattrs": sorted(k for k in (member.pax_headers or {})),
+                      })
+              digest = hashlib.sha256()
+              fh = outer.extractfile(f"blobs/sha256/{blob}")
+              head = fh.read(2)
+              fh = outer.extractfile(f"blobs/sha256/{blob}")
+              raw = gzip.open(fh) if head == b"\x1f\x8b" else fh
+              while True:
+                  chunk = raw.read(1024 * 1024)
+                  if not chunk:
+                      break
+                  digest.update(chunk)
+              record = {
+                  "position": position,
+                  "compressed": blob,
+                  "uncompressed": digest.hexdigest(),
+                  "entryCount": count,
+                  "gzip": head == b"\x1f\x8b",
+              }
+              if position >= len(layers) - detail_last:
+                  record["entries"] = entries
+              report["layers"].append(record)
+          with open(output, "w", encoding="utf-8") as handle:
+              json.dump(report, handle, indent=1, sort_keys=True)
+          print(f"wrote {output}: {len(layers)} layers, detail on last {detail_last}")
+          PY
+
       - name: Collect the intended SELinux manifest
         run: |
           set -euo pipefail
@@ -361,6 +421,7 @@ jobs:
             build/out/ci/hydrated-inputs.json
             build/out/qualification/hydrated-inputs.json
             build/out/ci/databases/**
+            build/out/ci/layer-inventory.json
             build/out/ci/sbom.spdx.json
             build/out/ci/package-inventory.txt
             build/out/ci/ci-provenance.json
