@@ -78,13 +78,17 @@ else
 fi
 
 # Manifest last, sorted, so post-collection edits are detectable.
-# Written to a temporary name and moved into place: find would otherwise
-# read the manifest it is in the middle of writing, which shellcheck refuses
-# (SC2094) and which would put a half-written file's own digest in it.
+#
+# Built outside the directory it describes and moved in afterwards. A
+# manifest written into the tree being walked is a file that would have to
+# either digest itself or be excluded by name, and shellcheck refuses the
+# shape (SC2094) for the same reason it is worth avoiding: the output of the
+# walk depends on when the walk reached its own output.
+manifest="$(mktemp)"
 (
     cd "$outdir"
-    find . -type f ! -name manifest.sha256 ! -name manifest.sha256.tmp -print0         | sort -z | xargs -0 sha256sum > manifest.sha256.tmp
-    mv manifest.sha256.tmp manifest.sha256
-)
+    find . -type f -print0 | sort -z | xargs -0 sha256sum
+) > "$manifest"
+mv "$manifest" "$outdir/manifest.sha256"
 
 echo "collect-power.sh: wrote $(wc -l < "$outdir/manifest.sha256") files into $outdir (see manifest.sha256)"
