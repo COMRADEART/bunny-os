@@ -1,0 +1,1 @@
+/boot/loader/entries/ostree-1.conf

@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "ISQ-20260801-encrypted-first-boot-001",
+  "sourceCommit": "619065e068e2153de461545f5b8950b985db4dfd",
+  "sourceArchiveDigest": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a",
+  "installationArtifactDigest": "7739e15f92627afa633043f2148f89be1fd9316b3f6809b066a9041a3456cf0b",
+  "environment": "qemu-kvm",
+  "firmwareMode": "uefi",
+  "secureBootState": "disabled",
+  "tpmState": "absent",
+  "encryptionState": "luks2-passphrase",
+  "scenario": "encrypted-first-boot",
+  "scenarioVersion": "isq-1",
+  "startedAt": "2026-08-01T13:23:19Z",
+  "completedAt": "2026-08-01T14:10:23Z",
+  "result": "FAIL",
+  "installationRecordSha256": "58cbed3cc92f144e35a3b45af29aa80cc5e6422cbd00ef41f19c27614743bcf4",
+  "assertions": [
+    {
+      "name": "marker:luks-prompt",
+      "expected": "Please enter passphrase for disk",
+      "observed": "matched",
+      "result": "PASS"
+    },
+    {
+      "name": "marker:boot-target",
+      "expected": "Reached target .*(Multi-User System|Graphical Interface)",
+      "observed": "absent from the complete log",
+      "result": "FAIL"
+    },
+    {
+      "name": "marker:health-check",
+      "expected": "Finished .*Bunny OS boot health check",
+      "observed": "absent from the complete log",
+      "result": "FAIL"
+    },
+    {
+      "name": "serial-input:luks-passphrase",
+      "expected": "prompt 'Please enter passphrase for disk' answered",
+      "observed": "sent",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:credential-echo",
+      "expected": "absent: BUNNY-TEST-CREDENTIAL",
+      "observed": "absent",
+      "result": "PASS"
+    },
+    {
+      "name": "forbidden:emergency-mode",
+      "expected": "absent: emergency mode|Emergency Shell",
+      "observed": "absent",
+      "result": "PASS"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "installation-record.json",
+      "sha256": "58cbed3cc92f144e35a3b45af29aa80cc5e6422cbd00ef41f19c27614743bcf4",
+      "createdAt": "2026-08-01T14:10:23Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "network.pcap",
+      "sha256": "17191345d3c4d756e2d2d0a7283aed60a7ac5f7e101b58f2dc6a9d9dda34d9f7",
+      "createdAt": "2026-08-01T14:10:23Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-command.json",
+      "sha256": "308cce2fb223954afc72cd5b0c5297ee20559749a01328dc51a9e8d461cc8942",
+      "createdAt": "2026-08-01T14:10:23Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/luks-prompt.ppm",
+      "sha256": "64e8f941b1e103b4c6de7505f415b1c5d0a63e1b036a2e2c2fca7c4ae15a74ad",
+      "createdAt": "2026-08-01T14:10:23Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "serial.log",
+      "sha256": "33f1edb7dde86ddcd059a4480a44975af72748ebcb0f7ef68feb56fd20294cd5",
+      "createdAt": "2026-08-01T14:10:23Z",
+      "collectionCommand": "run_scenario.py",
+      "redactionStatus": "not-required",
+      "retentionClass": "evidence"
+    }
+  ],
+  "operator": "allamsettiraviteja2009",
+  "limitations": [
+    "guest did not power down within 120s; QEMU was quit"
+  ]
+}

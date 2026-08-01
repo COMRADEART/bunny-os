@@ -1,0 +1,20 @@
+{
+  "completedAt": "2026-08-01T11:53:00Z",
+  "exitStatus": 0,
+  "image": "localhost/bunny-os-beta:619065e068e2",
+  "imageDigest": "sha256:bf3f68caf2c22cedc5d04f4f4b1c2c7a67f946378f219f172f84fcee8f418a19",
+  "kargAdded": "rd.luks.uuid=e738e4f6-649f-408a-bd9e-f3cea8675a0c",
+  "layout": [
+    "EFI-SYSTEM 512M vfat",
+    "boot 1G ext4",
+    "root LUKS2+ext4"
+  ],
+  "luksUuid": "e738e4f6-649f-408a-bd9e-f3cea8675a0c",
+  "luksVersion": "luks2",
+  "mode": "encrypted",
+  "note": "Passphrase supplied via file to cryptsetup only; it appears in no argument, log or record. The LUKS UUID is recorded because two installations must differ in it \u2014 it identifies a disk, not a secret.",
+  "outcome": "INSTALLED",
+  "schemaVersion": 1,
+  "startedAt": "2026-08-01T11:51:14Z",
+  "target": "/var/tmp/bunny-install-disks/encrypted.raw"
+}

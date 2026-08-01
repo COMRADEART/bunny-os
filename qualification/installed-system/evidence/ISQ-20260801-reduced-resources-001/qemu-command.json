@@ -1,0 +1,78 @@
+{
+  "argv": [
+    "qemu-system-x86_64",
+    "-machine",
+    "q35,accel=kvm",
+    "-cpu",
+    "host",
+    "-smp",
+    "2",
+    "-m",
+    "4096",
+    "-drive",
+    "if=pflash,format=qcow2,readonly=on,file=/usr/share/edk2/ovmf/OVMF_CODE_4M.qcow2",
+    "-drive",
+    "if=pflash,format=qcow2,file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-reduced-resources-001/work/OVMF_VARS.qcow2",
+    "-drive",
+    "file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-reduced-resources-001/work/target-disk.qcow2,format=qcow2,if=virtio",
+    "-chardev",
+    "socket,id=ser0,path=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-reduced-resources-001/work/serial.sock,server=on,wait=off,logfile=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-reduced-resources-001/serial.log",
+    "-serial",
+    "chardev:ser0",
+    "-qmp",
+    "unix:/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-reduced-resources-001/work/qmp.sock,server,nowait",
+    "-display",
+    "none",
+    "-vga",
+    "virtio",
+    "-no-reboot",
+    "-netdev",
+    "user,id=n0",
+    "-device",
+    "virtio-net-pci,netdev=n0",
+    "-object",
+    "filter-dump,id=fd0,netdev=n0,file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-reduced-resources-001/network.pcap"
+  ],
+  "scenario": {
+    "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+    "name": "reduced-resources",
+    "title": "Boot at the floor: 2 vCPU, 4 GiB",
+    "description": "Whether the installed system is supported, degraded or unsupported at the reduced-resource floor is a measurement, not a policy; this scenario measures it. The verdict records boot success and the report classifies the support level from the timing evidence.",
+    "scenarioVersion": "isq-1",
+    "environment": "qemu-kvm",
+    "disk": {
+      "sizeGiB": 64,
+      "blank": false,
+      "preExistingData": false
+    },
+    "resources": {
+      "vcpus": 2,
+      "memoryMiB": 4096
+    },
+    "firmware": "uefi",
+    "tpm": "none",
+    "network": "enabled",
+    "timeoutSeconds": 1200,
+    "markers": [
+      {
+        "label": "boot-target",
+        "regex": "Reached target .*(Multi-User System|Graphical Interface)",
+        "required": true
+      },
+      {
+        "label": "health-check",
+        "regex": "Finished .*Bunny OS boot health check",
+        "required": true
+      }
+    ],
+    "forbiddenMarkers": [
+      {
+        "label": "oom-kill",
+        "regex": "Out of memory: Killed process"
+      }
+    ],
+    "expectedOutcome": "PASS",
+    "destructive": false
+  },
+  "startedAt": "2026-08-01T11:01:36Z"
+}

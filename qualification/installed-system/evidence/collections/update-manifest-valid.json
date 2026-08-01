@@ -1,0 +1,27 @@
+{
+ "agentEntryPoint": "bunny_update_agent._validate_manifest(manifest, config, enforce_new_sequence=True)",
+ "assertions": [
+  {
+   "expected": "every schema-required field present",
+   "name": "manifest-covers-schema-required-fields",
+   "observed": "missing: none",
+   "result": "PASS"
+  },
+  {
+   "expected": "accepted by the agent validator",
+   "name": "valid-dev-signed-manifest-accepted",
+   "observed": "accepted",
+   "result": "PASS"
+  }
+ ],
+ "collection": "update-manifest-valid",
+ "keyClass": "development",
+ "limitations": [
+  "development keys only; production signing remains unclaimed",
+  "metadata validation exercised directly against the agent's validator; the in-guest download path is not exercised",
+  "the agent's on-device trust-store and sequence-state paths were redirected into a temporary directory for host execution; the validator code itself ran unmodified"
+ ],
+ "result": "PASS",
+ "schemaVersion": 1,
+ "signatureFormat": "embedded base64 Ed25519 signature over agent._canonical_payload(): the manifest minus its signature field, JSON with sorted keys and compact separators, UTF-8"
+}

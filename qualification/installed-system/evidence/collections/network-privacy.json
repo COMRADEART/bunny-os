@@ -1,0 +1,167 @@
+{
+ "assertions": [
+  {
+   "expected": "every observed destination matches an expected-traffic fixture entry",
+   "name": "no-unexpected-destinations",
+   "observed": "unexpected: udp://10.0.2.15:39025, udp://10.0.2.15:43818, udp://10.0.2.15:55733, udp://10.0.2.15:57759, udp://10.0.2.15:58615, udp://10.0.2.3:53, udp://203.161.35.67:123, udp://224.0.0.251:5353, udp://23.155.72.147:123, udp://255.255.255.255:67, udp://255.255.255.255:68, udp://73.185.182.209:123, ipproto-0://ff02:0:0:0:0:0:0:16, ipproto-0://ff02:0:0:0:0:1:ff12:3456, ipproto-2://224.0.0.22, ipproto-58://ff02:0:0:0:0:0:0:1, ipproto-58://ff02:0:0:0:0:0:0:2, ipproto-58://ff02:0:0:0:0:1:ff12:3456, ipproto-58://ff02:0:0:0:0:1:ff26:d646, ipproto-58://ff02:0:0:0:0:1:ff68:c974",
+   "result": "FAIL"
+  },
+  {
+   "expected": "every DNS query name matches an expected-traffic fixture entry",
+   "name": "no-dns-beyond-expected",
+   "observed": "unexpected queries: 2.fedora.pool.ntp.org",
+   "result": "FAIL"
+  }
+ ],
+ "capture": "network.pcap",
+ "collection": "network-capture-analysis",
+ "expectedFixture": "expected-network-traffic.json",
+ "limitations": [
+  "capture reflects the guest's emulated NIC under QEMU user-mode networking; traffic the hypervisor itself originates is out of scope",
+  "IPv6 extension-header chains are not traversed; such packets are inventoried by IP protocol number and always count as unexpected",
+  "DNS names are read from question sections of queries to port 53; DNS over TCP or non-53 resolvers appear only as destinations"
+ ],
+ "observed": {
+  "destinations": [
+   {
+    "bytes": 90,
+    "ip": "10.0.2.15",
+    "packets": 1,
+    "port": 39025,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 90,
+    "ip": "10.0.2.15",
+    "packets": 1,
+    "port": 43818,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 90,
+    "ip": "10.0.2.15",
+    "packets": 1,
+    "port": 55733,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 156,
+    "ip": "10.0.2.15",
+    "packets": 1,
+    "port": 57759,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 204,
+    "ip": "10.0.2.15",
+    "packets": 1,
+    "port": 58615,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 184,
+    "ip": "10.0.2.3",
+    "packets": 2,
+    "port": 53,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 90,
+    "ip": "203.161.35.67",
+    "packets": 1,
+    "port": 123,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 1194,
+    "ip": "224.0.0.251",
+    "packets": 5,
+    "port": 5353,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 90,
+    "ip": "23.155.72.147",
+    "packets": 1,
+    "port": 123,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 648,
+    "ip": "255.255.255.255",
+    "packets": 2,
+    "port": 67,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 1180,
+    "ip": "255.255.255.255",
+    "packets": 2,
+    "port": 68,
+    "protocol": "udp"
+   },
+   {
+    "bytes": 90,
+    "ip": "73.185.182.209",
+    "packets": 1,
+    "port": 123,
+    "protocol": "udp"
+   }
+  ],
+  "dnsQueries": [
+   "2.fedora.pool.ntp.org"
+  ],
+  "linktype": 1,
+  "nonIpFrames": {
+   "0x0806": 9
+  },
+  "otherProtocolDestinations": [
+   {
+    "ip": "ff02:0:0:0:0:0:0:16",
+    "ipProtocol": 0,
+    "packets": 10
+   },
+   {
+    "ip": "ff02:0:0:0:0:1:ff12:3456",
+    "ipProtocol": 0,
+    "packets": 1
+   },
+   {
+    "ip": "224.0.0.22",
+    "ipProtocol": 2,
+    "packets": 6
+   },
+   {
+    "ip": "ff02:0:0:0:0:0:0:1",
+    "ipProtocol": 58,
+    "packets": 1
+   },
+   {
+    "ip": "ff02:0:0:0:0:0:0:2",
+    "ipProtocol": 58,
+    "packets": 1
+   },
+   {
+    "ip": "ff02:0:0:0:0:1:ff12:3456",
+    "ipProtocol": 58,
+    "packets": 1
+   },
+   {
+    "ip": "ff02:0:0:0:0:1:ff26:d646",
+    "ipProtocol": 58,
+    "packets": 1
+   },
+   {
+    "ip": "ff02:0:0:0:0:1:ff68:c974",
+    "ipProtocol": 58,
+    "packets": 1
+   }
+  ],
+  "tcpSynDestinations": [],
+  "totalBytes": 6456,
+  "totalPackets": 50,
+  "undecodedPackets": 0
+ },
+ "result": "FAIL",
+ "schemaVersion": 1
+}

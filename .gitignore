@@ -14,3 +14,9 @@ build/out/
 .selfcheck-tmp/
 __pycache__/
 *.py[cod]
+
+# Scenario working disks: a booted copy of an installation artifact, kept
+# only so the offline collectors can read it. Gigabytes each, reproducible
+# from the pinned artifact and the installation record that made them, and
+# never evidence in themselves — the record.json beside them is.
+qualification/installed-system/evidence/*/work/

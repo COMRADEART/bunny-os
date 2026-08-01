@@ -1,0 +1,16 @@
+{
+  "completedAt": "2026-08-01T09:11:10Z",
+  "detail": "explicitly authorized destructive install over fixture data",
+  "exitStatus": 0,
+  "image": "localhost/bunny-os-beta:619065e068e2",
+  "imageDigest": "sha256:bf3f68caf2c22cedc5d04f4f4b1c2c7a67f946378f219f172f84fcee8f418a19",
+  "installCommand": "podman run ... bootc install to-disk --via-loopback",
+  "mode": "existing-data",
+  "note": "The deployed root filesystem is the image's own, installed by bootc running from the image. No secret appears in this record: encrypted mode reads its passphrase from a file descriptor and never echoes it.",
+  "outcome": "INSTALLED",
+  "schemaVersion": 1,
+  "startedAt": "2026-08-01T09:09:57Z",
+  "target": "/var/tmp/bunny-install-disks/existing.raw",
+  "targetDigestAfter": "5e6d0568b515582c429ecf574b5813deac67d4ee7a8a931704013d2b98cc557b",
+  "targetSizeRequested": "24G"
+}

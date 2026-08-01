@@ -1,0 +1,1 @@
+BOOT_IMAGE=(hd0,gpt3)/boot/ostree/default-dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d/vmlinuz-7.1.5-201.fc44.x86_64 root=UUID=c77ab5d6-13f9-41ae-b517-468a3770bf6a rw console=tty0 console=ttyS0,115200 ostree=/ostree/boot.1/default/dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d/0
