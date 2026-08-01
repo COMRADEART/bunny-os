@@ -3,7 +3,9 @@
 # differ, and a reboot must not rotate one. Both are decided from the digests
 # in the evidence records, never from the key values.
 set -uo pipefail
-cd "./../../.." || exit 3
+# The repository root, resolved from this script's own location so the
+# comparison reads the same evidence tree wherever it is invoked from.
+cd "$(dirname "$(readlink -f "$0")")/../../.." || exit 3
 python3 - <<'PY'
 import json, sys
 from pathlib import Path
