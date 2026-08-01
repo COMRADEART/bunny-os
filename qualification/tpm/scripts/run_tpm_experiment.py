@@ -234,7 +234,17 @@ def read_serial(serial_log: Path) -> str:
 
 
 def stage_reached(text: str) -> list[str]:
-    return [name for name, regex in STAGE_MARKERS if re.search(regex, text)]
+    """Which boot-chain stages appeared, in the order the transcript shows.
+
+    Ordering by the marker table instead would misreport `lastStage`: a
+    restoration reset that happens after a completed boot (the guest-reboot
+    shape) would be listed before `graphical` merely because the table lists
+    it earlier, and the last stage is read as the state the boot ended in.
+    """
+    found = [(match.start(), name)
+             for name, regex in STAGE_MARKERS
+             if (match := re.search(regex, text))]
+    return [name for _, name in sorted(found)]
 
 
 def split_boot_segments(serial_text: str) -> list[str]:
