@@ -62,6 +62,27 @@ bound to the authority, internally consistent, hash-verified, every reset
 classified, `UNKNOWN` blocking, and the no-TPM control passing before any
 TPM cell counts.
 
+Its measured output over the whole matrix:
+
+```text
+records                       87
+problems                       0
+no-tpm-cold        5/5   resets 0     satisfied
+crb-fresh-cold     5/5   resets 5     satisfied   (one designed restoration reboot per boot)
+tis-fresh-cold     5/5   resets 5     satisfied   (identical on the other interface)
+crb-reused-cold    5/5   resets 0     satisfied
+tis-reused-cold    5/5   resets 0     satisfied
+crb-qemu-reset     5/5   resets 0     satisfied   (platform reset, complete second boot)
+tis-qemu-reset     5/5   resets 0     satisfied
+retained evidence  831 files, all digest-verified against their records
+softwareTpmBoot    PASS
+physicalTpm        NOT_RUN
+```
+
+Thirty-five supported boots, plus fifty-two control, reproduction and
+diagnostic boots. Every reset in the matrix is classified; none is
+`UNKNOWN`.
+
 ## What this pass can not establish, and does not claim
 
 ```text
