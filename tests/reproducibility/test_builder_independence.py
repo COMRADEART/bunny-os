@@ -296,6 +296,47 @@ class MismatchedSourceCommit(unittest.TestCase):
         self.assertFalse(verdict.independent)
         self.assertIn("toolchain.syft", verdict.mismatchedInputs)
 
+    def test_an_unclassified_difference_blocks_even_with_classifications(self) -> None:
+        # Passing classifications does not soften the default: a tool the lock
+        # never classified is still an unestablished effect, and blocks.
+        verdict = evaluate_independence(
+            parse_builder_record(builder()),
+            parse_builder_record(hosted(toolchain={"podman": "5.8.4", "syft": "1.49.0"})),
+            toolClassifications={"podman": "output-affecting"},
+        )
+        self.assertFalse(verdict.independent)
+        self.assertIn("toolchain.syft", verdict.mismatchedInputs)
+
+    def test_an_output_affecting_difference_blocks_under_classification(self) -> None:
+        verdict = evaluate_independence(
+            parse_builder_record(builder()),
+            parse_builder_record(hosted(toolchain={"podman": "5.9.0", "syft": "1.50.0"})),
+            toolClassifications={"podman": "output-affecting", "syft": "evidence-generation-only"},
+        )
+        self.assertFalse(verdict.independent)
+        self.assertIn("toolchain.podman", verdict.mismatchedInputs)
+
+    def test_a_classified_evidence_only_difference_is_recorded_not_blocking(self) -> None:
+        # grype and image-builder never write the archive, and the lock says
+        # so with a class, a reason and a test. The verdict records the
+        # difference instead of refusing the pair for it — silently equal and
+        # loudly different are not the only two states.
+        left = parse_builder_record(builder())
+        right = parse_builder_record(hosted(toolchain=dict(left.toolchain, grype="absent")))
+        verdict = evaluate_independence(
+            left,
+            right,
+            toolClassifications={"grype": "evidence-generation-only"},
+        )
+        self.assertNotIn("toolchain.grype", verdict.mismatchedInputs)
+        self.assertIn(
+            "grype", verdict.as_dict()["recorded"]["toolchainRecordedOnlyDifferences"]
+        )
+        self.assertTrue(
+            all("toolchain" not in reason for reason in verdict.reasons),
+            verdict.reasons,
+        )
+
 
 class RequiredFieldsAndBoundaries(unittest.TestCase):
     def test_a_missing_administrator_boundary_is_refused(self) -> None:
@@ -602,20 +643,21 @@ class SeventeenDimensions(unittest.TestCase):
         self.assertEqual(result.state, "NOT_COLLECTED")
         self.assertIn("second", result.detail)
 
-    def test_the_committed_comparison_does_not_satisfy_the_production_gate(self) -> None:
-        # This asserted `INCONCLUSIVE` and had to change when the comparison was
-        # first run against two real builders — it became `NON_REPRODUCIBLE`.
-        # Pinning one measured outcome made the test a record of what happened
-        # to be true rather than of what must be. The invariant is that the
-        # committed comparison never claims more than it measured: only
-        # REPRODUCIBLE between independent builders satisfies the gate, and this
-        # comparison is not that.
+    def test_the_committed_comparison_cannot_pass_without_independence(self) -> None:
+        # This asserted `INCONCLUSIVE`, then `NON_REPRODUCIBLE`, and each pin
+        # became a record of what happened to be true rather than of what must
+        # be. As of the three-builder result the committed comparison *is*
+        # REPRODUCIBLE — three builders presented identical archives — so the
+        # outcome is no longer an invariant at all. What must remain true is
+        # that the document alone can never satisfy the production gate:
+        # independence is decided over the builder records by
+        # verify-builder-independence, and a comparison evaluated without it
+        # stays unsatisfying no matter how perfectly its dimensions match.
         document = json.loads(
             (ROOT / "operations/data/build-comparison.json").read_text(encoding="utf-8")
         )
         report = evaluate_comparison(document, independent=False)
         self.assertIn(report.outcome, OUTCOMES)
-        self.assertNotEqual(report.outcome, "REPRODUCIBLE")
         self.assertFalse(report.satisfiesProductionGate)
 
     def test_no_committed_comparison_can_pass_without_independent_builders(self) -> None:

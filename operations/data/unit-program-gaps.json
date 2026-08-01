@@ -12,6 +12,16 @@
       "blockedBy": "enterprise-pilot gate",
       "owner": "Phase 7 enterprise workstream",
       "trackedIn": "KNOWN_LIMITATIONS.md"
+    },
+    {
+      "unit": "bunny-brlapi-key.service",
+      "program": "/usr/libexec/bunny-brlapi-key",
+      "finding": "scripts/bunny-brlapi-key.py exists and the unit ships, but build/scripts/install-root.py's script list omits it, so nothing installs the program. Surfaced by the installed-form unit verification when systemd 259.8 began refusing a non-executable ExecStart outright.",
+      "impact": "On an installed system, first-boot generation of /etc/brlapi.key would fail, which matters to BRLTTY users: the archive correctly ships no key (finalisation removes per-device secrets) and the installed system is supposed to mint one. Installed-system qualification stage 10 tests exactly this behaviour and will fail until the program is installed.",
+      "notFixedHere": "The one-line fix is to install-root.py, which build/Containerfile copies into the image context: it changes the artifact, supersedes reproducibility qualification target 225a5e1, and requires a fresh local gate and three-builder run. That re-qualification belongs to the installed-system branch, where the root-filesystem-change rule governs it, not to the integration of the already-verified archive evidence.",
+      "blockedBy": "installed-system qualification, per-installation state stage",
+      "owner": "installed-system qualification workstream",
+      "trackedIn": "KNOWN_LIMITATIONS.md"
     }
   ]
 }

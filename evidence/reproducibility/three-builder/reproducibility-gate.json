@@ -1,0 +1,230 @@
+{
+  "acceptedOutcome": "REPRODUCIBLE",
+  "baseImageDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+  "builders": [
+    "local-fedora-wsl",
+    "hosted-H1-30684077591"
+  ],
+  "dimensionCount": 17,
+  "dimensions": [
+    {
+      "description": "the set of paths present in the image",
+      "detail": "164354 members, identical (compared by digest over the full value)",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "filesystemTree",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "the SHA-256 of every regular file's contents",
+      "detail": "105592 members, identical (compared by digest over the full value)",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "fileDigests",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "mode bits, including setuid and setgid",
+      "detail": "164354 members, identical (compared by digest over the full value)",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "permissions",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "owning uid and gid of every path",
+      "detail": "164354 members, identical (compared by digest over the full value)",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "ownership",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "xattrs, including capabilities",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "extendedAttributes",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "the SELinux context of every path",
+      "detail": "The archive-stage subcheck: the context every path is intended to receive, computed from the policy the image ships. No archive carries an applied security.selinux xattr \u2014 bootc install applies them on the target \u2014 so the applied subcheck stays outstanding under selinux.appliedSelinuxContexts and is not satisfied by this.",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "selinuxLabels",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "installed package name and version set",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "packageInventory",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "the SBOM package manifest, excluding document identity",
+      "detail": "6076 members, identical (compared by digest over the full value)",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "sbom",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "bootloader entries and kernel command line",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "bootConfiguration",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "unit files and their enablement state",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "systemdUnits",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "installed .desktop files",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "desktopEntries",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "compiled GSettings schemas",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "schemas",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "the kernel package version and vmlinuz digest",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "kernel",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "the initramfs digest, or a stated reason it is not comparable",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "initramfs",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "the layer digest list from the image manifest",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "ociLayers",
+      "kind": "semantic",
+      "state": "MATCH"
+    },
+    {
+      "description": "the archive file's own SHA-256, unnormalised",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "rawArchive",
+      "kind": "archive-raw",
+      "state": "MATCH"
+    },
+    {
+      "description": "the archive's SHA-256 after non-semantic normalisation",
+      "detail": "",
+      "differenceCount": 0,
+      "differences": [],
+      "dimension": "normalisedArchive",
+      "kind": "archive-normalised",
+      "state": "MATCH"
+    }
+  ],
+  "dimensionsByState": {
+    "DIFFER": [],
+    "MATCH": [
+      "bootConfiguration",
+      "desktopEntries",
+      "extendedAttributes",
+      "fileDigests",
+      "filesystemTree",
+      "initramfs",
+      "kernel",
+      "normalisedArchive",
+      "ociLayers",
+      "ownership",
+      "packageInventory",
+      "permissions",
+      "rawArchive",
+      "sbom",
+      "schemas",
+      "selinuxLabels",
+      "systemdUnits"
+    ],
+    "NOT_COLLECTED": []
+  },
+  "independenceReasons": [],
+  "independentBuilders": true,
+  "note": "Only REPRODUCIBLE satisfies the production evidence gate, and only between independent builders. NOT_COLLECTED is not a pass: a dimension nobody measured cannot support a reproducibility claim. Archive reproducibility and installed-system SELinux qualification are separate: satisfiesProductionGate can be true while satisfiesInstalledSystemSelinux is false, and the second is not implied by the first.",
+  "outcome": "REPRODUCIBLE",
+  "policyNote": "The production reproducibility prerequisite requires REPRODUCIBLE. CONTENT_REPRODUCIBLE_ARCHIVE_VARIANCE is not accepted for the stable gate unless the release policy is changed through a separate reviewed decision, and no such decision exists.",
+  "reasons": [
+    "SELinux evidence is incomplete beyond this stage: appliedSelinuxContexts is owned by installed-system qualification and is not satisfied by an archive-only build. Archive reproducibility does not establish it"
+  ],
+  "satisfiesInstalledSystemSelinux": false,
+  "satisfiesProductionGate": true,
+  "schemaVersion": 1,
+  "selinuxEvidence": {
+    "compositeState": "MATCH",
+    "fullyQualified": false,
+    "note": "The composite cannot be MATCH unless every subcheck required at this stage is MATCH. Subchecks owned by a later stage are reported as outstanding and are never counted as satisfied here: an archive-only build cannot observe an installed system's xattrs, and recording that as a pass would claim a comparison that did not happen.",
+    "outstandingAtLaterStages": [
+      "appliedSelinuxContexts"
+    ],
+    "stage": "archive",
+    "subchecks": [
+      {
+        "description": "the path-to-context manifest computed from the SELinux policy shipped in the image, which two archive builders can both produce",
+        "differenceCount": 0,
+        "differences": [],
+        "requiredAtThisStage": true,
+        "satisfied": true,
+        "stage": "archive",
+        "state": "MATCH",
+        "subcheck": "intendedSelinuxContexts"
+      },
+      {
+        "description": "the security.selinux xattr actually present on a booted installed system, which an archive-only build cannot observe at all",
+        "differenceCount": 0,
+        "differences": [],
+        "requiredAtThisStage": false,
+        "satisfied": false,
+        "stage": "installed-system",
+        "state": "NOT_COLLECTED",
+        "subcheck": "appliedSelinuxContexts"
+      }
+    ]
+  },
+  "sourceCommit": "225a5e1cbbba5765f83579d48842f7be05a25571"
+}

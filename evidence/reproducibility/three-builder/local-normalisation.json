@@ -1,0 +1,29 @@
+{
+  "appliedProperties": [
+    "entryTimestamps",
+    "filesystemTraversalOrder",
+    "groupMetadata",
+    "gzipTimestamp",
+    "ownerNames",
+    "ownershipMetadata",
+    "paxTimestampHeaders",
+    "tarEntryOrder"
+  ],
+  "gzipped": false,
+  "memberCount": 86,
+  "normalisedDigest": "165e57fc958b82656bfa2994cdd1acc545ac8c60450f7da7045cfb7c1a6705aa",
+  "normalisedPath": "/root/bunny-os/build/out/qualification/local-bundle/bunny-os.normalised.tar",
+  "note": "The normalised digest is comparable between builders. The raw digest is not discarded: a normalised match with differing raw digests is a packing difference that must still be explained.",
+  "protectedProperties": [
+    "binaryContents",
+    "packageContents",
+    "generatedConfiguration",
+    "signatures",
+    "manifests",
+    "sourceCommitMetadata",
+    "imageFilesystemDifferences"
+  ],
+  "rawDigest": "9439e7816f3effe5661549e50a350c614894eb26b64a4cfb036bf6fb4eb01abd",
+  "schemaVersion": 1,
+  "source": "/var/tmp/bunny-local-bundle/build/out/beta/bunny-os.oci.tar"
+}

@@ -25,8 +25,10 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
@@ -116,16 +118,51 @@ def main() -> int:
         )
 
     if not args.skip_signature_check and present:
+        # Verified against the keys the snapshot itself ships, in a keyring built
+        # for the purpose — not against whatever the host machine happens to
+        # trust.
+        #
+        # `rpmkeys --checksig` with no --dbpath reads the system rpm database.
+        # On the Fedora builder the Fedora keys are installed system-wide and
+        # every package verified; on an Ubuntu runner none are, and all 474
+        # packages failed. That is a property of the host, reported as a
+        # supply-chain failure.
+        #
+        # Using the shipped keys is also the stronger check. A snapshot that can
+        # only be verified by a machine that already trusts Fedora is one an
+        # independent party cannot verify at all, which is the reason the keys
+        # travel with the packages.
         unverified: list[str] = []
-        for name in sorted(set(expected) & set(present)):
-            checked = subprocess.run(
-                ["rpmkeys", "--checksig", str(present[name])], capture_output=True, text=True
+        keys = sorted((root / "keys").glob("RPM-GPG-KEY-*")) if (root / "keys").is_dir() else []
+        if not keys:
+            failures.append(
+                "the snapshot ships no Fedora signing key under keys/, so its packages cannot be "
+                "verified from the snapshot alone. Falling back to the host's trusted keys would "
+                "make the result depend on which machine ran the check"
             )
-            if checked.returncode != 0 or "signatures OK" not in checked.stdout:
-                unverified.append(name)
+        else:
+            keyring = Path(tempfile.mkdtemp(prefix="bunny-snapshot-keyring-"))
+            try:
+                for key in keys:
+                    subprocess.run(
+                        ["rpmkeys", "--dbpath", str(keyring), "--import", str(key)],
+                        capture_output=True,
+                        text=True,
+                    )
+                for name in sorted(set(expected) & set(present)):
+                    checked = subprocess.run(
+                        ["rpmkeys", "--dbpath", str(keyring), "--checksig", str(present[name])],
+                        capture_output=True,
+                        text=True,
+                    )
+                    if checked.returncode != 0 or "signatures OK" not in checked.stdout:
+                        unverified.append(name)
+            finally:
+                shutil.rmtree(keyring, ignore_errors=True)
         if unverified:
             failures.append(
-                f"{len(unverified)} packages failed signature verification: "
+                f"{len(unverified)} packages failed signature verification against the keys the "
+                "snapshot ships: "
                 + ", ".join(unverified[:10])
                 + ". Every RPM must retain its original trusted signature"
             )
@@ -153,7 +190,17 @@ def main() -> int:
         else:
             signature_record = root / "snapshot.signature"
             key_id = str(lock.signature.get("keyId", ""))
-            public = Path.home() / ".bunny-dev-keys" / "snapshot" / f"{key_id}.pub.pem"
+            # The public key lives in the repository. A public key is not a
+            # secret, and one that only exists in an operator's home directory
+            # makes the manifest signature unverifiable by every builder except
+            # the one that made it — which is the opposite of what signing it
+            # was for. The home-directory path is still accepted, so a machine
+            # holding a newer key than the tree can still verify.
+            candidates = [
+                Path("build/keys/snapshot") / f"{key_id}.pub.pem",
+                Path.home() / ".bunny-dev-keys" / "snapshot" / f"{key_id}.pub.pem",
+            ]
+            public = next((path for path in candidates if path.is_file()), candidates[0])
             if not signature_record.is_file():
                 failures.append("snapshot.signature is absent; the manifest is unsigned")
             elif not public.is_file():

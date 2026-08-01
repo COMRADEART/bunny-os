@@ -1,5 +1,5 @@
 {
-  "builderRecordNote": "Imported by scripts/release.py import-hosted-builder-evidence against candidate 9ea5459bdaf122f8c5999683b2c8961555826954. The hosted record was cross-checked against the runner's own environment report, the CI provenance and the artifact manifest in the same bundle; it is not signed, and the import record says so.",
+  "builderRecordNote": "Imported by scripts/release.py import-hosted-builder-evidence against candidate 225a5e1cbbba5765f83579d48842f7be05a25571. The hosted record was cross-checked against the runner's own environment report, the CI provenance and the artifact manifest in the same bundle; it is not signed, and the import record says so.",
   "builderRecords": [
     {
       "administratorBoundary": "4d8365eef238b5611864131a1a3b173c",
@@ -41,17 +41,17 @@
       "workflowRunId": "30566412012.1"
     },
     {
-      "administratorBoundary": "dcb0c0cc3f17c803b94954fa466eba8b",
+      "administratorBoundary": "f14958f44d7e4a5e9c6673e7cb641a0e",
       "architecture": "x86_64",
-      "baseImageDigest": "quay.io/fedora/fedora-bootc:44@sha256:c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
-      "buildCompletedAt": "2026-07-30T16:00:15Z",
-      "buildStartedAt": "2026-07-30T15:53:55Z",
-      "builderId": "local-fedora-wsl",
-      "builderType": "local-machine",
+      "baseImageDigest": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+      "buildCompletedAt": "2026-08-01T02:55:01Z",
+      "buildStartedAt": "2026-08-01T02:29:35Z",
+      "builderId": "hosted-H1-30680015881",
+      "builderType": "hosted-ci",
       "cloudProvider": null,
-      "cloudRunner": null,
+      "cloudRunner": "GitHub Actions 1000000898",
       "dependencyLockHashes": {
-        "build/Containerfile": "d5e66f6dd8c8216f8fc89175373ed09b0abeb0cba85749a805ec604098c9dbb8",
+        "build/Containerfile": "56eb00b20116bc0835a121cb0af83dec6686ce903c9a299782ecc552760115f2",
         "build/license-policy.json": "cf935034da1987d90d33214b77859c4825d4eb05e3d1a238bddba360a44779dc",
         "build/packages/applications.txt": "0a1d76f8dd369e8334b1cd9f3ae0a1c6101db80ef9e47fd5a0937f873feae857",
         "build/packages/common.txt": "1f6900c6d4434063362421e301fea788892440a22b39092b34ad312e219ed447",
@@ -63,19 +63,175 @@
         "build/packages/recovery.txt": "a764331caa87b2182f69a8654744770b002452299313ad549143e278d88349f1",
         "build/packages/shell.txt": "d12bf87c16a35efe7757a3aeaccbddf1a9b0d6fcb6ee3d41a4397f333693e0b6"
       },
-      "environmentId": "02385f6bb77dcf60a56e92585f737201",
+      "environmentId": "a68dde14bdcd43dc77c26f55ce9f0b0a",
+      "kernelVersion": "6.17.0-1020-azure",
+      "operatingSystem": "ubuntu-24.04",
+      "schemaVersion": 2,
+      "sourceCommit": "e7ce522e3d57ad711fce66c95a96a4a55c7e0aaa",
+      "toolchain": {
+        "grype": "absent",
+        "image-builder": "absent",
+        "podman": "podman version 5.8.4",
+        "python3": "Python 3.13.14",
+        "skopeo": "skopeo version 1.13.3",
+        "syft": "Application:   syft",
+        "tar": "tar (GNU tar) 1.35"
+      },
+      "workflowRunId": "30680015881.1"
+    },
+    {
+      "administratorBoundary": "14f53f5037e1a9fae0ffd532cdf8098d",
+      "architecture": "x86_64",
+      "baseImageDigest": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+      "buildCompletedAt": "2026-08-01T02:48:49Z",
+      "buildStartedAt": "2026-08-01T02:28:10Z",
+      "builderId": "hosted-H2-30680016612",
+      "builderType": "hosted-ci",
+      "cloudProvider": null,
+      "cloudRunner": "GitHub Actions 1000000899",
+      "dependencyLockHashes": {
+        "build/Containerfile": "56eb00b20116bc0835a121cb0af83dec6686ce903c9a299782ecc552760115f2",
+        "build/license-policy.json": "cf935034da1987d90d33214b77859c4825d4eb05e3d1a238bddba360a44779dc",
+        "build/packages/applications.txt": "0a1d76f8dd369e8334b1cd9f3ae0a1c6101db80ef9e47fd5a0937f873feae857",
+        "build/packages/common.txt": "1f6900c6d4434063362421e301fea788892440a22b39092b34ad312e219ed447",
+        "build/packages/desktop.txt": "db64ebcfaa79da0645357570e7eef09234caf74c084f9b552b910f3d96ffa908",
+        "build/packages/developer.txt": "08da0e8e574ad77a5d0cb097612b84d68d456a9adb4ee9f6becfd468c3213d51",
+        "build/packages/installer.txt": "de92991c011decdededd07094dc8494c48e999ce2d2d771ec635560713610d80",
+        "build/packages/minimal.txt": "f2a7e9d6d5b0685aaff2fd5e2fe83ea2a56db4135e1388d67cc1b291810be5b8",
+        "build/packages/protected.txt": "9098e90d3f73b01a34dac85b1b1b28eac7ed23eb70c736de8b55620ced526db1",
+        "build/packages/recovery.txt": "a764331caa87b2182f69a8654744770b002452299313ad549143e278d88349f1",
+        "build/packages/shell.txt": "d12bf87c16a35efe7757a3aeaccbddf1a9b0d6fcb6ee3d41a4397f333693e0b6"
+      },
+      "environmentId": "a68dde14bdcd43dc77c26f55ce9f0b0a",
+      "kernelVersion": "6.17.0-1020-azure",
+      "operatingSystem": "ubuntu-24.04",
+      "schemaVersion": 2,
+      "sourceCommit": "e7ce522e3d57ad711fce66c95a96a4a55c7e0aaa",
+      "toolchain": {
+        "grype": "absent",
+        "image-builder": "absent",
+        "podman": "podman version 5.8.4",
+        "python3": "Python 3.13.14",
+        "skopeo": "skopeo version 1.13.3",
+        "syft": "Application:   syft",
+        "tar": "tar (GNU tar) 1.35"
+      },
+      "workflowRunId": "30680016612.1"
+    },
+    {
+      "administratorBoundary": "1579ccde6d73cbf8c742c77fe8da5b80",
+      "architecture": "x86_64",
+      "baseImageDigest": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+      "buildCompletedAt": "2026-08-01T04:53:43Z",
+      "buildStartedAt": "2026-08-01T04:34:50Z",
+      "builderId": "hosted-H1-30684077591",
+      "builderType": "hosted-ci",
+      "cloudProvider": null,
+      "cloudRunner": "GitHub Actions 1000000903",
+      "dependencyLockHashes": {
+        "build/Containerfile": "56eb00b20116bc0835a121cb0af83dec6686ce903c9a299782ecc552760115f2",
+        "build/license-policy.json": "cf935034da1987d90d33214b77859c4825d4eb05e3d1a238bddba360a44779dc",
+        "build/packages/applications.txt": "0a1d76f8dd369e8334b1cd9f3ae0a1c6101db80ef9e47fd5a0937f873feae857",
+        "build/packages/common.txt": "1f6900c6d4434063362421e301fea788892440a22b39092b34ad312e219ed447",
+        "build/packages/desktop.txt": "db64ebcfaa79da0645357570e7eef09234caf74c084f9b552b910f3d96ffa908",
+        "build/packages/developer.txt": "08da0e8e574ad77a5d0cb097612b84d68d456a9adb4ee9f6becfd468c3213d51",
+        "build/packages/installer.txt": "de92991c011decdededd07094dc8494c48e999ce2d2d771ec635560713610d80",
+        "build/packages/minimal.txt": "f2a7e9d6d5b0685aaff2fd5e2fe83ea2a56db4135e1388d67cc1b291810be5b8",
+        "build/packages/protected.txt": "9098e90d3f73b01a34dac85b1b1b28eac7ed23eb70c736de8b55620ced526db1",
+        "build/packages/recovery.txt": "a764331caa87b2182f69a8654744770b002452299313ad549143e278d88349f1",
+        "build/packages/shell.txt": "d12bf87c16a35efe7757a3aeaccbddf1a9b0d6fcb6ee3d41a4397f333693e0b6"
+      },
+      "environmentId": "a68dde14bdcd43dc77c26f55ce9f0b0a",
+      "kernelVersion": "6.17.0-1020-azure",
+      "operatingSystem": "ubuntu-24.04",
+      "schemaVersion": 2,
+      "sourceCommit": "225a5e1cbbba5765f83579d48842f7be05a25571",
+      "toolchain": {
+        "grype": "absent",
+        "image-builder": "absent",
+        "podman": "5.8.4",
+        "python3": "3.14.3",
+        "skopeo": "1.22.2",
+        "syft": "1.50.0",
+        "tar": "1.35"
+      },
+      "workflowRunId": "30684077591.1"
+    },
+    {
+      "administratorBoundary": "952ca993a5db994e5661d1ad42068f7e",
+      "architecture": "x86_64",
+      "baseImageDigest": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+      "buildCompletedAt": "2026-08-01T04:54:47Z",
+      "buildStartedAt": "2026-08-01T04:34:35Z",
+      "builderId": "hosted-H2-30684078309",
+      "builderType": "hosted-ci",
+      "cloudProvider": null,
+      "cloudRunner": "GitHub Actions 1000000902",
+      "dependencyLockHashes": {
+        "build/Containerfile": "56eb00b20116bc0835a121cb0af83dec6686ce903c9a299782ecc552760115f2",
+        "build/license-policy.json": "cf935034da1987d90d33214b77859c4825d4eb05e3d1a238bddba360a44779dc",
+        "build/packages/applications.txt": "0a1d76f8dd369e8334b1cd9f3ae0a1c6101db80ef9e47fd5a0937f873feae857",
+        "build/packages/common.txt": "1f6900c6d4434063362421e301fea788892440a22b39092b34ad312e219ed447",
+        "build/packages/desktop.txt": "db64ebcfaa79da0645357570e7eef09234caf74c084f9b552b910f3d96ffa908",
+        "build/packages/developer.txt": "08da0e8e574ad77a5d0cb097612b84d68d456a9adb4ee9f6becfd468c3213d51",
+        "build/packages/installer.txt": "de92991c011decdededd07094dc8494c48e999ce2d2d771ec635560713610d80",
+        "build/packages/minimal.txt": "f2a7e9d6d5b0685aaff2fd5e2fe83ea2a56db4135e1388d67cc1b291810be5b8",
+        "build/packages/protected.txt": "9098e90d3f73b01a34dac85b1b1b28eac7ed23eb70c736de8b55620ced526db1",
+        "build/packages/recovery.txt": "a764331caa87b2182f69a8654744770b002452299313ad549143e278d88349f1",
+        "build/packages/shell.txt": "d12bf87c16a35efe7757a3aeaccbddf1a9b0d6fcb6ee3d41a4397f333693e0b6"
+      },
+      "environmentId": "a68dde14bdcd43dc77c26f55ce9f0b0a",
+      "kernelVersion": "6.17.0-1020-azure",
+      "operatingSystem": "ubuntu-24.04",
+      "schemaVersion": 2,
+      "sourceCommit": "225a5e1cbbba5765f83579d48842f7be05a25571",
+      "toolchain": {
+        "grype": "absent",
+        "image-builder": "absent",
+        "podman": "5.8.4",
+        "python3": "3.14.3",
+        "skopeo": "1.22.2",
+        "syft": "1.50.0",
+        "tar": "1.35"
+      },
+      "workflowRunId": "30684078309.1"
+    },
+    {
+      "administratorBoundary": "dcb0c0cc3f17c803b94954fa466eba8b",
+      "architecture": "x86_64",
+      "baseImageDigest": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+      "buildCompletedAt": "2026-08-01T04:58:40Z",
+      "buildStartedAt": "2026-08-01T04:56:18Z",
+      "builderId": "local-fedora-wsl",
+      "builderType": "local-machine",
+      "cloudProvider": null,
+      "cloudRunner": null,
+      "dependencyLockHashes": {
+        "build/Containerfile": "56eb00b20116bc0835a121cb0af83dec6686ce903c9a299782ecc552760115f2",
+        "build/license-policy.json": "cf935034da1987d90d33214b77859c4825d4eb05e3d1a238bddba360a44779dc",
+        "build/packages/applications.txt": "0a1d76f8dd369e8334b1cd9f3ae0a1c6101db80ef9e47fd5a0937f873feae857",
+        "build/packages/common.txt": "1f6900c6d4434063362421e301fea788892440a22b39092b34ad312e219ed447",
+        "build/packages/desktop.txt": "db64ebcfaa79da0645357570e7eef09234caf74c084f9b552b910f3d96ffa908",
+        "build/packages/developer.txt": "08da0e8e574ad77a5d0cb097612b84d68d456a9adb4ee9f6becfd468c3213d51",
+        "build/packages/installer.txt": "de92991c011decdededd07094dc8494c48e999ce2d2d771ec635560713610d80",
+        "build/packages/minimal.txt": "f2a7e9d6d5b0685aaff2fd5e2fe83ea2a56db4135e1388d67cc1b291810be5b8",
+        "build/packages/protected.txt": "9098e90d3f73b01a34dac85b1b1b28eac7ed23eb70c736de8b55620ced526db1",
+        "build/packages/recovery.txt": "a764331caa87b2182f69a8654744770b002452299313ad549143e278d88349f1",
+        "build/packages/shell.txt": "d12bf87c16a35efe7757a3aeaccbddf1a9b0d6fcb6ee3d41a4397f333693e0b6"
+      },
+      "environmentId": "60a16cbaa45cffd14e62bd0d0f09a757",
       "kernelVersion": "6.18.33.2-microsoft-standard-WSL2",
       "operatingSystem": "fedora-44",
       "schemaVersion": 2,
-      "sourceCommit": "9ea5459bdaf122f8c5999683b2c8961555826954",
+      "sourceCommit": "225a5e1cbbba5765f83579d48842f7be05a25571",
       "toolchain": {
-        "grype": "Application:         grype",
-        "image-builder": "image-builder:",
-        "podman": "podman version 5.8.4",
-        "python3": "Python 3.14.3",
-        "skopeo": "skopeo version 1.22.2 commit: 18684bc549c53facc3c39abbb73eeba7ddf7fea5",
-        "syft": "Application:   syft",
-        "tar": "tar (GNU tar) 1.35"
+        "grype": "0.116.1",
+        "image-builder": "76.0.0",
+        "podman": "5.8.4",
+        "python3": "3.14.3",
+        "skopeo": "1.22.2",
+        "syft": "1.50.0",
+        "tar": "1.35"
       },
       "workflowRunId": null
     }
@@ -275,6 +431,34 @@
       "declaredBy": "scripts/release.py import-hosted-builder-evidence",
       "first": "local-fedora-wsl",
       "second": "hosted-ci-30566412012"
+    },
+    {
+      "candidateCommit": "e7ce522e3d57ad711fce66c95a96a4a55c7e0aaa",
+      "claim": "independent-builder",
+      "declaredBy": "scripts/release.py import-hosted-builder-evidence",
+      "first": "local-fedora-wsl",
+      "second": "hosted-H1-30680015881"
+    },
+    {
+      "candidateCommit": "e7ce522e3d57ad711fce66c95a96a4a55c7e0aaa",
+      "claim": "independent-builder",
+      "declaredBy": "scripts/release.py import-hosted-builder-evidence",
+      "first": "local-fedora-wsl",
+      "second": "hosted-H2-30680016612"
+    },
+    {
+      "candidateCommit": "225a5e1cbbba5765f83579d48842f7be05a25571",
+      "claim": "independent-builder",
+      "declaredBy": "scripts/release.py import-hosted-builder-evidence",
+      "first": "local-fedora-wsl",
+      "second": "hosted-H1-30684077591"
+    },
+    {
+      "candidateCommit": "225a5e1cbbba5765f83579d48842f7be05a25571",
+      "claim": "independent-builder",
+      "declaredBy": "scripts/release.py import-hosted-builder-evidence",
+      "first": "local-fedora-wsl",
+      "second": "hosted-H2-30684078309"
     }
   ],
   "schemaVersion": 1

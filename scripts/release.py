@@ -1149,13 +1149,36 @@ def collect_builder_record(builderId: str, builderType: str | None) -> int:
 # --- Workstreams 2 and 3: builder independence --------------------------------
 
 
+def _tool_classifications() -> dict[str, str]:
+    """Per-tool classifications from the builder lock, for independence decisions.
+
+    The lock is read raw rather than parsed: an unreadable lock returns no
+    classifications, which leaves every tool ``unknown`` — the strict, blocking
+    default — rather than turning a broken lock into a passing verdict.
+    """
+    try:
+        lock = json.loads(
+            (ROOT / "build" / "inputs" / "builder-image-lock.json").read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        return {}
+    classifications = {
+        str(tool.get("name")): str(tool.get("classification", "unknown"))
+        for tool in (lock.get("tools") or [])
+        if isinstance(tool, dict)
+    }
+    for name in lock.get("absentTools") or {}:
+        classifications.setdefault(str(name), "unavailable-but-unused")
+    return classifications
+
+
 def verify_builder_independence() -> int:
     document = load_optional(DATA / "builders.json", None)
     if document is None:
         print("BLOCKED: operations/data/builders.json does not exist")
         return 2
     try:
-        result = evaluate_builder_set(document)
+        result = evaluate_builder_set(document, toolClassifications=_tool_classifications())
     except BuilderError as exc:
         print(f"BLOCKED: {exc}")
         return 2
@@ -1439,7 +1462,7 @@ def compare_independent_builds() -> int:
     independent = False
     independence_reasons: tuple[str, ...] = ("no independence pair has been verified",)
     try:
-        verdict = evaluate_builder_set(builders)
+        verdict = evaluate_builder_set(builders, toolClassifications=_tool_classifications())
         passing = [pair for pair in verdict["pairs"] if pair["independent"]]
         independent = bool(passing)
         if not independent:
@@ -1838,7 +1861,7 @@ def _candidate_observations() -> dict[str, dict[str, Any]]:
     builders = load_optional(DATA / "builders.json", {})
     independent = False
     try:
-        independent = evaluate_builder_set(builders)["requirementMet"]
+        independent = evaluate_builder_set(builders, toolClassifications=_tool_classifications())["requirementMet"]
     except BuilderError:
         independent = False
     observe(

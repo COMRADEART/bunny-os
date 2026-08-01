@@ -33,6 +33,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import subprocess
 from typing import Any
 
@@ -136,15 +137,43 @@ def environment_id(*, salt: str) -> str:
     return _hash(f"{workspace}:{storage}", salt=salt)
 
 
+_VERSION_NUMBER = re.compile(r"\b(\d+\.\d+(?:\.\d+)*)\b")
+
+
+def _tool_version(argv: list[str]) -> str:
+    """The tool's version number, not its banner.
+
+    Raw --version banners embed distribution build details: Fedora's skopeo
+    appends a git commit Ubuntu's build of the same release cannot share, and
+    syft's multi-line report begins "Application: syft", which is what an
+    earlier record captured as the version. Two builders comparing banners
+    compare distributions, and the independence evaluator would refuse a pair
+    whose tools are the same versions differently packaged. The version number
+    is the claim the comparison needs. A missing tool records "absent" —
+    absence is a version, not a gap.
+    """
+    try:
+        result = subprocess.run(argv, capture_output=True, text=True, check=False, timeout=30)
+    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+        return "absent"
+    output = (result.stdout or result.stderr or "").strip()
+    if not output:
+        return "absent"
+    match = _VERSION_NUMBER.search(output)
+    if match:
+        return match.group(1)
+    return output.splitlines()[0].strip().replace('"', "")
+
+
 def toolchain() -> dict[str, str]:
     return {
-        "podman": _command(["podman", "--version"]),
-        "skopeo": _command(["skopeo", "--version"]),
-        "image-builder": _command(["image-builder", "--version"]),
-        "syft": _command(["syft", "version", "-o", "text"]),
-        "grype": _command(["grype", "version", "-o", "text"]),
-        "python3": f"Python {platform.python_version()}",
-        "tar": _command(["tar", "--version"]),
+        "podman": _tool_version(["podman", "--version"]),
+        "skopeo": _tool_version(["skopeo", "--version"]),
+        "image-builder": _tool_version(["image-builder", "--version"]),
+        "syft": _tool_version(["syft", "version", "-o", "text"]),
+        "grype": _tool_version(["grype", "version", "-o", "text"]),
+        "python3": platform.python_version(),
+        "tar": _tool_version(["tar", "--version"]),
     }
 
 

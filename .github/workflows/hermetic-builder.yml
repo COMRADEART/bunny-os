@@ -48,7 +48,12 @@ permissions:
   packages: read
 
 env:
-  PYTHON_VERSION: "3.13"
+  # The exact interpreter the local builder runs, not a floating minor. The
+  # host python is classified output-affecting — the shipped archive passes
+  # through its tarfile during normalisation — so the independence evaluator
+  # requires the pair to match, and "3.13" was a version the local builder
+  # never had.
+  PYTHON_VERSION: "3.14.3"
   BUNNY_ARCHIVE_ONLY: "1"
   BUNNY_CACHES_DISABLED: "1"
 
@@ -113,6 +118,57 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends podman skopeo runc fuse-overlayfs
+          # podman is pinned by the builder lock, like syft below. Ubuntu's
+          # archive podman (4.9) predates --source-date-epoch and
+          # --rewrite-timestamp, which the build requires — the first hosted
+          # run to reach `podman build` failed on exactly that flag — and a
+          # version the lock does not name is not the pinned toolchain anyway:
+          # layer packing is the tool's output, and two podmans are two tools.
+          # The apt install above stays for its dependencies and configs; the
+          # static bundle in front of it on PATH is what runs.
+          podman_version="$(python -c "
+          import json
+          lock = json.load(open('build/inputs/builder-image-lock.json'))
+          print(next(t['version'] for t in lock['tools'] if t['name'] == 'podman'))
+          ")"
+          curl -fsSL -o /tmp/podman-static.tar.gz \
+            "https://github.com/mgoltzsche/podman-static/releases/download/v${podman_version}/podman-linux-amd64.tar.gz"
+          # The digest of the v5.8.4 linux-amd64 asset. A lock bump changes the
+          # URL above and fails this check loudly, which is the point: the new
+          # digest is recorded here deliberately, not discovered in a green run.
+          echo "a58765fe8be6ab3fb79f892f1a027b4ce4a7e8eb589df1ef960c167cbde08d69  /tmp/podman-static.tar.gz" \
+            | sha256sum --check
+          sudo tar -C / --strip-components=1 -xzf /tmp/podman-static.tar.gz \
+            podman-linux-amd64/usr podman-linux-amd64/etc
+          actual="$(podman --version | awk '{print $3}')"
+          if [ "${actual}" != "${podman_version}" ]; then
+            echo "::error::podman is ${actual} but the builder lock pins ${podman_version}"
+            exit 1
+          fi
+          echo "podman pinned to ${podman_version} from the builder lock"
+          # skopeo is classified output-affecting — it copies the base into
+          # and out of retention — so the independence evaluator requires both
+          # builders to run the same version. Ubuntu's archive carries 1.13;
+          # the lock pins 1.22.2. Built from the upstream tag with the openpgp
+          # tag so no gpgme system dependency enters, and asserted against the
+          # lock the same way podman is.
+          skopeo_version="$(python -c "
+          import json
+          lock = json.load(open('build/inputs/builder-image-lock.json'))
+          print(next(t['version'] for t in lock['tools'] if t['name'] == 'skopeo'))
+          ")"
+          git clone --quiet --depth 1 --branch "v${skopeo_version}" \
+            https://github.com/containers/skopeo /tmp/skopeo-src
+          make -C /tmp/skopeo-src bin/skopeo \
+            BUILDTAGS='containers_image_openpgp exclude_graphdriver_btrfs exclude_graphdriver_devicemapper' \
+            >/dev/null
+          sudo install /tmp/skopeo-src/bin/skopeo /usr/local/bin/skopeo
+          actual_skopeo="$(skopeo --version | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)"
+          if [ "${actual_skopeo}" != "${skopeo_version}" ]; then
+            echo "::error::skopeo is ${actual_skopeo} but the builder lock pins ${skopeo_version}"
+            exit 1
+          fi
+          echo "skopeo pinned to ${skopeo_version} from the builder lock"
           # syft is pinned by the builder lock; the version installed here must
           # match it or the SBOM dimension compares two tools rather than two
           # images.
@@ -141,16 +197,48 @@ jobs:
           sudo swapon /swapfile-bunny
           free -h
 
+      - name: Use the kernel's native overlay diff
+        run: |
+          set -euo pipefail
+          # Ubuntu boots overlayfs with redirect_dir=Y, and containers/storage
+          # answers that with its naive diff walker. The local Fedora builder
+          # defaults to N and gets the native upperdir reader. Same content,
+          # two byte streams: naive synthesizes an independent whiteout per
+          # deleted path where native emits the upperdir's opaque marker and
+          # hardlinked whiteouts, and naive orders members as a flat sorted
+          # list where native walks the tree. Measured on attempt 4 as the
+          # entire remaining difference between the local and hosted archives
+          # — one opaque entry, whiteout link shape, and member order in the
+          # two layers this build writes. The parameter is runtime-writable,
+          # so the runner is turned to match the local builder before any
+          # store exists.
+          sudo modprobe overlay 2>/dev/null || true
+          echo N | sudo tee /sys/module/overlay/parameters/redirect_dir
+          if [ -f /sys/module/overlay/parameters/metacopy ]; then
+            echo N | sudo tee /sys/module/overlay/parameters/metacopy
+          fi
+
       - name: Configure the container runtime
         run: |
           set -euo pipefail
-          # Ubuntu's crun refuses the OCI spec version Ubuntu's own podman
-          # writes, and podman falls back to the vfs storage driver without an
-          # explicit one, which copies the whole image per layer. Neither is a
-          # build input: the image content is determined by the Containerfile,
-          # the base digest and the source commit.
+          # crun, from the same pinned static bundle as podman — the local
+          # builder runs crun, and the earlier runc override existed only
+          # because Ubuntu's apt crun refused the OCI spec Ubuntu's apt podman
+          # wrote, a mismatch the pinned bundle does not have. podman still
+          # falls back to the vfs storage driver without an explicit one,
+          # which copies the whole image per layer, so the driver stays
+          # explicit. Neither is a build input: the image content is
+          # determined by the Containerfile, the base digest and the source
+          # commit.
+          # By absolute path: a bare "crun" resolves through podman's own
+          # runtime search list, which found Ubuntu's apt crun 1.14 ahead of
+          # the pinned one and failed with "crun: unknown version specified" —
+          # the 1.14 runtime refusing the OCI spec podman 5.8 writes. The name
+          # alone does not pin the binary.
           sudo install -d /etc/containers
-          printf '[engine]\nruntime = "runc"\n' | sudo tee /etc/containers/containers.conf
+          printf '[engine]\nruntime = "crun"\n\n[engine.runtimes]\ncrun = ["/usr/local/bin/crun"]\n' \
+            | sudo tee /etc/containers/containers.conf
+          /usr/local/bin/crun --version | head -1
           printf '[storage]\ndriver = "overlay"\nrunroot = "/run/containers/storage"\ngraphroot = "/var/lib/containers/storage"\n' \
             | sudo tee /etc/containers/storage.conf
           sudo rm -rf /var/lib/containers/storage /run/containers/storage
@@ -203,10 +291,73 @@ jobs:
           set -euo pipefail
           profile='${{ inputs.profile }}'
           export TMPDIR="${RUNNER_TEMP}/syft"
-          mkdir -p "$TMPDIR" "build/out/${profile}/sbom"
+          # The SBOM lives in build/out/ci, not in the profile directory: the
+          # artifact manifest below is `sha256sum -- *` over the profile
+          # directory, and a subdirectory there would break it.
+          mkdir -p "$TMPDIR" build/out/ci
           export SYFT_PARALLELISM=1
           syft "oci-archive:build/out/${profile}/bunny-os.oci.tar" \
-            -o "spdx-json=build/out/${profile}/sbom/bunny-os.spdx.json"
+            -o "spdx-json=build/out/ci/sbom.spdx.json"
+
+      - name: Inventory the layers
+        run: |
+          set -euo pipefail
+          # Per-layer compressed and uncompressed digests, plus ordered entry
+          # metadata for the layers this build itself wrote. When two builders'
+          # blobs differ, this is what says whether the difference is bytes,
+          # metadata, member order or only compression — without shipping a
+          # 1.8 GB archive to find out.
+          python - "build/out/${{ inputs.profile }}/bunny-os.oci.tar" build/out/ci/layer-inventory.json 3 <<'PY'
+          import gzip, hashlib, json, sys, tarfile
+          archive, output, detail_last = sys.argv[1], sys.argv[2], int(sys.argv[3])
+          outer = tarfile.open(archive)
+          index = json.load(outer.extractfile("index.json"))
+          manifest_digest = index["manifests"][0]["digest"].split(":")[1]
+          manifest = json.load(outer.extractfile(f"blobs/sha256/{manifest_digest}"))
+          layers = [l["digest"].split(":")[1] for l in manifest["layers"]]
+          report = {"layers": []}
+          for position, blob in enumerate(layers):
+              fh = outer.extractfile(f"blobs/sha256/{blob}")
+              head = fh.read(2)
+              fh = outer.extractfile(f"blobs/sha256/{blob}")
+              raw = gzip.open(fh) if head == b"\x1f\x8b" else fh
+              entries = []
+              inner = tarfile.open(fileobj=raw, mode="r|")
+              count = 0
+              for member in inner:
+                  count += 1
+                  if position >= len(layers) - detail_last:
+                      entries.append({
+                          "name": member.name, "type": member.type.decode(),
+                          "size": member.size, "mtime": member.mtime,
+                          "mode": member.mode, "uid": member.uid, "gid": member.gid,
+                          "linkname": member.linkname,
+                          "paxXattrs": sorted(k for k in (member.pax_headers or {})),
+                      })
+              digest = hashlib.sha256()
+              fh = outer.extractfile(f"blobs/sha256/{blob}")
+              head = fh.read(2)
+              fh = outer.extractfile(f"blobs/sha256/{blob}")
+              raw = gzip.open(fh) if head == b"\x1f\x8b" else fh
+              while True:
+                  chunk = raw.read(1024 * 1024)
+                  if not chunk:
+                      break
+                  digest.update(chunk)
+              record = {
+                  "position": position,
+                  "compressed": blob,
+                  "uncompressed": digest.hexdigest(),
+                  "entryCount": count,
+                  "gzip": head == b"\x1f\x8b",
+              }
+              if position >= len(layers) - detail_last:
+                  record["entries"] = entries
+              report["layers"].append(record)
+          with open(output, "w", encoding="utf-8") as handle:
+              json.dump(report, handle, indent=1, sort_keys=True)
+          print(f"wrote {output}: {len(layers)} layers, detail on last {detail_last}")
+          PY
 
       - name: Collect the intended SELinux manifest
         run: |
@@ -226,7 +377,7 @@ jobs:
           ")"
           python scripts/reproducibility/collect_comparison_dimensions.py \
             --archive "build/out/${profile}/bunny-os.oci.tar" \
-            --sbom "build/out/${profile}/sbom/bunny-os.spdx.json" \
+            --sbom build/out/ci/sbom.spdx.json \
             --normalisation "build/out/${profile}/normalisation.json" \
             --epoch "$epoch" \
             --mode qualification \
@@ -246,12 +397,63 @@ jobs:
       - name: Collect the builder record
         run: |
           set -euo pipefail
+          # The record must pin the base the build actually consumed. The
+          # published digest reference is that pin; an empty or tag-only value
+          # is refused at import, and both builders must record the same one.
+          BUNNY_BASE_IMAGE="$(python -c "
+          import json
+          lock = json.load(open('build/inputs/input-publication-lock.json'))
+          print(lock['inputs']['base']['digestReference'])
+          ")"
+          export BUNNY_BASE_IMAGE
           python scripts/reproducibility/collect_builder_record.py builder-record \
             --builder-id "hosted-${{ inputs.label }}-${GITHUB_RUN_ID}" \
             --builder-type hosted-ci \
             --started-at '${{ steps.environment.outputs.started }}' \
             --completed-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --output build/out/ci/builder-record.json
+
+      - name: Collect what the evidence import requires
+        run: |
+          set -euo pipefail
+          profile='${{ inputs.profile }}'
+          # release/hosted.py refuses a bundle missing any of its required
+          # artifacts, and the first hosted attempts uploaded a bundle that
+          # could never have been imported. Everything named there is produced
+          # here, the same way the independent-builder workflow produces it.
+          python - <<'PY'
+          import json, pathlib
+          document = json.loads(pathlib.Path("build/out/ci/sbom.spdx.json").read_text(encoding="utf-8"))
+          entries = sorted(
+              f"{item.get('name')}@{item.get('versionInfo', 'UNKNOWN')}"
+              for item in document.get("packages", [])
+          )
+          pathlib.Path("build/out/ci/package-inventory.txt").write_text(
+              "\n".join(entries) + "\n", encoding="utf-8"
+          )
+          print(f"{len(entries)} package entries")
+          PY
+          # The bundle's normalisation.json is the operator-side pass over the
+          # shipped archive, so its rawDigest matches the artifact manifest's
+          # entry for bunny-os.oci.tar. The build's own normalisation.json
+          # records the pre-shipping normalisation and stays where it is.
+          python scripts/release.py normalise-artifact \
+            --source "build/out/${profile}/bunny-os.oci.tar" \
+            --destination build/out/ci/bunny-os.normalised.tar \
+            --output build/out/ci/normalisation.json
+          rm -f build/out/ci/bunny-os.normalised.tar
+          BUNNY_BASE_IMAGE="$(python -c "
+          import json
+          lock = json.load(open('build/inputs/input-publication-lock.json'))
+          print(lock['inputs']['base']['digestReference'])
+          ")"
+          export BUNNY_BASE_IMAGE
+          python scripts/reproducibility/collect_builder_record.py provenance \
+            --profile "$profile" \
+            --artifact-dir "build/out/${profile}" \
+            --output build/out/ci/ci-provenance.json
+          ( cd "build/out/${profile}" && sha256sum -- * > "${GITHUB_WORKSPACE}/build/out/ci/artifact-manifest.sha256" )
+          cat build/out/ci/artifact-manifest.sha256
 
       - name: Upload the comparison evidence
         uses: actions/upload-artifact@v4
@@ -268,6 +470,13 @@ jobs:
             build/out/ci/hydrated-inputs.json
             build/out/qualification/hydrated-inputs.json
             build/out/ci/databases/**
+            build/out/ci/layer-inventory.json
+            build/out/ci/sbom.spdx.json
+            build/out/ci/package-inventory.txt
+            build/out/ci/ci-provenance.json
+            build/out/ci/artifact-manifest.sha256
+            build/out/ci/normalisation.json
+            build/out/ci/build.log
             build/out/${{ inputs.profile }}/normalisation.json
             build/out/${{ inputs.profile }}/provenance.json
             build/out/${{ inputs.profile }}/SHA256SUMS

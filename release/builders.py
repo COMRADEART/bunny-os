@@ -331,27 +331,54 @@ def _matching_pairing(first: BuilderRecord, second: BuilderRecord) -> tuple[str,
     return None
 
 
-def evaluate_independence(first: BuilderRecord, second: BuilderRecord) -> IndependenceVerdict:
-    """Decide whether these two records describe two independent builders."""
+def evaluate_independence(
+    first: BuilderRecord,
+    second: BuilderRecord,
+    *,
+    toolClassifications: Mapping[str, str] | None = None,
+) -> IndependenceVerdict:
+    """Decide whether these two records describe two independent builders.
+
+    Tool-version differences are adjudicated by the classification model in
+    ``release/supplychain.py`` rather than by blanket string equality. An
+    earlier version of this function refused any pair whose recorded versions
+    differed for any tool it happened to share, which pinned the machine
+    instead of the build: grype and image-builder never touch the archive, and
+    the honest question — could this difference have put different bytes in
+    the artifact? — is exactly what the per-tool classifications answer, with
+    a declared class, a reason and a test each. ``unknown`` still blocks: a
+    difference in a tool nobody classified is a difference nobody has
+    established to be harmless, so a caller that passes no classifications
+    keeps the old strict behaviour.
+    """
+    from release.supplychain import toolchain_mismatches
+
     reasons: list[str] = []
 
     # --- inputs that must be identical -------------------------------------
     mismatched = tuple(
         name for name in SHARED_INPUT_FIELDS if getattr(first, name) != getattr(second, name)
     )
-    shared_tools = sorted(set(first.toolchain) & set(second.toolchain))
-    toolchain_mismatch = tuple(
-        f"toolchain.{tool}" for tool in shared_tools if first.toolchain[tool] != second.toolchain[tool]
+    blocking, recorded_only, unclassified = toolchain_mismatches(
+        first.toolchain, second.toolchain, classifications=dict(toolClassifications or {})
     )
+    toolchain_mismatch = tuple(f"toolchain.{tool}" for tool in (*blocking, *unclassified))
     if mismatched:
         reasons.append(
             "the builders did not build the same thing: " + ", ".join(mismatched) + " differ"
         )
-    if toolchain_mismatch:
+    if blocking:
         reasons.append(
             "toolchain versions differ: "
-            + ", ".join(toolchain_mismatch)
+            + ", ".join(f"toolchain.{tool}" for tool in blocking)
             + "; a content difference could not be attributed to the environment"
+        )
+    if unclassified:
+        reasons.append(
+            "toolchain versions differ in unclassified tools: "
+            + ", ".join(f"toolchain.{tool}" for tool in unclassified)
+            + "; a tool whose effect on the artifact nobody has established cannot be assumed "
+            "to have none"
         )
 
     if first.builderId == second.builderId:
@@ -422,13 +449,21 @@ def evaluate_independence(first: BuilderRecord, second: BuilderRecord) -> Indepe
             "baseDigestEquality": first.baseImageDigest == second.baseImageDigest,
             "configurationEquality": not mismatched,
             "toolchainEquality": not toolchain_mismatch,
+            # Differences the classifications permit, reported rather than
+            # silently tolerated: the verdict says what differed and why that
+            # was allowed to stand.
+            "toolchainRecordedOnlyDifferences": list(recorded_only),
             "environmentIndependence": first.administratorBoundary != second.administratorBoundary,
             "artifactComparisonAvailable": False,
         },
     )
 
 
-def evaluate_builder_set(document: Mapping[str, Any]) -> dict[str, Any]:
+def evaluate_builder_set(
+    document: Mapping[str, Any],
+    *,
+    toolClassifications: Mapping[str, str] | None = None,
+) -> dict[str, Any]:
     """Evaluate every declared builder pair in ``operations/data/builders.json``."""
     raw = document.get("builderRecords")
     if not isinstance(raw, list):
@@ -460,7 +495,9 @@ def evaluate_builder_set(document: Mapping[str, Any]) -> dict[str, Any]:
             missing = [name for name in (left, right) if name not in records]
             rejected.append(f"pair references unknown builder(s): {', '.join(map(str, missing))}")
             continue
-        verdict = evaluate_independence(records[left], records[right])
+        verdict = evaluate_independence(
+            records[left], records[right], toolClassifications=toolClassifications
+        )
         verdicts.append(verdict.as_dict())
 
     independent = [v for v in verdicts if v["independent"]]

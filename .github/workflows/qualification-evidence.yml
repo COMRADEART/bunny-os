@@ -74,9 +74,30 @@ jobs:
           PY
 
       # 2. Same-host builds cannot satisfy independent reproducibility.
+      #
+      # This used to assert that verify-builder-independence exits blocked,
+      # which was true only while no real independent pair existed. The
+      # committed three-builder evidence now legitimately passes, so asserting
+      # a blocked exit would demand the evidence be false. The invariant this
+      # protection exists for is narrower and permanent: a second workspace,
+      # container or consecutive run on one host must never evaluate as
+      # independent, however the rest of the record reads.
       - name: Two builds on one host cannot satisfy independent reproducibility
         run: |
-          bash build/scripts/assert-gate.sh 2 "builder independence" -- python scripts/release.py verify-builder-independence
+          python - <<'PY'
+          import json, sys
+          sys.path.insert(0, ".")
+          from release.builders import evaluate_independence, parse_builder_record
+          records = json.load(open("operations/data/builders.json"))["builderRecords"]
+          base = next(r for r in records if r.get("builderType") == "local-machine")
+          clone = dict(base, builderId="second-workspace-same-host")
+          verdict = evaluate_independence(
+              parse_builder_record(base), parse_builder_record(clone)
+          )
+          if verdict.independent:
+              raise SystemExit("a same-host pair was accepted as independent")
+          print("refused: " + "; ".join(verdict.reasons)[:300])
+          PY
 
       # 3. Self-review cannot satisfy an independent-review gate.
       - name: A self-review cannot satisfy an independent-review gate

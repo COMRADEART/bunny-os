@@ -234,6 +234,42 @@ for path in /usr/lib/sysimage/libdnf5 /usr/share/rpm /var/lib/dnf /etc/machine-i
 done
 note "generated package-manager state pinned to ${epoch}"
 
+echo "==> 9a. breaking hardlink groups in this build's transaction"
+# The layer tar stores one member of a hardlink group as the file and the rest
+# as link entries pointing at it, and which member is the file follows the
+# order the storage driver walked the directory — readdir order, a property of
+# the build host's filesystem rather than of the image. Measured between the
+# local builder and hosted H2 on one commit: the same four icewm theme files
+# shipped as the real entries under themes/clearlooks/ on one and under
+# themes/clearlooks-2px/ on the other, flipping fileDigests, ociLayers and both
+# archive digests while every extracted byte matched. This layer carries 1,337
+# hardlink entries — mostly identical .pyc files — and any of them can flip the
+# same way on the next pair of hosts.
+#
+# Every multi-link file this build's own transaction installed becomes an
+# independent copy: same bytes, mode, owner, mtimes and xattrs, so nothing in
+# the tar depends on walk order. Scope matters more than mechanism here. The
+# base image's layers ship by digest and carry their hardlinks identically for
+# every builder, and rewriting a base-owned file would copy it up into this
+# layer — so only packages from this build's transaction are touched, found by
+# INSTALLTIME, which the frozen build clock pins to the epoch exactly.
+hardlinks_broken=0
+mapfile -t epoch_packages < <(
+  rpm -qa --qf '%{INSTALLTIME} %{NVRA}\n' | awk -v e="${epoch}" '$1 == e { print $2 }'
+)
+if [[ ${#epoch_packages[@]} -gt 0 ]]; then
+  while IFS= read -r path; do
+    [[ -f "${path}" && ! -L "${path}" ]] || continue
+    [[ "$(stat -c '%h' "${path}")" -gt 1 ]] || continue
+    scratch="${path}.dehardlink.$$"
+    cp -a "${path}" "${scratch}"
+    mv -f "${scratch}" "${path}"
+    hardlinks_broken=$((hardlinks_broken + 1))
+  done < <(rpm -ql "${epoch_packages[@]}" | sort -u)
+fi
+note "${#epoch_packages[@]} package(s) installed at the epoch"
+note "${hardlinks_broken} hardlinked path(s) rewritten as independent files"
+
 echo "==> 10. verifying ownership and permissions"
 failed=0
 if [[ -e /etc/machine-id ]]; then
@@ -287,6 +323,7 @@ if [[ -n "${report}" ]]; then
     printf '],\n'
     printf '  "machineIdBytes": %s,\n' "$(stat -c '%s' /etc/machine-id 2>/dev/null || echo null)"
     printf '  "fontCacheCount": %s,\n' "$(find /usr/lib/fontconfig/cache -name '*.cache-*' 2>/dev/null | wc -l)"
+    printf '  "hardlinksBroken": %s,\n' "${hardlinks_broken}"
     printf '  "result": "%s"\n' "$([[ "${failed}" == 0 ]] && echo PASS || echo FAIL)"
     printf '}\n'
   } > "${report}"
