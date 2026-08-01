@@ -106,6 +106,12 @@ class QmpClient:
         #: and a run that cannot see a reset must not be scored as one that
         #: saw none.
         self.reader_died = False
+        #: Set by the caller immediately before it asks QEMU to quit. The
+        #: socket closing after that is the expected end of the run, not a
+        #: reader death — without this distinction every clean shutdown
+        #: reported a dead reader and downgraded stability cells to
+        #: INCONCLUSIVE (measured on the TCG comparator runs).
+        self.shutting_down = False
         #: Monotonic command counter. QMP replies carry back the id they were
         #: sent with, and matching on it is the only way to know a reply
         #: belongs to the command in hand: without it, a reply that arrives
@@ -160,7 +166,7 @@ class QmpClient:
             except (socket.timeout,):
                 continue
             except (ConnectionError, OSError, json.JSONDecodeError):
-                if not self.closed:
+                if not self.closed and not self.shutting_down:
                     self.reader_died = True
                 return
             with self.lock:
@@ -731,6 +737,10 @@ def main() -> int:
         qemu_stderr = ""
         try:
             if qmp is not None:
+                # Announce the intent before issuing it: the socket closing
+                # after a quit we asked for is the end of the run, not a
+                # reader that died mid-observation.
+                qmp.shutting_down = True
                 try:
                     qmp.execute("quit", timeout=5)
                 except (TimeoutError, OSError, ConnectionError):
