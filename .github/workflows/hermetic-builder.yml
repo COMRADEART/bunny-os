@@ -113,6 +113,34 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends podman skopeo runc fuse-overlayfs
+          # podman is pinned by the builder lock, like syft below. Ubuntu's
+          # archive podman (4.9) predates --source-date-epoch and
+          # --rewrite-timestamp, which the build requires — the first hosted
+          # run to reach `podman build` failed on exactly that flag — and a
+          # version the lock does not name is not the pinned toolchain anyway:
+          # layer packing is the tool's output, and two podmans are two tools.
+          # The apt install above stays for its dependencies and configs; the
+          # static bundle in front of it on PATH is what runs.
+          podman_version="$(python -c "
+          import json
+          lock = json.load(open('build/inputs/builder-image-lock.json'))
+          print(next(t['version'] for t in lock['tools'] if t['name'] == 'podman'))
+          ")"
+          curl -fsSL -o /tmp/podman-static.tar.gz \
+            "https://github.com/mgoltzsche/podman-static/releases/download/v${podman_version}/podman-linux-amd64.tar.gz"
+          # The digest of the v5.8.4 linux-amd64 asset. A lock bump changes the
+          # URL above and fails this check loudly, which is the point: the new
+          # digest is recorded here deliberately, not discovered in a green run.
+          echo "a58765fe8be6ab3fb79f892f1a027b4ce4a7e8eb589df1ef960c167cbde08d69  /tmp/podman-static.tar.gz" \
+            | sha256sum --check
+          sudo tar -C / --strip-components=1 -xzf /tmp/podman-static.tar.gz \
+            podman-linux-amd64/usr podman-linux-amd64/etc
+          actual="$(podman --version | awk '{print $3}')"
+          if [ "${actual}" != "${podman_version}" ]; then
+            echo "::error::podman is ${actual} but the builder lock pins ${podman_version}"
+            exit 1
+          fi
+          echo "podman pinned to ${podman_version} from the builder lock"
           # syft is pinned by the builder lock; the version installed here must
           # match it or the SBOM dimension compares two tools rather than two
           # images.
@@ -144,13 +172,17 @@ jobs:
       - name: Configure the container runtime
         run: |
           set -euo pipefail
-          # Ubuntu's crun refuses the OCI spec version Ubuntu's own podman
-          # writes, and podman falls back to the vfs storage driver without an
-          # explicit one, which copies the whole image per layer. Neither is a
-          # build input: the image content is determined by the Containerfile,
-          # the base digest and the source commit.
+          # crun, from the same pinned static bundle as podman — the local
+          # builder runs crun, and the earlier runc override existed only
+          # because Ubuntu's apt crun refused the OCI spec Ubuntu's apt podman
+          # wrote, a mismatch the pinned bundle does not have. podman still
+          # falls back to the vfs storage driver without an explicit one,
+          # which copies the whole image per layer, so the driver stays
+          # explicit. Neither is a build input: the image content is
+          # determined by the Containerfile, the base digest and the source
+          # commit.
           sudo install -d /etc/containers
-          printf '[engine]\nruntime = "runc"\n' | sudo tee /etc/containers/containers.conf
+          printf '[engine]\nruntime = "crun"\n' | sudo tee /etc/containers/containers.conf
           printf '[storage]\ndriver = "overlay"\nrunroot = "/run/containers/storage"\ngraphroot = "/var/lib/containers/storage"\n' \
             | sudo tee /etc/containers/storage.conf
           sudo rm -rf /var/lib/containers/storage /run/containers/storage
