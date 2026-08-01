@@ -141,9 +141,13 @@ fi
 # Manifest last: every produced file bound to its sha256, so an edit after
 # collection is detectable. sorted for a stable, diffable manifest.
 # --------------------------------------------------------------------------
+# Written to a temporary name and moved into place: find would otherwise
+# read the manifest it is in the middle of writing, which shellcheck refuses
+# (SC2094) and which would put a half-written file's own digest in it.
 (
     cd "$outdir"
-    find . -type f ! -name manifest.sha256 -print0 | sort -z | xargs -0 sha256sum > manifest.sha256
+    find . -type f ! -name manifest.sha256 ! -name manifest.sha256.tmp -print0         | sort -z | xargs -0 sha256sum > manifest.sha256.tmp
+    mv manifest.sha256.tmp manifest.sha256
 )
 
 echo "collect-hardware.sh: wrote $(wc -l < "$outdir/manifest.sha256") files into $outdir (see manifest.sha256)"

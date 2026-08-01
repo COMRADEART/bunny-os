@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 
 from release.installed import resolve_context, verify_record_binding  # noqa: E402
-from release.matrix import parse_matrix_result  # noqa: E402
+from release.matrix import parse_result  # noqa: E402
 
 #: matrix -> row -> list of (record kind, evidence file names) that support it.
 #: "scenario:<name>" is a run_scenario verdict; "collection:<file>" is an
@@ -143,7 +143,7 @@ def main() -> int:
                     + ", ".join(v[1] for v in verdicts)
                 ),
             }
-            parse_matrix_result(matrix, row)  # refuse malformed rows before writing
+            parse_result(matrix, row, root=ROOT)  # refuse malformed rows before writing
             existing = matrices.get(matrix, [])
             matrices[matrix] = [r for r in existing if r.get("scenario") != scenario] + [row]
             written += 1
