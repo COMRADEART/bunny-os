@@ -192,7 +192,7 @@ the journal. The authoritative per-unit classification across boots is
 `dispose_failed_units.py`, which reads `systemctl --failed` and the journal
 from the booted disk offline, and it was not re-run in this pass — this pass
 is about the TPM boot path, and re-deriving the unit landscape would have
-meant mounting seventy per-run overlays.
+meant mounting a per-run overlay for every boot in the matrix.
 
 So the honest statement is narrow: across these boots, the serial console
 reported the failures counted above, and no TPM cell reported more of them
@@ -211,3 +211,11 @@ state.
 
 Every reset in this matrix is classified. `UNKNOWN` blocks the gate, and no
 run ended there.
+
+`BOOTLOADER_REBOOT_COMMAND` is the restoration reboot, in every cell that
+boots a disk through the fallback path with a TPM attached. The single
+`HOST_TERMINATED` is `fw-only-crb-001`, the first firmware-only control:
+it ran before the stability expectation existed, so the harness's own
+end-of-window quit was classified as if it were an event. The five later
+firmware-only runs carry no classification because nothing terminal
+happened in them, which is what a firmware control passing looks like.
