@@ -80,7 +80,7 @@ TOOLS = {
                "moves the archive between stores; every byte digest-verified afterwards"),
     "podman": ("podman", "media-content-affecting",
                "materialises the reproducible archive for deployment"),
-    "guestfish": ("guestfish", "test-environment-only",
+    "guestfish": ("guestfs-tools", "test-environment-only",
                   "inspects installed disks without booting them; reads applied SELinux labels"),
     "virtiofsd": ("virtiofsd", "test-environment-only",
                   "shares evidence directories with qualification guests where used"),
