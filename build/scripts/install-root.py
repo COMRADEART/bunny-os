@@ -181,7 +181,15 @@ def main() -> int:
         path.mkdir(parents=True, exist_ok=True, mode=mode)
         os.chmod(path, mode)
 
-    subprocess.run(["/usr/bin/systemctl", "enable", "NetworkManager.service", "firewalld.service", "bunny-system-broker.socket", "bunny-health-check.service"], check=True)
+    # bunny-brlapi-key.service is enabled here because an installed system
+    # measured it never running: the unit ships with WantedBy=sysinit.target,
+    # nothing enabled it, and systemd's default preset policy disables what no
+    # preset names — so /etc/brlapi.key was never minted and BRLTTY had no
+    # authorisation key for the whole session. This is the second half of the
+    # same accessibility defect as the missing program: CI could see the
+    # ExecStart that pointed nowhere, and only booting an installed system
+    # could see the service that nothing started.
+    subprocess.run(["/usr/bin/systemctl", "enable", "NetworkManager.service", "firewalld.service", "bunny-system-broker.socket", "bunny-health-check.service", "bunny-brlapi-key.service"], check=True)
     subprocess.run(["/usr/bin/systemctl", "enable", "bunny-recovery-shell.service"], check=True)
     subprocess.run(["/usr/bin/systemctl", "--global", "enable", "bunny-first-boot.service"], check=True)
     if args.profile == "recovery":

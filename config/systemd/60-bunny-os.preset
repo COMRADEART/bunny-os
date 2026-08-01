@@ -2,6 +2,7 @@ enable NetworkManager.service
 enable firewalld.service
 enable bunny-system-broker.socket
 enable bunny-health-check.service
+enable bunny-brlapi-key.service
 enable greenboot-healthcheck.service
 disable bunny-update-agent.timer
 disable sshd.service

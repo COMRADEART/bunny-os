@@ -43,6 +43,27 @@ administrator boundaries produced identical archives at target 619065e, and
 statement above remains true about same-host pairs and is kept because the
 distinction is the reason the hosted runs exist.
 
+### The BrlAPI key was never minted on an installed system
+
+Measured 2026-08-01 from the journal of an installed first boot: the archive
+qualified at 619065e reaches `graphical.target` in 9.6 seconds and starts
+GDM, and `bunny-brlapi-key.service` does not run at all. The unit ships with
+`WantedBy=sysinit.target`, nothing enabled it, and systemd disables what no
+preset names — so `/etc/brlapi.key` is absent on the installed system and
+BRLTTY has no authorisation key for the whole session.
+
+This is the second half of one accessibility defect. The first half — the
+unit's `ExecStart` naming a program the build never installed — was visible
+to CI and is fixed. The second half was visible only by booting an installed
+system and reading its journal, which is what this workstream exists to do.
+
+Both halves are now fixed in source: the program is installed, and the
+service is enabled both by preset and by the explicit `systemctl enable`
+list. **The fix post-dates the qualified archive**, so every installed-system
+record in this pass correctly reports `brlapi-key-service-ran` as `FAIL`, and
+the per-installation state comparison correctly reports the key absent. The
+next re-qualification carries the fix; nothing here claims it does.
+
 ### The image does not boot with a TPM 2.0 attached
 
 Measured 2026-08-01 in QEMU/OVMF against the qualified installation artifact:
