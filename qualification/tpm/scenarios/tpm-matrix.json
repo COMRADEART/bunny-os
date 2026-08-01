@@ -1,0 +1,34 @@
+{
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+  "matrixVersion": "tpmq-1",
+  "notes": [
+    "Cells run in order. A cell with 'seedFrom' reuses the OVMF variable store and/or TPM state retained by the named cell's first completed run, copied — never shared.",
+    "Supported cells (diagnostic: absent) bind to the pinned machine type, CPU mode and KVM. Diagnostic cells declare their variation and can never satisfy a supported-path requirement.",
+    "expectedResets encodes the boot design: a fresh variable store boots the removable path, and shim's fallback deliberately resets once when a TPM is present after restoring the boot entries. A reused variable store must boot with no reset at all."
+  ],
+  "cells": [
+    {"name": "no-tpm-cold", "runs": 5, "args": ["--tpm", "none", "--on-reset", "continue", "--expected-resets", "0", "--require-target", "--timeout", "900"]},
+    {"name": "crb-fresh-cold", "runs": 5, "args": ["--tpm", "crb", "--tpm-state", "fresh", "--vars", "fresh", "--on-reset", "continue", "--max-resets", "3", "--expected-resets", "1", "--require-target", "--timeout", "1200"]},
+    {"name": "tis-fresh-cold", "runs": 5, "args": ["--tpm", "tis", "--tpm-state", "fresh", "--vars", "fresh", "--on-reset", "continue", "--max-resets", "3", "--expected-resets", "1", "--require-target", "--timeout", "1200"]},
+    {"name": "crb-reused-cold", "runs": 5, "seedFrom": "crb-fresh-cold", "seed": ["vars", "tpm-state"], "args": ["--tpm", "crb", "--on-reset", "continue", "--expected-resets", "0", "--require-target", "--timeout", "900"]},
+    {"name": "tis-reused-cold", "runs": 5, "seedFrom": "tis-fresh-cold", "seed": ["vars", "tpm-state"], "args": ["--tpm", "tis", "--on-reset", "continue", "--expected-resets", "0", "--require-target", "--timeout", "900"]},
+    {"name": "crb-fresh-vars-reused-state", "runs": 3, "seedFrom": "crb-fresh-cold", "seed": ["tpm-state"], "args": ["--tpm", "crb", "--vars", "fresh", "--on-reset", "continue", "--max-resets", "3", "--expected-resets", "1", "--require-target", "--timeout", "1200"]},
+    {"name": "crb-reused-vars-fresh-state", "runs": 3, "seedFrom": "crb-fresh-cold", "seed": ["vars"], "args": ["--tpm", "crb", "--tpm-state", "fresh", "--on-reset", "continue", "--expected-resets", "0", "--require-target", "--timeout", "900"]},
+    {"name": "crb-guest-reboot", "runs": 5, "seedFrom": "crb-fresh-cold", "seed": ["vars", "tpm-state"], "args": ["--tpm", "crb", "--on-reset", "continue", "--max-resets", "3", "--reboot-after-target", "--timeout", "1800"]},
+    {"name": "tis-guest-reboot", "runs": 5, "seedFrom": "tis-fresh-cold", "seed": ["vars", "tpm-state"], "args": ["--tpm", "tis", "--on-reset", "continue", "--max-resets", "3", "--reboot-after-target", "--timeout", "1800"]},
+    {"name": "crb-qemu-reset", "runs": 3, "seedFrom": "crb-fresh-cold", "seed": ["vars", "tpm-state"], "args": ["--tpm", "crb", "--on-reset", "continue", "--max-resets", "3", "--qemu-reset-after-target", "--timeout", "1800"]},
+    {"name": "fw-only-crb", "runs": 3, "args": ["--no-disk", "--no-network", "--tpm", "crb", "--tpm-state", "fresh", "--vars", "fresh", "--on-reset", "stop", "--expect", "stable", "--timeout", "180"]},
+    {"name": "fw-only-tis", "runs": 3, "args": ["--no-disk", "--no-network", "--tpm", "tis", "--tpm-state", "fresh", "--vars", "fresh", "--on-reset", "stop", "--expect", "stable", "--timeout", "180"]},
+    {"name": "crb-fresh-repro-stop", "runs": 3, "args": ["--tpm", "crb", "--tpm-state", "fresh", "--vars", "fresh", "--on-reset", "stop", "--expect", "reset", "--timeout", "300"]},
+    {"name": "tis-fresh-repro-stop", "runs": 3, "args": ["--tpm", "tis", "--tpm-state", "fresh", "--vars", "fresh", "--on-reset", "stop", "--expect", "reset", "--timeout", "300"]},
+    {"name": "fedora-no-tpm", "runs": 3, "diagnostic": true, "args": ["--alt-disk", "/root/tpm-alt-disk/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2", "--tpm", "none", "--on-reset", "continue", "--expected-resets", "0", "--require-target", "--timeout", "900"]},
+    {"name": "fedora-crb-fresh-repro", "runs": 3, "diagnostic": true, "args": ["--alt-disk", "/root/tpm-alt-disk/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2", "--tpm", "crb", "--tpm-state", "fresh", "--vars", "fresh", "--on-reset", "stop", "--expect", "reset", "--timeout", "300"]},
+    {"name": "fedora-crb-continue", "runs": 3, "diagnostic": true, "args": ["--alt-disk", "/root/tpm-alt-disk/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2", "--tpm", "crb", "--tpm-state", "fresh", "--vars", "fresh", "--on-reset", "continue", "--max-resets", "3", "--expected-resets", "1", "--require-target", "--timeout", "900"]},
+    {"name": "tcg-no-tpm", "runs": 3, "diagnostic": true, "args": ["--tpm", "none", "--accel", "tcg", "--on-reset", "continue", "--expected-resets", "0", "--require-target", "--timeout", "3600"]},
+    {"name": "tcg-crb-fresh", "runs": 3, "diagnostic": true, "args": ["--tpm", "crb", "--tpm-state", "fresh", "--vars", "fresh", "--accel", "tcg", "--on-reset", "continue", "--max-resets", "3", "--expected-resets", "1", "--require-target", "--timeout", "3600"]},
+    {"name": "cpu-named-crb", "runs": 3, "diagnostic": true, "args": ["--tpm", "crb", "--tpm-state", "fresh", "--vars", "fresh", "--cpu", "Skylake-Client-v4", "--on-reset", "continue", "--max-resets", "3", "--expected-resets", "1", "--require-target", "--timeout", "1200"]},
+    {"name": "machine-q35-10-1-crb", "runs": 3, "diagnostic": true, "args": ["--tpm", "crb", "--tpm-state", "fresh", "--vars", "fresh", "--machine", "pc-q35-10.1", "--on-reset", "continue", "--max-resets", "3", "--expected-resets", "1", "--require-target", "--timeout", "1200"]},
+    {"name": "machine-q35-9-2-crb", "runs": 3, "diagnostic": true, "args": ["--tpm", "crb", "--tpm-state", "fresh", "--vars", "fresh", "--machine", "pc-q35-9.2", "--on-reset", "continue", "--max-resets", "3", "--expected-resets", "1", "--require-target", "--timeout", "1200"]},
+    {"name": "smm-on-crb", "runs": 3, "diagnostic": true, "args": ["--tpm", "crb", "--tpm-state", "fresh", "--vars", "fresh", "--smm", "--on-reset", "continue", "--max-resets", "3", "--expected-resets", "1", "--require-target", "--timeout", "1200"]}
+  ]
+}
