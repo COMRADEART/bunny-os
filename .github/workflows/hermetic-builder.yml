@@ -181,8 +181,15 @@ jobs:
           # explicit. Neither is a build input: the image content is
           # determined by the Containerfile, the base digest and the source
           # commit.
+          # By absolute path: a bare "crun" resolves through podman's own
+          # runtime search list, which found Ubuntu's apt crun 1.14 ahead of
+          # the pinned one and failed with "crun: unknown version specified" —
+          # the 1.14 runtime refusing the OCI spec podman 5.8 writes. The name
+          # alone does not pin the binary.
           sudo install -d /etc/containers
-          printf '[engine]\nruntime = "crun"\n' | sudo tee /etc/containers/containers.conf
+          printf '[engine]\nruntime = "crun"\n\n[engine.runtimes]\ncrun = ["/usr/local/bin/crun"]\n' \
+            | sudo tee /etc/containers/containers.conf
+          /usr/local/bin/crun --version | head -1
           printf '[storage]\ndriver = "overlay"\nrunroot = "/run/containers/storage"\ngraphroot = "/var/lib/containers/storage"\n' \
             | sudo tee /etc/containers/storage.conf
           sudo rm -rf /var/lib/containers/storage /run/containers/storage
