@@ -123,11 +123,19 @@ install_cmd=(
   "${image}"
   bootc install to-disk --via-loopback --generic-image
   --filesystem ext4
-  # The serial console karg is the qualification harness's one addition to
-  # the installed system, and it is why the evidence stream exists at all:
-  # without it the kernel boots silently past GRUB and a passing boot is
-  # indistinguishable from a hang. Recorded here and in the record below.
-  --karg console=ttyS0,115200 --karg console=tty0
+  # The serial console kargs are the qualification harness's one addition to
+  # the installed system, and they are why the evidence stream exists at all:
+  # without them the kernel boots silently past GRUB and a passing boot is
+  # indistinguishable from a hang.
+  #
+  # Order is load-bearing and was measured. The last console= becomes
+  # /dev/console, which is where systemd writes its status lines; kernel
+  # printk goes to every console either way. With ttyS0 first and tty0 last,
+  # serial carried kernel messages and nothing else — the system reached
+  # multi-user, ran logind, user-sessions and wpa_supplicant, and the
+  # scenario still failed for want of a marker that was being written to a
+  # display nobody was reading. tty0 first, ttyS0 last.
+  --karg console=tty0 --karg console=ttyS0,115200
   "${wipe_args[@]+"${wipe_args[@]}"}"
   --skip-fetch-check "/output/$(basename "${target}")"
 )
