@@ -169,6 +169,27 @@ jobs:
           sudo swapon /swapfile-bunny
           free -h
 
+      - name: Use the kernel's native overlay diff
+        run: |
+          set -euo pipefail
+          # Ubuntu boots overlayfs with redirect_dir=Y, and containers/storage
+          # answers that with its naive diff walker. The local Fedora builder
+          # defaults to N and gets the native upperdir reader. Same content,
+          # two byte streams: naive synthesizes an independent whiteout per
+          # deleted path where native emits the upperdir's opaque marker and
+          # hardlinked whiteouts, and naive orders members as a flat sorted
+          # list where native walks the tree. Measured on attempt 4 as the
+          # entire remaining difference between the local and hosted archives
+          # — one opaque entry, whiteout link shape, and member order in the
+          # two layers this build writes. The parameter is runtime-writable,
+          # so the runner is turned to match the local builder before any
+          # store exists.
+          sudo modprobe overlay 2>/dev/null || true
+          echo N | sudo tee /sys/module/overlay/parameters/redirect_dir
+          if [ -f /sys/module/overlay/parameters/metacopy ]; then
+            echo N | sudo tee /sys/module/overlay/parameters/metacopy
+          fi
+
       - name: Configure the container runtime
         run: |
           set -euo pipefail
