@@ -47,7 +47,10 @@ Path A obligations and their discharge:
 ```text
 QEMU/KVM TPM integration:  PASS   (crb and tis device models, socket-backed swtpm)
 OVMF TPM boot path:        PASS   (TCG2 protocol exposed and consumed through completed boots)
-GRUB TPM boot path:        PASS   (Fedora GRUB 2.12 tpm verifier active in every completed boot)
+GRUB TPM boot path:        PASS   (Fedora GRUB 2.12 loads and boots with a TPM present and
+                                   enumerated, no GRUB TPM error in any transcript; this is
+                                   "does not fail", not "measurements verified" — see
+                                   TPM_GRUB_ISOLATION_REPORT.md)
 software-TPM regression:   PASS   (matrix below; reset count zero outside the designed
                                    restoration reboot, which occurs exactly once per fresh
                                    variable store and never otherwise)
