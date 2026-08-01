@@ -51,7 +51,11 @@ def main() -> int:
     copy_file(source / "services/bunny-update-agent/bunny_update_agent.py", Path("/usr/libexec/bunny-update-agent"), 0o555)
     copy_file(source / "tools/bunny-os/bin/bunny-os", Path("/usr/bin/bunny-os"), 0o555)
     copy_file(source / "tools/bunny-os/bin/bunny-os-info", Path("/usr/bin/bunny-os-info"), 0o555)
-    script_names = ("bunny-health-check", "bunny-first-boot", "bunny-recovery-generator", "bunny-recovery-prepare", "bunny-recovery", "bunny-safe-graphics", "bunny-live-session")
+    # bunny-brlapi-key is here because its absence was measured, not noticed:
+    # the unit shipped, finalisation removes /etc/brlapi.key from the archive,
+    # and nothing installed the program that mints it on first boot — so an
+    # installed system would have left BRLTTY users without a working key.
+    script_names = ("bunny-health-check", "bunny-first-boot", "bunny-brlapi-key", "bunny-recovery-generator", "bunny-recovery-prepare", "bunny-recovery", "bunny-safe-graphics", "bunny-live-session")
     for name in script_names:
         destination = Path("/usr/lib/systemd/system-generators/bunny-recovery-generator") if name == "bunny-recovery-generator" else Path(f"/usr/libexec/{name}")
         copy_file(source / f"scripts/{name}.py", destination, 0o555)
