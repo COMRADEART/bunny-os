@@ -12,6 +12,9 @@
 #
 # Modes:
 #   blank         a new raw disk of --size, GPT, default layout
+#   offline       blank, with --network=none on the installing container: the
+#                 installation must complete from retained local content with
+#                 no registry or repository fallback possible at all
 #   encrypted     LUKS2 with a passphrase read from BUNNY_TEST_PASSPHRASE_FILE
 #                 (a test credential for a disposable disk, never logged)
 #   undersized    a deliberately too-small disk; the expected outcome is a
@@ -70,7 +73,7 @@ if [[ "${mode}" == "encrypted" ]]; then
 fi
 
 case "${mode}" in
-  blank|interrupted)
+  blank|offline|interrupted)
     rm -f "${target}"
     truncate -s "${size}" "${target}"
     ;;
@@ -96,9 +99,15 @@ case "${mode}" in
   *) echo "unknown mode: ${mode}" >&2; exit 2 ;;
 esac
 
+network_args=()
+if [[ "${mode}" == "offline" ]]; then
+  network_args=(--network=none)
+fi
+
 install_cmd=(
   podman run --rm --privileged --pid=host
   --security-opt label=type:unconfined_t
+  "${network_args[@]+"${network_args[@]}"}"
   -v /var/lib/containers:/var/lib/containers
   -v /dev:/dev
   -v "$(dirname "$(readlink -f "${target}")"):/output"
