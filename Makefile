@@ -683,3 +683,74 @@ reproducibility-gate:
 
 test-supplychain:
 	$(PYTHON) -m unittest discover -s tests/supplychain -t .
+
+# ---------------------------------------------------------------------------
+# Installed-system qualification. Every target reads its authority from
+# qualification/installed-system/evidence-context.json through
+# release/installed.py — no target decides for itself what is being tested.
+# The disk artifacts and scenario disks live outside the repository by size;
+# BUNNY_INSTALLABLES_DIR and BUNNY_SCENARIO_DISKS name where.
+
+ISQ := qualification/installed-system
+ISQ_SCRIPTS := $(ISQ)/scripts
+BUNNY_INSTALLABLES_DIR ?= /var/tmp/bunny-installables-out
+BUNNY_SCENARIO_DISKS ?= /var/tmp/bunny-install-disks
+
+collect-installer-toolchain:
+	$(PYTHON) build/installer/scripts/collect-toolchain-lock.py --output build/installer/toolchain.lock.json
+
+build-installable-images:
+	bash $(ISQ_SCRIPTS)/build_installables.sh --archive "$${BUNNY_QUALIFIED_ARCHIVE:?set BUNNY_QUALIFIED_ARCHIVE}" --expected-archive "$${BUNNY_ARCHIVE_DIGEST:?set BUNNY_ARCHIVE_DIGEST}" --commit "$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}" --output "$(BUNNY_INSTALLABLES_DIR)"
+
+build-installable-qcow2 build-installable-raw: build-installable-images
+
+create-installed-evidence-context:
+	$(PYTHON) $(ISQ_SCRIPTS)/create_evidence_context.py --source-commit "$${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT}" --source-archive-digest "$${BUNNY_ARCHIVE_DIGEST:?set BUNNY_ARCHIVE_DIGEST}" --installables "$(BUNNY_INSTALLABLES_DIR)/installables.json" --installation-artifact "bunny-os-$$(echo $${BUNNY_CANDIDATE_COMMIT} | head -c 12).qcow2"
+
+qemu-install-blank:
+	bash $(ISQ_SCRIPTS)/install_to_disk.sh --mode blank --size 24G --target "$(BUNNY_SCENARIO_DISKS)/blank.raw" --image "$${BUNNY_IMAGE:?set BUNNY_IMAGE}" --record $(ISQ)/evidence/installs/blank.json
+
+qemu-install-offline:
+	bash $(ISQ_SCRIPTS)/install_to_disk.sh --mode offline --size 24G --target "$(BUNNY_SCENARIO_DISKS)/offline.raw" --image "$${BUNNY_IMAGE:?set BUNNY_IMAGE}" --record $(ISQ)/evidence/installs/offline.json
+
+qemu-install-encrypted:
+	bash $(ISQ_SCRIPTS)/install_encrypted.sh --size 24G --target "$(BUNNY_SCENARIO_DISKS)/encrypted.raw" --image "$${BUNNY_IMAGE:?set BUNNY_IMAGE}" --record $(ISQ)/evidence/installs/encrypted.json
+
+qemu-install-interrupted:
+	bash $(ISQ_SCRIPTS)/install_to_disk.sh --mode interrupted --interrupt-after 25 --size 24G --target "$(BUNNY_SCENARIO_DISKS)/interrupted.raw" --image "$${BUNNY_IMAGE:?set BUNNY_IMAGE}" --record $(ISQ)/evidence/installs/interrupted.json
+
+qemu-first-boot:
+	$(PYTHON) $(ISQ_SCRIPTS)/run_scenario.py --scenario $(ISQ)/scenarios/first-boot.json --disk "$(BUNNY_INSTALLABLES_DIR)/bunny-os-$$(echo $${BUNNY_CANDIDATE_COMMIT:?set BUNNY_CANDIDATE_COMMIT} | head -c 12).qcow2"
+
+qemu-applied-selinux:
+	$(PYTHON) $(ISQ_SCRIPTS)/collect_applied_selinux.py --disk "$${BUNNY_BOOTED_DISK:?set BUNNY_BOOTED_DISK}" --output $(ISQ)/evidence/collections/applied-selinux.json
+	$(PYTHON) $(ISQ_SCRIPTS)/compare_selinux_manifests.py --intended "$${BUNNY_INTENDED_SELINUX:?set BUNNY_INTENDED_SELINUX}" --applied $(ISQ)/evidence/collections/applied-selinux.json --expected-differences $(ISQ)/fixtures/selinux-expected-differences.json --output $(ISQ)/evidence/collections/selinux-comparison.json
+
+qemu-network-privacy:
+	$(PYTHON) $(ISQ_SCRIPTS)/analyze_network_capture.py "$${BUNNY_PCAP:?set BUNNY_PCAP}" --expected $(ISQ)/fixtures/expected-network-traffic.json --output $(ISQ)/evidence/collections/network-privacy.json
+
+build-update-fixtures:
+	$(PYTHON) $(ISQ_SCRIPTS)/update_manifest_tests.py --output-dir $(ISQ)/evidence/collections
+
+qemu-update:
+	$(PYTHON) $(ISQ_SCRIPTS)/update_rollback_offline.py stage --disk "$${BUNNY_UPDATE_DISK:?set BUNNY_UPDATE_DISK}" --image-archive "$${BUNNY_NEXT_ARCHIVE:?set BUNNY_NEXT_ARCHIVE}" --record $(ISQ)/evidence/collections/update-to-next.json
+
+qemu-rollback:
+	$(PYTHON) $(ISQ_SCRIPTS)/update_rollback_offline.py rollback --disk "$${BUNNY_UPDATE_DISK:?set BUNNY_UPDATE_DISK}" --record $(ISQ)/evidence/collections/rollback.json
+
+installed-system-matrix:
+	@echo "The matrix is driven by the operator scripts recorded in the evidence"
+	@echo "records themselves; this target imports whatever evidence exists:"
+	$(PYTHON) $(ISQ_SCRIPTS)/import_matrix_results.py
+
+installed-evidence-gate:
+	$(PYTHON) $(ISQ_SCRIPTS)/import_matrix_results.py --dry-run
+
+collect-physical-hardware:
+	@echo "Run qualification/hardware/collect-*.sh ON THE TARGET DEVICE and submit"
+	@echo "through: python scripts/release.py validate-hardware-evidence"
+	@echo "No device is connected to this build host; there is nothing to collect here."
+	@exit 2
+
+test-installed:
+	$(PYTHON) -m unittest discover -s tests/installed -t .
