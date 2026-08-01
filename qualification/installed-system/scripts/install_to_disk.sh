@@ -104,6 +104,15 @@ if [[ "${mode}" == "offline" ]]; then
   network_args=(--network=none)
 fi
 
+# --filesystem ext4 is explicit because the image ships no install config
+# default — measured as "error: Installing to disk: No root filesystem
+# specified" — and it matches the ext4 the installable images deploy.
+# --wipe rides with --destructive only: bootc itself refuses a carrying
+# disk without it, which is a second, independent protection under the
+# runner's own authorization gate.
+wipe_args=()
+[[ "${destructive}" == "1" ]] && wipe_args=(--wipe)
+
 install_cmd=(
   podman run --rm --privileged --pid=host
   --security-opt label=type:unconfined_t
@@ -113,6 +122,8 @@ install_cmd=(
   -v "$(dirname "$(readlink -f "${target}")"):/output"
   "${image}"
   bootc install to-disk --via-loopback --generic-image
+  --filesystem ext4
+  "${wipe_args[@]+"${wipe_args[@]}"}"
   --skip-fetch-check "/output/$(basename "${target}")"
 )
 
