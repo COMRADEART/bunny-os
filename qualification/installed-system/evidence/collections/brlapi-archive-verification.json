@@ -1,0 +1,57 @@
+{
+ "archive": "bunny-os.oci.tar",
+ "assertions": [
+  {
+   "expected": "/usr/libexec/bunny-brlapi-key in the archive",
+   "name": "helper-installed",
+   "observed": "present",
+   "result": "PASS"
+  },
+  {
+   "expected": "executable",
+   "name": "helper-executable",
+   "observed": "0o555",
+   "result": "PASS"
+  },
+  {
+   "expected": "not group- or world-writable",
+   "name": "helper-not-writable",
+   "observed": "0o555",
+   "result": "PASS"
+  },
+  {
+   "expected": "uid 0",
+   "name": "helper-root-owned",
+   "observed": "uid 0",
+   "result": "PASS"
+  },
+  {
+   "expected": "the unit is in the archive",
+   "name": "unit-shipped",
+   "observed": "present",
+   "result": "PASS"
+  },
+  {
+   "expected": "sysinit.target.wants carries the unit",
+   "name": "activation-symlink-present",
+   "observed": "/usr/lib/systemd/system/bunny-brlapi-key.service",
+   "result": "PASS"
+  },
+  {
+   "expected": "the preset is in the archive",
+   "name": "preset-shipped",
+   "observed": "present",
+   "result": "PASS"
+  },
+  {
+   "expected": "no /etc/brlapi.key in the archive",
+   "name": "no-key-baked-into-image",
+   "observed": "absent",
+   "result": "PASS"
+  }
+ ],
+ "collection": "brlapi-archive-verification",
+ "note": "Read from the archive's own layers. This establishes that the thing which mints the key can run; whether it did is an installed-system question, answered separately.",
+ "result": "PASS",
+ "schemaVersion": 1
+}

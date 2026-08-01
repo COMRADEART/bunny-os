@@ -199,6 +199,11 @@ def main() -> int:
     parser.add_argument("--derived-disk", type=Path,
                         help="a disk produced by an installation run this session; pinned "
                              "through its installation record rather than by its own digest")
+    parser.add_argument("--rebooted-disk", type=Path,
+                        help="a disk an earlier scenario in this session already booted; its "
+                             "custody runs through that run's record, named by --prior-run")
+    parser.add_argument("--prior-run", help="evidence id of the run that produced "
+                                            "--rebooted-disk; required with it")
     parser.add_argument("--install-record", type=Path,
                         help="the installation record that produced --derived-disk; required "
                              "with it, and its digest is embedded in the verdict")
@@ -255,7 +260,29 @@ def main() -> int:
     disk_path = evidence_dir / "work" / "target-disk.qcow2"
     boot_disk: Path | None = None
     install_record_digest = None
-    if args.derived_disk:
+    prior_run_digest = None
+    if args.rebooted_disk:
+        # A second boot of a system this session already booted. Its digest
+        # cannot match the pinned artifact — first boot mints identities, which
+        # is the entire point of booting it twice — so custody runs through the
+        # earlier run's record instead, and that record's digest lands in this
+        # verdict. Without it there would be no way to say which system this
+        # is a reboot of.
+        if not args.prior_run:
+            raise SystemExit(
+                "BLOCKED: --rebooted-disk requires --prior-run. A disk with no "
+                "stated provenance is not evidence about any installation."
+            )
+        prior_record = args.evidence_root / args.prior_run / "record.json"
+        if not prior_record.is_file():
+            raise SystemExit(f"BLOCKED: no record at {prior_record}")
+        prior_run_digest = sha256_file(prior_record)
+        shutil.copy(prior_record, evidence_dir / "prior-run-record.json")
+        subprocess.run(["qemu-img", "create", "-f", "qcow2", "-b",
+                        str(args.rebooted_disk.resolve()), "-F", "qcow2", str(disk_path)],
+                       check=True, capture_output=True)
+        boot_disk = disk_path
+    elif args.derived_disk:
         # A disk minted by an installation run has a per-run digest by design
         # (per-installation identities). Its custody chain runs through the
         # installation record: the record names the image it deployed, the
@@ -537,6 +564,8 @@ def main() -> int:
         "result": result,
         **({"installationRecordSha256": install_record_digest}
            if install_record_digest else {}),
+        **({"rebootOf": args.prior_run, "priorRunRecordSha256": prior_run_digest}
+           if prior_run_digest else {}),
         "assertions": assertions,
         "evidenceFiles": evidence_files,
         "operator": args.operator,

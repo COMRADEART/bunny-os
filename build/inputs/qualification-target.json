@@ -1,4 +1,9 @@
 {
+  "accessibilityActivation": {
+    "brlapiHelper": "d134b497103a874482e042bb9260bde97c1485ba40e3d3b91090bd4c6492961f",
+    "brlapiPreset": "6b84d0c94d6a996a2c515e12aaf792dfcbd78bbd863637c8fb568847dd0fd1a8",
+    "brlapiUnit": "8a44c76b6cd925ef2cd817e27bdfea8e56ab5f55d4789eb173735fe7c1bf086f"
+  },
   "architecture": "x86_64",
   "buildEpoch": 1785442979,
   "builderImageDigest": "sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
@@ -24,8 +29,8 @@
   "packageCount": 474,
   "packageSnapshotDigest": "b6fbf2ae637a288cc8184ccf9142e47414db5196976a9d53b2d8422df1c2949b",
   "packageSnapshotId": "fedora-44-beta-20260730",
-  "parentCommit": "d5f77d7a64b9e271661463c5f8428b1478ea3bae",
-  "parentCommitShort": "d5f77d7a64b9",
+  "parentCommit": "fb55120f1a184c485226d39f60b3ebee63836ae7",
+  "parentCommitShort": "fb55120f1a18",
   "profile": "beta",
   "publishedInputs": {
     "base": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",

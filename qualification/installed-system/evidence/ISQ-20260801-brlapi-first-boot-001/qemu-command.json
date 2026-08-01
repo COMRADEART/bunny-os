@@ -1,0 +1,95 @@
+{
+  "argv": [
+    "qemu-system-x86_64",
+    "-machine",
+    "q35,accel=kvm",
+    "-cpu",
+    "host",
+    "-smp",
+    "4",
+    "-m",
+    "8192",
+    "-drive",
+    "if=pflash,format=qcow2,readonly=on,file=/usr/share/edk2/ovmf/OVMF_CODE_4M.qcow2",
+    "-drive",
+    "if=pflash,format=qcow2,file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-brlapi-first-boot-001/work/OVMF_VARS.qcow2",
+    "-drive",
+    "file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-brlapi-first-boot-001/work/target-disk.qcow2,format=qcow2,if=virtio",
+    "-chardev",
+    "socket,id=ser0,path=/tmp/isq-y8rr0fq5/ser.sock,server=on,wait=off,logfile=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-brlapi-first-boot-001/serial.log",
+    "-serial",
+    "chardev:ser0",
+    "-qmp",
+    "unix:/tmp/isq-y8rr0fq5/qmp.sock,server,nowait",
+    "-display",
+    "none",
+    "-vga",
+    "virtio",
+    "-no-reboot",
+    "-netdev",
+    "user,id=n0",
+    "-device",
+    "virtio-net-pci,netdev=n0",
+    "-object",
+    "filter-dump,id=fd0,netdev=n0,file=/root/bunny-os/qualification/installed-system/evidence/ISQ-20260801-brlapi-first-boot-001/network.pcap"
+  ],
+  "scenario": {
+    "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+    "name": "brlapi-first-boot",
+    "title": "First boot of the corrected image, with the key generator running",
+    "description": "The same first-boot requirements as before, plus the one the previous pass measured failing: bunny-brlapi-key.service must actually run. The marker is required rather than optional because a boot that reaches its targets without minting the key is exactly the outcome that shipped before \u2014 a system that looks healthy and leaves a braille user with no authorisation key.",
+    "scenarioVersion": "isq-1",
+    "environment": "qemu-kvm",
+    "disk": {
+      "sizeGiB": 24,
+      "blank": false,
+      "preExistingData": false
+    },
+    "resources": {
+      "vcpus": 4,
+      "memoryMiB": 8192
+    },
+    "firmware": "uefi",
+    "tpm": "none",
+    "network": "enabled",
+    "timeoutSeconds": 900,
+    "markers": [
+      {
+        "label": "boot-target",
+        "regex": "Reached target .*(Multi-User System|Graphical Interface)",
+        "required": true
+      },
+      {
+        "label": "health-check",
+        "regex": "Finished .*Bunny OS boot health check",
+        "required": true
+      },
+      {
+        "label": "brlapi-key-service",
+        "regex": "(Starting|Started|Finished).*[Bb]rl[Aa][Pp][Ii]",
+        "required": true
+      }
+    ],
+    "forbiddenMarkers": [
+      {
+        "label": "emergency-mode",
+        "regex": "emergency mode|Emergency Shell"
+      },
+      {
+        "label": "fs-repair",
+        "regex": "UNEXPECTED INCONSISTENCY"
+      },
+      {
+        "label": "brlapi-key-service-failed",
+        "regex": "bunny-brlapi-key\\.service: Failed"
+      },
+      {
+        "label": "key-value-on-console",
+        "regex": "brlapi[^\\n]*\\b[0-9a-f]{32}\\b"
+      }
+    ],
+    "expectedOutcome": "PASS",
+    "destructive": false
+  },
+  "startedAt": "2026-08-01T19:49:17Z"
+}

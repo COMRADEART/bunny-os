@@ -1,0 +1,16 @@
+{
+  "completedAt": "2026-08-01T19:48:57Z",
+  "detail": "",
+  "exitStatus": 0,
+  "image": "localhost/bunny-os-beta:b9c317d35b85",
+  "imageDigest": "sha256:d6638418f90388aa0ecc036ebca909569530a7dd699ca013496aef59b7dbcd50",
+  "installCommand": "podman run ... bootc install to-disk --via-loopback",
+  "mode": "offline",
+  "note": "The deployed root filesystem is the image's own, installed by bootc running from the image. No secret appears in this record: encrypted mode reads its passphrase from a file descriptor and never echoes it.",
+  "outcome": "INSTALLED",
+  "schemaVersion": 1,
+  "startedAt": "2026-08-01T19:47:41Z",
+  "target": "/var/tmp/bunny-brlapi-disks/brlapi-offline.raw",
+  "targetDigestAfter": "b1502fdb67cc4fed356451157d33a00e3028f1346dc7fb154c6f298922a3e0c0",
+  "targetSizeRequested": "24G"
+}

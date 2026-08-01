@@ -1,8 +1,8 @@
 {
   "baseImageDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
   "builders": [
-    "hosted-H1-30691438160",
-    "hosted-H2-30691438881"
+    "hosted-H1-30714175121",
+    "hosted-H2-30714176083"
   ],
   "claim": "independent-builder",
   "collectionMode": "qualification",
@@ -335,27 +335,27 @@
       }
     },
     "fileDigests": {
-      "detail": "105593 members, identical (compared by digest over the full value)",
+      "detail": "105596 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "ce2e2ed855b0037dfd9d1d95a5f83646bf6ed046fd5baa3cff3ab917d50ec847",
-        "__memberCount__": 105593
+        "__digest__": "29f5b7c62a2fc10e0902c45613479edf58473a3968dd31da78b99b19c82c5a1d",
+        "__memberCount__": 105596
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "ce2e2ed855b0037dfd9d1d95a5f83646bf6ed046fd5baa3cff3ab917d50ec847",
-        "__memberCount__": 105593
+        "__digest__": "29f5b7c62a2fc10e0902c45613479edf58473a3968dd31da78b99b19c82c5a1d",
+        "__memberCount__": 105596
       }
     },
     "filesystemTree": {
-      "detail": "164355 members, identical (compared by digest over the full value)",
+      "detail": "164359 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "958de87a556ae7f652fe11bc1bc6f86f299641f6d9cfcd5a3c73d05e6e85d51e",
-        "__memberCount__": 164355
+        "__digest__": "3e7a1c1f2b9c2f2186e7ffd300bb1273c3eaa3475103575c11ab638b7b8bbe09",
+        "__memberCount__": 164359
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "958de87a556ae7f652fe11bc1bc6f86f299641f6d9cfcd5a3c73d05e6e85d51e",
-        "__memberCount__": 164355
+        "__digest__": "3e7a1c1f2b9c2f2186e7ffd300bb1273c3eaa3475103575c11ab638b7b8bbe09",
+        "__memberCount__": 164359
       }
     },
     "initramfs": {
@@ -387,9 +387,9 @@
       }
     },
     "normalisedArchive": {
-      "first": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a",
+      "first": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
       "reductionForm": "verbatim",
-      "second": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a"
+      "second": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30"
     },
     "ociLayers": {
       "first": [
@@ -458,21 +458,21 @@
         "sha256:5d54fd4b57ae38321730975e9301cbaa13be19423f5bbac56fd9c150b19aaa81",
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
-        "sha256:f7c9c53e3c45708f040bdd9ff07268ef18d9c16564fff0412a5825b1847ed7d5",
-        "sha256:77089bd08aff6836b9bec6fb933b7ec8d0fd7668bcc268b9a33691c7970a0f1c",
+        "sha256:f98d42d92e220ce7e9486671d45d77e1ed71367a15be2831ca6b0357f3ae3eb1",
+        "sha256:a363c80ab91b7d37479f9f727178f7a8886b39e943d7a96323cbc8e74ca19e95",
         "sha256:0c916b66b4d392a053eed54413769a89cb6410cf7f88d52ece500a094c750313",
-        "sha256:f127c0a6e6b4f6b7675bdcdc3499f7584a45fab344d4c4c6163dae978c771038",
+        "sha256:af1745ed01db806929dfde6afe150be311a5c0496b01fa2efeadbaec7348fa7a",
         "sha256:08956329637ae4f7730bd564be637e00978e3c50f6dbe3d80ba00126ce64bf69",
         "sha256:818dad31c4060e41f89ebecad3069219fa2a32e80a24fbe22166db663db25d5b",
-        "sha256:3ccf8c67bd0e569fc22bf836906159a1741b749b19a7dab2a515fb2768ada33a",
-        "sha256:8cd7e45bbec963906e4a5ffa689356649cb0e9f986b9ab710b5e93841babcd69",
+        "sha256:c53270e599206ba69794d1923ea3080e7998be54c87e431731188efd375e450e",
+        "sha256:fa636fd514fe87d112c75282d81f5dc8ed47cc36c7bd7e024d879a819c70dd48",
         "sha256:bc3a6f56a6e4d9a4b8f643db3b43217c38fd7d2df5c141f81418fa648ea1e8d4",
         "sha256:40a942c201841d6f0cd9c9f76fdc9021cc43fd46e28046978319ae5538173c50",
         "sha256:7f9217a7b91f117d61cafccb5959f1e44f70dd7682aee9454cf0a6e42c8fdd74",
-        "sha256:89617b95f3dbe144763f8bab359db0ad7565342f2290c49c2f181382e6267000",
+        "sha256:81962c8b4ac92f2c7469cab4a31ab247bce22c6924931d9774e0259746520f35",
         "sha256:4ce9e0a7121413afe8d9e1aa10c10fc7a154e207f11d020f2d6425e275a946e8",
-        "sha256:a2a296b478b70c2c366ba1291288352c100a4eef2645d846f0fc533c3402985c",
-        "sha256:5f75694ade70f0809db2e979dbd19cdd8f6273585af633cd05c15e6cd3aebed7"
+        "sha256:d2a72fe70aa825f5f92fbb607ccc7e64ad842fa9cf1b3dc50e20688d7077f8f2",
+        "sha256:2379c53c19ce37f4d94fee14670dd56c3f99042edc8d9dda63daf5fd989dc615"
       ],
       "reductionForm": "verbatim",
       "second": [
@@ -541,33 +541,33 @@
         "sha256:5d54fd4b57ae38321730975e9301cbaa13be19423f5bbac56fd9c150b19aaa81",
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
-        "sha256:f7c9c53e3c45708f040bdd9ff07268ef18d9c16564fff0412a5825b1847ed7d5",
-        "sha256:77089bd08aff6836b9bec6fb933b7ec8d0fd7668bcc268b9a33691c7970a0f1c",
+        "sha256:f98d42d92e220ce7e9486671d45d77e1ed71367a15be2831ca6b0357f3ae3eb1",
+        "sha256:a363c80ab91b7d37479f9f727178f7a8886b39e943d7a96323cbc8e74ca19e95",
         "sha256:0c916b66b4d392a053eed54413769a89cb6410cf7f88d52ece500a094c750313",
-        "sha256:f127c0a6e6b4f6b7675bdcdc3499f7584a45fab344d4c4c6163dae978c771038",
+        "sha256:af1745ed01db806929dfde6afe150be311a5c0496b01fa2efeadbaec7348fa7a",
         "sha256:08956329637ae4f7730bd564be637e00978e3c50f6dbe3d80ba00126ce64bf69",
         "sha256:818dad31c4060e41f89ebecad3069219fa2a32e80a24fbe22166db663db25d5b",
-        "sha256:3ccf8c67bd0e569fc22bf836906159a1741b749b19a7dab2a515fb2768ada33a",
-        "sha256:8cd7e45bbec963906e4a5ffa689356649cb0e9f986b9ab710b5e93841babcd69",
+        "sha256:c53270e599206ba69794d1923ea3080e7998be54c87e431731188efd375e450e",
+        "sha256:fa636fd514fe87d112c75282d81f5dc8ed47cc36c7bd7e024d879a819c70dd48",
         "sha256:bc3a6f56a6e4d9a4b8f643db3b43217c38fd7d2df5c141f81418fa648ea1e8d4",
         "sha256:40a942c201841d6f0cd9c9f76fdc9021cc43fd46e28046978319ae5538173c50",
         "sha256:7f9217a7b91f117d61cafccb5959f1e44f70dd7682aee9454cf0a6e42c8fdd74",
-        "sha256:89617b95f3dbe144763f8bab359db0ad7565342f2290c49c2f181382e6267000",
+        "sha256:81962c8b4ac92f2c7469cab4a31ab247bce22c6924931d9774e0259746520f35",
         "sha256:4ce9e0a7121413afe8d9e1aa10c10fc7a154e207f11d020f2d6425e275a946e8",
-        "sha256:a2a296b478b70c2c366ba1291288352c100a4eef2645d846f0fc533c3402985c",
-        "sha256:5f75694ade70f0809db2e979dbd19cdd8f6273585af633cd05c15e6cd3aebed7"
+        "sha256:d2a72fe70aa825f5f92fbb607ccc7e64ad842fa9cf1b3dc50e20688d7077f8f2",
+        "sha256:2379c53c19ce37f4d94fee14670dd56c3f99042edc8d9dda63daf5fd989dc615"
       ]
     },
     "ownership": {
-      "detail": "164355 members, identical (compared by digest over the full value)",
+      "detail": "164359 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "b85ad246ffefacf039a0f4caa2bac6b5f57b4d7acd7968faeb50a7d9d3f45742",
-        "__memberCount__": 164355
+        "__digest__": "5a3be3bde78805209266e9d8c6fa7f5ac83d04f8c7ce1fa2aa69f04919f4fee5",
+        "__memberCount__": 164359
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "b85ad246ffefacf039a0f4caa2bac6b5f57b4d7acd7968faeb50a7d9d3f45742",
-        "__memberCount__": 164355
+        "__digest__": "5a3be3bde78805209266e9d8c6fa7f5ac83d04f8c7ce1fa2aa69f04919f4fee5",
+        "__memberCount__": 164359
       }
     },
     "packageInventory": {
@@ -12730,21 +12730,21 @@
       ]
     },
     "permissions": {
-      "detail": "164355 members, identical (compared by digest over the full value)",
+      "detail": "164359 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "ea08a47e95d60ce861bddb5be1eb9587ecfb65fec66e8ab7dcfed853829ae53a",
-        "__memberCount__": 164355
+        "__digest__": "31f3682ef8e2746ea951b0e8ae9baa30d4664ecd748902b939b57c2a858eec88",
+        "__memberCount__": 164359
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "ea08a47e95d60ce861bddb5be1eb9587ecfb65fec66e8ab7dcfed853829ae53a",
-        "__memberCount__": 164355
+        "__digest__": "31f3682ef8e2746ea951b0e8ae9baa30d4664ecd748902b939b57c2a858eec88",
+        "__memberCount__": 164359
       }
     },
     "rawArchive": {
-      "first": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a",
+      "first": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
       "reductionForm": "verbatim",
-      "second": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a"
+      "second": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30"
     },
     "sbom": {
       "detail": "6076 members, identical (compared by digest over the full value)",
@@ -12784,6 +12784,7 @@
         "usr/share/bunny-os/schemas/oem-qualification.schema.json": "0d0224de6422338b5af1c9c5d5cedb98b278de8a29dbee6f2afaa8f93ad80656",
         "usr/share/bunny-os/schemas/offline-policy-bundle.schema.json": "17f4d44e6862a0686894685d1333068838e0a937bc2e0bdb5d1151da69e3e951",
         "usr/share/bunny-os/schemas/organisation-catalogue.schema.json": "4fd2bf764c453958fe2144444e6ee4631d0181cb02375d196c8354bb400f6146",
+        "usr/share/bunny-os/schemas/qualification-update-marker.schema.json": "faa314002e7ca15c1ae253706234c8fb20501531910fbc79b1777b38064cc197",
         "usr/share/bunny-os/schemas/shell": "dir",
         "usr/share/bunny-os/schemas/shell/command-proposal.schema.json": "55a6ecab7e9823399d3849eb236d1c8f6b70e805802893a85fbd855fa95f5002",
         "usr/share/bunny-os/schemas/shell/core-summary.schema.json": "54a44346154b4f5873dd31e2bd5caaadff5b2308f43c0e1d9ac46e4e3aa7bce0",
@@ -12925,6 +12926,7 @@
         "usr/share/bunny-os/schemas/oem-qualification.schema.json": "0d0224de6422338b5af1c9c5d5cedb98b278de8a29dbee6f2afaa8f93ad80656",
         "usr/share/bunny-os/schemas/offline-policy-bundle.schema.json": "17f4d44e6862a0686894685d1333068838e0a937bc2e0bdb5d1151da69e3e951",
         "usr/share/bunny-os/schemas/organisation-catalogue.schema.json": "4fd2bf764c453958fe2144444e6ee4631d0181cb02375d196c8354bb400f6146",
+        "usr/share/bunny-os/schemas/qualification-update-marker.schema.json": "faa314002e7ca15c1ae253706234c8fb20501531910fbc79b1777b38064cc197",
         "usr/share/bunny-os/schemas/shell": "dir",
         "usr/share/bunny-os/schemas/shell/command-proposal.schema.json": "55a6ecab7e9823399d3849eb236d1c8f6b70e805802893a85fbd855fa95f5002",
         "usr/share/bunny-os/schemas/shell/core-summary.schema.json": "54a44346154b4f5873dd31e2bd5caaadff5b2308f43c0e1d9ac46e4e3aa7bce0",
@@ -13044,12 +13046,12 @@
     "selinuxLabels": {
       "detail": "The archive-stage subcheck: the context every path is intended to receive, computed from the policy the image ships. No archive carries an applied security.selinux xattr \u2014 bootc install applies them on the target \u2014 so the applied subcheck stays outstanding under selinux.appliedSelinuxContexts and is not satisfied by this.",
       "first": {
-        "__digest__": "9c164b4b3281539228673a7a831a2a74395ac5d15436ac8d07db49959c6ba318",
-        "__memberCount__": 165015
+        "__digest__": "883815316cfa3664e3e7378dadc0b3bb66e3aa35e52e0525e79362791de91f09",
+        "__memberCount__": 165026
       },
       "second": {
-        "__digest__": "9c164b4b3281539228673a7a831a2a74395ac5d15436ac8d07db49959c6ba318",
-        "__memberCount__": 165015
+        "__digest__": "883815316cfa3664e3e7378dadc0b3bb66e3aa35e52e0525e79362791de91f09",
+        "__memberCount__": 165026
       }
     },
     "systemdUnits": {
@@ -13126,6 +13128,7 @@
         "etc/systemd/system/sockets.target.wants/systemd-resolved-varlink.socket": "sysroot/ostree/repo/objects/cb/71c17b6d55813cf519673e526e8712d21e9f5031deea97ad3b3461e2e8bfba.file",
         "etc/systemd/system/sockets.target.wants/systemd-userdbd.socket": "sysroot/ostree/repo/objects/3a/dff44dbff2c6ed8afa35eb0eee75541a6d6b41b596de10d4c7b71b24bd57cc.file",
         "etc/systemd/system/sysinit.target.wants": "dir",
+        "etc/systemd/system/sysinit.target.wants/bunny-brlapi-key.service": "/usr/lib/systemd/system/bunny-brlapi-key.service",
         "etc/systemd/system/sysinit.target.wants/fips-crypto-policy-overlay.service": "sysroot/ostree/repo/objects/0e/f714d0f664b92ab682a5967f0d98ac3bd84b03c1d1ef536fdfe70ab763904a.file",
         "etc/systemd/system/sysinit.target.wants/lvm2-lvmpolld.socket": "sysroot/ostree/repo/objects/90/5c4ef205de0deb503a6b5916d11e7b361ee32bb06936cc6166acf3b0973b20.file",
         "etc/systemd/system/sysinit.target.wants/lvm2-monitor.service": "sysroot/ostree/repo/objects/84/f0545734e180281c5347dc168bbc422a7a184888ec491dd6d2d7cfb960175b.file",
@@ -13274,7 +13277,7 @@
         "usr/lib/systemd/system-generators/systemd-veritysetup-generator": "sysroot/ostree/repo/objects/86/8b9f7af6d4df21995f272be8ba25c07cf419f5dbdfebd84b7d7353d998ceb6.file",
         "usr/lib/systemd/system-generators/zram-generator": "sysroot/ostree/repo/objects/21/0ade8f006d2418baf6f527270c67daae28c1a7afce78925cfc2163785c9f12.file",
         "usr/lib/systemd/system-preset": "dir",
-        "usr/lib/systemd/system-preset/60-bunny-os.preset": "a008bf211000fe86c914d7e1a25f44c5e27dd70fa73f7686e789f8114912ffb1",
+        "usr/lib/systemd/system-preset/60-bunny-os.preset": "6b84d0c94d6a996a2c515e12aaf792dfcbd78bbd863637c8fb568847dd0fd1a8",
         "usr/lib/systemd/system-preset/85-bootc-bootloader-update.preset": "sysroot/ostree/repo/objects/6b/a1ade113dfe5dbad4a548eecbf887ab9970bbd83e7de65ccc8249f4bd39e1e.file",
         "usr/lib/systemd/system-preset/85-bootc.preset": "sysroot/ostree/repo/objects/19/7a7a1f3b737014c191288aeeb7acf5cf876aa6269321cfe0e01fd91c3e9313.file",
         "usr/lib/systemd/system-preset/85-display-manager.preset": "sysroot/ostree/repo/objects/0b/7f6303e45104191e387759cd2dabc096716565e1d18ba191a5a9f663fb82b4.file",
@@ -13320,7 +13323,7 @@
         "usr/lib/systemd/system/breakpoint-pre-mount.service": "sysroot/ostree/repo/objects/8b/dfeeab08f516601bffe90d9edbd6ac8309fe6e8b3caccf29155c9c33cf9014.file",
         "usr/lib/systemd/system/breakpoint-pre-switch-root.service": "sysroot/ostree/repo/objects/53/b35078e39c4d2966d51d6f403a162a1bbcf0e4ab7daa05ea095678e6deff2e.file",
         "usr/lib/systemd/system/breakpoint-pre-udev.service": "sysroot/ostree/repo/objects/67/d4d6432b7f0c72c2661ae7735406ab2b7aa5c244c83f846dff551d4b5aa7be.file",
-        "usr/lib/systemd/system/bunny-brlapi-key.service": "f07614640db716b2e95a49bf0bef033e85e66a75f00e30fbeaa0c92058f5b479",
+        "usr/lib/systemd/system/bunny-brlapi-key.service": "8a44c76b6cd925ef2cd817e27bdfea8e56ab5f55d4789eb173735fe7c1bf086f",
         "usr/lib/systemd/system/bunny-health-check.service": "0b5f18cf07108abd07aae277f97488a709bbbfc9e72985e95c070b3dc2678fca",
         "usr/lib/systemd/system/bunny-installer-backend.service": "045340ba8ff2f960f0ac12690bad1a6b696838d7e76e0bec32f2db8b98c116a3",
         "usr/lib/systemd/system/bunny-live-session.service": "1c8f9c420630c73d25f8d4417d0de29af56313ff9f8098dfa2684a78145ee060",
@@ -14230,6 +14233,7 @@
         "etc/systemd/system/sockets.target.wants/systemd-resolved-varlink.socket": "sysroot/ostree/repo/objects/cb/71c17b6d55813cf519673e526e8712d21e9f5031deea97ad3b3461e2e8bfba.file",
         "etc/systemd/system/sockets.target.wants/systemd-userdbd.socket": "sysroot/ostree/repo/objects/3a/dff44dbff2c6ed8afa35eb0eee75541a6d6b41b596de10d4c7b71b24bd57cc.file",
         "etc/systemd/system/sysinit.target.wants": "dir",
+        "etc/systemd/system/sysinit.target.wants/bunny-brlapi-key.service": "/usr/lib/systemd/system/bunny-brlapi-key.service",
         "etc/systemd/system/sysinit.target.wants/fips-crypto-policy-overlay.service": "sysroot/ostree/repo/objects/0e/f714d0f664b92ab682a5967f0d98ac3bd84b03c1d1ef536fdfe70ab763904a.file",
         "etc/systemd/system/sysinit.target.wants/lvm2-lvmpolld.socket": "sysroot/ostree/repo/objects/90/5c4ef205de0deb503a6b5916d11e7b361ee32bb06936cc6166acf3b0973b20.file",
         "etc/systemd/system/sysinit.target.wants/lvm2-monitor.service": "sysroot/ostree/repo/objects/84/f0545734e180281c5347dc168bbc422a7a184888ec491dd6d2d7cfb960175b.file",
@@ -14378,7 +14382,7 @@
         "usr/lib/systemd/system-generators/systemd-veritysetup-generator": "sysroot/ostree/repo/objects/86/8b9f7af6d4df21995f272be8ba25c07cf419f5dbdfebd84b7d7353d998ceb6.file",
         "usr/lib/systemd/system-generators/zram-generator": "sysroot/ostree/repo/objects/21/0ade8f006d2418baf6f527270c67daae28c1a7afce78925cfc2163785c9f12.file",
         "usr/lib/systemd/system-preset": "dir",
-        "usr/lib/systemd/system-preset/60-bunny-os.preset": "a008bf211000fe86c914d7e1a25f44c5e27dd70fa73f7686e789f8114912ffb1",
+        "usr/lib/systemd/system-preset/60-bunny-os.preset": "6b84d0c94d6a996a2c515e12aaf792dfcbd78bbd863637c8fb568847dd0fd1a8",
         "usr/lib/systemd/system-preset/85-bootc-bootloader-update.preset": "sysroot/ostree/repo/objects/6b/a1ade113dfe5dbad4a548eecbf887ab9970bbd83e7de65ccc8249f4bd39e1e.file",
         "usr/lib/systemd/system-preset/85-bootc.preset": "sysroot/ostree/repo/objects/19/7a7a1f3b737014c191288aeeb7acf5cf876aa6269321cfe0e01fd91c3e9313.file",
         "usr/lib/systemd/system-preset/85-display-manager.preset": "sysroot/ostree/repo/objects/0b/7f6303e45104191e387759cd2dabc096716565e1d18ba191a5a9f663fb82b4.file",
@@ -14424,7 +14428,7 @@
         "usr/lib/systemd/system/breakpoint-pre-mount.service": "sysroot/ostree/repo/objects/8b/dfeeab08f516601bffe90d9edbd6ac8309fe6e8b3caccf29155c9c33cf9014.file",
         "usr/lib/systemd/system/breakpoint-pre-switch-root.service": "sysroot/ostree/repo/objects/53/b35078e39c4d2966d51d6f403a162a1bbcf0e4ab7daa05ea095678e6deff2e.file",
         "usr/lib/systemd/system/breakpoint-pre-udev.service": "sysroot/ostree/repo/objects/67/d4d6432b7f0c72c2661ae7735406ab2b7aa5c244c83f846dff551d4b5aa7be.file",
-        "usr/lib/systemd/system/bunny-brlapi-key.service": "f07614640db716b2e95a49bf0bef033e85e66a75f00e30fbeaa0c92058f5b479",
+        "usr/lib/systemd/system/bunny-brlapi-key.service": "8a44c76b6cd925ef2cd817e27bdfea8e56ab5f55d4789eb173735fe7c1bf086f",
         "usr/lib/systemd/system/bunny-health-check.service": "0b5f18cf07108abd07aae277f97488a709bbbfc9e72985e95c070b3dc2678fca",
         "usr/lib/systemd/system/bunny-installer-backend.service": "045340ba8ff2f960f0ac12690bad1a6b696838d7e76e0bec32f2db8b98c116a3",
         "usr/lib/systemd/system/bunny-live-session.service": "1c8f9c420630c73d25f8d4417d0de29af56313ff9f8098dfa2684a78145ee060",
@@ -15265,21 +15269,21 @@
   "entryMtimeDiagnostic": {
     "differing": [],
     "differingCount": 0,
-    "firstDigest": "dedc60a5f0c0c3da1dcd31a5f49709843603e36bd892e85ae3aa72106463ec8d",
+    "firstDigest": "421c70d1efa4febec1c3decd3800ccb2c447b98a371e95866ab3854f81f379bb",
     "note": "Not a dimension. Layer tar bytes include entry mtimes, so a file whose content matches and whose mtime does not still changes ociLayers and rawArchive.",
-    "secondDigest": "dedc60a5f0c0c3da1dcd31a5f49709843603e36bd892e85ae3aa72106463ec8d"
+    "secondDigest": "421c70d1efa4febec1c3decd3800ccb2c447b98a371e95866ab3854f81f379bb"
   },
   "evaluation": {
     "baseImageDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
     "builders": [
-      "hosted-H1-30691438160",
-      "hosted-H2-30691438881"
+      "hosted-H1-30714175121",
+      "hosted-H2-30714176083"
     ],
     "dimensionCount": 17,
     "dimensions": [
       {
         "description": "the set of paths present in the image",
-        "detail": "164355 members, identical (compared by digest over the full value)",
+        "detail": "164359 members, identical (compared by digest over the full value)",
         "differenceCount": 0,
         "differences": [],
         "dimension": "filesystemTree",
@@ -15288,7 +15292,7 @@
       },
       {
         "description": "the SHA-256 of every regular file's contents",
-        "detail": "105593 members, identical (compared by digest over the full value)",
+        "detail": "105596 members, identical (compared by digest over the full value)",
         "differenceCount": 0,
         "differences": [],
         "dimension": "fileDigests",
@@ -15297,7 +15301,7 @@
       },
       {
         "description": "mode bits, including setuid and setgid",
-        "detail": "164355 members, identical (compared by digest over the full value)",
+        "detail": "164359 members, identical (compared by digest over the full value)",
         "differenceCount": 0,
         "differences": [],
         "dimension": "permissions",
@@ -15306,7 +15310,7 @@
       },
       {
         "description": "owning uid and gid of every path",
-        "detail": "164355 members, identical (compared by digest over the full value)",
+        "detail": "164359 members, identical (compared by digest over the full value)",
         "differenceCount": 0,
         "differences": [],
         "dimension": "ownership",
@@ -15495,31 +15499,31 @@
         }
       ]
     },
-    "sourceCommit": "619065e068e2153de461545f5b8950b985db4dfd"
+    "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a"
   },
   "schemaVersion": 1,
   "selinux": {
     "intendedSelinuxContexts": {
-      "detail": "165015 members, identical (compared by digest over the full value)",
+      "detail": "165026 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "9c164b4b3281539228673a7a831a2a74395ac5d15436ac8d07db49959c6ba318",
-        "__memberCount__": 165015
+        "__digest__": "883815316cfa3664e3e7378dadc0b3bb66e3aa35e52e0525e79362791de91f09",
+        "__memberCount__": 165026
       },
       "second": {
-        "__digest__": "9c164b4b3281539228673a7a831a2a74395ac5d15436ac8d07db49959c6ba318",
-        "__memberCount__": 165015
+        "__digest__": "883815316cfa3664e3e7378dadc0b3bb66e3aa35e52e0525e79362791de91f09",
+        "__memberCount__": 165026
       }
     },
     "resolvedCounts": [
-      165015,
-      165015
+      165026,
+      165026
     ],
     "specifications": [
       "file_contexts",
       "file_contexts"
     ]
   },
-  "sourceCommit": "619065e068e2153de461545f5b8950b985db4dfd",
+  "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
   "volatilePathDiagnostic": {
     "differing": [],
     "differingCount": 0,

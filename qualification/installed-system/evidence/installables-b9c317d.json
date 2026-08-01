@@ -1,0 +1,35 @@
+{
+  "artifacts": [
+    {
+      "artifact": "bunny-os-b9c317d35b85.qcow2",
+      "format": "qcow2",
+      "sha256": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217",
+      "virtualSizeBytes": 10737418240
+    },
+    {
+      "artifact": "bunny-os-b9c317d35b85.raw",
+      "format": "raw",
+      "sha256": "161cbb07ceaca38de331e2445f94ba0b737fa9f4c91567eaffb116a732ca9852",
+      "virtualSizeBytes": 10737418240
+    }
+  ],
+  "bootloader": "bootupd-managed GRUB2, BLS entries",
+  "completedAt": "2026-08-01T19:43:01Z",
+  "creationCommand": "image-builder build --bootc-ref localhost/bunny-os-beta:<sha12> --bootc-default-fs ext4 {qcow2,raw}",
+  "deployedImageId": "50b9d625eefe2dc3e0e3d851065256cb26804158d693d820e3d64ae997bdbbb5",
+  "encryption": "none in generated images; encrypted installation is a separate, prepared path",
+  "firmwareMode": "uefi",
+  "mechanism": "podman load of the qualified archive (layers and config preserved byte-for-byte), deployed by image-builder --bootc-ref; the root filesystem is the qualified archive's by construction",
+  "note": "Root-filesystem reproducibility is established evidence; disk-image byte reproducibility is a separate claim this record does not make. The identifiers listed as unique-per-generation are the measured reason the two claims differ.",
+  "partitioning": "GPT: ESP + boot + root (image-builder bootc default, ext4)",
+  "schemaVersion": 1,
+  "sourceArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
+  "sourceArchiveVerified": true,
+  "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
+  "startedAt": "2026-08-01T19:37:36Z",
+  "uniquePerGeneration": [
+    "partition GUIDs",
+    "filesystem UUIDs",
+    "ESP volume id"
+  ]
+}

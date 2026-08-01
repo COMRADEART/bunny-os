@@ -3,15 +3,15 @@
     "accepted": true,
     "baseImageDigest": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
     "builderRecord": {
-      "administratorBoundary": "f3346e7cdd641fbc5c651e46f89166d3",
+      "administratorBoundary": "9efe39af88711ab9ec0d296b8f821f9b",
       "architecture": "x86_64",
       "baseImageDigest": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
-      "buildCompletedAt": "2026-08-01T08:41:27Z",
-      "buildStartedAt": "2026-08-01T08:20:51Z",
-      "builderId": "hosted-H2-30691438881",
+      "buildCompletedAt": "2026-08-01T19:33:26Z",
+      "buildStartedAt": "2026-08-01T19:13:32Z",
+      "builderId": "hosted-H2-30714176083",
       "builderType": "hosted-ci",
       "cloudProvider": null,
-      "cloudRunner": "GitHub Actions 1000000996",
+      "cloudRunner": "GitHub Actions 1000001044",
       "dependencyLockHashes": {
         "build/Containerfile": "56eb00b20116bc0835a121cb0af83dec6686ce903c9a299782ecc552760115f2",
         "build/license-policy.json": "cf935034da1987d90d33214b77859c4825d4eb05e3d1a238bddba360a44779dc",
@@ -29,7 +29,7 @@
       "kernelVersion": "6.17.0-1020-azure",
       "operatingSystem": "ubuntu-24.04",
       "schemaVersion": 2,
-      "sourceCommit": "619065e068e2153de461545f5b8950b985db4dfd",
+      "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
       "toolchain": {
         "grype": "absent",
         "image-builder": "absent",
@@ -39,23 +39,23 @@
         "syft": "1.50.0",
         "tar": "1.35"
       },
-      "workflowRunId": "30691438881.1"
+      "workflowRunId": "30714176083.1"
     },
     "bundleDigests": {
-      "artifact-manifest.sha256": "49d9ae847ecc18ed9dd74d309f5ee5cecae535499821e4ba0491161490a1be72",
-      "build.log": "a2d935c229a8185ab0c14c7838856e2f365e469a14a8e6fd67dcc96d22136383",
-      "builder-record.json": "f24ad9d88ed5c16e89140b05df7dc17223fd0f608d3edcf0a4fdc4ffb19ffdc3",
-      "ci-provenance.json": "43022051f304f274611a19155dd09a7f769d2d130c121f9ad212cb755df06381",
-      "normalisation.json": "d5ee2e4216efd755686a4241a091c5968c65612f4b3fec9c7a53e458e03e9910",
-      "package-inventory.txt": "52ea4688c8d673e4ab3a0d8fa55a017f254f51d1b3fe1732c09d6488f34749b4",
-      "runner-environment.txt": "65ef668ec9a6a07f9ca955260832282ebd219bc9cc6a7e1563774725da17de13",
-      "sbom.spdx.json": "2e1ea870149879f6a182c8ac791eb9bd55b660acf583045034470910a90a69f7"
+      "artifact-manifest.sha256": "c0514aed46c44957f31838d6fef5ac42a22e3624ee73505e83c7ca9a0d68e0b6",
+      "build.log": "f3a5d9996f6e337f8dc368f2ca419bcffae831788632421d243889dfc37ca1ff",
+      "builder-record.json": "3d78048f7bcbb609477abe4a8a7dd5cbcd96477e73599dfa75417aa81c81f36c",
+      "ci-provenance.json": "de86e598274220ce90fe695e9a9fa42bcfdb479c68d953e6101fa170a28115ee",
+      "normalisation.json": "e1429f01f73bd7376f534b514ed56cca27a07d3a1a22c8010ff660716c15db2b",
+      "package-inventory.txt": "19a87450880a3fe65d29c865de18eb1ee5455b7cdb82a1363d23dd8b06b9c3ec",
+      "runner-environment.txt": "d5044357321fe2da3284d8d9da183171e0dfff0fbfdb07552f570947741e6797",
+      "sbom.spdx.json": "8af5b10feda9a621f945e2c61712848a0b27d926b638a62db7cda84a78439b80"
     },
-    "normalisedArchiveDigest": "4f4d7b8d9906df58d070b594c583714740f8a7523468a3cf91550ff51b323729",
+    "normalisedArchiveDigest": "68c12c71acd56e20079c09c2e0245940ad29ab3300f934b67c16bc064a2a603b",
     "note": "Cross-referenced, not signed. This detects a record edited in one place; it is not proof against a consistently forged bundle, and the record says so rather than implying more than it establishes.",
     "packageCount": 6077,
     "provenanceClaim": "unsigned",
-    "rawArchiveDigest": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a",
+    "rawArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
     "rejectionReasons": [],
     "runnerArchitecture": "X64",
     "runnerEnvironment": {
@@ -63,14 +63,14 @@
       "kernel": "6.17.0-1020-azure",
       "label": "H2",
       "runnerImage": "ubuntu24",
-      "runnerName": "GitHub Actions 1000000996",
-      "workflowRunId": "30691438881.1"
+      "runnerName": "GitHub Actions 1000001044",
+      "workflowRunId": "30714176083.1"
     },
     "runnerImage": "ubuntu24",
     "signed": false,
-    "sourceCommit": "619065e068e2153de461545f5b8950b985db4dfd",
+    "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
     "workflowRunAttempt": 1,
-    "workflowRunId": "30691438881.1"
+    "workflowRunId": "30714176083.1"
   },
   "local": {
     "accepted": true,
@@ -79,8 +79,8 @@
       "administratorBoundary": "dcb0c0cc3f17c803b94954fa466eba8b",
       "architecture": "x86_64",
       "baseImageDigest": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
-      "buildCompletedAt": "2026-08-01T08:19:46Z",
-      "buildStartedAt": "2026-08-01T08:17:13Z",
+      "buildCompletedAt": "2026-08-01T19:13:24Z",
+      "buildStartedAt": "2026-08-01T19:10:50Z",
       "builderId": "local-fedora-wsl",
       "builderType": "local-machine",
       "cloudProvider": null,
@@ -102,7 +102,7 @@
       "kernelVersion": "6.18.33.2-microsoft-standard-WSL2",
       "operatingSystem": "fedora-44",
       "schemaVersion": 2,
-      "sourceCommit": "619065e068e2153de461545f5b8950b985db4dfd",
+      "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
       "toolchain": {
         "grype": "0.116.1",
         "image-builder": "76.0.0",
@@ -115,20 +115,20 @@
       "workflowRunId": null
     },
     "bundleDigests": {
-      "artifact-manifest.sha256": "6dbc4b80e67cf193990a66d272af540a55a09ba7644b006bbdd865c1762cc8be",
-      "build.log": "dbfa442d8a371d8ced0bb0689878d2d18d7362eee3e5001d5a0aff30871d03d2",
-      "builder-record.json": "c8255fbb91e83aec12eb77bc1c41bd7db448ff6b0cb3c6515c8375faf1821218",
-      "ci-provenance.json": "daabeb61cdb432eb38e80158dba5d430eb73d6b07103314c256e45d4ecfd5b01",
-      "normalisation.json": "d400c1b6eb17ca782744fd31a351fe788358c997eca379217e65bf24fce222bc",
-      "package-inventory.txt": "bccf9714738347ce2a2b4d24766e69fa88908408d056c379e785d2bbf56b5e1f",
+      "artifact-manifest.sha256": "5595e970e98ac23483bce64ab32fa2fc396fa5c4b68a533567b6c977f54531e5",
+      "build.log": "88b126bd443acc5005562e83836a183a50b0710af40d4d830c90f739e53f7b2e",
+      "builder-record.json": "e3965ddace9edb87f2d0387e8061e78b43bcaa3d2abaa0672fd76c99c9ee1dd9",
+      "ci-provenance.json": "b308149f51b780bd63776c341ab12524985be580765e3144e063d5367d19a97b",
+      "normalisation.json": "55ae4cb1150730360d98d0d499bfdb9a3d5f4876ede9330d3ffcb51d87d2436d",
+      "package-inventory.txt": "ca0ae8862564205794df0a09e5fbdb36e3837be648ccc1855512088ea4973364",
       "runner-environment.txt": "6d25fbc26aecb91721c82b392b3aeb6d01fc1e7e461ee2e1ab5905cf946ccdd0",
-      "sbom.spdx.json": "d0b6d173c87bac30d442ec650eb4e7f87f39b90523686caadb474537d9583556"
+      "sbom.spdx.json": "133de0e67c2f09ad24ceaa92abd63e8f059ef7e0f2cf940a9a3d64dd933dcc9c"
     },
-    "normalisedArchiveDigest": "4f4d7b8d9906df58d070b594c583714740f8a7523468a3cf91550ff51b323729",
+    "normalisedArchiveDigest": "68c12c71acd56e20079c09c2e0245940ad29ab3300f934b67c16bc064a2a603b",
     "note": "Cross-referenced, not signed. This detects a record edited in one place; it is not proof against a consistently forged bundle, and the record says so rather than implying more than it establishes.",
     "packageCount": 6077,
     "provenanceClaim": "unsigned",
-    "rawArchiveDigest": "0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a",
+    "rawArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
     "rejectionReasons": [],
     "runnerArchitecture": "x86_64",
     "runnerEnvironment": {
@@ -137,7 +137,7 @@
     },
     "runnerImage": "fedora-44",
     "signed": false,
-    "sourceCommit": "619065e068e2153de461545f5b8950b985db4dfd",
+    "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
     "workflowRunAttempt": 1,
     "workflowRunId": null
   }

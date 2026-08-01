@@ -1,0 +1,327 @@
+{
+ "assertions": [
+  {
+   "expected": "units started during boot",
+   "name": "units-started",
+   "observed": "39 unit(s) started",
+   "result": "PASS"
+  },
+  {
+   "expected": "every failed unit reported, none omitted",
+   "name": "every-failure-enumerated",
+   "observed": "3 failed: 1.2-org.gnome.Shell.Screencast@0.service, avahi-daemon.service, gdm.service",
+   "result": "PASS"
+  },
+  {
+   "expected": "no unit failed during boot",
+   "name": "no-failed-units",
+   "observed": "1.2-org.gnome.Shell.Screencast@0.service, avahi-daemon.service, gdm.service",
+   "result": "FAIL"
+  },
+  {
+   "expected": "the image ships its Bunny units",
+   "name": "bunny-units-present",
+   "observed": "13 unit(s) read",
+   "result": "PASS"
+  },
+  {
+   "expected": "every shipped unit's ExecStart exists on the deployed root, or is a recorded gap",
+   "name": "every-unit-program-installed",
+   "observed": "all present; 1 recorded gap(s): bunny-policy-agent.service -> /usr/libexec/bunny-policy-agent",
+   "result": "PASS"
+  },
+  {
+   "expected": "every Bunny service declares at least one confinement directive",
+   "name": "services-declare-confinement",
+   "observed": "all confined",
+   "result": "PASS"
+  }
+ ],
+ "collection": "installed-services-offline",
+ "disk": "target-disk.qcow2",
+ "failedUnits": [
+  "1.2-org.gnome.Shell.Screencast@0.service",
+  "avahi-daemon.service",
+  "gdm.service"
+ ],
+ "limitations": [
+  "systemd-analyze security is not executed: it requires a live system bus. Sandboxing is read from the shipped unit files, which is what the score summarises, and the exposure is reported per directive rather than as a number.",
+  "runtime restart, crash and degraded-mode behaviour belong to scenarios that drive a booted system; this collection is offline and does not claim them."
+ ],
+ "recordedUnitProgramGaps": [
+  "bunny-policy-agent.service -> /usr/libexec/bunny-policy-agent"
+ ],
+ "result": "FAIL",
+ "schemaVersion": 1,
+ "units": [
+  {
+   "after": [
+    "local-fs.target systemd-tmpfiles-setup.service"
+   ],
+   "execStart": "/usr/libexec/bunny-brlapi-key",
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 13,
+   "sandboxing": {
+    "CapabilityBoundingSet": "CAP_CHOWN CAP_FOWNER",
+    "Group": "root",
+    "MemoryDenyWriteExecute": "yes",
+    "NoNewPrivileges": "yes",
+    "PrivateDevices": "yes",
+    "PrivateTmp": "yes",
+    "ProtectHome": "yes",
+    "ProtectSystem": "strict",
+    "ReadWritePaths": "/etc",
+    "RestrictAddressFamilies": "",
+    "RestrictNamespaces": "yes",
+    "SystemCallFilter": "@system-service",
+    "User": "root"
+   },
+   "unit": "bunny-brlapi-key.service",
+   "wantedBy": [
+    "sysinit.target"
+   ]
+  },
+  {
+   "after": [
+    "local-fs.target bunny-system-broker.socket"
+   ],
+   "execStart": "/usr/libexec/bunny-health-check",
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 13,
+   "sandboxing": {
+    "CapabilityBoundingSet": "",
+    "Group": "root",
+    "MemoryDenyWriteExecute": "yes",
+    "NoNewPrivileges": "yes",
+    "PrivateDevices": "yes",
+    "PrivateTmp": "yes",
+    "ProtectHome": "read-only",
+    "ProtectSystem": "strict",
+    "ReadWritePaths": "/var/lib/bunny-os/health /var/lib/bunny",
+    "RestrictAddressFamilies": "AF_UNIX",
+    "RestrictNamespaces": "yes",
+    "SystemCallFilter": "@system-service",
+    "User": "root"
+   },
+   "unit": "bunny-health-check.service",
+   "wantedBy": [
+    "multi-user.target"
+   ]
+  },
+  {
+   "after": [],
+   "execStart": "/usr/libexec/bunny-installer-backend",
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 13,
+   "sandboxing": {
+    "Group": "root",
+    "MemoryDenyWriteExecute": "yes",
+    "NoNewPrivileges": "yes",
+    "PrivateDevices": "no",
+    "PrivateTmp": "yes",
+    "ProtectControlGroups": "yes",
+    "ProtectHome": "yes",
+    "ProtectKernelModules": "yes",
+    "ProtectKernelTunables": "yes",
+    "ProtectSystem": "strict",
+    "RestrictAddressFamilies": "AF_UNIX",
+    "RestrictNamespaces": "yes",
+    "User": "root"
+   },
+   "unit": "bunny-installer-backend.service",
+   "wantedBy": []
+  },
+  {
+   "after": [],
+   "execStart": "/usr/libexec/bunny-live-session",
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 11,
+   "sandboxing": {
+    "MemoryDenyWriteExecute": "yes",
+    "NoNewPrivileges": "yes",
+    "PrivateTmp": "yes",
+    "ProtectControlGroups": "yes",
+    "ProtectHome": "read-only",
+    "ProtectKernelModules": "yes",
+    "ProtectKernelTunables": "yes",
+    "ProtectSystem": "strict",
+    "ReadWritePaths": "/run/bunny-installer /home /etc/passwd /etc/shadow /etc/group /etc/gshadow",
+    "RestrictAddressFamilies": "AF_UNIX",
+    "RestrictNamespaces": "yes"
+   },
+   "unit": "bunny-live-session.service",
+   "wantedBy": [
+    "graphical.target"
+   ]
+  },
+  {
+   "after": [
+    "network-online.target bunny-system-broker.socket"
+   ],
+   "execStart": "/usr/libexec/bunny-policy-agent",
+   "runsAsRoot": false,
+   "sandboxDirectiveCount": 13,
+   "sandboxing": {
+    "CapabilityBoundingSet": "",
+    "Group": "bunny-policy",
+    "MemoryDenyWriteExecute": "yes",
+    "NoNewPrivileges": "yes",
+    "PrivateDevices": "yes",
+    "PrivateTmp": "yes",
+    "ProtectHome": "yes",
+    "ProtectSystem": "strict",
+    "ReadWritePaths": "/var/lib/bunny-os/policy",
+    "RestrictAddressFamilies": "AF_UNIX AF_INET AF_INET6",
+    "RestrictNamespaces": "yes",
+    "SystemCallFilter": "@system-service",
+    "User": "bunny-policy"
+   },
+   "unit": "bunny-policy-agent.service",
+   "wantedBy": [
+    "multi-user.target"
+   ]
+  },
+  {
+   "after": [],
+   "execStart": null,
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 0,
+   "sandboxing": {},
+   "unit": "bunny-policy-broker.socket",
+   "wantedBy": [
+    "sockets.target"
+   ]
+  },
+  {
+   "after": [],
+   "execStart": "/usr/libexec/bunny-recovery-prepare",
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 14,
+   "sandboxing": {
+    "CapabilityBoundingSet": "",
+    "Group": "root",
+    "MemoryDenyWriteExecute": "yes",
+    "NoNewPrivileges": "yes",
+    "PrivateDevices": "yes",
+    "PrivateTmp": "yes",
+    "ProtectHome": "yes",
+    "ProtectSystem": "strict",
+    "ReadOnlyPaths": "/usr",
+    "ReadWritePaths": "/var/lib/bunny-os/recovery",
+    "RestrictAddressFamilies": "AF_UNIX",
+    "RestrictNamespaces": "yes",
+    "SystemCallFilter": "@system-service",
+    "User": "root"
+   },
+   "unit": "bunny-recovery-prepare.service",
+   "wantedBy": []
+  },
+  {
+   "after": [
+    "local-fs.target systemd-user-sessions.service"
+   ],
+   "execStart": "/usr/libexec/bunny-recovery",
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 7,
+   "sandboxing": {
+    "Group": "root",
+    "NoNewPrivileges": "yes",
+    "PrivateTmp": "yes",
+    "ProtectSystem": "full",
+    "ReadWritePaths": "/etc /var /home /boot /run",
+    "RestrictAddressFamilies": "AF_UNIX AF_NETLINK",
+    "User": "root"
+   },
+   "unit": "bunny-recovery-shell.service",
+   "wantedBy": [
+    "bunny-recovery.target"
+   ]
+  },
+  {
+   "after": [
+    "local-fs.target systemd-remount-fs.service"
+   ],
+   "execStart": null,
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 0,
+   "sandboxing": {},
+   "unit": "bunny-recovery.target",
+   "wantedBy": []
+  },
+  {
+   "after": [
+    "systemd-logind.service polkit.service"
+   ],
+   "execStart": "/usr/libexec/bunny-system-broker",
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 17,
+   "sandboxing": {
+    "CapabilityBoundingSet": "",
+    "Group": "root",
+    "IPAddressDeny": "any",
+    "MemoryDenyWriteExecute": "yes",
+    "NoNewPrivileges": "yes",
+    "PrivateDevices": "yes",
+    "PrivateTmp": "yes",
+    "ProtectControlGroups": "yes",
+    "ProtectHome": "yes",
+    "ProtectKernelModules": "yes",
+    "ProtectKernelTunables": "yes",
+    "ProtectSystem": "strict",
+    "ReadWritePaths": "/run/bunny /var/lib/bunny-os /var/lib/bunny-system-broker",
+    "RestrictAddressFamilies": "AF_UNIX",
+    "RestrictNamespaces": "yes",
+    "SystemCallFilter": "@system-service",
+    "User": "root"
+   },
+   "unit": "bunny-system-broker.service",
+   "wantedBy": []
+  },
+  {
+   "after": [],
+   "execStart": null,
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 0,
+   "sandboxing": {},
+   "unit": "bunny-system-broker.socket",
+   "wantedBy": [
+    "sockets.target"
+   ]
+  },
+  {
+   "after": [],
+   "execStart": null,
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 0,
+   "sandboxing": {},
+   "unit": "bunny-update-agent.timer",
+   "wantedBy": [
+    "timers.target"
+   ]
+  },
+  {
+   "after": [
+    "network-online.target"
+   ],
+   "execStart": "/usr/libexec/bunny-update-agent %i",
+   "runsAsRoot": true,
+   "sandboxDirectiveCount": 12,
+   "sandboxing": {
+    "Group": "root",
+    "NoNewPrivileges": "yes",
+    "PrivateTmp": "yes",
+    "ProtectControlGroups": "yes",
+    "ProtectHome": "yes",
+    "ProtectKernelModules": "yes",
+    "ProtectKernelTunables": "yes",
+    "ProtectSystem": "strict",
+    "ReadWritePaths": "/var/lib/bunny-os/update /var/cache/bunny-os/update /var/log/bunny-os/update /run/ostree-booted /sysroot /boot",
+    "RestrictAddressFamilies": "AF_UNIX AF_INET AF_INET6 AF_NETLINK",
+    "SystemCallFilter": "@system-service @mount",
+    "User": "root"
+   },
+   "unit": "bunny-update-agent@.service",
+   "wantedBy": []
+  }
+ ]
+}

@@ -8,11 +8,25 @@ Documentation=file:///usr/share/doc/bunny-os/IMAGE_FINALISATION.md
 After=local-fs.target systemd-tmpfiles-setup.service
 Before=brltty.service brltty-udev.service basic.target
 DefaultDependencies=no
-# ConditionPathExists with a leading ! runs the unit only when the key is
-# absent. It is not a first-boot marker: if the key is ever lost — a failed
-# update, a restored backup, a recovery action — this regenerates it, because
-# the failure mode of no key is no braille output.
-ConditionPathExists=!/etc/brlapi.key
+# /etc must be writable before this runs, and RequiresMountsFor says so
+# rather than leaving it to be implied by local-fs.target. On an ostree
+# system /etc is composed at boot; ordering after the mount that provides it
+# is the difference between writing the key and failing to.
+RequiresMountsFor=/etc
+#
+# There is deliberately no ConditionPathExists here.
+#
+# The unit used to carry ConditionPathExists=!/etc/brlapi.key, which reads as
+# "only run when the key is missing" and is the obvious way to avoid
+# rotating a key every boot. It also made the generator's recovery policy
+# unreachable: an empty or malformed key is a file that exists, so systemd
+# skipped the unit, and the one case where a braille user most needs the key
+# rebuilt was the one case nothing would rebuild it.
+#
+# Deciding is the generator's job and it already does it — a well-formed key
+# is left strictly alone, anything else is replaced and the replacement is
+# announced. Running unconditionally costs a stat on every boot and makes
+# recovery automatic instead of requiring a recovery console.
 
 [Service]
 Type=oneshot
