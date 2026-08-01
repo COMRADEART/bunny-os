@@ -1,0 +1,23 @@
+{
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+  "name": "reduced-resources",
+  "title": "Boot at the floor: 2 vCPU, 4 GiB",
+  "description": "Whether the installed system is supported, degraded or unsupported at the reduced-resource floor is a measurement, not a policy; this scenario measures it. The verdict records boot success and the report classifies the support level from the timing evidence.",
+  "scenarioVersion": "isq-1",
+  "environment": "qemu-kvm",
+  "disk": {"sizeGiB": 64, "blank": false, "preExistingData": false},
+  "resources": {"vcpus": 2, "memoryMiB": 4096},
+  "firmware": "uefi",
+  "tpm": "none",
+  "network": "enabled",
+  "timeoutSeconds": 1200,
+  "markers": [
+    {"label": "boot-target", "regex": "Reached target .*(Multi-User System|Graphical Interface)", "required": true},
+    {"label": "health-check", "regex": "Finished .*Bunny OS boot health check", "required": true}
+  ],
+  "forbiddenMarkers": [
+    {"label": "oom-kill", "regex": "Out of memory: Killed process"}
+  ],
+  "expectedOutcome": "PASS",
+  "destructive": false
+}

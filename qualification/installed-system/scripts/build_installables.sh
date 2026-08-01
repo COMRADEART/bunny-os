@@ -59,10 +59,14 @@ git clone --quiet --no-hardlinks "${repository_root}" "${workspace}"
 git -C "${workspace}" checkout --quiet "${commit}"
 
 started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+# No isolated container store here, deliberately: image-builder resolves the
+# bootc ref from the default store, and an image built into a private root is
+# invisible to it — measured as a localhost-registry fallback and a dead
+# build. Store isolation exists to make repeatability pairs honest; this is
+# artifact generation, and the identity guard is the archive digest check
+# below, not the store.
 (
   cd "${workspace}"
-  BUNNY_PODMAN_ROOT="${storage}/graph" \
-  BUNNY_PODMAN_RUNROOT="${storage}/run" \
   BUNNY_HERMETIC_BUILD=1 \
   bash build/scripts/build-image.sh beta
 ) 2>&1 | tee "${output}.build.log" | tail -5

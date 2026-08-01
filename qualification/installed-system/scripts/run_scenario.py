@@ -102,16 +102,24 @@ def wait_for_markers(
     markers: list[dict],
     timeout: int,
     checkpoint: callable,
-) -> dict[str, bool]:
+    serial_inputs: list[dict] | None = None,
+    serial_socket: Path | None = None,
+) -> tuple[dict[str, bool], list[str]]:
     """Scan the serial log until every required marker appears or time runs out.
 
     Screendump checkpoints fire when their trigger marker lands, so the
     screenshot shows the state the marker announced rather than an arbitrary
-    later moment.
+    later moment. Serial inputs fire once each, when their prompt regex
+    appears; the environment variable named by ``sendFromEnv`` supplies the
+    text, so a credential never sits in a scenario file.
     """
     found: dict[str, bool] = {m["label"]: False for m in markers}
+    sent: list[str] = []
+    pending_inputs = list(serial_inputs or [])
     deadline = time.monotonic() + timeout
     fired: set[str] = set()
+    connection: socket.socket | None = None
+    last_prompt_offset = 0
     while time.monotonic() < deadline:
         text = serial_log.read_text(encoding="utf-8", errors="replace") if serial_log.exists() else ""
         for marker in markers:
@@ -121,16 +129,51 @@ def wait_for_markers(
                 if label not in fired:
                     fired.add(label)
                     checkpoint(label)
-        if all(found[m["label"]] for m in markers if m.get("required", True)):
-            return found
+        for entry in list(pending_inputs):
+            # Only text that arrived since the previous send is eligible to
+            # trigger the next input, so three wrong-passphrase sends need
+            # three distinct prompts rather than one prompt read three times.
+            if re.search(entry["promptRegex"], text[last_prompt_offset:]):
+                payload = os.environ.get(entry["sendFromEnv"], "")
+                if not payload and entry.get("required", True):
+                    raise SystemExit(
+                        f"BLOCKED: serial input requires ${entry['sendFromEnv']} and it is "
+                        "empty. A prompt answered with nothing is not the scenario."
+                    )
+                try:
+                    if connection is None:
+                        connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                        connection.settimeout(10)
+                        connection.connect(str(serial_socket))
+                    connection.sendall((payload + "\n").encode())
+                    sent.append(entry["label"])
+                    last_prompt_offset = len(text)
+                    repeat = int(entry.get("repeat", 1)) - 1
+                    if repeat > 0:
+                        entry["repeat"] = repeat
+                    else:
+                        pending_inputs.remove(entry)
+                except OSError as exc:
+                    raise SystemExit(f"BLOCKED: serial send failed: {exc}")
+        if all(found[m["label"]] for m in markers if m.get("required", True)) \
+                and not pending_inputs:
+            break
         time.sleep(5)
-    return found
+    if connection is not None:
+        connection.close()
+    return found, sent
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="run_scenario")
     parser.add_argument("--scenario", required=True, type=Path)
     parser.add_argument("--disk", type=Path, help="pre-installed disk image for installed-disk scenarios")
+    parser.add_argument("--derived-disk", type=Path,
+                        help="a disk produced by an installation run this session; pinned "
+                             "through its installation record rather than by its own digest")
+    parser.add_argument("--install-record", type=Path,
+                        help="the installation record that produced --derived-disk; required "
+                             "with it, and its digest is embedded in the verdict")
     parser.add_argument("--installer-iso", type=Path)
     parser.add_argument("--recovery-iso", type=Path)
     parser.add_argument("--evidence-root", type=Path,
@@ -177,7 +220,27 @@ def main() -> int:
 
     disk_path = evidence_dir / "work" / "target-disk.qcow2"
     boot_disk: Path | None = None
-    if args.disk:
+    install_record_digest = None
+    if args.derived_disk:
+        # A disk minted by an installation run has a per-run digest by design
+        # (per-installation identities). Its custody chain runs through the
+        # installation record: the record names the image it deployed, the
+        # record's digest lands in this verdict, and a verdict whose record
+        # is missing proves nothing and is refused here.
+        if not args.install_record or not args.install_record.is_file():
+            raise SystemExit(
+                "BLOCKED: --derived-disk requires --install-record; a derived disk "
+                "without its installation record has no custody chain to the archive."
+            )
+        install_record_digest = sha256_file(args.install_record)
+        shutil.copy(args.install_record, evidence_dir / "installation-record.json")
+        raw = args.derived_disk
+        subprocess.run(
+            ["qemu-img", "convert", "-O", "qcow2", str(raw), str(disk_path)],
+            check=True, capture_output=True,
+        )
+        boot_disk = disk_path
+    elif args.disk:
         source = pinned(args.disk, "installationArtifactDigest")
         # The scenario boots a copy. The pinned artifact is immutable evidence;
         # a run that mutated it would invalidate every later run's binding.
@@ -201,7 +264,15 @@ def main() -> int:
     shutil.copy(OVMF_VARS, vars_copy)
 
     serial_log = evidence_dir / "serial.log"
+    serial_socket = work / "serial.sock"
     qmp_socket = work / "qmp.sock"
+
+    # Scenarios that answer a prompt (a LUKS passphrase, a confirmation) get a
+    # writable serial: a chardev socket whose logfile still captures every
+    # byte for evidence. What is SENT is never logged by this runner — the
+    # send text may be a test credential, and the guest does not echo
+    # passphrase input either.
+    serial_inputs = scenario.get("serialInputs", [])
 
     qemu = [
         "qemu-system-x86_64",
@@ -212,7 +283,9 @@ def main() -> int:
         "-drive", f"if=pflash,format=qcow2,readonly=on,file={code}",
         "-drive", f"if=pflash,format=qcow2,file={vars_copy}",
         "-drive", f"file={boot_disk},format=qcow2,if=virtio",
-        "-serial", f"file:{serial_log}",
+        "-chardev",
+        f"socket,id=ser0,path={serial_socket},server=on,wait=off,logfile={serial_log}",
+        "-serial", "chardev:ser0",
         "-qmp", f"unix:{qmp_socket},server,nowait",
         "-display", "none",
         "-vga", "virtio",
@@ -279,9 +352,10 @@ def main() -> int:
                 raise SystemExit(f"BLOCKED: QEMU exited immediately: {stderr[:500]}")
             time.sleep(0.5)
 
-        found = wait_for_markers(
+        found, inputs_sent = wait_for_markers(
             serial_log, scenario.get("markers", []),
             scenario.get("timeoutSeconds", 600), checkpoint,
+            serial_inputs=serial_inputs, serial_socket=serial_socket,
         )
         for marker in scenario.get("markers", []):
             assertions.append({
@@ -290,6 +364,27 @@ def main() -> int:
                 "observed": "matched" if found[marker["label"]] else "absent within timeout",
                 "result": "PASS" if found[marker["label"]] or not marker.get("required", True)
                           else "FAIL",
+            })
+        for entry in serial_inputs:
+            assertions.append({
+                "name": f"serial-input:{entry['label']}",
+                "expected": f"prompt {entry['promptRegex']!r} answered",
+                "observed": "sent" if entry["label"] in inputs_sent else "prompt never appeared",
+                "result": "PASS" if entry["label"] in inputs_sent else "FAIL",
+            })
+
+        # Forbidden markers: what must NOT have happened. A refusal scenario
+        # is only a pass when the refusal is visible AND the forbidden success
+        # is absent — an empty log satisfies neither.
+        final_text = serial_log.read_text(encoding="utf-8", errors="replace") \
+            if serial_log.exists() else ""
+        for forbidden in scenario.get("forbiddenMarkers", []):
+            hit = re.search(forbidden["regex"], final_text)
+            assertions.append({
+                "name": f"forbidden:{forbidden['label']}",
+                "expected": f"absent: {forbidden['regex']}",
+                "observed": hit.group(0)[:80] if hit else "absent",
+                "result": "FAIL" if hit else "PASS",
             })
 
         # Clean shutdown, escalating only when the guest does not respond: a
@@ -323,14 +418,12 @@ def main() -> int:
 
     completed = now()
 
-    required = [m for m in scenario.get("markers", []) if m.get("required", True)]
-    passed = all(found.get(m["label"], False) for m in required)
-    expected_outcome = scenario.get("expectedOutcome", "PASS")
-    result = "PASS" if passed else "FAIL"
-    if expected_outcome == "FAIL":
-        # A refusal scenario passes when the refusal happened. The assertion
-        # list keeps the raw marker states so the inversion is auditable.
-        result = "PASS" if not passed else "FAIL"
+    # A refusal scenario is expressed directly — the refusal is a required
+    # marker, the success it prevents is a forbidden one — so a single rule
+    # decides every scenario: the run passes when every assertion passed.
+    # There is no inversion to audit and no way to pass on an empty log.
+    result = "PASS" if assertions and all(
+        a["result"] == "PASS" for a in assertions) else "FAIL"
 
     if not args.keep_disk and disk_path.exists():
         disk_path.unlink()
@@ -367,6 +460,8 @@ def main() -> int:
         "startedAt": started,
         "completedAt": completed,
         "result": result,
+        **({"installationRecordSha256": install_record_digest}
+           if install_record_digest else {}),
         "assertions": assertions,
         "evidenceFiles": evidence_files,
         "operator": args.operator,

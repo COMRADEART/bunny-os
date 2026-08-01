@@ -23,8 +23,14 @@ Archive-stage evidence for the predecessor target 225a5e1 (Commit D):
 Reproducibility merge commit on main:
   2763757d1107a0598662be3b2a741f1855ecc7eb
 
-Raw archive digest (target 619065e):
+Raw archive digest (target 619065e, built at the target commit):
+  0258f92af988ef180e30d48ea084d555bd959a3af9d5a629268823c3f845966a
+
+Raw archive digest measured by the local gate (parent tree d5f77d7):
   aec97e705c382304efd8e58c165456e8646edac5f4ea3d27d4f34aee31e79b7a
+  (the target file itself rides in a COPY layer, so the target commit's
+  archive differs from its parent's by exactly that; installed-system
+  evidence binds to the target commit's own archive)
 
 Base image (retained, by digest):
   ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844

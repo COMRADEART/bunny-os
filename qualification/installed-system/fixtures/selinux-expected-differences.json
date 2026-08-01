@@ -1,0 +1,36 @@
+{
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later. Declared, reviewed classifications for applied-vs-intended SELinux differences. A path matching no entry here is UNRESOLVED, and UNRESOLVED blocks. Adding a glob is a reviewed change with a reason — that is the point of this being a fixture rather than a heuristic in the comparison script.",
+  "schemaVersion": 1,
+  "expectedRuntimePaths": [
+    "/dev/*",
+    "/proc/*",
+    "/sys/*",
+    "/run/*",
+    "/tmp/*",
+    "/var/tmp/*",
+    "/var/run/*",
+    "/ostree/deploy/*/var/*",
+    "/sysroot/ostree/repo/*"
+  ],
+  "reasons": {
+    "/dev/*": "device nodes are labelled by the kernel and udev at runtime; no archive carries them",
+    "/proc/* /sys/*": "virtual filesystems; labels are policy-computed, never stored",
+    "/run/* /tmp/* /var/tmp/* /var/run/*": "volatile trees recreated each boot",
+    "/ostree/deploy/*/var/*": "the deployment's mutable /var is populated on first boot by systemd-tmpfiles, not shipped",
+    "/sysroot/ostree/repo/*": "the ostree object store is the deployment mechanism's own state, outside the intended-context manifest's domain"
+  },
+  "firstBootGenerated": [
+    "/etc/machine-id",
+    "/etc/brlapi.key",
+    "/etc/ssh/ssh_host_*",
+    "/var/lib/systemd/random-seed",
+    "/etc/.updated",
+    "/var/.updated",
+    "/etc/lvm/devices/*",
+    "/var/lib/chrony/*",
+    "/var/log/journal/*",
+    "/var/lib/gdm/*",
+    "/var/lib/AccountsService/*",
+    "/var/lib/bunny-os/*"
+  ]
+}
