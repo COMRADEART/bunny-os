@@ -75,6 +75,43 @@ record can move it, and `tests/tpm/` proves the relabelling frauds
 (VM-as-physical, TCG-as-KVM, no-TPM-as-TPM, disabled-TPM-as-qualified) are
 refused by structure.
 
+## The TPM under test: identity, banks, capabilities
+
+Collected from the pinned swtpm build with `tpm2-tools` against a freshly
+initialised state directory; raw output in
+`qualification/tpm/evidence/swtpm-capabilities/`.
+
+| Property | Value |
+| --- | --- |
+| Manufacturer | `IBM` (`0x49424D00`) |
+| Vendor string | `SW` |
+| Firmware version | `0x20240125` |
+| Startup | `TPM2_Startup(CLEAR)` accepted |
+| PCR allocation | sha1, sha256, sha384 **and** sha512 banks, PCRs 0–23 each |
+| swtpm features | tpm-1.2, tpm-2.0, flags-opt-startup, cmdarg-seccomp, cmdarg-migration, nvram-backend-dir/file, tpmstate-opt-lock |
+
+The PCR-bank configuration was **not** changed. Every cell ran against the
+default allocation above, so bank configuration is not a variable in any
+result and no result is contingent on one. A deliberate bank experiment
+would be a distinct cell with its own record, and none was run.
+
+An event log was not collected: the product parses none, no boot path in
+these runs consumes one, and collecting one would have meant adding a
+component to the boot chain being measured.
+
+## The firmware under test: what was verified, not assumed
+
+| Question | Answer, and how it was established |
+| --- | --- |
+| TPM-capable? | Yes — proven by behaviour, not filename: shim's `fallback_should_prefer_reset()` locates a TCG/TCG2 protocol on this firmware, which is the branch that produces the restoration reset, and the guest enumerates the TPM in every completed boot |
+| Compatible with both selected QEMU TPM interfaces? | Yes — `tpm-crb` and `tpm-tis` produce identical firmware behaviour across every paired cell |
+| Secure-Boot-capable? | A separate secboot image ships in the same package (`OVMF_CODE_4M.secboot.qcow2`, sha256 `377708ac44c1…`) and was **not** used; every record's `secureBootState` is `disabled` |
+| SMM state | `off` in the supported path (no `smm=on` machine option); an SMM-on diagnostic cell is recorded separately |
+| Identity | package `edk2-ovmf-20260508-6.fc44.noarch`; code image sha256 `6551948da24a…`; variable template sha256 `035317bb2923…` — all three pinned in the authority and re-derived on every context resolution |
+
+No OVMF debug build was used. Every firmware observation above comes from
+the release image the product's qualification actually runs.
+
 ## Coverage this pass does not have
 
 * **OS-level `reboot` from a logged-in session** is not measured; the
