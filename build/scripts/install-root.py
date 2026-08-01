@@ -202,6 +202,38 @@ def main() -> int:
     else:
         subprocess.run(["/usr/bin/systemctl", "set-default", "multi-user.target"], check=True)
     subprocess.run(["/usr/bin/firewall-offline-cmd", "--set-default-zone=bunny-default"], check=True)
+
+    # Assert the activation landed, rather than trusting that the command that
+    # was supposed to create it exited zero.
+    #
+    # The measured defect this closes was exactly this shape: the unit shipped,
+    # the enablement did not exist, and nothing between the build and a booted
+    # installed system noticed. `systemctl enable` succeeding is a statement
+    # about a command; the symlink existing is a statement about the artifact,
+    # and the artifact is what gets installed. A build that produced an image
+    # whose accessibility service is inert must fail here, where it is cheap,
+    # rather than on a device where it is silent.
+    required_activation = {
+        "bunny-brlapi-key.service": Path(
+            "/etc/systemd/system/sysinit.target.wants/bunny-brlapi-key.service"
+        ),
+        "bunny-health-check.service": Path(
+            "/etc/systemd/system/multi-user.target.wants/bunny-health-check.service"
+        ),
+    }
+    missing_activation = [
+        f"{unit} (expected {link})"
+        for unit, link in required_activation.items()
+        if not link.is_symlink()
+    ]
+    if missing_activation:
+        raise SystemExit(
+            "BLOCKED: these units are not activated in the built filesystem: "
+            + "; ".join(missing_activation)
+            + ". A unit that ships without its enablement is a unit systemd will "
+            "never start, which is how /etc/brlapi.key came to be absent on every "
+            "installed system."
+        )
     return 0
 
 

@@ -56,14 +56,56 @@ def resolve_group(name: str) -> int:
         return -1
 
 
+def is_well_formed(path: Path) -> bool:
+    """Whether an existing key is one brltty can actually use.
+
+    Non-empty is not the same as usable. A truncated write, a restored
+    backup, or an editor that helpfully appended something all leave a file
+    that exists and is worthless, and brltty's failure mode for a malformed
+    key is an authorisation refusal with no braille output — indistinguishable,
+    to the person at the machine, from a broken display.
+    """
+    try:
+        text = path.read_text(encoding="ascii").strip()
+    except (OSError, UnicodeDecodeError):
+        return False
+    if len(text) != KEY_BYTES * 2:
+        return False
+    try:
+        int(text, 16)
+    except ValueError:
+        return False
+    return True
+
+
 def generate(path: Path, *, group: str = DEFAULT_GROUP, force: bool = False) -> int:
-    if path.exists() and path.stat().st_size > 0 and not force:
-        # Not an error, and deliberately not a regeneration. Rotating the key on
-        # every boot would invalidate any client that had already been
-        # authorised, and the service is ordered before brltty precisely so that
-        # the key is stable for the life of the installation.
-        print(f"{path} already exists and is not empty; leaving it alone")
-        return 0
+    if path.exists() and not force:
+        # The recovery policy, stated once and applied here.
+        #
+        # A well-formed key is left strictly alone. Rotating on every boot
+        # would invalidate any client already authorised, and the service is
+        # ordered before brltty precisely so the key is stable for the life of
+        # the installation.
+        #
+        # An empty or malformed key is replaced, and the replacement is
+        # announced. The alternative — refusing to touch a file that cannot
+        # work — protects nothing: there is no client authorised by a
+        # malformed key, so nothing can be invalidated by replacing it, and
+        # leaving it in place guarantees no braille output. Replacement is
+        # therefore the safe direction, and it is not silent, because a key
+        # that changed underneath a working setup is something an operator
+        # must be able to find afterwards in the journal.
+        if is_well_formed(path):
+            print(f"{path} already exists and is well formed; leaving it alone")
+            return 0
+        size = path.stat().st_size if path.exists() else 0
+        print(
+            f"warning: {path} exists but is not a usable BrlAPI key "
+            f"({size} bytes; expected {KEY_BYTES * 2} hex characters). "
+            "Replacing it: a malformed key authorises no client, so nothing is "
+            "invalidated by replacing it, and leaving it guarantees no braille output.",
+            file=sys.stderr,
+        )
 
     # os.urandom is the kernel CSPRNG. It is the same source mcookie draws from,
     # and it blocks until the pool is initialised, which matters on a first boot
