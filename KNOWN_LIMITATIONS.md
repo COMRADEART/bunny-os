@@ -116,9 +116,10 @@ What remains a real limitation:
 
 * A user's first boot of the shipped disk image on a TPM-equipped machine
   with empty NVRAM shows a five-second "Boot Option Restoration" countdown
-  and reboots once before the OS appears. That is upstream shim 16.1
-  behaviour, not a Bunny defect, but it is user-visible and undocumented
-  until now.
+  and reboots once before the OS appears. The mechanism is upstream shim
+  16.1's — the reset is in the distribution's `fallback.c`, on the branch
+  taken when firmware exposes a TPM — not a Bunny defect, but it is
+  user-visible and was undocumented until now.
 * All of this is software-TPM (swtpm/QEMU/OVMF) evidence. Whether a
   discrete hardware TPM behaves the same is exactly what physical
   qualification exists to answer and remains `NOT_RUN`.

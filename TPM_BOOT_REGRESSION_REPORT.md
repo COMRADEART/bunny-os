@@ -32,6 +32,24 @@ Reading rules for this report:
      --evidence-root qualification/tpm/evidence -->
 <!-- END MATRIX TABLE -->
 
+Three rows in that table are investigation controls rather than matrix
+cells, and their counts read oddly without that context:
+
+* `crb-fresh-stop` and `tis-fresh-stop` (1 boot each, 0/1 PASS) are the
+  original classification runs. They stopped at the reset on purpose —
+  that was their whole job — and were scored against the boot-completion
+  rule that was in force before the matrix distinguished a reproduction
+  expectation from a boot expectation. The `*-repro-stop` cells re-run the
+  same experiment under the corrected rule. The early records are kept
+  rather than re-scored, because re-scoring a record after the fact is how
+  evidence stops meaning anything.
+* `fw-only-crb` shows 1/2 for the same reason: its first run predates the
+  stability expectation and was scored INCONCLUSIVE despite behaving
+  exactly as a firmware control should (`TPM_FIRMWARE_CONTROL_REPORT.md`).
+* `crb-fresh-continue` and `crb-reuse-vars` (1 boot each) are the two
+  discriminating experiments that identified the mechanism, kept because
+  the root-cause statement cites them.
+
 ## The supported regression cells
 
 These are the cells the qualification gate requires, at five boots each,

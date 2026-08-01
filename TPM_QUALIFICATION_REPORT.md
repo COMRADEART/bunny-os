@@ -97,9 +97,11 @@ First boot of the shipped disk image on a TPM-equipped machine with empty
 NVRAM shows shim's five-second "Boot Option Restoration" countdown and
 reboots once before the OS appears; an operator can press a key and choose
 "Continue boot", and `FB_NO_REBOOT=1` (shim variable) suppresses the reboot
-permanently. This is upstream shim 16.1 behaviour on every Fedora-family
-system booted this way — reproduced with a stock Fedora Cloud 44 disk under
-the identical harness — recorded in `KNOWN_LIMITATIONS.md`.
+permanently. The mechanism is upstream shim 16.1's, not Bunny's — the code
+path is in `fallback.c` and the binary is the distribution's — and a stock
+Fedora Cloud 44 disk is booted under the identical harness as a
+corroborating diagnostic (`TPM_BOOT_REGRESSION_REPORT.md`). Recorded in
+`KNOWN_LIMITATIONS.md`.
 
 ## Gate positions after this pass
 
