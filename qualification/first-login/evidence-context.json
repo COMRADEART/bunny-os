@@ -1,0 +1,29 @@
+{
+  "archiveCommit": "93d1f6fb4f23f6533be37fe829f670ce0630de86",
+  "cpuMode": "host",
+  "guestfishVersion": "guestfish 1.60.1fedora=44,release=1.fc44,libvirt",
+  "installationArtifact": "bunny-os-93d1f6fb4f23.qcow2",
+  "installationArtifactDigest": "1c552675d564903b6493f05d457fe99dc046bd7e965b7c649e443b963887987e",
+  "journalctlVersion": "systemd 259 (259.8-1.fc44)",
+  "machineType": "pc-q35-10.2",
+  "ovmfCodeDigest": "6551948da24a02553476c1c1edccb0bb92a57dce9d722d7b396ac14547e6d9af",
+  "ovmfCodePath": "/usr/share/edk2/ovmf/OVMF_CODE_4M.qcow2",
+  "ovmfVarsTemplateDigest": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb",
+  "ovmfVarsTemplatePath": "/usr/share/edk2/ovmf/OVMF_VARS_4M.qcow2",
+  "qemuPath": "/usr/bin/qemu-system-x86_64",
+  "qemuVersion": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)",
+  "scenarioName": "first-login and display-stack requalification",
+  "scenarioVersion": "dsq-2",
+  "schemaVersion": 1,
+  "sourceArchiveDigest": "36736f369646e73a8c831578b267f72148f15e16af318677e13b870c72b84d08",
+  "sourceCommit": "15b3787550050e6462c49d066cfcf593cccf0db6",
+  "supersedes": {
+    "note": "dsq-1 measured the b9c317d archive, in which bunny-first-boot.service failed on 60 of 60 fresh homes and chronyd failed on 1 of 60 boots. Its records remain evidence about that archive and are not evidence about this one.",
+    "scenarioVersion": "dsq-1"
+  },
+  "swtpmVersion": "TPM emulator version 0.10.1, Copyright (c) 2014-2022 IBM Corp. and others",
+  "testFixture": {
+    "loginAccountIsTestInjected": true,
+    "note": "Every dsq-2 boot injects a qualification-only account into its own overlay. The Bunny artifact ships no account and no default credential."
+  }
+}
