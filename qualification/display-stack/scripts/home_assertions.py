@@ -33,12 +33,25 @@ REQUIRED_DIRECTORIES = (".config/bunny-os", ".config/systemd/user")
 #: The marker bunny-first-boot writes when it completes.
 COMPLETION_MARKER = ".config/bunny-os/first-boot-complete.json"
 
-#: What SELinux gives a file created under a user's home on this image. The
-#: dsq-1 pass established that the installed policy labels home content
-#: config_home_t or user_home_t depending on path; both are accepted and the
-#: measured value is always recorded, so a policy change shows up as a changed
-#: fact rather than as a silent pass.
-EXPECTED_HOME_CONTEXTS = ("config_home_t", "user_home_t", "gconf_home_t")
+#: The SELinux type the image's own policy assigns to each directory, read from
+#: the deployment's file_contexts.homedirs rather than assumed:
+#:
+#:   /var/home/[^/]+/\.config(/.*)?              -> config_home_t
+#:   /var/home/[^/]+/\.config/systemd/user(/.*)? -> systemd_unit_file_t
+#:
+#: The second rule is more specific and wins, which is correct — that directory
+#: holds user unit files. A single blanket list of "home-ish" types rejected it
+#: and reported a correctly labelled directory as a mislabel.
+#:
+#: The measured value is recorded either way, so a policy change shows up as a
+#: changed fact rather than as a silent pass.
+EXPECTED_CONTEXTS = {
+    ".config/bunny-os": ("config_home_t",),
+    ".config/systemd/user": ("systemd_unit_file_t",),
+}
+
+#: Fallback for a path with no specific expectation.
+DEFAULT_HOME_CONTEXTS = ("config_home_t", "user_home_t", "gconf_home_t")
 
 
 class HomeReadError(Exception):
@@ -181,11 +194,14 @@ def assert_home(overlay: Path, root: str, home: str, uid: int,
                 f"{reported}: carries no SELinux context; the image is labelled "
                 "and a home directory without a label is not an expected "
                 "state")
-        elif not any(expected in context
-                     for expected in EXPECTED_HOME_CONTEXTS):
-            result["problems"].append(
-                f"{reported}: SELinux context {context} is none of the expected "
-                f"user configuration types {EXPECTED_HOME_CONTEXTS}")
+        else:
+            expected = EXPECTED_CONTEXTS.get(relative, DEFAULT_HOME_CONTEXTS)
+            entry["expectedSelinuxTypes"] = list(expected)
+            if not any(name in context for name in expected):
+                result["problems"].append(
+                    f"{reported}: SELinux context {context} is not the type "
+                    f"this image's policy assigns to that path "
+                    f"{expected}")
         result["directories"][relative] = entry
 
     marker = f"{home}/{COMPLETION_MARKER}"
