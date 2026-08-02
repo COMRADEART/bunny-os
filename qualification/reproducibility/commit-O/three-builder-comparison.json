@@ -1,0 +1,31 @@
+{
+  "comparisons": {
+    "H1 vs H2": {
+      "differing": [],
+      "notCollected": [],
+      "outcome": "REPRODUCIBLE",
+      "reasons": [
+        "SELinux evidence is incomplete beyond this stage: appliedSelinuxContexts is owned by installed-system qualification and is not satisfied by an archive-only build. Archive reproducibility does not establish it"
+      ]
+    },
+    "L vs H1": {
+      "differing": [],
+      "notCollected": [],
+      "outcome": "REPRODUCIBLE",
+      "reasons": [
+        "SELinux evidence is incomplete beyond this stage: appliedSelinuxContexts is owned by installed-system qualification and is not satisfied by an archive-only build. Archive reproducibility does not establish it"
+      ]
+    },
+    "L vs H2": {
+      "differing": [],
+      "notCollected": [],
+      "outcome": "REPRODUCIBLE",
+      "reasons": [
+        "SELinux evidence is incomplete beyond this stage: appliedSelinuxContexts is owned by installed-system qualification and is not satisfied by an archive-only build. Archive reproducibility does not establish it"
+      ]
+    }
+  },
+  "note": "Three comparisons, all required to be REPRODUCIBLE: the two hosted builds against each other, and the local build against each of them. Two hosted runs of one commit an hour apart previously produced different results because the runner image rotated, so a single hosted comparison cannot establish reproducibility.",
+  "result": "PASS",
+  "schemaVersion": 1
+}
