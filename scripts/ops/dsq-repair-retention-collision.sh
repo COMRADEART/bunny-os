@@ -10,7 +10,7 @@
 # its retainedAt and gains an explicit loss note — the sha256 attestation
 # stands, the bytes do not.
 set -u
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 python3 - <<'EOF'
 import hashlib, json, shutil
 from pathlib import Path

@@ -2,7 +2,7 @@
 # For every failed unit in every dsq record: when did it fail, relative to
 # graphical.target and to the shutdown request (powerdown begins after the
 # observation window; "Stopping" from PID1 marks teardown start)?
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 python3 - <<'EOF'
 import json, glob
 for p in sorted(glob.glob("qualification/display-stack/evidence/DSQ-*cell*/record.json")):

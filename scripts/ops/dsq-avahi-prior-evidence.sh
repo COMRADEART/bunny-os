@@ -4,7 +4,7 @@
 # libguestfs appliance at a time).
 set -u
 export LIBGUESTFS_BACKEND=direct
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 for d in qualification/installed-system/evidence/ISQ-20260801-brlapi-first-boot-00{1,2,3,5}; do
   disk="$d/work/target-disk.qcow2"
   [ -f "$disk" ] || continue

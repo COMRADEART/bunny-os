@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Diagnostic preview: run the v2 analyzer over every retained v1 binary
 # journal. Informs hypotheses only; fills no dsq-1 cell.
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 python3 - <<'EOF'
 import sys, glob
 sys.path.insert(0, "qualification/display-stack/scripts")

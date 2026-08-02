@@ -2,7 +2,7 @@
 # Move every dsq-failed-units-1 run into evidence/invalidated/, retained in
 # full with an explicit invalidation note. Nothing is deleted.
 set -eu
-cd /root/bunny-os/qualification/display-stack/evidence
+cd /root/bunny-os/qualification/display-stack/evidence || exit 1
 DEST=invalidated/dsq-failed-units-1
 mkdir -p "$DEST"
 moved=0

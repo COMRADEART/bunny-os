@@ -3,7 +3,7 @@
 # `make display-stack-matrix` after the date rolled) into
 # evidence/supplementary/, retained in full with an explicit note.
 set -eu
-cd /root/bunny-os/qualification/display-stack/evidence
+cd /root/bunny-os/qualification/display-stack/evidence || exit 1
 DEST=supplementary/accidental-20260802-cellA
 mkdir -p "$DEST"
 moved=0

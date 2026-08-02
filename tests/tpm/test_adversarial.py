@@ -302,10 +302,12 @@ def synthetic_tree(records: list[dict]) -> Path:
         "installationArtifactDigest": "2" * 64,
         "installationArtifactName": "bunny.qcow2",
         "qemuDigest": "3" * 64, "qemuVersion": "QEMU 10.2.2",
+        "qemuPath": "/nonexistent/qemu",
         "ovmfCodeDigest": "4" * 64, "ovmfCodePath": "/nonexistent/code",
         "ovmfVarsTemplateDigest": "5" * 64,
         "ovmfVarsTemplatePath": "/nonexistent/vars",
         "swtpmDigest": "6" * 64, "swtpmVersion": "0.10.1",
+        "swtpmPath": "/nonexistent/swtpm",
         "libtpmsVersion": "0.10.2", "machineType": "pc-q35-10.2",
         "cpuMode": "host",
     }

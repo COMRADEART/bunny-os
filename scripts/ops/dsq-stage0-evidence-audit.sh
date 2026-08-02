@@ -3,7 +3,7 @@
 # working copy preserved at /root/tpm-untracked-backup-20260801, and against
 # the digests attested in each record.json.
 set -u
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 BK=/root/tpm-untracked-backup-20260801
 diffcount=0
 crlfcount=0

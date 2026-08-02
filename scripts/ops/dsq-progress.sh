@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-line-per-run summary of every dsq record so far.
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 python3 - <<'EOF'
 import json, glob
 rows = []

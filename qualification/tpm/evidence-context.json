@@ -20,5 +20,7 @@
   "libtpmsPackage": "libtpms-0.10.2-3.fc44.x86_64",
   "machineType": "pc-q35-10.2",
   "cpuMode": "host",
-  "notes": "Authority for every TPM boot-reset investigation record. Diagnostic runs that deliberately vary machineType, cpuMode or acceleration must declare the variation in their record; the varied value never replaces the pinned one. A record naming any other artifact, firmware or emulator digest is stale and must be refused."
+  "notes": "Authority for every TPM boot-reset investigation record. Diagnostic runs that deliberately vary machineType, cpuMode or acceleration must declare the variation in their record; the varied value never replaces the pinned one. A record naming any other artifact, firmware or emulator digest is stale and must be refused.",
+  "qemuPath": "/usr/sbin/qemu-system-x86_64",
+  "swtpmPath": "/usr/sbin/swtpm"
 }

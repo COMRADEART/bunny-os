@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Mid-flight sanity: per-cell tallies of resets, boot-phase and
 # shutdown-phase failures across collected records so far.
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 python3 - <<'EOF'
 import json, glob
 from collections import Counter, defaultdict

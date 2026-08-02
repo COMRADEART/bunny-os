@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Stage 16 gate recalculation: run every required command, record exact
 # exit codes, force nothing.
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 run() {
   "$@" >/tmp/gate-out.log 2>&1
   local rc=$?

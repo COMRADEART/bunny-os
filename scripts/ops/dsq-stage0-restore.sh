@@ -2,7 +2,7 @@
 # Restore the 23 EOL-mangled serial.log files from the pre-commit backup
 # (whose bytes match the digests attested in each record.json), then verify.
 set -u
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 BK=/root/tpm-untracked-backup-20260801
 restored=0
 for f in $(cd qualification/tpm && git ls-files . | grep 'serial\.log$'); do

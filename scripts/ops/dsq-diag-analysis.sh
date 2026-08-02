@@ -2,7 +2,7 @@
 # Summarize the chronyd-after-authselect diagnostic arm: per run, chronyd
 # disposition, its start time vs that boot's authselect apply window, and
 # any other boot-phase failures.
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 python3 - <<'EOF'
 import json, glob
 ok = failed = 0

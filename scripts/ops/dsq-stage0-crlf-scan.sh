@@ -3,7 +3,7 @@
 # any tracked file whose bytes no longer match a sha256 recorded in a
 # record.json/manifest in the same evidence tree.
 set -u
-cd /root/bunny-os
+cd /root/bunny-os || exit 1
 python3 - <<'EOF'
 import hashlib, json, os, glob
 
