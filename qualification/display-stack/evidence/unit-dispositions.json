@@ -1,0 +1,97 @@
+{
+  "_comment": "Stage 8/9/11 dispositions. Confidence CONFIRMED or STRONGLY_SUPPORTED is required for closure, and import_results.py re-verifies each claimed context against every record — a disposition here is an argument, not an exemption.",
+  "gdm.service": {
+    "disposition": "SHUTDOWN_TEARDOWN_EXIT_RACE",
+    "confidence": "STRONGLY_SUPPORTED",
+    "phase": "shutdown",
+    "mechanism": "gdm's main process races the ordered teardown: when accounts-daemon/D-Bus vanish before gdm finishes stopping, gdm logs 'Failed to list cached users: ServiceUnknown' and exits 1 while in its stop job, recording the unit failed. No boot-phase failure, no restart loop, no coredump in any dsq-1 record; the greeter session ran through the full observation window in every affected boot. gdm.service has no ordering relationship to accounts-daemon.service, so stop order between them is unconstrained — which is the race.",
+    "productCorrectionCandidate": "order gdm.service After=accounts-daemon.service (stop-before), or tolerate D-Bus peer disappearance in gdm's shutdown path; either is a Path C image change outside this pass",
+    "evidence": [
+      "journal/journal-gdm.log in every affected run (failure 0.05-0.1s after 'Stopping gdm.service')",
+      "unit-facts.json: gdm.service unit body (no accounts-daemon ordering)",
+      "prior first-boot-blank journal: identical signature at the prior harness's ~10s shutdown"
+    ]
+  },
+  "gnome-session-manager@gnome-initial-setup.service": {
+    "disposition": "SHUTDOWN_TEARDOWN_CRASH",
+    "confidence": "STRONGLY_SUPPORTED",
+    "phase": "shutdown",
+    "crashProcesses": ["gnome-session-s", "gnome-session-service"],
+    "mechanism": "deterministic (60/60): at poweroff, gnome-session-service does not exit on SIGTERM; the user manager's stop timeout expires ('State stop-sigterm timed out. Aborting.') and systemd itself kills the process with SIGABRT — code=dumped, status=6/ABRT, result=timeout, no systemd-coredump processing during shutdown. Strictly after shutdown initiation in every record; upstream's unit declares OnFailure=gnome-session-shutdown.target and CollectMode=inactive-or-failed for exactly this teardown path. The 45s stop timeout it burns delays every poweroff.",
+    "productCorrectionCandidate": "make the session leader exit on SIGTERM during system shutdown (upstream gnome-session), or bound the stop timeout for the launch-environment session; a Path C change outside this pass — quality (shutdown latency), not display-stack availability",
+    "evidence": [
+      "journal in every run: 'State stop-sigterm timed out. Aborting.' then SIGABRT ~45s after shutdown initiation",
+      "unit body: OnFailure=gnome-session-shutdown.target, CollectMode=inactive-or-failed",
+      "zero failures before shutdown initiation in any of 60 records"
+    ]
+  },
+  "at-spi-dbus-bus.service": {
+    "disposition": "SHUTDOWN_TEARDOWN_EXIT_RACE",
+    "confidence": "STRONGLY_SUPPORTED",
+    "phase": "shutdown",
+    "mechanism": "the accessibility bus exits 1 while the user session's D-Bus disappears under it at teardown; intermittent, always within ~0.1s of the session stop, never during operation.",
+    "evidence": ["failure timestamps sit at shutdown initiation in every affected record"]
+  },
+  "session-c1.scope": {
+    "disposition": "SHUTDOWN_TEARDOWN_EXIT_RACE",
+    "confidence": "STRONGLY_SUPPORTED",
+    "phase": "shutdown",
+    "mechanism": "the gnome-initial-setup session scope reaches its stop timeout (~45s after shutdown initiation, result=timeout) when session processes linger past SIGTERM; the final SIGKILL succeeds. A stop-timeout on a scope during poweroff, not a service crash.",
+    "evidence": ["result=timeout at shutdown-initiation +45s in every affected record"]
+  },
+  "chronyd.service": {
+    "disposition": "FIRST_BOOT_NSS_WINDOW_RACE",
+    "confidence": "STRONGLY_SUPPORTED",
+    "phase": "boot",
+    "mechanism": "chronyd resolves User=chrony at spawn. The image bakes no chrony user (systemd-sysusers creates it at boot) and ships no /etc/nsswitch.conf (authselect-apply-changes materialises it on first boot). When chronyd's spawn lands inside the authselect apply window, NSS resolution intermittently fails: 'Failed to determine credentials for user chrony: Unknown user', exit 217/USER, no restart (chronyd.service has no Restart=). The gate verifies every observed failure lies inside that boot's measured authselect window; the diagnostic arm (run_boot --diagnostic chronyd-after-authselect) orders chronyd after the window on a per-run overlay.",
+    "productCorrectionCandidate": "order chronyd.service (and any service resolving a sysusers-created user) After=authselect-apply-changes.service, or bake the chrony user into the image /etc/passwd; Path C image change outside this pass",
+    "evidence": [
+      "DSQ-20260801-cellA-012 (invalidated tree) and every dsq-1 occurrence: failure timestamp inside [authselectApplyStart, authselectApplyEnd]",
+      "unit-facts.json: no chrony passwd entry on the image",
+      "diagnostic arm records DSQ-*-diag-chronyd-after-authselect-*"
+    ]
+  },
+  "bunny-first-boot.service": {
+    "disposition": "GRAPHICAL_SESSION_DEFECT",
+    "confidence": "CONFIRMED",
+    "phase": "boot",
+    "mechanism": "deterministic (every dsq-1 boot): the unit declares ReadWritePaths=%h/.config/bunny-os under ProtectHome=read-only, but nothing on the image pre-creates that directory (no /etc/skel entry, no user-tmpfiles), so mount-namespace setup fails with 226/NAMESPACE before ExecStart in ANY fresh home — the gnome-initial-setup session here, and equally a real user's first login. The unit's own purpose is to create first-boot state in the directory whose absence kills it. Invisible to every prior pass because their collectors read only the UNIT journal field and never saw user-manager units.",
+    "productCorrection": "Path C image change required: pre-create the directory (user-tmpfiles.d or skel), or replace the ReadWritePaths sandbox declaration with one that can create its target. Blocks display-stack qualification until fixed and requalified through the full archive/installed-system chain.",
+    "evidence": [
+      "journal in every dsq-1 run: 'Failed to set up mount namespacing: /run/gdm/home/gnome-initial-setup/.config/bunny-os: No such file or directory'",
+      "image facts: /etc/skel has no .config/bunny-os; no user-tmpfiles.d entries; unit body ReadWritePaths + ProtectHome=read-only"
+    ]
+  },
+  "avahi-daemon.service": {
+    "disposition": "SHUTDOWN_TEARDOWN_CRASH",
+    "confidence": "STRONGLY_SUPPORTED",
+    "phase": "shutdown",
+    "crashProcesses": ["avahi-daemon"],
+    "mechanism": "avahi-daemon 0.8 intermittently aborts in its own shutdown path when SIGTERM arrives while interface state is still settling: 'avahi_server_add_address() failed: Bad state' followed by the assertion 'simple_protocol_restart_queries: Assertion server failed', SIGABRT, coredump, result=core-dump. Measured in the prior installed-system evidence where the harness powered down ~1s after avahi started (two of three installations crashed, the third tore down cleanly). In dsq-1, where shutdown begins ~75s after readiness, avahi exits cleanly in every boot — the crash needs teardown to collide with startup-time interface registration. An upstream avahi fragility, exercised only by near-immediate shutdown.",
+    "evidence": [
+      "prior ISQ brlapi-first-boot-001/-002 journals: ANOM_ABEND sig=6, systemd-coredump, 'Failed with result core-dump' 0.8s after avahi start",
+      "prior ISQ brlapi-first-boot-003 journal: identical teardown at +5s exits cleanly",
+      "dsq-1: zero avahi failures in any cell"
+    ]
+  },
+  "dbus-:*-org.gnome.Shell.Screencast@0.service": {
+    "disposition": "HARNESS_OR_COLLECTOR_DEFECT",
+    "confidence": "CONFIRMED",
+    "phase": "prior-scenario",
+    "mechanism": "two prior-pass defects, no product defect: (1) the prior collector stripped the dbus-: prefix and kept the per-boot D-Bus connection ID, so one transient unit was reported as '1.2-…' and '1.3-…' — two failures that never existed; (2) the prior harness initiated shutdown ~10s after boot, colliding with the unit's D-Bus activation at ~11s inside the gnome-initial-setup session ('Failed to open display' while the session tore down). In dsq-1, with canonical naming and a real observation window, the activation succeeds in every boot and the unit never fails. It requires a graphical session and a portal only when actually recording; failure before login is not its steady state on this image — it does not fail before login at all.",
+    "answers": {
+      "scope": "user unit (transient, D-Bus activated), gnome-initial-setup session's manager",
+      "activatedBy": "whatever requests org.gnome.Shell.Screencast on the session bus (gnome-shell)",
+      "requiresLoggedInGnomeSession": "requires a graphical session bus and display; the gnome-initial-setup session satisfies this",
+      "requiresPipewire": "for actual recording, yes; activation itself succeeded with PipeWire present in-session",
+      "requiresPortal": "queries org.freedesktop.portal.Settings at startup; absence logged as warning in the prior failure",
+      "affectsGreeter": "no — not in gdm.service's or the session's required path; its prior failure left the session running",
+      "coredumpOrRestartLoop": "none in any scenario"
+    },
+    "evidence": [
+      "dsq-1: activated-and-succeeded in every boot where activation occurred, zero failures",
+      "prior first-boot-blank journal: activation at 11.3s, 'Failed to open display' during the ~10s-initiated teardown",
+      "canonicalisation tests: tests/display_stack (connection-ID identity)"
+    ]
+  }
+}

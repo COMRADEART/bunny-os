@@ -72,8 +72,12 @@ def load_records(evidence_root: Path, problems: list[str]) -> dict[str, list[dic
             problems.append(f"{run_dir.name}: directory name and record "
                             "disagree about cell or sequence")
             continue
+        # the configuration equality check applies to records that fill a
+        # cell; an ABANDONED/COLLECTION_FAILED record measured nothing and
+        # keeps whatever configuration its refusal happened under
         expected_config = dict(CELLS[cell])
-        if record.get("cellConfiguration") != expected_config:
+        if record.get("status") == "COLLECTED" and \
+                record.get("cellConfiguration") != expected_config:
             problems.append(
                 f"{run_dir.name}: cell configuration differs from the "
                 f"cell {cell} definition — a run from another environment "
@@ -135,13 +139,35 @@ def verify_integrity(by_cell: dict[str, list[dict]], context,
                         f"{analysis.get('entryCount')} entries — too small "
                         "to be a complete boot record")
             if verify_files:
+                retention: dict[str, dict] = {}
+                retention_path = record["_dir"] / "retention-manifest.json"
+                if retention_path.is_file():
+                    retention = {
+                        e["path"]: e for e in json.loads(
+                            retention_path.read_text(encoding="utf-8"))
+                        .get("files", [])}
                 for entry in record.get("evidenceManifest", []):
                     path = record["_dir"] / entry["path"]
                     if entry["path"] == "record.json":
                         continue
                     if not path.exists():
-                        problems.append(f"{name}: manifest names missing "
-                                        f"file {entry['path']}")
+                        # a missing file is acceptable only when the
+                        # retention manifest names it with the record's own
+                        # digest — the digest chain stays unbroken
+                        kept = retention.get(entry["path"])
+                        if kept is None or kept["sha256"] != entry["sha256"]:
+                            problems.append(
+                                f"{name}: manifest names missing file "
+                                f"{entry['path']} and the retention "
+                                "manifest does not carry its digest")
+                        else:
+                            kept_path = Path(kept.get("retainedAt", ""))
+                            if kept_path.is_file() and \
+                                    sha256_file(kept_path) != entry["sha256"]:
+                                problems.append(
+                                    f"{name}: retained copy of "
+                                    f"{entry['path']} does not match its "
+                                    "recorded digest")
                     elif sha256_file(path) != entry["sha256"]:
                         problems.append(f"{name}: {entry['path']} does not "
                                         "match its recorded digest")
@@ -156,6 +182,7 @@ def unit_occurrences(by_cell: dict[str, list[dict]]) -> dict:
             for scope_key in ("systemUnits", "userUnits"):
                 for unit in analysis.get(scope_key, []):
                     if unit["disposition"] in ("currently-failed",
+                                               "failed-during-shutdown",
                                                "failed-transiently-and-recovered",
                                                "skipped-by-condition"):
                         units.add(unit["unit"])
@@ -232,8 +259,23 @@ def gdm_readiness(record: dict) -> tuple[bool, list[str]]:
         reasons.append("fatal display-server error present")
     if analysis.get("seat0CreatedMono") is None:
         reasons.append("seat0 never created")
-    if not record.get("observationWindowCompleted"):
-        reasons.append("observation window did not complete")
+    # The stability window is judged from the installed journal: time from
+    # greeter readiness to shutdown initiation. The serial-paced flag is a
+    # fallback only — measured on this image, gdm can win the console
+    # against systemd's graphical.target status line, so the serial marker
+    # is itself intermittent (DSQ-20260801-cellA-002: journal shows 636 s
+    # stable at graphical, serial never showed the line).
+    readiness_point = (gdm.get("greeterSessionOpenedMono")
+                       or analysis.get("graphicalTargetReachedMono"))
+    shutdown_at = analysis.get("shutdownInitiatedMono")
+    if readiness_point is not None and shutdown_at is not None:
+        stable = shutdown_at - readiness_point
+        if stable < 60.0:
+            reasons.append(f"display stack observed stable for only "
+                           f"{stable:.1f}s before shutdown (< 60s window)")
+    elif not record.get("observationWindowCompleted"):
+        reasons.append("observation window did not complete and the journal "
+                       "cannot establish a stability window")
     if record.get("guestResetCount") != record.get("expectedResets"):
         reasons.append("guest reset count differs from the cell's expected")
     return (not reasons, reasons)
@@ -262,6 +304,7 @@ def verify_contextual_acceptance(unit_name: str, disposition: dict,
                     "DEPENDENCY_FAILURE",
                     "EXPECTED_WITHOUT_NETWORK",
                     "SHUTDOWN_TEARDOWN_EXIT_RACE",
+                    "SHUTDOWN_TEARDOWN_CRASH",
                     "FIRST_BOOT_NSS_WINDOW_RACE"):
         return False
     for cell, records in by_cell.items():
@@ -287,20 +330,43 @@ def verify_contextual_acceptance(unit_name: str, disposition: dict,
                         f"session existed ({real_users}) — "
                         "EXPECTED_WITHOUT_USER_SESSION does not apply")
                     return False
-            elif kind == "SHUTDOWN_TEARDOWN_EXIT_RACE":
+            elif kind in ("SHUTDOWN_TEARDOWN_EXIT_RACE",
+                          "SHUTDOWN_TEARDOWN_CRASH"):
                 for unit in failed_entries:
                     if unit.get("failuresDuringBoot"):
                         problems.append(
                             f"{name}: {unit_name} failed "
                             f"{unit['failuresDuringBoot']}x before shutdown "
-                            "was requested — a teardown race cannot cover a "
-                            "boot-phase failure")
+                            "was requested — a teardown disposition cannot "
+                            "cover a boot-phase failure")
                         return False
-                if analysis.get("shutdownInitiatedMono") is None:
+                shutdown_at = analysis.get("shutdownInitiatedMono")
+                if shutdown_at is None:
                     problems.append(
-                        f"{name}: {unit_name} claimed as a teardown race "
-                        "but the record shows no shutdown initiation")
+                        f"{name}: {unit_name} claimed as a teardown "
+                        "disposition but the record shows no shutdown "
+                        "initiation")
                     return False
+                if kind == "SHUTDOWN_TEARDOWN_EXIT_RACE":
+                    crashing = [u for u in failed_entries
+                                if (u.get("mainExit") or {}).get("code")
+                                == "dumped"]
+                    if crashing:
+                        problems.append(
+                            f"{name}: {unit_name} dumped core — an exit "
+                            "race disposition cannot cover a crash")
+                        return False
+                else:  # SHUTDOWN_TEARDOWN_CRASH: the coredump itself must
+                    # also lie in the teardown phase
+                    processes = disposition.get("crashProcesses") or []
+                    for coredump in analysis.get("coredumps", []):
+                        if coredump.get("process") in processes and \
+                                (coredump.get("monotonic") or 0) < shutdown_at:
+                            problems.append(
+                                f"{name}: {coredump.get('process')} dumped "
+                                f"core at {coredump.get('monotonic')} — "
+                                "before shutdown was requested")
+                            return False
             elif kind == "FIRST_BOOT_NSS_WINDOW_RACE":
                 timeline = analysis.get("timeline") or {}
                 window_start = timeline.get("authselectApplyStart")
@@ -401,7 +467,14 @@ def main() -> int:
             continue
         if kind in ("BOOT_CRITICAL_DEFECT", "GRAPHICAL_SESSION_DEFECT",
                     "HARNESS_OR_COLLECTOR_DEFECT"):
-            disposition_verdicts[unit_name] = f"BLOCKING ({kind})"
+            # a defect blocks while it is observable in this scenario's
+            # records; a defect of a *prior* scenario's harness or
+            # collector, with zero dsq-1 failures, is closed history
+            if any_failure:
+                disposition_verdicts[unit_name] = f"BLOCKING ({kind})"
+            else:
+                disposition_verdicts[unit_name] = (
+                    f"CLOSED ({kind} in prior scenario; no dsq-1 failure)")
         elif any_failure and not verify_contextual_acceptance(
                 unit_name, entry, by_cell, problems):
             disposition_verdicts[unit_name] = (

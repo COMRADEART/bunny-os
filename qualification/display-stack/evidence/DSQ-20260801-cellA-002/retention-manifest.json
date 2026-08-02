@@ -1,0 +1,48 @@
+{
+  "retainedOn": "comrade",
+  "retainedTime": "2026-08-02T04:59:42+00:00",
+  "files": [
+    {
+      "path": "screenshots/boot-timeout.ppm",
+      "sha256": "0b4492eeaea267e83c9502892f3dc75b10b2d88ef50922d5693b71f9e59f2324",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellA-002/screenshots/boot-timeout.ppm"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellA-002/screenshots/stage-boot-option-started.ppm"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellA-002/screenshots/stage-firmware-bds.ppm"
+    },
+    {
+      "path": "screenshots/stage-health-check.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "lost": "overwritten by the retention path collision with the invalidated dsq-failed-units-1 run of the same ID (flat trace layout, fixed in retain_bulky_evidence.py); sha256 attestation stands, bytes unrecoverable"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "51ef38e9812950265b6dff4c6578c4322b4f37558509f9b2d88114ac29694e2a",
+      "sizeBytes": 3072016,
+      "lost": "overwritten by the retention path collision with the invalidated dsq-failed-units-1 run of the same ID (flat trace layout, fixed in retain_bulky_evidence.py); sha256 attestation stands, bytes unrecoverable"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "3cc0f193491f1a0797e80689a621fd4ede6fd99b59e9af52d634c0890df39e6d",
+      "sizeBytes": 3072016,
+      "lost": "overwritten by the retention path collision with the invalidated dsq-failed-units-1 run of the same ID (flat trace layout, fixed in retain_bulky_evidence.py); sha256 attestation stands, bytes unrecoverable"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellA-002/screenshots/stage-multi-user.ppm"
+    }
+  ]
+}

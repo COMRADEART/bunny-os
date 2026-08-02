@@ -82,11 +82,11 @@ CELLS = {
           "memory": 8192, "network": True, "expectedResets": 1,
           "description": "first TPM fallback boot, exactly one shim "
                          "restoration reboot expected"},
-    "D": {"tpm": False, "vars": "seed", "smp": 2, "memory": 4096,
-          "network": True, "expectedResets": 0,
+    "D": {"tpm": False, "vars": "seed", "varsSeedCell": "A", "smp": 2,
+          "memory": 4096, "network": True, "expectedResets": 0,
           "description": "reduced resources: 2 vCPU, 4 GiB"},
-    "E": {"tpm": False, "vars": "seed", "smp": 4, "memory": 8192,
-          "network": False, "expectedResets": 0,
+    "E": {"tpm": False, "vars": "seed", "varsSeedCell": "A", "smp": 4,
+          "memory": 8192, "network": False, "expectedResets": 0,
           "description": "network disconnected at the VM boundary"},
 }
 
@@ -106,6 +106,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cell", required=True,
                         choices=[*CELLS.keys(), "seed-A", "seed-B"])
+    parser.add_argument("--diagnostic", default=None,
+                        choices=["chronyd-after-authselect"],
+                        help="declared diagnostic variation: inject a "
+                             "drop-in into the per-run overlay before boot. "
+                             "The run ID is prefixed diag- and can fill no "
+                             "matrix cell")
     parser.add_argument("--sequence", type=int, default=1)
     parser.add_argument("--disk-source", type=Path, default=Path(
         "/var/tmp/bunny-installables-g/bunny-os-b9c317d35b85.qcow2"))
@@ -142,8 +148,13 @@ def main() -> int:
         return 2
 
     date_tag = args.date_tag or datetime.date.today().strftime("%Y%m%d")
-    run_id = (f"DSQ-{date_tag}-seed{cell_name}" if seeding
-              else f"DSQ-{date_tag}-cell{cell_name}-{args.sequence:03d}")
+    if seeding:
+        run_id = f"DSQ-{date_tag}-seed{cell_name}"
+    elif args.diagnostic:
+        run_id = (f"DSQ-{date_tag}-diag-{args.diagnostic}-"
+                  f"{args.sequence:03d}")
+    else:
+        run_id = f"DSQ-{date_tag}-cell{cell_name}-{args.sequence:03d}"
     evidence_dir = args.evidence_root / run_id
     if evidence_dir.exists():
         print(f"REFUSED: {evidence_dir} already exists; superseding runs get "
@@ -182,11 +193,39 @@ def main() -> int:
         print(f"{run_id}: {status}")
         return 0 if status in ("COLLECTED", "SEEDED") else 1
 
+    record["diagnostic"] = args.diagnostic
+
     # ------------------------------------------------------------- inputs
     overlay = work / "disk-overlay.qcow2"
     subprocess.run(["qemu-img", "create", "-f", "qcow2", "-b",
                     str(args.disk_source.resolve()), "-F", "qcow2",
                     str(overlay)], check=True, capture_output=True)
+
+    if args.diagnostic == "chronyd-after-authselect":
+        # The candidate correction for the first-boot NSS-window race,
+        # applied to this run's overlay only. The source disk is untouched
+        # and the varied configuration is recorded, never substituted.
+        dropin = ("[Unit]\n"
+                  "# dsq-1 diagnostic: order chronyd after the authselect\n"
+                  "# apply window to test the NSS-window race hypothesis\n"
+                  "After=authselect-apply-changes.service\n")
+        root = dsq_disk.root_partition(overlay)
+        listing = subprocess.run(
+            ["guestfish", "-a", str(overlay), "run", ":",
+             "mount", root, "/", ":",
+             "glob-expand", "/ostree/deploy/*/deploy/*.0"],
+            check=True, capture_output=True, text=True).stdout.strip()
+        deploy = listing.splitlines()[0].rstrip("/")
+        dropin_dir = f"{deploy}/etc/systemd/system/chronyd.service.d"
+        subprocess.run(
+            ["guestfish", "-a", str(overlay), "run", ":",
+             "mount", root, "/", ":",
+             "mkdir-p", dropin_dir, ":",
+             "write", f"{dropin_dir}/50-dsq-diagnostic.conf", dropin],
+            check=True, capture_output=True, text=True)
+        record["diagnosticDropIn"] = {
+            "path": f"{dropin_dir}/50-dsq-diagnostic.conf",
+            "content": dropin}
 
     vars_copy = work / "OVMF_VARS.qcow2"
     if cell["vars"] == "fresh":
@@ -194,7 +233,8 @@ def main() -> int:
         record["varsSource"] = {"kind": "template",
                                 "sha256": sha256_file(vars_copy)}
     else:
-        seed_vars = args.seed_root / f"cell{cell_name}-OVMF_VARS.qcow2"
+        seed_cell = cell.get("varsSeedCell", cell_name)
+        seed_vars = args.seed_root / f"cell{seed_cell}-OVMF_VARS.qcow2"
         if not seed_vars.exists():
             return finish("ABANDONED",
                           reason=f"seed variable store {seed_vars} missing; "

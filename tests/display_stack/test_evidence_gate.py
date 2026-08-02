@@ -159,10 +159,30 @@ class ReadinessTests(unittest.TestCase):
         ok, _ = import_results.gdm_readiness(record)
         self.assertFalse(ok)
 
-    # 17 — collection ended before the observation window
+    # 17 — collection ended before the observation window: the journal
+    # shows shutdown initiated 22 s after greeter readiness
     def test_incomplete_observation_window_not_ready(self):
         record = self.make_record()
         record["observationWindowCompleted"] = False
+        record["analysis"]["shutdownInitiatedMono"] = 30.0
+        ok, reasons = import_results.gdm_readiness(record)
+        self.assertFalse(ok)
+        self.assertTrue(any("stable for only" in r for r in reasons))
+
+    # the serial-paced flag alone cannot fail a boot whose journal proves a
+    # full stability window (the serial graphical marker is intermittent)
+    def test_journal_window_overrides_serial_flag(self):
+        record = self.make_record()
+        record["observationWindowCompleted"] = False
+        record["liveOutcome"] = "timeout"
+        ok, reasons = import_results.gdm_readiness(record)
+        self.assertTrue(ok, reasons)
+
+    # with no journal shutdown timestamp, the serial flag is the fallback
+    def test_missing_shutdown_timestamp_falls_back_to_serial(self):
+        record = self.make_record()
+        record["observationWindowCompleted"] = False
+        record["analysis"]["shutdownInitiatedMono"] = None
         ok, reasons = import_results.gdm_readiness(record)
         self.assertFalse(ok)
         self.assertTrue(any("observation window" in r for r in reasons))
@@ -280,6 +300,60 @@ class ContextualDispositionTests(unittest.TestCase):
              "confidence": "CONFIRMED"},
             import_results.load_records(self.root, []), [])
         self.assertTrue(accepted)
+
+    # a unit that dumped core can never close as a mere exit race
+    def test_exit_race_cannot_cover_a_crash(self):
+        run_dir = write_run(self.root, "A", 1, "a7" + "0" * 30)
+
+        def mutate(record):
+            unit = record["analysis"]["systemUnits"][0]
+            unit["unit"] = "avahi-daemon.service"
+            unit["disposition"] = "failed-during-shutdown"
+            unit["failures"] = 1
+            unit["failuresDuringBoot"] = 0
+            unit["failuresDuringShutdown"] = 1
+            unit["mainExit"] = {"code": "dumped", "status": "6/ABRT"}
+            unit["events"] = [{"kind": "failed", "monotonic": 85.0,
+                               "detail": "core-dump"}]
+        edit_record(run_dir, mutate)
+        problems: list[str] = []
+        accepted = import_results.verify_contextual_acceptance(
+            "avahi-daemon.service",
+            {"disposition": "SHUTDOWN_TEARDOWN_EXIT_RACE",
+             "confidence": "CONFIRMED"},
+            import_results.load_records(self.root, []), problems)
+        self.assertFalse(accepted)
+        self.assertTrue(any("cannot cover a crash" in p for p in problems))
+
+    # a teardown-crash disposition is rejected if the coredump preceded
+    # shutdown initiation
+    def test_teardown_crash_requires_teardown_coredump(self):
+        run_dir = write_run(self.root, "A", 1, "a8" + "0" * 30)
+
+        def mutate(record):
+            unit = record["analysis"]["systemUnits"][0]
+            unit["unit"] = "avahi-daemon.service"
+            unit["disposition"] = "failed-during-shutdown"
+            unit["failures"] = 1
+            unit["failuresDuringBoot"] = 0
+            unit["failuresDuringShutdown"] = 1
+            unit["mainExit"] = {"code": "dumped", "status": "6/ABRT"}
+            unit["events"] = [{"kind": "failed", "monotonic": 85.0,
+                               "detail": "core-dump"}]
+            record["analysis"]["coredumps"] = [
+                {"monotonic": 12.0, "process": "avahi-daemon",
+                 "uid": "70", "signal": "SIGABRT", "message": "x"}]
+        edit_record(run_dir, mutate)
+        problems: list[str] = []
+        accepted = import_results.verify_contextual_acceptance(
+            "avahi-daemon.service",
+            {"disposition": "SHUTDOWN_TEARDOWN_CRASH",
+             "confidence": "CONFIRMED",
+             "crashProcesses": ["avahi-daemon"]},
+            import_results.load_records(self.root, []), problems)
+        self.assertFalse(accepted)
+        self.assertTrue(any("before shutdown was requested" in p
+                            for p in problems))
 
     # an NSS-window race is bound to the authselect window, not the name
     def test_nss_window_race_rejected_outside_window(self):

@@ -36,7 +36,13 @@ def main() -> int:
     for cell, count in PLAN:
         if cell not in args.cells:
             continue
-        for sequence in range(1, count + 1):
+        # fill the cell's quota with COLLECTED runs: existing directories
+        # are never touched (an abandoned or failed run keeps its sequence
+        # number and its record), new runs continue the sequence
+        collected = 0
+        sequence = 0
+        while collected < count and sequence < count * 3:
+            sequence += 1
             run_id = f"DSQ-{args.date_tag}-cell{cell}-{sequence:03d}"
             run_dir = args.evidence_root / run_id
             if run_dir.exists():
@@ -48,6 +54,8 @@ def main() -> int:
                             record.read_text(encoding="utf-8"))["status"]
                     except (json.JSONDecodeError, KeyError):
                         status = "unreadable"
+                if status == "COLLECTED":
+                    collected += 1
                 print(f"skip {run_id} (exists, {status})", flush=True)
                 continue
             print(f"run  {run_id}", flush=True)
@@ -56,11 +64,17 @@ def main() -> int:
                  "--cell", cell, "--sequence", str(sequence),
                  "--evidence-root", str(args.evidence_root),
                  "--date-tag", args.date_tag])
-            if result.returncode not in (0, 1):
+            if result.returncode == 0:
+                collected += 1
+            elif result.returncode not in (0, 1):
                 # 2 is a refusal (bad artifact digest, missing seed):
                 # continuing would produce a matrix about a different input.
                 print(f"REFUSED at {run_id}; stopping", flush=True)
                 return 2
+        if collected < count:
+            print(f"cell {cell}: only {collected}/{count} collected "
+                  "within the sequence cap", flush=True)
+            return 2
     print("matrix complete", flush=True)
     return 0
 

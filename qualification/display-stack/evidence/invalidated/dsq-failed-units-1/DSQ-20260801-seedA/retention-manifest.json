@@ -1,0 +1,60 @@
+{
+  "retainedOn": "comrade",
+  "retainedTime": "2026-08-02T04:59:46+00:00",
+  "files": [
+    {
+      "path": "screenshots/graphical-reached.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-seedA/screenshots/graphical-reached.ppm"
+    },
+    {
+      "path": "screenshots/observation-window-end.ppm",
+      "sha256": "0b4492eeaea267e83c9502892f3dc75b10b2d88ef50922d5693b71f9e59f2324",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-seedA/screenshots/observation-window-end.ppm"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-seedA/screenshots/stage-boot-option-started.ppm"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-seedA/screenshots/stage-firmware-bds.ppm"
+    },
+    {
+      "path": "screenshots/stage-graphical.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-seedA/screenshots/stage-graphical.ppm"
+    },
+    {
+      "path": "screenshots/stage-health-check.ppm",
+      "sha256": "279b57b0db45e44c5e38c9512a0d6af9860cbbd241f808092299fa9068417c8f",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/invalidated/dsq-failed-units-1/DSQ-20260801-seedA/screenshots/stage-health-check.ppm"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "134b2990c3c406d413e8aafd76d2658c26cbdff532f4978236749bb8889c042b",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/invalidated/dsq-failed-units-1/DSQ-20260801-seedA/screenshots/stage-initramfs.ppm"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "9a7041410b039268459d2c2faaa2073c17efd04ec93c762e9a1d99e55fa377da",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/invalidated/dsq-failed-units-1/DSQ-20260801-seedA/screenshots/stage-kernel-loaded.ppm"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "279b57b0db45e44c5e38c9512a0d6af9860cbbd241f808092299fa9068417c8f",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/invalidated/dsq-failed-units-1/DSQ-20260801-seedA/screenshots/stage-multi-user.ppm"
+    }
+  ]
+}

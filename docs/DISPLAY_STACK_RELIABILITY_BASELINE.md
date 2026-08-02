@@ -111,7 +111,11 @@ every record — there is deliberately no way to accept a unit by name:
 - `EXPECTED_WITHOUT_USER_SESSION` — rejected if any covered boot had a real
   user session.
 - `SHUTDOWN_TEARDOWN_EXIT_RACE` — rejected if the unit failed even once
-  before shutdown initiation, or if a record lacks a shutdown timestamp.
+  before shutdown initiation, if a record lacks a shutdown timestamp, or
+  if the unit dumped core (a crash can never close as an exit race).
+- `SHUTDOWN_TEARDOWN_CRASH` — same phase requirements, and any coredump of
+  the disposition's named processes must itself lie after shutdown
+  initiation.
 - `FIRST_BOOT_NSS_WINDOW_RACE` — rejected if any failure lies outside that
   record's measured `authselect-apply-changes` window.
 - `BOOT_CRITICAL_DEFECT` / `GRAPHICAL_SESSION_DEFECT` /
@@ -130,6 +134,17 @@ every record — there is deliberately no way to accept a unit by name:
 - `dsq-journal-1` — offline journal extraction; binary journals are
   retained out-of-tree (default `/root/dsq-traces/<run-id>/`) with their
   manifest digest recorded in the run's record.
+
+Bulky raw evidence (screendumps) is moved out of the committable tree by
+`retain_bulky_evidence.py`, digest-first: a file is moved only after its
+bytes match the record's manifest, each run gains a
+`retention-manifest.json`, and the importer accepts a missing evidence
+file only when that manifest carries the record's own digest. Retention
+destinations preserve the run's position in the evidence tree — an
+invalidated run shares its ID with its rerun, and a flat layout let one
+tree overwrite the other's retained bytes before this was fixed (the 38
+affected v2 screenshots are recorded as lost in their retention
+manifests; their sha256 attestations stand).
 
 ## Adversarial evidence tests (Stage 13)
 

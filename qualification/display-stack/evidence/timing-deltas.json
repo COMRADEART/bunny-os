@@ -1,0 +1,5317 @@
+{
+  "perUnitDeltas": [
+    {
+      "failedRun": "DSQ-20260801-cellA-001",
+      "referenceRun": "DSQ-20260801-cellA-002",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.356922
+      ],
+      "shutdownInitiatedMono": 84.201432,
+      "failuresAfterShutdownInitiation": [
+        84.356922
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.045736,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.865871,
+          "referenceRun": 1.912489,
+          "deltaSeconds": -0.047
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.871139,
+          "referenceRun": 1.916841,
+          "deltaSeconds": -0.046
+        },
+        "dbusReady": {
+          "failedRun": 7.306714,
+          "referenceRun": 7.603926,
+          "deltaSeconds": -0.297
+        },
+        "logindReady": {
+          "failedRun": 7.60635,
+          "referenceRun": 7.92385,
+          "deltaSeconds": -0.317
+        },
+        "seat0Created": {
+          "failedRun": 7.600229,
+          "referenceRun": 7.917475,
+          "deltaSeconds": -0.317
+        },
+        "networkManagerReady": {
+          "failedRun": 7.62058,
+          "referenceRun": 7.929691,
+          "deltaSeconds": -0.309
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.312274,
+          "referenceRun": 7.609618,
+          "deltaSeconds": -0.297
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.469697,
+          "referenceRun": 7.756208,
+          "deltaSeconds": -0.287
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.697236,
+          "referenceRun": 8.024422,
+          "deltaSeconds": -0.327
+        },
+        "gdmActive": {
+          "failedRun": 7.713181,
+          "referenceRun": 8.045736,
+          "deltaSeconds": -0.333
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.962193,
+          "referenceRun": 8.304104,
+          "deltaSeconds": -0.342
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.941216,
+          "referenceRun": 8.280579,
+          "deltaSeconds": -0.339
+        },
+        "avahiActivation": {
+          "failedRun": 7.316525,
+          "referenceRun": 7.611829,
+          "deltaSeconds": -0.295
+        },
+        "multiUserTarget": {
+          "failedRun": 7.823936,
+          "referenceRun": 8.120902,
+          "deltaSeconds": -0.297
+        },
+        "graphicalTarget": {
+          "failedRun": 7.825629,
+          "referenceRun": 8.122613,
+          "deltaSeconds": -0.297
+        },
+        "healthCheck": {
+          "failedRun": 7.820446,
+          "referenceRun": 8.100519,
+          "deltaSeconds": -0.28
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-003",
+      "referenceRun": "DSQ-20260801-cellA-002",
+      "cell": "A",
+      "unit": "at-spi-dbus-bus.service",
+      "scope": "user",
+      "uid": "60578",
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.456141
+      ],
+      "shutdownInitiatedMono": 84.341471,
+      "failuresAfterShutdownInitiation": [
+        84.456141
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 9.076112,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.840583,
+          "referenceRun": 1.912489,
+          "deltaSeconds": -0.072
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.845381,
+          "referenceRun": 1.916841,
+          "deltaSeconds": -0.071
+        },
+        "dbusReady": {
+          "failedRun": 7.19055,
+          "referenceRun": 7.603926,
+          "deltaSeconds": -0.413
+        },
+        "logindReady": {
+          "failedRun": 7.459905,
+          "referenceRun": 7.92385,
+          "deltaSeconds": -0.464
+        },
+        "seat0Created": {
+          "failedRun": 7.457261,
+          "referenceRun": 7.917475,
+          "deltaSeconds": -0.46
+        },
+        "networkManagerReady": {
+          "failedRun": 7.495833,
+          "referenceRun": 7.929691,
+          "deltaSeconds": -0.434
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.195938,
+          "referenceRun": 7.609618,
+          "deltaSeconds": -0.414
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.323889,
+          "referenceRun": 7.756208,
+          "deltaSeconds": -0.432
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.578735,
+          "referenceRun": 8.024422,
+          "deltaSeconds": -0.446
+        },
+        "gdmActive": {
+          "failedRun": 7.596226,
+          "referenceRun": 8.045736,
+          "deltaSeconds": -0.45
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.857538,
+          "referenceRun": 8.304104,
+          "deltaSeconds": -0.447
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.8301,
+          "referenceRun": 8.280579,
+          "deltaSeconds": -0.45
+        },
+        "avahiActivation": {
+          "failedRun": 7.198284,
+          "referenceRun": 7.611829,
+          "deltaSeconds": -0.414
+        },
+        "multiUserTarget": {
+          "failedRun": 7.674981,
+          "referenceRun": 8.120902,
+          "deltaSeconds": -0.446
+        },
+        "graphicalTarget": {
+          "failedRun": 7.676447,
+          "referenceRun": 8.122613,
+          "deltaSeconds": -0.446
+        },
+        "healthCheck": {
+          "failedRun": 7.663561,
+          "referenceRun": 8.100519,
+          "deltaSeconds": -0.437
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-004",
+      "referenceRun": "DSQ-20260801-cellA-003",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.525658
+      ],
+      "shutdownInitiatedMono": 84.379855,
+      "failuresAfterShutdownInitiation": [
+        84.525658
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.596226,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.889335,
+          "referenceRun": 1.840583,
+          "deltaSeconds": 0.049
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.893659,
+          "referenceRun": 1.845381,
+          "deltaSeconds": 0.048
+        },
+        "dbusReady": {
+          "failedRun": 7.258912,
+          "referenceRun": 7.19055,
+          "deltaSeconds": 0.068
+        },
+        "logindReady": {
+          "failedRun": 7.522076,
+          "referenceRun": 7.459905,
+          "deltaSeconds": 0.062
+        },
+        "seat0Created": {
+          "failedRun": 7.516237,
+          "referenceRun": 7.457261,
+          "deltaSeconds": 0.059
+        },
+        "networkManagerReady": {
+          "failedRun": 7.576706,
+          "referenceRun": 7.495833,
+          "deltaSeconds": 0.081
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.263801,
+          "referenceRun": 7.195938,
+          "deltaSeconds": 0.068
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.399417,
+          "referenceRun": 7.323889,
+          "deltaSeconds": 0.076
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.660174,
+          "referenceRun": 7.578735,
+          "deltaSeconds": 0.081
+        },
+        "gdmActive": {
+          "failedRun": 7.679206,
+          "referenceRun": 7.596226,
+          "deltaSeconds": 0.083
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.922671,
+          "referenceRun": 7.857538,
+          "deltaSeconds": 0.065
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.897249,
+          "referenceRun": 7.8301,
+          "deltaSeconds": 0.067
+        },
+        "avahiActivation": {
+          "failedRun": 7.264802,
+          "referenceRun": 7.198284,
+          "deltaSeconds": 0.067
+        },
+        "multiUserTarget": {
+          "failedRun": 7.741903,
+          "referenceRun": 7.674981,
+          "deltaSeconds": 0.067
+        },
+        "graphicalTarget": {
+          "failedRun": 7.743919,
+          "referenceRun": 7.676447,
+          "deltaSeconds": 0.067
+        },
+        "healthCheck": {
+          "failedRun": 7.737456,
+          "referenceRun": 7.663561,
+          "deltaSeconds": 0.074
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-004",
+      "referenceRun": "DSQ-20260801-cellA-003",
+      "cell": "A",
+      "unit": "session-c1.scope",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "timeout",
+      "mainExit": null,
+      "failureTimes": [
+        129.440146
+      ],
+      "shutdownInitiatedMono": 84.379855,
+      "failuresAfterShutdownInitiation": [
+        129.440146
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.85137,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.889335,
+          "referenceRun": 1.840583,
+          "deltaSeconds": 0.049
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.893659,
+          "referenceRun": 1.845381,
+          "deltaSeconds": 0.048
+        },
+        "dbusReady": {
+          "failedRun": 7.258912,
+          "referenceRun": 7.19055,
+          "deltaSeconds": 0.068
+        },
+        "logindReady": {
+          "failedRun": 7.522076,
+          "referenceRun": 7.459905,
+          "deltaSeconds": 0.062
+        },
+        "seat0Created": {
+          "failedRun": 7.516237,
+          "referenceRun": 7.457261,
+          "deltaSeconds": 0.059
+        },
+        "networkManagerReady": {
+          "failedRun": 7.576706,
+          "referenceRun": 7.495833,
+          "deltaSeconds": 0.081
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.263801,
+          "referenceRun": 7.195938,
+          "deltaSeconds": 0.068
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.399417,
+          "referenceRun": 7.323889,
+          "deltaSeconds": 0.076
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.660174,
+          "referenceRun": 7.578735,
+          "deltaSeconds": 0.081
+        },
+        "gdmActive": {
+          "failedRun": 7.679206,
+          "referenceRun": 7.596226,
+          "deltaSeconds": 0.083
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.922671,
+          "referenceRun": 7.857538,
+          "deltaSeconds": 0.065
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.897249,
+          "referenceRun": 7.8301,
+          "deltaSeconds": 0.067
+        },
+        "avahiActivation": {
+          "failedRun": 7.264802,
+          "referenceRun": 7.198284,
+          "deltaSeconds": 0.067
+        },
+        "multiUserTarget": {
+          "failedRun": 7.741903,
+          "referenceRun": 7.674981,
+          "deltaSeconds": 0.067
+        },
+        "graphicalTarget": {
+          "failedRun": 7.743919,
+          "referenceRun": 7.676447,
+          "deltaSeconds": 0.067
+        },
+        "healthCheck": {
+          "failedRun": 7.737456,
+          "referenceRun": 7.663561,
+          "deltaSeconds": 0.074
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-005",
+      "referenceRun": "DSQ-20260801-cellA-003",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.564436
+      ],
+      "shutdownInitiatedMono": 84.405989,
+      "failuresAfterShutdownInitiation": [
+        84.564436
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.596226,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.849654,
+          "referenceRun": 1.840583,
+          "deltaSeconds": 0.009
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.853799,
+          "referenceRun": 1.845381,
+          "deltaSeconds": 0.008
+        },
+        "dbusReady": {
+          "failedRun": 7.192589,
+          "referenceRun": 7.19055,
+          "deltaSeconds": 0.002
+        },
+        "logindReady": {
+          "failedRun": 7.458124,
+          "referenceRun": 7.459905,
+          "deltaSeconds": -0.002
+        },
+        "seat0Created": {
+          "failedRun": 7.453442,
+          "referenceRun": 7.457261,
+          "deltaSeconds": -0.004
+        },
+        "networkManagerReady": {
+          "failedRun": 7.494113,
+          "referenceRun": 7.495833,
+          "deltaSeconds": -0.002
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.196148,
+          "referenceRun": 7.195938,
+          "deltaSeconds": 0.0
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.339842,
+          "referenceRun": 7.323889,
+          "deltaSeconds": 0.016
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.575234,
+          "referenceRun": 7.578735,
+          "deltaSeconds": -0.004
+        },
+        "gdmActive": {
+          "failedRun": 7.594721,
+          "referenceRun": 7.596226,
+          "deltaSeconds": -0.002
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.826423,
+          "referenceRun": 7.857538,
+          "deltaSeconds": -0.031
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.809493,
+          "referenceRun": 7.8301,
+          "deltaSeconds": -0.021
+        },
+        "avahiActivation": {
+          "failedRun": 7.199247,
+          "referenceRun": 7.198284,
+          "deltaSeconds": 0.001
+        },
+        "multiUserTarget": {
+          "failedRun": 7.667904,
+          "referenceRun": 7.674981,
+          "deltaSeconds": -0.007
+        },
+        "graphicalTarget": {
+          "failedRun": 7.669107,
+          "referenceRun": 7.676447,
+          "deltaSeconds": -0.007
+        },
+        "healthCheck": {
+          "failedRun": 7.660775,
+          "referenceRun": 7.663561,
+          "deltaSeconds": -0.003
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-006",
+      "referenceRun": "DSQ-20260801-cellA-008",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.935397
+      ],
+      "shutdownInitiatedMono": 84.348604,
+      "failuresAfterShutdownInitiation": [
+        84.935397
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.56705,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.861175,
+          "referenceRun": 1.857295,
+          "deltaSeconds": 0.004
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.867812,
+          "referenceRun": 1.861554,
+          "deltaSeconds": 0.006
+        },
+        "dbusReady": {
+          "failedRun": 7.266316,
+          "referenceRun": 8.160674,
+          "deltaSeconds": -0.894
+        },
+        "logindReady": {
+          "failedRun": 7.584165,
+          "referenceRun": 8.435198,
+          "deltaSeconds": -0.851
+        },
+        "seat0Created": {
+          "failedRun": 7.575847,
+          "referenceRun": 8.430229,
+          "deltaSeconds": -0.854
+        },
+        "networkManagerReady": {
+          "failedRun": 7.586306,
+          "referenceRun": 8.465732,
+          "deltaSeconds": -0.879
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.271221,
+          "referenceRun": 8.166055,
+          "deltaSeconds": -0.895
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.410118,
+          "referenceRun": 8.297193,
+          "deltaSeconds": -0.887
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.672055,
+          "referenceRun": 8.548036,
+          "deltaSeconds": -0.876
+        },
+        "gdmActive": {
+          "failedRun": 7.689873,
+          "referenceRun": 8.56705,
+          "deltaSeconds": -0.877
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.928225,
+          "referenceRun": 8.808245,
+          "deltaSeconds": -0.88
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.912495,
+          "referenceRun": 8.790906,
+          "deltaSeconds": -0.878
+        },
+        "avahiActivation": {
+          "failedRun": 7.279748,
+          "referenceRun": 8.167182,
+          "deltaSeconds": -0.887
+        },
+        "multiUserTarget": {
+          "failedRun": 7.798375,
+          "referenceRun": 8.641241,
+          "deltaSeconds": -0.843
+        },
+        "graphicalTarget": {
+          "failedRun": 7.8012,
+          "referenceRun": 8.642973,
+          "deltaSeconds": -0.842
+        },
+        "healthCheck": {
+          "failedRun": 7.793913,
+          "referenceRun": 8.627858,
+          "deltaSeconds": -0.834
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-007",
+      "referenceRun": "DSQ-20260801-cellA-008",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        86.356832
+      ],
+      "shutdownInitiatedMono": 86.18982,
+      "failuresAfterShutdownInitiation": [
+        86.356832
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.56705,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.957673,
+          "referenceRun": 1.857295,
+          "deltaSeconds": 0.1
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.962163,
+          "referenceRun": 1.861554,
+          "deltaSeconds": 0.101
+        },
+        "dbusReady": {
+          "failedRun": 7.561184,
+          "referenceRun": 8.160674,
+          "deltaSeconds": -0.599
+        },
+        "logindReady": {
+          "failedRun": 7.837377,
+          "referenceRun": 8.435198,
+          "deltaSeconds": -0.598
+        },
+        "seat0Created": {
+          "failedRun": 7.834234,
+          "referenceRun": 8.430229,
+          "deltaSeconds": -0.596
+        },
+        "networkManagerReady": {
+          "failedRun": 7.871275,
+          "referenceRun": 8.465732,
+          "deltaSeconds": -0.594
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.565344,
+          "referenceRun": 8.166055,
+          "deltaSeconds": -0.601
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.702367,
+          "referenceRun": 8.297193,
+          "deltaSeconds": -0.595
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.956774,
+          "referenceRun": 8.548036,
+          "deltaSeconds": -0.591
+        },
+        "gdmActive": {
+          "failedRun": 7.976488,
+          "referenceRun": 8.56705,
+          "deltaSeconds": -0.591
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.247169,
+          "referenceRun": 8.808245,
+          "deltaSeconds": -0.561
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.228493,
+          "referenceRun": 8.790906,
+          "deltaSeconds": -0.562
+        },
+        "avahiActivation": {
+          "failedRun": 7.572048,
+          "referenceRun": 8.167182,
+          "deltaSeconds": -0.595
+        },
+        "multiUserTarget": {
+          "failedRun": 8.071694,
+          "referenceRun": 8.641241,
+          "deltaSeconds": -0.57
+        },
+        "graphicalTarget": {
+          "failedRun": 8.073409,
+          "referenceRun": 8.642973,
+          "deltaSeconds": -0.57
+        },
+        "healthCheck": {
+          "failedRun": 8.065099,
+          "referenceRun": 8.627858,
+          "deltaSeconds": -0.563
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-010",
+      "referenceRun": "DSQ-20260801-cellA-009",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.588526
+      ],
+      "shutdownInitiatedMono": 84.438162,
+      "failuresAfterShutdownInitiation": [
+        84.588526
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.61362,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.912274,
+          "referenceRun": 1.901661,
+          "deltaSeconds": 0.011
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.916937,
+          "referenceRun": 1.906077,
+          "deltaSeconds": 0.011
+        },
+        "dbusReady": {
+          "failedRun": 7.248154,
+          "referenceRun": 7.184383,
+          "deltaSeconds": 0.064
+        },
+        "logindReady": {
+          "failedRun": 7.528642,
+          "referenceRun": 7.473035,
+          "deltaSeconds": 0.056
+        },
+        "seat0Created": {
+          "failedRun": 7.527833,
+          "referenceRun": 7.469394,
+          "deltaSeconds": 0.058
+        },
+        "networkManagerReady": {
+          "failedRun": 7.545792,
+          "referenceRun": 7.501172,
+          "deltaSeconds": 0.045
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.250303,
+          "referenceRun": 7.189304,
+          "deltaSeconds": 0.061
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.378622,
+          "referenceRun": 7.326304,
+          "deltaSeconds": 0.052
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.646179,
+          "referenceRun": 7.596227,
+          "deltaSeconds": 0.05
+        },
+        "gdmActive": {
+          "failedRun": 7.66469,
+          "referenceRun": 7.61362,
+          "deltaSeconds": 0.051
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.912468,
+          "referenceRun": 7.860334,
+          "deltaSeconds": 0.052
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.888071,
+          "referenceRun": 7.838839,
+          "deltaSeconds": 0.049
+        },
+        "avahiActivation": {
+          "failedRun": 7.252736,
+          "referenceRun": 7.196341,
+          "deltaSeconds": 0.056
+        },
+        "multiUserTarget": {
+          "failedRun": 7.740864,
+          "referenceRun": 7.696929,
+          "deltaSeconds": 0.044
+        },
+        "graphicalTarget": {
+          "failedRun": 7.742307,
+          "referenceRun": 7.698213,
+          "deltaSeconds": 0.044
+        },
+        "healthCheck": {
+          "failedRun": 7.735536,
+          "referenceRun": 7.693702,
+          "deltaSeconds": 0.042
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-013",
+      "referenceRun": "DSQ-20260801-cellA-012",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.629973
+      ],
+      "shutdownInitiatedMono": 84.483061,
+      "failuresAfterShutdownInitiation": [
+        84.629973
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.52664,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.853647,
+          "referenceRun": 1.836832,
+          "deltaSeconds": 0.017
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.859457,
+          "referenceRun": 1.841663,
+          "deltaSeconds": 0.018
+        },
+        "dbusReady": {
+          "failedRun": 7.203949,
+          "referenceRun": 8.086495,
+          "deltaSeconds": -0.883
+        },
+        "logindReady": {
+          "failedRun": 7.492231,
+          "referenceRun": 8.388622,
+          "deltaSeconds": -0.896
+        },
+        "seat0Created": {
+          "failedRun": 7.487877,
+          "referenceRun": 8.384964,
+          "deltaSeconds": -0.897
+        },
+        "networkManagerReady": {
+          "failedRun": 7.537481,
+          "referenceRun": 8.422344,
+          "deltaSeconds": -0.885
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.207883,
+          "referenceRun": 8.090941,
+          "deltaSeconds": -0.883
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.357842,
+          "referenceRun": 8.235369,
+          "deltaSeconds": -0.878
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.621035,
+          "referenceRun": 8.504836,
+          "deltaSeconds": -0.884
+        },
+        "gdmActive": {
+          "failedRun": 7.637143,
+          "referenceRun": 8.52664,
+          "deltaSeconds": -0.889
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.871633,
+          "referenceRun": 8.767789,
+          "deltaSeconds": -0.896
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.855791,
+          "referenceRun": 8.752385,
+          "deltaSeconds": -0.897
+        },
+        "avahiActivation": {
+          "failedRun": 7.215771,
+          "referenceRun": 8.094018,
+          "deltaSeconds": -0.878
+        },
+        "multiUserTarget": {
+          "failedRun": 7.707168,
+          "referenceRun": 8.597367,
+          "deltaSeconds": -0.89
+        },
+        "graphicalTarget": {
+          "failedRun": 7.709034,
+          "referenceRun": 8.599216,
+          "deltaSeconds": -0.89
+        },
+        "healthCheck": {
+          "failedRun": 7.69665,
+          "referenceRun": 8.591698,
+          "deltaSeconds": -0.895
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-014",
+      "referenceRun": "DSQ-20260801-cellA-013",
+      "cell": "A",
+      "unit": "at-spi-dbus-bus.service",
+      "scope": "user",
+      "uid": "60578",
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.406643
+      ],
+      "shutdownInitiatedMono": 84.350911,
+      "failuresAfterShutdownInitiation": [
+        84.406643
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.589686,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.872778,
+          "referenceRun": 1.853647,
+          "deltaSeconds": 0.019
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.877045,
+          "referenceRun": 1.859457,
+          "deltaSeconds": 0.018
+        },
+        "dbusReady": {
+          "failedRun": 7.113783,
+          "referenceRun": 7.203949,
+          "deltaSeconds": -0.09
+        },
+        "logindReady": {
+          "failedRun": 7.42123,
+          "referenceRun": 7.492231,
+          "deltaSeconds": -0.071
+        },
+        "seat0Created": {
+          "failedRun": 7.415665,
+          "referenceRun": 7.487877,
+          "deltaSeconds": -0.072
+        },
+        "networkManagerReady": {
+          "failedRun": 7.435059,
+          "referenceRun": 7.537481,
+          "deltaSeconds": -0.102
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.118257,
+          "referenceRun": 7.207883,
+          "deltaSeconds": -0.09
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.273925,
+          "referenceRun": 7.357842,
+          "deltaSeconds": -0.084
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.517438,
+          "referenceRun": 7.621035,
+          "deltaSeconds": -0.104
+        },
+        "gdmActive": {
+          "failedRun": 7.544801,
+          "referenceRun": 7.637143,
+          "deltaSeconds": -0.092
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.783622,
+          "referenceRun": 7.871633,
+          "deltaSeconds": -0.088
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.768708,
+          "referenceRun": 7.855791,
+          "deltaSeconds": -0.087
+        },
+        "avahiActivation": {
+          "failedRun": 7.123254,
+          "referenceRun": 7.215771,
+          "deltaSeconds": -0.093
+        },
+        "multiUserTarget": {
+          "failedRun": 7.617763,
+          "referenceRun": 7.707168,
+          "deltaSeconds": -0.089
+        },
+        "graphicalTarget": {
+          "failedRun": 7.620615,
+          "referenceRun": 7.709034,
+          "deltaSeconds": -0.088
+        },
+        "healthCheck": {
+          "failedRun": 7.612877,
+          "referenceRun": 7.69665,
+          "deltaSeconds": -0.084
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-015",
+      "referenceRun": "DSQ-20260801-cellA-014",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.528145
+      ],
+      "shutdownInitiatedMono": 84.386966,
+      "failuresAfterShutdownInitiation": [
+        84.528145
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.544801,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.954742,
+          "referenceRun": 1.872778,
+          "deltaSeconds": 0.082
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.959331,
+          "referenceRun": 1.877045,
+          "deltaSeconds": 0.082
+        },
+        "dbusReady": {
+          "failedRun": 7.412832,
+          "referenceRun": 7.113783,
+          "deltaSeconds": 0.299
+        },
+        "logindReady": {
+          "failedRun": 7.713856,
+          "referenceRun": 7.42123,
+          "deltaSeconds": 0.293
+        },
+        "seat0Created": {
+          "failedRun": 7.709233,
+          "referenceRun": 7.415665,
+          "deltaSeconds": 0.294
+        },
+        "networkManagerReady": {
+          "failedRun": 7.732544,
+          "referenceRun": 7.435059,
+          "deltaSeconds": 0.297
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.416851,
+          "referenceRun": 7.118257,
+          "deltaSeconds": 0.299
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.55831,
+          "referenceRun": 7.273925,
+          "deltaSeconds": 0.284
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.820731,
+          "referenceRun": 7.517438,
+          "deltaSeconds": 0.303
+        },
+        "gdmActive": {
+          "failedRun": 7.841324,
+          "referenceRun": 7.544801,
+          "deltaSeconds": 0.297
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.110539,
+          "referenceRun": 7.783622,
+          "deltaSeconds": 0.327
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.088489,
+          "referenceRun": 7.768708,
+          "deltaSeconds": 0.32
+        },
+        "avahiActivation": {
+          "failedRun": 7.420712,
+          "referenceRun": 7.123254,
+          "deltaSeconds": 0.297
+        },
+        "multiUserTarget": {
+          "failedRun": 7.921742,
+          "referenceRun": 7.617763,
+          "deltaSeconds": 0.304
+        },
+        "graphicalTarget": {
+          "failedRun": 7.923136,
+          "referenceRun": 7.620615,
+          "deltaSeconds": 0.303
+        },
+        "healthCheck": {
+          "failedRun": 7.90828,
+          "referenceRun": 7.612877,
+          "deltaSeconds": 0.295
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-015",
+      "referenceRun": "DSQ-20260801-cellA-016",
+      "cell": "A",
+      "unit": "at-spi-dbus-bus.service",
+      "scope": "user",
+      "uid": "60578",
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.483555
+      ],
+      "shutdownInitiatedMono": 84.386966,
+      "failuresAfterShutdownInitiation": [
+        84.483555
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.596706,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.954742,
+          "referenceRun": 1.854311,
+          "deltaSeconds": 0.1
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.959331,
+          "referenceRun": 1.859077,
+          "deltaSeconds": 0.1
+        },
+        "dbusReady": {
+          "failedRun": 7.412832,
+          "referenceRun": 7.181683,
+          "deltaSeconds": 0.231
+        },
+        "logindReady": {
+          "failedRun": 7.713856,
+          "referenceRun": 7.482026,
+          "deltaSeconds": 0.232
+        },
+        "seat0Created": {
+          "failedRun": 7.709233,
+          "referenceRun": 7.473971,
+          "deltaSeconds": 0.235
+        },
+        "networkManagerReady": {
+          "failedRun": 7.732544,
+          "referenceRun": 7.515267,
+          "deltaSeconds": 0.217
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.416851,
+          "referenceRun": 7.185695,
+          "deltaSeconds": 0.231
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.55831,
+          "referenceRun": 7.328803,
+          "deltaSeconds": 0.23
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.820731,
+          "referenceRun": 7.587725,
+          "deltaSeconds": 0.233
+        },
+        "gdmActive": {
+          "failedRun": 7.841324,
+          "referenceRun": 7.608217,
+          "deltaSeconds": 0.233
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.110539,
+          "referenceRun": 7.843887,
+          "deltaSeconds": 0.267
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.088489,
+          "referenceRun": 7.827719,
+          "deltaSeconds": 0.261
+        },
+        "avahiActivation": {
+          "failedRun": 7.420712,
+          "referenceRun": 7.193796,
+          "deltaSeconds": 0.227
+        },
+        "multiUserTarget": {
+          "failedRun": 7.921742,
+          "referenceRun": 7.67398,
+          "deltaSeconds": 0.248
+        },
+        "graphicalTarget": {
+          "failedRun": 7.923136,
+          "referenceRun": 7.67607,
+          "deltaSeconds": 0.247
+        },
+        "healthCheck": {
+          "failedRun": 7.90828,
+          "referenceRun": 7.659883,
+          "deltaSeconds": 0.248
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-016",
+      "referenceRun": "DSQ-20260801-cellA-014",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.564216
+      ],
+      "shutdownInitiatedMono": 84.414936,
+      "failuresAfterShutdownInitiation": [
+        84.564216
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.544801,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.854311,
+          "referenceRun": 1.872778,
+          "deltaSeconds": -0.018
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.859077,
+          "referenceRun": 1.877045,
+          "deltaSeconds": -0.018
+        },
+        "dbusReady": {
+          "failedRun": 7.181683,
+          "referenceRun": 7.113783,
+          "deltaSeconds": 0.068
+        },
+        "logindReady": {
+          "failedRun": 7.482026,
+          "referenceRun": 7.42123,
+          "deltaSeconds": 0.061
+        },
+        "seat0Created": {
+          "failedRun": 7.473971,
+          "referenceRun": 7.415665,
+          "deltaSeconds": 0.058
+        },
+        "networkManagerReady": {
+          "failedRun": 7.515267,
+          "referenceRun": 7.435059,
+          "deltaSeconds": 0.08
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.185695,
+          "referenceRun": 7.118257,
+          "deltaSeconds": 0.067
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.328803,
+          "referenceRun": 7.273925,
+          "deltaSeconds": 0.055
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.587725,
+          "referenceRun": 7.517438,
+          "deltaSeconds": 0.07
+        },
+        "gdmActive": {
+          "failedRun": 7.608217,
+          "referenceRun": 7.544801,
+          "deltaSeconds": 0.063
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.843887,
+          "referenceRun": 7.783622,
+          "deltaSeconds": 0.06
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.827719,
+          "referenceRun": 7.768708,
+          "deltaSeconds": 0.059
+        },
+        "avahiActivation": {
+          "failedRun": 7.193796,
+          "referenceRun": 7.123254,
+          "deltaSeconds": 0.071
+        },
+        "multiUserTarget": {
+          "failedRun": 7.67398,
+          "referenceRun": 7.617763,
+          "deltaSeconds": 0.056
+        },
+        "graphicalTarget": {
+          "failedRun": 7.67607,
+          "referenceRun": 7.620615,
+          "deltaSeconds": 0.055
+        },
+        "healthCheck": {
+          "failedRun": 7.659883,
+          "referenceRun": 7.612877,
+          "deltaSeconds": 0.047
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-017",
+      "referenceRun": "DSQ-20260801-cellA-018",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.603353
+      ],
+      "shutdownInitiatedMono": 84.460397,
+      "failuresAfterShutdownInitiation": [
+        84.603353
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.614984,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.881708,
+          "referenceRun": 1.860809,
+          "deltaSeconds": 0.021
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.886171,
+          "referenceRun": 1.865039,
+          "deltaSeconds": 0.021
+        },
+        "dbusReady": {
+          "failedRun": 7.206661,
+          "referenceRun": 7.228841,
+          "deltaSeconds": -0.022
+        },
+        "logindReady": {
+          "failedRun": 7.48969,
+          "referenceRun": 7.503476,
+          "deltaSeconds": -0.014
+        },
+        "seat0Created": {
+          "failedRun": 7.485387,
+          "referenceRun": 7.499243,
+          "deltaSeconds": -0.014
+        },
+        "networkManagerReady": {
+          "failedRun": 7.509499,
+          "referenceRun": 7.516794,
+          "deltaSeconds": -0.007
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.210231,
+          "referenceRun": 7.233949,
+          "deltaSeconds": -0.024
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.342893,
+          "referenceRun": 7.365354,
+          "deltaSeconds": -0.022
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.591377,
+          "referenceRun": 7.598057,
+          "deltaSeconds": -0.007
+        },
+        "gdmActive": {
+          "failedRun": 7.610108,
+          "referenceRun": 7.614984,
+          "deltaSeconds": -0.005
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.85069,
+          "referenceRun": 7.853477,
+          "deltaSeconds": -0.003
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.834601,
+          "referenceRun": 7.836591,
+          "deltaSeconds": -0.002
+        },
+        "avahiActivation": {
+          "failedRun": 7.215578,
+          "referenceRun": 7.238266,
+          "deltaSeconds": -0.023
+        },
+        "multiUserTarget": {
+          "failedRun": 7.697524,
+          "referenceRun": 7.718963,
+          "deltaSeconds": -0.021
+        },
+        "graphicalTarget": {
+          "failedRun": 7.698504,
+          "referenceRun": 7.721172,
+          "deltaSeconds": -0.023
+        },
+        "healthCheck": {
+          "failedRun": 7.685324,
+          "referenceRun": 7.714324,
+          "deltaSeconds": -0.029
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-019",
+      "referenceRun": "DSQ-20260801-cellA-018",
+      "cell": "A",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.956963
+      ],
+      "shutdownInitiatedMono": 84.412959,
+      "failuresAfterShutdownInitiation": [
+        84.956963
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.614984,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.917129,
+          "referenceRun": 1.860809,
+          "deltaSeconds": 0.056
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.921283,
+          "referenceRun": 1.865039,
+          "deltaSeconds": 0.056
+        },
+        "dbusReady": {
+          "failedRun": 7.26809,
+          "referenceRun": 7.228841,
+          "deltaSeconds": 0.039
+        },
+        "logindReady": {
+          "failedRun": 7.565491,
+          "referenceRun": 7.503476,
+          "deltaSeconds": 0.062
+        },
+        "seat0Created": {
+          "failedRun": 7.561473,
+          "referenceRun": 7.499243,
+          "deltaSeconds": 0.062
+        },
+        "networkManagerReady": {
+          "failedRun": 7.581436,
+          "referenceRun": 7.516794,
+          "deltaSeconds": 0.065
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.271631,
+          "referenceRun": 7.233949,
+          "deltaSeconds": 0.038
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.420033,
+          "referenceRun": 7.365354,
+          "deltaSeconds": 0.055
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.652232,
+          "referenceRun": 7.598057,
+          "deltaSeconds": 0.054
+        },
+        "gdmActive": {
+          "failedRun": 7.666777,
+          "referenceRun": 7.614984,
+          "deltaSeconds": 0.052
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.926396,
+          "referenceRun": 7.853477,
+          "deltaSeconds": 0.073
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.901585,
+          "referenceRun": 7.836591,
+          "deltaSeconds": 0.065
+        },
+        "avahiActivation": {
+          "failedRun": 7.276888,
+          "referenceRun": 7.238266,
+          "deltaSeconds": 0.039
+        },
+        "multiUserTarget": {
+          "failedRun": 7.772652,
+          "referenceRun": 7.718963,
+          "deltaSeconds": 0.054
+        },
+        "graphicalTarget": {
+          "failedRun": 7.774492,
+          "referenceRun": 7.721172,
+          "deltaSeconds": 0.053
+        },
+        "healthCheck": {
+          "failedRun": 7.767044,
+          "referenceRun": 7.714324,
+          "deltaSeconds": 0.053
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-019",
+      "referenceRun": "DSQ-20260801-cellA-018",
+      "cell": "A",
+      "unit": "session-c1.scope",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "timeout",
+      "mainExit": null,
+      "failureTimes": [
+        129.696532
+      ],
+      "shutdownInitiatedMono": 84.412959,
+      "failuresAfterShutdownInitiation": [
+        129.696532
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.848296,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.917129,
+          "referenceRun": 1.860809,
+          "deltaSeconds": 0.056
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.921283,
+          "referenceRun": 1.865039,
+          "deltaSeconds": 0.056
+        },
+        "dbusReady": {
+          "failedRun": 7.26809,
+          "referenceRun": 7.228841,
+          "deltaSeconds": 0.039
+        },
+        "logindReady": {
+          "failedRun": 7.565491,
+          "referenceRun": 7.503476,
+          "deltaSeconds": 0.062
+        },
+        "seat0Created": {
+          "failedRun": 7.561473,
+          "referenceRun": 7.499243,
+          "deltaSeconds": 0.062
+        },
+        "networkManagerReady": {
+          "failedRun": 7.581436,
+          "referenceRun": 7.516794,
+          "deltaSeconds": 0.065
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.271631,
+          "referenceRun": 7.233949,
+          "deltaSeconds": 0.038
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.420033,
+          "referenceRun": 7.365354,
+          "deltaSeconds": 0.055
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.652232,
+          "referenceRun": 7.598057,
+          "deltaSeconds": 0.054
+        },
+        "gdmActive": {
+          "failedRun": 7.666777,
+          "referenceRun": 7.614984,
+          "deltaSeconds": 0.052
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.926396,
+          "referenceRun": 7.853477,
+          "deltaSeconds": 0.073
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.901585,
+          "referenceRun": 7.836591,
+          "deltaSeconds": 0.065
+        },
+        "avahiActivation": {
+          "failedRun": 7.276888,
+          "referenceRun": 7.238266,
+          "deltaSeconds": 0.039
+        },
+        "multiUserTarget": {
+          "failedRun": 7.772652,
+          "referenceRun": 7.718963,
+          "deltaSeconds": 0.054
+        },
+        "graphicalTarget": {
+          "failedRun": 7.774492,
+          "referenceRun": 7.721172,
+          "deltaSeconds": 0.053
+        },
+        "healthCheck": {
+          "failedRun": 7.767044,
+          "referenceRun": 7.714324,
+          "deltaSeconds": 0.053
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellA-020",
+      "referenceRun": "DSQ-20260801-cellA-019",
+      "cell": "A",
+      "unit": "chronyd.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "currently-failed",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "217/USER"
+      },
+      "failureTimes": [
+        7.748774
+      ],
+      "shutdownInitiatedMono": 86.225726,
+      "failuresAfterShutdownInitiation": [],
+      "insideAuthselectWindow": true,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.519394,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.914087,
+          "referenceRun": 1.917129,
+          "deltaSeconds": -0.003
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.918345,
+          "referenceRun": 1.921283,
+          "deltaSeconds": -0.003
+        },
+        "dbusReady": {
+          "failedRun": 7.601385,
+          "referenceRun": 7.26809,
+          "deltaSeconds": 0.333
+        },
+        "logindReady": {
+          "failedRun": 7.88867,
+          "referenceRun": 7.565491,
+          "deltaSeconds": 0.323
+        },
+        "seat0Created": {
+          "failedRun": 7.887044,
+          "referenceRun": 7.561473,
+          "deltaSeconds": 0.326
+        },
+        "networkManagerReady": {
+          "failedRun": 7.906292,
+          "referenceRun": 7.581436,
+          "deltaSeconds": 0.325
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.604415,
+          "referenceRun": 7.271631,
+          "deltaSeconds": 0.333
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.738541,
+          "referenceRun": 7.420033,
+          "deltaSeconds": 0.319
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.985864,
+          "referenceRun": 7.652232,
+          "deltaSeconds": 0.334
+        },
+        "gdmActive": {
+          "failedRun": 8.005193,
+          "referenceRun": 7.666777,
+          "deltaSeconds": 0.338
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.262203,
+          "referenceRun": 7.926396,
+          "deltaSeconds": 0.336
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.246267,
+          "referenceRun": 7.901585,
+          "deltaSeconds": 0.345
+        },
+        "avahiActivation": {
+          "failedRun": 7.612321,
+          "referenceRun": 7.276888,
+          "deltaSeconds": 0.335
+        },
+        "multiUserTarget": {
+          "failedRun": 8.097983,
+          "referenceRun": 7.772652,
+          "deltaSeconds": 0.325
+        },
+        "graphicalTarget": {
+          "failedRun": 8.100311,
+          "referenceRun": 7.774492,
+          "deltaSeconds": 0.326
+        },
+        "healthCheck": {
+          "failedRun": 8.091487,
+          "referenceRun": 7.767044,
+          "deltaSeconds": 0.324
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellB-002",
+      "referenceRun": "DSQ-20260801-cellB-001",
+      "cell": "B",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.799538
+      ],
+      "shutdownInitiatedMono": 84.641811,
+      "failuresAfterShutdownInitiation": [
+        84.799538
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 12.448662,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.892687,
+          "referenceRun": 1.879019,
+          "deltaSeconds": 0.014
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.897368,
+          "referenceRun": 1.884468,
+          "deltaSeconds": 0.013
+        },
+        "dbusReady": {
+          "failedRun": 7.257741,
+          "referenceRun": 11.968679,
+          "deltaSeconds": -4.711
+        },
+        "logindReady": {
+          "failedRun": 7.549039,
+          "referenceRun": 12.309264,
+          "deltaSeconds": -4.76
+        },
+        "seat0Created": {
+          "failedRun": 7.546285,
+          "referenceRun": 12.304808,
+          "deltaSeconds": -4.759
+        },
+        "networkManagerReady": {
+          "failedRun": 7.577871,
+          "referenceRun": 12.361886,
+          "deltaSeconds": -4.784
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.262667,
+          "referenceRun": 11.976874,
+          "deltaSeconds": -4.714
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.41136,
+          "referenceRun": 12.144704,
+          "deltaSeconds": -4.733
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.668214,
+          "referenceRun": 12.427777,
+          "deltaSeconds": -4.76
+        },
+        "gdmActive": {
+          "failedRun": 7.690231,
+          "referenceRun": 12.448662,
+          "deltaSeconds": -4.758
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.933937,
+          "referenceRun": 12.726127,
+          "deltaSeconds": -4.792
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.919173,
+          "referenceRun": 12.697596,
+          "deltaSeconds": -4.778
+        },
+        "avahiActivation": {
+          "failedRun": 7.271097,
+          "referenceRun": 11.9814,
+          "deltaSeconds": -4.71
+        },
+        "multiUserTarget": {
+          "failedRun": 7.774859,
+          "referenceRun": 12.53841,
+          "deltaSeconds": -4.764
+        },
+        "graphicalTarget": {
+          "failedRun": 7.776623,
+          "referenceRun": 12.53961,
+          "deltaSeconds": -4.763
+        },
+        "healthCheck": {
+          "failedRun": 7.760202,
+          "referenceRun": 12.52898,
+          "deltaSeconds": -4.769
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellB-003",
+      "referenceRun": "DSQ-20260801-cellB-001",
+      "cell": "B",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        85.09814
+      ],
+      "shutdownInitiatedMono": 84.954858,
+      "failuresAfterShutdownInitiation": [
+        85.09814
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 12.448662,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.826741,
+          "referenceRun": 1.879019,
+          "deltaSeconds": -0.052
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.833485,
+          "referenceRun": 1.884468,
+          "deltaSeconds": -0.051
+        },
+        "dbusReady": {
+          "failedRun": 7.172282,
+          "referenceRun": 11.968679,
+          "deltaSeconds": -4.796
+        },
+        "logindReady": {
+          "failedRun": 7.464837,
+          "referenceRun": 12.309264,
+          "deltaSeconds": -4.844
+        },
+        "seat0Created": {
+          "failedRun": 7.463067,
+          "referenceRun": 12.304808,
+          "deltaSeconds": -4.842
+        },
+        "networkManagerReady": {
+          "failedRun": 7.472769,
+          "referenceRun": 12.361886,
+          "deltaSeconds": -4.889
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.177497,
+          "referenceRun": 11.976874,
+          "deltaSeconds": -4.799
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.31489,
+          "referenceRun": 12.144704,
+          "deltaSeconds": -4.83
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.556045,
+          "referenceRun": 12.427777,
+          "deltaSeconds": -4.872
+        },
+        "gdmActive": {
+          "failedRun": 7.578511,
+          "referenceRun": 12.448662,
+          "deltaSeconds": -4.87
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.830973,
+          "referenceRun": 12.726127,
+          "deltaSeconds": -4.895
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.804252,
+          "referenceRun": 12.697596,
+          "deltaSeconds": -4.893
+        },
+        "avahiActivation": {
+          "failedRun": 7.18041,
+          "referenceRun": 11.9814,
+          "deltaSeconds": -4.801
+        },
+        "multiUserTarget": {
+          "failedRun": 7.652721,
+          "referenceRun": 12.53841,
+          "deltaSeconds": -4.886
+        },
+        "graphicalTarget": {
+          "failedRun": 7.654297,
+          "referenceRun": 12.53961,
+          "deltaSeconds": -4.885
+        },
+        "healthCheck": {
+          "failedRun": 7.64094,
+          "referenceRun": 12.52898,
+          "deltaSeconds": -4.888
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellB-004",
+      "referenceRun": "DSQ-20260801-cellB-005",
+      "cell": "B",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        86.046579
+      ],
+      "shutdownInitiatedMono": 85.902808,
+      "failuresAfterShutdownInitiation": [
+        86.046579
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.704355,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.887048,
+          "referenceRun": 1.925126,
+          "deltaSeconds": -0.038
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.894535,
+          "referenceRun": 1.930899,
+          "deltaSeconds": -0.036
+        },
+        "dbusReady": {
+          "failedRun": 7.244694,
+          "referenceRun": 7.28709,
+          "deltaSeconds": -0.042
+        },
+        "logindReady": {
+          "failedRun": 7.514916,
+          "referenceRun": 7.595671,
+          "deltaSeconds": -0.081
+        },
+        "seat0Created": {
+          "failedRun": 7.512302,
+          "referenceRun": 7.588623,
+          "deltaSeconds": -0.076
+        },
+        "networkManagerReady": {
+          "failedRun": 7.543647,
+          "referenceRun": 7.601559,
+          "deltaSeconds": -0.058
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.248707,
+          "referenceRun": 7.291526,
+          "deltaSeconds": -0.043
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.380443,
+          "referenceRun": 7.417865,
+          "deltaSeconds": -0.037
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.617395,
+          "referenceRun": 7.684266,
+          "deltaSeconds": -0.067
+        },
+        "gdmActive": {
+          "failedRun": 7.636344,
+          "referenceRun": 7.704355,
+          "deltaSeconds": -0.068
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.876362,
+          "referenceRun": 7.967327,
+          "deltaSeconds": -0.091
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.861839,
+          "referenceRun": 7.951408,
+          "deltaSeconds": -0.09
+        },
+        "avahiActivation": {
+          "failedRun": 7.250547,
+          "referenceRun": 7.295391,
+          "deltaSeconds": -0.045
+        },
+        "multiUserTarget": {
+          "failedRun": 7.709205,
+          "referenceRun": 7.810678,
+          "deltaSeconds": -0.101
+        },
+        "graphicalTarget": {
+          "failedRun": 7.710457,
+          "referenceRun": 7.812507,
+          "deltaSeconds": -0.102
+        },
+        "healthCheck": {
+          "failedRun": 7.701613,
+          "referenceRun": 7.796982,
+          "deltaSeconds": -0.095
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellB-006",
+      "referenceRun": "DSQ-20260801-cellB-005",
+      "cell": "B",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        85.171305
+      ],
+      "shutdownInitiatedMono": 84.587186,
+      "failuresAfterShutdownInitiation": [
+        85.171305
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.704355,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.917868,
+          "referenceRun": 1.925126,
+          "deltaSeconds": -0.007
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.922433,
+          "referenceRun": 1.930899,
+          "deltaSeconds": -0.008
+        },
+        "dbusReady": {
+          "failedRun": 7.149851,
+          "referenceRun": 7.28709,
+          "deltaSeconds": -0.137
+        },
+        "logindReady": {
+          "failedRun": 7.446385,
+          "referenceRun": 7.595671,
+          "deltaSeconds": -0.149
+        },
+        "seat0Created": {
+          "failedRun": 7.442435,
+          "referenceRun": 7.588623,
+          "deltaSeconds": -0.146
+        },
+        "networkManagerReady": {
+          "failedRun": 7.47085,
+          "referenceRun": 7.601559,
+          "deltaSeconds": -0.131
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.155029,
+          "referenceRun": 7.291526,
+          "deltaSeconds": -0.136
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.309911,
+          "referenceRun": 7.417865,
+          "deltaSeconds": -0.108
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.5497,
+          "referenceRun": 7.684266,
+          "deltaSeconds": -0.135
+        },
+        "gdmActive": {
+          "failedRun": 7.568661,
+          "referenceRun": 7.704355,
+          "deltaSeconds": -0.136
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.807834,
+          "referenceRun": 7.967327,
+          "deltaSeconds": -0.159
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.787017,
+          "referenceRun": 7.951408,
+          "deltaSeconds": -0.164
+        },
+        "avahiActivation": {
+          "failedRun": 7.161285,
+          "referenceRun": 7.295391,
+          "deltaSeconds": -0.134
+        },
+        "multiUserTarget": {
+          "failedRun": 7.632046,
+          "referenceRun": 7.810678,
+          "deltaSeconds": -0.179
+        },
+        "graphicalTarget": {
+          "failedRun": 7.633434,
+          "referenceRun": 7.812507,
+          "deltaSeconds": -0.179
+        },
+        "healthCheck": {
+          "failedRun": 7.62109,
+          "referenceRun": 7.796982,
+          "deltaSeconds": -0.176
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellB-007",
+      "referenceRun": "DSQ-20260801-cellB-008",
+      "cell": "B",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        86.373174
+      ],
+      "shutdownInitiatedMono": 85.801947,
+      "failuresAfterShutdownInitiation": [
+        86.373174
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.520779,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.876808,
+          "referenceRun": 1.883161,
+          "deltaSeconds": -0.006
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.883591,
+          "referenceRun": 1.887785,
+          "deltaSeconds": -0.004
+        },
+        "dbusReady": {
+          "failedRun": 7.192135,
+          "referenceRun": 7.133023,
+          "deltaSeconds": 0.059
+        },
+        "logindReady": {
+          "failedRun": 7.442424,
+          "referenceRun": 7.37239,
+          "deltaSeconds": 0.07
+        },
+        "seat0Created": {
+          "failedRun": 7.438059,
+          "referenceRun": 7.369285,
+          "deltaSeconds": 0.069
+        },
+        "networkManagerReady": {
+          "failedRun": 7.494101,
+          "referenceRun": 7.430914,
+          "deltaSeconds": 0.063
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.195938,
+          "referenceRun": 7.136594,
+          "deltaSeconds": 0.059
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.329492,
+          "referenceRun": 7.271521,
+          "deltaSeconds": 0.058
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.574657,
+          "referenceRun": 7.501907,
+          "deltaSeconds": 0.073
+        },
+        "gdmActive": {
+          "failedRun": 7.591879,
+          "referenceRun": 7.520779,
+          "deltaSeconds": 0.071
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.866153,
+          "referenceRun": 7.777275,
+          "deltaSeconds": 0.089
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.841881,
+          "referenceRun": 7.761556,
+          "deltaSeconds": 0.08
+        },
+        "avahiActivation": {
+          "failedRun": 7.199979,
+          "referenceRun": 7.138403,
+          "deltaSeconds": 0.062
+        },
+        "multiUserTarget": {
+          "failedRun": 7.683884,
+          "referenceRun": 7.617263,
+          "deltaSeconds": 0.067
+        },
+        "graphicalTarget": {
+          "failedRun": 7.684255,
+          "referenceRun": 7.619196,
+          "deltaSeconds": 0.065
+        },
+        "healthCheck": {
+          "failedRun": 7.678658,
+          "referenceRun": 7.6123,
+          "deltaSeconds": 0.066
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellB-010",
+      "referenceRun": "DSQ-20260801-cellB-009",
+      "cell": "B",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        85.170898
+      ],
+      "shutdownInitiatedMono": 84.585341,
+      "failuresAfterShutdownInitiation": [
+        85.170898
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.866632,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.852565,
+          "referenceRun": 1.895058,
+          "deltaSeconds": -0.042
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.856974,
+          "referenceRun": 1.899656,
+          "deltaSeconds": -0.043
+        },
+        "dbusReady": {
+          "failedRun": 7.216572,
+          "referenceRun": 7.415934,
+          "deltaSeconds": -0.199
+        },
+        "logindReady": {
+          "failedRun": 7.515656,
+          "referenceRun": 7.731879,
+          "deltaSeconds": -0.216
+        },
+        "seat0Created": {
+          "failedRun": 7.512351,
+          "referenceRun": 7.720791,
+          "deltaSeconds": -0.208
+        },
+        "networkManagerReady": {
+          "failedRun": 7.548151,
+          "referenceRun": 7.762878,
+          "deltaSeconds": -0.215
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.221738,
+          "referenceRun": 7.420772,
+          "deltaSeconds": -0.199
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.369494,
+          "referenceRun": 7.571274,
+          "deltaSeconds": -0.202
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.629257,
+          "referenceRun": 7.845626,
+          "deltaSeconds": -0.216
+        },
+        "gdmActive": {
+          "failedRun": 7.648535,
+          "referenceRun": 7.866632,
+          "deltaSeconds": -0.218
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.915395,
+          "referenceRun": 8.120045,
+          "deltaSeconds": -0.205
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.894908,
+          "referenceRun": 8.101655,
+          "deltaSeconds": -0.207
+        },
+        "avahiActivation": {
+          "failedRun": 7.223781,
+          "referenceRun": 7.422692,
+          "deltaSeconds": -0.199
+        },
+        "multiUserTarget": {
+          "failedRun": 7.71294,
+          "referenceRun": 7.945234,
+          "deltaSeconds": -0.232
+        },
+        "graphicalTarget": {
+          "failedRun": 7.715053,
+          "referenceRun": 7.946619,
+          "deltaSeconds": -0.232
+        },
+        "healthCheck": {
+          "failedRun": 7.700974,
+          "referenceRun": 7.92682,
+          "deltaSeconds": -0.226
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellC-002",
+      "referenceRun": "DSQ-20260801-cellC-001",
+      "cell": "C",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.037181
+      ],
+      "shutdownInitiatedMono": 83.899351,
+      "failuresAfterShutdownInitiation": [
+        84.037181
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.647903,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.844872,
+          "referenceRun": 1.88681,
+          "deltaSeconds": -0.042
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.849356,
+          "referenceRun": 1.891646,
+          "deltaSeconds": -0.042
+        },
+        "dbusReady": {
+          "failedRun": 7.074313,
+          "referenceRun": 7.224126,
+          "deltaSeconds": -0.15
+        },
+        "logindReady": {
+          "failedRun": 7.343462,
+          "referenceRun": 7.51867,
+          "deltaSeconds": -0.175
+        },
+        "seat0Created": {
+          "failedRun": 7.340414,
+          "referenceRun": 7.512629,
+          "deltaSeconds": -0.172
+        },
+        "networkManagerReady": {
+          "failedRun": 7.378602,
+          "referenceRun": 7.545841,
+          "deltaSeconds": -0.167
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.078209,
+          "referenceRun": 7.228267,
+          "deltaSeconds": -0.15
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.202762,
+          "referenceRun": 7.37268,
+          "deltaSeconds": -0.17
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.466282,
+          "referenceRun": 7.631514,
+          "deltaSeconds": -0.165
+        },
+        "gdmActive": {
+          "failedRun": 7.485346,
+          "referenceRun": 7.647903,
+          "deltaSeconds": -0.163
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.759177,
+          "referenceRun": 7.890816,
+          "deltaSeconds": -0.132
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.727817,
+          "referenceRun": 7.871562,
+          "deltaSeconds": -0.144
+        },
+        "avahiActivation": {
+          "failedRun": 7.080506,
+          "referenceRun": 7.231435,
+          "deltaSeconds": -0.151
+        },
+        "multiUserTarget": {
+          "failedRun": 7.567946,
+          "referenceRun": 7.721198,
+          "deltaSeconds": -0.153
+        },
+        "graphicalTarget": {
+          "failedRun": 7.570752,
+          "referenceRun": 7.72252,
+          "deltaSeconds": -0.152
+        },
+        "healthCheck": {
+          "failedRun": 7.556802,
+          "referenceRun": 7.70638,
+          "deltaSeconds": -0.15
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellC-002",
+      "referenceRun": "DSQ-20260801-cellC-001",
+      "cell": "C",
+      "unit": "session-c1.scope",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "timeout",
+      "mainExit": null,
+      "failureTimes": [
+        128.945183
+      ],
+      "shutdownInitiatedMono": 83.899351,
+      "failuresAfterShutdownInitiation": [
+        128.945183
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.887429,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.844872,
+          "referenceRun": 1.88681,
+          "deltaSeconds": -0.042
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.849356,
+          "referenceRun": 1.891646,
+          "deltaSeconds": -0.042
+        },
+        "dbusReady": {
+          "failedRun": 7.074313,
+          "referenceRun": 7.224126,
+          "deltaSeconds": -0.15
+        },
+        "logindReady": {
+          "failedRun": 7.343462,
+          "referenceRun": 7.51867,
+          "deltaSeconds": -0.175
+        },
+        "seat0Created": {
+          "failedRun": 7.340414,
+          "referenceRun": 7.512629,
+          "deltaSeconds": -0.172
+        },
+        "networkManagerReady": {
+          "failedRun": 7.378602,
+          "referenceRun": 7.545841,
+          "deltaSeconds": -0.167
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.078209,
+          "referenceRun": 7.228267,
+          "deltaSeconds": -0.15
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.202762,
+          "referenceRun": 7.37268,
+          "deltaSeconds": -0.17
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.466282,
+          "referenceRun": 7.631514,
+          "deltaSeconds": -0.165
+        },
+        "gdmActive": {
+          "failedRun": 7.485346,
+          "referenceRun": 7.647903,
+          "deltaSeconds": -0.163
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.759177,
+          "referenceRun": 7.890816,
+          "deltaSeconds": -0.132
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.727817,
+          "referenceRun": 7.871562,
+          "deltaSeconds": -0.144
+        },
+        "avahiActivation": {
+          "failedRun": 7.080506,
+          "referenceRun": 7.231435,
+          "deltaSeconds": -0.151
+        },
+        "multiUserTarget": {
+          "failedRun": 7.567946,
+          "referenceRun": 7.721198,
+          "deltaSeconds": -0.153
+        },
+        "graphicalTarget": {
+          "failedRun": 7.570752,
+          "referenceRun": 7.72252,
+          "deltaSeconds": -0.152
+        },
+        "healthCheck": {
+          "failedRun": 7.556802,
+          "referenceRun": 7.70638,
+          "deltaSeconds": -0.15
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellC-003",
+      "referenceRun": "DSQ-20260801-cellC-004",
+      "cell": "C",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.675826
+      ],
+      "shutdownInitiatedMono": 84.528135,
+      "failuresAfterShutdownInitiation": [
+        84.675826
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.850861,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.89327,
+          "referenceRun": 1.908251,
+          "deltaSeconds": -0.015
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.897899,
+          "referenceRun": 1.91306,
+          "deltaSeconds": -0.015
+        },
+        "dbusReady": {
+          "failedRun": 7.169343,
+          "referenceRun": 7.426156,
+          "deltaSeconds": -0.257
+        },
+        "logindReady": {
+          "failedRun": 7.454411,
+          "referenceRun": 7.732354,
+          "deltaSeconds": -0.278
+        },
+        "seat0Created": {
+          "failedRun": 7.452294,
+          "referenceRun": 7.729086,
+          "deltaSeconds": -0.277
+        },
+        "networkManagerReady": {
+          "failedRun": 7.478926,
+          "referenceRun": 7.74778,
+          "deltaSeconds": -0.269
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.173881,
+          "referenceRun": 7.430846,
+          "deltaSeconds": -0.257
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.318026,
+          "referenceRun": 7.564284,
+          "deltaSeconds": -0.246
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.560305,
+          "referenceRun": 7.831513,
+          "deltaSeconds": -0.271
+        },
+        "gdmActive": {
+          "failedRun": 7.579111,
+          "referenceRun": 7.850861,
+          "deltaSeconds": -0.272
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.818088,
+          "referenceRun": 8.108255,
+          "deltaSeconds": -0.29
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.799541,
+          "referenceRun": 8.086332,
+          "deltaSeconds": -0.287
+        },
+        "avahiActivation": {
+          "failedRun": 7.183624,
+          "referenceRun": 7.43543,
+          "deltaSeconds": -0.252
+        },
+        "multiUserTarget": {
+          "failedRun": 7.654535,
+          "referenceRun": 7.942426,
+          "deltaSeconds": -0.288
+        },
+        "graphicalTarget": {
+          "failedRun": 7.6571,
+          "referenceRun": 7.944142,
+          "deltaSeconds": -0.287
+        },
+        "healthCheck": {
+          "failedRun": 7.638928,
+          "referenceRun": 7.939756,
+          "deltaSeconds": -0.301
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellC-005",
+      "referenceRun": "DSQ-20260801-cellC-004",
+      "cell": "C",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.276372
+      ],
+      "shutdownInitiatedMono": 84.139496,
+      "failuresAfterShutdownInitiation": [
+        84.276372
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.850861,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.868854,
+          "referenceRun": 1.908251,
+          "deltaSeconds": -0.039
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.873321,
+          "referenceRun": 1.91306,
+          "deltaSeconds": -0.04
+        },
+        "dbusReady": {
+          "failedRun": 7.227431,
+          "referenceRun": 7.426156,
+          "deltaSeconds": -0.199
+        },
+        "logindReady": {
+          "failedRun": 7.5573,
+          "referenceRun": 7.732354,
+          "deltaSeconds": -0.175
+        },
+        "seat0Created": {
+          "failedRun": 7.551681,
+          "referenceRun": 7.729086,
+          "deltaSeconds": -0.177
+        },
+        "networkManagerReady": {
+          "failedRun": 7.595493,
+          "referenceRun": 7.74778,
+          "deltaSeconds": -0.152
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.233446,
+          "referenceRun": 7.430846,
+          "deltaSeconds": -0.197
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.369045,
+          "referenceRun": 7.564284,
+          "deltaSeconds": -0.195
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.688912,
+          "referenceRun": 7.831513,
+          "deltaSeconds": -0.143
+        },
+        "gdmActive": {
+          "failedRun": 7.705687,
+          "referenceRun": 7.850861,
+          "deltaSeconds": -0.145
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.957922,
+          "referenceRun": 8.108255,
+          "deltaSeconds": -0.15
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.942383,
+          "referenceRun": 8.086332,
+          "deltaSeconds": -0.144
+        },
+        "avahiActivation": {
+          "failedRun": 7.233654,
+          "referenceRun": 7.43543,
+          "deltaSeconds": -0.202
+        },
+        "multiUserTarget": {
+          "failedRun": 7.792652,
+          "referenceRun": 7.942426,
+          "deltaSeconds": -0.15
+        },
+        "graphicalTarget": {
+          "failedRun": 7.794749,
+          "referenceRun": 7.944142,
+          "deltaSeconds": -0.149
+        },
+        "healthCheck": {
+          "failedRun": 7.785241,
+          "referenceRun": 7.939756,
+          "deltaSeconds": -0.155
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellC-005",
+      "referenceRun": "DSQ-20260801-cellC-004",
+      "cell": "C",
+      "unit": "session-c1.scope",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "timeout",
+      "mainExit": null,
+      "failureTimes": [
+        129.273689
+      ],
+      "shutdownInitiatedMono": 84.139496,
+      "failuresAfterShutdownInitiation": [
+        129.273689
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.10552,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.868854,
+          "referenceRun": 1.908251,
+          "deltaSeconds": -0.039
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.873321,
+          "referenceRun": 1.91306,
+          "deltaSeconds": -0.04
+        },
+        "dbusReady": {
+          "failedRun": 7.227431,
+          "referenceRun": 7.426156,
+          "deltaSeconds": -0.199
+        },
+        "logindReady": {
+          "failedRun": 7.5573,
+          "referenceRun": 7.732354,
+          "deltaSeconds": -0.175
+        },
+        "seat0Created": {
+          "failedRun": 7.551681,
+          "referenceRun": 7.729086,
+          "deltaSeconds": -0.177
+        },
+        "networkManagerReady": {
+          "failedRun": 7.595493,
+          "referenceRun": 7.74778,
+          "deltaSeconds": -0.152
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.233446,
+          "referenceRun": 7.430846,
+          "deltaSeconds": -0.197
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.369045,
+          "referenceRun": 7.564284,
+          "deltaSeconds": -0.195
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.688912,
+          "referenceRun": 7.831513,
+          "deltaSeconds": -0.143
+        },
+        "gdmActive": {
+          "failedRun": 7.705687,
+          "referenceRun": 7.850861,
+          "deltaSeconds": -0.145
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.957922,
+          "referenceRun": 8.108255,
+          "deltaSeconds": -0.15
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.942383,
+          "referenceRun": 8.086332,
+          "deltaSeconds": -0.144
+        },
+        "avahiActivation": {
+          "failedRun": 7.233654,
+          "referenceRun": 7.43543,
+          "deltaSeconds": -0.202
+        },
+        "multiUserTarget": {
+          "failedRun": 7.792652,
+          "referenceRun": 7.942426,
+          "deltaSeconds": -0.15
+        },
+        "graphicalTarget": {
+          "failedRun": 7.794749,
+          "referenceRun": 7.944142,
+          "deltaSeconds": -0.149
+        },
+        "healthCheck": {
+          "failedRun": 7.785241,
+          "referenceRun": 7.939756,
+          "deltaSeconds": -0.155
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellC-006",
+      "referenceRun": "DSQ-20260801-cellC-007",
+      "cell": "C",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.986598
+      ],
+      "shutdownInitiatedMono": 84.830805,
+      "failuresAfterShutdownInitiation": [
+        84.986598
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.720364,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.904717,
+          "referenceRun": 1.917634,
+          "deltaSeconds": -0.013
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.909705,
+          "referenceRun": 1.922163,
+          "deltaSeconds": -0.012
+        },
+        "dbusReady": {
+          "failedRun": 7.296124,
+          "referenceRun": 7.28463,
+          "deltaSeconds": 0.011
+        },
+        "logindReady": {
+          "failedRun": 7.600923,
+          "referenceRun": 7.600714,
+          "deltaSeconds": 0.0
+        },
+        "seat0Created": {
+          "failedRun": 7.586591,
+          "referenceRun": 7.596938,
+          "deltaSeconds": -0.01
+        },
+        "networkManagerReady": {
+          "failedRun": 7.638519,
+          "referenceRun": 7.619202,
+          "deltaSeconds": 0.019
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.299803,
+          "referenceRun": 7.288372,
+          "deltaSeconds": 0.011
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.453966,
+          "referenceRun": 7.441074,
+          "deltaSeconds": 0.013
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.722382,
+          "referenceRun": 7.701857,
+          "deltaSeconds": 0.021
+        },
+        "gdmActive": {
+          "failedRun": 7.742478,
+          "referenceRun": 7.720364,
+          "deltaSeconds": 0.022
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.989114,
+          "referenceRun": 7.981117,
+          "deltaSeconds": 0.008
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.971381,
+          "referenceRun": 7.9639,
+          "deltaSeconds": 0.007
+        },
+        "avahiActivation": {
+          "failedRun": 7.303806,
+          "referenceRun": 7.293946,
+          "deltaSeconds": 0.01
+        },
+        "multiUserTarget": {
+          "failedRun": 7.811448,
+          "referenceRun": 7.813718,
+          "deltaSeconds": -0.002
+        },
+        "graphicalTarget": {
+          "failedRun": 7.813277,
+          "referenceRun": 7.81491,
+          "deltaSeconds": -0.002
+        },
+        "healthCheck": {
+          "failedRun": 7.802217,
+          "referenceRun": 7.810549,
+          "deltaSeconds": -0.008
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellC-006",
+      "referenceRun": "DSQ-20260801-cellC-007",
+      "cell": "C",
+      "unit": "session-c1.scope",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "timeout",
+      "mainExit": null,
+      "failureTimes": [
+        129.91722
+      ],
+      "shutdownInitiatedMono": 84.830805,
+      "failuresAfterShutdownInitiation": [
+        129.91722
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.977031,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.904717,
+          "referenceRun": 1.917634,
+          "deltaSeconds": -0.013
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.909705,
+          "referenceRun": 1.922163,
+          "deltaSeconds": -0.012
+        },
+        "dbusReady": {
+          "failedRun": 7.296124,
+          "referenceRun": 7.28463,
+          "deltaSeconds": 0.011
+        },
+        "logindReady": {
+          "failedRun": 7.600923,
+          "referenceRun": 7.600714,
+          "deltaSeconds": 0.0
+        },
+        "seat0Created": {
+          "failedRun": 7.586591,
+          "referenceRun": 7.596938,
+          "deltaSeconds": -0.01
+        },
+        "networkManagerReady": {
+          "failedRun": 7.638519,
+          "referenceRun": 7.619202,
+          "deltaSeconds": 0.019
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.299803,
+          "referenceRun": 7.288372,
+          "deltaSeconds": 0.011
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.453966,
+          "referenceRun": 7.441074,
+          "deltaSeconds": 0.013
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.722382,
+          "referenceRun": 7.701857,
+          "deltaSeconds": 0.021
+        },
+        "gdmActive": {
+          "failedRun": 7.742478,
+          "referenceRun": 7.720364,
+          "deltaSeconds": 0.022
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.989114,
+          "referenceRun": 7.981117,
+          "deltaSeconds": 0.008
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.971381,
+          "referenceRun": 7.9639,
+          "deltaSeconds": 0.007
+        },
+        "avahiActivation": {
+          "failedRun": 7.303806,
+          "referenceRun": 7.293946,
+          "deltaSeconds": 0.01
+        },
+        "multiUserTarget": {
+          "failedRun": 7.811448,
+          "referenceRun": 7.813718,
+          "deltaSeconds": -0.002
+        },
+        "graphicalTarget": {
+          "failedRun": 7.813277,
+          "referenceRun": 7.81491,
+          "deltaSeconds": -0.002
+        },
+        "healthCheck": {
+          "failedRun": 7.802217,
+          "referenceRun": 7.810549,
+          "deltaSeconds": -0.008
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellC-008",
+      "referenceRun": "DSQ-20260801-cellC-007",
+      "cell": "C",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        85.985939
+      ],
+      "shutdownInitiatedMono": 85.466239,
+      "failuresAfterShutdownInitiation": [
+        85.985939
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.720364,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.897966,
+          "referenceRun": 1.917634,
+          "deltaSeconds": -0.02
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.902987,
+          "referenceRun": 1.922163,
+          "deltaSeconds": -0.019
+        },
+        "dbusReady": {
+          "failedRun": 7.281826,
+          "referenceRun": 7.28463,
+          "deltaSeconds": -0.003
+        },
+        "logindReady": {
+          "failedRun": 7.59403,
+          "referenceRun": 7.600714,
+          "deltaSeconds": -0.007
+        },
+        "seat0Created": {
+          "failedRun": 7.589384,
+          "referenceRun": 7.596938,
+          "deltaSeconds": -0.008
+        },
+        "networkManagerReady": {
+          "failedRun": 7.624192,
+          "referenceRun": 7.619202,
+          "deltaSeconds": 0.005
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.287217,
+          "referenceRun": 7.288372,
+          "deltaSeconds": -0.001
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.44755,
+          "referenceRun": 7.441074,
+          "deltaSeconds": 0.006
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.71375,
+          "referenceRun": 7.701857,
+          "deltaSeconds": 0.012
+        },
+        "gdmActive": {
+          "failedRun": 7.731316,
+          "referenceRun": 7.720364,
+          "deltaSeconds": 0.011
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.001261,
+          "referenceRun": 7.981117,
+          "deltaSeconds": 0.02
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.978221,
+          "referenceRun": 7.9639,
+          "deltaSeconds": 0.014
+        },
+        "avahiActivation": {
+          "failedRun": 7.289169,
+          "referenceRun": 7.293946,
+          "deltaSeconds": -0.005
+        },
+        "multiUserTarget": {
+          "failedRun": 7.812663,
+          "referenceRun": 7.813718,
+          "deltaSeconds": -0.001
+        },
+        "graphicalTarget": {
+          "failedRun": 7.814882,
+          "referenceRun": 7.81491,
+          "deltaSeconds": -0.0
+        },
+        "healthCheck": {
+          "failedRun": 7.799632,
+          "referenceRun": 7.810549,
+          "deltaSeconds": -0.011
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellD-012",
+      "referenceRun": "DSQ-20260801-cellD-011",
+      "cell": "D",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        86.511887
+      ],
+      "shutdownInitiatedMono": 86.326156,
+      "failuresAfterShutdownInitiation": [
+        86.511887
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.392593,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.985845,
+          "referenceRun": 1.88339,
+          "deltaSeconds": 0.102
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.991215,
+          "referenceRun": 1.891466,
+          "deltaSeconds": 0.1
+        },
+        "dbusReady": {
+          "failedRun": 7.742463,
+          "referenceRun": 7.630532,
+          "deltaSeconds": 0.112
+        },
+        "logindReady": {
+          "failedRun": 8.242188,
+          "referenceRun": 8.122864,
+          "deltaSeconds": 0.119
+        },
+        "seat0Created": {
+          "failedRun": 8.233173,
+          "referenceRun": 8.111796,
+          "deltaSeconds": 0.121
+        },
+        "networkManagerReady": {
+          "failedRun": 8.293972,
+          "referenceRun": 8.193348,
+          "deltaSeconds": 0.101
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.747957,
+          "referenceRun": 7.636169,
+          "deltaSeconds": 0.112
+        },
+        "authselectApplyEnd": {
+          "failedRun": 8.003767,
+          "referenceRun": 7.882191,
+          "deltaSeconds": 0.122
+        },
+        "gdmStartRequested": {
+          "failedRun": 8.453641,
+          "referenceRun": 8.351585,
+          "deltaSeconds": 0.102
+        },
+        "gdmActive": {
+          "failedRun": 8.484209,
+          "referenceRun": 8.392593,
+          "deltaSeconds": 0.092
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.801688,
+          "referenceRun": 8.794394,
+          "deltaSeconds": 0.007
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.771592,
+          "referenceRun": 8.766855,
+          "deltaSeconds": 0.005
+        },
+        "avahiActivation": {
+          "failedRun": 7.75118,
+          "referenceRun": 7.640845,
+          "deltaSeconds": 0.11
+        },
+        "multiUserTarget": {
+          "failedRun": 8.598655,
+          "referenceRun": 8.756746,
+          "deltaSeconds": -0.158
+        },
+        "graphicalTarget": {
+          "failedRun": 8.602648,
+          "referenceRun": 8.75676,
+          "deltaSeconds": -0.154
+        },
+        "healthCheck": {
+          "failedRun": 8.590887,
+          "referenceRun": 8.618369,
+          "deltaSeconds": -0.027
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellD-015",
+      "referenceRun": "DSQ-20260801-cellD-014",
+      "cell": "D",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        86.579921
+      ],
+      "shutdownInitiatedMono": 86.412183,
+      "failuresAfterShutdownInitiation": [
+        86.579921
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.095149,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.840756,
+          "referenceRun": 1.864685,
+          "deltaSeconds": -0.024
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.847116,
+          "referenceRun": 1.872894,
+          "deltaSeconds": -0.026
+        },
+        "dbusReady": {
+          "failedRun": 7.28159,
+          "referenceRun": 7.309259,
+          "deltaSeconds": -0.028
+        },
+        "logindReady": {
+          "failedRun": 7.747958,
+          "referenceRun": 7.749254,
+          "deltaSeconds": -0.001
+        },
+        "seat0Created": {
+          "failedRun": 7.743423,
+          "referenceRun": 7.744441,
+          "deltaSeconds": -0.001
+        },
+        "networkManagerReady": {
+          "failedRun": 7.817696,
+          "referenceRun": 7.889733,
+          "deltaSeconds": -0.072
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.286683,
+          "referenceRun": 7.317766,
+          "deltaSeconds": -0.031
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.519478,
+          "referenceRun": 7.544818,
+          "deltaSeconds": -0.025
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.934523,
+          "referenceRun": 8.039974,
+          "deltaSeconds": -0.105
+        },
+        "gdmActive": {
+          "failedRun": 7.964227,
+          "referenceRun": 8.095149,
+          "deltaSeconds": -0.131
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.308597,
+          "referenceRun": 8.485295,
+          "deltaSeconds": -0.177
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.281259,
+          "referenceRun": 8.455153,
+          "deltaSeconds": -0.174
+        },
+        "avahiActivation": {
+          "failedRun": 7.292812,
+          "referenceRun": 7.321505,
+          "deltaSeconds": -0.029
+        },
+        "multiUserTarget": {
+          "failedRun": 8.103428,
+          "referenceRun": 8.392471,
+          "deltaSeconds": -0.289
+        },
+        "graphicalTarget": {
+          "failedRun": 8.106644,
+          "referenceRun": 8.393349,
+          "deltaSeconds": -0.287
+        },
+        "healthCheck": {
+          "failedRun": 8.067926,
+          "referenceRun": 8.301425,
+          "deltaSeconds": -0.233
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellD-016",
+      "referenceRun": "DSQ-20260801-cellD-015",
+      "cell": "D",
+      "unit": "session-c1.scope",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "timeout",
+      "mainExit": null,
+      "failureTimes": [
+        129.766882
+      ],
+      "shutdownInitiatedMono": 84.5458,
+      "failuresAfterShutdownInitiation": [
+        129.766882
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.302826,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.815741,
+          "referenceRun": 1.840756,
+          "deltaSeconds": -0.025
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.821405,
+          "referenceRun": 1.847116,
+          "deltaSeconds": -0.026
+        },
+        "dbusReady": {
+          "failedRun": 7.305438,
+          "referenceRun": 7.28159,
+          "deltaSeconds": 0.024
+        },
+        "logindReady": {
+          "failedRun": 7.807046,
+          "referenceRun": 7.747958,
+          "deltaSeconds": 0.059
+        },
+        "seat0Created": {
+          "failedRun": 7.796761,
+          "referenceRun": 7.743423,
+          "deltaSeconds": 0.053
+        },
+        "networkManagerReady": {
+          "failedRun": 7.841464,
+          "referenceRun": 7.817696,
+          "deltaSeconds": 0.024
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.309918,
+          "referenceRun": 7.286683,
+          "deltaSeconds": 0.023
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.558993,
+          "referenceRun": 7.519478,
+          "deltaSeconds": 0.04
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.966551,
+          "referenceRun": 7.934523,
+          "deltaSeconds": 0.032
+        },
+        "gdmActive": {
+          "failedRun": 7.995348,
+          "referenceRun": 7.964227,
+          "deltaSeconds": 0.031
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.314968,
+          "referenceRun": 8.308597,
+          "deltaSeconds": 0.006
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.284948,
+          "referenceRun": 8.281259,
+          "deltaSeconds": 0.004
+        },
+        "avahiActivation": {
+          "failedRun": 7.31327,
+          "referenceRun": 7.292812,
+          "deltaSeconds": 0.02
+        },
+        "multiUserTarget": {
+          "failedRun": 8.150194,
+          "referenceRun": 8.103428,
+          "deltaSeconds": 0.047
+        },
+        "graphicalTarget": {
+          "failedRun": 8.150225,
+          "referenceRun": 8.106644,
+          "deltaSeconds": 0.044
+        },
+        "healthCheck": {
+          "failedRun": 8.147154,
+          "referenceRun": 8.067926,
+          "deltaSeconds": 0.079
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellD-016",
+      "referenceRun": "DSQ-20260801-cellD-015",
+      "cell": "D",
+      "unit": "at-spi-dbus-bus.service",
+      "scope": "user",
+      "uid": "60578",
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.690435
+      ],
+      "shutdownInitiatedMono": 84.5458,
+      "failuresAfterShutdownInitiation": [
+        84.690435
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 9.049903,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.815741,
+          "referenceRun": 1.840756,
+          "deltaSeconds": -0.025
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.821405,
+          "referenceRun": 1.847116,
+          "deltaSeconds": -0.026
+        },
+        "dbusReady": {
+          "failedRun": 7.305438,
+          "referenceRun": 7.28159,
+          "deltaSeconds": 0.024
+        },
+        "logindReady": {
+          "failedRun": 7.807046,
+          "referenceRun": 7.747958,
+          "deltaSeconds": 0.059
+        },
+        "seat0Created": {
+          "failedRun": 7.796761,
+          "referenceRun": 7.743423,
+          "deltaSeconds": 0.053
+        },
+        "networkManagerReady": {
+          "failedRun": 7.841464,
+          "referenceRun": 7.817696,
+          "deltaSeconds": 0.024
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.309918,
+          "referenceRun": 7.286683,
+          "deltaSeconds": 0.023
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.558993,
+          "referenceRun": 7.519478,
+          "deltaSeconds": 0.04
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.966551,
+          "referenceRun": 7.934523,
+          "deltaSeconds": 0.032
+        },
+        "gdmActive": {
+          "failedRun": 7.995348,
+          "referenceRun": 7.964227,
+          "deltaSeconds": 0.031
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.314968,
+          "referenceRun": 8.308597,
+          "deltaSeconds": 0.006
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.284948,
+          "referenceRun": 8.281259,
+          "deltaSeconds": 0.004
+        },
+        "avahiActivation": {
+          "failedRun": 7.31327,
+          "referenceRun": 7.292812,
+          "deltaSeconds": 0.02
+        },
+        "multiUserTarget": {
+          "failedRun": 8.150194,
+          "referenceRun": 8.103428,
+          "deltaSeconds": 0.047
+        },
+        "graphicalTarget": {
+          "failedRun": 8.150225,
+          "referenceRun": 8.106644,
+          "deltaSeconds": 0.044
+        },
+        "healthCheck": {
+          "failedRun": 8.147154,
+          "referenceRun": 8.067926,
+          "deltaSeconds": 0.079
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellD-019",
+      "referenceRun": "DSQ-20260801-cellD-018",
+      "cell": "D",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.854066
+      ],
+      "shutdownInitiatedMono": 84.657291,
+      "failuresAfterShutdownInitiation": [
+        84.854066
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.07029,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.809247,
+          "referenceRun": 1.84046,
+          "deltaSeconds": -0.031
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.814506,
+          "referenceRun": 1.845464,
+          "deltaSeconds": -0.031
+        },
+        "dbusReady": {
+          "failedRun": 7.288639,
+          "referenceRun": 7.358996,
+          "deltaSeconds": -0.07
+        },
+        "logindReady": {
+          "failedRun": 7.821519,
+          "referenceRun": 7.899188,
+          "deltaSeconds": -0.078
+        },
+        "seat0Created": {
+          "failedRun": 7.815435,
+          "referenceRun": 7.892194,
+          "deltaSeconds": -0.077
+        },
+        "networkManagerReady": {
+          "failedRun": 7.876774,
+          "referenceRun": 7.93724,
+          "deltaSeconds": -0.06
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.291234,
+          "referenceRun": 7.364976,
+          "deltaSeconds": -0.074
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.529302,
+          "referenceRun": 7.679042,
+          "deltaSeconds": -0.15
+        },
+        "gdmStartRequested": {
+          "failedRun": 8.018077,
+          "referenceRun": 8.037733,
+          "deltaSeconds": -0.02
+        },
+        "gdmActive": {
+          "failedRun": 8.062112,
+          "referenceRun": 8.07029,
+          "deltaSeconds": -0.008
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.416414,
+          "referenceRun": 8.394247,
+          "deltaSeconds": 0.022
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.37645,
+          "referenceRun": 8.371066,
+          "deltaSeconds": 0.005
+        },
+        "avahiActivation": {
+          "failedRun": 7.294991,
+          "referenceRun": 7.373257,
+          "deltaSeconds": -0.078
+        },
+        "multiUserTarget": {
+          "failedRun": 8.189146,
+          "referenceRun": 8.250807,
+          "deltaSeconds": -0.062
+        },
+        "graphicalTarget": {
+          "failedRun": 8.195373,
+          "referenceRun": 8.250838,
+          "deltaSeconds": -0.055
+        },
+        "healthCheck": {
+          "failedRun": 8.165166,
+          "referenceRun": 8.245703,
+          "deltaSeconds": -0.081
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellE-012",
+      "referenceRun": "DSQ-20260801-cellE-011",
+      "cell": "E",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.574775
+      ],
+      "shutdownInitiatedMono": 84.436987,
+      "failuresAfterShutdownInitiation": [
+        84.574775
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.665121,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.868639,
+          "referenceRun": 1.877352,
+          "deltaSeconds": -0.009
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.87256,
+          "referenceRun": 1.881893,
+          "deltaSeconds": -0.009
+        },
+        "dbusReady": {
+          "failedRun": 7.254204,
+          "referenceRun": 7.244142,
+          "deltaSeconds": 0.01
+        },
+        "logindReady": {
+          "failedRun": 7.570903,
+          "referenceRun": 7.54641,
+          "deltaSeconds": 0.024
+        },
+        "seat0Created": {
+          "failedRun": 7.561646,
+          "referenceRun": 7.540067,
+          "deltaSeconds": 0.022
+        },
+        "networkManagerReady": {
+          "failedRun": 7.584833,
+          "referenceRun": 7.568382,
+          "deltaSeconds": 0.016
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.257689,
+          "referenceRun": 7.24773,
+          "deltaSeconds": 0.01
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.410281,
+          "referenceRun": 7.398249,
+          "deltaSeconds": 0.012
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.68085,
+          "referenceRun": 7.647786,
+          "deltaSeconds": 0.033
+        },
+        "gdmActive": {
+          "failedRun": 7.702984,
+          "referenceRun": 7.665121,
+          "deltaSeconds": 0.038
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.949479,
+          "referenceRun": 7.898106,
+          "deltaSeconds": 0.051
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.926795,
+          "referenceRun": 7.878675,
+          "deltaSeconds": 0.048
+        },
+        "avahiActivation": {
+          "failedRun": 7.26448,
+          "referenceRun": 7.250842,
+          "deltaSeconds": 0.014
+        },
+        "multiUserTarget": {
+          "failedRun": 7.782724,
+          "referenceRun": 7.753512,
+          "deltaSeconds": 0.029
+        },
+        "graphicalTarget": {
+          "failedRun": 7.784175,
+          "referenceRun": 7.754632,
+          "deltaSeconds": 0.03
+        },
+        "healthCheck": {
+          "failedRun": 7.780368,
+          "referenceRun": 7.74976,
+          "deltaSeconds": 0.031
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellE-012",
+      "referenceRun": "DSQ-20260801-cellE-011",
+      "cell": "E",
+      "unit": "session-c1.scope",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "timeout",
+      "mainExit": null,
+      "failureTimes": [
+        129.609501
+      ],
+      "shutdownInitiatedMono": 84.436987,
+      "failuresAfterShutdownInitiation": [
+        129.609501
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.892766,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.868639,
+          "referenceRun": 1.877352,
+          "deltaSeconds": -0.009
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.87256,
+          "referenceRun": 1.881893,
+          "deltaSeconds": -0.009
+        },
+        "dbusReady": {
+          "failedRun": 7.254204,
+          "referenceRun": 7.244142,
+          "deltaSeconds": 0.01
+        },
+        "logindReady": {
+          "failedRun": 7.570903,
+          "referenceRun": 7.54641,
+          "deltaSeconds": 0.024
+        },
+        "seat0Created": {
+          "failedRun": 7.561646,
+          "referenceRun": 7.540067,
+          "deltaSeconds": 0.022
+        },
+        "networkManagerReady": {
+          "failedRun": 7.584833,
+          "referenceRun": 7.568382,
+          "deltaSeconds": 0.016
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.257689,
+          "referenceRun": 7.24773,
+          "deltaSeconds": 0.01
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.410281,
+          "referenceRun": 7.398249,
+          "deltaSeconds": 0.012
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.68085,
+          "referenceRun": 7.647786,
+          "deltaSeconds": 0.033
+        },
+        "gdmActive": {
+          "failedRun": 7.702984,
+          "referenceRun": 7.665121,
+          "deltaSeconds": 0.038
+        },
+        "greeterSessionOpened": {
+          "failedRun": 7.949479,
+          "referenceRun": 7.898106,
+          "deltaSeconds": 0.051
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.926795,
+          "referenceRun": 7.878675,
+          "deltaSeconds": 0.048
+        },
+        "avahiActivation": {
+          "failedRun": 7.26448,
+          "referenceRun": 7.250842,
+          "deltaSeconds": 0.014
+        },
+        "multiUserTarget": {
+          "failedRun": 7.782724,
+          "referenceRun": 7.753512,
+          "deltaSeconds": 0.029
+        },
+        "graphicalTarget": {
+          "failedRun": 7.784175,
+          "referenceRun": 7.754632,
+          "deltaSeconds": 0.03
+        },
+        "healthCheck": {
+          "failedRun": 7.780368,
+          "referenceRun": 7.74976,
+          "deltaSeconds": 0.031
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellE-015",
+      "referenceRun": "DSQ-20260801-cellE-014",
+      "cell": "E",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        85.057546
+      ],
+      "shutdownInitiatedMono": 84.470699,
+      "failuresAfterShutdownInitiation": [
+        85.057546
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.610048,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.885828,
+          "referenceRun": 1.81307,
+          "deltaSeconds": 0.073
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.89018,
+          "referenceRun": 1.817463,
+          "deltaSeconds": 0.073
+        },
+        "dbusReady": {
+          "failedRun": 7.336207,
+          "referenceRun": 7.193865,
+          "deltaSeconds": 0.142
+        },
+        "logindReady": {
+          "failedRun": 7.636983,
+          "referenceRun": 7.489426,
+          "deltaSeconds": 0.148
+        },
+        "seat0Created": {
+          "failedRun": 7.625627,
+          "referenceRun": 7.487164,
+          "deltaSeconds": 0.138
+        },
+        "networkManagerReady": {
+          "failedRun": 7.659665,
+          "referenceRun": 7.510862,
+          "deltaSeconds": 0.149
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.341784,
+          "referenceRun": 7.197825,
+          "deltaSeconds": 0.144
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.485525,
+          "referenceRun": 7.347257,
+          "deltaSeconds": 0.138
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.740622,
+          "referenceRun": 7.591906,
+          "deltaSeconds": 0.149
+        },
+        "gdmActive": {
+          "failedRun": 7.758962,
+          "referenceRun": 7.610048,
+          "deltaSeconds": 0.149
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.005648,
+          "referenceRun": 7.865318,
+          "deltaSeconds": 0.14
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 7.989818,
+          "referenceRun": 7.84121,
+          "deltaSeconds": 0.149
+        },
+        "avahiActivation": {
+          "failedRun": 7.346468,
+          "referenceRun": 7.202529,
+          "deltaSeconds": 0.144
+        },
+        "multiUserTarget": {
+          "failedRun": 7.836868,
+          "referenceRun": 7.706277,
+          "deltaSeconds": 0.131
+        },
+        "graphicalTarget": {
+          "failedRun": 7.838408,
+          "referenceRun": 7.709648,
+          "deltaSeconds": 0.129
+        },
+        "healthCheck": {
+          "failedRun": 7.829765,
+          "referenceRun": 7.703352,
+          "deltaSeconds": 0.126
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellE-018",
+      "referenceRun": "DSQ-20260801-cellE-017",
+      "cell": "E",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.54353
+      ],
+      "shutdownInitiatedMono": 84.414502,
+      "failuresAfterShutdownInitiation": [
+        84.54353
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 7.916632,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.875389,
+          "referenceRun": 1.871502,
+          "deltaSeconds": 0.004
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.882491,
+          "referenceRun": 1.875439,
+          "deltaSeconds": 0.007
+        },
+        "dbusReady": {
+          "failedRun": 7.350022,
+          "referenceRun": 7.403729,
+          "deltaSeconds": -0.054
+        },
+        "logindReady": {
+          "failedRun": 7.662633,
+          "referenceRun": 7.751681,
+          "deltaSeconds": -0.089
+        },
+        "seat0Created": {
+          "failedRun": 7.659959,
+          "referenceRun": 7.748953,
+          "deltaSeconds": -0.089
+        },
+        "networkManagerReady": {
+          "failedRun": 7.684635,
+          "referenceRun": 7.786615,
+          "deltaSeconds": -0.102
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.355422,
+          "referenceRun": 7.408344,
+          "deltaSeconds": -0.053
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.498803,
+          "referenceRun": 7.571027,
+          "deltaSeconds": -0.072
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.787254,
+          "referenceRun": 7.890236,
+          "deltaSeconds": -0.103
+        },
+        "gdmActive": {
+          "failedRun": 7.80463,
+          "referenceRun": 7.916632,
+          "deltaSeconds": -0.112
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.044206,
+          "referenceRun": 8.170337,
+          "deltaSeconds": -0.126
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.025738,
+          "referenceRun": 8.149146,
+          "deltaSeconds": -0.123
+        },
+        "avahiActivation": {
+          "failedRun": 7.357624,
+          "referenceRun": 7.411425,
+          "deltaSeconds": -0.054
+        },
+        "multiUserTarget": {
+          "failedRun": 7.862557,
+          "referenceRun": 7.984664,
+          "deltaSeconds": -0.122
+        },
+        "graphicalTarget": {
+          "failedRun": 7.865458,
+          "referenceRun": 7.98583,
+          "deltaSeconds": -0.12
+        },
+        "healthCheck": {
+          "failedRun": 7.85862,
+          "referenceRun": 7.970105,
+          "deltaSeconds": -0.111
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellE-019",
+      "referenceRun": "DSQ-20260801-cellE-020",
+      "cell": "E",
+      "unit": "gdm.service",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "exit-code",
+      "mainExit": {
+        "code": "exited",
+        "status": "1/FAILURE"
+      },
+      "failureTimes": [
+        84.463104
+      ],
+      "shutdownInitiatedMono": 84.328581,
+      "failuresAfterShutdownInitiation": [
+        84.463104
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.71036,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.882446,
+          "referenceRun": 1.880306,
+          "deltaSeconds": 0.002
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.891098,
+          "referenceRun": 1.884219,
+          "deltaSeconds": 0.007
+        },
+        "dbusReady": {
+          "failedRun": 7.335381,
+          "referenceRun": 8.274953,
+          "deltaSeconds": -0.94
+        },
+        "logindReady": {
+          "failedRun": 7.612769,
+          "referenceRun": 8.583166,
+          "deltaSeconds": -0.97
+        },
+        "seat0Created": {
+          "failedRun": 7.609017,
+          "referenceRun": 8.579064,
+          "deltaSeconds": -0.97
+        },
+        "networkManagerReady": {
+          "failedRun": 7.702402,
+          "referenceRun": 8.600346,
+          "deltaSeconds": -0.898
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.343024,
+          "referenceRun": 8.279317,
+          "deltaSeconds": -0.936
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.492569,
+          "referenceRun": 8.439376,
+          "deltaSeconds": -0.947
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.787127,
+          "referenceRun": 8.691371,
+          "deltaSeconds": -0.904
+        },
+        "gdmActive": {
+          "failedRun": 7.808614,
+          "referenceRun": 8.71036,
+          "deltaSeconds": -0.902
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.103441,
+          "referenceRun": 8.955758,
+          "deltaSeconds": -0.852
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.078474,
+          "referenceRun": 8.933771,
+          "deltaSeconds": -0.855
+        },
+        "avahiActivation": {
+          "failedRun": 7.343187,
+          "referenceRun": 8.282365,
+          "deltaSeconds": -0.939
+        },
+        "multiUserTarget": {
+          "failedRun": 7.956797,
+          "referenceRun": 8.809936,
+          "deltaSeconds": -0.853
+        },
+        "graphicalTarget": {
+          "failedRun": 7.958859,
+          "referenceRun": 8.812076,
+          "deltaSeconds": -0.853
+        },
+        "healthCheck": {
+          "failedRun": 7.864433,
+          "referenceRun": 8.806784,
+          "deltaSeconds": -0.942
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    },
+    {
+      "failedRun": "DSQ-20260801-cellE-019",
+      "referenceRun": "DSQ-20260801-cellE-018",
+      "cell": "E",
+      "unit": "session-c1.scope",
+      "scope": "system",
+      "uid": null,
+      "disposition": "failed-during-shutdown",
+      "result": "timeout",
+      "mainExit": null,
+      "failureTimes": [
+        129.480444
+      ],
+      "shutdownInitiatedMono": 84.328581,
+      "failuresAfterShutdownInitiation": [
+        129.480444
+      ],
+      "insideAuthselectWindow": false,
+      "referenceDisposition": "activated-and-succeeded",
+      "referenceActiveEnter": 8.03813,
+      "timing": {
+        "kernelStart": {
+          "failedRun": 1.882446,
+          "referenceRun": 1.875389,
+          "deltaSeconds": 0.007
+        },
+        "systemdStart": {
+          "failedRun": null,
+          "referenceRun": null,
+          "deltaSeconds": null
+        },
+        "graphicsDeviceReady": {
+          "failedRun": 1.891098,
+          "referenceRun": 1.882491,
+          "deltaSeconds": 0.009
+        },
+        "dbusReady": {
+          "failedRun": 7.335381,
+          "referenceRun": 7.350022,
+          "deltaSeconds": -0.015
+        },
+        "logindReady": {
+          "failedRun": 7.612769,
+          "referenceRun": 7.662633,
+          "deltaSeconds": -0.05
+        },
+        "seat0Created": {
+          "failedRun": 7.609017,
+          "referenceRun": 7.659959,
+          "deltaSeconds": -0.051
+        },
+        "networkManagerReady": {
+          "failedRun": 7.702402,
+          "referenceRun": 7.684635,
+          "deltaSeconds": 0.018
+        },
+        "authselectApplyStart": {
+          "failedRun": 7.343024,
+          "referenceRun": 7.355422,
+          "deltaSeconds": -0.012
+        },
+        "authselectApplyEnd": {
+          "failedRun": 7.492569,
+          "referenceRun": 7.498803,
+          "deltaSeconds": -0.006
+        },
+        "gdmStartRequested": {
+          "failedRun": 7.787127,
+          "referenceRun": 7.787254,
+          "deltaSeconds": -0.0
+        },
+        "gdmActive": {
+          "failedRun": 7.808614,
+          "referenceRun": 7.80463,
+          "deltaSeconds": 0.004
+        },
+        "greeterSessionOpened": {
+          "failedRun": 8.103441,
+          "referenceRun": 8.044206,
+          "deltaSeconds": 0.059
+        },
+        "pipewireFirstSeen": {
+          "failedRun": 8.078474,
+          "referenceRun": 8.025738,
+          "deltaSeconds": 0.053
+        },
+        "avahiActivation": {
+          "failedRun": 7.343187,
+          "referenceRun": 7.357624,
+          "deltaSeconds": -0.014
+        },
+        "multiUserTarget": {
+          "failedRun": 7.956797,
+          "referenceRun": 7.862557,
+          "deltaSeconds": 0.094
+        },
+        "graphicalTarget": {
+          "failedRun": 7.958859,
+          "referenceRun": 7.865458,
+          "deltaSeconds": 0.093
+        },
+        "healthCheck": {
+          "failedRun": 7.864433,
+          "referenceRun": 7.85862,
+          "deltaSeconds": 0.006
+        }
+      },
+      "dependencyFailuresDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "coredumpsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "kernelGraphicsErrorsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      },
+      "conditionSkipsDelta": {
+        "failedRun": [],
+        "referenceRun": []
+      }
+    }
+  ],
+  "deterministicFailuresWithoutReference": {
+    "bunny-first-boot.service": 60,
+    "gnome-session-manager@gnome-initial-setup.service": 60
+  },
+  "note": "a unit listed under deterministicFailuresWithoutReference failed in every collected run of its cell; a timing delta against a non-failing run is undefined for it"
+}

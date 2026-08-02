@@ -1,0 +1,72 @@
+{
+  "retainedOn": "comrade",
+  "retainedTime": "2026-08-02T04:59:45+00:00",
+  "files": [
+    {
+      "path": "screenshots/graphical-reached.ppm",
+      "sha256": "db26a82bf6a8ea79fd3b2bcd58c5024b008585848debc12b5494440ab9065b7e",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-seedB/screenshots/graphical-reached.ppm"
+    },
+    {
+      "path": "screenshots/observation-window-end.ppm",
+      "sha256": "0b4492eeaea267e83c9502892f3dc75b10b2d88ef50922d5693b71f9e59f2324",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-seedB/screenshots/observation-window-end.ppm"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016,
+      "lost": "overwritten by the retention path collision with the invalidated dsq-failed-units-1 run of the same ID (flat trace layout, fixed in retain_bulky_evidence.py); sha256 attestation stands, bytes unrecoverable"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016,
+      "lost": "overwritten by the retention path collision with the invalidated dsq-failed-units-1 run of the same ID (flat trace layout, fixed in retain_bulky_evidence.py); sha256 attestation stands, bytes unrecoverable"
+    },
+    {
+      "path": "screenshots/stage-graphical.ppm",
+      "sha256": "db26a82bf6a8ea79fd3b2bcd58c5024b008585848debc12b5494440ab9065b7e",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-seedB/screenshots/stage-graphical.ppm"
+    },
+    {
+      "path": "screenshots/stage-health-check.ppm",
+      "sha256": "335f326b816aecf2b517d1ebec4124d3177cfabfd41bf35d8794afc438ca1b40",
+      "sizeBytes": 3072016,
+      "lost": "overwritten by the retention path collision with the invalidated dsq-failed-units-1 run of the same ID (flat trace layout, fixed in retain_bulky_evidence.py); sha256 attestation stands, bytes unrecoverable"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "bf7b01f3bb871d8ff57b77849c9488e58dcec69d58125d282314a7185cd93f9a",
+      "sizeBytes": 3072016,
+      "lost": "overwritten by the retention path collision with the invalidated dsq-failed-units-1 run of the same ID (flat trace layout, fixed in retain_bulky_evidence.py); sha256 attestation stands, bytes unrecoverable"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "124acb5e3f440ef621f5de4cf22e7d78cf36125f1ff9d2108742314861b1a5c7",
+      "sizeBytes": 3072016,
+      "lost": "overwritten by the retention path collision with the invalidated dsq-failed-units-1 run of the same ID (flat trace layout, fixed in retain_bulky_evidence.py); sha256 attestation stands, bytes unrecoverable"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "db26a82bf6a8ea79fd3b2bcd58c5024b008585848debc12b5494440ab9065b7e",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-seedB/screenshots/stage-multi-user.ppm"
+    },
+    {
+      "path": "screenshots/stage-reset-announced.ppm",
+      "sha256": "5d7d732b6065090c1cc779f3df3ae09f82101b9091f3283375b74cf40807b142",
+      "sizeBytes": 3072016,
+      "lost": "overwritten by the retention path collision with the invalidated dsq-failed-units-1 run of the same ID (flat trace layout, fixed in retain_bulky_evidence.py); sha256 attestation stands, bytes unrecoverable"
+    },
+    {
+      "path": "screenshots/stage-restoration-dialog.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016,
+      "lost": "overwritten by the retention path collision with the invalidated dsq-failed-units-1 run of the same ID (flat trace layout, fixed in retain_bulky_evidence.py); sha256 attestation stands, bytes unrecoverable"
+    }
+  ]
+}
