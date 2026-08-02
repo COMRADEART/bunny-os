@@ -59,19 +59,28 @@ def _guestfish(overlay: Path, root: str, *commands: list[str]) -> str:
 def _stat_fields(overlay: Path, root: str, path: str) -> dict | None:
     """lstat of one path, or None when it does not exist.
 
-    `lstatlist` is used rather than `stat` so a symlink reports itself instead
-    of reporting whatever it points at — the distinction the whole assertion
-    exists for.
+    `lstatns`, for three reasons, each of which was measured:
+
+    * it does not follow a symlink, so a link at the target reports itself
+      rather than whatever it points at — the distinction this whole module
+      exists to make;
+    * it names its fields `st_mode`, `st_uid`, `st_gid`, matching what the
+      callers read. `lstatlist` returns the same numbers under unprefixed
+      names inside a `[0] = {...}` block, so parsing it with this pattern
+      silently produced no fields at all: every directory came back as type
+      unknown-0, mode 0000, owner None, and a correct run looked like four
+      distinct failures;
+    * it fails cleanly on a missing path. `lstatlist` encodes an error as a
+      struct with `ino: -1`, which a "did I parse any fields?" test reads as
+      present.
     """
-    parent, _, name = path.rpartition("/")
     try:
-        out = _guestfish(overlay, root,
-                         ["lstatlist", parent or "/", name])
+        out = _guestfish(overlay, root, ["lstatns", path])
     except HomeReadError:
         return None
     fields: dict[str, int] = {}
     for line in out.splitlines():
-        match = re.match(r"^(\w+):\s*(-?\d+)$", line.strip())
+        match = re.match(r"^(st_\w+):\s*(-?\d+)$", line.strip())
         if match:
             fields[match.group(1)] = int(match.group(2))
     return fields or None
