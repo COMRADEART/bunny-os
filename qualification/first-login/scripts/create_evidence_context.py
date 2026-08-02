@@ -51,11 +51,17 @@ def main() -> int:
                         help="Commit O — the archive target Q was built from")
     parser.add_argument("--source-archive-digest", required=True)
     parser.add_argument("--installation-artifact", type=Path, required=True)
+    # The 4M variants and the versioned machine type, not the unsuffixed
+    # names: this is the firmware dsq-1 measured on this host, and dsq-2 has
+    # to boot the same firmware or the two scenarios are not comparable. The
+    # unsuffixed OVMF names do not exist here at all, and bare `q35` is an
+    # alias that follows the QEMU version, so pinning it would silently change
+    # machine on the next upgrade.
     parser.add_argument("--ovmf-code", type=Path,
-                        default=Path("/usr/share/edk2/ovmf/OVMF_CODE.qcow2"))
+                        default=Path("/usr/share/edk2/ovmf/OVMF_CODE_4M.qcow2"))
     parser.add_argument("--ovmf-vars-template", type=Path,
-                        default=Path("/usr/share/edk2/ovmf/OVMF_VARS.qcow2"))
-    parser.add_argument("--machine-type", default="q35")
+                        default=Path("/usr/share/edk2/ovmf/OVMF_VARS_4M.qcow2"))
+    parser.add_argument("--machine-type", default="pc-q35-10.2")
     parser.add_argument("--cpu-mode", default="host")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
