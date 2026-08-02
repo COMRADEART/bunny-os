@@ -69,11 +69,17 @@ AUTHORITY_FIELDS = (
 #: Each is re-hashed at resolve time when the file exists; a mismatch is an
 #: error, because a context that misdescribes the emulator it runs under is
 #: worse than no context.
+#: Each digest field maps to the context key naming its subject, with a
+#: default for contexts that predate the key. Recording the path in the
+#: context (as ovmfCodePath always was) rather than hard-coding it keeps
+#: one semantics everywhere: a fixture context binds its subjects into its
+#: own tree, so a machine with the real toolchain installed no longer
+#: fails fixture verification against binaries the fixture never named.
 _SYSTEM_SUBJECTS = {
-    "qemuDigest": "/usr/sbin/qemu-system-x86_64",
-    "ovmfCodeDigest": "ovmfCodePath",
-    "ovmfVarsTemplateDigest": "ovmfVarsTemplatePath",
-    "swtpmDigest": "/usr/sbin/swtpm",
+    "qemuDigest": ("qemuPath", "/usr/sbin/qemu-system-x86_64"),
+    "ovmfCodeDigest": ("ovmfCodePath", "ovmfCodePath"),
+    "ovmfVarsTemplateDigest": ("ovmfVarsTemplatePath", "ovmfVarsTemplatePath"),
+    "swtpmDigest": ("swtpmPath", "/usr/sbin/swtpm"),
 }
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -152,8 +158,8 @@ def resolve_context(root: Path | None = None, *, verify_system: bool = True) -> 
             raise ContextError(f"{name} must be present and non-empty")
 
     if verify_system:
-        for field_name, subject in _SYSTEM_SUBJECTS.items():
-            subject_path = Path(str(record.get(subject, subject)))
+        for field_name, (subject_key, default) in _SYSTEM_SUBJECTS.items():
+            subject_path = Path(str(record.get(subject_key, default)))
             if not subject_path.is_file():
                 continue
             expected = str(record.get(field_name, ""))

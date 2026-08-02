@@ -30,11 +30,13 @@ def write_context(root: Path, **overrides: object) -> Path:
         "sourceArchiveDigest": "1" * 64,
         "installationArtifactDigest": "2" * 64,
         "qemuDigest": "3" * 64,
+        "qemuPath": str(root / "no-such-qemu"),
         "ovmfCodeDigest": "4" * 64,
         "ovmfCodePath": str(root / "no-such-code"),
         "ovmfVarsTemplateDigest": "5" * 64,
         "ovmfVarsTemplatePath": str(root / "no-such-vars"),
         "swtpmDigest": "6" * 64,
+        "swtpmPath": str(root / "no-such-swtpm"),
         "swtpmVersion": "0.10.1", "libtpmsVersion": "0.10.2",
         "machineType": "pc-q35-10.2", "cpuMode": "host",
     }

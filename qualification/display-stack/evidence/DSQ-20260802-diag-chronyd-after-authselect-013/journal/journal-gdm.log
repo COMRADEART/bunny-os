@@ -1,0 +1,9 @@
+[    7.628065] fedora systemd[1]: Starting gdm.service - GNOME Display Manager...
+[    7.646316] fedora systemd[1]: Started gdm.service - GNOME Display Manager.
+[   84.323658] fedora gdm[1036]: Gdm: Tried to look up non-existent conversation gdm-launch-environment
+[   84.323916] fedora gdm[1036]: Gdm: Freeing conversation 'gdm-launch-environment' with active job
+[   84.383102] fedora systemd[1]: Stopping gdm.service - GNOME Display Manager...
+[   84.931035] fedora gdm[1036]: Gdm: Failed to delete '/run/gdm/home/gnome-initial-setup', continuing: Error removing file /run/gdm/home/gnome-initial-setup/.local/share: Directory not empty
+[   84.931050] fedora gdm[1036]: Gdm: Child process -1153 was already dead.
+[   84.933227] fedora systemd[1]: gdm.service: Deactivated successfully.
+[   84.933574] fedora systemd[1]: Stopped gdm.service - GNOME Display Manager.

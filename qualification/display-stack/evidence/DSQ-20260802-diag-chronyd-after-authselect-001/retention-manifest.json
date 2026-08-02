@@ -1,0 +1,60 @@
+{
+  "retainedOn": "comrade",
+  "retainedTime": "2026-08-02T04:59:45+00:00",
+  "files": [
+    {
+      "path": "screenshots/graphical-reached.ppm",
+      "sha256": "3cd322d9b1e9942aa30768d25d13394a02aee12d7bf1257a9a5630449e98c45f",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260802-diag-chronyd-after-authselect-001/screenshots/graphical-reached.ppm"
+    },
+    {
+      "path": "screenshots/observation-window-end.ppm",
+      "sha256": "0b4492eeaea267e83c9502892f3dc75b10b2d88ef50922d5693b71f9e59f2324",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260802-diag-chronyd-after-authselect-001/screenshots/observation-window-end.ppm"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260802-diag-chronyd-after-authselect-001/screenshots/stage-boot-option-started.ppm"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260802-diag-chronyd-after-authselect-001/screenshots/stage-firmware-bds.ppm"
+    },
+    {
+      "path": "screenshots/stage-graphical.ppm",
+      "sha256": "3cd322d9b1e9942aa30768d25d13394a02aee12d7bf1257a9a5630449e98c45f",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260802-diag-chronyd-after-authselect-001/screenshots/stage-graphical.ppm"
+    },
+    {
+      "path": "screenshots/stage-health-check.ppm",
+      "sha256": "1f01380cff02250b9624ac4ae7705db6edbdac36a80ee398e5ffe4e1b3d60bd9",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260802-diag-chronyd-after-authselect-001/screenshots/stage-health-check.ppm"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "d2b18755191fe2dbaef1c17665b14c824ae0760f020aa2fc6ac93f06e61a1a9b",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260802-diag-chronyd-after-authselect-001/screenshots/stage-initramfs.ppm"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "e0571f44c16932de579c705d8225bd72f7a0c6f032964c531b5f587fe6e1058d",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260802-diag-chronyd-after-authselect-001/screenshots/stage-kernel-loaded.ppm"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "3cd322d9b1e9942aa30768d25d13394a02aee12d7bf1257a9a5630449e98c45f",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260802-diag-chronyd-after-authselect-001/screenshots/stage-multi-user.ppm"
+    }
+  ]
+}

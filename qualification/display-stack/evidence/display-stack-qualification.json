@@ -1,0 +1,619 @@
+{
+  "scenarioVersion": "dsq-1",
+  "recordCount": 80,
+  "problems": [],
+  "cells": {
+    "A": {
+      "planned": 20,
+      "attempted": 20,
+      "collected": 20,
+      "gdmReady": 20,
+      "gdmNotReady": [],
+      "complete": true
+    },
+    "B": {
+      "planned": 10,
+      "attempted": 10,
+      "collected": 10,
+      "gdmReady": 10,
+      "gdmNotReady": [],
+      "complete": true
+    },
+    "C": {
+      "planned": 10,
+      "attempted": 10,
+      "collected": 10,
+      "gdmReady": 10,
+      "gdmNotReady": [],
+      "complete": true
+    },
+    "D": {
+      "planned": 10,
+      "attempted": 20,
+      "collected": 10,
+      "gdmReady": 10,
+      "gdmNotReady": [],
+      "complete": true
+    },
+    "E": {
+      "planned": 10,
+      "attempted": 20,
+      "collected": 10,
+      "gdmReady": 10,
+      "gdmNotReady": [],
+      "complete": true
+    }
+  },
+  "unitOccurrences": {
+    "at-spi-dbus-bus.service": {
+      "A": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 20,
+        "activated": 20,
+        "succeeded": 17,
+        "failed": 0,
+        "failedDuringShutdown": 3,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "B": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "C": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "D": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 9,
+        "failed": 0,
+        "failedDuringShutdown": 1,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      },
+      "E": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      }
+    },
+    "avahi-daemon.service": {
+      "A": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 20,
+        "activated": 20,
+        "succeeded": 20,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "B": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "C": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "D": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      },
+      "E": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      }
+    },
+    "avahi-daemon.socket": {
+      "A": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 20,
+        "activated": 20,
+        "succeeded": 20,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "B": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "C": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "D": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      },
+      "E": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      }
+    },
+    "bunny-first-boot.service": {
+      "A": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 20,
+        "activated": 20,
+        "succeeded": 0,
+        "failed": 20,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "B": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 0,
+        "failed": 10,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "C": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 0,
+        "failed": 10,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "D": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 0,
+        "failed": 10,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      },
+      "E": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 0,
+        "failed": 10,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      }
+    },
+    "chronyd.service": {
+      "A": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 20,
+        "activated": 20,
+        "succeeded": 19,
+        "failed": 1,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "B": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "C": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "D": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      },
+      "E": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      }
+    },
+    "dbus-:*-org.gnome.Shell.Screencast@0.service": {
+      "A": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 20,
+        "activated": 20,
+        "succeeded": 20,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "B": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "C": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "D": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      },
+      "E": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      }
+    },
+    "gdm.service": {
+      "A": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 20,
+        "activated": 20,
+        "succeeded": 9,
+        "failed": 0,
+        "failedDuringShutdown": 11,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "B": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 4,
+        "failed": 0,
+        "failedDuringShutdown": 6,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "C": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 5,
+        "failed": 0,
+        "failedDuringShutdown": 5,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "D": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 7,
+        "failed": 0,
+        "failedDuringShutdown": 3,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      },
+      "E": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 6,
+        "failed": 0,
+        "failedDuringShutdown": 4,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      }
+    },
+    "gnome-session-manager@gnome-initial-setup.service": {
+      "A": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 20,
+        "activated": 20,
+        "succeeded": 0,
+        "failed": 0,
+        "failedDuringShutdown": 20,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "B": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 0,
+        "failed": 0,
+        "failedDuringShutdown": 10,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "C": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 0,
+        "failed": 0,
+        "failedDuringShutdown": 10,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "D": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 0,
+        "failed": 0,
+        "failedDuringShutdown": 10,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      },
+      "E": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 0,
+        "failed": 0,
+        "failedDuringShutdown": 10,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      }
+    },
+    "session-c1.scope": {
+      "A": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 20,
+        "activated": 20,
+        "succeeded": 18,
+        "failed": 0,
+        "failedDuringShutdown": 2,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "B": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 10,
+        "failed": 0,
+        "failedDuringShutdown": 0,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "C": {
+        "bootsAttempted": 10,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 7,
+        "failed": 0,
+        "failedDuringShutdown": 3,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 0
+      },
+      "D": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 9,
+        "failed": 0,
+        "failedDuringShutdown": 1,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      },
+      "E": {
+        "bootsAttempted": 20,
+        "bootsReachingGraphical": 10,
+        "activated": 10,
+        "succeeded": 8,
+        "failed": 0,
+        "failedDuringShutdown": 2,
+        "failedAndRecovered": 0,
+        "skipped": 0,
+        "notApplicable": 0,
+        "collectionFailed": 10
+      }
+    }
+  },
+  "dispositionVerdicts": {
+    "at-spi-dbus-bus.service": "CLOSED (SHUTDOWN_TEARDOWN_EXIT_RACE)",
+    "avahi-daemon.service": "CLOSED (SHUTDOWN_TEARDOWN_CRASH)",
+    "bunny-first-boot.service": "BLOCKING (GRAPHICAL_SESSION_DEFECT)",
+    "chronyd.service": "CLOSED (FIRST_BOOT_NSS_WINDOW_RACE)",
+    "dbus-:*-org.gnome.Shell.Screencast@0.service": "CLOSED (HARNESS_OR_COLLECTOR_DEFECT in prior scenario; no dsq-1 failure)",
+    "gdm.service": "CLOSED (SHUTDOWN_TEARDOWN_EXIT_RACE)",
+    "gnome-session-manager@gnome-initial-setup.service": "CLOSED (SHUTDOWN_TEARDOWN_CRASH)",
+    "session-c1.scope": "CLOSED (SHUTDOWN_TEARDOWN_EXIT_RACE)"
+  },
+  "gdmReliability": "PASS",
+  "displayStackReliability": "BLOCKED"
+}

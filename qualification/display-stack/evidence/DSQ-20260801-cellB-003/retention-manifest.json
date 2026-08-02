@@ -1,0 +1,60 @@
+{
+  "retainedOn": "comrade",
+  "retainedTime": "2026-08-02T04:59:43+00:00",
+  "files": [
+    {
+      "path": "screenshots/graphical-reached.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellB-003/screenshots/graphical-reached.ppm"
+    },
+    {
+      "path": "screenshots/observation-window-end.ppm",
+      "sha256": "0b4492eeaea267e83c9502892f3dc75b10b2d88ef50922d5693b71f9e59f2324",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellB-003/screenshots/observation-window-end.ppm"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "39a227165159d3541d627a8bb802a6db04816ebc13c8fd2bfedfd13ecc0257da",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellB-003/screenshots/stage-boot-option-started.ppm"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "39a227165159d3541d627a8bb802a6db04816ebc13c8fd2bfedfd13ecc0257da",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellB-003/screenshots/stage-firmware-bds.ppm"
+    },
+    {
+      "path": "screenshots/stage-graphical.ppm",
+      "sha256": "67b1b9a502e35da92122e9522b776a0fa55ad3b901111e90918f3d6ef987bc9f",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellB-003/screenshots/stage-graphical.ppm"
+    },
+    {
+      "path": "screenshots/stage-health-check.ppm",
+      "sha256": "67b1b9a502e35da92122e9522b776a0fa55ad3b901111e90918f3d6ef987bc9f",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellB-003/screenshots/stage-health-check.ppm"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "18e904e9f13e6ad7a1d03caa1f8f15824789a55e00811f4a002b816868d7b033",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellB-003/screenshots/stage-initramfs.ppm"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "5cd820a2dc844d05b6b1494f3d58987f4521720dc8dd885aff90fd54d259ae54",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellB-003/screenshots/stage-kernel-loaded.ppm"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "67b1b9a502e35da92122e9522b776a0fa55ad3b901111e90918f3d6ef987bc9f",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/DSQ-20260801-cellB-003/screenshots/stage-multi-user.ppm"
+    }
+  ]
+}

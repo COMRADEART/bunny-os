@@ -1,0 +1,27 @@
+[    7.256849] fedora systemd[1]: Listening on avahi-daemon.socket - Avahi mDNS/DNS-SD Stack Activation Socket.
+[    7.343171] fedora systemd[1]: Starting avahi-daemon.service - Avahi mDNS/DNS-SD Stack...
+[    7.582819] fedora avahi-daemon[839]: Found user 'avahi' (UID 70) and group 'avahi' (GID 70).
+[    7.583435] fedora avahi-daemon[839]: Successfully dropped root privileges.
+[    7.583607] fedora avahi-daemon[839]: avahi-daemon 0.8 starting up.
+[    7.584116] fedora avahi-daemon[839]: WARNING: No NSS support for mDNS detected, consider installing nss-mdns!
+[    7.585369] fedora avahi-daemon[839]: Successfully called chroot().
+[    7.585376] fedora avahi-daemon[839]: Successfully dropped remaining capabilities.
+[    7.586065] fedora avahi-daemon[839]: No service file found in /etc/avahi/services.
+[    7.586624] fedora avahi-daemon[839]: Joining mDNS multicast group on interface lo.IPv6 with address ::1.
+[    7.586636] fedora avahi-daemon[839]: New relevant interface lo.IPv6 for mDNS.
+[    7.586638] fedora avahi-daemon[839]: Joining mDNS multicast group on interface lo.IPv4 with address 127.0.0.1.
+[    7.586644] fedora avahi-daemon[839]: New relevant interface lo.IPv4 for mDNS.
+[    7.586646] fedora avahi-daemon[839]: Network interface enumeration completed.
+[    7.586650] fedora avahi-daemon[839]: Registering new address record for ::1 on lo.*.
+[    7.586666] fedora avahi-daemon[839]: Registering new address record for 127.0.0.1 on lo.IPv4.
+[    7.587732] fedora systemd[1]: Started avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+[    8.541977] fedora avahi-daemon[839]: Server startup complete. Host name is fedora.local. Local service cookie is 1809234582.
+[   84.396364] fedora avahi-daemon[839]: Got SIGTERM, quitting.
+[   84.396465] fedora avahi-daemon[839]: Leaving mDNS multicast group on interface lo.IPv6 with address ::1.
+[   84.396564] fedora avahi-daemon[839]: Leaving mDNS multicast group on interface lo.IPv4 with address 127.0.0.1.
+[   84.396931] fedora systemd[1]: Stopping avahi-daemon.service - Avahi mDNS/DNS-SD Stack...
+[   84.422906] fedora avahi-daemon[839]: avahi-daemon 0.8 exiting.
+[   84.440486] fedora systemd[1]: avahi-daemon.service: Deactivated successfully.
+[   84.440667] fedora systemd[1]: Stopped avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+[  130.427038] fedora systemd[1]: avahi-daemon.socket: Deactivated successfully.
+[  130.427169] fedora systemd[1]: Closed avahi-daemon.socket - Avahi mDNS/DNS-SD Stack Activation Socket.

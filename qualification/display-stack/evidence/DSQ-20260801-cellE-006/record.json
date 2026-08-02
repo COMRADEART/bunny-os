@@ -1,0 +1,42 @@
+{
+  "artifact": {
+    "name": "bunny-os-b9c317d35b85.qcow2",
+    "sha256": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217"
+  },
+  "authority": {
+    "cpuMode": "host",
+    "failedUnitCollectorVersion": "dsq-failed-units-2",
+    "installationArtifactDigest": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217",
+    "journalCollectorVersion": "dsq-journal-1",
+    "machineType": "pc-q35-10.2",
+    "ovmfCodeDigest": "6551948da24a02553476c1c1edccb0bb92a57dce9d722d7b396ac14547e6d9af",
+    "ovmfVarsTemplateDigest": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb",
+    "qemuDigest": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+    "scenarioVersion": "dsq-1",
+    "sourceArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
+    "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
+    "swtpmDigest": "32c411b8d1b269ca6b5ae922e84459dec5669dc96ca17bb5cf8119f830ab7ce0"
+  },
+  "cell": "E",
+  "cellConfiguration": {
+    "description": "network disconnected at the VM boundary",
+    "expectedResets": 0,
+    "memory": 8192,
+    "network": false,
+    "smp": 4,
+    "tpm": false,
+    "vars": "seed"
+  },
+  "completedAt": "2026-08-02T02:52:44.238Z",
+  "diagnostic": null,
+  "evidenceManifest": [],
+  "journalCollectorVersion": "dsq-journal-1",
+  "limitations": [],
+  "reason": "seed variable store /root/bunny-os/qualification/display-stack/seeds/cellE-OVMF_VARS.qcow2 missing; run --cell seed-E first",
+  "runId": "DSQ-20260801-cellE-006",
+  "schemaVersion": 1,
+  "seeding": false,
+  "sequence": 6,
+  "startedAt": "2026-08-02T02:52:44.232Z",
+  "status": "ABANDONED"
+}

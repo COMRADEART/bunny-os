@@ -1,0 +1,7 @@
+[    8.504649] fedora systemd[1]: Starting gdm.service - GNOME Display Manager...
+[    8.526634] fedora systemd[1]: Started gdm.service - GNOME Display Manager.
+[   86.479970] fedora gdm[1035]: Gdm: Tried to look up non-existent conversation gdm-launch-environment
+[   86.480150] fedora gdm[1035]: Gdm: Freeing conversation 'gdm-launch-environment' with active job
+[   86.520137] fedora systemd[1]: Stopping gdm.service - GNOME Display Manager...
+[   87.062770] fedora systemd[1]: gdm.service: Deactivated successfully.
+[   87.062977] fedora systemd[1]: Stopped gdm.service - GNOME Display Manager.

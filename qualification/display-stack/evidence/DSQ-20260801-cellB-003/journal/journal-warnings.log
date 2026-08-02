@@ -1,0 +1,72 @@
+[    1.829169] fedora kernel: virt/tdx: TDX not supported by the host platform
+[    2.096246] fedora rpc.statd[412]: Failed to open directory sm: No such file or directory
+[    2.096272] fedora rpc.statd[412]: Failed to create /var/lib/nfs/statd/.state.new: No such file or directory
+[    2.100077] fedora rpc.idmapd[417]: Setting log level to 0
+[    2.100465] fedora rpc.idmapd[417]: libnfsidmap: Unable to determine the NFSv4 domain; Using 'localdomain' as the NFSv4 domain which means UIDs will be mapped to the 'Nobody-User' user defined in /etc/idmapd.conf
+[    3.026828] fedora rpc.idmapd[417]: exiting on signal 15
+[    3.028769] fedora rpcbind[408]: cannot open file = /run/rpcbind/rpcbind.xdr for writing
+[    3.028794] fedora rpcbind[408]: cannot save any registration
+[    3.028803] fedora rpcbind[408]: cannot open file = /run/rpcbind/portmap.xdr for writing
+[    3.028804] fedora rpcbind[408]: cannot save any registration
+[    5.210778] fedora systemd-oomd[695]: No swap; memory pressure usage will be degraded
+[    5.215142] fedora kernel: kauditd_printk_skb: 13 callbacks suppressed
+[    5.536675] fedora (udev-worker)[721]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[    5.788768] fedora sm-notify[778]: Failed to open sm: No such file or directory
+[    5.788770] fedora sm-notify[778]: Failed to open directory sm.bak: No such file or directory
+[    5.856704] fedora systemd-tmpfiles[780]: Failed to create directory or subvolume "/usr/local/sbin": Read-only file system
+[    7.286475] fedora irqbalance[862]: thermal: failed to receive messages.
+[    7.287390] fedora irqbalance[862]: Failed to initialize thermal events.
+[    7.381551] fedora avahi-daemon[841]: WARNING: No NSS support for mDNS detected, consider installing nss-mdns!
+[    7.504532] fedora systemd-logind[961]: Failed to open '/boot/loader/entries': Remote address changed
+[    7.710628] fedora (udev-worker)[720]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[    7.951057] fedora systemd-logind[961]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.050369] fedora systemd-logind[961]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.913504] fedora systemd-logind[961]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.991991] fedora gnome-shell[1179]: Could not issue 'GetUnit' systemd call
+[    9.045941] fedora systemd-logind[961]: Failed to open '/boot/loader/entries': Remote address changed
+[    9.087847] fedora systemd-logind[961]: Failed to open '/boot/loader/entries': Remote address changed
+[    9.102976] fedora gsd-sharing[1296]: Failed to stop gnome-user-share-webdav.service: GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit gnome-user-share-webdav.service not loaded.
+[    9.103943] fedora gsd-sharing[1296]: Failed to stop rygel.service: GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit rygel.service not loaded.
+[    9.115821] fedora (bunny-first-boot)[1377]: bunny-first-boot.service: Failed to set up mount namespacing: /run/gdm/home/gnome-initial-setup/.config/bunny-os: No such file or directory
+[    9.117468] fedora (bunny-first-boot)[1377]: bunny-first-boot.service: Failed at step NAMESPACE spawning /usr/libexec/bunny-first-boot: No such file or directory
+[    9.118839] fedora systemd[1084]: bunny-first-boot.service: Failed with result 'exit-code'.
+[    9.119159] fedora systemd[1084]: Failed to start bunny-first-boot.service - Bunny OS per-user first-boot preferences.
+[    9.305479] fedora gsd-media-keys[1293]: Failed to grab accelerator for keybinding settings:hibernate
+[    9.305834] fedora gsd-media-keys[1293]: Failed to grab accelerator for keybinding settings:playback-repeat
+[    9.306251] fedora gsd-usb-protection[1298]: Failed to fetch USBGuard parameters: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name is not activatable
+[    9.366191] fedora gnome-shell[1179]: Failed to record usage: GDBus.Error:org.freedesktop.MalcontentTimer1.Child.Error.IdentifyingUser: Error identifying user: Invalid or unknown user
+[    9.526902] fedora wireplumber[1524]: spa.bluez5: BlueZ system service is not available
+[    9.748144] fedora gnome-keyring-daemon[1628]: discover_other_daemon: 0
+[    9.829313] fedora gnome-initial-setup[1379]: Could not read list of available locales from libc, guessing possible locales from available translations, but list may be incomplete!
+[   10.358390] fedora gnome-shell[1179]: Could not issue 'GetUnit' systemd call
+[   10.398154] fedora gsd-xsettings[1681]: Failed to get current UI scaling factor: GDBus.Error:org.freedesktop.DBus.Error.NameHasNoOwner: Destination does not exist
+[   17.729997] fedora kernel: kauditd_printk_skb: 139 callbacks suppressed
+[   18.010590] fedora irqbalance[862]: Cannot change IRQ 25 affinity: Permission denied
+[   18.010640] fedora irqbalance[862]: IRQ 25 affinity is now unmanaged
+[   18.010665] fedora irqbalance[862]: Cannot change IRQ 28 affinity: Permission denied
+[   18.010667] fedora irqbalance[862]: IRQ 28 affinity is now unmanaged
+[   38.004709] fedora irqbalance[862]: Cannot change IRQ 27 affinity: Permission denied
+[   38.004752] fedora irqbalance[862]: IRQ 27 affinity is now unmanaged
+[   70.008385] fedora kernel: kauditd_printk_skb: 4 callbacks suppressed
+[   84.958849] fedora gsd-media-keys[1293]: Virtual machines only honor the 'nothing' power-button-action, and will shutdown otherwise
+[   85.066608] fedora gdm[1039]: Gdm: Failed to list cached users: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name is not activatable
+[   85.096191] fedora systemd[1]: gdm.service: Failed with result 'exit-code'.
+[   85.097783] fedora systemd[1]: gdm.service: Failed to enqueue OnFailure=plymouth-quit.service job, ignoring: Unit plymouth-quit.service not found.
+[   85.127565] fedora gnome-shell[1179]: Connection to xwayland lost
+[   85.132169] fedora gnome-shell[1179]: Could not issue 'GetUnit' systemd call
+[   85.504188] fedora systemd[1]: sys-devices-virtual-misc-rfkill.device: Failed to enqueue SYSTEMD_WANTS job, ignoring: Transaction for systemd-rfkill.socket/start is destructive (poweroff.target has 'start' job queued, but 'stop' is included in transaction).
+[   85.536492] fedora gnome-shell[1179]: Could not release device '/dev/input/event0' (13,64): GDBus.Error:org.freedesktop.DBus.Error.UnknownObject: Unknown object '/org/freedesktop/login1/session/c1'.
+[   85.541560] fedora gnome-shell[1179]: Could not release device '/dev/input/event1' (13,65): GDBus.Error:org.freedesktop.DBus.Error.UnknownObject: Unknown object '/org/freedesktop/login1/session/c1'.
+[   85.549686] fedora gnome-shell[1179]: Could not release device '/dev/input/event3' (13,67): GDBus.Error:org.freedesktop.DBus.Error.UnknownObject: Unknown object '/org/freedesktop/login1/session/c1'.
+[   85.563658] fedora gnome-shell[1179]: Could not release device '/dev/input/event2' (13,66): GDBus.Error:org.freedesktop.DBus.Error.UnknownObject: Unknown object '/org/freedesktop/login1/session/c1'.
+[   85.580686] fedora (udev-worker)[1884]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[   85.590572] fedora gnome-shell[1179]: Could not release device '/dev/dri/card1' (226,1): GDBus.Error:org.freedesktop.DBus.Error.UnknownObject: Unknown object '/org/freedesktop/login1/session/c1'.
+[   85.592176] fedora dbus-broker-launch[813]: Activation request for 'org.freedesktop.ColorManager' failed.
+[   85.623489] fedora gnome-session-service[1173]: Failed to log out: Logout has been locked down
+[  130.735629] fedora systemd[1084]: gnome-session-manager@gnome-initial-setup.service: State 'stop-sigterm' timed out. Aborting.
+[  130.740582] fedora kernel: kauditd_printk_skb: 18 callbacks suppressed
+[  130.751987] fedora systemd[1084]: gnome-session-manager@gnome-initial-setup.service: Main process exited, code=dumped, status=6/ABRT
+[  130.770226] fedora systemd[1084]: gnome-session-manager@gnome-initial-setup.service: Failed with result 'timeout'.
+[  130.787749] fedora gnome-session-ctl[1909]: Couldn't connect to session bus: Could not connect: Connection refused
+[  130.925729] fedora dbus-broker-launch[813]: Activation request for 'org.freedesktop.nm_dispatcher' failed.
+[  131.203929] fedora systemd-udevd[704]: Failed to remove file descriptor "config-serialization" from the store, ignoring: Connection refused

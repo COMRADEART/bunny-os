@@ -1,0 +1,5623 @@
+{
+  "analysis": {
+    "bootId": "ccdbc2fd8e494f95a05f03ccb9fc8c34",
+    "coredumps": [],
+    "dependencyFailures": [],
+    "entryCount": 2238,
+    "failedSystemUnits": [],
+    "failedUnitCollectorVersion": "dsq-failed-units-1",
+    "failedUserUnits": [],
+    "gdm": {
+      "fatalDisplayErrors": [],
+      "gdmCoredumps": [],
+      "gdmFailures": 0,
+      "gdmReachedActive": true,
+      "gdmRestartCounterMax": 0,
+      "greeterSessionOpenedMono": 8.033558,
+      "sessionNeverRegisteredMono": null
+    },
+    "graphicalTargetReachedMono": 7.874049,
+    "healthCheckFinishedMono": 7.858921,
+    "kernelGraphicsErrors": [],
+    "parseErrors": 0,
+    "recoveredSystemUnits": [],
+    "seat0CreatedMono": 7.652854,
+    "sessionsByUid": {
+      "60578": [
+        "pam:gnome-initial-setup",
+        "pam:gnome-initial-setup"
+      ]
+    },
+    "systemUnits": [
+      {
+        "activeEnterMono": 7.693619,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.66966
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.693619
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "NetworkManager-dispatcher.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "NetworkManager-dispatcher.service"
+      },
+      {
+        "activeEnterMono": 7.654658,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.380842
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.654658
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.491311
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.513812
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.513812,
+        "mainExit": null,
+        "rawNames": [
+          "NetworkManager.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "NetworkManager.service"
+      },
+      {
+        "activeEnterMono": 7.690109,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.555176
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.690109
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.475306
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.553408
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.553408,
+        "mainExit": null,
+        "rawNames": [
+          "accounts-daemon.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "accounts-daemon.service"
+      },
+      {
+        "activeEnterMono": 7.487279,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.337298
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.487279
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.491772
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.491772,
+        "mainExit": null,
+        "rawNames": [
+          "authselect-apply-changes.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "authselect-apply-changes.service"
+      },
+      {
+        "activeEnterMono": 7.547978,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.339672
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.547978
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.475319
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.527525
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.527525,
+        "mainExit": null,
+        "rawNames": [
+          "avahi-daemon.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "avahi-daemon.service"
+      },
+      {
+        "activeEnterMono": 7.247487,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.247487
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "avahi-daemon.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "avahi-daemon.socket"
+      },
+      {
+        "activeEnterMono": 7.334723,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.224101
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.099784
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.334723
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.55055
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.55055,
+        "mainExit": null,
+        "rawNames": [
+          "basic.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "basic.target"
+      },
+      {
+        "activeEnterMono": 5.867694,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.867694
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "boot-efi.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "boot-efi.mount"
+      },
+      {
+        "activeEnterMono": 5.792276,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.792276
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "boot.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "boot.mount"
+      },
+      {
+        "activeEnterMono": 7.237051,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.237051
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.471361
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.471361,
+        "mainExit": null,
+        "rawNames": [
+          "bootc-fetch-apply-updates.timer"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "bootc-fetch-apply-updates.timer"
+      },
+      {
+        "activeEnterMono": 7.278284,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.278284
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "bootc-generic-growpart.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "bootc-generic-growpart.service"
+      },
+      {
+        "activeEnterMono": 7.243986,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.243986
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.468498
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.468498,
+        "mainExit": null,
+        "rawNames": [
+          "bootc-status-updated-onboot.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "bootc-status-updated-onboot.target"
+      },
+      {
+        "activeEnterMono": 7.233784,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.233784
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.552849
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.552849,
+        "mainExit": null,
+        "rawNames": [
+          "bootc-status-updated.path"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "bootc-status-updated.path"
+      },
+      {
+        "activeEnterMono": 5.172101,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.146529
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.172101
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "bootc-sysusers-shadow-sync.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "bootc-sysusers-shadow-sync.service"
+      },
+      {
+        "activeEnterMono": 7.582829,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.348137
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.582829
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.475343
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.475343,
+        "mainExit": null,
+        "rawNames": [
+          "bootloader-update.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "bootloader-update.service"
+      },
+      {
+        "activeEnterMono": 6.128571,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 6.029179
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 6.128571
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "bunny-brlapi-key.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "bunny-brlapi-key.service"
+      },
+      {
+        "activeEnterMono": 7.858921,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.350622
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.858921
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "bunny-health-check.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "bunny-health-check.service"
+      },
+      {
+        "activeEnterMono": 7.685779,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.685779
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.476539
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.55517
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.55517,
+        "mainExit": null,
+        "rawNames": [
+          "bunny-system-broker.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "bunny-system-broker.service"
+      },
+      {
+        "activeEnterMono": 7.249558,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.249558
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "bunny-system-broker.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "bunny-system-broker.socket"
+      },
+      {
+        "activeEnterMono": 7.579823,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.356429
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.579823
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.476576
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.531159
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.531159,
+        "mainExit": null,
+        "rawNames": [
+          "chronyd.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "chronyd.service"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.121176
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.121176,
+        "mainExit": null,
+        "rawNames": [
+          "clevis-luks-askpass.path"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "clevis-luks-askpass.path"
+      },
+      {
+        "activeEnterMono": 8.903113,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 8.87182
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 8.903113
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.476664
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.904515
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.904515,
+        "mainExit": null,
+        "rawNames": [
+          "colord.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "colord.service"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.119675
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.595989
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.595989,
+        "mainExit": null,
+        "rawNames": [
+          "cryptsetup-pre.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "cryptsetup-pre.target"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.115284
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.591086
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.591086,
+        "mainExit": null,
+        "rawNames": [
+          "cryptsetup.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "cryptsetup.target"
+      },
+      {
+        "activeEnterMono": 7.234972,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.234972
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.554736
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.554736,
+        "mainExit": null,
+        "rawNames": [
+          "cups.path"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "cups.path"
+      },
+      {
+        "activeEnterMono": 7.251346,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.251346
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "cups.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "cups.socket"
+      },
+      {
+        "activeEnterMono": 7.333239,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.28306
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.333239
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.578057
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.584449
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.584449,
+        "mainExit": null,
+        "rawNames": [
+          "dbus-broker.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dbus-broker.service"
+      },
+      {
+        "activeEnterMono": 7.253545,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.253545
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "dbus.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dbus.socket"
+      },
+      {
+        "activeEnterMono": 4.988657,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 4.988657
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "dev-hugepages.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dev-hugepages.mount"
+      },
+      {
+        "activeEnterMono": 4.992579,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 4.992579
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "dev-mqueue.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dev-mqueue.mount"
+      },
+      {
+        "activeEnterMono": 1.885554,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 1.871473
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.885554
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.147147
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.147147,
+        "mainExit": null,
+        "rawNames": [
+          "dracut-cmdline-ask.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dracut-cmdline-ask.service"
+      },
+      {
+        "activeEnterMono": 1.996758,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 1.888824
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.996758
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.146086
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.146086,
+        "mainExit": null,
+        "rawNames": [
+          "dracut-cmdline.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dracut-cmdline.service"
+      },
+      {
+        "activeEnterMono": 2.356355,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 2.228488
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.356355
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.122596
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.122596,
+        "mainExit": null,
+        "rawNames": [
+          "dracut-initqueue.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dracut-initqueue.service"
+      },
+      {
+        "activeEnterMono": 2.370374,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 2.361348
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.370374
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.114168
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.114168,
+        "mainExit": null,
+        "rawNames": [
+          "dracut-pre-mount.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dracut-pre-mount.service"
+      },
+      {
+        "activeEnterMono": 3.068839,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 3.03678
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 3.068839
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.097491
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.097491,
+        "mainExit": null,
+        "rawNames": [
+          "dracut-pre-pivot.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dracut-pre-pivot.service"
+      },
+      {
+        "activeEnterMono": 2.153383,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 2.124788
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.153383
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.129034
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.129034,
+        "mainExit": null,
+        "rawNames": [
+          "dracut-pre-trigger.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dracut-pre-trigger.service"
+      },
+      {
+        "activeEnterMono": 2.105044,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 1.99871
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.105044
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.144901
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.144901,
+        "mainExit": null,
+        "rawNames": [
+          "dracut-pre-udev.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dracut-pre-udev.service"
+      },
+      {
+        "activeEnterMono": 7.496165,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.362498
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.496165
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.498877
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.912561
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.912561,
+        "mainExit": null,
+        "rawNames": [
+          "dracut-shutdown.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "dracut-shutdown.service"
+      },
+      {
+        "activeEnterMono": 130.730131,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 130.730131
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "final.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "final.target"
+      },
+      {
+        "activeEnterMono": 7.373361,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.373361
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.516408
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.548427
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.548427,
+        "mainExit": null,
+        "rawNames": [
+          "firewalld.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "firewalld.service"
+      },
+      {
+        "activeEnterMono": 7.540194,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.384239
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.540194
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.499378
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.499378,
+        "mainExit": null,
+        "rawNames": [
+          "flatpak-add-fedora-repos.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "flatpak-add-fedora-repos.service"
+      },
+      {
+        "activeEnterMono": 7.238225,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.238225
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.47152
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.47152,
+        "mainExit": null,
+        "rawNames": [
+          "fstrim.timer"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "fstrim.timer"
+      },
+      {
+        "activeEnterMono": 7.774193,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.753152
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.774193
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.500679
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.562038
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.562038,
+        "mainExit": null,
+        "rawNames": [
+          "gdm.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "gdm.service"
+      },
+      {
+        "activeEnterMono": 9.705102,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 9.63029
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 9.705102
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "geoclue.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "geoclue.service"
+      },
+      {
+        "activeEnterMono": 7.757861,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.757861
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.468974
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.468974,
+        "mainExit": null,
+        "rawNames": [
+          "getty.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "getty.target"
+      },
+      {
+        "activeEnterMono": 7.874049,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.874049
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.467949
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.467949,
+        "mainExit": null,
+        "rawNames": [
+          "graphical.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "graphical.target"
+      },
+      {
+        "activeEnterMono": 7.706206,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.673908
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.706206
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.465558
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.476929
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.476929,
+        "mainExit": null,
+        "rawNames": [
+          "gssproxy.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "gssproxy.service"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.597174
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.597174,
+        "mainExit": null,
+        "rawNames": [
+          "imports.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "imports.target"
+      },
+      {
+        "activeEnterMono": 3.133552,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 3.071358
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 3.133552
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "initrd-cleanup.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "initrd-cleanup.service"
+      },
+      {
+        "activeEnterMono": 3.034103,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 3.034103
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "initrd-fs.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "initrd-fs.target"
+      },
+      {
+        "activeEnterMono": 3.032315,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 3.019069
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 3.032315
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "initrd-parse-etc.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "initrd-parse-etc.service"
+      },
+      {
+        "activeEnterMono": 2.347277,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.347277
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.10217
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.10217,
+        "mainExit": null,
+        "rawNames": [
+          "initrd-root-device.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "initrd-root-device.target"
+      },
+      {
+        "activeEnterMono": 3.017347,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 3.017347
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "initrd-root-fs.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "initrd-root-fs.target"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 3.166367
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "initrd-switch-root.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "initrd-switch-root.service"
+      },
+      {
+        "activeEnterMono": 3.164255,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 3.164255
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "initrd-switch-root.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "initrd-switch-root.target"
+      },
+      {
+        "activeEnterMono": 3.162924,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 3.149234
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 3.162924
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "initrd-udevadm-cleanup-db.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "initrd-udevadm-cleanup-db.service"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.102239
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.102239,
+        "mainExit": null,
+        "rawNames": [
+          "initrd-usr-fs.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "initrd-usr-fs.target"
+      },
+      {
+        "activeEnterMono": 3.035121,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 3.035121
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.098758
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.098758,
+        "mainExit": null,
+        "rawNames": [
+          "initrd.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "initrd.target"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.598134
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.598134,
+        "mainExit": null,
+        "rawNames": [
+          "integritysetup.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "integritysetup.target"
+      },
+      {
+        "activeEnterMono": 7.38919,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.38919
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.508792
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.534522
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.534522,
+        "mainExit": null,
+        "rawNames": [
+          "irqbalance.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "irqbalance.service"
+      },
+      {
+        "activeEnterMono": 4.997493,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.839559
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.153029
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 4.997493
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.153029,
+        "mainExit": null,
+        "rawNames": [
+          "kmod-static-nodes.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "kmod-static-nodes.service"
+      },
+      {
+        "activeEnterMono": 7.211114,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 6.031479
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.211114
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.604496
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.604496,
+        "mainExit": null,
+        "rawNames": [
+          "ldconfig.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "ldconfig.service"
+      },
+      {
+        "activeEnterMono": 5.317349,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.8816
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.111973
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.317349
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.678987
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.678987,
+        "mainExit": null,
+        "rawNames": [
+          "local-fs-pre.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "local-fs-pre.target"
+      },
+      {
+        "activeEnterMono": 5.870398,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.881703
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.110952
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.870398
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.633213
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.633213,
+        "mainExit": null,
+        "rawNames": [
+          "local-fs.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "local-fs.target"
+      },
+      {
+        "activeEnterMono": 7.239415,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.239415
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.471762
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.471762,
+        "mainExit": null,
+        "rawNames": [
+          "logrotate.timer"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "logrotate.timer"
+      },
+      {
+        "activeEnterMono": 7.235875,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.235875
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.556143
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.556143,
+        "mainExit": null,
+        "rawNames": [
+          "lvm-devices-import.path"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "lvm-devices-import.path"
+      },
+      {
+        "activeEnterMono": 7.503626,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.395036
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.503626
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "lvm-devices-import.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "lvm-devices-import.service"
+      },
+      {
+        "activeEnterMono": 4.998917,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 4.998917
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.68226
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.727238
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.727238,
+        "mainExit": null,
+        "rawNames": [
+          "lvm2-monitor.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "lvm2-monitor.service"
+      },
+      {
+        "activeEnterMono": 9.572566,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 9.531811
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 9.572566
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "malcontent-timerd.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "malcontent-timerd.service"
+      },
+      {
+        "activeEnterMono": 7.869437,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.869437
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.468357
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.468357,
+        "mainExit": null,
+        "rawNames": [
+          "multi-user.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "multi-user.target"
+      },
+      {
+        "activeEnterMono": 7.374574,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.374574
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.515122
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.515122,
+        "mainExit": null,
+        "rawNames": [
+          "network-pre.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "network-pre.target"
+      },
+      {
+        "activeEnterMono": 7.665891,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.225243
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.092797
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.665891
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.485514
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.485514,
+        "mainExit": null,
+        "rawNames": [
+          "network.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "network.target"
+      },
+      {
+        "activeEnterMono": 7.71143,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.71143
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.464339
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.464339,
+        "mainExit": null,
+        "rawNames": [
+          "nfs-client.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "nfs-client.target"
+      },
+      {
+        "activeEnterMono": 5.331305,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.331305
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.469508
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.469508,
+        "mainExit": null,
+        "rawNames": [
+          "nss-lookup.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "nss-lookup.target"
+      },
+      {
+        "activeEnterMono": 7.549945,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.549945
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.487259
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.487259,
+        "mainExit": null,
+        "rawNames": [
+          "nss-user-lookup.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "nss-user-lookup.target"
+      },
+      {
+        "activeEnterMono": 3.015571,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 2.95089
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 3.015571
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "ostree-prepare-root.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "ostree-prepare-root.service"
+      },
+      {
+        "activeEnterMono": 5.810521,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.804335
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.810521
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.639678
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.639678,
+        "mainExit": null,
+        "rawNames": [
+          "ostree-remount.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "ostree-remount.service"
+      },
+      {
+        "activeEnterMono": 7.245242,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.103415
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.245242
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.551579
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.551579,
+        "mainExit": null,
+        "rawNames": [
+          "paths.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "paths.target"
+      },
+      {
+        "activeEnterMono": 7.680725,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.557698
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.680725
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.938944
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.951753
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.951753,
+        "mainExit": null,
+        "rawNames": [
+          "polkit.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "polkit.service"
+      },
+      {
+        "activeEnterMono": 130.732762,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 130.732762
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "poweroff.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "poweroff.target"
+      },
+      {
+        "activeEnterMono": 6.749093,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 6.749093
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "proc-sys-fs-binfmt_misc.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "proc-sys-fs-binfmt_misc.mount"
+      },
+      {
+        "activeEnterMono": 7.240542,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.240542
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.471868
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.471868,
+        "mainExit": null,
+        "rawNames": [
+          "raid-check.timer"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "raid-check.timer"
+      },
+      {
+        "activeEnterMono": 7.714407,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.361276
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.093858
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.714407
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.469899
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.469899,
+        "mainExit": null,
+        "rawNames": [
+          "remote-cryptsetup.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "remote-cryptsetup.target"
+      },
+      {
+        "activeEnterMono": 7.712247,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.357692
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.106611
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.712247
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.463141
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.463141,
+        "mainExit": null,
+        "rawNames": [
+          "remote-fs-pre.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "remote-fs-pre.target"
+      },
+      {
+        "activeEnterMono": 7.716221,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.361302
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.106083
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.716221
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.461624
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.461624,
+        "mainExit": null,
+        "rawNames": [
+          "remote-fs.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "remote-fs.target"
+      },
+      {
+        "activeEnterMono": 7.718292,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.718292
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.470339
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.470339,
+        "mainExit": null,
+        "rawNames": [
+          "remote-integritysetup.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "remote-integritysetup.target"
+      },
+      {
+        "activeEnterMono": 7.719217,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.719217
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.47047
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.47047,
+        "mainExit": null,
+        "rawNames": [
+          "remote-veritysetup.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "remote-veritysetup.target"
+      },
+      {
+        "activeEnterMono": 5.942942,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.880252
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.942942
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "rpc-statd-notify.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "rpc-statd-notify.service"
+      },
+      {
+        "activeEnterMono": 6.742983,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 6.742983
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.47065
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.47065,
+        "mainExit": null,
+        "rawNames": [
+          "rpc_pipefs.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "rpc_pipefs.target"
+      },
+      {
+        "activeEnterMono": 7.241607,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.241607
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.475177
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.475177,
+        "mainExit": null,
+        "rawNames": [
+          "rpm-ostree-countme.timer"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "rpm-ostree-countme.timer"
+      },
+      {
+        "activeEnterMono": 7.50563,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.402546
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.50563
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.466523
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.466523,
+        "mainExit": null,
+        "rawNames": [
+          "rpm-ostree-fix-shadow-mode.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "rpm-ostree-fix-shadow-mode.service"
+      },
+      {
+        "activeEnterMono": 7.531269,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.408834
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.531269
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.509068
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.540254
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.540254,
+        "mainExit": null,
+        "rawNames": [
+          "rtkit-daemon.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "rtkit-daemon.service"
+      },
+      {
+        "activeEnterMono": 7.755613,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.755613
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.509107
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.56429
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.56429,
+        "mainExit": null,
+        "rawNames": [
+          "serial-getty@ttyS0.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "serial-getty@ttyS0.service"
+      },
+      {
+        "activeEnterMono": 8.029634,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 8.029634
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.457957
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.915927
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.915927,
+        "mainExit": null,
+        "rawNames": [
+          "session-c1.scope"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "session-c1.scope"
+      },
+      {
+        "activeEnterMono": 130.72913,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 130.72913
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "shutdown.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "shutdown.target"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.107946
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.558469
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.558469,
+        "mainExit": null,
+        "rawNames": [
+          "slices.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "slices.target"
+      },
+      {
+        "activeEnterMono": 7.287949,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.108892
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.287949
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.561039
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.561039,
+        "mainExit": null,
+        "rawNames": [
+          "sockets.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sockets.target"
+      },
+      {
+        "activeEnterMono": 7.289291,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.289291
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.470813
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.470813,
+        "mainExit": null,
+        "rawNames": [
+          "ssh-access.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "ssh-access.target"
+      },
+      {
+        "activeEnterMono": 7.527129,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.413671
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.527129
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.939984
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.939984,
+        "mainExit": null,
+        "rawNames": [
+          "ssh-host-keys-migration.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "ssh-host-keys-migration.service"
+      },
+      {
+        "activeEnterMono": 7.733131,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.733131
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.937561
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.937561,
+        "mainExit": null,
+        "rawNames": [
+          "sshd-keygen.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sshd-keygen.target"
+      },
+      {
+        "activeEnterMono": 7.512104,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.419836
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.512104
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "sshd-keygen@ecdsa.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sshd-keygen@ecdsa.service"
+      },
+      {
+        "activeEnterMono": 7.514107,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.433622
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.514107
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "sshd-keygen@ed25519.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sshd-keygen@ed25519.service"
+      },
+      {
+        "activeEnterMono": 7.726036,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.448477
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.726036
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "sshd-keygen@rsa.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sshd-keygen@rsa.service"
+      },
+      {
+        "activeEnterMono": 7.256569,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.256569
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "sshd-unix-local.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sshd-unix-local.socket"
+      },
+      {
+        "activeEnterMono": 7.286204,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.259774
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.286204
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.569245
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.569245,
+        "mainExit": null,
+        "rawNames": [
+          "sshd-vsock.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sshd-vsock.socket"
+      },
+      {
+        "activeEnterMono": 7.761322,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.738798
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.761322
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.509121
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.557846
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.557846,
+        "mainExit": null,
+        "rawNames": [
+          "sshd.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sshd.service"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.113244
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.653716
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.653716,
+        "mainExit": null,
+        "rawNames": [
+          "swap.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "swap.target"
+      },
+      {
+        "activeEnterMono": 7.535865,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.458284
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.535865
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.94154
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.947524
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.947524,
+        "mainExit": null,
+        "rawNames": [
+          "switcheroo-control.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "switcheroo-control.service"
+      },
+      {
+        "activeEnterMono": 5.003462,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.003462
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "sys-fs-fuse-connections.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sys-fs-fuse-connections.mount"
+      },
+      {
+        "activeEnterMono": 2.853661,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.853661
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "sys-kernel-config.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sys-kernel-config.mount"
+      },
+      {
+        "activeEnterMono": 4.993975,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 4.993975
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "sys-kernel-debug.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sys-kernel-debug.mount"
+      },
+      {
+        "activeEnterMono": 4.995215,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 4.995215
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "sys-kernel-tracing.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sys-kernel-tracing.mount"
+      },
+      {
+        "activeEnterMono": 7.232604,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.223047
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.1099
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.232604
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.589993
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.589993,
+        "mainExit": null,
+        "rawNames": [
+          "sysinit.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sysinit.target"
+      },
+      {
+        "activeEnterMono": 2.949137,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.949137
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "sysroot.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "sysroot.mount"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.117784
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.592339
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.592339,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-ask-password-console.path"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-ask-password-console.path"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.594442
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.594442,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-ask-password-wall.path"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-ask-password-wall.path"
+      },
+      {
+        "activeEnterMono": 6.776546,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.914923
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 6.776546
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.60104
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.62022
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.62022,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-binfmt.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-binfmt.service"
+      },
+      {
+        "activeEnterMono": 5.873566,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.873566
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-bootctl.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-bootctl.socket"
+      },
+      {
+        "activeEnterMono": 2.389279,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 2.370507
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.389279
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-fsck-root.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-fsck-root.service"
+      },
+      {
+        "activeEnterMono": 7.561265,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.561265
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.469723
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.49823
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.49823,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-homed-activate.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-homed-activate.service"
+      },
+      {
+        "activeEnterMono": 7.533972,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.465456
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.533972
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.502511
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.508161
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.508161,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-homed.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-homed.service"
+      },
+      {
+        "activeEnterMono": 7.624717,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.56696
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.624717
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-hostnamed.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-hostnamed.service"
+      },
+      {
+        "activeEnterMono": 7.261223,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.261223
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-hostnamed.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-hostnamed.socket"
+      },
+      {
+        "activeEnterMono": 5.409869,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.029257
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.409869
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.605715
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.605715,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-hwdb-update.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-hwdb-update.service"
+      },
+      {
+        "activeEnterMono": 6.065741,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 6.038256
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 6.065741
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.607234
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.607234,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-journal-catalog-update.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-journal-catalog-update.service"
+      },
+      {
+        "activeEnterMono": 5.862056,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.816234
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.862056
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-journal-flush.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-journal-flush.service"
+      },
+      {
+        "activeEnterMono": 9.340028,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 9.283692
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 9.340028
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-localed.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-localed.service"
+      },
+      {
+        "activeEnterMono": 7.262546,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.262546
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-logind-varlink.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-logind-varlink.socket"
+      },
+      {
+        "activeEnterMono": 7.661229,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.575774
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.661229
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.471105
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.482643
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.482643,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-logind.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-logind.service"
+      },
+      {
+        "activeEnterMono": 5.007124,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.840911
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.125102
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.007124
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.630828
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.630828,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-modules-load.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-modules-load.service"
+      },
+      {
+        "activeEnterMono": 5.011019,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.011019
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.5176
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.5176,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-network-generator.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-network-generator.service"
+      },
+      {
+        "activeEnterMono": 5.322051,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.260015
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.322051
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.430302
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.441336
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.441336,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-oomd.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-oomd.service"
+      },
+      {
+        "activeEnterMono": 130.731201,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 130.731201
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-poweroff.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-poweroff.service"
+      },
+      {
+        "activeEnterMono": 5.861167,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.820473
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.861167
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.516532
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.91308
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.91308,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-random-seed.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-random-seed.service"
+      },
+      {
+        "activeEnterMono": 5.012827,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.012827
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.686122
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.686122,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-remount-fs.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-remount-fs.service"
+      },
+      {
+        "activeEnterMono": 5.324343,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.26582
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.324343
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.602117
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.617678
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.617678,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-resolved.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-resolved.service"
+      },
+      {
+        "activeEnterMono": 7.639889,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.639889
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-rfkill.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-rfkill.socket"
+      },
+      {
+        "activeEnterMono": 5.055168,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 1.84266
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.85238
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.123827
+          },
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.03038
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.055168
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.629803
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.629803,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-sysctl.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-sysctl.service"
+      },
+      {
+        "activeEnterMono": 5.880124,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.880124
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-sysext.socket"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-sysext.socket"
+      },
+      {
+        "activeEnterMono": 5.256634,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.175325
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.256634
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.685115
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.685115,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-sysusers.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-sysusers.service"
+      },
+      {
+        "activeEnterMono": 10.219876,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 10.181462
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 10.219876
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-timedated.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-timedated.service"
+      },
+      {
+        "activeEnterMono": 7.242712,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.242712
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.475231
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.475231,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-tmpfiles-clean.timer"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-tmpfiles-clean.timer"
+      },
+      {
+        "activeEnterMono": 5.141139,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 1.843359
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.860329
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.151782
+          },
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.033056
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.141139
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.687383
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.687383,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-tmpfiles-setup-dev-early.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-tmpfiles-setup-dev-early.service"
+      },
+      {
+        "activeEnterMono": 5.311209,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 1.8625
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.879906
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.150579
+          },
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.268898
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.311209
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.683589
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.683589,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-tmpfiles-setup-dev.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-tmpfiles-setup-dev.service"
+      },
+      {
+        "activeEnterMono": 6.025627,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 1.844658
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.874985
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.126328
+          },
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.934368
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 6.025627
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.631915
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.631915,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-tmpfiles-setup.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-tmpfiles-setup.service"
+      },
+      {
+        "activeEnterMono": 5.020385,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.020385
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.519974
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.519974,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-udev-load-credentials.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-udev-load-credentials.service"
+      },
+      {
+        "activeEnterMono": 5.045602,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 2.155315
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.221556
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.127663
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.045602
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.127663,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-udev-trigger.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-udev-trigger.service"
+      },
+      {
+        "activeEnterMono": 5.533711,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 2.107074
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.12256
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.130279
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.142218
+          },
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.413287
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.533711
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 3.142218,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-udevd.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 2,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-udevd.service"
+      },
+      {
+        "activeEnterMono": 7.231203,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.214395
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.231203
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.603248
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.603248,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-update-done.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-update-done.service"
+      },
+      {
+        "activeEnterMono": 6.04976,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 6.040056
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 6.04976
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.617214
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.622006
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.622006,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-update-utmp.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-update-utmp.service"
+      },
+      {
+        "activeEnterMono": 7.745398,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.723297
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.745398
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.432626
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.452977
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.452977,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-user-sessions.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-user-sessions.service"
+      },
+      {
+        "activeEnterMono": 5.949095,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.937336
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.949095
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.494431
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.494431,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-userdb-load-credentials.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-userdb-load-credentials.service"
+      },
+      {
+        "activeEnterMono": 5.096098,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.068245
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.096098
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-userdbd.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-userdbd.service"
+      },
+      {
+        "activeEnterMono": 5.941297,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 1.869377
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 2.348699
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 2.349842
+          },
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 2.351375
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 2.380158
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.154244
+          },
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.759198
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 5.80765
+          },
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 5.83649
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.941297
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 5.80765,
+        "mainExit": null,
+        "rawNames": [
+          "systemd-vconsole-setup.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 3,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "systemd-vconsole-setup.service"
+      },
+      {
+        "activeEnterMono": 7.246092,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 3.095155
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.246092
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.471051
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.471051,
+        "mainExit": null,
+        "rawNames": [
+          "timers.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "timers.target"
+      },
+      {
+        "activeEnterMono": 4.996327,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 4.996327
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "tmp.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "tmp.mount"
+      },
+      {
+        "activeEnterMono": 7.731218,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.468513
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.731218
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.521093
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.546133
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.546133,
+        "mainExit": null,
+        "rawNames": [
+          "udisks2.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "udisks2.service"
+      },
+      {
+        "activeEnterMono": 130.680319,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 130.680319
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "umount.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "umount.target"
+      },
+      {
+        "activeEnterMono": 7.729787,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.478877
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.729787
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.522213
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.550365
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 84.550365,
+        "mainExit": null,
+        "rawNames": [
+          "upower.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "upower.service"
+      },
+      {
+        "activeEnterMono": 7.862652,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.843508
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 7.862652
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.434849
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.454577
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.454577,
+        "mainExit": null,
+        "rawNames": [
+          "user-runtime-dir@60578.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "user-runtime-dir@60578.service"
+      },
+      {
+        "activeEnterMono": 8.027136,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 7.875802
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 8.027136
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 84.942884
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.371891
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.371891,
+        "mainExit": null,
+        "rawNames": [
+          "user@60578.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "user@60578.service"
+      },
+      {
+        "activeEnterMono": 6.73931,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 6.73931
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "var-lib-nfs-rpc_pipefs.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "var-lib-nfs-rpc_pipefs.mount"
+      },
+      {
+        "activeEnterMono": 5.793895,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 5.793895
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": null,
+        "mainExit": null,
+        "rawNames": [
+          "var.mount"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "var.mount"
+      },
+      {
+        "activeEnterMono": null,
+        "disposition": "inactive-no-activation-observed",
+        "events": [
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.599237
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.599237,
+        "mainExit": null,
+        "rawNames": [
+          "veritysetup.target"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 0,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "veritysetup.target"
+      },
+      {
+        "activeEnterMono": 9.702326,
+        "disposition": "activated-and-succeeded",
+        "events": [
+          {
+            "detail": null,
+            "kind": "starting",
+            "monotonic": 9.686476
+          },
+          {
+            "detail": null,
+            "kind": "started",
+            "monotonic": 9.702326
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.495497
+          },
+          {
+            "detail": null,
+            "kind": "stopped",
+            "monotonic": 130.49613
+          }
+        ],
+        "failures": 0,
+        "inactiveEnterMono": 130.49613,
+        "mainExit": null,
+        "rawNames": [
+          "wpa_supplicant.service"
+        ],
+        "restartCounterMax": 0,
+        "result": null,
+        "scope": "system",
+        "skipped": [],
+        "started": 1,
+        "uid": null,
+        "uidHadSession": null,
+        "unit": "wpa_supplicant.service"
+      }
+    ],
+    "timeline": {
+      "avahiActivation": 7.339672,
+      "dbusReady": 7.333239,
+      "gdmActive": 7.774193,
+      "gdmStartRequested": 7.753152,
+      "graphicalTarget": 7.874049,
+      "graphicsDeviceReady": 1.831902,
+      "greeterSessionOpened": 8.033558,
+      "healthCheck": 7.858921,
+      "kernelStart": 1.827681,
+      "logindReady": 7.661229,
+      "multiUserTarget": 7.869437,
+      "networkManagerReady": 7.654658,
+      "pipewireFirstSeen": 8.019143,
+      "seat0Created": 7.652854
+    },
+    "userUnits": [],
+    "wallClock": {
+      "first": 1785626851.745202,
+      "last": 1785626982.241177
+    }
+  },
+  "artifact": {
+    "name": "bunny-os-b9c317d35b85.qcow2",
+    "sha256": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217"
+  },
+  "authority": {
+    "cpuMode": "host",
+    "failedUnitCollectorVersion": "dsq-failed-units-1",
+    "installationArtifactDigest": "0b7dd90d86f11c713246a0fd36e63b5d7dddcccad45de710239e5add28fab217",
+    "journalCollectorVersion": "dsq-journal-1",
+    "machineType": "pc-q35-10.2",
+    "ovmfCodeDigest": "6551948da24a02553476c1c1edccb0bb92a57dce9d722d7b396ac14547e6d9af",
+    "ovmfVarsTemplateDigest": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb",
+    "qemuDigest": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+    "scenarioVersion": "dsq-1",
+    "sourceArchiveDigest": "29e54aaf9dd1ecc60e263fed3e6e06226115b76033b3965bdcd062441bcc2f30",
+    "sourceCommit": "b9c317d35b85aa082904ecd40c4a54c81aded99a",
+    "swtpmDigest": "32c411b8d1b269ca6b5ae922e84459dec5669dc96ca17bb5cf8119f830ab7ce0"
+  },
+  "cell": "A",
+  "cellConfiguration": {
+    "description": "ordinary no-TPM cold boot, vars reused after normal boot entry exists",
+    "expectedResets": 0,
+    "memory": 8192,
+    "network": true,
+    "smp": 4,
+    "tpm": false,
+    "vars": "seed"
+  },
+  "collection": {
+    "binaryJournalManifestSha256": "9042ba267cebfae49bba787e57ab4d7d522064ab9ac58e9b97999475c4170cd3",
+    "binaryJournalRetainedAt": "/root/dsq-traces/DSQ-20260801-cellA-001/journal",
+    "bootId": "ccdbc2fd8e494f95a05f03ccb9fc8c34",
+    "bootsInJournal": 1,
+    "coredumpFiles": [],
+    "excerpts": {
+      "journal-avahi.log": "written",
+      "journal-full-short-monotonic.log": "written",
+      "journal-gdm.log": "written",
+      "journal-warnings.log": "written"
+    },
+    "journalCollectorVersion": "dsq-journal-1",
+    "journalExtraction": "ok",
+    "status": "ok"
+  },
+  "completedAt": "2026-08-01T23:29:58.146Z",
+  "evidenceManifest": [
+    {
+      "path": "journal/journal-avahi.log",
+      "sha256": "9cb01267c6c4ee9040ad4b820c3141af985628b6bf812d71f156a8acbb2ef0ff",
+      "sizeBytes": 3884
+    },
+    {
+      "path": "journal/journal-full-short-monotonic.log",
+      "sha256": "03399cf63933685bef6be22a5e1ae88c6020a108b8503709b4b53338e0916ecf",
+      "sizeBytes": 252046
+    },
+    {
+      "path": "journal/journal-gdm.log",
+      "sha256": "e37a4d84352ca51943c12a915f58bf61f1d91042a80c08a41a37cd971fd4d284",
+      "sizeBytes": 395
+    },
+    {
+      "path": "journal/journal-warnings.log",
+      "sha256": "ddb47d67416760945aa3f1ad2050aeac676f043426aa124495163a28e98b27cb",
+      "sizeBytes": 8467
+    },
+    {
+      "path": "qemu-command.json",
+      "sha256": "ec34c03713b17d0b406b39d013c3f36f114d18eea54951aa13b0c5f411f53a06",
+      "sizeBytes": 900
+    },
+    {
+      "path": "qmp-events.jsonl",
+      "sha256": "c12dc62ebd803c30d4fe0fb30dadac3cda4956f68cdc76a26f1a458994e0faba",
+      "sizeBytes": 1100
+    },
+    {
+      "path": "screenshots/graphical-reached.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/observation-window-end.ppm",
+      "sha256": "0b4492eeaea267e83c9502892f3dc75b10b2d88ef50922d5693b71f9e59f2324",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/stage-graphical.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/stage-health-check.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "ca0c322829416b9c13c962283a87abcf051c9c21391b718ec63baf3c4855da65",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "491d7c31390d9cf964caa927ec0ee55c69f35d60357766e268e9529a3fbe133b",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "serial.log",
+      "sha256": "7c6483d45f98da76525c274ca1cf8dbbee70b1a47b5ca39a9366348c6795e87b",
+      "sizeBytes": 137750
+    }
+  ],
+  "expectedResets": 0,
+  "graphicalTargetOnSerial": true,
+  "guestResetCount": 0,
+  "guestResetTimes": [],
+  "journalCollectorVersion": "dsq-journal-1",
+  "limitations": [],
+  "liveOutcome": "observed",
+  "observationWindowCompleted": true,
+  "observationWindowSeconds": 75,
+  "qemuExitCode": 0,
+  "runId": "DSQ-20260801-cellA-001",
+  "schemaVersion": 1,
+  "seeding": false,
+  "sequence": 1,
+  "serialStages": [
+    "boot-option-started",
+    "firmware-bds",
+    "graphical",
+    "health-check",
+    "initramfs",
+    "kernel-loaded",
+    "multi-user"
+  ],
+  "shutdownMethod": "acpi-powerdown",
+  "startedAt": "2026-08-01T23:27:26.391Z",
+  "status": "COLLECTED",
+  "varsSource": {
+    "kind": "seed",
+    "path": "/root/bunny-os/qualification/display-stack/seeds/cellA-OVMF_VARS.qcow2",
+    "sha256": "fd3cde7fe226bba97e131479c53b733531794c9ba6abc78b5b3f82b731675934"
+  }
+}

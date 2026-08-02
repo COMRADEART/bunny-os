@@ -1,0 +1,6 @@
+# Qualification evidence is attested by sha256 digests recorded inside the
+# evidence trees. Any content filter (EOL normalization included) silently
+# breaks the attestation on checkout, so evidence bytes must round-trip git
+# exactly.
+qualification/** -text
+build/out/** -text
