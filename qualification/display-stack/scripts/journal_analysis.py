@@ -262,6 +262,22 @@ def analyze_boot(journal_dir: Path, boot_id: str) -> dict[str, Any]:
                     timeline["authselectApplyStart"] = mono(entry)
                 elif message.startswith("Finished"):
                     timeline["authselectApplyEnd"] = mono(entry)
+            elif unit_field == "chronyd.service":
+                # dsq-2: the chronyd ordering correction is an assertion about
+                # two timestamps, so both have to exist as timestamps. The
+                # dsq-1 analysis recorded the authselect window but nothing
+                # about chronyd, which is why the ordering could only be
+                # argued from the absence of a failure rather than measured.
+                #
+                # First-wins on the request: a restart after the window would
+                # otherwise overwrite the spawn that the race is about.
+                if message.startswith("Starting"):
+                    timeline.setdefault("chronydStartRequested", mono(entry))
+                elif message.startswith("Started"):
+                    timeline.setdefault("chronydActive", mono(entry))
+            elif unit_field == "nss-user-lookup.target" and \
+                    message.startswith("Reached target"):
+                timeline.setdefault("nssUserLookupReached", mono(entry))
             elif unit_field in ("poweroff.target", "shutdown.target") and \
                     message.startswith(("Reached target", "Starting")):
                 if shutdown_initiated is None:
@@ -409,6 +425,8 @@ def analyze_boot(journal_dir: Path, boot_id: str) -> dict[str, Any]:
         "kernelGraphicsErrors": kernel_gfx_errors[:50],
         "gdm": _gdm_assertions(system_units, timeline, coredumps, entries,
                                msg, mono, shutdown_initiated, failure_phases),
+        "firstLogin": _first_login_assertions(user_rendered, sessions_by_uid),
+        "chronydOrdering": _chronyd_ordering(system_units, timeline),
     }
 
 
@@ -457,6 +475,107 @@ def _gdm_assertions(system_units: dict, timeline: dict, coredumps: list,
     }
 
 
+#: Uids and account names that are part of the display stack rather than a
+#: person logging in. A first login must be none of these.
+INFRASTRUCTURE_ACCOUNTS = ("gdm", "gnome-initial-setup")
+
+FIRST_LOGIN_UNITS = ("bunny-config-dir.service", "bunny-first-boot.service")
+
+
+def _first_login_assertions(user_rendered: list[dict],
+                            sessions_by_uid: dict) -> dict:
+    """dsq-2 — what the first-login units did, per logged-in uid.
+
+    Read from userUnits, which is built from USER_UNIT. A system-journal
+    query cannot answer any of this: these units exist only inside a user
+    manager, and a prior collector that read UNIT alone reported the 60/60
+    bunny-first-boot failure as an empty list.
+
+    Every field is None when the boot cannot answer it, never a falsy
+    default — an absent session and a session whose units all succeeded must
+    not render identically.
+    """
+    logged_in = sorted(
+        uid for uid, names in sessions_by_uid.items()
+        if uid and uid != "0" and any(
+            not any(account in name for account in INFRASTRUCTURE_ACCOUNTS)
+            for name in names))
+
+    per_uid: dict[str, dict] = {}
+    for uid in logged_in:
+        units: dict[str, dict | None] = {}
+        for unit_name in FIRST_LOGIN_UNITS:
+            found = next((u for u in user_rendered
+                          if u["unit"] == unit_name and u["uid"] == uid), None)
+            if found is None:
+                units[unit_name] = None
+                continue
+            exit_status = (found.get("mainExit") or {}).get("status")
+            units[unit_name] = {
+                "disposition": found["disposition"],
+                "result": found["result"],
+                "mainExitStatus": exit_status,
+                "failuresDuringBoot": found["failuresDuringBoot"],
+                "restartCounterMax": found["restartCounterMax"],
+                "activeEnterMono": found["activeEnterMono"],
+                # 226/NAMESPACE is the signature of the corrected defect: the
+                # mount namespace could not be built, so ExecStart never ran.
+                # Named explicitly because a gate that only counted failures
+                # would report the correction as working the moment the unit
+                # failed some other way.
+                "namespaceFailure": exit_status == "226/NAMESPACE",
+            }
+        per_uid[uid] = units
+
+    return {
+        "loggedInUids": logged_in,
+        "sessionCount": len(logged_in),
+        "units": per_uid,
+        "anyNamespaceFailure": any(
+            (entry or {}).get("namespaceFailure")
+            for units in per_uid.values() for entry in units.values()),
+    }
+
+
+def _chronyd_ordering(system_units: dict, timeline: dict) -> dict:
+    """dsq-2 — the chronyd correction stated as two comparable timestamps.
+
+    `orderedAfterAuthselect` is None, not False, when either timestamp is
+    absent: a boot where authselect had nothing to apply proves nothing about
+    the ordering and must not be counted as proving it holds.
+    """
+    chronyd = system_units.get("chronyd.service")
+    exit_status = None
+    if chronyd and chronyd.get("mainExit"):
+        exit_status = chronyd["mainExit"].get("status")
+
+    start = timeline.get("chronydStartRequested")
+    apply_end = timeline.get("authselectApplyEnd")
+    apply_start = timeline.get("authselectApplyStart")
+    ordered = None
+    if start is not None and apply_end is not None:
+        ordered = start >= apply_end
+
+    inside_window = None
+    if start is not None and apply_start is not None and apply_end is not None:
+        inside_window = apply_start <= start <= apply_end
+
+    return {
+        "chronydStartRequestedMono": start,
+        "chronydActiveMono": timeline.get("chronydActive"),
+        "nssUserLookupReachedMono": timeline.get("nssUserLookupReached"),
+        "authselectApplyStartMono": apply_start,
+        "authselectApplyEndMono": apply_end,
+        "orderedAfterAuthselect": ordered,
+        "startedInsideApplyWindow": inside_window,
+        "mainExitStatus": exit_status,
+        # 217/USER is the exact failure the ordering correction targets: the
+        # account could not be resolved when chronyd spawned.
+        "userResolutionFailure": exit_status == "217/USER",
+        "observed": chronyd is not None,
+    }
+
+
 def excerpts(journal_dir: Path, boot_id: str, out_dir: Path) -> dict[str, str]:
     """Stage 4 excerpt files, hashed by the caller's manifest pass."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -470,6 +589,20 @@ def excerpts(journal_dir: Path, boot_id: str, out_dir: Path) -> dict[str, str]:
         "journal-avahi.log": ("-b", boot_id, "-o", "short-monotonic",
                               "-u", "avahi-daemon.service",
                               "-u", "avahi-daemon.socket"),
+        # dsq-2. `-u` matches system units only, so the first-login units —
+        # which exist only in a user manager — produce an empty file under it.
+        # That empty file was how a prior collector reported the 60/60
+        # bunny-first-boot failure as nothing at all. `--user-unit` is the
+        # query that can see them, and these excerpts are the evidence the
+        # gate requires instead of a system-journal substitute.
+        "journal-first-login-user-units.log": (
+            "-b", boot_id, "-o", "short-monotonic",
+            "--user-unit", "bunny-first-boot.service",
+            "--user-unit", "bunny-config-dir.service",
+            "--user-unit", "systemd-tmpfiles-setup.service"),
+        "journal-chronyd.log": ("-b", boot_id, "-o", "short-monotonic",
+                                "-u", "chronyd.service",
+                                "-u", "authselect-apply-changes.service"),
     }.items():
         try:
             (out_dir / name).write_text(_journalctl(journal_dir, *args),
