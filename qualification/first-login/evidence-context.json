@@ -3,7 +3,7 @@
   "cpuMode": "host",
   "guestfishVersion": "guestfish 1.60.1fedora=44,release=1.fc44,libvirt",
   "installationArtifact": "bunny-os-93d1f6fb4f23.qcow2",
-  "installationArtifactDigest": "1c552675d564903b6493f05d457fe99dc046bd7e965b7c649e443b963887987e",
+  "installationArtifactDigest": "1290afe9eeb54b1d9f2385bc760d2ce5616d9580bc3b529ead5b55f6aa931249",
   "journalctlVersion": "systemd 259 (259.8-1.fc44)",
   "machineType": "pc-q35-10.2",
   "ovmfCodeDigest": "6551948da24a02553476c1c1edccb0bb92a57dce9d722d7b396ac14547e6d9af",
@@ -15,8 +15,8 @@
   "scenarioName": "first-login and display-stack requalification",
   "scenarioVersion": "dsq-2",
   "schemaVersion": 1,
-  "sourceArchiveDigest": "36736f369646e73a8c831578b267f72148f15e16af318677e13b870c72b84d08",
-  "sourceCommit": "15b3787550050e6462c49d066cfcf593cccf0db6",
+  "sourceArchiveDigest": "38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd",
+  "sourceCommit": "12b5423b9f1b2fe4938bac393d8d65fb6b9fb47b",
   "supersedes": {
     "note": "dsq-1 measured the b9c317d archive, in which bunny-first-boot.service failed on 60 of 60 fresh homes and chronyd failed on 1 of 60 boots. Its records remain evidence about that archive and are not evidence about this one.",
     "scenarioVersion": "dsq-1"
