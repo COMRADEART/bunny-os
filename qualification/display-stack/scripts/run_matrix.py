@@ -15,6 +15,7 @@ import argparse
 import datetime
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -28,10 +29,23 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--evidence-root", type=Path,
                         default=ROOT / "qualification/display-stack/evidence")
-    parser.add_argument("--date-tag",
-                        default=datetime.date.today().strftime("%Y%m%d"))
+    parser.add_argument("--date-tag", default=None,
+                        help="defaults to the newest date tag already "
+                             "present in the evidence root, so a rerun "
+                             "continues that matrix instead of starting a "
+                             "parallel one after midnight; today's date "
+                             "only when no matrix exists yet")
     parser.add_argument("--cells", default="ABCDE")
     args = parser.parse_args()
+
+    if args.date_tag is None:
+        existing = sorted({
+            match.group("date")
+            for entry in args.evidence_root.iterdir()
+            if (match := re.match(r"DSQ-(?P<date>\d{8})-cell[A-E]-\d{3}$",
+                                  entry.name))})
+        args.date_tag = (existing[-1] if existing
+                         else datetime.date.today().strftime("%Y%m%d"))
 
     for cell, count in PLAN:
         if cell not in args.cells:

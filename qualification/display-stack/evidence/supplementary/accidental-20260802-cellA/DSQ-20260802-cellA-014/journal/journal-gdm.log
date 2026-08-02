@@ -1,0 +1,9 @@
+[    7.754668] fedora systemd[1]: Starting gdm.service - GNOME Display Manager...
+[    7.781146] fedora systemd[1]: Started gdm.service - GNOME Display Manager.
+[   84.320427] fedora gdm[1034]: Gdm: Tried to look up non-existent conversation gdm-launch-environment
+[   84.320625] fedora gdm[1034]: Gdm: Freeing conversation 'gdm-launch-environment' with active job
+[   84.380161] fedora systemd[1]: Stopping gdm.service - GNOME Display Manager...
+[   84.826586] fedora gdm[1034]: Gdm: Child process -1153 was already dead.
+[   84.832982] fedora gdm[1034]: Gdm: Child process -1153 was already dead.
+[   84.934715] fedora systemd[1]: gdm.service: Deactivated successfully.
+[   84.934971] fedora systemd[1]: Stopped gdm.service - GNOME Display Manager.

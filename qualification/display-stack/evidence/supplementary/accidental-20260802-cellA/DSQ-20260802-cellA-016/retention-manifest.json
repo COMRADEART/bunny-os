@@ -1,0 +1,60 @@
+{
+  "retainedOn": "comrade",
+  "retainedTime": "2026-08-02T05:55:58+00:00",
+  "files": [
+    {
+      "path": "screenshots/graphical-reached.ppm",
+      "sha256": "27314f98acbe1f4bee9dadb2b438ab6f81fdc1dc91a67c7007d56675ed86ca0c",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/supplementary-accidental-20260802/DSQ-20260802-cellA-016/screenshots/graphical-reached.ppm"
+    },
+    {
+      "path": "screenshots/observation-window-end.ppm",
+      "sha256": "0b4492eeaea267e83c9502892f3dc75b10b2d88ef50922d5693b71f9e59f2324",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/supplementary-accidental-20260802/DSQ-20260802-cellA-016/screenshots/observation-window-end.ppm"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/supplementary-accidental-20260802/DSQ-20260802-cellA-016/screenshots/stage-boot-option-started.ppm"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/supplementary-accidental-20260802/DSQ-20260802-cellA-016/screenshots/stage-firmware-bds.ppm"
+    },
+    {
+      "path": "screenshots/stage-graphical.ppm",
+      "sha256": "27314f98acbe1f4bee9dadb2b438ab6f81fdc1dc91a67c7007d56675ed86ca0c",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/supplementary-accidental-20260802/DSQ-20260802-cellA-016/screenshots/stage-graphical.ppm"
+    },
+    {
+      "path": "screenshots/stage-health-check.ppm",
+      "sha256": "9a81e43c774ccb4c09d3de2f62d4fff5e19f0e020229b4f534168eb1c6b12cb6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/supplementary-accidental-20260802/DSQ-20260802-cellA-016/screenshots/stage-health-check.ppm"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "9a7904142495eaa5437d161f7cfab76aef17c21587aaf27438111b3b872d2ac0",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/supplementary-accidental-20260802/DSQ-20260802-cellA-016/screenshots/stage-initramfs.ppm"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "a58da4b1e02ecff3e930661431700fb762fa787b1491b8a59bcd2d83ed253eaf",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/supplementary-accidental-20260802/DSQ-20260802-cellA-016/screenshots/stage-kernel-loaded.ppm"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "9a81e43c774ccb4c09d3de2f62d4fff5e19f0e020229b4f534168eb1c6b12cb6",
+      "sizeBytes": 3072016,
+      "retainedAt": "/root/dsq-traces/supplementary-accidental-20260802/DSQ-20260802-cellA-016/screenshots/stage-multi-user.ppm"
+    }
+  ]
+}
