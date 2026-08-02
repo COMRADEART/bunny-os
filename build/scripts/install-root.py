@@ -217,6 +217,17 @@ def main() -> int:
     # and the artifact is what gets installed. A build that produced an image
     # whose accessibility service is inert must fail here, where it is cheap,
     # rather than on a device where it is silent.
+    # The user-tmpfiles rule has the same failure shape as an unactivated
+    # unit: it is read from one search path, systemd never reports that it
+    # looked, and a rule in the wrong directory is indistinguishable from no
+    # rule at all until a fresh home fails to get its directories. Resolved
+    # before the unit table so the refusal below stays adjacent to the check
+    # that produces it.
+    user_tmpfiles_rule = Path("/usr/share/user-tmpfiles.d/bunny-os.conf")
+    inert_rule = [] if user_tmpfiles_rule.is_file() else [
+        f"the per-user tmpfiles rule (expected {user_tmpfiles_rule}; "
+        "/usr/lib/user-tmpfiles.d is not a --user search path)"]
+
     required_activation = {
         "bunny-brlapi-key.service": Path(
             "/etc/systemd/system/sysinit.target.wants/bunny-brlapi-key.service"
@@ -235,20 +246,11 @@ def main() -> int:
             "/etc/systemd/user/graphical-session.target.wants/bunny-first-boot.service"
         ),
     }
-    missing_activation = [
+    missing_activation = inert_rule + [
         f"{unit} (expected {link})"
         for unit, link in required_activation.items()
         if not link.is_symlink()
     ]
-    # The user-tmpfiles rule has the same failure shape as an unactivated
-    # unit: it is read from one search path, systemd never says it looked, and
-    # a rule in the wrong directory is indistinguishable from no rule at all
-    # until a fresh home fails to get its directories.
-    user_tmpfiles_rule = Path("/usr/share/user-tmpfiles.d/bunny-os.conf")
-    if not user_tmpfiles_rule.is_file():
-        missing_activation.append(
-            f"the per-user tmpfiles rule (expected {user_tmpfiles_rule}; "
-            "/usr/lib/user-tmpfiles.d is not a --user search path)")
     if missing_activation:
         raise SystemExit(
             "BLOCKED: these units are not activated in the built filesystem: "
