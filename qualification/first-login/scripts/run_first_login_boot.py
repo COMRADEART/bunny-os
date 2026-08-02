@@ -203,8 +203,9 @@ def run_one_boot(boot: Boot, qemu_base: list[str], work: Path, cell: dict,
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cell", required=True, choices=list(CELLS))
-    parser.add_argument("--sequence", type=int, required=True)
+    parser.add_argument("--cell", required=True,
+                        choices=[*CELLS, "seed-A", "seed-B"])
+    parser.add_argument("--sequence", type=int, default=1)
     parser.add_argument("--second-login", action="store_true")
     parser.add_argument("--disk-source", type=Path, required=True)
     parser.add_argument("--context", type=Path,
@@ -222,8 +223,23 @@ def main() -> int:
     args = parser.parse_args()
 
     context = load_context(args.context)
-    cell_name = args.cell
+    seeding = args.cell.startswith("seed-")
+    cell_name = args.cell[-1] if seeding else args.cell
     cell = dict(CELLS[cell_name])
+    if seeding:
+        # A seed boot is the boot that creates the reusable variable store —
+        # and, for B, the TPM state — from fresh inputs. The corrected archive
+        # is a different disk, so the dsq-1 seeds do not describe it: their
+        # boot entries name another deployment. Cells A, B, D and E all boot
+        # from a seed, so this has to run first.
+        #
+        # Measured in tpmq-1: shim's fallback chainloads the created boot
+        # entry directly with no TPM attached, and takes its one designed
+        # restoration reset only when one is present.
+        cell["vars"] = "fresh"
+        cell["expectedResets"] = 1 if cell.get("tpm") else 0
+        if cell.get("tpm"):
+            cell["tpmState"] = "fresh"
 
     digest = sha256_file(args.disk_source)
     if digest != context["installationArtifactDigest"]:
@@ -234,7 +250,8 @@ def main() -> int:
         return 2
 
     date_tag = args.date_tag or datetime.date.today().strftime("%Y%m%d")
-    run_id = f"FLQ-{date_tag}-cell{cell_name}-{args.sequence:03d}"
+    run_id = (f"FLQ-{date_tag}-seed{cell_name}" if seeding
+              else f"FLQ-{date_tag}-cell{cell_name}-{args.sequence:03d}")
     evidence_dir = args.evidence_root / run_id
     if evidence_dir.exists():
         print(f"REFUSED: {evidence_dir} exists; a superseding run takes a new "
@@ -251,7 +268,8 @@ def main() -> int:
         "scenarioVersion": SCENARIO_VERSION,
         "runId": run_id,
         "cell": cell_name,
-        "sequence": args.sequence,
+        "seeding": seeding,
+        "sequence": None if seeding else args.sequence,
         "cellConfiguration": cell,
         "secondLoginPlanned": args.second_login,
         "startedAt": now(),
@@ -271,7 +289,7 @@ def main() -> int:
             encoding="utf-8")
         shutil.rmtree(work, ignore_errors=True)
         print(f"{run_id}: {status}")
-        return 0 if status == "COLLECTED" else 1
+        return 0 if status in ("COLLECTED", "SEEDED") else 1
 
     # ------------------------------------------------------------- overlay
     overlay = work / "disk-overlay.qcow2"
@@ -395,6 +413,25 @@ def main() -> int:
             except subprocess.TimeoutExpired:
                 swtpm_process.kill()
     record["boots"] = boots
+
+    # ------------------------------------------------- seed preservation
+    if seeding:
+        args.seed_root.mkdir(parents=True, exist_ok=True)
+        seed_vars_out = args.seed_root / f"cell{cell_name}-OVMF_VARS.qcow2"
+        shutil.copy(vars_copy, seed_vars_out)
+        seed_note = {"fromRun": run_id,
+                     "varsSha256": sha256_file(seed_vars_out)}
+        if cell.get("tpm"):
+            seed_state_out = args.seed_root / "cellB-tpm-state"
+            if seed_state_out.exists():
+                shutil.rmtree(seed_state_out)
+            shutil.copytree(tpm_state, seed_state_out)
+            seed_note["tpmStateManifest"] = manifest(seed_state_out)
+        record["seedProduced"] = seed_note
+        # A seed boot establishes firmware state. It is not a measured login
+        # and must never fill a matrix cell, so it stops here rather than
+        # producing analyses a gate could count.
+        return finish("SEEDED")
 
     # -------------------------------------------------- offline collection
     collection: dict = {"journalCollectorVersion": JOURNAL_COLLECTOR_VERSION}
