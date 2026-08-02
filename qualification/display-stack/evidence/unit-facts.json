@@ -1,0 +1,57 @@
+{
+  "disk": "bunny-os-b9c317d35b85.qcow2",
+  "deploymentRoot": "/ostree/deploy/default/deploy/f41de91266c8a0042674608becc9aab637ae43e7fb697e418414dc647f77a38b.0",
+  "systemUnits": {
+    "gdm.service": {
+      "unitFilePath": "/usr/lib/systemd/system/gdm.service",
+      "body": "[Unit]\nDescription=GNOME Display Manager\n\n# replaces the getty\nConflicts=getty@tty1.service\nAfter=getty@tty1.service\n\n# replaces plymouth-quit since it quits plymouth on its own\nConflicts=plymouth-quit.service\nAfter=plymouth-quit.service\n\n# Needs all the dependencies of the services it's replacing\n# pulled from getty@.service and plymouth-quit.service\n# (except for plymouth-quit-wait.service since it waits until\n# plymouth is quit, which we do)\nAfter=rc-local.service plymouth-start.service systemd-user-sessions.service\n\n# GDM takes responsibility for stopping plymouth, so if it fails\n# for any reason, make sure plymouth still stops\nOnFailure=plymouth-quit.service\n\n[Service]\nExecStart=/usr/bin/gdm\nKillMode=mixed\nRestart=always\nIgnoreSIGPIPE=no\nBusName=org.gnome.DisplayManager\nEnvironmentFile=-/etc/locale.conf\nExecReload=/bin/kill -SIGHUP $MAINPID\nKeyringMode=shared\n\n[Install]\nAlias=display-manager.service\n\n",
+      "etcOverride": null
+    },
+    "avahi-daemon.service": {
+      "unitFilePath": "/usr/lib/systemd/system/avahi-daemon.service",
+      "body": "# This file is part of avahi.\n#\n# avahi is free software; you can redistribute it and/or modify it\n# under the terms of the GNU Lesser General Public License as\n# published by the Free Software Foundation; either version 2 of the\n# License, or (at your option) any later version.\n#\n# avahi is distributed in the hope that it will be useful, but WITHOUT\n# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY\n# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public\n# License for more details.\n#\n# You should have received a copy of the GNU Lesser General Public\n# License along with avahi; if not, write to the Free Software\n# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307\n# USA.\n\n[Unit]\nDescription=Avahi mDNS/DNS-SD Stack\nRequires=avahi-daemon.socket\n\n[Service]\nType=dbus\nBusName=org.freedesktop.Avahi\nExecStart=/usr/bin/avahi-daemon -s\nExecReload=/usr/bin/avahi-daemon -r\nNotifyAccess=main\n\n[Install]\nWantedBy=multi-user.target\nAlso=avahi-daemon.socket\nAlias=dbus-org.freedesktop.Avahi.service\n\n",
+      "etcOverride": null
+    },
+    "avahi-daemon.socket": {
+      "unitFilePath": "/usr/lib/systemd/system/avahi-daemon.socket",
+      "body": "# This file is part of avahi.\n#\n# avahi is free software; you can redistribute it and/or modify it\n# under the terms of the GNU Lesser General Public License as\n# published by the Free Software Foundation; either version 2 of the\n# License, or (at your option) any later version.\n#\n# avahi is distributed in the hope that it will be useful, but WITHOUT\n# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY\n# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public\n# License for more details.\n#\n# You should have received a copy of the GNU Lesser General Public\n# License along with avahi; if not, write to the Free Software\n# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307\n# USA.\n\n[Unit]\nDescription=Avahi mDNS/DNS-SD Stack Activation Socket\n\n[Socket]\nListenStream=/run/avahi-daemon/socket\n\n[Install]\nWantedBy=sockets.target\n\n",
+      "etcOverride": null
+    },
+    "accounts-daemon.service": {
+      "unitFilePath": "/usr/lib/systemd/system/accounts-daemon.service",
+      "body": "[Unit]\nDescription=Accounts Service\n\n# In order to avoid races with identity-providing services like SSSD or\n# winbind, we need to ensure that Accounts Service starts after\n# nss-user-lookup.target\nAfter=nss-user-lookup.target\nWants=nss-user-lookup.target\n\n[Service]\nType=dbus\nBusName=org.freedesktop.Accounts\nExecStart=/usr/libexec/accounts-daemon\nEnvironment=GVFS_DISABLE_FUSE=1\nEnvironment=GIO_USE_VFS=local\nEnvironment=GVFS_REMOTE_VOLUME_MONITOR_IGNORE=1\n\nStateDirectory=AccountsService\nStateDirectoryMode=0775\n\nProtectSystem=strict\nPrivateDevices=true\nProtectKernelTunables=true\nProtectKernelModules=true\nProtectControlGroups=true\n# Write access is needed to create home directories:\nProtectHome=false\n# Needed sometime for data shared like icons\nPrivateTmp=false\nPrivateNetwork=true\n# We need access to the canonical user database:\nPrivateUsers=false\n# For D-Bus:\nRestrictAddressFamilies=AF_UNIX\nSystemCallArchitectures=native\nSystemCallFilter=~@mount\nRestrictNamespaces=true\nLockPersonality=true\nMemoryDenyWriteExecute=true\nRestrictRealtime=true\nRemoveIPC=true\n\n# In addition to the below paths,\n#  - /var/lib/AccountsService/users/ and\n#  - /var/lib/AccountsService/icons/\n# are read/written by the daemon. See StateDirectory= above.\n#\n# The paths in /etc are not directly modified by AccountsService, but by\n# usermod, which it spawns.\n#\n# The paths in /var/log and /var/mail are touched by useradd/userdel when adding\n# or deleting users.\nReadWritePaths=\\\n  -/etc/gdm/custom.conf \\\n  /etc/ \\\n  -/var/log/lastlog \\\n  -/var/log/tallylog \\\n  -/var/mail/\nReadOnlyPaths=\\\n  /usr/share/accountsservice/interfaces/ \\\n  /usr/share/dbus-1/interfaces/ \\\n  /var/log/wtmp \\\n  /run/systemd/seats/\n\n[Install]\n# We pull this in by graphical.target instead of waiting for the bus\n# activation, to speed things up a little: gdm uses this anyway so it is nice\n# if it is already around when gdm wants to use it and doesn't have to wait for\n# it.\nWantedBy=graphical.target\n\n",
+      "etcOverride": null
+    },
+    "plymouth-quit.service": {
+      "unitFilePath": null,
+      "body": null,
+      "etcOverride": null
+    }
+  },
+  "displayManagerAlias": {
+    "etc": "/usr/lib/systemd/system/gdm.service",
+    "usr": null
+  },
+  "graphicalTargetWants": [
+    "accounts-daemon.service",
+    "rtkit-daemon.service",
+    "switcheroo-control.service",
+    "udisks2.service",
+    "upower.service"
+  ],
+  "multiUserWantsAvahi": true,
+  "screencast": {
+    "dbusServiceFile": "[D-BUS Service]\nName=org.gnome.Shell.Screencast\nExec=/usr/bin/gjs -m /usr/share/gnome-shell/org.gnome.Shell.Screencast\n\n",
+    "systemdUserUnitExists": false
+  },
+  "gdmCustomConf": "# GDM configuration storage\n\n[daemon]\n\n[security]\n\n[debug]\n# Uncomment the line below to turn on debugging\n#Enable=true\n\n",
+  "gnomeInitialSetupDone": null,
+  "loginCapableUsers": [],
+  "gnomeInitialSetupPasswd": [],
+  "presetLines": {
+    "90-default.preset": [
+      "enable avahi-daemon.*"
+    ],
+    "99-default-disable.preset": []
+  }
+}
