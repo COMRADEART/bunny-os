@@ -96,29 +96,39 @@ def _file_type(mode: int) -> str:
 
 
 def assert_home(overlay: Path, root: str, home: str, uid: int,
-                gid: int) -> dict:
-    """Every filesystem fact dsq-2 needs about one account's home."""
-    result: dict = {"home": home, "expectedUid": uid, "expectedGid": gid,
+                gid: int, reported_as: str | None = None) -> dict:
+    """Every filesystem fact dsq-2 needs about one account's home.
+
+    `home` is the path on the offline image; `reported_as` is the path the
+    guest resolves. They differ on an ostree system, where the running /var is
+    the stateroot's and there is no /var at the disk root at all. Reading one
+    and reporting the other keeps the record a statement about the running
+    system while the lookup goes where the bytes are.
+    """
+    shown = reported_as or home
+    result: dict = {"home": shown, "homeOnDisk": home,
+                    "expectedUid": uid, "expectedGid": gid,
                     "directories": {}, "problems": []}
 
     home_stat = _stat_fields(overlay, root, home)
     if home_stat is None:
         result["problems"].append(
-            f"{home}: the home directory does not exist in the overlay; no "
-            "first login can have happened")
+            f"{shown}: the home directory does not exist in the overlay "
+            f"(looked at {home}); no first login can have happened")
         result["homeExists"] = False
         return result
     result["homeExists"] = True
 
     for relative in REQUIRED_DIRECTORIES:
         path = f"{home}/{relative}"
-        entry: dict = {"path": path}
+        reported = f"{shown}/{relative}"
+        entry: dict = {"path": reported, "pathOnDisk": path}
         stat_fields = _stat_fields(overlay, root, path)
         if stat_fields is None:
             entry["present"] = False
             entry["type"] = None
             result["problems"].append(
-                f"{path}: absent after a first login. This is the state that "
+                f"{reported}: absent after a first login. This is the state that "
                 "failed mount-namespace setup with 226/NAMESPACE on every "
                 "dsq-1 boot")
             result["directories"][relative] = entry
@@ -135,44 +145,46 @@ def assert_home(overlay: Path, root: str, home: str, uid: int,
 
         if entry["type"] == "symlink":
             result["problems"].append(
-                f"{path}: is a symbolic link. The correction refuses a link "
+                f"{reported}: is a symbolic link. The correction refuses a link "
                 "here rather than following it; a link present after a run "
                 "means something else created it")
         elif entry["type"] != "directory":
             result["problems"].append(
-                f"{path}: is a {entry['type']}, not a directory")
+                f"{reported}: is a {entry['type']}, not a directory")
         if entry["uid"] != uid:
             result["problems"].append(
-                f"{path}: owned by uid {entry['uid']}, expected {uid} — the "
+                f"{reported}: owned by uid {entry['uid']}, expected {uid} — the "
                 "account that logged in")
         if entry["gid"] != gid:
             result["problems"].append(
-                f"{path}: group {entry['gid']}, expected {gid} — the "
+                f"{reported}: group {entry['gid']}, expected {gid} — the "
                 "account's primary group")
         if entry["mode"] != 0o700:
             result["problems"].append(
-                f"{path}: mode {entry['mode']:04o}, expected 0700")
+                f"{reported}: mode {entry['mode']:04o}, expected 0700")
         if entry["mode"] & 0o077:
             result["problems"].append(
-                f"{path}: mode {entry['mode']:04o} grants access outside the "
+                f"{reported}: mode {entry['mode']:04o} grants access outside the "
                 "owning user")
         context = entry["selinuxContext"]
         if context is None:
             result["problems"].append(
-                f"{path}: carries no SELinux context; the image is labelled "
+                f"{reported}: carries no SELinux context; the image is labelled "
                 "and a home directory without a label is not an expected "
                 "state")
         elif not any(expected in context
                      for expected in EXPECTED_HOME_CONTEXTS):
             result["problems"].append(
-                f"{path}: SELinux context {context} is none of the expected "
+                f"{reported}: SELinux context {context} is none of the expected "
                 f"user configuration types {EXPECTED_HOME_CONTEXTS}")
         result["directories"][relative] = entry
 
     marker = f"{home}/{COMPLETION_MARKER}"
+    marker_reported = f"{shown}/{COMPLETION_MARKER}"
     marker_stat = _stat_fields(overlay, root, marker)
     result["completionMarker"] = {
-        "path": marker,
+        "path": marker_reported,
+        "pathOnDisk": marker,
         "present": marker_stat is not None,
         "mode": (marker_stat.get("st_mode", 0) & 0o7777) if marker_stat
                 else None,
@@ -181,7 +193,7 @@ def assert_home(overlay: Path, root: str, home: str, uid: int,
     }
     if marker_stat is None:
         result["problems"].append(
-            f"{marker}: absent. bunny-first-boot.service writes this when it "
+            f"{marker_reported}: absent. bunny-first-boot.service writes this when it "
             "completes, so a first login that reports success without it did "
             "not run the flow")
     return result

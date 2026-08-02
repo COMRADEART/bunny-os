@@ -106,13 +106,22 @@ def _hash_password(password: str) -> str:
     return result.stdout.strip()
 
 
-def inject(overlay: Path, root: str, deploy: str,
+def inject(overlay: Path, root: str, deploy: str, var_path: str,
            second_login: bool = False) -> dict:
     """Create the test account in one run's overlay. Returns provenance.
 
     `deploy` is the ostree deployment root inside the guest, e.g.
     /ostree/deploy/default/deploy/<checksum>.0 — the same path the dsq-1
     diagnostic drop-in used.
+
+    `var_path` is the *stateroot* var, /ostree/deploy/<stateroot>/var. It is a
+    separate argument because there is no /var at the disk root at all, and
+    writing the home there produced a run where the account existed, the
+    session started, and $HOME did not: the user tmpfiles unit failed, the
+    directory guard failed with it, and bunny-first-boot never ran because it
+    Requires= the guard. Everything the guest reads as /var lives under this
+    path, so the home has to be created here even though passwd names
+    /var/home/<user>.
     """
     etc = f"{deploy}/etc"
     password = secrets.token_urlsafe(24)
@@ -129,8 +138,17 @@ def inject(overlay: Path, root: str, deploy: str,
                 f"{TEST_USER} already present in {name}; the source disk must "
                 "ship no test account, and an overlay is used once")
 
-    # /var/home, because a bootc system keeps /home a symlink into /var.
+    # Two paths for one directory, and the distinction is load-bearing.
+    #
+    # `home` is what the guest resolves at runtime and what goes in passwd:
+    # /var/home/<user>, because a bootc system keeps /home under /var.
+    #
+    # `home_on_disk` is where that directory actually lives in the image we are
+    # editing offline. There is no /var at the disk root at all — the running
+    # system's /var is the stateroot's — so writing to /var/home here creates a
+    # directory nothing ever mounts.
     home = f"/var/home/{TEST_USER}"
+    home_on_disk = f"{var_path}/home/{TEST_USER}"
     passwd_line = (f"{TEST_USER}:x:{TEST_UID}:{TEST_GID}:{TEST_GECOS}:"
                    f"{home}:/bin/bash")
     group_line = f"{TEST_USER}:x:{TEST_GID}:"
@@ -150,9 +168,9 @@ def inject(overlay: Path, root: str, deploy: str,
     # nothing in it, and a home seeded from /etc/skel or from a previous run
     # would hide exactly the failure this pass exists to close.
     commands += [
-        f"mkdir-p\x00{home}",
-        f"chown\x00{TEST_UID}\x00{TEST_GID}\x00{home}",
-        f"chmod\x000700\x00{home}",
+        f"mkdir-p\x00{home_on_disk}",
+        f"chown\x00{TEST_UID}\x00{TEST_GID}\x00{home_on_disk}",
+        f"chmod\x000700\x00{home_on_disk}",
     ]
 
     # GDM automatic login. This is what makes the session start without a
@@ -177,11 +195,12 @@ def inject(overlay: Path, root: str, deploy: str,
 
     provenance = dict(PROVENANCE)
     provenance["home"] = home
+    provenance["homeOnDisk"] = home_on_disk
     provenance["automaticLogin"] = True
     provenance["secondLoginPlanned"] = second_login
     provenance["injectedPaths"] = [f"{etc}/passwd", f"{etc}/group",
                                    f"{etc}/shadow", f"{etc}/gdm/custom.conf",
-                                   home]
+                                   home_on_disk]
     return provenance
 
 

@@ -314,7 +314,14 @@ def main() -> int:
                       reason="the fixture account is present in the artifact "
                              "under test: " + "; ".join(leaks))
     try:
-        provenance = login_fixture.inject(overlay, root, deploy,
+        # The stateroot var, not /var: there is no /var at the disk root, so
+        # the home has to be created under /ostree/deploy/<stateroot>/var even
+        # though passwd names /var/home/<user>.
+        var_path = dsq_disk.stateroot_var(overlay)
+    except dsq_disk.DiskLayoutError as exc:
+        return finish("ABANDONED", reason=f"cannot resolve the stateroot var: {exc}")
+    try:
+        provenance = login_fixture.inject(overlay, root, deploy, var_path,
                                           second_login=args.second_login)
     except login_fixture.FixtureError as exc:
         return finish("ABANDONED", reason=f"login fixture failed: {exc}")
@@ -494,12 +501,16 @@ def main() -> int:
         return finish("COLLECTION_FAILED")
 
     # ------------------------------------------------- filesystem evidence
-    home = provenance["home"]
+    # Read the home from where it lives on disk, not from the path the guest
+    # resolves: an offline mount has no /var. The assertions report the guest
+    # path so the record reads as a statement about the running system.
+    home_on_disk = provenance["homeOnDisk"]
     try:
         record["homeAssertions"] = home_assertions.assert_home(
-            overlay, root, home, login_fixture.TEST_UID, login_fixture.TEST_GID)
+            overlay, root, home_on_disk, login_fixture.TEST_UID,
+            login_fixture.TEST_GID, reported_as=provenance["home"])
         record["firstRunPreferences"] = home_assertions.read_marker(
-            overlay, root, home)
+            overlay, root, home_on_disk)
     except home_assertions.HomeReadError as exc:
         record["homeAssertions"] = None
         collection["homeAssertionError"] = str(exc)[:400]
