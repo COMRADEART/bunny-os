@@ -4,3 +4,15 @@
 # exactly.
 qualification/** -text
 build/out/** -text
+
+# Image content. These files are copied verbatim into the image by
+# build/scripts/install-root.py and are then parsed by systemd, systemd-tmpfiles
+# and the shell, none of which treat a trailing CR as whitespace: a unit
+# checked out with CRLF yields directive values ending in \r, and a tmpfiles
+# line likewise. A Windows checkout under core.autocrlf=true produces exactly
+# that, and the corruption would reach the image only when someone built from
+# that working tree — silently, and nowhere near the checkout that caused it.
+systemd/** -text
+config/** -text
+*.sh -text
+

@@ -1,0 +1,42 @@
+[Unit]
+Description=Establish and verify the Bunny OS per-user configuration directory
+Documentation=file:///usr/share/doc/bunny-os/DEVELOPER_IMAGE.md
+
+# The user manager's tmpfiles unit is what creates the directories; this unit
+# asserts the result. It is named in both directions on purpose.
+#
+# After= alone would not be enough. systemd-tmpfiles-setup.service is pulled
+# in by basic.target with Wants=, so a tmpfiles failure does not stop
+# basic.target being reached, and an After= on a unit that is not in the
+# transaction orders nothing at all. Wants= here states the requirement
+# directly instead of inheriting it from another unit's enablement, which was
+# measured as preset-dependent (/usr/lib/systemd/user-preset/90-systemd.preset
+# enables it; a preset policy change would silently remove it).
+Wants=systemd-tmpfiles-setup.service
+After=systemd-tmpfiles-setup.service
+
+Before=bunny-first-boot.service
+PartOf=graphical-session.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/bunny-config-dir
+
+# Deliberately no ProtectHome=, ReadWritePaths=, or any other directive whose
+# evaluation depends on a path inside the home existing. This unit's whole
+# purpose is to make those paths exist, so a path-dependent sandbox here
+# would reintroduce the 226/NAMESPACE failure one unit earlier. Its safety
+# comes from its own code: two fixed relative paths, O_NOFOLLOW, no recursion,
+# no deletion, no chown.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=graphical-session.target

@@ -5,9 +5,26 @@ After=graphical-session.target
 PartOf=graphical-session.target
 ConditionPathExists=!%h/.config/bunny-os/first-boot-complete.json
 
+# Both ReadWritePaths= below are established and verified by
+# bunny-config-dir.service. Requires= rather than Wants=: if the directories
+# cannot be made safe, this unit must not start at all. Starting it anyway
+# produced 226/NAMESPACE — a mount-namespace error that names a path and
+# explains nothing — on 60 of 60 fresh homes. A dependency failure names the
+# unit that refused, and why.
+Requires=bunny-config-dir.service
+After=bunny-config-dir.service
+
 [Service]
 Type=oneshot
 ExecStart=/usr/libexec/bunny-first-boot
+
+# bunny-first-boot resolves its destination from XDG_CONFIG_HOME, falling back
+# to ~/.config. ReadWritePaths= can only name a path fixed at unit load, so a
+# user with XDG_CONFIG_HOME set elsewhere would have the program write outside
+# the only writable path in its own sandbox. Pinning it here makes the
+# sandbox, the tmpfiles rule and the program resolve to one directory.
+Environment=XDG_CONFIG_HOME=%h/.config
+
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
