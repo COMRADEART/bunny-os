@@ -85,15 +85,25 @@ def _read(overlay: Path, root: str, path: str) -> str:
 
 
 def _hash_password(password: str) -> str:
-    """A yescrypt/SHA-512 crypt string for the guest's shadow file.
+    """A SHA-512 crypt string for the guest's shadow file.
 
-    Generated on the host with the guest's own algorithm rather than by
-    running a program inside the image, so the fixture needs no boot to
-    install a credential it is about to throw away.
+    Generated on the host rather than by running a program inside the image,
+    so the fixture needs no boot to install a credential it is about to throw
+    away.
+
+    `openssl passwd -6` rather than the `crypt` module: crypt was removed in
+    Python 3.13 and the builder runs 3.14, so the module import is not a
+    deprecation warning here, it is a hard failure. The password is passed on
+    stdin, never as an argument, so it does not appear in the process table.
     """
-    import crypt  # deprecated in 3.13 but present on the builder
-    salt = crypt.mksalt(crypt.METHOD_SHA512)
-    return crypt.crypt(password, salt)
+    result = subprocess.run(
+        ["openssl", "passwd", "-6", "-stdin"],
+        input=password, capture_output=True, text=True, timeout=60)
+    if result.returncode != 0 or not result.stdout.strip().startswith("$6$"):
+        raise FixtureError(
+            "cannot generate a credential for the test account: "
+            f"openssl passwd exited {result.returncode}")
+    return result.stdout.strip()
 
 
 def inject(overlay: Path, root: str, deploy: str,
