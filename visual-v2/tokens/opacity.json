@@ -1,0 +1,5 @@
+{
+  "$schema": "./schema.json",
+  "schemaVersion": 2,
+  "tokens": {"disabled": 0.46, "secondary": 0.72, "panel": 0.92, "opaque": 1.0}
+}

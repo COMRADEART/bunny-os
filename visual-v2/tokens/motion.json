@@ -1,0 +1,11 @@
+{
+  "$schema": "./schema.json",
+  "schemaVersion": 2,
+  "tokens": {
+    "micro": {"milliseconds": 120, "reducedMilliseconds": 0},
+    "panel": {"milliseconds": 180, "reducedMilliseconds": 0},
+    "mode": {"milliseconds": 240, "reducedMilliseconds": 0},
+    "workspace": {"milliseconds": 280, "reducedMilliseconds": 0}
+  },
+  "reducedMotionRemoves": ["scale", "parallax", "character-entrance", "background-movement", "spring"]
+}

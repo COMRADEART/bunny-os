@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Bunny Assistant V2
+Comment=VISUAL PROTOTYPE ONLY — NOT RELEASE QUALIFIED — DO NOT MERGE INTO MAIN
+Exec=bunny-assistant-v2
+Icon=system-run-symbolic
+Terminal=false
+Type=Application
+Categories=Utility;
+X-Bunny-Visual-Prototype=true
+

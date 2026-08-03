@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Bunny Approval Center V2
+Comment=VISUAL PROTOTYPE ONLY — NOT RELEASE QUALIFIED — DO NOT MERGE INTO MAIN
+Exec=bunny-approval-center-v2
+Icon=changes-prevent-symbolic
+Terminal=false
+Type=Application
+Categories=Settings;Security;
+X-Bunny-Visual-Prototype=true
+

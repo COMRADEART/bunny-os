@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+printf '%s\n' 'VISUAL PROTOTYPE ONLY — NOT RELEASE QUALIFIED — DO NOT MERGE INTO MAIN' >&2
+
+if [ "${XDG_SESSION_TYPE:-}" != "wayland" ]; then
+    printf '%s\n' 'Bunny Desktop Preview requires a Wayland session.' >&2
+    exit 2
+fi
+
+export BUNNY_VISUAL_V2_PREVIEW=1
+exec gnome-session --session=bunny-desktop-preview
+

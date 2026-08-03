@@ -1,0 +1,5 @@
+{
+  "$schema": "./schema.json",
+  "schemaVersion": 2,
+  "tokens": {"small": 8, "control": 12, "card": 16, "panel": 22, "modal": 24}
+}

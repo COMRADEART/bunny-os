@@ -1,0 +1,17 @@
+{
+  "$schema": "./schema.json",
+  "schemaVersion": 2,
+  "families": {
+    "sans": "Adwaita Sans",
+    "mono": "Adwaita Mono"
+  },
+  "scale": {
+    "display": {"size": 32, "lineHeight": 40, "weight": 600},
+    "title": {"size": 24, "lineHeight": 32, "weight": 600},
+    "heading": {"size": 18, "lineHeight": 24, "weight": 600},
+    "body": {"size": 15, "lineHeight": 22, "weight": 400},
+    "label": {"size": 13, "lineHeight": 18, "weight": 500},
+    "caption": {"size": 11, "lineHeight": 16, "weight": 400},
+    "monospace": {"size": 13, "lineHeight": 20, "weight": 400}
+  }
+}

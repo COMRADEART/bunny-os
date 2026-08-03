@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "status": [
+    "VISUAL PROTOTYPE ONLY",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT MERGE INTO MAIN"
+  ],
+  "installedAsBootTheme": false,
+  "installedAsGdmTheme": false,
+  "characterAllowed": false,
+  "files": [
+    "boot/boot-splash.svg",
+    "boot/shutdown.svg",
+    "login/login-screen.svg",
+    "login/lock-screen.svg",
+    "login/session-selector.svg"
+  ]
+}
