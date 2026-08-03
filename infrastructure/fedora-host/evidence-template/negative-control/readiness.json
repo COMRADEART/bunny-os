@@ -1,0 +1,218 @@
+{
+  "conditions": [
+    {
+      "description": "the report describes a measurement host",
+      "id": "role-is-host",
+      "mandatory": true,
+      "observed": "host",
+      "refusal": null,
+      "satisfied": true
+    },
+    {
+      "description": "Fedora runs on bare metal",
+      "id": "bare-metal",
+      "mandatory": true,
+      "observed": "wsl",
+      "refusal": "host is virtualised (wsl); a qualification host must not run inside WSL, VirtualBox, VMware or a nested VM",
+      "satisfied": false
+    },
+    {
+      "description": "the operating system is Fedora",
+      "id": "fedora",
+      "mandatory": true,
+      "observed": "Fedora Linux",
+      "refusal": null,
+      "satisfied": true
+    },
+    {
+      "description": "the host booted in UEFI mode",
+      "id": "uefi-boot",
+      "mandatory": true,
+      "observed": "bios",
+      "refusal": "boot mode is bios; UEFI is required",
+      "satisfied": false
+    },
+    {
+      "description": "SELinux is enforcing",
+      "id": "selinux-enforcing",
+      "mandatory": true,
+      "observed": "Disabled",
+      "refusal": "SELinux is Disabled, not Enforcing",
+      "satisfied": false
+    },
+    {
+      "description": "the host session is Wayland",
+      "id": "wayland-session",
+      "mandatory": true,
+      "observed": "wayland",
+      "refusal": null,
+      "satisfied": true
+    },
+    {
+      "description": "a DRM card node exists",
+      "id": "drm-card-node",
+      "mandatory": true,
+      "observed": null,
+      "refusal": "/dev/dri is absent; without KMS there is no page-flip, no vblank and no connector",
+      "satisfied": false
+    },
+    {
+      "description": "a DRM render node exists",
+      "id": "drm-render-node",
+      "mandatory": true,
+      "observed": null,
+      "refusal": "no /dev/dri/renderD* node; GPU rendering cannot be measured",
+      "satisfied": false
+    },
+    {
+      "description": "an OpenGL renderer was observed and is hardware, not a software rasteriser",
+      "id": "hardware-renderer",
+      "mandatory": true,
+      "observed": "llvmpipe (LLVM 22.1.8, 256 bits)",
+      "refusal": "renderer is llvmpipe (LLVM 22.1.8, 256 bits), a software rasteriser; it renders correctly and proves nothing about the hardware path",
+      "satisfied": false
+    },
+    {
+      "description": "a hardware Vulkan device is present, backed by a real DRM device",
+      "id": "vulkan-device",
+      "mandatory": true,
+      "observed": "Microsoft Direct3D12 (NVIDIA GeForce RTX 4050 Laptop GPU)",
+      "refusal": "Vulkan device 'Microsoft Direct3D12 (NVIDIA GeForce RTX 4050 Laptop GPU)' is translated or emulated; a paravirtualised device name is not a hardware render path",
+      "satisfied": false
+    },
+    {
+      "description": "at least two displays are physically connected",
+      "id": "two-connected-outputs",
+      "mandatory": true,
+      "observed": 0,
+      "refusal": "0 connected output(s); 2 are required, and nested windows are not outputs",
+      "satisfied": false
+    },
+    {
+      "description": "a physical TPM 2.0 is present",
+      "id": "physical-tpm-2",
+      "mandatory": true,
+      "observed": "present=False physical=False version=None",
+      "refusal": "no physical TPM 2.0; an emulated TPM proves the software path, not the machine",
+      "satisfied": false
+    },
+    {
+      "description": "the Secure Boot state was observed",
+      "id": "secure-boot-observed",
+      "mandatory": true,
+      "observed": "unknown",
+      "refusal": "Secure Boot state is unknown; it must be explicitly observed, even when disabled",
+      "satisfied": false
+    },
+    {
+      "description": "KVM is usable: /dev/kvm exists and virt-host-validate qemu passes",
+      "id": "kvm-available",
+      "mandatory": true,
+      "observed": "kvm=True virt-host-validate exit=0",
+      "refusal": null,
+      "satisfied": true
+    },
+    {
+      "description": "PipeWire is running",
+      "id": "pipewire-active",
+      "mandatory": true,
+      "observed": false,
+      "refusal": "PipeWire is not active",
+      "satisfied": false
+    },
+    {
+      "description": "WirePlumber is running",
+      "id": "wireplumber-active",
+      "mandatory": true,
+      "observed": false,
+      "refusal": "WirePlumber is not active",
+      "satisfied": false
+    },
+    {
+      "description": "xdg-desktop-portal is running",
+      "id": "portal-active",
+      "mandatory": true,
+      "observed": "xdg-desktop-portal-gtk",
+      "refusal": "xdg-desktop-portal is inactive; screen sharing and screenshots cannot be measured",
+      "satisfied": false
+    },
+    {
+      "description": "Orca is installed",
+      "id": "orca-installed",
+      "mandatory": true,
+      "observed": null,
+      "refusal": "Orca is not installed; accessibility cannot be measured, and labels are not Orca evidence",
+      "satisfied": false
+    },
+    {
+      "description": "speech-dispatcher is installed",
+      "id": "speech-dispatcher-installed",
+      "mandatory": true,
+      "observed": null,
+      "refusal": "speech-dispatcher is not installed; spoken output cannot be captured",
+      "satisfied": false
+    },
+    {
+      "description": "IBus or Fcitx 5 is available",
+      "id": "input-method-available",
+      "mandatory": true,
+      "observed": null,
+      "refusal": "neither IBus nor Fcitx 5 is available; CJK input cannot be measured",
+      "satisfied": false
+    },
+    {
+      "description": "cryptsetup supports LUKS2",
+      "id": "luks2-supported",
+      "mandatory": true,
+      "observed": "cryptsetup 2.8.7 flags: UDEV BLKID KEYRING FIPS KERNEL_CAPI PWQUALITY HW_OPAL",
+      "refusal": null,
+      "satisfied": true
+    },
+    {
+      "description": "at least 8 logical cores",
+      "id": "cpu-cores",
+      "mandatory": true,
+      "observed": 22,
+      "refusal": null,
+      "satisfied": true
+    },
+    {
+      "description": "sufficient RAM for the guest matrices",
+      "id": "memory",
+      "mandatory": true,
+      "observed": 16561381376,
+      "refusal": "15.4 GiB RAM; 16 GiB is the reduced-matrix minimum",
+      "satisfied": false
+    },
+    {
+      "description": "sufficient storage for guests, overlays and retained evidence",
+      "id": "evidence-storage",
+      "mandatory": true,
+      "observed": 760523476992,
+      "refusal": null,
+      "satisfied": true
+    },
+    {
+      "description": "the system clock is synchronised",
+      "id": "clock-synchronised",
+      "mandatory": true,
+      "observed": "2026-08-03T16:34:02.419382+00:00",
+      "refusal": null,
+      "satisfied": true
+    },
+    {
+      "description": "the evidence byte round-trip guard passes",
+      "id": "git-byte-roundtrip",
+      "mandatory": true,
+      "observed": null,
+      "refusal": "tests/evidence did not pass; attested bytes may not round-trip this checkout",
+      "satisfied": false
+    }
+  ],
+  "environmentId": "FQH-20260803-01",
+  "evaluatedAt": "2026-08-03T16:34:12.927337+00:00",
+  "mandatorySatisfied": 8,
+  "mandatoryTotal": 26,
+  "result": "BLOCKED",
+  "schemaVersion": 1
+}

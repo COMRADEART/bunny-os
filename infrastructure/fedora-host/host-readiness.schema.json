@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunnyos.example/schemas/fedora-host-readiness.schema.json",
+  "title": "Fedora qualification host readiness result",
+  "description": "The readiness gate's own output. A condition is satisfied only when satisfied is true. There is deliberately no warning state, because a warning is how a missing mandatory condition becomes a footnote.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "environmentId",
+    "evaluatedAt",
+    "result",
+    "mandatoryTotal",
+    "mandatorySatisfied",
+    "conditions"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "environmentId": {
+      "type": "string"
+    },
+    "evaluatedAt": {
+      "type": "string"
+    },
+    "result": {
+      "enum": [
+        "READY",
+        "BLOCKED"
+      ],
+      "description": "READY only when every mandatory condition is satisfied."
+    },
+    "mandatoryTotal": {
+      "type": "integer"
+    },
+    "mandatorySatisfied": {
+      "type": "integer"
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "description",
+          "mandatory",
+          "satisfied",
+          "observed"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mandatory": {
+            "type": "boolean"
+          },
+          "satisfied": {
+            "type": "boolean"
+          },
+          "observed": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "refusal": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the condition was refused, stated as an observation rather than an instruction."
+          }
+        }
+      }
+    }
+  }
+}
