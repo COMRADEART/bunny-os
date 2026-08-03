@@ -335,27 +335,27 @@
       }
     },
     "fileDigests": {
-      "detail": "105680 members, identical (compared by digest over the full value)",
+      "detail": "105681 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "4946bf3a8a9dc0b350f09068b38b50724071045f2768681df1b052ac408da7d8",
-        "__memberCount__": 105680
+        "__digest__": "d187680f60f61faf7f1da8738070233a2ae824f01df7883ba1ae2e7b169e3319",
+        "__memberCount__": 105681
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "4946bf3a8a9dc0b350f09068b38b50724071045f2768681df1b052ac408da7d8",
-        "__memberCount__": 105680
+        "__digest__": "d187680f60f61faf7f1da8738070233a2ae824f01df7883ba1ae2e7b169e3319",
+        "__memberCount__": 105681
       }
     },
     "filesystemTree": {
-      "detail": "164452 members, identical (compared by digest over the full value)",
+      "detail": "164453 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "25dabf4b82f536bf31474ee0722ad0dc0397c6d6718ed4519e36981c0045b3a1",
-        "__memberCount__": 164452
+        "__digest__": "c475923f928ee1b76a279d712853b1d6a9dbad97b16a4aac0899868af026647d",
+        "__memberCount__": 164453
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "25dabf4b82f536bf31474ee0722ad0dc0397c6d6718ed4519e36981c0045b3a1",
-        "__memberCount__": 164452
+        "__digest__": "c475923f928ee1b76a279d712853b1d6a9dbad97b16a4aac0899868af026647d",
+        "__memberCount__": 164453
       }
     },
     "initramfs": {
@@ -387,9 +387,9 @@
       }
     },
     "normalisedArchive": {
-      "first": "273bb4ca5937f8d6f55a1c05fe51496139210968c9aebd97356a055922a28bc3",
+      "first": "f6ddb976a2c5d0e4c13e04eb682d718836e7cbecea52c5c15f1d386d6ab9687a",
       "reductionForm": "verbatim",
-      "second": "273bb4ca5937f8d6f55a1c05fe51496139210968c9aebd97356a055922a28bc3"
+      "second": "f6ddb976a2c5d0e4c13e04eb682d718836e7cbecea52c5c15f1d386d6ab9687a"
     },
     "ociLayers": {
       "first": [
@@ -458,11 +458,11 @@
         "sha256:5d54fd4b57ae38321730975e9301cbaa13be19423f5bbac56fd9c150b19aaa81",
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
-        "sha256:72c48d88529f4a6a5194133c7e6129f7f2fd208d6f755ca4b0fbfca1e8bd8696",
+        "sha256:785a3a6aa4cb4753cdbf2933482d3e0458d9d7003af9dd07129c62f2a6ce617d",
         "sha256:ab2c19358acdf9b94cf4f6c3bb6f748c67963b647c81f8df35f4d3d94c03574c",
         "sha256:e237054a682e974c110a6c11bde021523011737e05b200a57013847539000c68",
         "sha256:a4874227555b88c872aa2a0304259a1aedd6ee1be9d5b50e0ec628e876f2f53a",
-        "sha256:94ec88d929977572889c4687108868ea09dd24f7cf1d5d464e4e2cc1251f5655",
+        "sha256:42357d6b21ccc3c6857d01cc4f395bdd57e18bda8cb7834cf3a81d7cdfda9f13",
         "sha256:e05d37f3d0cefcaf1b1dfb9b778117a746a0da5d49a60c4c78fa32430cb2244c",
         "sha256:80de5036185731d7e97a7093ad01db2be938380bef2b35411c0b42d5d834bb92",
         "sha256:2df8f9bedc1e9fa18a4dc1aa97e93c13daee863cb4d042d227173d9e6f0af269",
@@ -472,7 +472,7 @@
         "sha256:e4dd6b92093a6d0001d5894edc347b62c591ebc2d24042e3c24c48f43ef37eea",
         "sha256:c335ab7a4d18bfbe8513da7a2ffcd7b0e882459e5cf02ac51830d4939497294c",
         "sha256:c386cca459ed2a24b5670553ecbb08f8eb5372a07689bce9045061e820d2bf9a",
-        "sha256:d87b90c1c0e19f244ef196de020dda85f639377512c1f5878a072884d703252c",
+        "sha256:085a3c68450314ad05f28ce772c5b2e052e007b6cea14b9fbf512891585ff22d",
         "sha256:28835b3546239b45d25f4ebb455290d02ec84edbc58a557642b015ca72592541"
       ],
       "reductionForm": "verbatim",
@@ -542,11 +542,11 @@
         "sha256:5d54fd4b57ae38321730975e9301cbaa13be19423f5bbac56fd9c150b19aaa81",
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
-        "sha256:72c48d88529f4a6a5194133c7e6129f7f2fd208d6f755ca4b0fbfca1e8bd8696",
+        "sha256:785a3a6aa4cb4753cdbf2933482d3e0458d9d7003af9dd07129c62f2a6ce617d",
         "sha256:ab2c19358acdf9b94cf4f6c3bb6f748c67963b647c81f8df35f4d3d94c03574c",
         "sha256:e237054a682e974c110a6c11bde021523011737e05b200a57013847539000c68",
         "sha256:a4874227555b88c872aa2a0304259a1aedd6ee1be9d5b50e0ec628e876f2f53a",
-        "sha256:94ec88d929977572889c4687108868ea09dd24f7cf1d5d464e4e2cc1251f5655",
+        "sha256:42357d6b21ccc3c6857d01cc4f395bdd57e18bda8cb7834cf3a81d7cdfda9f13",
         "sha256:e05d37f3d0cefcaf1b1dfb9b778117a746a0da5d49a60c4c78fa32430cb2244c",
         "sha256:80de5036185731d7e97a7093ad01db2be938380bef2b35411c0b42d5d834bb92",
         "sha256:2df8f9bedc1e9fa18a4dc1aa97e93c13daee863cb4d042d227173d9e6f0af269",
@@ -556,20 +556,20 @@
         "sha256:e4dd6b92093a6d0001d5894edc347b62c591ebc2d24042e3c24c48f43ef37eea",
         "sha256:c335ab7a4d18bfbe8513da7a2ffcd7b0e882459e5cf02ac51830d4939497294c",
         "sha256:c386cca459ed2a24b5670553ecbb08f8eb5372a07689bce9045061e820d2bf9a",
-        "sha256:d87b90c1c0e19f244ef196de020dda85f639377512c1f5878a072884d703252c",
+        "sha256:085a3c68450314ad05f28ce772c5b2e052e007b6cea14b9fbf512891585ff22d",
         "sha256:28835b3546239b45d25f4ebb455290d02ec84edbc58a557642b015ca72592541"
       ]
     },
     "ownership": {
-      "detail": "164452 members, identical (compared by digest over the full value)",
+      "detail": "164453 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "2d703ea5be29179fc7c7b47036b5638a44bd79f7a7fb7688b5ab8ac9f2d07319",
-        "__memberCount__": 164452
+        "__digest__": "801e91843f8167e83954b6b1ad4f8c3dac7359ed5c6a70fc015ac410438f25bb",
+        "__memberCount__": 164453
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "2d703ea5be29179fc7c7b47036b5638a44bd79f7a7fb7688b5ab8ac9f2d07319",
-        "__memberCount__": 164452
+        "__digest__": "801e91843f8167e83954b6b1ad4f8c3dac7359ed5c6a70fc015ac410438f25bb",
+        "__memberCount__": 164453
       }
     },
     "packageInventory": {
@@ -12732,21 +12732,21 @@
       ]
     },
     "permissions": {
-      "detail": "164452 members, identical (compared by digest over the full value)",
+      "detail": "164453 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "863d2c99789f73ce9a9e80d33ef7c5d1ad518de3a934788198237a10963dfe90",
-        "__memberCount__": 164452
+        "__digest__": "2907eb3dd531a0b3a5eb704b6e48f837c9fa715fec16c85fb803b08300666eca",
+        "__memberCount__": 164453
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "863d2c99789f73ce9a9e80d33ef7c5d1ad518de3a934788198237a10963dfe90",
-        "__memberCount__": 164452
+        "__digest__": "2907eb3dd531a0b3a5eb704b6e48f837c9fa715fec16c85fb803b08300666eca",
+        "__memberCount__": 164453
       }
     },
     "rawArchive": {
-      "first": "273bb4ca5937f8d6f55a1c05fe51496139210968c9aebd97356a055922a28bc3",
+      "first": "f6ddb976a2c5d0e4c13e04eb682d718836e7cbecea52c5c15f1d386d6ab9687a",
       "reductionForm": "verbatim",
-      "second": "273bb4ca5937f8d6f55a1c05fe51496139210968c9aebd97356a055922a28bc3"
+      "second": "f6ddb976a2c5d0e4c13e04eb682d718836e7cbecea52c5c15f1d386d6ab9687a"
     },
     "sbom": {
       "detail": "6076 members, identical (compared by digest over the full value)",
@@ -13060,12 +13060,12 @@
     "selinuxLabels": {
       "detail": "The archive-stage subcheck: the context every path is intended to receive, computed from the policy the image ships. No archive carries an applied security.selinux xattr \u2014 bootc install applies them on the target \u2014 so the applied subcheck stays outstanding under selinux.appliedSelinuxContexts and is not satisfied by this.",
       "first": {
-        "__digest__": "fac5e6682616148ffddcbd22abb717ae5877f29b8ffe215544e64adae72fe964",
-        "__memberCount__": 165240
+        "__digest__": "7b8a3a2d4fba8c1334f11d9e83d591bd6dd99eb3235769b25c6f2879f66af240",
+        "__memberCount__": 165242
       },
       "second": {
-        "__digest__": "fac5e6682616148ffddcbd22abb717ae5877f29b8ffe215544e64adae72fe964",
-        "__memberCount__": 165240
+        "__digest__": "7b8a3a2d4fba8c1334f11d9e83d591bd6dd99eb3235769b25c6f2879f66af240",
+        "__memberCount__": 165242
       }
     },
     "systemdUnits": {
@@ -15293,9 +15293,9 @@
   "entryMtimeDiagnostic": {
     "differing": [],
     "differingCount": 0,
-    "firstDigest": "bc477050a04c0cf53d6f96d78a118c34999d1032810b520f3780c96f5f5408a3",
+    "firstDigest": "e4fc7fd26330f3de020cf77b2137356fa5d5818f752b344fe2bd7673466b4537",
     "note": "Not a dimension. Layer tar bytes include entry mtimes, so a file whose content matches and whose mtime does not still changes ociLayers and rawArchive.",
-    "secondDigest": "bc477050a04c0cf53d6f96d78a118c34999d1032810b520f3780c96f5f5408a3"
+    "secondDigest": "e4fc7fd26330f3de020cf77b2137356fa5d5818f752b344fe2bd7673466b4537"
   },
   "evaluation": {
     "baseImageDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
@@ -15307,7 +15307,7 @@
     "dimensions": [
       {
         "description": "the set of paths present in the image",
-        "detail": "164452 members, identical (compared by digest over the full value)",
+        "detail": "164453 members, identical (compared by digest over the full value)",
         "differenceCount": 0,
         "differences": [],
         "dimension": "filesystemTree",
@@ -15316,7 +15316,7 @@
       },
       {
         "description": "the SHA-256 of every regular file's contents",
-        "detail": "105680 members, identical (compared by digest over the full value)",
+        "detail": "105681 members, identical (compared by digest over the full value)",
         "differenceCount": 0,
         "differences": [],
         "dimension": "fileDigests",
@@ -15325,7 +15325,7 @@
       },
       {
         "description": "mode bits, including setuid and setgid",
-        "detail": "164452 members, identical (compared by digest over the full value)",
+        "detail": "164453 members, identical (compared by digest over the full value)",
         "differenceCount": 0,
         "differences": [],
         "dimension": "permissions",
@@ -15334,7 +15334,7 @@
       },
       {
         "description": "owning uid and gid of every path",
-        "detail": "164452 members, identical (compared by digest over the full value)",
+        "detail": "164453 members, identical (compared by digest over the full value)",
         "differenceCount": 0,
         "differences": [],
         "dimension": "ownership",
@@ -15524,31 +15524,31 @@
         }
       ]
     },
-    "sourceCommit": "88085cd43be8a2377a2096f9f05413ae59f03d43"
+    "sourceCommit": "e4fdca400c282ab6828b2b347508ec2b964e170d"
   },
   "schemaVersion": 1,
   "selinux": {
     "intendedSelinuxContexts": {
-      "detail": "165240 members, identical (compared by digest over the full value)",
+      "detail": "165242 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "fac5e6682616148ffddcbd22abb717ae5877f29b8ffe215544e64adae72fe964",
-        "__memberCount__": 165240
+        "__digest__": "7b8a3a2d4fba8c1334f11d9e83d591bd6dd99eb3235769b25c6f2879f66af240",
+        "__memberCount__": 165242
       },
       "second": {
-        "__digest__": "fac5e6682616148ffddcbd22abb717ae5877f29b8ffe215544e64adae72fe964",
-        "__memberCount__": 165240
+        "__digest__": "7b8a3a2d4fba8c1334f11d9e83d591bd6dd99eb3235769b25c6f2879f66af240",
+        "__memberCount__": 165242
       }
     },
     "resolvedCounts": [
-      165240,
-      165240
+      165242,
+      165242
     ],
     "specifications": [
       "file_contexts",
       "file_contexts"
     ]
   },
-  "sourceCommit": "88085cd43be8a2377a2096f9f05413ae59f03d43",
+  "sourceCommit": "e4fdca400c282ab6828b2b347508ec2b964e170d",
   "volatilePathDiagnostic": {
     "differing": [],
     "differingCount": 0,
