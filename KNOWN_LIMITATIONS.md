@@ -661,30 +661,76 @@ is not a side effect this change is entitled to have. `capability/registry.py`
 already prefers the installed path when it exists, so the wiring is a build
 change with no code change.
 
+### The previous "build impact: none" claim was wrong
+
+The commit that added `capability/apply/` (`ff751ab`) recorded that it did not
+affect the constructed artifact. That was checked by confirming `capability/` is
+not installed, which is true, and by stopping there, which was the mistake: the
+same commit changed three files under `schemas/` and three under `docs/`, and
+`install-root.py` copies both directories into the image wholesale, plus
+`tools/bunny-os/bunny_os/` where `capability_cli.py` also changed.
+
+`build/scripts/build-input-closure.py` now computes this mechanically from the
+Containerfile's `COPY` set and install-root.py's AST, and reports `ff751ab` as
+build-affecting through seven installed paths. The commit that added the
+capability runtime (`96ca61f`) is build-affecting through sixteen.
+
+Neither claim contaminated any evidence — candidate `79bb99ddb39d` is 273
+commits back and remains valid for its own artifact. What was wrong was a
+statement in a commit message and a report, and the correction is recorded here
+rather than by rewriting either.
+
+### A systemd-managed service reports no implementation, so changes are not detected
+
+`SystemdBackend.inspect()` cannot say which *implementation* of a service is
+running: `systemctl show` has no field for it and Bunny OS does not yet record
+one. Reconciliation therefore treats an unknown implementation as "not a
+mismatch" rather than "different".
+
+The measured alternative was worse. Comparing `None` against the desired
+implementation made every running service look like it needed replacing, and a
+real reconciliation on a real host issued `stop` then `start` for each of them
+on every cycle — the oscillation the hysteresis and cooldown machinery exists to
+prevent, reintroduced underneath all of it. The vertical slice caught it.
+
+The cost of the current rule is that a service which should switch
+implementations will not be switched by the systemd backend; it converges to
+whatever is running and stays there. Recording the implementation at start —
+in a runtime drop-in or a marker under the unit's `RuntimeDirectory` — is the
+fix, and it is not implemented.
+
 ### The applicator exists, but has never acted on a machine
 
 `capability/apply/` now contains the reconciliation engine, the reservation
 ledger, the transaction and rollback model, a systemd backend and a cgroup v2
-backend. All of it is tested. **None of it has changed a real machine**, and the
-gap between those two statements is the point of this entry.
+backend. All of it is tested. Since the image-integration phase, **parts of it have now changed a real
+machine**: the vertical slice starts, limits, health-checks and stops one
+harmless service against real systemd 259 and a real cgroup v2 hierarchy, and
+verifies enforcement by reading `memory.max`, `memory.current` and
+`cgroup.procs` back from the kernel. What remains unmeasured is narrower than
+it was, and is listed below.
 
 Specifically:
 
-- **The systemd backend has never talked to systemd.** Every test drives it
-  through an injected subprocess runner returning captured `systemctl` output.
-  No unit has been started, stopped, frozen or thawed by this code, on this host
-  or any other. Behaviour against a real service manager — job ordering,
-  `TimeoutStartSec` interaction, transient units, `Restart=` policies fighting
-  the applicator's own retry policy — is `NOT_MEASURED`.
-- **The cgroup backend has never written to a real cgroup hierarchy.** It is
-  tested against directory trees built in `tempfile`, which reproduce the file
-  layout but not kernel semantics. A real `memory.max` write can be rejected,
-  clamped, or accepted and then overridden by a parent slice; a plain file
-  cannot model any of that. The read-back-and-compare logic is therefore tested
-  for its arithmetic, not for its agreement with a kernel.
-- **No physical or virtual machine has been reconciled.** Every result comes
-  from `InMemoryBackend`, which models a service manager rather than measuring
-  one.
+- **Start, stop, limit and health-check are now exercised against real systemd**
+  (259, Fedora 44, kernel 6.18.33.2-microsoft-standard-WSL2) by
+  `scripts/capability-vertical-slice.sh`. Suspend (`freeze`), resume (`thaw`),
+  reload, ungraceful kill, and `Restart=` policies interacting with the
+  applicator's retry policy are `NOT_MEASURED`.
+- **Limits are applied through systemd, not by direct cgroup writes.** The
+  original design wrote into a Bunny OS-owned subtree; measured on a real host,
+  systemd places units under `system.slice/<unit>`, so those writes limited an
+  empty cgroup while the service ran unconstrained elsewhere.
+  `SystemdResourceController` replaces them with `systemctl set-property
+  --runtime` plus a kernel read-back. `CgroupController`'s direct-write path
+  survives for the non-systemd case and **is still only tested against
+  `tempfile` trees**, which model the file layout and not kernel semantics.
+- **No Bunny OS image has been booted.** The slice runs against a Fedora 44 WSL2
+  system, not against a constructed Bunny OS artifact. Boot behaviour, the
+  installed layout, and the units under a real first boot are `NOT_MEASURED`.
+- **The environment is WSL2, which is virtualised and not a physical machine.**
+  `systemd-detect-virt` reports `wsl`. No result here is a statement about
+  physical hardware.
 
 The default backend is `DryRunBackend` and reaching a real host requires an
 explicit `--host` flag, an `allow_host_modification=True` backend and systemd's

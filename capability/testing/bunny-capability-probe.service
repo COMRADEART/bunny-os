@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# The service the capability applicator is validated against.
+#
+# It lives in capability/testing/ and NOT in systemd/, deliberately.
+# install-root.py copies systemd/ into the image wholesale, so a unit placed
+# there ships to every installed system — and a validation fixture that ships is
+# a fixture that can be started on somebody's machine. capability/ is not in the
+# build context at all, so from here the unit cannot reach the artifact by any
+# route. The repository's unit-program gate caught this when the file was first
+# written into systemd/, which is what the gate is for.
+#
+# It exists so that the vertical slice has a real unit to start, limit,
+# health-check and stop that is not an essential host service. It does nothing
+# and provides nothing; it is not enabled, is not wanted by any target, and
+# starts only when the applicator explicitly starts it.
+#
+# The sandbox here is deliberately tighter than a real Bunny OS service needs.
+# This unit is the one an applicator bug would reach first, so it is confined to
+# the point where reaching it accomplishes nothing.
+
+[Unit]
+Description=Bunny OS capability probe (validation target; does nothing)
+Documentation=file:/usr/share/doc/bunny-os/CAPABILITY_APPLICATOR.md
+# Never pulled in by a target. The applicator starts it or nothing does.
+RefuseManualStart=no
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/bunny-capability-probe --allocate-mib 8
+RuntimeDirectory=bunny-capability-probe
+RuntimeDirectoryMode=0700
+
+# A clean stop must be distinguishable from a kill, because the applicator
+# reports which one happened. SIGTERM, then a bounded wait, then SIGKILL.
+KillSignal=SIGTERM
+KillMode=mixed
+TimeoutStartSec=15s
+TimeoutStopSec=10s
+
+# The applicator owns the restart decision. A unit that restarted itself would
+# race the applicator's retry policy and defeat its circuit breaker: the two
+# would each be bounded and the pair would not be.
+Restart=no
+
+# Confinement. Every directive below is here because this unit does not need
+# what it removes, not because the list is conventional.
+User=nobody
+Group=nobody
+DynamicUser=no
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+# It opens no socket at all, so no family is permitted.
+RestrictAddressFamilies=
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources @obsolete
+SystemCallArchitectures=native
+
+[Install]
+# Deliberately absent from any target. Installing this unit does not cause it
+# to run; only an explicit start does.

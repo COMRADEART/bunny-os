@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.capability.probe",
+  "title": "Capability probe",
+  "description": "A harmless service that exists so the applicator has something real and safe to start, limit, health-check and stop. It writes a readiness file, holds a declared resident working set, and exits cleanly on SIGTERM. Validating against an essential host service would risk the machine; validating against sleep would give nothing to observe a memory limit against.",
+  "essential": false,
+  "priority": "background",
+  "budgetCategory": "optional_services",
+  "handlesSensitiveData": false,
+  "requirements": {
+    "memory": { "minimumBytes": 16777216 },
+    "storage": { "writable": true }
+  },
+  "dependencies": {
+    "requires": [],
+    "conflictsWith": []
+  },
+  "execution": {
+    "suspendable": true,
+    "restartPolicy": "never"
+  },
+  "startup": {
+    "estimatedMilliseconds": 500,
+    "estimatedPeakMemoryBytes": 25165824
+  },
+  "implementations": [
+    {
+      "id": "probe-default",
+      "title": "Capability probe",
+      "locality": "local",
+      "rank": 1,
+      "description": "Holds 8 MiB resident and answers a readiness check.",
+      "requirements": {
+        "memory": { "minimumBytes": 16777216, "recommendedBytes": 33554432 }
+      }
+    }
+  ]
+}

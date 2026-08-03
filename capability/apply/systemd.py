@@ -47,12 +47,19 @@ import time
 from typing import Any, Mapping, Sequence
 
 from .backends import BackendOutcome, EnforcedLimits, ServiceLimits
-from .cgroup import NullCgroupController
+from .cgroup import (
+    NullCgroupController,
+    _covers,
+    _parse_cpu_max,
+    _parse_integer,
+    _parse_limit,
+)
 from .state import ServiceObservation
 
 __all__ = [
     "DEFAULT_UNIT_PREFIX",
     "SystemdBackend",
+    "SystemdResourceController",
     "systemd_available",
     "unit_name_for",
     "valid_unit_name",
@@ -109,6 +116,192 @@ def unit_name_for(service_id: str, *, prefix: str = DEFAULT_UNIT_PREFIX) -> str:
     return name
 
 
+def _quantity(value: float | int) -> str:
+    """A systemd resource-control value. Plain integers; no unit suffixes.
+
+    systemd accepts suffixes, but they invite a rounding disagreement between
+    what was asked for and what is read back. Bytes are unambiguous.
+    """
+    return str(int(value))
+
+
+@dataclass
+class SystemdResourceController:
+    """Resource limits applied *through systemd*, and verified from the kernel.
+
+    This replaces direct cgroup writes wherever systemd owns the unit, and the
+    reason is not tidiness — it is that direct writes do not work. systemd
+    places a unit in ``system.slice/<unit>``, a path it chooses and manages;
+    writing ``memory.max`` into a Bunny OS-owned subtree the service is not in
+    limits an empty cgroup. The vertical slice caught exactly that: the write
+    would have been reported as enforcement while the service ran unconstrained
+    somewhere else.
+
+    So limits go in through ``systemctl set-property --runtime``, which is
+    systemd's own interface for the same kernel attributes, and the *effective*
+    figure is then read back from the unit's real cgroup — the path systemd
+    reports, not one this code assembled. Requested and effective stay separate,
+    because a parent slice can impose something stricter and only the read-back
+    reveals it.
+
+    ``--runtime`` rather than a persistent drop-in: the applicator's limits come
+    from a plan that is re-derived every cycle, and a limit that outlived the
+    plan that justified it would silently constrain a service after the reason
+    for constraining it had gone.
+    """
+
+    backend: Any
+    name: str = "systemd-resource-control"
+
+    def available(self) -> bool:
+        return bool(self.backend.available())
+
+    def _unit_cgroup(self, service_id: str) -> Path | None:
+        """Where systemd actually put the unit. Asked, never assumed."""
+        code, stdout, _ = self.backend._run(
+            self.backend._argv("show", self.backend.unit_for(service_id) or "",
+                               "--property=ControlGroup", "--value"),
+            5.0,
+        )
+        value = stdout.strip()
+        if code != 0 or not value or value == "/":
+            return None
+        return Path("/sys/fs/cgroup") / value.lstrip("/")
+
+    def apply(self, service_id: str, limits: ServiceLimits) -> EnforcedLimits:
+        unit = self.backend.unit_for(service_id)
+        if unit is None or not self.backend.available():
+            return EnforcedLimits(
+                limits, ServiceLimits(), False,
+                detail="systemd is not available, so no limit was applied",
+            )
+
+        properties: list[str] = []
+        if limits.memory_max_bytes is not None:
+            properties.append(f"MemoryMax={_quantity(limits.memory_max_bytes)}")
+        if limits.memory_high_bytes is not None:
+            properties.append(f"MemoryHigh={_quantity(limits.memory_high_bytes)}")
+        if limits.cpu_weight is not None:
+            properties.append(f"CPUWeight={_quantity(limits.cpu_weight)}")
+        if limits.cpu_quota_percent is not None:
+            properties.append(f"CPUQuota={_quantity(limits.cpu_quota_percent)}%")
+        if limits.process_limit is not None:
+            properties.append(f"TasksMax={_quantity(limits.process_limit)}")
+        if limits.io_weight is not None:
+            properties.append(f"IOWeight={_quantity(limits.io_weight)}")
+
+        if not properties:
+            return EnforcedLimits(limits, ServiceLimits(), True, detail="no limit was requested")
+
+        code, stdout, stderr = self.backend._run(
+            self.backend._argv("set-property", unit, "--runtime", *properties), 15.0,
+        )
+        if code != 0:
+            return EnforcedLimits(
+                limits, ServiceLimits(), False,
+                detail=f"systemctl set-property failed: {(stderr or stdout).strip()[:200]}",
+            )
+
+        # A stopped unit has no cgroup yet, so there is nothing to read back.
+        # That is not a failure to enforce: ``--runtime`` writes a drop-in that
+        # systemd applies when the unit starts, so the limit is in force before
+        # the first instruction of the service runs. Verification is deferred to
+        # :meth:`verify`, which the backend calls once the unit is up — reporting
+        # "not enforced" here would roll back every start on a correct system.
+        path = self._unit_cgroup(service_id)
+        if path is None or not path.is_dir():
+            return EnforcedLimits(
+                limits, ServiceLimits(), True,
+                detail=(
+                    "accepted by systemd and staged for start; the unit has no cgroup to read "
+                    "back from until it is running, and enforcement is verified then"
+                ),
+            )
+        return self.verify(service_id, limits)
+
+    def verify(self, service_id: str, limits: ServiceLimits) -> EnforcedLimits:
+        """Read the running unit's real cgroup and compare it to what was asked.
+
+        This is the only statement about enforcement this class will make about
+        a running service. It is separate from :meth:`apply` because the two
+        happen at different times — the limit is staged before the process
+        exists and can only be verified after it does — and collapsing them
+        would mean either claiming enforcement before it could be checked or
+        refusing every correct start.
+        """
+        effective = self.observe(service_id)
+        path = self._unit_cgroup(service_id)
+        if path is None or not path.is_dir():
+            return EnforcedLimits(
+                limits, effective, False,
+                detail="the unit has no cgroup, so nothing is enforced against it",
+            )
+        enforced = _covers(limits, effective)
+        detail = "" if enforced else (
+            f"systemd accepted the properties but {path} reports different effective values; "
+            "a parent slice may impose a different ceiling"
+        )
+        return EnforcedLimits(limits, effective, enforced, detail=detail)
+
+    def observe(self, service_id: str) -> ServiceLimits:
+        """The effective limits, read from the cgroup the unit is actually in."""
+        path = self._unit_cgroup(service_id)
+        if path is None or not path.is_dir():
+            return ServiceLimits()
+
+        def read(attribute: str) -> str | None:
+            try:
+                return (path / attribute).read_text(encoding="ascii").strip()
+            except OSError:
+                return None
+
+        return ServiceLimits(
+            memory_max_bytes=_parse_limit(read("memory.max")),
+            memory_high_bytes=_parse_limit(read("memory.high")),
+            cpu_weight=_parse_integer(read("cpu.weight")),
+            cpu_quota_percent=_parse_cpu_max(read("cpu.max")),
+            process_limit=_parse_limit(read("pids.max")),
+            io_weight=None,
+        )
+
+    def usage(self, service_id: str) -> dict[str, Any]:
+        """What the cgroup reports it is using. For measurement, not decisions."""
+        path = self._unit_cgroup(service_id)
+        if path is None or not path.is_dir():
+            return {}
+
+        def read(attribute: str) -> str | None:
+            try:
+                return (path / attribute).read_text(encoding="ascii").strip()
+            except OSError:
+                return None
+
+        events = read("memory.events") or ""
+        parsed = {}
+        for line in events.splitlines():
+            parts = line.split()
+            if len(parts) == 2 and parts[1].isdigit():
+                parsed[parts[0]] = int(parts[1])
+        return {
+            "cgroup": str(path),
+            "memoryCurrent": _parse_limit(read("memory.current")),
+            "memoryPeak": _parse_limit(read("memory.peak")),
+            "memoryEvents": parsed,
+            "procs": [item for item in (read("cgroup.procs") or "").split() if item],
+        }
+
+    def release(self, service_id: str) -> bool:
+        """systemd removes the cgroup when the unit stops. Nothing to do."""
+        return True
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "controller": self.name,
+            "available": self.available(),
+            "mechanism": "systemctl set-property --runtime, verified by cgroup read-back",
+        }
+
+
 def systemd_available() -> bool:
     """Whether this machine is running systemd as PID 1.
 
@@ -137,10 +330,12 @@ class SystemdBackend:
     #: ``--user`` rather than system units. A development default that cannot
     #: reach anything outside the invoking user's own session.
     user_scope: bool = False
-    #: Applies limits when systemd cannot. Normally a
-    #: :class:`~capability.apply.cgroup.CgroupController`; a null one by default
-    #: so that an unconfigured backend reports honestly rather than silently.
-    cgroups: Any = field(default_factory=NullCgroupController)
+    #: How resource limits are applied. ``None`` means "use systemd", which is
+    #: correct wherever systemd owns the unit and is the default for that
+    #: reason: a direct cgroup write lands in a subtree the unit is not in and
+    #: enforces nothing. A caller may pass an explicit controller for the
+    #: non-systemd case.
+    cgroups: Any = None
     unit_prefix: str = DEFAULT_UNIT_PREFIX
     name: str = "systemd"
     #: Injected for tests. Signature matches :func:`subprocess.run`'s use here.
@@ -151,6 +346,8 @@ class SystemdBackend:
     systemctl: str | None = None
 
     def __post_init__(self) -> None:
+        if self.cgroups is None:
+            self.cgroups = SystemdResourceController(backend=self)
         if self.systemctl is None:
             self.systemctl = shutil.which("systemctl")
         for unit in self.authorized_units:
@@ -413,7 +610,23 @@ class SystemdBackend:
         # command exited.
         observation = self.inspect(service_id)
         if observation.state in ("running", "starting"):
-            return replace(outcome, observation=observation)
+            # Now that the unit has a cgroup, the staged limits can actually be
+            # checked. Before this point "enforced" was a statement about what
+            # systemd accepted; from here it is a statement about what the
+            # kernel is doing, which is the only one worth reporting.
+            verify = getattr(self.cgroups, "verify", None)
+            if callable(verify) and observation.state == "running":
+                enforced = verify(service_id, limits)
+            observed_limit = enforced.effective.memory_max_bytes if enforced else None
+            return replace(
+                outcome,
+                observation=replace(
+                    observation,
+                    memory_limit_bytes=limits.memory_max_bytes,
+                    enforced_memory_limit_bytes=observed_limit,
+                ),
+                limits=enforced,
+            )
         return BackendOutcome(
             False, "start", service_id,
             "health_check_failure" if observation.state == "failed" else "startup_timeout",
