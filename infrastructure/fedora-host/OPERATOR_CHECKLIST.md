@@ -115,9 +115,20 @@ python infrastructure/fedora-host/scripts/host-readiness-gate.py \
     --output    /var/lib/bunny-qualification/environments/FQH-<id>/readiness.json
 ```
 
-Set `git.byteRoundtripTestsPass` to `true` in the environment report only after
-step 6 actually passed. The gate treats `null` as not run, and not run is not a
-pass.
+Between those two commands, record the byte policy from a measurement rather than
+by hand:
+
+```bash
+python infrastructure/fedora-host/scripts/verify-git-byte-policy.py \
+    --update-environment /var/lib/bunny-qualification/environments/FQH-<id>/environment.json
+```
+
+This runs the guard and writes `git.byteRoundtripTestsPass` itself — `true` only
+when it measured a pass, and `false` the moment anything fails. Do not set that
+field by hand. It is the one mandatory condition that was previously satisfiable
+by typing a word, and it guards the property the evidence model depends on.
+
+The gate treats `null` as not run, and not run is not a pass.
 
 `READY` exits 0. **`BLOCKED` exits 2 and means the host may not be used** — not
 that the refusal should be worked around.
