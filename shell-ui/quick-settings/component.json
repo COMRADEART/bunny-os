@@ -1,0 +1,15 @@
+{
+  "component": "quick-settings",
+  "description": "Quick Settings for system, shell and Bunny controls.",
+  "drawnByCompositor": false,
+  "executable": "bunny-quick-settings",
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "requiresExperimentalMode": true,
+  "schemaVersion": 1,
+  "surfaceMechanism": "wlr-layer-shell-v1",
+  "toolkit": "GTK 4"
+}

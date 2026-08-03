@@ -514,6 +514,17 @@ impl WlrLayerShellHandler for BunnyShell {
         });
         surface.send_configure();
 
+        eprintln!(
+            "bunny-shell: layer surface mapped: namespace={namespace} layer={layer:?} \
+             role={role:?} geometry={width}x{height}+{x}+{y} focusable={}",
+            role.map(|surface| surface.focusable()).unwrap_or(true)
+        );
+        self.diagnostics.components.push(crate::diagnostics::Fact::new(
+            format!("layer-surface-{namespace}"),
+            format!("{layer:?} {width}x{height}+{x}+{y}"),
+            crate::diagnostics::Evidence::Observed,
+        ));
+
         self.layer_surfaces.push(MappedLayerSurface {
             surface,
             layer,

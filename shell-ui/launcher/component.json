@@ -1,0 +1,15 @@
+{
+  "component": "launcher",
+  "description": "The Bunny launcher: browse and start installed applications.",
+  "drawnByCompositor": false,
+  "executable": "bunny-launcher",
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "requiresExperimentalMode": true,
+  "schemaVersion": 1,
+  "surfaceMechanism": "wlr-layer-shell-v1",
+  "toolkit": "GTK 4"
+}
