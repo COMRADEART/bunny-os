@@ -449,3 +449,61 @@ Carried forward from this pass, and not addressed by it:
   `install-root.py` writes `sourceCommit` into `/usr/lib/bunny-os/release.json`.
   Any future reproducibility pass must create the target commit *before* any
   build that will be compared against a hosted one.
+
+## Refreshed 2026-08-03 — after visual prototype removal
+
+Repository HEAD `9c469a6ff8e10c73476e5fd8d19330c88ae4e7c1`. Candidate commit
+`79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`. Candidate gate: **BLOCKED, 3 of 14**.
+Stable release: **NO-GO**. Pilots: **BLOCKED**.
+
+### Completed in this pass
+
+Visual prototypes V1, V2 and V3 were reverted out of `main` and branch isolation
+was restored (PR #17, merge `9c469a6`). `main` now carries no experimental visual
+session and no prototype implementation; the three `visual/*` branches are
+preserved and all three heads resolve. Main's CI went from failing to green:
+`Release blocker closure` and `Qualification evidence closure` both failed at
+`da87b23` and both pass at `9c469a6`.
+
+The qualification reports were refreshed from the gate's own output rather than
+by hand. The stale `2 of 14` headline is corrected to the gate-computed
+`3 of 14`, and `independent-reproducibility` is recorded at its current `PASS`.
+
+### The eleven that block, and who owns them
+
+Nothing below can be closed by writing code alone.
+
+| Owner | Prerequisites | What is actually required |
+|---|---|---|
+| engineering | `independent-recovery-media`, `installation-matrix`, `encryption-matrix` | build a signed recovery ISO and run real destructive installs against disposable disks |
+| operated-release | `update-matrix`, `rollback-matrix` | publish a release first, then measure against it |
+| independent-reviewer | `vulnerability-gate`, `accessibility-evidence`, `independent-reviews` | commission genuinely external reviews; reviews created internally cannot be labelled independent |
+| physical-hardware | `physical-hardware-evidence` | acquire one x86-64 UEFI machine with Secure Boot and TPM 2.0; VM evidence may never be relabelled as hardware evidence |
+| second-authorised-signer | `second-production-signer` | identify a second human signer and hold an approved key ceremony |
+| owner-decision | `protected-approvals` | nine approvals: Engineering, Release, Security, Privacy, Accessibility, Installer, Hardware, Documentation, Maintenance |
+
+### Immediate engineering work that is not blocked
+
+1. **Re-measure the stale evidence.** The twenty records attest a file that has
+   since changed. Re-run the matrices and record fresh evidence bound to a
+   current authority. Do not re-digest.
+2. **Extend `-text` protection to `operations/data/**`** in `.gitattributes`, so
+   attested bytes round-trip git on a Windows checkout.
+3. **Run the source gate on Linux.** One protected mutation test needs symlink
+   privilege that a Windows host does not hold; it is `NOT_RUN` there, not `PASS`.
+4. **Encrypted unlock KDF qualification** (`feature/encrypted-unlock-kdf-qualification`)
+   and **global SELinux closure** (`feature/selinux-installed-classification`)
+   are both product-authority work and neither depends on the visual track.
+
+### The visual track
+
+V4 framework closure (Smithay versus libmutter) is specified to require real
+Orca, real CJK input, real PipeWire screen sharing, real PAM lock/unlock,
+measured GPU rendering and two outputs actually presenting frames.
+
+None of that can be measured on a Windows host, and a prototype that has not been
+measured is not a framework verdict. V4 must be executed on Linux hardware with a
+working Wayland stack. Until it is, the correct recorded state for every V4
+mandatory gate is `NOT_RUN` or `NOT_AVAILABLE` — never `PASS`.
+
+GNOME remains the supported architecture throughout.
