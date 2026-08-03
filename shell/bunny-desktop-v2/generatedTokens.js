@@ -2,6 +2,27 @@
 // VISUAL PROTOTYPE ONLY — NOT RELEASE QUALIFIED — DO NOT MERGE INTO MAIN
 
 export const TOKENS = Object.freeze({
+  "layout": {
+    "dockHeight": 68,
+    "dockHeightCompact": 54,
+    "dockIcon": 48,
+    "dockIconCompact": 38,
+    "dockMaximumWidth": 660,
+    "dockTexture": 38,
+    "dockTextureCompact": 30,
+    "edgeMargin": 20,
+    "iconIdentity": 18,
+    "iconSmall": 16,
+    "iconStandard": 20,
+    "paletteWidth": 680,
+    "paletteWidthCompact": 580,
+    "panelMaximumWidth": 480,
+    "panelMinimumHeight": 420,
+    "panelMinimumWidth": 320,
+    "quickTileMinimumHeight": 76,
+    "topBarHeight": 42,
+    "topOffset": 54
+  },
   "motion": {
     "micro": 120,
     "mode": 240,

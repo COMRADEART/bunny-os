@@ -18,6 +18,7 @@ const PRESENTATION_KEYS = new Set([
     'assistant-panel-width',
     'focus-mode-enabled',
     'compact-layout-enabled',
+    'high-contrast',
 ]);
 
 
@@ -81,6 +82,7 @@ export class ModeController {
             panelTransparency: this._settings.get_double('panel-transparency'),
             dockAutohide: this._settings.get_boolean('dock-autohide'),
             assistantPanelWidth: this._settings.get_int('assistant-panel-width'),
+            highContrast: this._settings.get_boolean('high-contrast'),
         });
     }
 
@@ -98,4 +100,3 @@ export class ModeController {
         this._components.clear();
     }
 }
-

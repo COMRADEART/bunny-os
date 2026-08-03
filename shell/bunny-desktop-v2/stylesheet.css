@@ -50,3 +50,13 @@
 .bunny-v2-panel-transition { transition-duration: 180ms; }
 .bunny-v2-reduced-motion, .bunny-v2-reduced-motion * { transition-duration: 0ms; transition-delay: 0ms; }
 .bunny-v2-mock-banner { background-color: #F0B45C; color: #090C17; border-radius: 8px; padding: 8px 12px; font-weight: 700; }
+.bunny-v2-top-button { border-radius: 12px; padding: 4px 8px; }
+.bunny-v2-system-panel { spacing: 16px; }
+.bunny-v2-quick-tile { min-height: 76px; }
+.bunny-v2-palette-dialog { background-color: transparent; }
+.bunny-v2-palette-result:selected, .bunny-v2-palette-result.selected { background-color: #1D2742; }
+.bunny-v2-running { border-bottom: 2px solid #63C5FF; }
+.bunny-v2-active { background-color: #1D2742; }
+.bunny-v2-minimized { opacity: 0.72; }
+.bunny-v2-severity-sensitive, .bunny-v2-severity-privileged { border-left: 3px solid #F0B45C; }
+.bunny-v2-severity-critical { border-left: 3px solid #EF6B73; }

@@ -1,0 +1,25 @@
+{
+  "$schema": "./schema.json",
+  "schemaVersion": 2,
+  "tokens": {
+    "topBarHeight": 42,
+    "topOffset": 54,
+    "edgeMargin": 20,
+    "dockIcon": 48,
+    "dockIconCompact": 38,
+    "dockHeight": 68,
+    "dockHeightCompact": 54,
+    "dockMaximumWidth": 660,
+    "panelMinimumWidth": 320,
+    "panelMaximumWidth": 480,
+    "panelMinimumHeight": 420,
+    "paletteWidth": 680,
+    "paletteWidthCompact": 580,
+    "iconSmall": 16,
+    "iconIdentity": 18,
+    "iconStandard": 20,
+    "dockTexture": 38,
+    "dockTextureCompact": 30,
+    "quickTileMinimumHeight": 76
+  }
+}
