@@ -1,0 +1,38 @@
+{
+  "bunny": "available",
+  "provider": "local",
+  "backgroundTaskCount": 1,
+  "pendingApprovalCount": 1,
+  "privacyUses": [{"kind": "microphone", "application": "Recorder"}],
+  "tasks": [{"id": "mock-task", "title": "Organize project notes", "state": "running"}],
+  "conversation": [
+    {"role": "user", "state": "request", "text": "Organize my research notes."},
+    {"role": "assistant", "state": "proposed action", "text": "I prepared a reversible move proposal."},
+    {"role": "assistant", "state": "approval required", "text": "Review the affected files before anything changes."}
+  ],
+  "plan": [
+    {"title": "Review folders", "state": "completed"},
+    {"title": "Propose file moves", "state": "running"},
+    {"title": "Apply approved changes", "state": "waiting for approval"}
+  ],
+  "recentFiles": [{"name": "Research notes.md", "path": "/home/demo/Documents/Research notes.md"}],
+  "toolActivity": [{"name": "File index", "state": "completed"}, {"name": "Move proposal", "state": "waiting for approval"}],
+  "results": [{"title": "12 folders reviewed", "state": "completed"}],
+  "approvals": [{
+    "id": "mock-approval",
+    "component": "Bunny Assistant",
+    "operation": "Move 8 files into new project folders",
+    "resources": ["~/Documents/Research"],
+    "privilege": "User files",
+    "networkImpact": "None",
+    "dataImpact": "Changes file locations",
+    "reversibility": "Reversible from result history",
+    "reason": "Apply the organization plan you requested",
+    "expiration": "10 minutes",
+    "severity": "sensitive"
+  }],
+  "notifications": [
+    {"category": "Bunny activity", "title": "File move proposal", "state": "waiting for approval"},
+    {"category": "system", "title": "Updates available", "state": "proposal"}
+  ]
+}

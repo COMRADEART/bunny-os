@@ -3,6 +3,9 @@ import GLib from 'gi://GLib';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import {Dock} from './components/dock.js';
+import {ApprovalPanel} from './components/approvalPanel.js';
+import {AssistantPanel} from './components/assistantPanel.js';
+import {CommandPalette} from './components/commandPalette.js';
 import {NotificationCenter} from './components/notificationCenter.js';
 import {OverviewRail} from './components/overview.js';
 import {QuickSettings} from './components/quickSettings.js';
@@ -24,6 +27,9 @@ export default class BunnyDesktopExtension extends Extension {
             new NotificationCenter(this._state),
             new Dock(this._state, this._settings),
             new OverviewRail(this._state),
+            new CommandPalette(this._state, this._settings),
+            new AssistantPanel(this._state, this._settings),
+            new ApprovalPanel(this._state, this._settings),
         ];
         for (const component of this._components)
             component.enable();

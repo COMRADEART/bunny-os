@@ -41,6 +41,12 @@ def render_shell() -> str:
 .bunny-v1-success {{ color: {c['dark-success']}; }}
 .bunny-v1-privacy {{ color: {c['dark-focus']}; font-weight: {t['weight-semibold']}; }}
 .bunny-v1-mock {{ background-color: {c['dark-warning']}; color: {c['dark-background']}; border-radius: {r['control-small']}; padding: {s['space-2']}; font-weight: {t['weight-semibold']}; }}
+.bunny-v1-role-user {{ border-left: 3px solid {c['dark-focus']}; }}
+.bunny-v1-role-assistant {{ border-left: 3px solid {c['dark-accent']}; }}
+.bunny-v1-state-proposed-action, .bunny-v1-state-approval-required {{ border-right: 3px solid {c['dark-warning']}; }}
+.bunny-v1-state-executing-action {{ border-right: 3px solid {c['dark-focus']}; }}
+.bunny-v1-state-completed-action {{ border-right: 3px solid {c['dark-success']}; }}
+.bunny-v1-state-failed-action {{ border-right: 3px solid {c['dark-danger']}; }}
 .bunny-v1-compact .bunny-v1-card {{ padding: {s['space-2']}; spacing: {s['space-1']}; }}
 .bunny-v1-compact .bunny-v1-dock-icon {{ min-width: 36px; min-height: 36px; padding: {s['space-1']}; }}
 .bunny-v1-reduced-motion {{ transition-duration: 0ms; }}
@@ -65,6 +71,12 @@ def render_gtk() -> str:
 .bunny-privileged {{ border-left: 4px solid {c['dark-warning']}; }}
 .bunny-standard {{ border-left: 4px solid {c['dark-accent']}; }}
 .bunny-information {{ border-left: 4px solid {c['dark-focus']}; }}
+.bunny-role-user {{ border-left: 4px solid {c['dark-focus']}; }}
+.bunny-role-assistant {{ border-left: 4px solid {c['dark-accent']}; }}
+.bunny-action-proposed-action, .bunny-action-approval-required {{ border-right: 4px solid {c['dark-warning']}; }}
+.bunny-action-executing-action {{ border-right: 4px solid {c['dark-focus']}; }}
+.bunny-action-completed-action {{ border-right: 4px solid {c['dark-success']}; }}
+.bunny-action-failed-action {{ border-right: 4px solid {c['dark-danger']}; }}
 button:focus-visible, row:focus-visible, entry:focus-visible, switch:focus-visible {{ outline: 2px solid {c['dark-focus']}; outline-offset: 2px; }}
 .bunny-compact .bunny-card {{ padding: {s['space-2']}; border-radius: 12px; }}
 .bunny-compact list row {{ min-height: 40px; }}

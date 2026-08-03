@@ -17,6 +17,12 @@
 .bunny-v1-success { color: #70D8AD; }
 .bunny-v1-privacy { color: #65C7F7; font-weight: 600; }
 .bunny-v1-mock { background-color: #F4C878; color: #0C0E14; border-radius: 9px; padding: 8px; font-weight: 600; }
+.bunny-v1-role-user { border-left: 3px solid #65C7F7; }
+.bunny-v1-role-assistant { border-left: 3px solid #A99EFF; }
+.bunny-v1-state-proposed-action, .bunny-v1-state-approval-required { border-right: 3px solid #F4C878; }
+.bunny-v1-state-executing-action { border-right: 3px solid #65C7F7; }
+.bunny-v1-state-completed-action { border-right: 3px solid #70D8AD; }
+.bunny-v1-state-failed-action { border-right: 3px solid #FF9097; }
 .bunny-v1-compact .bunny-v1-card { padding: 8px; spacing: 4px; }
 .bunny-v1-compact .bunny-v1-dock-icon { min-width: 36px; min-height: 36px; padding: 4px; }
 .bunny-v1-reduced-motion { transition-duration: 0ms; }

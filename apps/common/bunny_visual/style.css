@@ -10,6 +10,12 @@
 .bunny-privileged { border-left: 4px solid #F4C878; }
 .bunny-standard { border-left: 4px solid #A99EFF; }
 .bunny-information { border-left: 4px solid #65C7F7; }
+.bunny-role-user { border-left: 4px solid #65C7F7; }
+.bunny-role-assistant { border-left: 4px solid #A99EFF; }
+.bunny-action-proposed-action, .bunny-action-approval-required { border-right: 4px solid #F4C878; }
+.bunny-action-executing-action { border-right: 4px solid #65C7F7; }
+.bunny-action-completed-action { border-right: 4px solid #70D8AD; }
+.bunny-action-failed-action { border-right: 4px solid #FF9097; }
 button:focus-visible, row:focus-visible, entry:focus-visible, switch:focus-visible { outline: 2px solid #65C7F7; outline-offset: 2px; }
 .bunny-compact .bunny-card { padding: 8px; border-radius: 12px; }
 .bunny-compact list row { min-height: 40px; }
