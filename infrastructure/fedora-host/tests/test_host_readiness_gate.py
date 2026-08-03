@@ -30,6 +30,21 @@ spec = importlib.util.spec_from_file_location("gate", SCRIPTS / "host-readiness-
 gate = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gate)
 
+try:
+    import jsonschema  # noqa: F401
+
+    HAS_JSONSCHEMA = True
+except ImportError:
+    HAS_JSONSCHEMA = False
+
+# The gate itself refuses when jsonschema is missing, which is correct for a gate:
+# one that cannot check its input has not checked it. These tests take the
+# repository's convention instead and skip with a reason, because a skip is not a
+# pass and "it passed locally" must stay distinguishable from "it never ran".
+needs_jsonschema = unittest.skipUnless(
+    HAS_JSONSCHEMA, "jsonschema unavailable; schema validation cannot be exercised"
+)
+
 
 def ideal_host() -> dict:
     """A machine that satisfies every mandatory condition."""
@@ -291,6 +306,7 @@ class ExitCodeTests(unittest.TestCase):
             capture_output=True, text=True,
         )
 
+    @needs_jsonschema
     def test_a_ready_host_exits_zero(self):
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:
@@ -298,6 +314,7 @@ class ExitCodeTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stdout)
             self.assertIn("READY", proc.stdout)
 
+    @needs_jsonschema
     def test_a_blocked_host_exits_two(self):
         import tempfile
         env = ideal_host()
@@ -316,6 +333,7 @@ class ExitCodeTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 2)
 
 
+@needs_jsonschema
 class SchemaValidationTests(unittest.TestCase):
     """A malformed report is refused for being malformed, not by crashing.
 
@@ -371,6 +389,7 @@ class SchemaValidationTests(unittest.TestCase):
         self.assert_schema_refuses(mutate, "role")
 
 
+@needs_jsonschema
 class MalformedReportExitCodeTests(unittest.TestCase):
     """Every malformed shape exits 2 and prints no traceback."""
 
@@ -406,6 +425,35 @@ class MalformedReportExitCodeTests(unittest.TestCase):
         proc = self._run(["not", "an", "object"])
         self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
         self.assertNotIn("Traceback", proc.stdout + proc.stderr)
+
+
+class FailClosedWithoutJsonschemaTests(unittest.TestCase):
+    """Without jsonschema the gate refuses; it never proceeds unvalidated.
+
+    This runs everywhere, including on the hosts where the tests above skip. It
+    is the one property that must hold regardless of what is installed.
+    """
+
+    def test_validation_refuses_when_jsonschema_is_absent(self):
+        import builtins
+
+        real_import = builtins.__import__
+
+        def blocked(name, *args, **kwargs):
+            if name == "jsonschema":
+                raise ImportError("simulated: jsonschema unavailable")
+            return real_import(name, *args, **kwargs)
+
+        builtins.__import__ = blocked
+        try:
+            with self.assertRaises(gate.SchemaError) as caught:
+                gate.validate_environment(ideal_host())
+        finally:
+            builtins.__import__ = real_import
+
+        message = str(caught.exception)
+        self.assertIn("jsonschema", message)
+        self.assertIn("rather than skipping", message)
 
 
 class SchemaTests(unittest.TestCase):
