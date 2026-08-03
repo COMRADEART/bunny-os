@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "firmwareHandoff": "vendor-owned; no modification",
+  "startup": {"label": "Starting Bunny OS", "terminalState": "session ready"},
+  "shutdown": {"label": "Shutting down", "terminalState": "system power event"},
+  "recovery": {"label": "Bunny Recovery", "terminalState": "recovery environment ready", "destructiveActionsRequireScope": true},
+  "verboseBootAvailable": true,
+  "fakePercentages": false
+}

@@ -63,8 +63,10 @@ class InteractionSurfaceTests(unittest.TestCase):
             py_compile.compile(str(path), doraise=True)
 
     def test_required_app_entry_points_exist(self) -> None:
-        for app in ("bunny-command-center", "bunny-approval-center", "bunny-assistant", "bunny-diagnostics"):
-            self.assertTrue((ROOT / "apps" / app / app).is_file())
+        for app in ("bunny-command-center", "bunny-approval-center", "bunny-assistant", "bunny-diagnostics", "bunny-welcome"):
+            entry = ROOT / "apps" / app / app
+            self.assertTrue(entry.is_file())
+            py_compile.compile(str(entry), doraise=True)
 
 
 if __name__ == "__main__":

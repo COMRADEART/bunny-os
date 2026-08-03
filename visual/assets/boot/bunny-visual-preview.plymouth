@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Bunny Visual Preview
+Description=Minimal Bunny OS visual prototype splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/bunny-visual-preview
+ScriptFile=/usr/share/plymouth/themes/bunny-visual-preview/bunny-visual-preview.script

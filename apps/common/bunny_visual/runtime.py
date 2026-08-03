@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import tempfile
 from typing import Any
 
 
@@ -109,3 +110,36 @@ def diagnostic_facts(state: dict[str, Any]) -> list[dict[str, str]]:
     except OSError:
         facts.append({"fact": "System storage", "severity": "information", "impact": "Impact unknown", "action": "Inspect system storage", "evidence": "Storage observation unavailable"})
     return facts
+
+
+def save_welcome_preferences(preferences: dict[str, Any]) -> Path:
+    """Persist non-secret onboarding choices without enabling any service."""
+    allowed = {
+        "language": str(preferences.get("language", "system"))[:32],
+        "appearance": str(preferences.get("appearance", "system"))[:16],
+        "bunnyEnabled": bool(preferences.get("bunnyEnabled", False)),
+        "localOnly": bool(preferences.get("localOnly", True)),
+        "provider": str(preferences.get("provider", "none"))[:32],
+        "highContrast": bool(preferences.get("highContrast", False)),
+        "largeText": bool(preferences.get("largeText", False)),
+        "reducedMotion": bool(preferences.get("reducedMotion", False)),
+        "telemetry": False,
+    }
+    if allowed["provider"] not in {"none", "local", "cloud-optional"}:
+        raise ValueError("invalid provider preference")
+    config_root = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+    destination = config_root / "bunny" / "visual-v1-welcome.json"
+    destination.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    handle, temporary = tempfile.mkstemp(prefix=".visual-v1-welcome-", dir=destination.parent)
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8", newline="\n") as stream:
+            json.dump(allowed, stream, indent=2, sort_keys=True)
+            stream.write("\n")
+        os.chmod(temporary, 0o600)
+        os.replace(temporary, destination)
+    finally:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+    return destination

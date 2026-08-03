@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable
 
-from .runtime import decision_available, diagnostic_facts, load_state, submit_decision
+from .runtime import decision_available, diagnostic_facts, load_state, save_welcome_preferences, submit_decision
 
 
 SECTIONS = (
@@ -101,7 +101,7 @@ class VisualApplication:
             "approval-center": self._approval_center,
             "assistant": self._assistant,
             "diagnostics": self._diagnostics,
-            "welcome": self._welcome_placeholder,
+            "welcome": self._welcome,
         }.get(self.surface)
         if builder is None:
             raise ValueError(f"unknown Bunny visual surface: {self.surface}")
@@ -230,9 +230,103 @@ class VisualApplication:
             root.append(card)
         return root
 
-    def _welcome_placeholder(self) -> Any:
-        root = self._box(12)
-        root.append(self._label("Welcome is completed in the identity and demo stage.", "title-2"))
+    def _welcome(self) -> Any:
+        root = self._box(16)
+        root.append(self._label("Set up a calm desktop that works without an account or internet connection.", "title-2"))
+        stack = self.Gtk.Stack(transition_type=self.Gtk.StackTransitionType.SLIDE_LEFT_RIGHT, vexpand=True)
+        preferences: dict[str, Any] = {
+            "language": "system", "appearance": "system", "bunnyEnabled": False,
+            "localOnly": True, "provider": "none", "highContrast": False,
+            "largeText": False, "reducedMotion": False,
+        }
+        pages: list[Any] = []
+
+        def page(title: str, body: str) -> Any:
+            box = self._box(14)
+            box.append(self._label(title, "title-1"))
+            box.append(self._label(body))
+            box.add_css_class("bunny-panel")
+            pages.append(box)
+            stack.add_named(box, f"step-{len(pages) - 1}")
+            return box
+
+        language = page("Language and keyboard", "Use the installed system languages and keyboard layouts. These can be changed later without Bunny.")
+        language_picker = self.Gtk.DropDown.new_from_strings(["System default", "English", "Español", "Français", "Deutsch"])
+        language_picker.update_property([self.Gtk.AccessibleProperty.LABEL], ["Preferred language"])
+        language_picker.connect("notify::selected", lambda control, _property: preferences.update(language=["system", "en", "es", "fr", "de"][control.get_selected()]))
+        language.append(language_picker)
+        language.append(self._row("Keyboard layout", "Uses the current GNOME keyboard layout; additional layouts remain available at login"))
+
+        appearance = page("Appearance", "Choose a visual preference. Light and dark themes have equal functional support.")
+        appearance_picker = self.Gtk.DropDown.new_from_strings(["Follow system", "Light", "Dark"])
+        appearance_picker.update_property([self.Gtk.AccessibleProperty.LABEL], ["Appearance theme"])
+        appearance_picker.connect("notify::selected", lambda control, _property: preferences.update(appearance=["system", "light", "dark"][control.get_selected()]))
+        appearance.append(appearance_picker)
+
+        access = page("Accessibility", "These choices supplement the accessibility menu available at login and in Quick Settings.")
+        for label, key in (("High contrast", "highContrast"), ("Large text", "largeText"), ("Reduced motion", "reducedMotion")):
+            row = self._row(label, "Can be changed at any time")
+            toggle = self.Gtk.Switch(valign=self.Gtk.Align.CENTER)
+            toggle.update_property([self.Gtk.AccessibleProperty.LABEL], [label])
+            toggle.connect("notify::active", lambda control, _property, name=key: preferences.update({name: control.get_active()}))
+            row.add_suffix(toggle); row.set_activatable_widget(toggle); access.append(row)
+
+        privacy = page("Privacy and Bunny", "Bunny is optional. Start disabled or local-only, with no account, cloud provider, or internet connection.")
+        bunny_row = self._row("Enable Bunny", "Off by default in this visual preview")
+        bunny_toggle = self.Gtk.Switch(active=False, valign=self.Gtk.Align.CENTER)
+        bunny_toggle.update_property([self.Gtk.AccessibleProperty.LABEL], ["Enable Bunny"])
+        bunny_toggle.connect("notify::active", lambda control, _property: preferences.update(bunnyEnabled=control.get_active()))
+        bunny_row.add_suffix(bunny_toggle); bunny_row.set_activatable_widget(bunny_toggle); privacy.append(bunny_row)
+        local_row = self._row("Local-only mode", "On by default; no provider traffic")
+        local_toggle = self.Gtk.Switch(active=True, valign=self.Gtk.Align.CENTER)
+        local_toggle.update_property([self.Gtk.AccessibleProperty.LABEL], ["Use Bunny in local-only mode"])
+        local_toggle.connect("notify::active", lambda control, _property: preferences.update(localOnly=control.get_active()))
+        local_row.add_suffix(local_toggle); local_row.set_activatable_widget(local_toggle); privacy.append(local_row)
+
+        provider = page("Optional provider", "Provider setup is optional and skipped by default. No credentials are collected by Welcome.")
+        provider_picker = self.Gtk.DropDown.new_from_strings(["No provider", "Local model", "Set up cloud later"])
+        provider_picker.update_property([self.Gtk.AccessibleProperty.LABEL], ["Optional Bunny provider"])
+        provider_picker.connect("notify::selected", lambda control, _property: preferences.update(provider=["none", "local", "cloud-optional"][control.get_selected()]))
+        provider.append(provider_picker)
+
+        approvals = page("Approvals", "Bunny proposes sensitive actions before they happen. Approval cards identify resources, privilege, network and data impact, reversibility, reason, and expiration.")
+        approvals.append(self._row("No silent authority", "Privileged actions follow the existing Bunny approval path"))
+
+        data = page("Data controls", "Telemetry is off. Provider secrets are not stored here. You can use the desktop with Bunny disabled.")
+        data.append(self._row("Telemetry", "Disabled"))
+        data.append(self._row("Cloud account", "Not required"))
+
+        finish = page("Ready", "Finish saves only these non-secret preferences. It does not enable network services or contact a provider.")
+        summary = self._label("Bunny disabled · Local-only · No provider · No account", "bunny-state")
+        finish.append(summary)
+        finish_status = self._label("")
+        finish.append(finish_status)
+        save = self.Gtk.Button(label="Finish setup")
+        save.add_css_class("suggested-action")
+        save.update_property([self.Gtk.AccessibleProperty.LABEL], ["Finish Bunny Desktop setup without contacting a provider"])
+        def persist(_button: Any) -> None:
+            try:
+                destination = save_welcome_preferences(preferences)
+                finish_status.set_label(f"Setup saved locally to {destination}. No network request was made.")
+            except (OSError, ValueError) as exc:
+                finish_status.set_label(f"Setup was not saved: {exc}")
+        save.connect("clicked", persist)
+        finish.append(save)
+
+        root.append(stack)
+        navigation = self.Gtk.Box(orientation=self.Gtk.Orientation.HORIZONTAL, spacing=12, halign=self.Gtk.Align.END)
+        back = self.Gtk.Button(label="Back")
+        next_button = self.Gtk.Button(label="Next")
+        index = {"value": 0}
+        def show(offset: int) -> None:
+            index["value"] = max(0, min(len(pages) - 1, index["value"] + offset))
+            stack.set_visible_child_name(f"step-{index['value']}")
+            back.set_sensitive(index["value"] > 0)
+            next_button.set_sensitive(index["value"] < len(pages) - 1)
+        back.connect("clicked", lambda _button: show(-1))
+        next_button.connect("clicked", lambda _button: show(1))
+        back.set_sensitive(False)
+        navigation.append(back); navigation.append(next_button); root.append(navigation)
         return root
 
     def run(self) -> int:

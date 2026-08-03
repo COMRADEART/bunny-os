@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "title": "Bunny Desktop Visual Phase V1",
+  "warningSlate": "VISUAL PROTOTYPE ONLY · NOT RELEASE QUALIFIED · DO NOT MERGE",
+  "scenes": [
+    {"seconds": 4, "action": "Select Bunny Visual Preview while GNOME remains visible in the session chooser"},
+    {"seconds": 5, "action": "Enter the dark Normal desktop and open workspace overview"},
+    {"seconds": 7, "action": "Open Command Palette with Super+Space and switch a window"},
+    {"seconds": 7, "action": "Inspect Assistant plan, tool activity, and provider-unavailable state"},
+    {"seconds": 8, "action": "Inspect a critical approval with neutral focus and no preselected approval"},
+    {"seconds": 6, "action": "Switch CompactLayout and FocusMode, then use the visible exit"},
+    {"seconds": 6, "action": "Show light, high-contrast, and reduced-motion settings"},
+    {"seconds": 4, "action": "End on prototype warning and GNOME fallback"}
+  ]
+}

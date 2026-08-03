@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "enabledByDefault": false,
+  "respectsSystemEventSounds": true,
+  "events": ["login", "logout", "notification", "approval-requested", "approval-granted", "approval-denied", "action-completed", "action-failed", "critical-warning"],
+  "implementation": "specification-only; no placeholder result sounds"
+}
