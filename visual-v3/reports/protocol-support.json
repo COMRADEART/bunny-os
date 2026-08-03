@@ -1,0 +1,233 @@
+{
+  "contradictions": [],
+  "globalCount": 19,
+  "globalsAdvertised": {
+    "ext_session_lock_manager_v1": 1,
+    "wl_compositor": 5,
+    "wl_data_device_manager": 3,
+    "wl_output": 4,
+    "wl_seat": 9,
+    "wl_shm": 2,
+    "wl_subcompositor": 1,
+    "wp_fractional_scale_manager_v1": 1,
+    "wp_presentation": 2,
+    "wp_viewporter": 1,
+    "xdg_activation_v1": 1,
+    "xdg_wm_base": 6,
+    "zwlr_layer_shell_v1": 4,
+    "zwp_idle_inhibit_manager_v1": 1,
+    "zwp_primary_selection_device_manager_v1": 1,
+    "zwp_relative_pointer_manager_v1": 1,
+    "zwp_text_input_manager_v3": 1,
+    "zxdg_decoration_manager_v1": 1,
+    "zxdg_output_manager_v1": 3
+  },
+  "noUnsupportedProtocolReportedAsSupported": true,
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "protocols": [
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "wl_compositor",
+      "note": "Core. Provided by smithay's compositor module.",
+      "protocol": "wl_compositor",
+      "status": "inherited from framework",
+      "version": 5
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "wl_shm",
+      "note": "Core shared-memory buffers.",
+      "protocol": "wl_shm",
+      "status": "inherited from framework",
+      "version": 2
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "wl_seat",
+      "note": "Core input seat.",
+      "protocol": "wl_seat",
+      "status": "inherited from framework",
+      "version": 9
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "wl_output",
+      "note": "Bunny creates and configures the output globals.",
+      "protocol": "wl_output",
+      "status": "implemented",
+      "version": 4
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "xdg_wm_base",
+      "note": "Bunny implements the window-management policy on top.",
+      "protocol": "xdg_wm_base",
+      "status": "implemented",
+      "version": 6
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "xdg_activation_v1",
+      "note": "Honoured as attention, never as a focus grant.",
+      "protocol": "xdg_activation",
+      "status": "implemented",
+      "version": 1
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "zxdg_decoration_manager_v1",
+      "note": "Server-side decorations are requested.",
+      "protocol": "xdg_decoration",
+      "status": "implemented",
+      "version": 1
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "zxdg_output_manager_v1",
+      "note": "Enabled via OutputManagerState::new_with_xdg_output.",
+      "protocol": "xdg_output",
+      "status": "inherited from framework",
+      "version": 3
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "wp_presentation",
+      "note": "Clock is CLOCK_MONOTONIC.",
+      "protocol": "presentation-time",
+      "status": "inherited from framework",
+      "version": 2
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "wp_viewporter",
+      "note": "Surface scaling and cropping.",
+      "protocol": "viewporter",
+      "status": "inherited from framework",
+      "version": 1
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "wp_fractional_scale_manager_v1",
+      "note": "Needed for 4K at 200% and mixed-DPI layouts.",
+      "protocol": "fractional-scale",
+      "status": "inherited from framework",
+      "version": 1
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "zwp_relative_pointer_manager_v1",
+      "note": "Required by games and 3D applications.",
+      "protocol": "relative-pointer",
+      "status": "inherited from framework",
+      "version": 1
+    },
+    {
+      "advertisedToClient": false,
+      "evidence": "observed",
+      "global": "zwp_pointer_constraints_v1",
+      "note": "Available in smithay but not wired up in V3. Pointer lock and confinement do not work; applications that need them will misbehave.",
+      "protocol": "pointer-constraints",
+      "status": "not implemented",
+      "version": null
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "zwp_text_input_manager_v3",
+      "note": "The client half of input methods.",
+      "protocol": "text-input",
+      "status": "inherited from framework",
+      "version": 1
+    },
+    {
+      "advertisedToClient": false,
+      "evidence": "observed",
+      "global": "zwp_input_method_v2",
+      "note": "The compositor half needs popup placement policy V3 did not write. Without it there is no on-screen keyboard and no CJK input method, which is an accessibility and internationalisation gap, not a cosmetic one.",
+      "protocol": "input-method",
+      "status": "not implemented",
+      "version": null
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "zwp_idle_inhibit_manager_v1",
+      "note": "Tracked so a video player can hold the screen on.",
+      "protocol": "idle-inhibit",
+      "status": "implemented",
+      "version": 1
+    },
+    {
+      "advertisedToClient": false,
+      "evidence": "observed",
+      "global": "zwp_linux_dmabuf_v1",
+      "note": "Needs a GPU device to advertise formats against. The nested software renderer on this host has none, so clients fall back to wl_shm. Required for hardware video decode.",
+      "protocol": "linux-dmabuf",
+      "status": "not implemented",
+      "version": null
+    },
+    {
+      "advertisedToClient": false,
+      "evidence": "unsupported",
+      "global": "zwlr_screencopy_manager_v1",
+      "note": "smithay 0.7 implements no screencopy protocol at all. This is the blocker behind the screencast portal, and it is a framework gap rather than a Bunny decision.",
+      "protocol": "screencopy",
+      "status": "intentionally unsupported",
+      "version": null
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "zwlr_layer_shell_v1",
+      "note": "Every piece of Bunny chrome depends on it.",
+      "protocol": "layer-shell",
+      "status": "implemented",
+      "version": 4
+    },
+    {
+      "advertisedToClient": true,
+      "evidence": "observed",
+      "global": "ext_session_lock_manager_v1",
+      "note": "The lock screen's surface role.",
+      "protocol": "session-lock",
+      "status": "implemented",
+      "version": 1
+    },
+    {
+      "advertisedToClient": false,
+      "evidence": "observed",
+      "global": "ext_foreign_toplevel_list_v1",
+      "note": "Available in smithay. Not enabled in V3: it lets any client enumerate every window, so it wants a security-context restriction before it is turned on.",
+      "protocol": "foreign-toplevel-management",
+      "status": "not implemented",
+      "version": null
+    },
+    {
+      "advertisedToClient": false,
+      "evidence": "unsupported",
+      "global": "zwlr_data_control_manager_v1",
+      "note": "Deliberately off. It grants unrestricted clipboard read to any client that binds it, which is a clipboard-stealing capability with no consent step.",
+      "protocol": "data-control",
+      "status": "intentionally unsupported",
+      "version": null
+    }
+  ],
+  "schemaVersion": 1,
+  "verifiedBy": "wayland-info run against the running compositor"
+}

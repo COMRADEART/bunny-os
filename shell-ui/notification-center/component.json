@@ -1,0 +1,15 @@
+{
+  "component": "notification-center",
+  "description": "Notification history, grouping and Do Not Disturb.",
+  "drawnByCompositor": false,
+  "executable": "bunny-notification-center",
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "requiresExperimentalMode": true,
+  "schemaVersion": 1,
+  "surfaceMechanism": "wlr-layer-shell-v1",
+  "toolkit": "GTK 4"
+}

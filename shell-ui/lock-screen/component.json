@@ -1,0 +1,19 @@
+{
+  "authenticationSurface": true,
+  "characterPermitted": false,
+  "component": "lock-screen",
+  "description": "The Bunny lock screen. Runs as an ext-session-lock-v1 client, not a layer surface.",
+  "drawnByCompositor": false,
+  "executable": "bunny-lock-screen",
+  "failsClosed": true,
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "passwordValidatedBy": "isolated PAM helper, never the compositor",
+  "requiresExperimentalMode": true,
+  "schemaVersion": 1,
+  "surfaceMechanism": "ext-session-lock-v1",
+  "toolkit": "GTK 4"
+}

@@ -1,0 +1,15 @@
+{
+  "compositorSideRequirement": null,
+  "description": "Screenshots, each requiring explicit per-request consent.",
+  "implementedInV3": false,
+  "integrationApproach": "consume the existing xdg-desktop-portal backend rather than implement a Bunny backend",
+  "interface": "org.freedesktop.portal.Screenshot",
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "portal": "bunny-screenshot-portal",
+  "reason": "A portal backend is a security-critical component that grants applications access to the screen and the filesystem. Writing a Bunny one would mean re-implementing consent handling that xdg-desktop-portal-gtk already does correctly, and V3 found no Bunny-specific requirement that the existing backend cannot meet.",
+  "schemaVersion": 1
+}

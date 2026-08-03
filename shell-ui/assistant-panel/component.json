@@ -1,0 +1,16 @@
+{
+  "characterPermitted": true,
+  "component": "assistant-panel",
+  "description": "The Bunny assistant panel. The only routinely character-bearing surface.",
+  "drawnByCompositor": false,
+  "executable": "bunny-assistant-panel",
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "requiresExperimentalMode": true,
+  "schemaVersion": 1,
+  "surfaceMechanism": "wlr-layer-shell-v1",
+  "toolkit": "GTK 4"
+}

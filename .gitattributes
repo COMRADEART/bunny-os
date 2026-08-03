@@ -16,3 +16,15 @@ systemd/** -text
 config/** -text
 *.sh -text
 
+# Visual Phase V3 (experimental Wayland shell). Session launchers, systemd
+# units and desktop entries here are parsed by the same CR-intolerant tooling as
+# the image content above, and the Rust sources are compiled on Linux. The V3
+# evidence files record sha256 digests of their own bytes, so they must round
+# trip git exactly for the same reason the qualification evidence must.
+compositor/** text=auto eol=lf
+shell-ui/** text=auto eol=lf
+portals/** text=auto eol=lf
+sessions/** text=auto eol=lf
+visual-v3/tools/** text=auto eol=lf
+visual-v3/reports/** -text
+

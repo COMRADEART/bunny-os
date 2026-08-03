@@ -1,0 +1,16 @@
+{
+  "characterPermitted": true,
+  "component": "approval-panel",
+  "description": "Approval cards. Renders trusted backend state and returns explicit user input.",
+  "drawnByCompositor": false,
+  "executable": "bunny-approval-panel",
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "requiresExperimentalMode": true,
+  "schemaVersion": 1,
+  "surfaceMechanism": "wlr-layer-shell-v1",
+  "toolkit": "GTK 4"
+}
