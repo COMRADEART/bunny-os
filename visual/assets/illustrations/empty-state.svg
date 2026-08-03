@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
-  <title>No Bunny activity observed</title>
-  <rect width="640" height="360" rx="28" fill="#151821"/>
-  <path d="M238 64c0 112 24 180 82 232M402 64c0 112-24 180-82 232" fill="none" stroke="#8B7CFF" stroke-opacity=".58" stroke-width="14" stroke-linecap="round"/>
-  <path d="M258 194c20 24 39 37 62 46 23-9 42-22 62-46" fill="none" stroke="#65C7F7" stroke-opacity=".68" stroke-width="10" stroke-linecap="round"/>
-  <text x="320" y="330" text-anchor="middle" fill="#B9BFCC" font-family="Adwaita Sans, sans-serif" font-size="18">No activity observed</text>
-</svg>

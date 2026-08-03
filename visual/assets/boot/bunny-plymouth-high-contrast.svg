@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
-  <title>Bunny OS high contrast boot mark</title>
-  <rect width="320" height="320" fill="#000"/>
-  <g transform="translate(64 44) scale(3)" color="#FFF">
-    <path fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" d="M13 10c0 21 5 36 19 44M51 10c0 21-5 36-19 44M18 33c4 5 8 8 14 10 6-2 10-5 14-10"/>
-  </g>
-</svg>

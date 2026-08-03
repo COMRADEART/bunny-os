@@ -1,9 +1,0 @@
-#!/usr/bin/python3
-from pathlib import Path
-import sys
-
-installed = Path("/usr/lib/bunny-visual-v1")
-sys.path.insert(0, str(installed if installed.is_dir() else Path(__file__).resolve().parents[1] / "common"))
-from bunny_visual import run_surface
-
-raise SystemExit(run_surface("welcome"))
