@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.system.update",
+  "title": "Signed update agent",
+  "description": "Fetches and verifies signed update manifests. The service runs without a network; only an update check needs one, and a check that cannot reach the network reports that rather than failing the service.",
+  "essential": true,
+  "priority": "important",
+  "budgetCategory": "essential_services",
+  "requirements": {
+    "memory": {
+      "minimumBytes": 6291456,
+      "recommendedBytes": 12582912
+    },
+    "storage": {
+      "writable": true
+    }
+  },
+  "execution": {
+    "suspendable": true,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 150,
+    "estimatedPeakMemoryBytes": 25165824
+  },
+  "implementations": [
+    {
+      "id": "update-agent",
+      "title": "Local update agent",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 6291456,
+          "recommendedBytes": 12582912
+        }
+      }
+    }
+  ]
+}

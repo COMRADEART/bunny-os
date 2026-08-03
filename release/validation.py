@@ -31,6 +31,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 from typing import Any, Callable, Iterable, Sequence
 import xml.etree.ElementTree as ET
 
@@ -167,6 +168,9 @@ def _json_parsing(root: Path) -> ValidatorOutcome:
         *_walk(root, "*.json", under="enterprise"),
         *_walk(root, "*.json", under="sync"),
         *_walk(root, "*.json", under="security"),
+        # Service capability manifests. A manifest that does not parse would
+        # otherwise fail at boot on the machine it was meant to describe.
+        *_walk(root, "*.json", under="capability"),
     })
     for path in paths:
         try:
@@ -430,6 +434,59 @@ def _licence_headers(root: Path) -> ValidatorOutcome:
         f"{declared} declarations over {len(paths)} files, all within "
         f"{sorted(PERMITTED_SPDX)}"
     )
+    outcome.result = "FAIL" if outcome.failures else "PASS"
+    return outcome
+
+
+def _capability_manifests(root: Path) -> ValidatorOutcome:
+    """Shipped service manifests must parse, validate, and agree as a set.
+
+    A manifest is a safety input: it is what tells the policy engine how much
+    memory a service needs before that service is started. An unparseable one
+    would fail at boot on the machine it was meant to describe, and a set that
+    disagrees with itself — a dependency nothing declares, an asymmetric
+    conflict, an essential service depending on an optional one — produces a
+    control plane that a resource decision can switch off. Both are caught here
+    rather than in production.
+    """
+    outcome = ValidatorOutcome("Capability manifests")
+    directory = root / "capability/services"
+    paths = sorted(directory.glob("*.json")) if directory.is_dir() else []
+    outcome.checked = len(paths)
+    if not paths:
+        outcome.result = "SKIP"
+        outcome.skipReason = "no capability/services directory in this tree"
+        return outcome
+
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    try:
+        from capability.manifest import ManifestError, load_manifest
+        from capability.registry import build_registry
+    except ImportError as exc:
+        outcome.result = "SKIP"
+        outcome.skipReason = f"capability package not importable ({exc}); manifests were not validated"
+        return outcome
+
+    manifests = []
+    for path in paths:
+        try:
+            manifests.append(load_manifest(path))
+        except ManifestError as exc:
+            outcome.failures.append(Failure(_name(root, path), str(exc)))
+
+    if not outcome.failures:
+        try:
+            registry = build_registry(manifests)
+        except ManifestError as exc:
+            outcome.failures.append(Failure(_name(root, directory), str(exc)))
+        else:
+            outcome.summary = (
+                f"{len(manifests)} manifests, {len(registry.essential())} essential, "
+                f"{registry.essential_floor_bytes() // (1024 ** 2)} MiB essential floor"
+            )
+    if not outcome.summary:
+        outcome.summary = f"{len(paths)} manifests"
     outcome.result = "FAIL" if outcome.failures else "PASS"
     return outcome
 
@@ -725,6 +782,7 @@ _VALIDATORS: tuple[tuple[str, Callable[[Path], ValidatorOutcome]], ...] = (
     ("systemd units", _systemd_units),
     ("systemd unit programs", _systemd_unit_programs),
     ("Shell layout", _shell_layout),
+    ("Capability manifests", _capability_manifests),
 )
 
 

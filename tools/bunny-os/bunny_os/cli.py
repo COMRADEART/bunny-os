@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 from typing import Any
 
+from . import capability_cli as capability_module
 from . import qualification as qualification_module
 from .client import BrokerClientError, request
 from .info import human as hardware_human, inventory
@@ -82,6 +83,7 @@ def parser() -> argparse.ArgumentParser:
     verify.add_argument("--signature", type=Path, default=Path("/run/initramfs/live/BUNNY-MANIFEST.json.sig"))
     verify.add_argument("--public-key", type=Path, default=Path("/usr/share/bunny-os/media-keys/release.pem"))
     qualification_module.add_arguments(sub)
+    capability_module.add_arguments(sub)
     return root
 
 
@@ -128,6 +130,18 @@ def main() -> int:
                 value = qualification_module.dispatch(args)
             except qualification_module.QualificationError as exc:
                 raise BrokerClientError("qualification_refused", str(exc)) from exc
+        elif args.command == "capability":
+            # Like qualification, this is local and read-only: it needs no
+            # privilege the caller does not already have, and it must work on a
+            # machine whose broker is not running — deciding what can run is
+            # exactly the question asked when little is running.
+            try:
+                value = capability_module.dispatch(args)
+            except capability_module.CapabilityError as exc:
+                raise BrokerClientError("capability_refused", str(exc)) from exc
+            if not args.json and isinstance(value, str):
+                print(value)
+                return 0
         elif args.command == "media":
             from installer.validation.media import MediaVerificationError, verify_manifest
 

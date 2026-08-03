@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.memory.vector",
+  "title": "Vector memory index",
+  "description": "Embedding index for retrieval. Storage-heavy and entirely optional; without it retrieval falls back to the plain text index.",
+  "essential": false,
+  "priority": "deferred",
+  "budgetCategory": "caching",
+  "handlesSensitiveData": true,
+  "requirements": {
+    "memory": {
+      "minimumBytes": 536870912,
+      "recommendedBytes": 1073741824
+    },
+    "storage": {
+      "writable": true,
+      "minimumFreeBytes": 4294967296
+    }
+  },
+  "execution": {
+    "suspendable": true,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 1500,
+    "estimatedPeakMemoryBytes": 1073741824
+  },
+  "implementations": [
+    {
+      "id": "local-index",
+      "title": "Local vector index",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 536870912,
+          "recommendedBytes": 1073741824
+        },
+        "scores": {
+          "storage_performance": 30.0
+        }
+      }
+    }
+  ]
+}

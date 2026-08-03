@@ -614,3 +614,94 @@ host. Its state on Windows is **`NOT_RUN`**, never `PASS`.
 
 Linux CI runs it and passes: `host-gate` and `Gate state` are green on `9c469a6`.
 The source gate must be evaluated on Linux.
+
+## Capability runtime
+
+The subsystem in `capability/` is a working, tested vertical slice. These are the
+things it does **not** establish, stated so that nothing downstream reads more
+into it than it earns. See `docs/CAPABILITY_RUNTIME.md`.
+
+### The 64 MB target is calculated, not measured
+
+The arithmetic holds: the declared essential floor is 28 MiB, the simulated
+64 MB device budgets 40 MiB allocatable, and all five essential services are
+planned to start. That is a statement about **declarations and the budget
+engine**, not about resident memory.
+
+**No Bunny OS process has been run on a 64 MB machine, or on any ARM board, or
+measured for actual RSS.** The 64 MB target is therefore `NOT_MEASURED`. §17 of
+the commissioning brief is explicit that it may not be claimed achieved without
+measurement on an appropriate build or emulator, and it is not claimed here.
+
+### Declared service memory figures are estimates
+
+Every `minimumBytes` and `recommendedBytes` in `capability/services/*.json` is a
+manifest author's declaration. None has been profiled. A plan built from them is
+only as accurate as they are, and a service that declares 8 MiB and resident-sets
+40 MiB would produce over-committed plans that the engine cannot detect. Profiling
+the shipped services and correcting the manifests is follow-up work.
+
+### No physical hardware has been exercised
+
+Every result comes from a simulated inventory or from whichever host ran the
+tests — on this Windows checkout, a host where nearly every Linux probe returns
+`unknown`. The discovery layer's Linux paths (`/proc`, `/sys`, cgroup v1 and v2,
+DRM enumeration, PSI, vendor tools) are unit-tested against captured text and
+mocked filesystem reads. **They have not been run against a real Linux machine
+in this repository**, and no GPU, NPU, battery, thermal zone or metered
+connection has ever been read by this code on hardware that has one.
+
+### The capability runtime is not part of the image build
+
+`capability/` is not copied into the OCI image by `build/scripts/install-root.py`,
+and `bunny-os capability` therefore reads manifests from the source tree rather
+than from `/usr/share/bunny-os/capability/services`. Wiring it in would add files
+to the built artifact and invalidate the current reproducibility candidate, which
+is not a side effect this change is entitled to have. `capability/registry.py`
+already prefers the installed path when it exists, so the wiring is a build
+change with no code change.
+
+### The plan is produced but not applied
+
+`capability/` decides what should run. Nothing here starts, stops, suspends or
+resource-limits a service. There is no cgroup writer, no systemd integration, no
+supervisor. The execution plan is a document; acting on it is future work with
+higher privilege requirements and its own threat model.
+
+### Runtime monitoring has no loop
+
+`evaluate()` accepts a previous plan and a clock reading and produces a revised
+plan, and the hysteresis and cooldown behaviour is tested. **Nothing calls it on
+a timer.** `monitorIntervalSeconds` is honoured by nothing yet.
+
+### Bandwidth is never measured
+
+`network.bandwidthBitsPerSecond` is always `unknown`. An honest measurement means
+moving real traffic on a user's connection.
+
+### Metering requires NetworkManager
+
+Without `nmcli`, `network.metered` is `unknown`, and policy treats unknown as
+possibly metered. A machine using systemd-networkd will therefore never be
+permitted metered-network remote execution unless the user sets
+`meteredNetworkAllowed`.
+
+### No provider integration exists
+
+`RemoteProvider` is a protocol; `NullProvider` and the test doubles are the only
+implementations. No transport, no authentication, no credential storage. Remote
+execution is decided correctly and dispatched nowhere.
+
+### Input capability parsing assumes a 64-bit kernel is possible but does not depend on it
+
+Every input capability bit tested is below 32 and so lives in the last bitmask
+group regardless of `BITS_PER_LONG`. This is correct on both 32- and 64-bit
+kernels. Any future test of a bit above 31 would need the word-size ambiguity
+resolved first, and there is currently no way to do so from the printed masks.
+
+### GPU classification is heuristic
+
+`kind` (discrete / integrated / virtual) is derived from the bound driver name
+and VRAM size. An unrecognised driver reports `unknown` rather than guessing.
+The classification affects scoring, never usability — usability is decided by
+driver and runtime readiness, which are measured.

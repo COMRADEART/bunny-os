@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.inference.local",
+  "title": "Model inference",
+  "description": "Runs model inference for Bunny OS. Handles user content, so every remote implementation is gated on remoteExecution.allowSensitiveData in addition to being an allowlisted provider.",
+  "essential": false,
+  "priority": "standard",
+  "budgetCategory": "local_ai_inference",
+  "handlesSensitiveData": true,
+  "requirements": {},
+  "execution": {
+    "suspendable": true,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 4000,
+    "estimatedPeakMemoryBytes": 8589934592
+  },
+  "implementations": [
+    {
+      "id": "local-gpu",
+      "title": "GPU inference",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 2147483648,
+          "recommendedBytes": 4294967296
+        },
+        "gpu": {
+          "required": true,
+          "runtime": "cuda",
+          "minimumVramBytes": 6442450944
+        }
+      }
+    },
+    {
+      "id": "local-cpu-large",
+      "title": "Larger CPU model",
+      "locality": "local",
+      "rank": 2,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 12884901888,
+          "recommendedBytes": 17179869184
+        },
+        "cpu": {
+          "minimumScore": 55.0
+        }
+      }
+    },
+    {
+      "id": "local-cpu-small",
+      "title": "Small CPU model",
+      "locality": "local",
+      "rank": 3,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 3221225472,
+          "recommendedBytes": 4294967296
+        },
+        "cpu": {
+          "minimumScore": 30.0
+        }
+      }
+    },
+    {
+      "id": "remote-node",
+      "title": "Paired Bunny compute node",
+      "locality": "remote",
+      "rank": 4,
+      "provider": "bunny-node",
+      "costsMoney": false,
+      "description": "Another Bunny OS machine the user has paired. Still remote: it needs the same permission every other remote destination needs.",
+      "requirements": {
+        "memory": {
+          "minimumBytes": 50331648,
+          "recommendedBytes": 67108864
+        },
+        "network": {
+          "required": true
+        }
+      }
+    },
+    {
+      "id": "remote-provider",
+      "title": "Configured external provider",
+      "locality": "remote",
+      "rank": 5,
+      "provider": "configured-inference-provider",
+      "costsMoney": true,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 50331648,
+          "recommendedBytes": 67108864
+        },
+        "network": {
+          "required": true
+        }
+      }
+    }
+  ]
+}

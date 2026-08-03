@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/execution-plan-1.schema.json",
+  "title": "Bunny OS execution plan",
+  "description": "What runs, where, and why. A plan is a value: producing it starts nothing, which is what makes it safe to ask a live machine for one. Every decision carries structured reasons rather than prose, so an explanation cannot drift from the arithmetic that produced it. Reasons here describe measurements and deterministic policy; no model reasoning appears in this document.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "generatedAt", "decisions"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "grantedMemoryBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total granted across running services. Never exceeds the budget's allocatable figure; the engine asserts this before returning a plan."
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "running": { "type": "integer", "minimum": 0 },
+        "local": { "type": "integer", "minimum": 0 },
+        "remote": { "type": "integer", "minimum": 0 },
+        "suspended": { "type": "integer", "minimum": 0 },
+        "stopped": { "type": "integer", "minimum": 0 },
+        "deferred": { "type": "integer", "minimum": 0 },
+        "rejected": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["serviceId", "action", "reasons"],
+        "properties": {
+          "serviceId": { "type": "string", "maxLength": 128 },
+          "action": {
+            "type": "string",
+            "enum": ["start_local", "start_remote", "suspend", "stop", "defer", "reject"],
+            "description": "'Start with reduced limits' and 'select a lightweight backend' are not separate actions: reducing a service is selecting a lower-ranked implementation, and modelling it twice would let the two disagree."
+          },
+          "implementationId": { "type": ["string", "null"], "maxLength": 64 },
+          "memoryGrantBytes": { "type": "integer", "minimum": 0 },
+          "cpuPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+          "fallback": { "type": "string", "maxLength": 512 },
+          "reasons": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["code", "message"],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "enum": [
+                    "selected", "degraded", "user-disabled", "pin-honoured", "pin-unsatisfiable",
+                    "requirement-unmet", "requirement-unknown", "budget-exhausted", "no-implementation",
+                    "conflict", "dependency-unavailable", "remote-not-permitted", "remote-approval-required",
+                    "remote-unreachable", "metered-network", "sensitive-data-local-only",
+                    "paid-api-confirmation", "essential-shortfall", "hysteresis-hold", "cooldown-hold",
+                    "resource-pressure"
+                  ],
+                  "description": "requirement-unmet and requirement-unknown are distinct: telling a user their machine lacks memory it may well have is a worse error than telling them it could not be measured."
+                },
+                "message": { "type": "string", "maxLength": 1024 },
+                "required": {},
+                "measured": {}
+              }
+            }
+          },
+          "checks": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["requirement", "satisfied"],
+              "properties": {
+                "requirement": { "type": "string", "maxLength": 128 },
+                "satisfied": { "type": ["boolean", "null"], "description": "null means the requirement could not be evaluated. Treated as not satisfied for admission, and reported as undetermined in explanations." },
+                "required": {},
+                "measured": {},
+                "detail": { "type": "string", "maxLength": 512 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notes": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 512 } }
+  }
+}

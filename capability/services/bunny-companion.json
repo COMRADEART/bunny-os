@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.companion",
+  "title": "Bunny companion",
+  "description": "The companion presence. One user-facing feature with five implementations: the machine decides which, and the user gets the same companion with the same vocabulary and controls either way.",
+  "essential": false,
+  "priority": "standard",
+  "budgetCategory": "companion_rendering",
+  "requirements": {},
+  "execution": {
+    "suspendable": true,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 1200,
+    "estimatedPeakMemoryBytes": 2147483648
+  },
+  "implementations": [
+    {
+      "id": "animated-3d",
+      "title": "Full 3D character",
+      "locality": "local",
+      "rank": 1,
+      "description": "Skeletal animation and shading on the GPU.",
+      "requirements": {
+        "memory": {
+          "minimumBytes": 2147483648,
+          "recommendedBytes": 3221225472
+        },
+        "display": {
+          "required": true,
+          "minimumResolution": "1280x720"
+        },
+        "gpu": {
+          "required": true,
+          "runtime": "vulkan"
+        },
+        "scores": {
+          "graphics": 60.0
+        }
+      }
+    },
+    {
+      "id": "animated-2d",
+      "title": "Animated 2D avatar",
+      "locality": "local",
+      "rank": 2,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 805306368,
+          "recommendedBytes": 1073741824
+        },
+        "display": {
+          "required": true
+        },
+        "scores": {
+          "graphics": 25.0
+        }
+      }
+    },
+    {
+      "id": "static-avatar",
+      "title": "Static avatar with speech bubbles",
+      "locality": "local",
+      "rank": 3,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 268435456,
+          "recommendedBytes": 402653184
+        },
+        "display": {
+          "required": true
+        }
+      }
+    },
+    {
+      "id": "audio-only",
+      "title": "Voice with no visual presence",
+      "locality": "local",
+      "rank": 4,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 100663296,
+          "recommendedBytes": 134217728
+        },
+        "audio": {
+          "outputRequired": true
+        }
+      }
+    },
+    {
+      "id": "text-only",
+      "title": "Text status only",
+      "locality": "local",
+      "rank": 5,
+      "description": "The floor of the ladder. Same companion, same vocabulary, no rendering and no audio.",
+      "requirements": {
+        "memory": {
+          "minimumBytes": 25165824,
+          "recommendedBytes": 33554432
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.system.broker",
+  "title": "Privileged system broker",
+  "description": "The root service that mediates every privileged OS operation. Nothing else in Bunny OS may act as root.",
+  "essential": true,
+  "priority": "critical",
+  "budgetCategory": "essential_services",
+  "handlesSensitiveData": true,
+  "requirements": {
+    "memory": {
+      "minimumBytes": 8388608,
+      "recommendedBytes": 16777216
+    }
+  },
+  "execution": {
+    "suspendable": false,
+    "restartPolicy": "always"
+  },
+  "startup": {
+    "estimatedMilliseconds": 120,
+    "estimatedPeakMemoryBytes": 20971520
+  },
+  "implementations": [
+    {
+      "id": "system-broker",
+      "title": "Local socket-activated broker",
+      "locality": "local",
+      "rank": 1,
+      "description": "systemd socket activation on /run/bunny/broker.sock. There is no remote form: a broker that could run elsewhere would not be a local privilege boundary.",
+      "requirements": {
+        "memory": {
+          "minimumBytes": 8388608,
+          "recommendedBytes": 16777216
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.speech.recognition",
+  "title": "Speech recognition",
+  "description": "Turns speech into text. Microphone audio is sensitive by construction, so no implementation leaves the device without explicit permission.",
+  "essential": false,
+  "priority": "standard",
+  "budgetCategory": "speech_recognition",
+  "handlesSensitiveData": true,
+  "requirements": {
+    "audio": {
+      "inputRequired": true
+    }
+  },
+  "execution": {
+    "suspendable": true,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 2500,
+    "estimatedPeakMemoryBytes": 2147483648
+  },
+  "implementations": [
+    {
+      "id": "local-gpu",
+      "title": "GPU speech model",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 2147483648,
+          "recommendedBytes": 3221225472
+        },
+        "gpu": {
+          "required": true,
+          "runtime": "cuda"
+        },
+        "audio": {
+          "inputRequired": true
+        }
+      }
+    },
+    {
+      "id": "local-cpu",
+      "title": "Small local speech model",
+      "locality": "local",
+      "rank": 2,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 536870912,
+          "recommendedBytes": 1073741824
+        },
+        "cpu": {
+          "minimumScore": 35.0
+        },
+        "audio": {
+          "inputRequired": true
+        }
+      }
+    },
+    {
+      "id": "remote-provider",
+      "title": "Configured speech provider",
+      "locality": "remote",
+      "rank": 3,
+      "provider": "configured-speech-provider",
+      "costsMoney": true,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 33554432,
+          "recommendedBytes": 50331648
+        },
+        "network": {
+          "required": true
+        },
+        "audio": {
+          "inputRequired": true
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/capability-inventory-1.schema.json",
+  "title": "Bunny OS capability inventory",
+  "description": "The normalized, versioned record of what hardware and constraints a machine has. Every measurable fact is an observation carrying an availability state, so that 'measured', 'absent' (probed, and the thing is not there) and 'unknown' (the probe could not run) remain distinguishable. A consumer may never treat 'unknown' as zero: a probe that failed is not a machine without hardware. The document contains no serial numbers, MAC addresses, hostnames or machine UUIDs, and is not transmitted by default.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "detectedAt", "detection", "system", "cpu", "memory", "gpu", "storage", "network", "power", "thermal", "display", "audio", "constraints"],
+  "$defs": {
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["measured", "absent", "unknown"],
+          "description": "measured: the probe ran and produced the value. absent: the probe ran and the hardware or feature is not present. unknown: the probe could not run, timed out, or returned something unparseable."
+        },
+        "value": {
+          "description": "Present only when state is 'measured'. Its absence under any other state is what prevents a plausible-looking default from being read as a measurement."
+        },
+        "source": { "type": "string", "maxLength": 256, "description": "Where the value came from, e.g. /proc/meminfo or nvidia-smi." },
+        "detail": { "type": "string", "maxLength": 512, "description": "Why the state is what it is. Required reading for absent and unknown." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "state": { "not": { "const": "measured" } } }, "required": ["state"] },
+          "then": { "not": { "required": ["value"] } }
+        }
+      ]
+    },
+    "observationMap": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/observation" }
+    }
+  },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "detectedAt": { "type": "string", "format": "date-time" },
+    "detection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["budgetMs", "durationMs", "probes"],
+      "description": "One shared wall-clock budget covers the whole pass. Per-probe timeouts would not bound boot: twelve probes at three seconds each is a thirty-six second stall.",
+      "properties": {
+        "budgetMs": { "type": "integer", "minimum": 0 },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "probes": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "state", "durationMs"],
+            "properties": {
+              "name": { "type": "string", "maxLength": 64 },
+              "state": { "type": "string", "enum": ["ok", "failed", "skipped"] },
+              "durationMs": { "type": "integer", "minimum": 0 },
+              "detail": { "type": "string", "maxLength": 512 }
+            }
+          }
+        }
+      }
+    },
+    "system": { "$ref": "#/$defs/observationMap" },
+    "cpu": { "$ref": "#/$defs/observationMap" },
+    "memory": { "$ref": "#/$defs/observationMap" },
+    "gpu": {
+      "type": "array",
+      "maxItems": 64,
+      "description": "Presence is not usability. driverReady is the derived answer to 'could work be submitted here', and it requires both a bound driver and a render node.",
+      "items": {
+        "type": "object",
+        "required": ["index", "driverReady", "runtimes"],
+        "properties": {
+          "index": { "type": "integer", "minimum": 0 },
+          "driverReady": { "type": "boolean" },
+          "runtimes": { "$ref": "#/$defs/observationMap" }
+        },
+        "additionalProperties": { "$ref": "#/$defs/observation" }
+      }
+    },
+    "accelerators": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "required": ["kind"],
+        "properties": { "kind": { "type": "string", "maxLength": 32 } },
+        "additionalProperties": { "$ref": "#/$defs/observation" }
+      }
+    },
+    "storage": { "$ref": "#/$defs/observationMap" },
+    "network": { "$ref": "#/$defs/observationMap" },
+    "power": { "$ref": "#/$defs/observationMap" },
+    "thermal": { "$ref": "#/$defs/observationMap" },
+    "display": { "$ref": "#/$defs/observationMap" },
+    "audio": { "$ref": "#/$defs/observationMap" },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Derived booleans naming the restrictions that make this machine smaller than its hardware. Each is false unless the corresponding restriction was positively observed, except headless and offline, which are documented in docs/CAPABILITY_SCHEMA.md.",
+      "required": ["memoryLimited", "cpuQuotaLimited", "containerized", "virtualized", "readOnlyRoot", "headless", "offline", "onBattery", "thermallyThrottled", "meteredNetwork"],
+      "properties": {
+        "memoryLimited": { "type": "boolean" },
+        "cpuQuotaLimited": { "type": "boolean" },
+        "containerized": { "type": "boolean" },
+        "virtualized": { "type": "boolean" },
+        "readOnlyRoot": { "type": "boolean" },
+        "headless": { "type": "boolean" },
+        "offline": { "type": "boolean" },
+        "onBattery": { "type": "boolean" },
+        "thermallyThrottled": { "type": "boolean" },
+        "meteredNetwork": { "type": "boolean" }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identifiersCollected", "transmitted"],
+      "properties": {
+        "identifiersCollected": { "const": false },
+        "transmitted": { "const": false },
+        "note": { "type": "string", "maxLength": 512 }
+      }
+    },
+    "simulationNotice": {
+      "type": "string",
+      "maxLength": 512,
+      "description": "Present only when the inventory came from capability.simulate. Its presence means the document describes a synthetic machine and no claim is made about physical hardware."
+    }
+  }
+}

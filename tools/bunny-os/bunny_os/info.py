@@ -193,17 +193,42 @@ def _storage() -> dict[str, Any]:
 
 
 def _model_suitability(memory: dict[str, int], gpus: list[dict[str, Any]]) -> dict[str, Any]:
+    """Deprecated. Superseded by the capability runtime's scored dimensions.
+
+    This function collapsed a machine into one of three labels. That is exactly
+    the "single misleading power level" the capability runtime exists to
+    replace: it read total RAM and a Boolean "is there an active GPU", so a
+    workstation with two accelerators inside a 512 MB cgroup was assessed
+    ``candidate-20b-moe``, and a 24 GB machine with a driverless card and a
+    read-only root got the same answer as a healthy one.
+
+    It is retained for one release because ``contractCapabilities`` is a
+    versioned surface and removing a key is a contract change. It now carries
+    its own deprecation and points at the replacement, so a consumer reading it
+    can find the scored dimensions instead of the label. See
+    ``MODE_MIGRATION_REPORT.md``; the replacement is
+    ``bunny-os capability scores``, whose ``local_ai``, ``memory_available`` and
+    ``gpu_compute`` dimensions are independent and cannot mask one another.
+    """
     gib = memory["totalBytes"] / (1024 ** 3) if memory["totalBytes"] else 0
     active_gpu = any(gpu["state"] in {"driver-active", "runtime-verified"} for gpu in gpus)
     if gib >= 32 and active_gpu:
-        tier = "candidate-20b-moe"
+        legacy = "candidate-20b-moe"
     elif gib >= 16:
-        tier = "candidate-small-local"
+        legacy = "candidate-small-local"
     else:
-        tier = "classification-only-or-hosted"
+        legacy = "classification-only-or-hosted"
     return {
-        "assessment": tier,
+        "assessment": legacy,
         "verified": False,
+        "deprecated": True,
+        "replacedBy": "bunny-os capability scores",
+        "deprecationReason": (
+            "A single label cannot represent a machine. It ignores cgroup ceilings, driver "
+            "readiness and storage state, so it reports the same answer for machines that "
+            "differ in whether anything can run at all. Read the local_ai, memory_available "
+            "and gpu_compute dimensions instead; they are independent by construction."
+        ),
         "reasons": [f"system-memory-gib={gib:.1f}", f"active-gpu={str(active_gpu).lower()}", "runtime-benchmark-not-run"],
     }
 
@@ -277,6 +302,12 @@ def human(value: dict[str, Any]) -> str:
         f"GPU: {gpu}",
         f"Secure Boot detected enabled: {str(caps['secureBoot']).lower()} (not qualification evidence)",
         f"TPM available: {str(caps['tpmAvailable']).lower()}",
-        f"Local model assessment: {value['localModelSuitability']['assessment']} (benchmark unverified)",
+        # The collapsed single-label assessment is deliberately no longer
+        # printed. It is still present in the JSON for one release so that the
+        # versioned contract does not break, but showing a user one word where
+        # the honest answer is thirteen independent measurements is the thing
+        # the capability runtime was built to stop.
+        "Local capability: run 'bunny-os capability scores' for the scored dimensions,",
+        "and 'bunny-os capability plan' for what will actually run here.",
         "Inventory remains local and is not transmitted.",
     ])
