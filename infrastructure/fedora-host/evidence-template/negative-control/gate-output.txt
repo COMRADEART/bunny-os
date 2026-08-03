@@ -1,0 +1,54 @@
+host readiness: BLOCKED
+  environment: FQH-20260803-01
+  mandatory conditions satisfied: 8 of 26
+
+  ok      role-is-host                 the report describes a measurement host
+  BLOCKED bare-metal                   Fedora runs on bare metal
+          BLOCKED: host is virtualised (wsl); a qualification host must not run inside WSL, VirtualBox, VMware or a nested VM
+  ok      fedora                       the operating system is Fedora
+  BLOCKED uefi-boot                    the host booted in UEFI mode
+          BLOCKED: boot mode is bios; UEFI is required
+  BLOCKED selinux-enforcing            SELinux is enforcing
+          BLOCKED: SELinux is Disabled, not Enforcing
+  ok      wayland-session              the host session is Wayland
+  BLOCKED drm-card-node                a DRM card node exists
+          BLOCKED: /dev/dri is absent; without KMS there is no page-flip, no vblank and no connector
+  BLOCKED drm-render-node              a DRM render node exists
+          BLOCKED: no /dev/dri/renderD* node; GPU rendering cannot be measured
+  BLOCKED hardware-renderer            the OpenGL renderer is hardware, not a software rasteriser
+          BLOCKED: renderer is llvmpipe (LLVM 22.1.8, 256 bits), a software rasteriser; it renders correctly and proves nothing about the hardware path
+  BLOCKED vulkan-device                a hardware Vulkan device is present, backed by a real DRM device
+          BLOCKED: Vulkan device 'Microsoft Direct3D12 (NVIDIA GeForce RTX 4050 Laptop GPU)' is translated or emulated; a paravirtualised device name is not a hardware render path
+  BLOCKED two-connected-outputs        at least two displays are physically connected
+          BLOCKED: 0 connected output(s); 2 are required, and nested windows are not outputs
+  BLOCKED physical-tpm-2               a physical TPM 2.0 is present
+          BLOCKED: no physical TPM 2.0; an emulated TPM proves the software path, not the machine
+  BLOCKED secure-boot-observed         the Secure Boot state was observed
+          BLOCKED: Secure Boot state is unknown; it must be explicitly observed, even when disabled
+  ok      kvm-available                KVM is available for disposable guests
+  BLOCKED pipewire-active              PipeWire is running
+          BLOCKED: PipeWire is not active
+  BLOCKED wireplumber-active           WirePlumber is running
+          BLOCKED: WirePlumber is not active
+  BLOCKED portal-active                xdg-desktop-portal is running
+          BLOCKED: xdg-desktop-portal is inactive; screen sharing and screenshots cannot be measured
+  BLOCKED orca-installed               Orca is installed
+          BLOCKED: Orca is not installed; accessibility cannot be measured, and labels are not Orca evidence
+  BLOCKED speech-dispatcher-installed  speech-dispatcher is installed
+          BLOCKED: speech-dispatcher is not installed; spoken output cannot be captured
+  BLOCKED input-method-available       IBus or Fcitx 5 is available
+          BLOCKED: neither IBus nor Fcitx 5 is available; CJK input cannot be measured
+  ok      luks2-supported              cryptsetup supports LUKS2
+  ok      cpu-cores                    at least 8 logical cores
+  BLOCKED memory                       sufficient RAM for the guest matrices
+          BLOCKED: 15.4 GiB RAM; 16 GiB is the reduced-matrix minimum
+  ok      evidence-storage             sufficient storage for guests, overlays and retained evidence
+  ok      clock-synchronised           the system clock is synchronised
+  BLOCKED git-byte-roundtrip           the evidence byte round-trip guard passes
+          BLOCKED: tests/evidence did not pass; attested bytes may not round-trip this checkout
+
+This host may not be used to qualify Bunny OS. A host that cannot measure a
+requirement must refuse the work rather than produce a result that resembles a
+measurement.
+
+wrote infrastructure\fedora-host\evidence-template\negative-control\readiness.json
