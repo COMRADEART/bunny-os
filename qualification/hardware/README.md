@@ -155,3 +155,73 @@ the field nobody thought about. When in doubt, replace the value with
 
 Until a machine exists, the honest content of this directory is exactly
 what you see: schemas, collectors, and zero results.
+
+## The aggregate file stops being the authority — 2026-08-03
+
+`operations/data/hardware-evidence.json` is a single mutable aggregate, and the
+only artifact satisfying the `physical-hardware-evidence` prerequisite is one
+digest taken over the whole of it. Two failure modes follow, and both have
+already occurred in this repository:
+
+- a later edit to an aggregate stales every record referencing it — which is
+  what `f314864` did to the twenty records attesting
+  `operations/data/qualification-matrices.json`;
+- a digest taken on a checkout that rewrites bytes binds the record to that
+  platform — which is what happened to the physical-hardware record itself.
+
+So the Program I session records **each observation as its own immutable file
+with its own digest**, under a per-session evidence directory:
+
+    qualification/hardware/
+      targets/phq-<n>-target.json
+      evidence/phq-<n>/{environment,hardware-inventory,firmware,secure-boot,
+                        tpm,storage,graphics,display-matrix,installation,
+                        encryption,suspend-resume,update,rollback,recovery,
+                        accessibility,summary}.json
+      reports/PHYSICAL_HARDWARE_QUALIFICATION_REPORT.md
+
+A correction to one cell then invalidates that cell, not the session.
+
+`operations/data/hardware-evidence.json` becomes a **derived, non-authoritative
+index** of those records. It may summarise. It may not satisfy a prerequisite.
+
+The collectors and schemas above are unchanged and still produce the device
+record; what changes is that their output is committed as discrete artifacts
+rather than folded into one aggregate before being digested.
+
+### Target and evidence stay separate
+
+As with the TPM and display-stack work: a `PH-T` commit fixes the artifact
+digest, source commit, installer digest, expected firmware mode, hardware
+profile, test matrix, evidence schema and collection tools. A `PH-E` commit
+records what the machine actually did and references `PH-T`.
+
+Evidence never becomes its own target. If the session exposes a product defect
+requiring an image change, the correction gets a **new** target — the prior
+hardware evidence is not reused against a changed image.
+
+## The invalidated physical-hardware record
+
+`INVALIDATED_EVIDENCE.json` classifies the existing `physical-hardware` record
+as `INVALIDATED_EVIDENCE`, reason `CONTENT_FILTER_BOUND_DIGEST`.
+
+Its recorded digest `73fe6d481320…` is the sha256 of the attested file's **CRLF**
+bytes; the committed bytes hash to `4836c6c7e9ba…`. The record verified only on a
+Windows checkout and failed everywhere else.
+
+It is retained exactly as written:
+
+- **never deleted** — the record is the durable trace that the mistake happened
+- **never re-digested** — re-hashing binds a record to bytes it was never
+  measured from, the substitution the digest check exists to catch
+- **never replaced under the same id** — the replacement is minted as
+  `PHQ-<YYYYMMDD>-<NN>` by the physical session
+
+`tests/evidence/test_invalidated_evidence.py` enforces all three and asserts the
+candidate gate still reports `physical-hardware-evidence` as blocked. The
+tempting one-line repair — swapping the digest for the committed one — fails that
+suite, which was verified by making the edit and watching it fail.
+
+Nothing in this directory is hardware evidence. No physical machine has been
+qualified, and VM results may never be recorded in a physical cell — including
+VM results produced on the physical qualification host itself.

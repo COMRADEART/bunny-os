@@ -30,17 +30,27 @@ ROOT = Path(__file__).resolve().parents[2]
 # Documents that bind a repository path to a digest of its bytes.
 EVIDENCE_DOCUMENTS = ("operations/data/release-evidence.json",)
 
-# Records whose recorded digest matches the file's CRLF bytes rather than its
-# committed bytes. Each one was generated on a Windows checkout before
-# .gitattributes protected these paths, and verifies only on such a checkout.
+# Records already known to carry a digest measured from filtered bytes. These are
+# not listed here: they are classified in the invalidated-evidence registry, which
+# is the single authority for "this record is known to be wrong and is retained
+# anyway". Duplicating the list would let the two disagree.
 #
-# The fix is to RE-MEASURE the evidence, not to recompute the digest against the
-# committed bytes. Re-hashing would bind a record to bytes it was never measured
-# from, which is exactly the substitution the digest check exists to catch.
+# The fix for such a record is to RE-MEASURE the evidence, not to recompute the
+# digest against the committed bytes. Re-hashing would bind a record to bytes it
+# was never measured from, which is exactly the substitution the digest check
+# exists to catch.
 #
-# This set exists so a *new* occurrence fails the suite. Removing an entry is
-# correct once that evidence has been re-measured.
-KNOWN_CRLF_BOUND_RECORDS = frozenset({"operations/data/hardware-evidence.json"})
+# This set exists so a *new* occurrence fails the suite.
+INVALIDATED_REGISTRY = ROOT / "qualification" / "hardware" / "INVALIDATED_EVIDENCE.json"
+
+
+def known_crlf_bound_records() -> frozenset[str]:
+    document = json.loads(INVALIDATED_REGISTRY.read_text(encoding="utf-8"))
+    return frozenset(
+        entry["evidenceReference"]
+        for entry in document["invalidated"]
+        if entry["reason"] == "CONTENT_FILTER_BOUND_DIGEST"
+    )
 
 
 def git(*args: str) -> bytes:
@@ -161,7 +171,7 @@ class RecordedDigestOriginTests(unittest.TestCase):
 
     def test_no_new_record_is_bound_to_crlf_bytes(self):
         crlf_bound = {p for p, v in self.classify().items() if v == "crlf-bound"}
-        new = crlf_bound - KNOWN_CRLF_BOUND_RECORDS
+        new = crlf_bound - known_crlf_bound_records()
         self.assertEqual(
             new,
             set(),
@@ -173,14 +183,14 @@ class RecordedDigestOriginTests(unittest.TestCase):
         """If this fails because the set is empty, the evidence was re-measured.
 
         That is the correct outcome, and the fix is to remove the entry from
-        KNOWN_CRLF_BOUND_RECORDS deliberately — not to delete this test.
+        the invalidated-evidence registry deliberately — not to delete this test.
         """
         crlf_bound = {p for p, v in self.classify().items() if v == "crlf-bound"}
-        for path in KNOWN_CRLF_BOUND_RECORDS:
+        for path in known_crlf_bound_records():
             if path not in crlf_bound:
                 self.skipTest(
-                    f"{path} is no longer CRLF-bound; remove it from "
-                    "KNOWN_CRLF_BOUND_RECORDS to close this out"
+                    f"{path} is no longer CRLF-bound; remove its entry from "
+                    "the invalidated-evidence registry to close this out"
                 )
         self.assertTrue(crlf_bound)
 

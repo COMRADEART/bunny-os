@@ -1,0 +1,25 @@
+{
+  "invalidated": [
+    {
+      "classification": "INVALIDATED_EVIDENCE",
+      "committedDigest": "4836c6c7e9bafd14571f66f765fc49543bf95966e4ddf02e5bc446a0ddf9037b",
+      "detail": "The recorded digest is the sha256 of the file's CRLF bytes, not of the bytes committed to git. The record verified only on a checkout that rewrote line endings and failed everywhere else. Corrected at the checkout level by the -text rules added in PR #20; the record itself is left exactly as it was.",
+      "evidenceReference": "operations/data/hardware-evidence.json",
+      "invalidatedOn": "2026-08-03",
+      "mustNotBeReplacedInPlace": true,
+      "originPlatform": "Windows checkout with EOL conversion (core.autocrlf=true)",
+      "prerequisite": "physical-hardware-evidence",
+      "qualificationEffect": "none",
+      "reason": "CONTENT_FILTER_BOUND_DIGEST",
+      "recordCategory": "Hardware",
+      "recordId": "physical-hardware",
+      "recordedDigest": "73fe6d481320b797d557016122347c84751915bbc6981caa69dd026dda5deb56",
+      "replacementEvidenceId": null,
+      "replacementIdPattern": "PHQ-<YYYYMMDD>-<NN>",
+      "replacementProgram": "I",
+      "replacementRequired": "physical remeasurement"
+    }
+  ],
+  "note": "Evidence records that are known to be invalid and are deliberately retained. A record listed here is never deleted, never re-digested and never counted toward a prerequisite. It is replaced only by a new record under a new identifier, produced by a real measurement.",
+  "schemaVersion": 1
+}
