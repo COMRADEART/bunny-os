@@ -230,3 +230,28 @@ addendum above describes — not a moved count, but a changed kind of
 evidence. A blocking symptom that was a measured failure of unknown cause is
 now a measured, classified, reproduced-and-explained behaviour with a
 mechanism, a source citation, and a regression matrix behind it.
+
+## Update 2026-08-02 — first-login and chronyd corrections
+
+`gate-qualification-candidate` exits 2 and calculates **3 of 14** satisfied:
+licence, independent reproducibility, and the development signing drill. That
+is the same count as before this pass, and it was expected to be.
+
+The two defects corrected here — `bunny-first-boot.service` failing on every
+fresh home, and chronyd losing the `chrony` identity inside the authselect
+window — are real product defects and both are now measured closed. Neither is
+a candidate prerequisite. The gate reads installation, encryption, update,
+rollback, recovery-media, hardware, accessibility, review, signing and approval
+categories; it does not read display-stack reliability or first login. The
+correction therefore removes two blockers from the *product* without moving the
+*candidate* count, and the count is reported here from the gate's own output
+rather than predicted.
+
+New evidence available to a future candidate:
+
+    Commit O  93d1f6fb4f23  corrected archive target
+              38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd
+    Commit P  40c1d7ba8206  three-builder evidence, 17/17, independence PASS
+    Commit Q  12b5423b9f1b  corrected installed-system target
+              qcow2 1290afe9eeb54b1d…, raw afc7eea55823f31e…
+    Commit R  227d88290fcd  60 first-login + 35 TPM + 3 BrlAPI records
