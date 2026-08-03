@@ -23,6 +23,9 @@
     "quickTileMinimumHeight": 76,
     "characterIllustrationHeight": 300,
     "characterMinimumPanelHeight": 640,
-    "characterMaximumPanelRatio": 0.45
+    "characterMaximumPanelRatio": 0.45,
+    "applicationWidth": 1040,
+    "applicationHeight": 760,
+    "applicationNavigationWidth": 240
   }
 }

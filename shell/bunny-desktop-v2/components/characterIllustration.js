@@ -61,6 +61,12 @@ export class CharacterIllustration {
             this.actor.visible = false;
             return;
         }
+        if (['task-completed', 'celebrating'].includes(pose) && !presentation.successAppearances)
+            return this._hide();
+        if (['warning', 'error', 'offline'].includes(pose) && !presentation.errorAppearances)
+            return this._hide();
+        if (['explaining', 'requesting-approval', 'privacy-mode', 'pointing-at-interface'].includes(pose) && !presentation.educationalAppearances)
+            return this._hide();
         this._loader ??= new CharacterAssetLoader(this._extensionPath);
         const maximum = Math.floor(this._availableHeight * TOKENS.layout.characterMaximumPanelRatio);
         const size = Math.min(maximum, Math.round(TOKENS.layout.characterIllustrationHeight * presentation.characterScale));
@@ -81,6 +87,13 @@ export class CharacterIllustration {
         this.actor.set_child(image);
         this.actor.visible = true;
         this.active = true;
+    }
+
+    _hide() {
+        this.active = false;
+        this.actor.set_child(null);
+        this.actor.visible = false;
+        return undefined;
     }
 
     disable() {

@@ -35,6 +35,26 @@
       <default>'automatic'</default>
       <summary>Preferred guide position inside an approved surface</summary>
     </key>
+    <key name="character-reduced-motion" type="b">
+      <default>false</default>
+      <summary>Suppress character-specific entrance motion</summary>
+    </key>
+    <key name="character-educational-appearances" type="b">
+      <default>true</default>
+      <summary>Show the guide for approved educational explanations</summary>
+    </key>
+    <key name="character-success-appearances" type="b">
+      <default>true</default>
+      <summary>Show the guide after an observed successful result</summary>
+    </key>
+    <key name="character-error-appearances" type="b">
+      <default>true</default>
+      <summary>Show the guide for confirmed error and offline guidance</summary>
+    </key>
+    <key name="character-onboarding-appearances" type="b">
+      <default>true</default>
+      <summary>Show the guide in approved onboarding steps</summary>
+    </key>
     <key name="reduced-motion" type="b">
       <default>false</default>
       <summary>Remove nonessential motion</summary>
@@ -83,4 +103,3 @@
     </key>
   </schema>
 </schemalist>
-

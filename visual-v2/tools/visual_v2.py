@@ -50,6 +50,7 @@ def build() -> int:
     setup()
     validate_json()
     run([sys.executable, str(ROOT / "visual-v2/tools/generate_css.py"), "--check"])
+    run([sys.executable, str(ROOT / "visual-v2/tools/generate_gtk_css.py"), "--check"])
     run([sys.executable, str(ROOT / "visual-v2/tools/render_wallpapers.py"), "--check"])
     print("Design tokens, generated CSS, and static wallpaper assets are current")
     return 0
