@@ -526,3 +526,73 @@ The upstream base is a four-architecture index; the mirror holds the amd64
 manifest and records the other three by digest without their blobs. An arm64
 build would fail at verification rather than silently pull from upstream, which
 is correct, and also means this project can currently qualify one architecture.
+
+## Added by the visual prototype removal and gate refresh — 2026-08-03
+
+### The native Bunny shell is not release-qualified, and V3 is not a candidate
+
+Visual V1, V2 and V3 were merged into `main` despite each carrying an explicit
+`DO NOT MERGE INTO MAIN` policy. They have been reverted (PR #17, merge
+`9c469a6`) and are reachable only from their three preserved branches.
+
+The V3 Wayland prototype's own verdict is **FEASIBLE WITH MAJOR GAPS**. It is a
+visual prototype, not release-qualified software. Its measured strengths — a
+Rust/Smithay compositor that starts, real GTK 4 clients that connect and map,
+nineteen Wayland globals, Bunny chrome mapping as layer surfaces, Regular and
+Character Mode, bounded crash recovery, GNOME still available, 197 tests — do not
+close any of these gaps, all of which remain open:
+
+no real screen sharing; no input-method implementation; no real
+assistive-technology validation; no XWayland server; no pointer constraints; no
+GPU qualification; no real multi-output presentation; no end-to-end PAM unlock;
+chrome launch latency missing its targets; and screenshots that did not visibly
+capture mapped chrome.
+
+**GNOME remains the supported architecture** and must not be removed before a
+production replacement is qualified.
+
+### The twenty stable evidence records are stale
+
+Every record in `operations/data/release-evidence.json` attests
+`operations/data/qualification-matrices.json` by `contentDigest`. The recorded
+digest `bc6019c3b1ae` matched that file at `80df25b`, where the records were
+committed; the file changed at `f314864`, so the forgery check in
+`release/evidence.py` now reports a digest mismatch on every affected record.
+
+The check is behaving correctly and the records block. They have deliberately
+**not** been re-digested: re-hashing a record against a file it was not measured
+from is the substitution the check exists to catch. Clearing this requires
+re-measuring the matrices, not recomputing a digest.
+
+### Evidence digests are not EOL-protected outside `qualification/`
+
+`.gitattributes` marks `qualification/**`, `build/out/**`, `systemd/**`,
+`config/**` and `*.sh` as `-text` precisely so that attested bytes round-trip
+git exactly. `operations/data/**` is **not** covered, yet
+`operations/data/qualification-matrices.json` is attested by `contentDigest` in
+all twenty evidence records.
+
+Measured on a Windows checkout with `core.autocrlf=true`: that file contains 622
+CRLF pairs in the working tree and digests to `dcfe08e49c21`, where the committed
+LF bytes digest to `04c09f845bc4`. Any evidence generated or verified from such a
+checkout would carry a digest that no Linux checkout can reproduce.
+
+This has not yet produced a wrong record, because the records currently block for
+the unrelated staleness above. It is a live hazard for any future evidence pass
+run on Windows, and the narrow fix is to extend the `-text` protection to
+`operations/data/**`.
+
+### One protected mutation test cannot run on Windows
+
+`tests.display_stack.test_evidence_gate.MutationTests.test_duplicate_boot_check_is_load_bearing`
+requires `os.symlink`. On a Windows host without `SeCreateSymbolicLinkPrivilege`
+it raises `OSError [WinError 1314]`, so `python scripts/task.py test` exits 1 and
+`scripts/release.py gate --kind source` reports `sourceSuitesPass: FAIL`.
+
+This host cannot create symlinks at all; a minimal probe outside the repository
+fails identically. The test is a mutation test proving the duplicate-boot guard
+is load-bearing, so it must not be weakened, skipped or rewritten to suit the
+host. Its state on Windows is **`NOT_RUN`**, never `PASS`.
+
+Linux CI runs it and passes: `host-gate` and `Gate state` are green on `9c469a6`.
+The source gate must be evaluated on Linux.

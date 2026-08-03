@@ -66,3 +66,47 @@ The gate additionally refuses the artifacts present: the builds in
 image. An archive-only build is evidence for reproducibility comparison only.
 
 Nothing in this repository may be described as release-qualified.
+
+Update 2026-08-03 (visual prototype removal and gate refresh): still **NO-GO**,
+and the count is unchanged at **3 of 14** prerequisites.
+
+Three visual prototype merges that carried an explicit `DO NOT MERGE INTO MAIN`
+policy were reverted from `main` (PR #17, merge `9c469a6`). That change is
+repository-state correction only. It qualified nothing, and the candidate gate
+count is identical before and after it, as expected: the candidate gate does not
+read any visual category.
+
+Re-measured on 2026-08-03 against candidate commit `79bb99dd`:
+
+```text
+$ python scripts/release.py gate --kind stable-release
+stable release gate: NO-GO
+  ok      licence
+  ok      package-minimisation
+  BLOCKED evidence-record
+  BLOCKED vulnerability-position
+  BLOCKED independent-builder-reproducibility
+  BLOCKED production-signing
+  BLOCKED candidate-artifacts
+  BLOCKED qualification-matrices
+  BLOCKED physical-hardware
+  BLOCKED independent-reviews
+  BLOCKED approvals
+  BLOCKED blockers
+$ echo $?
+2
+```
+
+Nine approvals remain pending: Engineering, Release, Security, Privacy,
+Accessibility, Installer, Hardware, Documentation, Maintenance.
+
+Five blocker codes remain open: `missing-checksum`, `recovery-media-failure`,
+`unresolved-blocker`, `unsigned-artifact`, `untested-release-rollback`.
+
+The twenty evidence records are additionally **STALE**: they attest
+`operations/data/qualification-matrices.json` by a digest that matched at
+`80df25b`, and that file changed at `f314864`. They have not been re-digested;
+superseding stale evidence requires re-measuring it, not re-hashing it.
+
+Pilots remain **BLOCKED**. A blocked prerequisite keeps every pilot blocked,
+including OEM, enterprise and encrypted-sync.

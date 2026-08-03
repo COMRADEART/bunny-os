@@ -5,19 +5,84 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Qualification candidate readiness report
 
-Date: 2026-07-30
+Date: 2026-08-03 (refreshed from the gate; supersedes the 2026-07-30 state below)
 Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8` (scan-derived evidence)
+Repository HEAD at refresh: `9c469a6ff8e10c73476e5fd8d19330c88ae4e7c1`
 Qualification target commit: `9ea5459bdaf122f8c5999683b2c8961555826954` (both builders)
-Result: **2 of 14 prerequisites satisfied. No artifact may be labelled
+Result: **3 of 14 prerequisites satisfied. No artifact may be labelled
 release-qualified.**
+
+This count is the gate's own arithmetic, transcribed from
+`build/out/qualification/qualification-candidate.json`. It is not maintained by
+hand. The previous headline of `2 of 14` was stale: it predated
+`independent-reproducibility` reaching `PASS`, and it already contradicted this
+same document's own addendum further down, which had recorded `3 of 14`.
 
 ```text
 $ python scripts/release.py gate --kind qualification-candidate
 qualification candidate gate: BLOCKED
+  ok      PASS                     Licence gate passed
+  BLOCKED PENDING_EXTERNAL_REVIEW  Vulnerability gate passed
+  ok      PASS                     Independent reproducibility passed
+  ok      PASS                     Development signing drill passed
+  BLOCKED NOT_RUN                  Independent recovery media passed
+  BLOCKED NOT_RUN                  Installation matrix passed
+  BLOCKED NOT_RUN                  Encryption matrix passed
+  BLOCKED NOT_RUN                  Update matrix passed
+  BLOCKED NOT_RUN                  Rollback matrix passed
+  BLOCKED PENDING_HARDWARE         Physical hardware evidence passed
+  BLOCKED PENDING_EXTERNAL_REVIEW  Accessibility evidence passed
+  BLOCKED PENDING_EXTERNAL_REVIEW  Independent reviews passed
+  BLOCKED BLOCKED                  Second production signer available
+  BLOCKED PENDING_OWNER            Protected approvals complete
+$ echo $?
+2
 ```
+
+Gate evaluation timestamp: `2026-08-03T14:36:08.117094Z`.
+`candidateLabelPermitted`: **false**.
 
 Machine-readable: `build/out/qualification/qualification-candidate.json`.
 Dashboard: `build/out/qualification/stable-evidence-dashboard.md`.
+
+## Commit binding, and why the evidence is stale
+
+Evidence is bound to the candidate commit, not to `HEAD`:
+
+```text
+candidate commit: 79bb99ddb39d, HEAD: 9c469a6ff8e1
+```
+
+A candidate behind `HEAD` is legitimate — a release candidate qualifies one
+commit. What must be visible is that the tree has moved since the evidence was
+measured, so a rebuild is required before publication.
+
+It has moved in a way that matters. All twenty evidence records reference
+`operations/data/qualification-matrices.json` and attest it by `contentDigest`.
+The recorded digest `bc6019c3b1ae` matches that file as it existed at
+`80df25b09f6578276d18c8a82f15c47dd8959740`, where the records were committed.
+The file was subsequently changed by `f314864` ("evidence: Commit F — installed-system
+evidence for Commit E"), so the digest no longer matches and every record that
+points at it now reports:
+
+```text
+evidence artifact digest mismatch: recorded bc6019c3b1ae, actual …
+```
+
+This is the forgery check in `release/evidence.py` working as designed. The
+records are therefore **STALE**, and they block. They have not been re-digested,
+because re-digesting stale evidence against a file it was not measured from is
+precisely the substitution the check exists to catch. Superseding them requires
+re-measuring, not re-hashing.
+
+Evidence disposition at this refresh:
+
+| Evidence set | Disposition | Reason |
+|---|---|---|
+| The 20 records in `operations/data/release-evidence.json` | **STALE** | bound to `79bb99dd`/`80df25b`; referenced artifact changed at `f314864` |
+| The `2 of 14` headline of 2026-07-30 | **SUPERSEDED** | gate now computes `3 of 14` |
+| Prerequisite 3 recorded as `BLOCKED` below | **SUPERSEDED** | gate now computes `PASS` |
+| Visual V1/V2/V3 prototype evidence | **HISTORICAL** | prototypes reverted out of `main`; reachable only from the three `visual/*` branches, and never release-qualifying |
 
 ## What a blocking candidate gate does and does not forbid
 
@@ -35,7 +100,7 @@ stage of it, and `evaluate_candidate_gate` states it in its own output.
 |---|---|---|---|---|
 | 1 | Licence gate passed | **PASS** | engineering | — |
 | 2 | Vulnerability gate passed | `PENDING_EXTERNAL_REVIEW` | independent-reviewer | commission the review; `reviews/security/REQUEST.md` |
-| 3 | Independent reproducibility passed | `BLOCKED` | ci-infrastructure | measured 2026-07-30, twice. Attempt 1: `NON_REPRODUCIBLE`, 15 files. Attempt 2: 13 of 15 fixed, 2 remained. Attempt 3 measured *why* rather than assuming — the two databases differed in content, not encoding, and the causes were an unfrozen build clock and an unpinned mtime. Fixed and re-measured; see `LOCAL_HERMETIC_REPEATABILITY_REPORT.md`. Still `BLOCKED` regardless of that result: the retained inputs are not published, so no independent builder can obtain them. One token scope — `gh auth refresh -h github.com -s write:packages,read:packages` |
+| 3 | Independent reproducibility passed | **`PASS`** (was `BLOCKED` on 2026-07-30) | ci-infrastructure | now satisfied; the published-inputs obstacle described below was cleared. Historical detail retained: measured 2026-07-30, twice. Attempt 1: `NON_REPRODUCIBLE`, 15 files. Attempt 2: 13 of 15 fixed, 2 remained. Attempt 3 measured *why* rather than assuming — the two databases differed in content, not encoding, and the causes were an unfrozen build clock and an unpinned mtime. Fixed and re-measured; see `LOCAL_HERMETIC_REPEATABILITY_REPORT.md`. Still `BLOCKED` regardless of that result: the retained inputs are not published, so no independent builder can obtain them. One token scope — `gh auth refresh -h github.com -s write:packages,read:packages` |
 | 4 | Development signing drill passed | **PASS** | engineering | — |
 | 5 | Independent recovery media passed | `NOT_RUN` | engineering | build a signed recovery ISO |
 | 6 | Installation matrix passed | `NOT_RUN` | engineering | build a live installer ISO |
@@ -193,6 +258,11 @@ and `image-builder` differ between the builders.
 
 **Prerequisite count: unchanged at 2 of 14.** `licence-gate` and
 `development-signing-drill` pass; the other twelve block.
+
+> **SUPERSEDED as of 2026-08-03.** The count above was correct when this addendum
+> was written and is retained as written. The gate now computes **3 of 14**:
+> `independent-reproducibility` has since reached `PASS`. See the refreshed
+> header at the top of this report, which is the authoritative figure.
 
 What this addendum adds to the report above is not a changed count but a changed
 kind of evidence. `independent-reproducibility` used to be an absence. It is now
