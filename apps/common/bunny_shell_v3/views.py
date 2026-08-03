@@ -229,6 +229,118 @@ def build_notification_center(center: NotificationCenter):
     return root
 
 
+def build_character(layer, box: tuple[int, int]):
+    """The bounded illustration widget.
+
+    Returns None when nothing may be shown, so a caller cannot accidentally
+    render an empty placeholder where the character would have been.
+    """
+
+    Gtk = _gtk()
+    placement = layer.placement
+    if placement is None:
+        return None
+
+    picture = Gtk.Picture.new_for_filename(str(layer.root / placement.asset))
+    # Preserve aspect ratio; never stretch the character.
+    picture.set_content_fit(Gtk.ContentFit.CONTAIN)
+    picture.set_can_focus(False)
+    picture.set_can_target(False)  # never blocks input
+    width, height = box
+    picture.set_size_request(width, height)
+    # The character illustrates the panel's state; the state itself is the
+    # accessible text, so a screen reader user loses nothing.
+    picture.update_property([Gtk.AccessibleProperty.LABEL], [placement.semantic_description])
+    return picture
+
+
+def build_assistant_panel(assistant, controller, layer):
+    Gtk = _gtk()
+    root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+    for margin in ("top", "bottom", "start", "end"):
+        getattr(root, f"set_margin_{margin}")(14)
+    root.append(notice_label())
+
+    state_label = Gtk.Label(label=f"Bunny — {assistant.state.value}", xalign=0)
+    state_label.update_property(
+        [Gtk.AccessibleProperty.LABEL], [f"Assistant state: {assistant.state.value}"]
+    )
+    root.append(state_label)
+
+    body = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+    panel_size = (460, 700)
+    illustration = build_character(layer, controller.illustration_box(panel_size))
+    if illustration is not None:
+        body.append(illustration)
+
+    content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+    content.set_hexpand(True)
+    for line in assistant.transcript[-8:]:
+        content.append(Gtk.Label(label=line, xalign=0, wrap=True))
+    entry = Gtk.Entry()
+    entry.set_placeholder_text("Ask Bunny")
+    entry.update_property([Gtk.AccessibleProperty.LABEL], ["Message to Bunny"])
+    if assistant.state.value == "Disabled":
+        entry.set_sensitive(False)
+        content.append(Gtk.Label(label="Bunny is disabled", xalign=0))
+    content.append(entry)
+    body.append(content)
+    root.append(body)
+    return root
+
+
+def build_approval_panel(card, layer, controller):
+    Gtk = _gtk()
+    root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+    for margin in ("top", "bottom", "start", "end"):
+        getattr(root, f"set_margin_{margin}")(16)
+    root.append(notice_label())
+
+    problems = card.validate()
+    if problems:
+        # A card that cannot state its blast radius is not shown at all.
+        root.append(Gtk.Label(label="This approval cannot be displayed:", xalign=0))
+        for problem in problems:
+            root.append(Gtk.Label(label=f"• {problem}", xalign=0))
+        return root
+
+    body = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+    illustration = build_character(layer, controller.illustration_box((640, 420)))
+    if illustration is not None:
+        body.append(illustration)
+
+    details = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+    details.set_hexpand(True)
+    for label, value in (
+        ("Requested by", card.requester),
+        ("Operation", card.operation),
+        ("Affects", ", ".join(card.affected_resources)),
+        ("Privilege", card.privilege.value),
+        ("Network", card.network_impact),
+        ("Data", card.data_impact),
+        ("Reversibility", card.reversibility.value),
+        ("Reason", card.reason),
+        ("Expires in", f"{card.expiration_seconds}s"),
+    ):
+        row = Gtk.Label(label=f"{label}: {value}", xalign=0, wrap=True)
+        row.update_property([Gtk.AccessibleProperty.LABEL], [f"{label}: {value}"])
+        details.append(row)
+    body.append(details)
+    root.append(body)
+
+    actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    actions.set_halign(Gtk.Align.END)
+    for action in ("inspect", "deny", "approve"):
+        button = Gtk.Button(label=action.capitalize())
+        button.update_property([Gtk.AccessibleProperty.LABEL], [f"{action} {card.operation}"])
+        # No default action on any card, and never on a critical one: the
+        # approve button must not be reachable by a reflexive Enter.
+        button.set_receives_default(False)
+        actions.append(button)
+    root.append(actions)
+    return root
+
+
 def present(component: str, child, *, application=None):
     """Show a component as its layer surface."""
 

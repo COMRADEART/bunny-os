@@ -19,6 +19,9 @@ from .palette import CommandPalette, default_results
 from .quicksettings import QuickSettings
 from .runtime import COMPONENTS, spec
 
+#: Repository root, used to resolve the canonical character assets.
+ROOT = Path(__file__).resolve().parents[3]
+
 
 #: gtk4-layer-shell must be loaded before libwayland-client, otherwise GTK
 #: creates an ordinary xdg-toplevel and the layer-surface calls silently do
@@ -113,6 +116,44 @@ def build_child(component: str, state: ShellState):
         return views.build_notification_center(NotificationCenter())
     if component == "overview":
         return views.build_notification_center(NotificationCenter())
+    if component in ("assistant-panel", "approval-panel"):
+        from .assistant import (
+            ApprovalCard,
+            Assistant,
+            AssistantState,
+            Privilege,
+            Reversibility,
+            Severity,
+        )
+        from .character import CharacterLayer
+        from .modes import ModeController
+
+        layer = CharacterLayer(ROOT, character_mode=state.character_mode)
+        controller = ModeController(state, layer)
+        if component == "assistant-panel":
+            assistant = Assistant(bunny_enabled=state.bunny_enabled, local_only=state.local_only)
+            guide = assistant.guide_state()
+            container = assistant.character_container()
+            if guide is not None and container is not None:
+                layer.show(container, guide)
+            return views.build_assistant_panel(assistant, controller, layer)
+
+        # The approval panel shows a real card only when the approval backend
+        # supplies one. With no backend it says so rather than inventing one.
+        card = ApprovalCard(
+            requester="Bunny approval backend",
+            operation="(no pending approval)",
+            affected_resources=("none",),
+            privilege=Privilege.USER,
+            network_impact="none",
+            data_impact="none",
+            reversibility=Reversibility.REVERSIBLE,
+            reason="No approval backend is connected in the experimental shell.",
+            expiration_seconds=60,
+            severity=Severity.ORDINARY,
+        )
+        layer.show("approval-education", card.guide_state())
+        return views.build_approval_panel(card, layer, controller)
     raise KeyError(f"no view registered for component {component}")
 
 
