@@ -13,11 +13,6 @@ desktop.ini
 build/out/
 build/visual/
 build/visual-v2/
-build/visual-v3/
-
-# Cargo build output for the experimental V3 compositor. Reproducible from the
-# sources and Cargo.lock; hundreds of megabytes.
-compositor/bunny-shell/target/
 .selfcheck-tmp/
 __pycache__/
 *.py[cod]
@@ -35,9 +30,3 @@ qualification/installed-system/evidence/*/work/
 # record.json and work-manifest.json, and never evidence in themselves.
 qualification/tpm/evidence/*/work/
 qualification/tpm/evidence/*/state/
-
-# Per-run compositor logs and diagnostics from the V3 measurement harnesses.
-# Each is a verbose backend trace tied to one run of one harness; the evidence
-# that matters is the JSON report the harness distils from them.
-visual-v3/reports/*.log
-visual-v3/reports/*-diagnostics.json
