@@ -54,8 +54,15 @@ if [ -z "$SCOPE" ]; then
     exit 2
 fi
 
-# shellcheck disable=SC2076
-if [[ ! " ${SCOPES[*]} " =~ " ${SCOPE} " ]]; then
+SCOPE_KNOWN=0
+for known in "${SCOPES[@]}"; do
+    if [ "$known" = "$SCOPE" ]; then
+        SCOPE_KNOWN=1
+        break
+    fi
+done
+
+if [ "$SCOPE_KNOWN" -eq 0 ]; then
     echo "BLOCKED: unknown scope '${SCOPE}'" >&2
     exit 2
 fi
@@ -152,13 +159,18 @@ reset_block_devices() {
     echo "LUKS mappings, loop devices and mounts"
     # Named mappings only. A blanket cryptsetup close would reach the operator's
     # own encrypted disks, which is exactly the accident this script must not have.
-    local mappings
-    mappings="$(ls /dev/mapper 2>/dev/null | grep "^${PREFIX}-" || true)"
-    if [ -z "$mappings" ]; then
+    local -a mappings=()
+    local path
+    for path in "/dev/mapper/${PREFIX}"-*; do
+        [ -e "$path" ] || continue
+        mappings+=("${path##*/}")
+    done
+
+    if [ "${#mappings[@]}" -eq 0 ]; then
         say "no device-mapper entries named ${PREFIX}-*"
     else
-        for mapping in $mappings; do
-            local mount
+        local mapping mount
+        for mapping in "${mappings[@]}"; do
             mount="$(findmnt -n -o TARGET "/dev/mapper/${mapping}" 2>/dev/null || true)"
             [ -n "$mount" ] && act umount "$mount"
             act cryptsetup close "$mapping"
