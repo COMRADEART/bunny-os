@@ -1,0 +1,6 @@
+[    8.037479] fedora systemd[1]: Starting gdm.service - GNOME Display Manager...
+[    8.066402] fedora systemd[1]: Started gdm.service - GNOME Display Manager.
+[   84.816139] fedora systemd[1]: Stopping gdm.service - GNOME Display Manager...
+[   85.278059] fedora gdm[1028]: Gdm: Freeing conversation 'gdm-autologin' with active job
+[   85.381697] fedora systemd[1]: gdm.service: Deactivated successfully.
+[   85.381909] fedora systemd[1]: Stopped gdm.service - GNOME Display Manager.

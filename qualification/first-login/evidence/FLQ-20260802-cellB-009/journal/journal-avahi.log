@@ -1,0 +1,41 @@
+[    7.210785] fedora systemd[1]: Listening on avahi-daemon.socket - Avahi mDNS/DNS-SD Stack Activation Socket.
+[    7.303694] fedora systemd[1]: Starting avahi-daemon.service - Avahi mDNS/DNS-SD Stack...
+[    7.483485] fedora avahi-daemon[843]: Found user 'avahi' (UID 70) and group 'avahi' (GID 70).
+[    7.484388] fedora avahi-daemon[843]: Successfully dropped root privileges.
+[    7.484755] fedora avahi-daemon[843]: avahi-daemon 0.8 starting up.
+[    7.484870] fedora avahi-daemon[843]: WARNING: No NSS support for mDNS detected, consider installing nss-mdns!
+[    7.485945] fedora avahi-daemon[843]: Successfully called chroot().
+[    7.485992] fedora avahi-daemon[843]: Successfully dropped remaining capabilities.
+[    7.486425] fedora avahi-daemon[843]: No service file found in /etc/avahi/services.
+[    7.487340] fedora avahi-daemon[843]: Joining mDNS multicast group on interface lo.IPv6 with address ::1.
+[    7.487590] fedora avahi-daemon[843]: New relevant interface lo.IPv6 for mDNS.
+[    7.487619] fedora avahi-daemon[843]: Joining mDNS multicast group on interface lo.IPv4 with address 127.0.0.1.
+[    7.487640] fedora avahi-daemon[843]: New relevant interface lo.IPv4 for mDNS.
+[    7.487654] fedora avahi-daemon[843]: Network interface enumeration completed.
+[    7.487667] fedora avahi-daemon[843]: Registering new address record for ::1 on lo.*.
+[    7.487728] fedora avahi-daemon[843]: Registering new address record for 127.0.0.1 on lo.IPv4.
+[    7.489311] fedora systemd[1]: Started avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+[    7.592500] fedora avahi-daemon[843]: Joining mDNS multicast group on interface enp0s2.IPv6 with address fe80::5578:3e8d:8eac:95d.
+[    7.593450] fedora avahi-daemon[843]: New relevant interface enp0s2.IPv6 for mDNS.
+[    7.593459] fedora avahi-daemon[843]: Registering new address record for fe80::5578:3e8d:8eac:95d on enp0s2.*.
+[    7.749595] fedora avahi-daemon[843]: Joining mDNS multicast group on interface enp0s2.IPv4 with address 10.0.2.15.
+[    7.750481] fedora avahi-daemon[843]: New relevant interface enp0s2.IPv4 for mDNS.
+[    7.750494] fedora avahi-daemon[843]: Registering new address record for 10.0.2.15 on enp0s2.IPv4.
+[    8.721870] fedora avahi-daemon[843]: Server startup complete. Host name is fedora.local. Local service cookie is 2111341150.
+[    9.231943] fedora avahi-daemon[843]: Leaving mDNS multicast group on interface enp0s2.IPv6 with address fe80::5578:3e8d:8eac:95d.
+[    9.231963] fedora avahi-daemon[843]: Joining mDNS multicast group on interface enp0s2.IPv6 with address fec0::8568:c533:2ed0:1de1.
+[    9.231969] fedora avahi-daemon[843]: Registering new address record for fec0::8568:c533:2ed0:1de1 on enp0s2.*.
+[    9.231992] fedora avahi-daemon[843]: Withdrawing address record for fe80::5578:3e8d:8eac:95d on enp0s2.
+[   14.346064] fedora avahi-daemon[843]: Missed message org.freedesktop.DBus.Properties::GetAll()
+[   14.348537] fedora avahi-daemon[843]: Missed message org.freedesktop.DBus.Properties::GetAll()
+[   87.132560] fedora avahi-daemon[843]: Got SIGTERM, quitting.
+[   87.132792] fedora systemd[1]: Stopping avahi-daemon.service - Avahi mDNS/DNS-SD Stack...
+[   87.132774] fedora avahi-daemon[843]: Leaving mDNS multicast group on interface enp0s2.IPv6 with address fec0::8568:c533:2ed0:1de1.
+[   87.132830] fedora avahi-daemon[843]: Leaving mDNS multicast group on interface enp0s2.IPv4 with address 10.0.2.15.
+[   87.132860] fedora avahi-daemon[843]: Leaving mDNS multicast group on interface lo.IPv6 with address ::1.
+[   87.132886] fedora avahi-daemon[843]: Leaving mDNS multicast group on interface lo.IPv4 with address 127.0.0.1.
+[   87.136154] fedora avahi-daemon[843]: avahi-daemon 0.8 exiting.
+[   87.136775] fedora systemd[1]: avahi-daemon.service: Deactivated successfully.
+[   87.137143] fedora systemd[1]: Stopped avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+[   87.389517] fedora systemd[1]: avahi-daemon.socket: Deactivated successfully.
+[   87.389808] fedora systemd[1]: Closed avahi-daemon.socket - Avahi mDNS/DNS-SD Stack Activation Socket.

@@ -1,0 +1,120 @@
+[12931.953307] systemd-journald[83]: File /var/log/journal/4b44f1ff2901414e9c6100a387d276c6/system.journal corrupted or uncleanly shut down, renaming and replacing.
+[12969.371825] Exception: 
+[12969.371832] Operation canceled @p9io.cpp:258 (AcceptAsync)
+
+[12969.883431] systemd-journald[83]: Received SIGTERM from PID 1 (systemd-shutdow).
+[12969.995090] EXT4-fs (sdd): unmounting filesystem ae26d3a2-c912-46f8-b94d-3cbc649f7ae0.
+[12973.339641] EXT4-fs (sdd): mounted filesystem ae26d3a2-c912-46f8-b94d-3cbc649f7ae0 r/w with ordered data mode. Quota mode: none.
+[12973.503397] misc dxg: dxgk: dxgkio_is_feature_enabled: Ioctl failed: -22
+[12973.505869] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[12973.506735] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[12973.507444] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[12973.508132] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[12973.508717] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[12973.509784] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[12973.510296] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[12973.510877] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[12973.511507] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[12973.514333] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[12973.515077] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[12973.515808] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[12973.516634] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[12989.837743] systemd-journald[80]: Collecting audit messages is enabled.
+[12989.918622] systemd-journald[80]: Received client request to flush runtime journal.
+[12989.926715] systemd-journald[80]: File /var/log/journal/4b44f1ff2901414e9c6100a387d276c6/system.journal corrupted or uncleanly shut down, renaming and replacing.
+[13064.070257] Exception: 
+[13064.070269] Operation canceled @p9io.cpp:258 (AcceptAsync)
+
+[13064.629001] systemd-journald[80]: Received SIGTERM from PID 1 (systemd-shutdow).
+[13064.821247] EXT4-fs (sdd): unmounting filesystem ae26d3a2-c912-46f8-b94d-3cbc649f7ae0.
+[13068.473254] EXT4-fs (sdd): mounted filesystem ae26d3a2-c912-46f8-b94d-3cbc649f7ae0 r/w with ordered data mode. Quota mode: none.
+[13068.652376] misc dxg: dxgk: dxgkio_is_feature_enabled: Ioctl failed: -22
+[13068.655499] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13068.655819] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13068.656224] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13068.656797] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13068.657141] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13068.660783] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13068.661682] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13068.662054] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13068.663761] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13068.666562] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13068.666905] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13068.667317] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13068.667976] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13069.062025] systemd-journald[60]: Collecting audit messages is enabled.
+[13069.120076] systemd-journald[60]: Received client request to flush runtime journal.
+[13069.125905] systemd-journald[60]: File /var/log/journal/4b44f1ff2901414e9c6100a387d276c6/system.journal corrupted or uncleanly shut down, renaming and replacing.
+[13085.652638] Exception: 
+[13085.652646] Operation canceled @p9io.cpp:258 (AcceptAsync)
+
+[13086.255030] systemd-journald[60]: Received SIGTERM from PID 1 (systemd-shutdow).
+[13086.355766] EXT4-fs (sdd): unmounting filesystem ae26d3a2-c912-46f8-b94d-3cbc649f7ae0.
+[13089.349811] EXT4-fs (sdd): mounted filesystem ae26d3a2-c912-46f8-b94d-3cbc649f7ae0 r/w with ordered data mode. Quota mode: none.
+[13089.520612] misc dxg: dxgk: dxgkio_is_feature_enabled: Ioctl failed: -22
+[13089.522912] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13089.523247] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13089.523475] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13089.524201] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13089.524730] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13089.525862] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13089.526595] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13089.527151] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13089.527772] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13089.530277] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13089.530653] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13089.530981] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13089.531374] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13101.185636] Failed to connect to system scope bus via local transport: No such file or directory
+[13101.276492] systemd-journald[84]: Collecting audit messages is enabled.
+[13101.342969] systemd-journald[84]: Received client request to flush runtime journal.
+[13101.357565] systemd-journald[84]: File /var/log/journal/4b44f1ff2901414e9c6100a387d276c6/system.journal corrupted or uncleanly shut down, renaming and replacing.
+[13200.493287] mini_init (213): drop_caches: 1
+[13260.475132] mini_init (213): drop_caches: 1
+[13312.668724] Exception: 
+[13312.668733] Operation canceled @p9io.cpp:258 (AcceptAsync)
+
+[13313.236163] systemd-journald[84]: Received SIGTERM from PID 1 (systemd-shutdow).
+[13313.367891] EXT4-fs (sdd): unmounting filesystem ae26d3a2-c912-46f8-b94d-3cbc649f7ae0.
+[13313.789065] EXT4-fs (sdd): mounted filesystem ae26d3a2-c912-46f8-b94d-3cbc649f7ae0 r/w with ordered data mode. Quota mode: none.
+[13314.108515] misc dxg: dxgk: dxgkio_is_feature_enabled: Ioctl failed: -22
+[13314.111278] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13314.111892] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13314.112406] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13314.112784] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13314.113265] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13314.114528] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13314.115003] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13314.115722] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13314.116515] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13314.119050] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13314.119880] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13314.120537] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13314.121263] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13314.187480] Failed to connect to system scope bus via local transport: No such file or directory
+[13314.545496] systemd-journald[60]: Collecting audit messages is enabled.
+[13314.587349] systemd-journald[60]: Received client request to flush runtime journal.
+[13314.593736] systemd-journald[60]: File /var/log/journal/4b44f1ff2901414e9c6100a387d276c6/system.journal corrupted or uncleanly shut down, renaming and replacing.
+[13376.792503] Exception: 
+[13376.792511] Operation canceled @p9io.cpp:258 (AcceptAsync)
+
+[13377.305383] systemd-journald[60]: Received SIGTERM from PID 1 (systemd-shutdow).
+[13377.429637] EXT4-fs (sdd): unmounting filesystem ae26d3a2-c912-46f8-b94d-3cbc649f7ae0.
+[13379.043677] EXT4-fs (sdd): mounted filesystem ae26d3a2-c912-46f8-b94d-3cbc649f7ae0 r/w with ordered data mode. Quota mode: none.
+[13379.222359] misc dxg: dxgk: dxgkio_is_feature_enabled: Ioctl failed: -22
+[13379.225362] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13379.226304] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13379.226786] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13379.227584] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13379.228504] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13379.229839] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13379.230674] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13379.231432] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13379.232309] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13379.234991] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13379.235676] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13379.236687] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[13379.237405] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[13390.122388] systemd-journald[76]: Collecting audit messages is enabled.
+[13390.158144] systemd-journald[76]: Received client request to flush runtime journal.
+[13390.172349] systemd-journald[76]: File /var/log/journal/4b44f1ff2901414e9c6100a387d276c6/system.journal corrupted or uncleanly shut down, renaming and replacing.

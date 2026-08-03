@@ -1,0 +1,6 @@
+{"event": "_QMP_GREETING", "qmp": {"version": {"qemu": {"micro": 2, "minor": 2, "major": 10}, "package": "qemu-10.2.2-1.fc44"}, "capabilities": ["oob"]}, "hostTime": "2026-08-02T23:39:31.017Z"}
+{"timestamp": {"seconds": 1785713971, "microseconds": 238811}, "event": "RTC_CHANGE", "data": {"offset": -1, "qom-path": "/machine/unattached/device[6]/rtc"}, "hostTime": "2026-08-02T23:39:31.239Z"}
+{"timestamp": {"seconds": 1785713981, "microseconds": 793183}, "event": "NIC_RX_FILTER_CHANGED", "data": {"path": "/machine/peripheral-anon/device[0]/virtio-backend"}, "hostTime": "2026-08-02T23:39:41.793Z"}
+{"timestamp": {"seconds": 1785713988, "microseconds": 153825}, "event": "RTC_CHANGE", "data": {"offset": 0, "qom-path": "/machine/unattached/device[6]/rtc"}, "hostTime": "2026-08-02T23:39:48.154Z"}
+{"timestamp": {"seconds": 1785714059, "microseconds": 532044}, "event": "POWERDOWN", "hostTime": "2026-08-02T23:40:59.532Z"}
+{"timestamp": {"seconds": 1785714061, "microseconds": 163045}, "event": "SHUTDOWN", "data": {"guest": true, "reason": "guest-shutdown"}, "hostTime": "2026-08-02T23:41:01.163Z"}

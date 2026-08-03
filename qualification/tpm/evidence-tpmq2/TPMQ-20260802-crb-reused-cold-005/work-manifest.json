@@ -1,0 +1,22 @@
+{
+  "diskOverlay": {
+    "sha256": "c39b2ecf2ce820af63971e85248d33b2c3f9dba24da1d800df3ad4eea53b653a",
+    "sizeBytes": 22216704
+  },
+  "ovmfVarsAfter": {
+    "sha256": "ea3251f66acf0d8723aa34ed2e68e6c3228602a9a06607e1437996e13a65ce8b"
+  },
+  "tpmStateAfter": [
+    {
+      "path": ".lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0
+    },
+    {
+      "path": "tpm2-00.permall",
+      "sha256": "3c1ff2c255437ce51449b7cfaf4e78bb71d709f4c68814c81dbdaba5493fde63",
+      "sizeBytes": 4473
+    }
+  ],
+  "lifecycle": "working copies deleted after digest capture"
+}

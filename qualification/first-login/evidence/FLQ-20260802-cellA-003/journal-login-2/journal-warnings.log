@@ -1,0 +1,140 @@
+[    1.837094] fedora kernel: virt/tdx: TDX not supported by the host platform
+[    2.093461] fedora rpc.statd[411]: Failed to open directory sm: No such file or directory
+[    2.093485] fedora rpc.statd[411]: Failed to create /var/lib/nfs/statd/.state.new: No such file or directory
+[    2.097364] fedora rpc.idmapd[416]: Setting log level to 0
+[    2.097539] fedora rpc.idmapd[416]: libnfsidmap: Unable to determine the NFSv4 domain; Using 'localdomain' as the NFSv4 domain which means UIDs will be mapped to the 'Nobody-User' user defined in /etc/idmapd.conf
+[    3.058200] fedora rpc.idmapd[416]: exiting on signal 15
+[    3.059954] fedora rpcbind[407]: cannot open file = /run/rpcbind/rpcbind.xdr for writing
+[    3.060078] fedora rpcbind[407]: cannot save any registration
+[    3.060099] fedora rpcbind[407]: cannot open file = /run/rpcbind/portmap.xdr for writing
+[    3.060103] fedora rpcbind[407]: cannot save any registration
+[    5.103531] fedora systemd-oomd[687]: No swap; memory pressure usage will be degraded
+[    5.208606] fedora kernel: kauditd_printk_skb: 19 callbacks suppressed
+[    5.368065] fedora (udev-worker)[700]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[    5.873439] fedora systemd-tmpfiles[781]: Failed to create directory or subvolume "/usr/local/sbin": Read-only file system
+[    6.120041] fedora irqbalance[840]: thermal: failed to receive messages.
+[    6.120056] fedora irqbalance[840]: Failed to initialize thermal events.
+[    6.150450] fedora avahi-daemon[826]: WARNING: No NSS support for mDNS detected, consider installing nss-mdns!
+[    6.250225] fedora systemd-logind[882]: Failed to open '/boot/loader/entries': Remote address changed
+[    7.045213] fedora (udev-worker)[696]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[    7.129051] fedora systemd-logind[882]: Failed to open '/boot/loader/entries': Remote address changed
+[    7.138310] fedora gnome-session-service[1177]: App gnome-keyring-secrets.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    7.138386] fedora gnome-session-service[1177]: App at-spi-dbus-bus.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    7.138418] fedora gnome-session-service[1177]: App gnome-keyring-pkcs11.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    7.138439] fedora gnome-session-service[1177]: App xdg-user-dirs.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    7.138466] fedora gnome-session-service[1177]: App gnome-keyring-ssh.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    7.332537] fedora systemd-logind[882]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.193761] fedora systemd-logind[882]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.400600] fedora gnome-shell[1184]: Could not issue 'GetUnit' systemd call
+[    8.529923] fedora systemd-logind[882]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.535709] fedora systemd-logind[882]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.554632] fedora gsd-sharing[1319]: Failed to stop gnome-user-share-webdav.service: GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit gnome-user-share-webdav.service not loaded.
+[    8.554644] fedora gsd-sharing[1319]: Failed to stop rygel.service: GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit rygel.service not loaded.
+[    8.613137] fedora gsd-keyboard[1297]: g_variant_unref: assertion 'value != NULL' failed
+[    8.726511] fedora malcontent-timerd[1506]: mct_time_span_new: assertion 'start_time_secs < end_time_secs' failed
+[    8.728581] fedora malcontent-timerd[1506]: mct_time_span_copy: assertion 'self != NULL' failed
+[    8.728599] fedora malcontent-timerd[1506]: mct_time_span_get_start_time_secs: assertion 'self != NULL' failed
+[    8.728600] fedora malcontent-timerd[1506]: mct_time_span_get_end_time_secs: assertion 'self != NULL' failed
+[    8.728604] fedora malcontent-timerd[1506]: mct_time_span_free: assertion 'self != NULL' failed
+[    8.742941] fedora malcontent-timerd[1506]: mct_time_span_free: assertion 'self != NULL' failed
+[    8.798524] fedora gsd-usb-protection[1323]: Failed to fetch USBGuard parameters: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name is not activatable
+[    8.803919] fedora gsd-media-keys[1303]: Failed to grab accelerator for keybinding settings:playback-repeat
+[    8.803929] fedora gsd-media-keys[1303]: Failed to grab accelerator for keybinding settings:hibernate
+[    8.899607] fedora gnome-shell-calendar-server[1256]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[    8.902469] fedora gnome-shell-calendar-server[1256]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[    8.906569] fedora gnome-shell-calendar-server[1256]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[    8.908273] fedora gnome-shell-calendar-server[1256]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[    8.911507] fedora colord[1234]: CdMain: failed to profile from filename: failed to load file: Error opening file /var/home/dsq-test/.local/share/icc/edid-bb6ad72dc802b000932c73ad20996ae5.icc: Permission denied
+[    9.002582] fedora gnome-shell[1184]: Failed to create colord color profile icc-bba7d60274d3ac15a2c2f5e248abbf9a: failed to load file: Error opening file /var/home/dsq-test/.local/share/icc/edid-bb6ad72dc802b000932c73ad20996ae5.icc: Permission denied
+[    9.234855] fedora wireplumber[1740]: spa.bluez5: BlueZ system service is not available
+[    9.388536] fedora gnome-keyring-daemon[1885]: discover_other_daemon: 1
+[   16.018552] fedora irqbalance[840]: Cannot change IRQ 25 affinity: Permission denied
+[   16.018617] fedora irqbalance[840]: IRQ 25 affinity is now unmanaged
+[   16.018656] fedora irqbalance[840]: Cannot change IRQ 28 affinity: Permission denied
+[   16.018659] fedora irqbalance[840]: IRQ 28 affinity is now unmanaged
+[   16.498536] fedora kernel: kauditd_printk_skb: 131 callbacks suppressed
+[   56.011341] fedora irqbalance[840]: Cannot change IRQ 27 affinity: Permission denied
+[   56.011484] fedora irqbalance[840]: IRQ 27 affinity is now unmanaged
+[   85.317634] fedora gsd-media-keys[1303]: Virtual machines only honor the 'nothing' power-button-action, and will shutdown otherwise
+[   85.413392] fedora localsearch-3[1434]: Owner of volume monitor org.gtk.vfs.GoaVolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   85.413406] fedora localsearch-3[1434]: Owner of volume monitor org.gtk.vfs.UDisks2VolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   85.436833] fedora gnome-shell[1184]: Owner of volume monitor org.gtk.vfs.GoaVolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   85.441350] fedora gnome-shell[1184]: Owner of volume monitor org.gtk.vfs.UDisks2VolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   85.938040] fedora gnome-shell[1184]: Object Gjs_ui_dateMenu_EventsSection (0x55b709731d20), has been already disposed — impossible to set any property on it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55b705e2c220 ==
+                                         #0   55b705efcd30 i   resource:///org/gnome/shell/ui/dateMenu.js:326 (3f4a317bbce0 @ 49)
+                                         #1   55b705efcca8 i   resource:///org/gnome/shell/ui/calendar.js:254 (3f4a317c4830 @ 17)
+                                         #2   55b705efcc08 i   resource:///org/gnome/shell/ui/main.js:277 (305d359f7790 @ 119)
+[   85.938327] fedora gnome-shell[1184]: Object Gjs_ui_dateMenu_EventsSection (0x55b709731d20), has been already disposed — impossible to set any property on it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55b705e2c220 ==
+                                         #0   55b705efcd30 i   resource:///org/gnome/shell/ui/dateMenu.js:327 (3f4a317bbce0 @ 71)
+                                         #1   55b705efcca8 i   resource:///org/gnome/shell/ui/calendar.js:254 (3f4a317c4830 @ 17)
+                                         #2   55b705efcc08 i   resource:///org/gnome/shell/ui/main.js:277 (305d359f7790 @ 119)
+[   85.938600] fedora gnome-shell[1184]: Object Gjs_ui_calendar_Calendar (0x55b70968c7f0), has been already disposed — impossible to access it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55b705e2c220 ==
+                                         #0   7ffdfb5639e0 b   resource:///org/gnome/shell/ui/calendar.js:632 (3f4a317c51a0 @ 79)
+                                         #1   55b705efcdb8 i   resource:///org/gnome/shell/ui/calendar.js:457 (3f4a317c4e70 @ 12)
+                                         #2   55b705efcd28 i   resource:///org/gnome/shell/ui/calendar.js:302 (3f4a317c4a60 @ 37)
+                                         #3   55b705efcca8 i   resource:///org/gnome/shell/ui/calendar.js:250 (3f4a317c47e0 @ 63)
+                                         #4   55b705efcc08 i   resource:///org/gnome/shell/ui/main.js:277 (305d359f7790 @ 119)
+[   85.938784] fedora gnome-shell[1184]: Object Gjs_ui_calendar_Calendar (0x55b70968c7f0), has been already disposed — impossible to get any property from it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55b705e2c220 ==
+                                         #0   7ffdfb5639e0 b   resource:///org/gnome/shell/ui/calendar.js:667 (3f4a317c51a0 @ 427)
+                                         #1   55b705efcdb8 i   resource:///org/gnome/shell/ui/calendar.js:457 (3f4a317c4e70 @ 12)
+                                         #2   55b705efcd28 i   resource:///org/gnome/shell/ui/calendar.js:302 (3f4a317c4a60 @ 37)
+                                         #3   55b705efcca8 i   resource:///org/gnome/shell/ui/calendar.js:250 (3f4a317c47e0 @ 63)
+                                         #4   55b705efcc08 i   resource:///org/gnome/shell/ui/main.js:277 (305d359f7790 @ 119)
+[   85.939861] fedora gnome-shell[1184]: JS ERROR: TypeError: can't access property "attach", layout is null
+                                         _rebuildCalendar@resource:///org/gnome/shell/ui/calendar.js:724:13
+                                         setEventSource/<@resource:///org/gnome/shell/ui/calendar.js:457:18
+                                         _onNameVanished@resource:///org/gnome/shell/ui/calendar.js:302:14
+                                         _initProxy/<@resource:///org/gnome/shell/ui/calendar.js:250:22
+                                         _initializeUI/<@resource:///org/gnome/shell/ui/main.js:277:14
+[   85.939903] fedora gnome-shell[1184]: Object St.BoxLayout (0x55b709738b40), has been already disposed — impossible to access it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55b705e2c220 ==
+                                         #0   55b705efcf38 i   resource:///org/gnome/shell/ui/environment.js:362 (305d3599a790 @ 40)
+                                         #1   55b705efcea0 i   self-hosted:1425 (840eaa44790 @ 30)
+                                         #2   7ffdfb5637c0 b   self-hosted:1346 (840eaa44560 @ 205)
+                                         #3   55b705efcdb8 i   resource:///org/gnome/shell/ui/dateMenu.js:267 (3f4a317bbb50 @ 131)
+                                         #4   55b705efcd28 i   resource:///org/gnome/shell/ui/calendar.js:302 (3f4a317c4a60 @ 37)
+                                         #5   55b705efcca8 i   resource:///org/gnome/shell/ui/calendar.js:250 (3f4a317c47e0 @ 63)
+                                         #6   55b705efcc08 i   resource:///org/gnome/shell/ui/main.js:277 (305d359f7790 @ 119)
+[   85.939959] fedora gnome-shell[1184]: Object St.BoxLayout (0x55b709738b40), has been already disposed — impossible to access it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55b705e2c220 ==
+                                         #0   55b705efcdb8 i   resource:///org/gnome/shell/ui/dateMenu.js:288 (3f4a317bbb50 @ 581)
+                                         #1   55b705efcd28 i   resource:///org/gnome/shell/ui/calendar.js:302 (3f4a317c4a60 @ 37)
+                                         #2   55b705efcca8 i   resource:///org/gnome/shell/ui/calendar.js:250 (3f4a317c47e0 @ 63)
+                                         #3   55b705efcc08 i   resource:///org/gnome/shell/ui/main.js:277 (305d359f7790 @ 119)
+[   85.940142] fedora gnome-shell[1184]: Object St.BoxLayout (0x55b709738b40), has been already disposed — impossible to access it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55b705e2c220 ==
+                                         #0   55b705efcdb8 i   resource:///org/gnome/shell/ui/dateMenu.js:293 (3f4a317bbb50 @ 680)
+                                         #1   55b705efcd28 i   resource:///org/gnome/shell/ui/calendar.js:302 (3f4a317c4a60 @ 37)
+                                         #2   55b705efcca8 i   resource:///org/gnome/shell/ui/calendar.js:250 (3f4a317c47e0 @ 63)
+                                         #3   55b705efcc08 i   resource:///org/gnome/shell/ui/main.js:277 (305d359f7790 @ 119)
+[   85.940678] fedora gnome-shell[1184]: Object Gjs_ui_dateMenu_EventsSection (0x55b709731d20), has been already disposed — impossible to set any property on it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55b705e2c220 ==
+                                         #0   55b705efcea0 i   resource:///org/gnome/shell/ui/dateMenu.js:326 (3f4a317bbce0 @ 49)
+                                         #1   55b705efcdb8 i   resource:///org/gnome/shell/ui/dateMenu.js:297 (3f4a317bbb50 @ 712)
+                                         #2   55b705efcd28 i   resource:///org/gnome/shell/ui/calendar.js:302 (3f4a317c4a60 @ 37)
+                                         #3   55b705efcca8 i   resource:///org/gnome/shell/ui/calendar.js:250 (3f4a317c47e0 @ 63)
+                                         #4   55b705efcc08 i   resource:///org/gnome/shell/ui/main.js:277 (305d359f7790 @ 119)
+[   85.940691] fedora gnome-shell[1184]: Object Gjs_ui_dateMenu_EventsSection (0x55b709731d20), has been already disposed — impossible to set any property on it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55b705e2c220 ==
+                                         #0   55b705efcea0 i   resource:///org/gnome/shell/ui/dateMenu.js:327 (3f4a317bbce0 @ 71)
+                                         #1   55b705efcdb8 i   resource:///org/gnome/shell/ui/dateMenu.js:297 (3f4a317bbb50 @ 712)
+                                         #2   55b705efcd28 i   resource:///org/gnome/shell/ui/calendar.js:302 (3f4a317c4a60 @ 37)
+                                         #3   55b705efcca8 i   resource:///org/gnome/shell/ui/calendar.js:250 (3f4a317c47e0 @ 63)
+                                         #4   55b705efcc08 i   resource:///org/gnome/shell/ui/main.js:277 (305d359f7790 @ 119)
+[   85.945447] fedora systemd[1]: sys-devices-virtual-misc-rfkill.device: Failed to enqueue SYSTEMD_WANTS job, ignoring: Transaction for systemd-rfkill.socket/start is destructive (systemd-poweroff.service has 'start' job queued, but 'stop' is included in transaction).
+[   85.983381] fedora gnome-shell[1184]: Could not release device '/dev/input/event2' (13,66): GDBus.Error:org.freedesktop.DBus.Error.UnknownObject: Unknown object '/org/freedesktop/login1/session/_31'.
+[   85.994554] fedora gnome-shell[1184]: Could not release device '/dev/input/event3' (13,67): GDBus.Error:org.freedesktop.DBus.Error.UnknownObject: Unknown object '/org/freedesktop/login1/session/_31'.
+[   86.014818] fedora gnome-shell[1184]: Could not release device '/dev/input/event1' (13,65): GDBus.Error:org.freedesktop.DBus.Error.UnknownObject: Unknown object '/org/freedesktop/login1/session/_31'.
+[   86.021699] fedora gnome-shell[1184]: Could not release device '/dev/input/event0' (13,64): GDBus.Error:org.freedesktop.DBus.Error.UnknownObject: Unknown object '/org/freedesktop/login1/session/_31'.
+[   86.024057] fedora (udev-worker)[2233]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[   86.027287] fedora gnome-shell[1184]: Error checking authorization for action id org.freedesktop.NetworkManager.network-control: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name is not activatable
+[   86.073763] fedora gnome-shell[1184]: invalid (NULL) pointer instance
+[   86.073794] fedora gnome-shell[1184]: g_signal_handler_disconnect: assertion 'G_TYPE_CHECK_INSTANCE (instance)' failed
+[   86.074782] fedora gnome-shell[1184]: Could not release device '/dev/dri/card1' (226,1): GDBus.Error:org.freedesktop.DBus.Error.UnknownObject: Unknown object '/org/freedesktop/login1/session/_31'.
+[   86.077193] fedora dbus-broker-launch[793]: Activation request for 'org.freedesktop.ColorManager' failed.
+[   87.910103] fedora gnome-session-ctl[2281]: Couldn't connect to session bus: Could not connect: Connection refused
+[   88.016892] fedora dbus-broker-launch[793]: Activation request for 'org.freedesktop.nm_dispatcher' failed.

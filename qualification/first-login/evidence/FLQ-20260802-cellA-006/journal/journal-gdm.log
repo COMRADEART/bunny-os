@@ -1,0 +1,9 @@
+[    7.821840] fedora systemd[1]: Starting gdm.service - GNOME Display Manager...
+[    7.846319] fedora systemd[1]: Started gdm.service - GNOME Display Manager.
+[   85.289610] fedora gdm[1036]: Gdm: Failed to list cached users: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name is not activatable
+[   85.326301] fedora systemd[1]: Stopping gdm.service - GNOME Display Manager...
+[   85.382483] fedora systemd[1]: gdm.service: Main process exited, code=exited, status=1/FAILURE
+[   85.382506] fedora systemd[1]: gdm.service: Failed with result 'exit-code'.
+[   85.382653] fedora systemd[1]: Stopped gdm.service - GNOME Display Manager.
+[   85.383730] fedora systemd[1]: gdm.service: Triggering OnFailure= dependencies.
+[   85.383806] fedora systemd[1]: gdm.service: Failed to enqueue OnFailure=plymouth-quit.service job, ignoring: Unit plymouth-quit.service not found.

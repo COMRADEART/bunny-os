@@ -1,0 +1,197 @@
+{
+  "artifact": {
+    "name": "bunny-os-93d1f6fb4f23.qcow2",
+    "sha256": "1290afe9eeb54b1d9f2385bc760d2ce5616d9580bc3b529ead5b55f6aa931249"
+  },
+  "authority": {
+    "archiveCommit": "93d1f6fb4f23f6533be37fe829f670ce0630de86",
+    "cpuMode": "host",
+    "guestfishVersion": "guestfish 1.60.1fedora=44,release=1.fc44,libvirt",
+    "installationArtifact": "bunny-os-93d1f6fb4f23.qcow2",
+    "installationArtifactDigest": "1290afe9eeb54b1d9f2385bc760d2ce5616d9580bc3b529ead5b55f6aa931249",
+    "journalctlVersion": "systemd 259 (259.8-1.fc44)",
+    "machineType": "pc-q35-10.2",
+    "ovmfCodeDigest": "6551948da24a02553476c1c1edccb0bb92a57dce9d722d7b396ac14547e6d9af",
+    "ovmfCodePath": "/usr/share/edk2/ovmf/OVMF_CODE_4M.qcow2",
+    "ovmfVarsTemplateDigest": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb",
+    "ovmfVarsTemplatePath": "/usr/share/edk2/ovmf/OVMF_VARS_4M.qcow2",
+    "qemuPath": "/usr/bin/qemu-system-x86_64",
+    "qemuVersion": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)",
+    "scenarioName": "first-login and display-stack requalification",
+    "scenarioVersion": "dsq-2",
+    "schemaVersion": 1,
+    "sourceArchiveDigest": "38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd",
+    "sourceCommit": "12b5423b9f1b2fe4938bac393d8d65fb6b9fb47b",
+    "supersedes": {
+      "note": "dsq-1 measured the b9c317d archive, in which bunny-first-boot.service failed on 60 of 60 fresh homes and chronyd failed on 1 of 60 boots. Its records remain evidence about that archive and are not evidence about this one.",
+      "scenarioVersion": "dsq-1"
+    },
+    "swtpmVersion": "TPM emulator version 0.10.1, Copyright (c) 2014-2022 IBM Corp. and others",
+    "testFixture": {
+      "loginAccountIsTestInjected": true,
+      "note": "Every dsq-2 boot injects a qualification-only account into its own overlay. The Bunny artifact ships no account and no default credential."
+    }
+  },
+  "boots": [
+    {
+      "graphicalTargetOnSerial": true,
+      "guestResetCount": 1,
+      "guestResetTimes": [
+        "2026-08-02T15:24:50.015Z"
+      ],
+      "label": "login-1",
+      "observationWindowCompleted": true,
+      "observationWindowSeconds": 75,
+      "outcome": "observed",
+      "qemuExitCode": 0,
+      "serialStages": [
+        "boot-option-started",
+        "firmware-bds",
+        "graphical",
+        "health-check",
+        "initramfs",
+        "kernel-loaded",
+        "multi-user",
+        "reset-announced",
+        "restoration-dialog"
+      ],
+      "shutdownMethod": "acpi-powerdown"
+    }
+  ],
+  "cell": "B",
+  "cellConfiguration": {
+    "description": "CRB TPM with restored NVRAM, no reset expected",
+    "expectedResets": 1,
+    "memory": 8192,
+    "network": true,
+    "smp": 4,
+    "tpm": true,
+    "tpmState": "fresh",
+    "vars": "fresh"
+  },
+  "completedAt": "2026-08-02T15:26:27.385Z",
+  "deployment": "/ostree/deploy/default/deploy/e713287b64a78fea8f18a6d6142e31348c8ee4a611c881b4da9a46e57fabc92a.0",
+  "evidenceManifest": [
+    {
+      "path": "qemu-command.json",
+      "sha256": "cdcd51316db68b75976b37e58cddbde79539a3f3c2d72fc2adacc3df4c6eb608",
+      "sizeBytes": 873
+    },
+    {
+      "path": "qmp-events-login-1.jsonl",
+      "sha256": "522ea5f918230a7cb353280cde7509f4e825e01e61b6d34f3f7c95bf4c6c4a10",
+      "sizeBytes": 1467
+    },
+    {
+      "path": "screenshots/login-1/graphical-reached.ppm",
+      "sha256": "2b48d93eebb1ba94a1bbf50bfdc3944760beb20c646f6dc8dd156a26909819d1",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/login-1/observation-window-end.ppm",
+      "sha256": "1d1de7f69f97928c30e18a27196a1b960f5fb03bf52a0a22f9a481d31b36a818",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/login-1/stage-boot-option-started.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/login-1/stage-firmware-bds.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/login-1/stage-graphical.ppm",
+      "sha256": "2b48d93eebb1ba94a1bbf50bfdc3944760beb20c646f6dc8dd156a26909819d1",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/login-1/stage-health-check.ppm",
+      "sha256": "2b48d93eebb1ba94a1bbf50bfdc3944760beb20c646f6dc8dd156a26909819d1",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/login-1/stage-initramfs.ppm",
+      "sha256": "b7c9f2020178f80930a2bf349f1e652556d7db6de00d1ebc08204ff2f6990977",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/login-1/stage-kernel-loaded.ppm",
+      "sha256": "eb7823ead041b0c41d87bfd217454f3bd80de2ecbd9bb65e9f9915097ba8db21",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/login-1/stage-multi-user.ppm",
+      "sha256": "2b48d93eebb1ba94a1bbf50bfdc3944760beb20c646f6dc8dd156a26909819d1",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/login-1/stage-reset-announced.ppm",
+      "sha256": "d4e96a65fd4f8e97bc1d762fc90cf2593bc2efb53a3125a72502fdae0f09395c",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "screenshots/login-1/stage-restoration-dialog.ppm",
+      "sha256": "3019889f0e3279215a7a1930f4c5bdb014317b9624ce8281e1934f7360bea957",
+      "sizeBytes": 3072016
+    },
+    {
+      "path": "serial-login-1.log",
+      "sha256": "de2b8824f0f69be9b90d9c9273ff7d6b8f1a66e735f30a2a4d2b98aa34b105fd",
+      "sizeBytes": 137630
+    }
+  ],
+  "journalCollectorVersion": "dsq-journal-1",
+  "limitations": [],
+  "loginFixture": {
+    "account": "dsq-test",
+    "automaticLogin": true,
+    "credential": "random per run, not retained, not recorded, not printed",
+    "expiry": "the overlay is destroyed when the run ends",
+    "home": "/var/home/dsq-test",
+    "injectedInto": "per-run copy-on-write overlay",
+    "injectedPaths": [
+      "/ostree/deploy/default/deploy/e713287b64a78fea8f18a6d6142e31348c8ee4a611c881b4da9a46e57fabc92a.0/etc/passwd",
+      "/ostree/deploy/default/deploy/e713287b64a78fea8f18a6d6142e31348c8ee4a611c881b4da9a46e57fabc92a.0/etc/group",
+      "/ostree/deploy/default/deploy/e713287b64a78fea8f18a6d6142e31348c8ee4a611c881b4da9a46e57fabc92a.0/etc/shadow",
+      "/ostree/deploy/default/deploy/e713287b64a78fea8f18a6d6142e31348c8ee4a611c881b4da9a46e57fabc92a.0/etc/gdm/custom.conf",
+      "/var/home/dsq-test"
+    ],
+    "note": "The Bunny OS image ships no account and no default credential. This account exists only inside one qualification run's writable overlay and is not product behaviour.",
+    "partOfBunnyArtifact": false,
+    "secondLoginPlanned": false,
+    "sourceDiskModified": false,
+    "testInjected": true,
+    "uid": 4242
+  },
+  "runId": "FLQ-20260802-seedB",
+  "scenarioVersion": "dsq-2",
+  "schemaVersion": 1,
+  "secondLoginPlanned": false,
+  "seedProduced": {
+    "fromRun": "FLQ-20260802-seedB",
+    "tpmStateManifest": [
+      {
+        "path": ".lock",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sizeBytes": 0
+      },
+      {
+        "path": "tpm2-00.permall",
+        "sha256": "d6badb8c89b77c8b48b13b1f6c036a98a67492bb11314fcea508f018f08451a4",
+        "sizeBytes": 1315
+      }
+    ],
+    "varsSha256": "3e7045fcb91729ba2a7926313ca683fd39c200bd7171ebc6f8d12e17c2385a27"
+  },
+  "seeding": true,
+  "sequence": null,
+  "startedAt": "2026-08-02T15:24:15.744Z",
+  "status": "SEEDED",
+  "varsSource": {
+    "kind": "template",
+    "sha256": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb"
+  }
+}

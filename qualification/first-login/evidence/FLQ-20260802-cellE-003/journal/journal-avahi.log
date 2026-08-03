@@ -1,0 +1,27 @@
+[    7.022374] fedora systemd[1]: Listening on avahi-daemon.socket - Avahi mDNS/DNS-SD Stack Activation Socket.
+[    7.094401] fedora systemd[1]: Starting avahi-daemon.service - Avahi mDNS/DNS-SD Stack...
+[    7.274362] fedora avahi-daemon[839]: Found user 'avahi' (UID 70) and group 'avahi' (GID 70).
+[    7.274813] fedora avahi-daemon[839]: Successfully dropped root privileges.
+[    7.275246] fedora avahi-daemon[839]: avahi-daemon 0.8 starting up.
+[    7.275373] fedora avahi-daemon[839]: WARNING: No NSS support for mDNS detected, consider installing nss-mdns!
+[    7.275762] fedora avahi-daemon[839]: Successfully called chroot().
+[    7.275780] fedora avahi-daemon[839]: Successfully dropped remaining capabilities.
+[    7.277609] fedora avahi-daemon[839]: No service file found in /etc/avahi/services.
+[    7.277647] fedora systemd[1]: Started avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+[    7.279619] fedora avahi-daemon[839]: Joining mDNS multicast group on interface lo.IPv6 with address ::1.
+[    7.279630] fedora avahi-daemon[839]: New relevant interface lo.IPv6 for mDNS.
+[    7.279632] fedora avahi-daemon[839]: Joining mDNS multicast group on interface lo.IPv4 with address 127.0.0.1.
+[    7.279638] fedora avahi-daemon[839]: New relevant interface lo.IPv4 for mDNS.
+[    7.279640] fedora avahi-daemon[839]: Network interface enumeration completed.
+[    7.279643] fedora avahi-daemon[839]: Registering new address record for ::1 on lo.*.
+[    7.279661] fedora avahi-daemon[839]: Registering new address record for 127.0.0.1 on lo.IPv4.
+[    8.185504] fedora avahi-daemon[839]: Server startup complete. Host name is fedora.local. Local service cookie is 3362757450.
+[   84.872337] fedora systemd[1]: Stopping avahi-daemon.service - Avahi mDNS/DNS-SD Stack...
+[   84.872290] fedora avahi-daemon[839]: Got SIGTERM, quitting.
+[   84.872872] fedora avahi-daemon[839]: Leaving mDNS multicast group on interface lo.IPv6 with address ::1.
+[   84.873032] fedora avahi-daemon[839]: Leaving mDNS multicast group on interface lo.IPv4 with address 127.0.0.1.
+[   84.873342] fedora avahi-daemon[839]: avahi-daemon 0.8 exiting.
+[   84.942553] fedora systemd[1]: avahi-daemon.service: Deactivated successfully.
+[   84.942848] fedora systemd[1]: Stopped avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+[   85.739285] fedora systemd[1]: avahi-daemon.socket: Deactivated successfully.
+[   85.739378] fedora systemd[1]: Closed avahi-daemon.socket - Avahi mDNS/DNS-SD Stack Activation Socket.

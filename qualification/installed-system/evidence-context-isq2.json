@@ -1,0 +1,18 @@
+{
+  "installationArtifact": "bunny-os-93d1f6fb4f23.qcow2",
+  "installationArtifactDigest": "1290afe9eeb54b1d9f2385bc760d2ce5616d9580bc3b529ead5b55f6aa931249",
+  "installationArtifactName": "bunny-os-b9c317d35b85.qcow2",
+  "installerToolchainDigest": "5ea15dda4031b33844004a862a46c32c7fcebcf1086df1487d648952b0b56c80",
+  "notes": "Authority for every installed-system evidence record. The installation artifact lives outside the repository by size; its digest is recomputed by every consumer that attaches it.",
+  "scenarioVersion": "isq-2",
+  "schemaVersion": 1,
+  "sourceArchiveDigest": "38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd",
+  "sourceCommit": "12b5423b9f1b2fe4938bac393d8d65fb6b9fb47b",
+  "subjects": {
+    "installerToolchainDigest": "build/installer/toolchain.lock.json"
+  },
+  "supersedes": {
+    "note": "isq-1 measured the b9c317d artifact, on which bunny-brlapi-key.service was already corrected in source but post-dated the qualified archive. Its records remain evidence about that disk.",
+    "scenarioVersion": "isq-1"
+  }
+}

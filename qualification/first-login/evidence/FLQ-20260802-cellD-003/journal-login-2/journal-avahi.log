@@ -1,0 +1,39 @@
+[    6.703392] fedora systemd[1]: Listening on avahi-daemon.socket - Avahi mDNS/DNS-SD Stack Activation Socket.
+[    6.789847] fedora systemd[1]: Starting avahi-daemon.service - Avahi mDNS/DNS-SD Stack...
+[    6.984613] fedora avahi-daemon[794]: Found user 'avahi' (UID 70) and group 'avahi' (GID 70).
+[    6.987435] fedora avahi-daemon[794]: Successfully dropped root privileges.
+[    6.987618] fedora avahi-daemon[794]: avahi-daemon 0.8 starting up.
+[    6.987835] fedora avahi-daemon[794]: WARNING: No NSS support for mDNS detected, consider installing nss-mdns!
+[    6.988268] fedora avahi-daemon[794]: Successfully called chroot().
+[    6.988277] fedora avahi-daemon[794]: Successfully dropped remaining capabilities.
+[    6.992434] fedora systemd[1]: Started avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+[    6.992311] fedora avahi-daemon[794]: No service file found in /etc/avahi/services.
+[    6.992911] fedora avahi-daemon[794]: Joining mDNS multicast group on interface lo.IPv6 with address ::1.
+[    6.992919] fedora avahi-daemon[794]: New relevant interface lo.IPv6 for mDNS.
+[    6.992922] fedora avahi-daemon[794]: Joining mDNS multicast group on interface lo.IPv4 with address 127.0.0.1.
+[    6.992927] fedora avahi-daemon[794]: New relevant interface lo.IPv4 for mDNS.
+[    6.992928] fedora avahi-daemon[794]: Network interface enumeration completed.
+[    6.992932] fedora avahi-daemon[794]: Registering new address record for ::1 on lo.*.
+[    6.992945] fedora avahi-daemon[794]: Registering new address record for 127.0.0.1 on lo.IPv4.
+[    7.169151] fedora avahi-daemon[794]: Joining mDNS multicast group on interface enp0s2.IPv6 with address fe80::fcb6:6e6d:139:4864.
+[    7.169246] fedora avahi-daemon[794]: New relevant interface enp0s2.IPv6 for mDNS.
+[    7.169254] fedora avahi-daemon[794]: Registering new address record for fe80::fcb6:6e6d:139:4864 on enp0s2.*.
+[    7.359684] fedora avahi-daemon[794]: Joining mDNS multicast group on interface enp0s2.IPv4 with address 10.0.2.15.
+[    7.359692] fedora avahi-daemon[794]: New relevant interface enp0s2.IPv4 for mDNS.
+[    7.359700] fedora avahi-daemon[794]: Registering new address record for 10.0.2.15 on enp0s2.IPv4.
+[    8.337740] fedora avahi-daemon[794]: Server startup complete. Host name is fedora.local. Local service cookie is 3595694043.
+[    9.047281] fedora avahi-daemon[794]: Leaving mDNS multicast group on interface enp0s2.IPv6 with address fe80::fcb6:6e6d:139:4864.
+[    9.048063] fedora avahi-daemon[794]: Joining mDNS multicast group on interface enp0s2.IPv6 with address fec0::89b0:46dc:3b50:52b1.
+[    9.048076] fedora avahi-daemon[794]: Registering new address record for fec0::89b0:46dc:3b50:52b1 on enp0s2.*.
+[    9.048095] fedora avahi-daemon[794]: Withdrawing address record for fe80::fcb6:6e6d:139:4864 on enp0s2.
+[   85.400187] fedora systemd[1]: Stopping avahi-daemon.service - Avahi mDNS/DNS-SD Stack...
+[   85.401322] fedora avahi-daemon[794]: Got SIGTERM, quitting.
+[   85.401503] fedora avahi-daemon[794]: Leaving mDNS multicast group on interface enp0s2.IPv6 with address fec0::89b0:46dc:3b50:52b1.
+[   85.401556] fedora avahi-daemon[794]: Leaving mDNS multicast group on interface enp0s2.IPv4 with address 10.0.2.15.
+[   85.401578] fedora avahi-daemon[794]: Leaving mDNS multicast group on interface lo.IPv6 with address ::1.
+[   85.401602] fedora avahi-daemon[794]: Leaving mDNS multicast group on interface lo.IPv4 with address 127.0.0.1.
+[   85.410343] fedora avahi-daemon[794]: avahi-daemon 0.8 exiting.
+[   85.442668] fedora systemd[1]: avahi-daemon.service: Deactivated successfully.
+[   85.442870] fedora systemd[1]: Stopped avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+[   86.856268] fedora systemd[1]: avahi-daemon.socket: Deactivated successfully.
+[   86.856339] fedora systemd[1]: Closed avahi-daemon.socket - Avahi mDNS/DNS-SD Stack Activation Socket.

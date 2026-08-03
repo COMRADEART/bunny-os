@@ -1,0 +1,71 @@
+[    1.834636] fedora kernel: virt/tdx: TDX not supported by the host platform
+[    2.103471] fedora rpc.statd[411]: Failed to open directory sm: No such file or directory
+[    2.103496] fedora rpc.statd[411]: Failed to create /var/lib/nfs/statd/.state.new: No such file or directory
+[    2.106798] fedora rpc.idmapd[416]: Setting log level to 0
+[    2.107101] fedora rpc.idmapd[416]: libnfsidmap: Unable to determine the NFSv4 domain; Using 'localdomain' as the NFSv4 domain which means UIDs will be mapped to the 'Nobody-User' user defined in /etc/idmapd.conf
+[    3.059232] fedora rpc.idmapd[416]: exiting on signal 15
+[    3.061202] fedora rpcbind[407]: cannot open file = /run/rpcbind/rpcbind.xdr for writing
+[    3.061228] fedora rpcbind[407]: cannot save any registration
+[    3.061236] fedora rpcbind[407]: cannot open file = /run/rpcbind/portmap.xdr for writing
+[    3.061238] fedora rpcbind[407]: cannot save any registration
+[    5.207951] fedora kernel: kauditd_printk_skb: 5 callbacks suppressed
+[    5.434737] fedora systemd-oomd[690]: No swap; memory pressure usage will be degraded
+[    5.829525] fedora (udev-worker)[724]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[    6.064506] fedora sm-notify[771]: Failed to open sm: No such file or directory
+[    6.064509] fedora sm-notify[771]: Failed to open directory sm.bak: No such file or directory
+[    6.134212] fedora systemd-tmpfiles[773]: Failed to create directory or subvolume "/usr/local/sbin": Read-only file system
+[    7.622513] fedora irqbalance[857]: thermal: failed to receive messages.
+[    7.622530] fedora irqbalance[857]: Failed to initialize thermal events.
+[    7.675576] fedora avahi-daemon[841]: WARNING: No NSS support for mDNS detected, consider installing nss-mdns!
+[    7.839834] fedora systemd-logind[951]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.290243] fedora (udev-worker)[703]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[    8.367189] fedora systemd-logind[951]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.377704] fedora gnome-session-service[1153]: App gnome-keyring-secrets.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    8.377790] fedora gnome-session-service[1153]: App at-spi-dbus-bus.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    8.377825] fedora gnome-session-service[1153]: App gnome-keyring-pkcs11.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    8.377849] fedora gnome-session-service[1153]: App xdg-user-dirs.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    8.377881] fedora gnome-session-service[1153]: App gnome-keyring-ssh.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    8.485429] fedora systemd-logind[951]: Failed to open '/boot/loader/entries': Remote address changed
+[   10.563495] fedora systemd-logind[951]: Failed to open '/boot/loader/entries': Remote address changed
+[   10.803810] fedora gnome-shell[1160]: Could not issue 'GetUnit' systemd call
+[   10.853488] fedora systemd-logind[951]: Failed to open '/boot/loader/entries': Remote address changed
+[   10.920562] fedora systemd-logind[951]: Failed to open '/boot/loader/entries': Remote address changed
+[   10.934836] fedora kernel: kauditd_printk_skb: 128 callbacks suppressed
+[   11.016602] fedora gsd-sharing[1337]: Failed to stop gnome-user-share-webdav.service: GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit gnome-user-share-webdav.service not loaded.
+[   11.016620] fedora gsd-sharing[1337]: Failed to stop rygel.service: GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit rygel.service not loaded.
+[   11.056771] fedora gsd-keyboard[1318]: g_variant_unref: assertion 'value != NULL' failed
+[   11.060247] fedora gsd-media-keys[1321]: Failed to grab accelerator for keybinding settings:playback-repeat
+[   11.060499] fedora gsd-media-keys[1321]: Failed to grab accelerator for keybinding settings:hibernate
+[   11.299260] fedora gsd-usb-protection[1350]: Failed to fetch USBGuard parameters: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name is not activatable
+[   11.312296] fedora gnome-shell-calendar-server[1265]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[   11.314671] fedora gnome-shell-calendar-server[1265]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[   11.321640] fedora gnome-shell-calendar-server[1265]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[   11.325887] fedora gnome-shell-calendar-server[1265]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[   11.643937] fedora colord[1241]: CdMain: failed to profile from filename: failed to load file: Error opening file /var/home/dsq-test/.local/share/icc/edid-bb6ad72dc802b000932c73ad20996ae5.icc: Permission denied
+[   11.706208] fedora gnome-shell[1160]: Failed to create colord color profile icc-372638cb22eaaef397d7611ca8d99ef2: failed to load file: Error opening file /var/home/dsq-test/.local/share/icc/edid-bb6ad72dc802b000932c73ad20996ae5.icc: Permission denied
+[   11.843465] fedora wireplumber[1801]: spa.bluez5: BlueZ system service is not available
+[   12.080899] fedora gnome-keyring-daemon[1921]: discover_other_daemon: 1
+[   14.932093] fedora gnome-software[1460]: Only 0 apps for recent list, hiding
+[   14.946423] fedora gnome-software[1460]: Only 0 apps for curated list, hiding
+[   15.685953] fedora gnome-software[1460]: updates-shell: failed to get upgrades: no root object
+[   17.930988] fedora kernel: kauditd_printk_skb: 12 callbacks suppressed
+[   18.008732] fedora irqbalance[857]: Cannot change IRQ 25 affinity: Permission denied
+[   18.008807] fedora irqbalance[857]: IRQ 25 affinity is now unmanaged
+[   18.008844] fedora irqbalance[857]: Cannot change IRQ 28 affinity: Permission denied
+[   18.008848] fedora irqbalance[857]: IRQ 28 affinity is now unmanaged
+[   18.008871] fedora irqbalance[857]: Cannot change IRQ 26 affinity: Permission denied
+[   18.008875] fedora irqbalance[857]: IRQ 26 affinity is now unmanaged
+[   18.008915] fedora irqbalance[857]: Cannot change IRQ 27 affinity: Permission denied
+[   18.008918] fedora irqbalance[857]: IRQ 27 affinity is now unmanaged
+[   73.973687] fedora gnome-software[1460]: failed to get upgrades: no root object
+[   76.883273] fedora gnome-software[1460]: updates-shell: failed to get upgrades: [*/*/*/fedora-pkgdb-collections/*] Failed to download ‘https://admin.fedoraproject.org/pkgdb/api/collections/’: Unknown Error: Error resolving “admin.fedoraproject.org”: Temporary failure in name resolution
+[   84.452746] fedora gsd-media-keys[1321]: Virtual machines only honor the 'nothing' power-button-action, and will shutdown otherwise
+[   84.547277] fedora localsearch-3[1461]: Owner of volume monitor org.gtk.vfs.GoaVolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   84.550452] fedora gnome-shell[1160]: Owner of volume monitor org.gtk.vfs.GoaVolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   84.558671] fedora localsearch-3[1461]: Owner of volume monitor org.gtk.vfs.UDisks2VolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   84.562962] fedora gnome-shell[1160]: Owner of volume monitor org.gtk.vfs.UDisks2VolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   84.730163] fedora (udev-worker)[2102]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[   85.071288] fedora systemd[1]: sys-devices-virtual-misc-rfkill.device: Failed to enqueue SYSTEMD_WANTS job, ignoring: Transaction for systemd-rfkill.socket/start is destructive (systemd-poweroff.service has 'start' job queued, but 'stop' is included in transaction).
+[   85.155094] fedora gnome-shell[1160]: invalid (NULL) pointer instance
+[   85.155106] fedora gnome-shell[1160]: g_signal_handler_disconnect: assertion 'G_TYPE_CHECK_INSTANCE (instance)' failed
+[   85.158911] fedora dbus-broker-launch[809]: Activation request for 'org.freedesktop.ColorManager' failed.

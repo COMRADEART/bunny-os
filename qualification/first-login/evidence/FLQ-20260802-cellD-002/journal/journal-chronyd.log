@@ -1,0 +1,18 @@
+[    7.368146] fedora systemd[1]: Starting authselect-apply-changes.service - Apply authselect changes...
+[    7.596406] fedora authselect[820]: Changes were successfully applied.
+[    7.636199] fedora systemd[1]: Finished authselect-apply-changes.service - Apply authselect changes.
+[    7.760867] fedora systemd[1]: Starting chronyd.service - NTP client/server...
+[    7.881125] fedora chronyd[929]: chronyd version 4.8 starting (+CMDMON +REFCLOCK +RTC +PRIVDROP +SCFILTER +SIGND +NTS +SECHASH +IPV6 +DEBUG)
+[    7.883087] fedora chronyd[929]: Using leap second list /usr/share/zoneinfo/leap-seconds.list
+[    7.883432] fedora systemd[1]: Started chronyd.service - NTP client/server.
+[    7.883192] fedora chronyd[929]: Loaded seccomp filter (level 2)
+[   14.654664] fedora chronyd[929]: Selected source 142.248.192.33 (2.fedora.pool.ntp.org)
+[   13.221987] fedora chronyd[929]: System clock wrong by 1.432805 seconds
+[   14.657872] fedora chronyd[929]: System clock was stepped by 1.432805 seconds
+[   14.657989] fedora chronyd[929]: System clock TAI offset set to 37 seconds
+[   84.646819] fedora systemd[1]: Stopping chronyd.service - NTP client/server...
+[   84.650896] fedora chronyd[929]: chronyd exiting
+[   84.689888] fedora systemd[1]: chronyd.service: Deactivated successfully.
+[   84.690256] fedora systemd[1]: Stopped chronyd.service - NTP client/server.
+[   85.473621] fedora systemd[1]: authselect-apply-changes.service: Deactivated successfully.
+[   85.473710] fedora systemd[1]: Stopped authselect-apply-changes.service - Apply authselect changes.

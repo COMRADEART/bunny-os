@@ -1,0 +1,67 @@
+{
+  "scenarioVersion": "dsq-2",
+  "sourceCommit": "12b5423b9f1b2fe4938bac393d8d65fb6b9fb47b",
+  "installationArtifactDigest": "1290afe9eeb54b1d9f2385bc760d2ce5616d9580bc3b529ead5b55f6aa931249",
+  "recordCount": 60,
+  "problems": [],
+  "cells": {
+    "A": {
+      "planned": 20,
+      "attempted": 20,
+      "collected": 20,
+      "firstLoginPassed": 20,
+      "failures": [],
+      "secondLoginPlanned": 10,
+      "secondLoginPassed": 10,
+      "complete": true,
+      "secondLoginComplete": true
+    },
+    "B": {
+      "planned": 10,
+      "attempted": 10,
+      "collected": 10,
+      "firstLoginPassed": 10,
+      "failures": [],
+      "secondLoginPlanned": 0,
+      "secondLoginPassed": 0,
+      "complete": true,
+      "secondLoginComplete": true
+    },
+    "C": {
+      "planned": 10,
+      "attempted": 10,
+      "collected": 10,
+      "firstLoginPassed": 10,
+      "failures": [],
+      "secondLoginPlanned": 0,
+      "secondLoginPassed": 0,
+      "complete": true,
+      "secondLoginComplete": true
+    },
+    "D": {
+      "planned": 10,
+      "attempted": 10,
+      "collected": 10,
+      "firstLoginPassed": 10,
+      "failures": [],
+      "secondLoginPlanned": 5,
+      "secondLoginPassed": 5,
+      "complete": true,
+      "secondLoginComplete": true
+    },
+    "E": {
+      "planned": 10,
+      "attempted": 10,
+      "collected": 10,
+      "firstLoginPassed": 10,
+      "failures": [],
+      "secondLoginPlanned": 5,
+      "secondLoginPassed": 5,
+      "complete": true,
+      "secondLoginComplete": true
+    }
+  },
+  "unexplainedFailures": 0,
+  "firstLoginReliability": "PASS",
+  "note": "A single unexplained bunny-first-boot or chronyd failure keeps this blocked. There is no percentage threshold."
+}

@@ -1,0 +1,214 @@
+{
+  "matrixVersion": "tpmq-1+tpmq-2",
+  "startedAt": "2026-08-03T02:19:02+00:00",
+  "cells": {
+    "no-tpm-cold": {
+      "bootsAttempted": 5,
+      "reachedGrub": 5,
+      "loadedKernel": 5,
+      "reachedInitramfs": 5,
+      "reachedMultiUser": 5,
+      "reachedGraphical": 5,
+      "healthCheck": 5,
+      "resets": 0,
+      "timeouts": 0,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260802-no-tpm-cold-001": [],
+        "TPMQ-20260802-no-tpm-cold-002": [],
+        "TPMQ-20260802-no-tpm-cold-003": [],
+        "TPMQ-20260802-no-tpm-cold-004": [],
+        "TPMQ-20260802-no-tpm-cold-005": []
+      },
+      "classifications": [],
+      "runs": [
+        "TPMQ-20260802-no-tpm-cold-001",
+        "TPMQ-20260802-no-tpm-cold-002",
+        "TPMQ-20260802-no-tpm-cold-003",
+        "TPMQ-20260802-no-tpm-cold-004",
+        "TPMQ-20260802-no-tpm-cold-005"
+      ]
+    },
+    "crb-fresh-cold": {
+      "bootsAttempted": 5,
+      "reachedGrub": 5,
+      "loadedKernel": 5,
+      "reachedInitramfs": 5,
+      "reachedMultiUser": 5,
+      "reachedGraphical": 5,
+      "healthCheck": 5,
+      "resets": 5,
+      "timeouts": 0,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260802-crb-fresh-cold-001": [],
+        "TPMQ-20260802-crb-fresh-cold-002": [],
+        "TPMQ-20260802-crb-fresh-cold-003": [],
+        "TPMQ-20260802-crb-fresh-cold-004": [],
+        "TPMQ-20260802-crb-fresh-cold-005": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260802-crb-fresh-cold-001",
+        "TPMQ-20260802-crb-fresh-cold-002",
+        "TPMQ-20260802-crb-fresh-cold-003",
+        "TPMQ-20260802-crb-fresh-cold-004",
+        "TPMQ-20260802-crb-fresh-cold-005"
+      ]
+    },
+    "tis-fresh-cold": {
+      "bootsAttempted": 5,
+      "reachedGrub": 5,
+      "loadedKernel": 5,
+      "reachedInitramfs": 5,
+      "reachedMultiUser": 5,
+      "reachedGraphical": 5,
+      "healthCheck": 5,
+      "resets": 5,
+      "timeouts": 0,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260802-tis-fresh-cold-001": [],
+        "TPMQ-20260802-tis-fresh-cold-002": [],
+        "TPMQ-20260802-tis-fresh-cold-003": [],
+        "TPMQ-20260802-tis-fresh-cold-004": [],
+        "TPMQ-20260802-tis-fresh-cold-005": []
+      },
+      "classifications": [
+        "BOOTLOADER_REBOOT_COMMAND"
+      ],
+      "runs": [
+        "TPMQ-20260802-tis-fresh-cold-001",
+        "TPMQ-20260802-tis-fresh-cold-002",
+        "TPMQ-20260802-tis-fresh-cold-003",
+        "TPMQ-20260802-tis-fresh-cold-004",
+        "TPMQ-20260802-tis-fresh-cold-005"
+      ]
+    },
+    "crb-reused-cold": {
+      "bootsAttempted": 5,
+      "reachedGrub": 5,
+      "loadedKernel": 5,
+      "reachedInitramfs": 5,
+      "reachedMultiUser": 5,
+      "reachedGraphical": 5,
+      "healthCheck": 5,
+      "resets": 0,
+      "timeouts": 0,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260802-crb-reused-cold-001": [],
+        "TPMQ-20260802-crb-reused-cold-002": [],
+        "TPMQ-20260802-crb-reused-cold-003": [],
+        "TPMQ-20260802-crb-reused-cold-004": [],
+        "TPMQ-20260802-crb-reused-cold-005": []
+      },
+      "classifications": [],
+      "runs": [
+        "TPMQ-20260802-crb-reused-cold-001",
+        "TPMQ-20260802-crb-reused-cold-002",
+        "TPMQ-20260802-crb-reused-cold-003",
+        "TPMQ-20260802-crb-reused-cold-004",
+        "TPMQ-20260802-crb-reused-cold-005"
+      ]
+    },
+    "tis-reused-cold": {
+      "bootsAttempted": 5,
+      "reachedGrub": 5,
+      "loadedKernel": 5,
+      "reachedInitramfs": 5,
+      "reachedMultiUser": 5,
+      "reachedGraphical": 5,
+      "healthCheck": 5,
+      "resets": 0,
+      "timeouts": 0,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260802-tis-reused-cold-001": [],
+        "TPMQ-20260802-tis-reused-cold-002": [],
+        "TPMQ-20260802-tis-reused-cold-003": [],
+        "TPMQ-20260802-tis-reused-cold-004": [],
+        "TPMQ-20260802-tis-reused-cold-005": []
+      },
+      "classifications": [],
+      "runs": [
+        "TPMQ-20260802-tis-reused-cold-001",
+        "TPMQ-20260802-tis-reused-cold-002",
+        "TPMQ-20260802-tis-reused-cold-003",
+        "TPMQ-20260802-tis-reused-cold-004",
+        "TPMQ-20260802-tis-reused-cold-005"
+      ]
+    },
+    "crb-qemu-reset": {
+      "bootsAttempted": 5,
+      "reachedGrub": 5,
+      "loadedKernel": 5,
+      "reachedInitramfs": 5,
+      "reachedMultiUser": 5,
+      "reachedGraphical": 5,
+      "healthCheck": 5,
+      "resets": 0,
+      "timeouts": 0,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260802-crb-qemu-reset-001": [],
+        "TPMQ-20260802-crb-qemu-reset-002": [],
+        "TPMQ-20260802-crb-qemu-reset-003": [],
+        "TPMQ-20260802-crb-qemu-reset-004": [],
+        "TPMQ-20260802-crb-qemu-reset-005": []
+      },
+      "classifications": [],
+      "runs": [
+        "TPMQ-20260802-crb-qemu-reset-001",
+        "TPMQ-20260802-crb-qemu-reset-002",
+        "TPMQ-20260802-crb-qemu-reset-003",
+        "TPMQ-20260802-crb-qemu-reset-004",
+        "TPMQ-20260802-crb-qemu-reset-005"
+      ]
+    },
+    "tis-qemu-reset": {
+      "bootsAttempted": 5,
+      "reachedGrub": 5,
+      "loadedKernel": 5,
+      "reachedInitramfs": 5,
+      "reachedMultiUser": 5,
+      "reachedGraphical": 5,
+      "healthCheck": 5,
+      "resets": 0,
+      "timeouts": 0,
+      "pass": 5,
+      "fail": 0,
+      "inconclusive": 0,
+      "failedUnitsPerBoot": {
+        "TPMQ-20260802-tis-qemu-reset-001": [],
+        "TPMQ-20260802-tis-qemu-reset-002": [],
+        "TPMQ-20260802-tis-qemu-reset-003": [],
+        "TPMQ-20260802-tis-qemu-reset-004": [],
+        "TPMQ-20260802-tis-qemu-reset-005": []
+      },
+      "classifications": [],
+      "runs": [
+        "TPMQ-20260802-tis-qemu-reset-001",
+        "TPMQ-20260802-tis-qemu-reset-002",
+        "TPMQ-20260802-tis-qemu-reset-003",
+        "TPMQ-20260802-tis-qemu-reset-004",
+        "TPMQ-20260802-tis-qemu-reset-005"
+      ]
+    }
+  },
+  "completedAt": "2026-08-03T02:33:16+00:00"
+}

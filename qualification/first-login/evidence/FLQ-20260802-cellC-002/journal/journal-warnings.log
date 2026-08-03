@@ -1,0 +1,83 @@
+[    1.844798] fedora kernel: virt/tdx: TDX not supported by the host platform
+[    2.114878] fedora rpc.statd[410]: Failed to open directory sm: No such file or directory
+[    2.114938] fedora rpc.statd[410]: Failed to create /var/lib/nfs/statd/.state.new: No such file or directory
+[    2.118329] fedora rpc.idmapd[415]: Setting log level to 0
+[    2.118522] fedora rpc.idmapd[415]: libnfsidmap: Unable to determine the NFSv4 domain; Using 'localdomain' as the NFSv4 domain which means UIDs will be mapped to the 'Nobody-User' user defined in /etc/idmapd.conf
+[    3.074932] fedora rpc.idmapd[415]: exiting on signal 15
+[    3.076946] fedora rpcbind[406]: cannot open file = /run/rpcbind/rpcbind.xdr for writing
+[    3.076977] fedora rpcbind[406]: cannot save any registration
+[    3.076986] fedora rpcbind[406]: cannot open file = /run/rpcbind/portmap.xdr for writing
+[    3.076987] fedora rpcbind[406]: cannot save any registration
+[    5.636593] fedora systemd-oomd[692]: No swap; memory pressure usage will be degraded
+[    6.093517] fedora (udev-worker)[711]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[    6.212909] fedora sm-notify[771]: Failed to open sm: No such file or directory
+[    6.212914] fedora sm-notify[771]: Failed to open directory sm.bak: No such file or directory
+[    6.324196] fedora systemd-tmpfiles[774]: Failed to create directory or subvolume "/usr/local/sbin": Read-only file system
+[    8.078488] fedora irqbalance[859]: thermal: failed to receive messages.
+[    8.079390] fedora irqbalance[859]: Failed to initialize thermal events.
+[    8.142356] fedora avahi-daemon[845]: WARNING: No NSS support for mDNS detected, consider installing nss-mdns!
+[    8.323946] fedora systemd-logind[977]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.796285] fedora (udev-worker)[728]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[    8.868634] fedora systemd-logind[977]: Failed to open '/boot/loader/entries': Remote address changed
+[    8.877787] fedora gnome-session-service[1212]: App gnome-keyring-secrets.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    8.877880] fedora gnome-session-service[1212]: App at-spi-dbus-bus.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    8.877914] fedora gnome-session-service[1212]: App gnome-keyring-pkcs11.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    8.877937] fedora gnome-session-service[1212]: App xdg-user-dirs.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    8.877968] fedora gnome-session-service[1212]: App gnome-keyring-ssh.desktop sets X-GNOME-Autostart-Phase, but gnome-session no longer manages session services
+[    8.977700] fedora systemd-logind[977]: Failed to open '/boot/loader/entries': Remote address changed
+[    9.816980] fedora systemd-logind[977]: Failed to open '/boot/loader/entries': Remote address changed
+[   10.029911] fedora gnome-shell[1219]: Could not issue 'GetUnit' systemd call
+[   10.117896] fedora systemd-logind[977]: Failed to open '/boot/loader/entries': Remote address changed
+[   10.245340] fedora kernel: kauditd_printk_skb: 147 callbacks suppressed
+[   10.388822] fedora systemd-logind[977]: Failed to open '/boot/loader/entries': Remote address changed
+[   10.698829] fedora gsd-sharing[1379]: Failed to stop gnome-user-share-webdav.service: GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit gnome-user-share-webdav.service not loaded.
+[   10.710476] fedora gsd-sharing[1379]: Failed to stop rygel.service: GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit rygel.service not loaded.
+[   10.816335] fedora gsd-keyboard[1364]: g_variant_unref: assertion 'value != NULL' failed
+[   11.180835] fedora gsd-media-keys[1365]: Failed to grab accelerator for keybinding settings:playback-repeat
+[   11.187864] fedora gsd-media-keys[1365]: Failed to grab accelerator for keybinding settings:hibernate
+[   11.840464] fedora gsd-usb-protection[1395]: Failed to fetch USBGuard parameters: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name is not activatable
+[   12.714524] fedora gnome-shell-calendar-server[1323]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[   12.729515] fedora gnome-shell-calendar-server[1323]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[   12.736325] fedora gnome-shell-calendar-server[1323]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[   12.738435] fedora gnome-shell-calendar-server[1323]: e_cal_client_set_default_timezone: assertion 'zone != NULL' failed
+[   12.816489] fedora colord[1299]: CdMain: failed to profile from filename: failed to load file: Error opening file /var/home/dsq-test/.local/share/icc/edid-bb6ad72dc802b000932c73ad20996ae5.icc: Permission denied
+[   12.831328] fedora gnome-shell[1219]: Failed to create colord color profile icc-3eb8b43db08f39b7c6c0957125bdd097: failed to load file: Error opening file /var/home/dsq-test/.local/share/icc/edid-bb6ad72dc802b000932c73ad20996ae5.icc: Permission denied
+[   13.281263] fedora wireplumber[1868]: spa.bluez5: BlueZ system service is not available
+[   13.542793] fedora gnome-keyring-daemon[1983]: discover_other_daemon: 1
+[   13.428543] fedora chronyd[967]: System clock wrong by 1.466191 seconds
+[   14.896220] fedora chronyd[967]: System clock was stepped by 1.466191 seconds
+[   15.480718] fedora kernel: kauditd_printk_skb: 12 callbacks suppressed
+[   15.536665] fedora avahi-daemon[845]: Missed message org.freedesktop.DBus.Properties::GetAll()
+[   15.537329] fedora avahi-daemon[845]: Missed message org.freedesktop.DBus.Properties::GetAll()
+[   18.011229] fedora irqbalance[859]: Cannot change IRQ 25 affinity: Permission denied
+[   18.011239] fedora irqbalance[859]: IRQ 25 affinity is now unmanaged
+[   18.011256] fedora irqbalance[859]: Cannot change IRQ 28 affinity: Permission denied
+[   18.011258] fedora irqbalance[859]: IRQ 28 affinity is now unmanaged
+[   28.004269] fedora irqbalance[859]: Cannot change IRQ 27 affinity: Permission denied
+[   28.004302] fedora irqbalance[859]: IRQ 27 affinity is now unmanaged
+[   55.013281] fedora gnome-software[1510]: updates-shell: failed to get upgrades: no root object
+[   85.224504] fedora gsd-media-keys[1365]: Virtual machines only honor the 'nothing' power-button-action, and will shutdown otherwise
+[   85.262901] fedora gnome-shell[1219]: Owner of volume monitor org.gtk.vfs.GoaVolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   85.277150] fedora localsearch-3[1512]: Owner of volume monitor org.gtk.vfs.GoaVolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   85.290537] fedora localsearch-3[1512]: Owner of volume monitor org.gtk.vfs.UDisks2VolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   85.291373] fedora gnome-shell[1219]: Owner of volume monitor org.gtk.vfs.UDisks2VolumeMonitor disconnected from the bus; removing drives/volumes/mounts
+[   85.359349] fedora gsd-media-keys[1365]: g_hash_table_size: assertion 'hash_table != NULL' failed
+[   85.432910] fedora (udev-worker)[2186]: sr0: Process '/usr/sbin/pktsetup -i -d 11:0' failed with exit code 1.
+[   85.440112] fedora gnome-shell[1219]: Object Gjs_status_system_PowerToggle (0x55e28516ad40), has been already disposed — impossible to set any property on it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55e280027230 ==
+                                         #0   55e2800f7598 i   resource:///org/gnome/shell/ui/status/system.js:72 (46cf09a9dd0 @ 50)
+                                         #1   55e2800f7518 i   resource:///org/gnome/shell/ui/status/system.js:46 (46cf09a9c90 @ 12)
+                                         #2   55e2800f7478 i   resource:///org/gnome/shell/ui/main.js:277 (1334b97f7790 @ 119)
+[   85.440142] fedora gnome-shell[1219]: Object Gjs_status_system_PowerToggle (0x55e28516ad40), has been already disposed — impossible to get any property from it. This might be caused by the object having been destroyed from C code using something such as destroy(), dispose(), or remove() vfuncs.
+                                         == Stack trace for context 0x55e280027230 ==
+                                         #0   55e2800f7598 i   resource:///org/gnome/shell/ui/status/system.js:73 (46cf09a9dd0 @ 60)
+                                         #1   55e2800f7518 i   resource:///org/gnome/shell/ui/status/system.js:46 (46cf09a9c90 @ 12)
+                                         #2   55e2800f7478 i   resource:///org/gnome/shell/ui/main.js:277 (1334b97f7790 @ 119)
+[   85.814686] fedora systemd[1]: sys-devices-virtual-misc-rfkill.device: Failed to enqueue SYSTEMD_WANTS job, ignoring: Transaction for systemd-rfkill.socket/start is destructive (poweroff.target has 'start' job queued, but 'stop' is included in transaction).
+[   85.898370] fedora gnome-shell[1219]: invalid (NULL) pointer instance
+[   85.898399] fedora gnome-shell[1219]: g_signal_handler_disconnect: assertion 'G_TYPE_CHECK_INSTANCE (instance)' failed
+[   85.902516] fedora dbus-broker-launch[813]: Activation request for 'org.freedesktop.ColorManager' failed.
+[   86.005619] fedora systemd[1119]: wireplumber.service: Main process exited, code=dumped, status=6/ABRT
+[   86.005647] fedora systemd[1119]: wireplumber.service: Failed with result 'core-dump'.
+[   86.159424] fedora dbus-broker-launch[813]: Activation request for 'org.freedesktop.nm_dispatcher' failed.
+[   86.545263] fedora systemd-udevd[702]: Failed to remove file descriptor "config-serialization" from the store, ignoring: Connection refused
