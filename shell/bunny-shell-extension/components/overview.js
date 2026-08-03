@@ -81,9 +81,22 @@ export class OverviewRail {
         const monitor = Main.layoutManager.primaryMonitor;
         if (!monitor)
             return;
-        const width = Math.min(360, Math.floor(monitor.width * 0.28));
-        this.actor.set_position(monitor.x + 24, monitor.y + 64);
+        const compact = this._presentation?.mode === 'compact';
+        const width = Math.min(compact ? 310 : 360, Math.floor(monitor.width * (compact ? 0.24 : 0.28)));
+        this.actor.set_position(monitor.x + (compact ? 10 : 24), monitor.y + (compact ? 48 : 64));
         this.actor.set_size(width, Math.min(640, monitor.height - 112));
+    }
+
+    applyPresentation(presentation) {
+        this._presentation = presentation;
+        for (const [name, enabled] of [
+            ['bunny-v1-compact', presentation.mode === 'compact'],
+            ['bunny-v1-light', presentation.theme === 'light'],
+            ['bunny-v1-high-contrast', presentation.highContrast],
+            ['bunny-v1-reduced-motion', presentation.reducedMotion],
+        ])
+            enabled ? this.actor.add_style_class_name(name) : this.actor.remove_style_class_name(name);
+        this._place();
     }
 
     disable() {

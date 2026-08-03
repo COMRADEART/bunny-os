@@ -10,6 +10,7 @@ import {NotificationCenter} from './components/notificationCenter.js';
 import {OverviewRail} from './components/overview.js';
 import {QuickSettings} from './components/quickSettings.js';
 import {TopBar} from './components/topBar.js';
+import {LayoutController} from './components/layoutController.js';
 import {VisualState} from './services/state.js';
 
 export default class BunnyDesktopExtension extends Extension {
@@ -21,8 +22,8 @@ export default class BunnyDesktopExtension extends Extension {
 
         this._settings = this.getSettings();
         this._state = new VisualState(this.path);
-        this._components = [
-            new TopBar(this._state, this.path),
+        const surfaces = [
+            new TopBar(this._state, this.path, this._settings),
             new QuickSettings(this._state, this._settings),
             new NotificationCenter(this._state),
             new Dock(this._state, this._settings),
@@ -31,6 +32,7 @@ export default class BunnyDesktopExtension extends Extension {
             new AssistantPanel(this._state, this._settings),
             new ApprovalPanel(this._state, this._settings),
         ];
+        this._components = [...surfaces, new LayoutController(this._settings, surfaces)];
         for (const component of this._components)
             component.enable();
     }

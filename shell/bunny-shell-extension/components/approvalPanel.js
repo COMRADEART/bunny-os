@@ -1,3 +1,4 @@
+import Clutter from 'gi://Clutter';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
@@ -20,7 +21,14 @@ export class ApprovalPanel {
     }
 
     enable() {
-        this.actor = new St.BoxLayout({vertical: true, style_class: 'bunny-v1-panel', spacing: 12, visible: false, reactive: true});
+        this.actor = new St.BoxLayout({vertical: true, style_class: 'bunny-v1-panel', spacing: 12, visible: false, reactive: true, can_focus: true});
+        this.actor.connect('key-press-event', (_actor, event) => {
+            if (event.get_key_symbol() === Clutter.KEY_Escape) {
+                this.actor.hide();
+                return Clutter.EVENT_STOP;
+            }
+            return Clutter.EVENT_PROPAGATE;
+        });
         const heading = new St.BoxLayout({spacing: 8});
         heading.add_child(new St.Label({text: 'Approval Center', style_class: 'title-1', x_expand: true}));
         const details = new St.Button({label: 'Open full details', can_focus: true});
@@ -72,6 +80,16 @@ export class ApprovalPanel {
         const width = Math.min(500, Math.floor(monitor.width * 0.42));
         this.actor.set_position(monitor.x + monitor.width - width - 18, monitor.y + 64);
         this.actor.set_size(width, Math.min(680, monitor.height - 100));
+    }
+
+    applyPresentation(presentation) {
+        this._presentation = presentation;
+        for (const [name, enabled] of [
+            ['bunny-v1-compact', presentation.mode === 'compact'], ['bunny-v1-light', presentation.theme === 'light'],
+            ['bunny-v1-high-contrast', presentation.highContrast], ['bunny-v1-reduced-motion', presentation.reducedMotion],
+        ])
+            enabled ? this.actor.add_style_class_name(name) : this.actor.remove_style_class_name(name);
+        this._place();
     }
 
     disable() {

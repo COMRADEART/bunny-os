@@ -36,10 +36,12 @@ export class QuickSettings {
         this._localOnly.setSensitive(false);
         this._localOnly.label.text = 'Bunny local-only mode · managed by Bunny settings';
         this._button.menu.addMenuItem(this._localOnly);
+        this._modeToggles = new Map();
         for (const [label, mode] of [['FocusMode', 'focus'], ['CompactLayout', 'compact']]) {
             const toggle = new PopupMenu.PopupSwitchMenuItem(label, this._settings.get_string('layout-mode') === mode);
             toggle.connect('toggled', (_item, active) => this._settings.set_string('layout-mode', active ? mode : 'normal'));
             this._button.menu.addMenuItem(toggle);
+            this._modeToggles.set(mode, toggle);
         }
         this._stateSignal = this._state.connect('changed', () => this._refresh());
         this._refresh();
@@ -50,6 +52,11 @@ export class QuickSettings {
         this._privacyItem.label.text = uses.length
             ? `Privacy active · ${uses.map(use => use.kind ?? 'device').join(', ')}`
             : 'Privacy use: none reported';
+    }
+
+    applyPresentation(presentation) {
+        for (const [mode, toggle] of this._modeToggles)
+            toggle.setToggleState(presentation.mode === mode);
     }
 
     disable() {

@@ -106,6 +106,8 @@ export class Dock {
     }
 
     _shouldHide() {
+        if (this._focusMode)
+            return true;
         if (!this._settings.get_boolean('dock-auto-hide'))
             return false;
         const window = global.display.focus_window;
@@ -120,11 +122,25 @@ export class Dock {
     }
 
     _reveal() {
-        this.actor.ease({translation_y: 0, duration: this._settings.get_boolean('reduced-motion') ? 0 : 120});
+        this.actor.ease({translation_y: 0, duration: this._reducedMotion ? 0 : 120});
     }
 
     _conceal() {
-        this.actor.ease({translation_y: 58, duration: this._settings.get_boolean('reduced-motion') ? 0 : 120});
+        this.actor.ease({translation_y: 58, duration: this._reducedMotion ? 0 : 120});
+    }
+
+    applyPresentation(presentation) {
+        this._focusMode = presentation.mode === 'focus';
+        this._reducedMotion = presentation.reducedMotion;
+        for (const [name, enabled] of [
+            ['bunny-v1-compact', presentation.mode === 'compact'],
+            ['bunny-v1-light', presentation.theme === 'light'],
+            ['bunny-v1-high-contrast', presentation.highContrast],
+            ['bunny-v1-reduced-motion', presentation.reducedMotion],
+        ])
+            enabled ? this._box.add_style_class_name(name) : this._box.remove_style_class_name(name);
+        this._place();
+        this._syncVisibility();
     }
 
     disable() {

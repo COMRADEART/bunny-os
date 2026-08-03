@@ -9,9 +9,10 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {launchFixedAction} from '../services/fixedActions.js';
 
 export class TopBar {
-    constructor(state, extensionPath) {
+    constructor(state, extensionPath, settings) {
         this._state = state;
         this._extensionPath = extensionPath;
+        this._settings = settings;
     }
 
     enable() {
@@ -48,6 +49,13 @@ export class TopBar {
         this._activityLabel = new St.Label({text: '', y_align: Clutter.ActorAlign.CENTER});
         this._activity.add_child(this._activityLabel);
         Main.panel.addToStatusArea('bunny-v1-activity', this._activity, 2, 'right');
+        this._focusExit = new PanelMenu.Button(0, 'Exit FocusMode', false);
+        this._focusExit.add_child(new St.Label({text: 'Exit Focus', y_align: Clutter.ActorAlign.CENTER}));
+        const exitItem = new PopupMenu.PopupMenuItem('Exit FocusMode');
+        exitItem.connect('activate', () => this._settings.set_string('layout-mode', 'normal'));
+        this._focusExit.menu.addMenuItem(exitItem);
+        this._focusExit.visible = false;
+        Main.panel.addToStatusArea('bunny-v1-focus-exit', this._focusExit, 3, 'right');
         this._stateSignal = this._state.connect('changed', () => this._refreshState());
         this._refreshState();
     }
@@ -93,6 +101,16 @@ export class TopBar {
         this._activity.menu.addMenuItem(privacy);
     }
 
+    applyPresentation(presentation) {
+        this._mode = presentation.mode;
+        this._launcher.visible = presentation.mode !== 'focus';
+        this._focusExit.visible = presentation.mode === 'focus';
+        this._refreshWorkspace();
+        if (presentation.mode === 'compact')
+            this._workspaceLabel.text = `WS ${this._workspaceManager.get_active_workspace_index() + 1}`;
+        this._refreshState();
+    }
+
     disable() {
         if (this._workspaceSignal)
             this._workspaceManager.disconnect(this._workspaceSignal);
@@ -103,6 +121,7 @@ export class TopBar {
         this._launcher?.destroy();
         this._workspace?.destroy();
         this._activity?.destroy();
-        this._launcher = this._workspace = this._activity = null;
+        this._focusExit?.destroy();
+        this._launcher = this._workspace = this._activity = this._focusExit = null;
     }
 }

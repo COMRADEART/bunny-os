@@ -22,7 +22,7 @@ export class NotificationCenter {
 
     _refresh() {
         this._button.menu.removeAll();
-        const notifications = this._state.snapshot.notifications;
+        const notifications = this._state.snapshot.notifications.filter(item => this._visibleInMode(item));
         for (const group of GROUPS) {
             const title = new PopupMenu.PopupMenuItem(group, {reactive: false});
             title.label.add_style_class_name('bunny-v1-muted');
@@ -38,6 +38,22 @@ export class NotificationCenter {
                 this._button.menu.addMenuItem(new PopupMenu.PopupMenuItem(label, {reactive: false}));
             }
         }
+    }
+
+    _visibleInMode(item) {
+        if (this._mode !== 'focus')
+            return true;
+        const severity = String(item.severity ?? '').toLocaleLowerCase();
+        const state = String(item.state ?? '').toLocaleLowerCase();
+        const kind = String(item.kind ?? '').toLocaleLowerCase();
+        return ['critical', 'security', 'battery-critical'].includes(severity)
+            || ['waiting for approval', 'failed'].includes(state)
+            || ['approval', 'accessibility', 'system-error'].includes(kind);
+    }
+
+    applyPresentation(presentation) {
+        this._mode = presentation.mode;
+        this._refresh();
     }
 
     disable() {

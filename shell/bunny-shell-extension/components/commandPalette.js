@@ -29,6 +29,7 @@ export class CommandPalette {
     enable() {
         this._dialog = new ModalDialog.ModalDialog({styleClass: 'bunny-v1-palette'});
         const panel = new St.BoxLayout({vertical: true, style_class: 'bunny-v1-panel', spacing: 12, width: 680});
+        this._panel = panel;
         const heading = new St.BoxLayout({spacing: 8});
         heading.add_child(new St.Label({text: 'Bunny Command Palette', style_class: 'title-1'}));
         heading.add_child(new St.Label({text: 'Super + Space', style_class: 'bunny-v1-badge'}));
@@ -54,6 +55,15 @@ export class CommandPalette {
             Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
             () => this.open(),
         );
+    }
+
+    applyPresentation(presentation) {
+        this._panel.width = presentation.mode === 'compact' ? 600 : 680;
+        for (const [name, enabled] of [
+            ['bunny-v1-compact', presentation.mode === 'compact'], ['bunny-v1-light', presentation.theme === 'light'],
+            ['bunny-v1-high-contrast', presentation.highContrast], ['bunny-v1-reduced-motion', presentation.reducedMotion],
+        ])
+            enabled ? this._panel.add_style_class_name(name) : this._panel.remove_style_class_name(name);
     }
 
     open() {
@@ -172,7 +182,7 @@ export class CommandPalette {
     disable() {
         Main.wm.removeKeybinding('open-command-palette');
         this._dialog?.destroy();
-        this._dialog = this._entry = this._results = null;
+        this._dialog = this._entry = this._results = this._panel = null;
         this._resultButtons = [];
     }
 }
