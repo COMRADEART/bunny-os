@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <title>Bunny OS mark</title>
+  <defs>
+    <linearGradient id="b" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#8B7CFF"/><stop offset="1" stop-color="#65C7F7"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#0C0E14"/>
+  <path fill="none" stroke="url(#b)" stroke-width="18" stroke-linecap="round" d="M57 40c0 81 19 137 71 174M199 40c0 81-19 137-71 174"/>
+  <path fill="none" stroke="#F4F4F2" stroke-opacity=".76" stroke-width="14" stroke-linecap="round" d="M74 130c15 19 32 31 54 39 22-8 39-20 54-39"/>
+</svg>

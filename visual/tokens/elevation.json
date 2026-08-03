@@ -1,0 +1,11 @@
+{
+  "$schema": "./schema.json",
+  "family": "elevation",
+  "version": 1,
+  "tokens": {
+    "surface": {"value": "none", "type": "shadow"},
+    "overlay-dark": {"value": "0 12px 36px rgba(0, 0, 0, 0.36)", "type": "shadow"},
+    "overlay-light": {"value": "0 12px 36px rgba(20, 24, 35, 0.16)", "type": "shadow"},
+    "focus-ring-width": {"value": "2px", "type": "dimension"}
+  }
+}
