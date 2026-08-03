@@ -48,6 +48,16 @@ generous negative space. They must be original, abstract, quiet, and useful
 behind windows. Avoid characters, photographic subjects, dense textures,
 branded mascots, neon grids, and continuous animated effects.
 
+## Guide character
+
+Bunny OS has one primary human guide character for selected educational and
+status moments. Use the same identity and wardrobe across all poses, render one
+character per asset, and keep operational panels character-free unless the
+illustration materially helps the user understand the state. The guide is not
+a mascot, wallpaper subject, desktop companion, or replacement for native
+controls. See `visual/assets/character/CHARACTER_GUIDE.md` for the complete
+appearance, placement, state, and accessibility contract.
+
 ## Naming
 
 Product surfaces use title case: `Bunny Command Palette`, `Approval Center`,

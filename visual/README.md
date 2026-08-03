@@ -21,7 +21,8 @@ enabled automatically.
 ## Source and output layout
 
 - `tokens/` contains reviewed design-token sources and their JSON schema.
-- `assets/` contains original, redistributable Bunny identity sources.
+- `assets/` contains reviewed Bunny identity and interface-art sources; consult
+  `assets/LICENSE.md` for per-family provenance and redistribution status.
 - `mockups/` contains explicit development-only fixtures and compositions.
 - `screenshots/` contains scenario definitions and review manifests, not renders.
 - `references/` records internal design decisions; third-party artwork is not

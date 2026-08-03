@@ -113,6 +113,7 @@ def stage_package() -> dict[str, object]:
         copy_file(path, STAGE / "usr/share/backgrounds/bunny-visual-v1" / path.name)
 
     copy_tree(ROOT / "visual/assets/logo", STAGE / "usr/share/bunny-visual-v1/logo")
+    copy_tree(ROOT / "visual/assets/character", STAGE / "usr/share/bunny-visual-v1/character")
     copy_tree(ROOT / "visual/assets/illustrations", STAGE / "usr/share/bunny-visual-v1/illustrations")
     copy_tree(ROOT / "visual/assets/login", STAGE / "usr/share/bunny-visual-v1/login-concept")
     copy_tree(ROOT / "visual/assets/sounds", STAGE / "usr/share/bunny-visual-v1/sound-specification")
