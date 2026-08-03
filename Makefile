@@ -860,3 +860,30 @@ visual-package:
 
 visual-clean:
 	$(PYTHON) visual/tools/visual.py clean
+
+visual-v2-setup:
+	$(PYTHON) visual-v2/tools/visual_v2.py setup
+
+visual-v2-build:
+	$(PYTHON) visual-v2/tools/visual_v2.py build
+
+visual-v2-preview:
+	$(PYTHON) visual-v2/tools/visual_v2.py preview
+
+visual-v2-preview-nested:
+	$(PYTHON) visual-v2/tools/visual_v2.py preview-nested
+
+visual-v2-test:
+	$(PYTHON) visual-v2/tools/visual_v2.py test
+
+visual-v2-a11y:
+	$(PYTHON) visual-v2/tools/visual_v2.py a11y
+
+visual-v2-screenshots:
+	$(PYTHON) visual-v2/tools/visual_v2.py screenshots
+
+visual-v2-package:
+	$(PYTHON) visual-v2/tools/visual_v2.py package
+
+visual-v2-clean:
+	$(PYTHON) visual-v2/tools/visual_v2.py clean
