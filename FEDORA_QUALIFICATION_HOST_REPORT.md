@@ -101,7 +101,7 @@ exit code means not run, and not run is not a pass.
 | | `READY` exits 0, `BLOCKED` exits 2, missing file exits 2 |
 | | run against a real host that had to fail: 8 of 26, exit 2 |
 | Environment collector | run on WSL2; correctly reported `bareMetal: false`, `hypervisor: wsl`, `llvmpipe`, `softwareRasteriser: true`, `connectedOutputs: 0` |
-| Package installer | dry-run against live Fedora 44 repositories: 100 packages, 54 already present, 46 available, **0 unavailable** |
+| Package installer | dry-run against live Fedora 44 repositories: 101 packages, 55 already present, 46 available, **0 unavailable** |
 | Reset script | `bash -n` clean; dry-run exercised; unknown scope refused |
 
 The WSL2 environment was used as a **negative control and as a Fedora package
