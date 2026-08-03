@@ -65,7 +65,7 @@
       "satisfied": false
     },
     {
-      "description": "the OpenGL renderer is hardware, not a software rasteriser",
+      "description": "an OpenGL renderer was observed and is hardware, not a software rasteriser",
       "id": "hardware-renderer",
       "mandatory": true,
       "observed": "llvmpipe (LLVM 22.1.8, 256 bits)",
@@ -105,10 +105,10 @@
       "satisfied": false
     },
     {
-      "description": "KVM is available for disposable guests",
+      "description": "KVM is usable: /dev/kvm exists and virt-host-validate qemu passes",
       "id": "kvm-available",
       "mandatory": true,
-      "observed": true,
+      "observed": "kvm=True virt-host-validate exit=0",
       "refusal": null,
       "satisfied": true
     },
@@ -180,7 +180,7 @@
       "description": "sufficient RAM for the guest matrices",
       "id": "memory",
       "mandatory": true,
-      "observed": 16561389568,
+      "observed": 16561381376,
       "refusal": "15.4 GiB RAM; 16 GiB is the reduced-matrix minimum",
       "satisfied": false
     },
@@ -188,7 +188,7 @@
       "description": "sufficient storage for guests, overlays and retained evidence",
       "id": "evidence-storage",
       "mandatory": true,
-      "observed": 760523276288,
+      "observed": 760523476992,
       "refusal": null,
       "satisfied": true
     },
@@ -196,7 +196,7 @@
       "description": "the system clock is synchronised",
       "id": "clock-synchronised",
       "mandatory": true,
-      "observed": "2026-08-03T15:36:10.628626+00:00",
+      "observed": "2026-08-03T16:34:02.419382+00:00",
       "refusal": null,
       "satisfied": true
     },
@@ -210,7 +210,7 @@
     }
   ],
   "environmentId": "FQH-20260803-01",
-  "evaluatedAt": "2026-08-03T15:39:43.596331+00:00",
+  "evaluatedAt": "2026-08-03T16:34:12.927337+00:00",
   "mandatorySatisfied": 8,
   "mandatoryTotal": 26,
   "result": "BLOCKED",

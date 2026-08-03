@@ -73,6 +73,8 @@ def ideal_host() -> dict:
         },
         "tpm": {"present": True, "version": "2.0", "manufacturer": "IFX", "physical": True},
         "virtualisation": {"kvmAvailable": True, "virtHostValidate": "PASS",
+                           "virtHostValidateExitCode": 0,
+                           "virtHostValidateOutput": "QEMU: Checking for hardware virtualization: PASS",
                            "qemuVersion": "9.0", "libvirtVersion": "10.0"},
         "selinux": {"mode": "Enforcing"},
         "session": {"type": "wayland", "desktop": "GNOME", "pipewire": True,
@@ -231,6 +233,30 @@ class RefusalTests(unittest.TestCase):
             e["git"]["byteRoundtripTestsPass"] = None
         self.assert_blocked_by(mutate, "git-byte-roundtrip")
 
+
+    def test_missing_opengl_renderer_is_refused(self):
+        """An absent observation is not a passing one."""
+        def mutate(e):
+            e["graphics"]["openglRenderer"] = None
+        self.assert_blocked_by(mutate, "hardware-renderer")
+
+    def test_empty_opengl_renderer_is_refused(self):
+        def mutate(e):
+            e["graphics"]["openglRenderer"] = "   "
+        self.assert_blocked_by(mutate, "hardware-renderer")
+
+    def test_dev_kvm_with_failed_host_validation_is_refused(self):
+        """A device node is not a working hypervisor."""
+        def mutate(e):
+            e["virtualisation"]["virtHostValidateExitCode"] = 1
+            e["virtualisation"]["virtHostValidateOutput"] = "QEMU: Checking for hardware virtualization: FAIL"
+        self.assert_blocked_by(mutate, "kvm-available")
+
+    def test_unrun_host_validation_is_refused(self):
+        def mutate(e):
+            e["virtualisation"]["virtHostValidateExitCode"] = None
+        self.assert_blocked_by(mutate, "kvm-available")
+
     def test_a_non_host_role_is_refused(self):
         def mutate(e):
             e["role"] = "vm-qualification"
@@ -288,6 +314,98 @@ class ExitCodeTests(unittest.TestCase):
             capture_output=True, text=True,
         )
         self.assertEqual(proc.returncode, 2)
+
+
+class SchemaValidationTests(unittest.TestCase):
+    """A malformed report is refused for being malformed, not by crashing.
+
+    The conditions index and call methods on the report freely, so a document
+    with the right keys and the wrong types can raise from inside a lambda. A
+    traceback is the one outcome a gate must never produce: a crash is not a
+    refusal, and a caller cannot tell them apart.
+    """
+
+    def test_the_ideal_host_validates(self):
+        gate.validate_environment(ideal_host())
+
+    def test_the_committed_negative_control_validates(self):
+        """It must be refused by the conditions, not rejected as malformed."""
+        control = HERE.parent / "evidence-template" / "negative-control" / "environment.json"
+        gate.validate_environment(json.loads(control.read_text(encoding="utf-8")))
+
+    def assert_schema_refuses(self, mutate, expected_field: str):
+        env = ideal_host()
+        mutate(env)
+        with self.assertRaises(gate.SchemaError) as caught:
+            gate.validate_environment(env)
+        self.assertIn(expected_field, str(caught.exception))
+
+    def test_a_non_string_os_name_is_refused(self):
+        def mutate(e):
+            e["os"]["name"] = 44
+        self.assert_schema_refuses(mutate, "os.name")
+
+    def test_a_string_where_an_array_belongs_is_refused(self):
+        def mutate(e):
+            e["graphics"]["drmCardNodes"] = "card0"
+        self.assert_schema_refuses(mutate, "graphics.drmCardNodes")
+
+    def test_a_string_output_count_is_refused(self):
+        def mutate(e):
+            e["displays"]["connectedOutputs"] = "2"
+        self.assert_schema_refuses(mutate, "displays.connectedOutputs")
+
+    def test_a_null_memory_total_is_refused(self):
+        def mutate(e):
+            e["memory"]["totalBytes"] = None
+        self.assert_schema_refuses(mutate, "memory.totalBytes")
+
+    def test_a_missing_top_level_section_is_refused(self):
+        def mutate(e):
+            del e["graphics"]
+        self.assert_schema_refuses(mutate, "graphics")
+
+    def test_an_unknown_role_is_refused(self):
+        def mutate(e):
+            e["role"] = "laptop-under-the-desk"
+        self.assert_schema_refuses(mutate, "role")
+
+
+class MalformedReportExitCodeTests(unittest.TestCase):
+    """Every malformed shape exits 2 and prints no traceback."""
+
+    def _run(self, payload) -> subprocess.CompletedProcess:
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "environment.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            return subprocess.run(
+                [sys.executable, str(SCRIPTS / "host-readiness-gate.py"),
+                 "--environment", str(path)],
+                capture_output=True, text=True,
+            )
+
+    def test_wrong_types_exit_two_without_a_traceback(self):
+        cases = {
+            "os.name": lambda e: e["os"].__setitem__("name", 44),
+            "graphics.drmCardNodes": lambda e: e["graphics"].__setitem__("drmCardNodes", "card0"),
+            "displays.connectedOutputs": lambda e: e["displays"].__setitem__("connectedOutputs", "2"),
+            "memory.totalBytes": lambda e: e["memory"].__setitem__("totalBytes", None),
+        }
+        for field, mutate in cases.items():
+            with self.subTest(field=field):
+                env = ideal_host()
+                mutate(env)
+                proc = self._run(env)
+                self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+                self.assertIn("BLOCKED", proc.stdout)
+                self.assertIn(field, proc.stdout)
+                self.assertNotIn("Traceback", proc.stdout + proc.stderr)
+
+    def test_a_json_document_that_is_not_an_object_exits_two(self):
+        proc = self._run(["not", "an", "object"])
+        self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+        self.assertNotIn("Traceback", proc.stdout + proc.stderr)
 
 
 class SchemaTests(unittest.TestCase):

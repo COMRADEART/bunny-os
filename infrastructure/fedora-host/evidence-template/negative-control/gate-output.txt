@@ -15,7 +15,7 @@ host readiness: BLOCKED
           BLOCKED: /dev/dri is absent; without KMS there is no page-flip, no vblank and no connector
   BLOCKED drm-render-node              a DRM render node exists
           BLOCKED: no /dev/dri/renderD* node; GPU rendering cannot be measured
-  BLOCKED hardware-renderer            the OpenGL renderer is hardware, not a software rasteriser
+  BLOCKED hardware-renderer            an OpenGL renderer was observed and is hardware, not a software rasteriser
           BLOCKED: renderer is llvmpipe (LLVM 22.1.8, 256 bits), a software rasteriser; it renders correctly and proves nothing about the hardware path
   BLOCKED vulkan-device                a hardware Vulkan device is present, backed by a real DRM device
           BLOCKED: Vulkan device 'Microsoft Direct3D12 (NVIDIA GeForce RTX 4050 Laptop GPU)' is translated or emulated; a paravirtualised device name is not a hardware render path
@@ -25,7 +25,7 @@ host readiness: BLOCKED
           BLOCKED: no physical TPM 2.0; an emulated TPM proves the software path, not the machine
   BLOCKED secure-boot-observed         the Secure Boot state was observed
           BLOCKED: Secure Boot state is unknown; it must be explicitly observed, even when disabled
-  ok      kvm-available                KVM is available for disposable guests
+  ok      kvm-available                KVM is usable: /dev/kvm exists and virt-host-validate qemu passes
   BLOCKED pipewire-active              PipeWire is running
           BLOCKED: PipeWire is not active
   BLOCKED wireplumber-active           WirePlumber is running

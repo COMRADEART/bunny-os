@@ -86,6 +86,18 @@ def _renderer_is_software(graphics: dict) -> bool:
     return any(name in renderer for name in SOFTWARE_RASTERISERS)
 
 
+def _hardware_renderer_observed(graphics: dict) -> bool:
+    """A renderer must be observed, not merely not-known-to-be-software.
+
+    The first version of this asked only whether the renderer was a software
+    rasteriser, and a missing renderer answered no — so a host where glxinfo was
+    absent or failed satisfied the mandatory GPU condition by saying nothing.
+    An absent observation is not a passing one.
+    """
+    renderer = (graphics.get("openglRenderer") or "").strip()
+    return bool(renderer) and not _renderer_is_software(graphics)
+
+
 def _renderer_is_translated(name: str | None) -> bool:
     """True for translation layers and emulated devices, whatever they are named."""
     lowered = (name or "").lower()
@@ -168,12 +180,16 @@ CONDITIONS: list[Condition] = [
     ),
     Condition(
         "hardware-renderer",
-        "the OpenGL renderer is hardware, not a software rasteriser",
+        "an OpenGL renderer was observed and is hardware, not a software rasteriser",
         lambda e: (
-            not _renderer_is_software(e["graphics"]),
+            _hardware_renderer_observed(e["graphics"]),
             e["graphics"].get("openglRenderer"),
-            f"renderer is {e['graphics'].get('openglRenderer')}, a software rasteriser; "
-            "it renders correctly and proves nothing about the hardware path",
+            (
+                "no OpenGL renderer was observed; an absent observation is not a passing one"
+                if not (e["graphics"].get("openglRenderer") or "").strip()
+                else f"renderer is {e['graphics'].get('openglRenderer')}, a software rasteriser; "
+                "it renders correctly and proves nothing about the hardware path"
+            ),
         ),
     ),
     Condition(
@@ -223,11 +239,22 @@ CONDITIONS: list[Condition] = [
     ),
     Condition(
         "kvm-available",
-        "KVM is available for disposable guests",
+        "KVM is usable: /dev/kvm exists and virt-host-validate qemu passes",
         lambda e: (
-            bool(e["virtualisation"]["kvmAvailable"]),
-            e["virtualisation"]["kvmAvailable"],
-            "/dev/kvm is unavailable; Programs E, F and G run in disposable guests",
+            bool(e["virtualisation"]["kvmAvailable"])
+            and e["virtualisation"].get("virtHostValidateExitCode") == 0,
+            f"kvm={e['virtualisation']['kvmAvailable']} "
+            f"virt-host-validate exit={e['virtualisation'].get('virtHostValidateExitCode')}",
+            (
+                "/dev/kvm is unavailable; Programs E, F and G run in disposable guests"
+                if not e["virtualisation"]["kvmAvailable"]
+                else "virt-host-validate qemu was not run; a present /dev/kvm node is not "
+                "a working hypervisor and not run is not a pass"
+                if e["virtualisation"].get("virtHostValidateExitCode") is None
+                else "virt-host-validate qemu exited "
+                f"{e['virtualisation'].get('virtHostValidateExitCode')}; the node exists but "
+                "the host cannot actually run guests"
+            ),
         ),
     ),
     Condition(
@@ -335,6 +362,50 @@ CONDITIONS: list[Condition] = [
 ]
 
 
+SCHEMA = Path(__file__).resolve().parents[1] / "host-environment.schema.json"
+
+
+class SchemaError(Exception):
+    """The environment report is not a valid environment report."""
+
+
+def validate_environment(env: object, *, schema_path: Path = SCHEMA) -> None:
+    """Reject a malformed report at the boundary, before any condition reads it.
+
+    The conditions index and call methods on the report freely, so a document
+    with the right keys and the wrong types can raise from inside a lambda. That
+    used to surface as a traceback, which is the one outcome a gate must never
+    produce: a crash is not a refusal, and a caller cannot tell them apart.
+
+    Validating the whole document first means a malformed report is refused for
+    being malformed, with the offending field named. Catching more exception
+    types inside the wrapper would have hidden the same problem one layer down.
+    """
+    try:
+        import jsonschema
+    except ImportError as exc:
+        # Fail closed. A gate that cannot check its input has not checked it.
+        raise SchemaError(
+            "jsonschema is unavailable, so the environment report cannot be validated. "
+            "Install it (python -m pip install jsonschema) rather than skipping the check."
+        ) from exc
+
+    try:
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SchemaError(f"{schema_path.name} could not be read: {exc}") from exc
+
+    validator = jsonschema.Draft202012Validator(schema)
+    errors = sorted(validator.iter_errors(env), key=lambda e: list(e.absolute_path))
+    if errors:
+        first = errors[0]
+        location = ".".join(str(part) for part in first.absolute_path) or "<document root>"
+        detail = f"{location}: {first.message}"
+        if len(errors) > 1:
+            detail += f" (and {len(errors) - 1} further schema violation(s))"
+        raise SchemaError(detail)
+
+
 def evaluate(env: dict, *, now: str) -> dict:
     conditions = [condition.evaluate(env) for condition in CONDITIONS]
     satisfied = sum(1 for c in conditions if c["satisfied"])
@@ -384,6 +455,13 @@ def main() -> int:
         return 2
     except json.JSONDecodeError as exc:
         print(f"BLOCKED: {args.environment} is not valid JSON: {exc}")
+        return 2
+
+    try:
+        validate_environment(env)
+    except SchemaError as exc:
+        print(f"BLOCKED: {args.environment} is not a valid environment report.")
+        print(f"         {exc}")
         return 2
 
     now = datetime.datetime.now(datetime.timezone.utc).isoformat()

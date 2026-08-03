@@ -49,6 +49,22 @@ def run(*command: str, timeout: int = 30) -> str | None:
     return proc.stdout.strip() if proc.returncode == 0 else None
 
 
+def run_with_status(*command: str, timeout: int = 60) -> tuple[int | None, str | None]:
+    """Run a command and return (exit code, output), or (None, None) if absent.
+
+    Used where the exit code is the observation. `virt-host-validate` is the case
+    that matters: a present /dev/kvm node says a device file exists, not that the
+    host can run a guest, and only the exit code distinguishes those.
+    """
+    if not shutil.which(command[0]):
+        return None, None
+    try:
+        proc = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+    except (subprocess.TimeoutExpired, OSError):
+        return None, None
+    return proc.returncode, (proc.stdout + proc.stderr).strip()
+
+
 def read(path: str) -> str | None:
     try:
         return Path(path).read_text(encoding="utf-8", errors="replace").strip()
@@ -211,6 +227,10 @@ def collect(environment_id: str, operator: str, role: str) -> dict:
     input_methods = [name for name in ("ibus", "fcitx5") if shutil.which(name)]
     engines = (run("ibus", "list-engine") or "").splitlines()[:40]
 
+    # The exit code is the observation here, not the prose. `qemu` is passed
+    # explicitly so the check is about the hypervisor the guests will actually use.
+    virt_exit, virt_output = run_with_status("virt-host-validate", "qemu")
+
     cryptsetup = version_of("cryptsetup")
     luks2 = bool(cryptsetup) and bool(run("bash", "-lc", "cryptsetup --help | grep -q luks2 && echo yes"))
 
@@ -261,7 +281,9 @@ def collect(environment_id: str, operator: str, role: str) -> dict:
         "tpm": collect_tpm(),
         "virtualisation": {
             "kvmAvailable": Path("/dev/kvm").exists(),
-            "virtHostValidate": run("virt-host-validate"),
+            "virtHostValidate": virt_output,
+            "virtHostValidateExitCode": virt_exit,
+            "virtHostValidateOutput": virt_output,
             "qemuVersion": version_of("qemu-system-x86_64"),
             "libvirtVersion": version_of("virsh"),
         },

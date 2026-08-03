@@ -33,6 +33,13 @@ python infrastructure/fedora-host/scripts/host-readiness-gate.py \
 how a missing mandatory condition becomes a footnote. `READY` exits 0; `BLOCKED`
 exits 2.
 
+The report is validated against `host-environment.schema.json` **before** any
+condition reads it. The conditions index and call methods on the document freely,
+so a report with the right keys and the wrong types could raise from inside a
+lambda — and a traceback is the one outcome a gate must never produce, because a
+crash is not a refusal and a caller cannot tell them apart. Validation fails
+closed: if `jsonschema` is unavailable the gate refuses rather than skipping.
+
 Three refusals matter more than the rest, because each has an attractive-looking
 substitute:
 
@@ -53,9 +60,9 @@ keeps it that way.
 ## The gate was validated by making it refuse
 
 The tests build an ideal host that satisfies every condition, then break one
-thing at a time and assert the gate stops — 28 tests, including malformed
-reports, which block rather than crash, and exit codes, because a gate that
-prints `BLOCKED` and exits 0 is a gate a caller can ignore.
+thing at a time and assert the gate stops — 42 tests, including malformed reports
+of every shape, which block rather than crash, and exit codes, because a gate
+that prints `BLOCKED` and exits 0 is a gate a caller can ignore.
 
 The gate was additionally run against the WSL2 development host, which it
 correctly refused at **8 of 26**:
@@ -98,7 +105,7 @@ physical qualification host. That is the distinction the invalidated
 | `scripts/collect-environment.py` | observes the host; infers nothing |
 | `scripts/host-readiness-gate.py` | the 26 mandatory conditions |
 | `scripts/reset-test-state.sh` | scope-aware, prefix-limited cleanup |
-| `tests/` | 28 tests, mostly refusals |
+| `tests/` | 42 tests, mostly refusals |
 | `PACKAGE_MANIFEST.md` | the toolchain, and how absence is recorded |
 | `OPERATOR_CHECKLIST.md` | the order to do things in |
 | `SECURITY_BOUNDARY.md` | what must never reach this repository |

@@ -16,10 +16,10 @@
   },
   "clock": {
     "synchronised": true,
-    "systemTime": "2026-08-03T15:36:10.628626+00:00",
+    "systemTime": "2026-08-03T16:34:02.419382+00:00",
     "timezone": "America/New_York (EDT, -0400)"
   },
-  "collectedAt": "2026-08-03T15:35:45.437339+00:00",
+  "collectedAt": "2026-08-03T16:33:37.987185+00:00",
   "cpu": {
     "logicalCores": 22,
     "model": "Intel(R) Core(TM) Ultra 9 185H",
@@ -47,7 +47,7 @@
     "kernelDriver": "dxgkrnl",
     "mesaVersion": "4.6 (Core Profile) Mesa 26.1.5",
     "openglRenderer": "llvmpipe (LLVM 22.1.8, 256 bits)",
-    "pciIdentity": "2446:00:00.0 3D controller [0302]: Microsoft Corporation Basic Render Driver [1414:008e]",
+    "pciIdentity": "2a19:00:00.0 3D controller [0302]: Microsoft Corporation Basic Render Driver [1414:008e]",
     "softwareRasteriser": true,
     "vulkanDevice": "Microsoft Direct3D12 (NVIDIA GeForce RTX 4050 Laptop GPU)"
   },
@@ -66,7 +66,7 @@
     "ibusVersion": null
   },
   "memory": {
-    "totalBytes": 16561389568
+    "totalBytes": 16561381376
   },
   "operator": "negative-control",
   "os": {
@@ -92,7 +92,7 @@
     "wireplumber": false
   },
   "storage": {
-    "availableBytesForEvidence": 760523276288,
+    "availableBytesForEvidence": 760523476992,
     "devices": [
       {
         "name": "sda",
@@ -143,6 +143,8 @@
     "kvmAvailable": true,
     "libvirtVersion": "12.0.0",
     "qemuVersion": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)",
-    "virtHostValidate": null
+    "virtHostValidate": "QEMU: Checking for hardware virtualization                                 : PASS\n (VMX)\n  QEMU: Checking if device '/dev/kvm' exists                                 : PASS\n\n  QEMU: Checking if device '/dev/kvm' is accessible                          : PASS\n\n  QEMU: Checking if device '/dev/vhost-net' exists                           : PASS\n\n  QEMU: Checking if device '/dev/net/tun' exists                             : PASS\n\n  QEMU: Checking for cgroup 'cpu' controller support                         : PASS\n\n  QEMU: Checking for cgroup 'cpuacct' controller support                     : PASS\n\n  QEMU: Checking for cgroup 'cpuset' controller support                      : PASS\n\n  QEMU: Checking for cgroup 'memory' controller support                      : PASS\n\n  QEMU: Checking for cgroup 'devices' controller support                     : PASS\n\n  QEMU: Checking for cgroup 'blkio' controller support                       : PASS\n\n  QEMU: Checking for device assignment IOMMU support                         : WARN (No ACPI DMAR table found, IOMMU either disabled in BIOS or not supported by this hardware platform)\n  QEMU: Checking for secure guest support                                    : WARN (None of SEV, SEV-ES, SEV-SNP, TDX available)",
+    "virtHostValidateExitCode": 0,
+    "virtHostValidateOutput": "QEMU: Checking for hardware virtualization                                 : PASS\n (VMX)\n  QEMU: Checking if device '/dev/kvm' exists                                 : PASS\n\n  QEMU: Checking if device '/dev/kvm' is accessible                          : PASS\n\n  QEMU: Checking if device '/dev/vhost-net' exists                           : PASS\n\n  QEMU: Checking if device '/dev/net/tun' exists                             : PASS\n\n  QEMU: Checking for cgroup 'cpu' controller support                         : PASS\n\n  QEMU: Checking for cgroup 'cpuacct' controller support                     : PASS\n\n  QEMU: Checking for cgroup 'cpuset' controller support                      : PASS\n\n  QEMU: Checking for cgroup 'memory' controller support                      : PASS\n\n  QEMU: Checking for cgroup 'devices' controller support                     : PASS\n\n  QEMU: Checking for cgroup 'blkio' controller support                       : PASS\n\n  QEMU: Checking for device assignment IOMMU support                         : WARN (No ACPI DMAR table found, IOMMU either disabled in BIOS or not supported by this hardware platform)\n  QEMU: Checking for secure guest support                                    : WARN (None of SEV, SEV-ES, SEV-SNP, TDX available)"
   }
 }

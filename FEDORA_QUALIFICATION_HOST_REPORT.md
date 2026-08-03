@@ -69,12 +69,35 @@ The refusal is retained as a negative control in
 
 A gate nobody has watched refuse is a gate nobody has checked.
 
+## Three further fail-closed gaps, closed before merge
+
+Review found three conditions that could pass on an absence rather than an
+observation. Each is now refused, and each has tests.
+
+**A missing OpenGL renderer satisfied `hardware-renderer`.** The check asked only
+whether the renderer was a software rasteriser, and a missing renderer answered
+no. A host where `glxinfo` was absent or failed therefore passed the mandatory GPU
+condition by saying nothing. It now requires a renderer to have been observed.
+
+**Malformed reports could raise instead of refusing.** The conditions index and
+call methods on the document, so valid JSON with wrong types could raise
+`AttributeError` from inside a lambda. The report is now validated against
+`host-environment.schema.json` before evaluation, naming the offending field and
+exiting 2 with no traceback. Adding `AttributeError` to the wrapper would have
+hidden the same problem one layer down; the schema is the correct boundary.
+Validation fails closed — an unavailable `jsonschema` refuses rather than skips.
+
+**`/dev/kvm` alone proved nothing.** A device node says a file exists, not that the
+host can run a guest. The collector now runs `virt-host-validate qemu` and records
+its exit code, and the condition requires both the node and a zero exit. A null
+exit code means not run, and not run is not a pass.
+
 ## What was validated, and how
 
 | Component | Validation |
 |---|---|
-| Readiness gate | 28 tests; an ideal-host fixture broken one condition at a time |
-| | malformed reports block rather than crash |
+| Readiness gate | 42 tests; an ideal-host fixture broken one condition at a time |
+| | the report is schema-validated before evaluation; malformed types block, never crash |
 | | `READY` exits 0, `BLOCKED` exits 2, missing file exits 2 |
 | | run against a real host that had to fail: 8 of 26, exit 2 |
 | Environment collector | run on WSL2; correctly reported `bareMetal: false`, `hypervisor: wsl`, `llvmpipe`, `softwareRasteriser: true`, `connectedOutputs: 0` |
