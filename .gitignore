@@ -11,6 +11,7 @@ desktop.ini
 
 # Bunny OS generated validation/build outputs
 build/out/
+build/visual/
 .selfcheck-tmp/
 __pycache__/
 *.py[cod]

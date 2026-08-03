@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Bunny Visual Preview
+Comment=Visual prototype on GNOME and Wayland — not release qualified
+Exec=/usr/libexec/bunny-visual-preview-session
+TryExec=/usr/libexec/bunny-visual-preview-session
+Type=Application
+DesktopNames=BunnyVisualPreview;GNOME;
+X-GDM-SessionRegisters=true
+X-Bunny-Visual-Prototype=true
