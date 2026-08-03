@@ -30,6 +30,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 from typing import Any, Mapping
@@ -133,17 +134,29 @@ def resolve_context(root: Path | None = None, *, verify_system: bool = True) -> 
     an error — the context can be read on a machine that does not run the
     VMs — but a present subject with a different digest is.
     """
+    # BUNNY_TPM_CONTEXT names an alternative authority file.
+    #
+    # The regression pass reruns the supported cells against a *different*
+    # installation artifact. tpmq-1's records are frozen evidence about the
+    # superseded disk and their binding is checked against the context they
+    # were written under, so editing that file in place would invalidate every
+    # one of them, and moving them is forbidden. A second context, named
+    # explicitly, lets both scenarios keep their own authority.
+    #
+    # The default is unchanged, so nothing that does not set the variable can
+    # end up bound to an authority it did not ask for.
+    override = os.environ.get("BUNNY_TPM_CONTEXT")
     base = Path(root) if root else Path.cwd()
-    path = base / CONTEXT_PATH
+    path = Path(override) if override else base / CONTEXT_PATH
     if not path.is_file():
         raise ContextError(
-            f"{CONTEXT_PATH} does not exist. TPM evidence has no authority to bind "
+            f"{path} does not exist. TPM evidence has no authority to bind "
             "to; create the context before running any experiment."
         )
     try:
         record = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise ContextError(f"{CONTEXT_PATH} is not valid JSON: {exc}") from None
+        raise ContextError(f"{path} is not valid JSON: {exc}") from None
 
     commit = str(record.get("sourceCommit", ""))
     if not _COMMIT.match(commit):
