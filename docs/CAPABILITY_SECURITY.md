@@ -172,5 +172,56 @@ a service needs *before* that service is started.
   Manifest figures are declarations, not measurements — recorded in
   `KNOWN_LIMITATIONS.md`.
 - **Applying a plan.** This package produces one. Enforcing it — cgroups,
-  systemd properties, actual start and stop — is future work with its own,
-  higher, privilege requirements and its own threat model.
+  systemd properties, actual start and stop — happens in `capability/apply/`,
+  which carries higher privilege requirements and its own threat model. Those
+  are documented in `docs/CAPABILITY_APPLICATOR.md` and summarised below.
+
+## The applicator's boundaries
+
+`capability/apply/` is the only code in Bunny OS that can change a running
+machine, so its trust boundaries are stated separately from the engine's.
+
+| Boundary | Rule |
+|---|---|
+| Who may submit a plan | Only a plan carrying an identity that revalidates against live inventory, budget, policy and manifest fingerprints |
+| Who may approve an action | An `ApprovalStore`. The shipped default grants nothing, and an unanswered sensitive request defaults to denial |
+| Who may operate the service manager | Only a `SystemdBackend` built with `allow_host_modification=True`; without it every mutating method refuses before acting |
+| Which units may be controlled | Only unit names derived from shipped manifests by a fixed rule. A manifest cannot name a unit, so it cannot name somebody else's |
+| Which cgroup subtree may be written | `<detected root>/bunny-os.slice` only, verified to contain the target after path resolution so a symlink cannot escape it |
+| How replayed plans are rejected | A plan must carry a strictly higher revision than the one in force |
+| How stale approvals are rejected | By expiry, and by invalidation whenever the plan they were granted against is superseded |
+| Privilege separation | The applicator escalates nothing, calls no `sudo`, and does not check whether it is privileged. It runs with what it was given and reports `permission_denied` when refused |
+
+Command construction is the sharpest edge, and it is closed by construction:
+**no string is ever interpolated into a command line.** Every systemd invocation
+is an argument array run with `shell=False`, unit names are validated against a
+regular expression narrower than systemd's own — no templates, no path units, no
+slices — and then checked against an allowlist derived from the registry.
+
+Two further properties are worth stating because their absence is the usual
+failure mode:
+
+- **Enforcement is never claimed on faith.** Every cgroup write is read back,
+  and `EnforcedLimits` carries the requested and effective figures separately.
+  A service whose limits could not be applied is rolled back rather than left
+  running unconstrained, because the budget engine's arithmetic assumed a
+  ceiling that would not exist.
+- **Credentials have nowhere to live.** `RemoteTask` and `ProviderIdentity`
+  have no field for one. Audit records are redacted on the way in, not on the
+  way out, because a redactor at the read end protects nothing once the bytes
+  are on disk.
+
+What the applicator does **not** defend against:
+
+- **A compromised service manager.** If systemd itself is hostile, an allowlist
+  of unit names is not a boundary. The applicator's guarantee is that it asks
+  for nothing outside that list.
+- **A privileged process racing it.** The reservation ledger is
+  concurrency-safe within one applicator process. Two applicators against one
+  machine, or an administrator running `systemctl` alongside it, are outside
+  the model — which is why an externally started unit is reported
+  `externally_managed` and never touched.
+- **Its own untested backends.** The systemd and cgroup backends have never run
+  against real systemd or a real cgroup hierarchy. Their security properties are
+  arguments about the code, not observations of behaviour. Recorded in
+  `KNOWN_LIMITATIONS.md`.

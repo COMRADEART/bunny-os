@@ -381,8 +381,11 @@ ones:
 - **The package is not in the image build.** Manifests are read from the source
   tree. Adding files to the image would change the built artifact and invalidate
   the current reproducibility candidate.
-- **The plan is produced, not applied.** Nothing here starts, stops or
-  resource-limits a service.
+- **The plan is produced here and applied elsewhere.** Nothing in `capability/`
+  itself starts, stops or resource-limits a service; `capability/apply/` is the
+  layer that does, and it has its own limitations — nothing it contains has run
+  against real systemd, a real cgroup hierarchy or a physical machine. See
+  `docs/CAPABILITY_APPLICATOR.md`.
 - **Bandwidth is never measured.** An honest measurement means moving real
   traffic on a user's connection.
 - Metering requires NetworkManager; without it, metering is `unknown`, which
@@ -396,4 +399,5 @@ ones:
 4. `docs/SERVICE_MANIFESTS.md` — declaring a service
 5. `docs/CAPABILITY_POLICY.md` — precedence, hysteresis, explanation
 6. `docs/CAPABILITY_REMOTE_EXECUTION.md` — the task abstraction and providers
-7. `MODE_MIGRATION_REPORT.md` — what was migrated and what was found
+7. `docs/CAPABILITY_APPLICATOR.md` — turning a plan into operating-system actions
+8. `MODE_MIGRATION_REPORT.md` — what was migrated and what was found

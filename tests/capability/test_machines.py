@@ -124,10 +124,24 @@ class EmbeddedTests(unittest.TestCase):
                 self.assertFalse(self.result.plan.decision(identifier).running)
 
     def test_it_is_not_a_separate_edition(self) -> None:
-        # Same registry, same manifests, same schema version. The device is
-        # running the same OS with less of it started.
+        # Same registry, same manifests, same document. The device is running
+        # the same OS with less of it started.
+        #
+        # The schema version is compared against a large machine's plan rather
+        # than against a literal, because the property under test is that the
+        # constrained device produces the *same* document as everything else —
+        # a hard-coded number would still pass on the day a 64 MB board started
+        # emitting a reduced schema of its own.
         self.assertEqual(len(self.result.plan.decisions), len(REGISTRY))
-        self.assertEqual(self.result.plan.to_json()["schemaVersion"], 1)
+        large = assess(simulate("multi-gpu-ai-server"), registry=REGISTRY).plan
+        self.assertEqual(
+            self.result.plan.to_json()["schemaVersion"],
+            large.to_json()["schemaVersion"],
+        )
+        self.assertEqual(
+            sorted(self.result.plan.to_json()),
+            sorted(large.to_json()),
+        )
 
     def test_the_memory_dimension_scores_the_documented_floor(self) -> None:
         self.assertEqual(self.result.scores["memory_available"].value, 0.0)

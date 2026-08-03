@@ -21,10 +21,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
+from . import PLAN_SCHEMA_VERSION
+from .apply.identity import PlanIdentity
 from .manifest import RequirementCheck
 
 __all__ = [
     "ACTIONS",
+    "APPROVAL_REASONS",
     "Decision",
     "ExecutionPlan",
     "REASON_CODES",
@@ -74,6 +77,15 @@ REASON_CODES = (
     "cooldown-hold",               # held at its current state inside the cooldown window
     "resource-pressure",           # running work is yielding to a live pressure signal
 )
+
+#: Reason codes that mean a decision cannot be acted on until a person says yes.
+#: Derived from the reasons rather than stored as a separate flag: a plan with a
+#: ``requiresApproval`` field that disagreed with its own reasons would leave the
+#: applicator and the explanation telling a user different things.
+APPROVAL_REASONS = frozenset({
+    "remote-approval-required",
+    "paid-api-confirmation",
+})
 
 
 @dataclass(frozen=True)
@@ -126,6 +138,11 @@ class Decision:
     def reason_codes(self) -> tuple[str, ...]:
         return tuple(reason.code for reason in self.reasons)
 
+    @property
+    def requires_approval(self) -> bool:
+        """Whether acting on this decision needs a person to say yes first."""
+        return any(reason.code in APPROVAL_REASONS for reason in self.reasons)
+
     def to_json(self) -> dict[str, Any]:
         return {
             "serviceId": self.service_id,
@@ -134,6 +151,7 @@ class Decision:
             "memoryGrantBytes": self.memory_grant_bytes,
             "cpuPercent": round(self.cpu_percent, 1),
             "fallback": self.fallback,
+            "requiresApproval": self.requires_approval,
             "reasons": [reason.to_json() for reason in self.reasons],
             "checks": [check.to_json() for check in self.checks],
         }
@@ -149,6 +167,11 @@ class ExecutionPlan:
     #: Total memory granted across running services. Never exceeds the budget's
     #: allocatable figure; the engine asserts this before returning.
     granted_memory_bytes: int = 0
+    #: What makes this plan *this* plan. ``None`` only for a plan assembled by
+    #: hand in a test; :func:`capability.engine.evaluate` always sets it, and
+    #: :mod:`capability.apply` refuses to apply a plan without one — an
+    #: unidentified plan is a plan whose staleness cannot be checked.
+    identity: PlanIdentity | None = None
 
     def by_id(self) -> Mapping[str, Decision]:
         return {decision.service_id: decision for decision in self.decisions}
@@ -159,9 +182,17 @@ class ExecutionPlan:
     def running(self) -> tuple[Decision, ...]:
         return tuple(decision for decision in self.decisions if decision.running)
 
+    def awaiting_approval(self) -> tuple[Decision, ...]:
+        return tuple(decision for decision in self.decisions if decision.requires_approval)
+
+    @property
+    def plan_id(self) -> str:
+        return self.identity.plan_id if self.identity is not None else ""
+
     def to_json(self) -> dict[str, Any]:
         return {
-            "schemaVersion": 1,
+            "schemaVersion": PLAN_SCHEMA_VERSION,
+            "identity": self.identity.to_json() if self.identity is not None else None,
             "generatedAt": self.generated_at,
             "grantedMemoryBytes": self.granted_memory_bytes,
             "summary": {
@@ -173,6 +204,7 @@ class ExecutionPlan:
                 "stopped": sum(1 for item in self.decisions if item.action == "stop"),
                 "deferred": sum(1 for item in self.decisions if item.action == "defer"),
                 "rejected": sum(1 for item in self.decisions if item.action == "reject"),
+                "awaitingApproval": len(self.awaiting_approval()),
             },
             "decisions": [decision.to_json() for decision in self.decisions],
             "notes": list(self.notes),

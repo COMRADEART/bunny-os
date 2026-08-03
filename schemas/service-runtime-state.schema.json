@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/service-runtime-state-1.schema.json",
+  "title": "Bunny OS service runtime state",
+  "description": "The difference between what the execution plan requires and what the machine can presently be observed to be, plus the ordered transitions that would close it. Producing this document starts nothing: it is the output of a pure function over a plan and an observation, which is what makes reconciliation's safety properties testable without a machine. Every state here is either observed or explicitly unknown; 'not observed' and 'not running' are never conflated, because they call for opposite actions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["planId", "revision", "converged", "transitions", "blocked"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": {
+      "type": "string",
+      "enum": ["simulation", "dry-run", "host"],
+      "description": "Which of the three modes produced this document. Stated rather than inferred, so a rehearsal transcript can never be mistaken for a record of real host operation."
+    },
+    "planId": { "type": "string", "maxLength": 64 },
+    "revision": { "type": "integer", "minimum": 0 },
+    "converged": {
+      "type": "boolean",
+      "description": "True when no transition is needed. A blocked service does not prevent convergence being reported: the machine is as close to the plan as it is permitted to get, and calling that unconverged would make an unanswered approval look like a loop that never finishes."
+    },
+    "reevaluationReason": {
+      "type": ["string", "null"],
+      "description": "Set when reconciliation concluded the plan itself needs revisiting rather than retrying."
+    },
+    "transitions": {
+      "type": "array",
+      "maxItems": 512,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["transitionId", "serviceId", "planId", "sourceState", "targetState", "operation"],
+        "properties": {
+          "transitionId": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "Derived from the plan, the service, the operation and the attempt number rather than generated, so an audit record is reproducible and a test can assert on it."
+          },
+          "serviceId": { "type": "string", "maxLength": 128 },
+          "planId": { "type": "string", "maxLength": 64 },
+          "sourceState": { "$ref": "#/$defs/serviceState" },
+          "targetState": { "$ref": "#/$defs/serviceState" },
+          "operation": {
+            "type": "string",
+            "enum": ["start", "stop", "suspend", "resume", "reload", "apply_limits", "probe", "rollback"],
+            "description": "'restart' is deliberately absent: a restart is a stop and a start with different rollback obligations, and modelling it as one operation hides the window in which the service is down."
+          },
+          "sequence": { "type": "integer", "minimum": 0 },
+          "startedAtMonotonic": { "type": ["number", "null"] },
+          "completedAtMonotonic": { "type": ["number", "null"] },
+          "durationSeconds": { "type": ["number", "null"] },
+          "timeoutSeconds": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Every operation is bounded. An unbounded operation can hang the reconciliation loop, and a hung loop is a machine that has stopped adapting without saying so."
+          },
+          "retryCount": { "type": "integer", "minimum": 0 },
+          "reservationId": { "type": ["string", "null"], "maxLength": 256 },
+          "rollbackState": {
+            "type": "string",
+            "enum": ["none", "pending", "completed", "failed", "unnecessary"]
+          },
+          "result": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["result"],
+            "properties": {
+              "result": {
+                "type": "string",
+                "enum": ["succeeded", "failed", "rolled_back", "postponed", "rejected", "cancelled"],
+                "description": "'postponed' and 'rejected' are distinct: postponed means not now, ask again; rejected means not this plan, get a new one."
+              },
+              "failureClass": { "type": ["string", "null"], "maxLength": 64 },
+              "detail": { "type": "string", "maxLength": 1024 },
+              "reevaluationReason": { "type": ["string", "null"], "maxLength": 64 }
+            }
+          },
+          "explanation": {
+            "type": "array",
+            "maxItems": 32,
+            "description": "Structured records captured at the moment each thing happened. Observed facts and inferred conclusions are separate entries so that an explanation cannot drift from the act it describes.",
+            "items": { "type": "object" }
+          }
+        }
+      }
+    },
+    "blocked": {
+      "type": "array",
+      "maxItems": 512,
+      "description": "Differences between desired and actual that must not be closed right now. Distinct from failures: nothing was attempted, so nothing failed.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["serviceId", "reason", "detail"],
+        "properties": {
+          "serviceId": { "type": "string", "maxLength": 128 },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "already_converged", "waiting_for_dependency", "waiting_for_resources",
+              "waiting_for_approval", "waiting_for_network", "conflict", "externally_managed",
+              "essential_protected", "user_work_protected", "circuit_open", "retry_backoff",
+              "state_unknown", "not_authorized", "plan_forbids"
+            ]
+          },
+          "detail": { "type": "string", "maxLength": 1024 },
+          "desiredAction": { "type": "string", "maxLength": 32 },
+          "actualState": { "type": "string", "maxLength": 32 },
+          "fallback": {
+            "type": "string",
+            "maxLength": 512,
+            "description": "What the user still has. Never empty for a user-visible block: a refusal with no stated alternative is a dead end presented as a choice."
+          },
+          "adaptation": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "properties": {
+              "adaptationClass": {
+                "type": "string",
+                "enum": ["non_disruptive", "gracefully_disruptive", "user_visible"]
+              },
+              "userWorkPolicy": {
+                "type": "string",
+                "enum": [
+                  "graceful_completion", "user_notification", "approval_required",
+                  "deadline_shutdown", "emergency_only"
+                ]
+              },
+              "requiresApproval": { "type": "boolean" },
+              "reasons": { "type": "array", "maxItems": 16, "items": { "type": "string", "maxLength": 512 } },
+              "fallback": { "type": "string", "maxLength": 512 }
+            }
+          }
+        }
+      }
+    },
+    "notes": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 512 } }
+  },
+  "$defs": {
+    "serviceState": {
+      "type": "string",
+      "enum": [
+        "running", "stopped", "starting", "stopping", "suspended", "failed", "unknown",
+        "externally_managed", "degraded", "waiting_for_approval", "waiting_for_dependency",
+        "waiting_for_resources", "waiting_for_network", "remote_execution_pending",
+        "remote_execution_active"
+      ],
+      "description": "Wider than running/stopped on purpose. Most of the interesting states in an adaptive system are the waiting ones, and collapsing them into 'stopped' would discard exactly the information a user needs in order to understand why their machine is behaving as it is. 'externally_managed' is what stops a reconciliation deciding it may shut down a service Bunny OS did not start."
+    }
+  }
+}

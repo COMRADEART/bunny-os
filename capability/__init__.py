@@ -45,7 +45,12 @@ MANIFEST_SCHEMA_VERSION = 1
 BUDGET_SCHEMA_VERSION = 1
 
 #: Version of the execution plan document (``schemas/execution-plan.schema.json``).
-PLAN_SCHEMA_VERSION = 1
+#:
+#: Version 2 added the ``identity`` block. A plan without one cannot be checked
+#: for staleness or supersession, so it cannot safely be applied — which is why
+#: the field is required rather than optional, and why the version moved rather
+#: than the field being quietly added to version 1.
+PLAN_SCHEMA_VERSION = 2
 
 __all__ = [
     "BUDGET_SCHEMA_VERSION",

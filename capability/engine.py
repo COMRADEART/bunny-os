@@ -41,6 +41,8 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Sequence
 
+from . import PLAN_SCHEMA_VERSION
+from .apply.identity import DEFAULT_MAXIMUM_AGE_SECONDS, build_identity
 from .budget import Budget
 from .manifest import Implementation, RequirementCheck, ServiceManifest
 from .model import Inventory, now_iso8601
@@ -255,8 +257,17 @@ def evaluate(
     *,
     previous: ExecutionPlan | None = None,
     now: float = 0.0,
+    reason: str = "initial",
+    maximum_age_seconds: float = DEFAULT_MAXIMUM_AGE_SECONDS,
 ) -> ExecutionPlan:
-    """Produce the execution plan. Pure, deterministic, side-effect free."""
+    """Produce the execution plan. Pure, deterministic, side-effect free.
+
+    ``reason`` records why this evaluation happened — one of
+    :data:`~capability.apply.identity.REEVALUATION_REASONS`. It is carried in
+    the plan's identity so that an audit record can say *"this plan exists
+    because memory pressure was entered"* without the applicator having to infer
+    it from the decisions, which would be a guess.
+    """
     decisions: list[Decision] = []
     notes: list[str] = []
     running: set[str] = set()
@@ -332,11 +343,26 @@ def evaluate(
             f"granted {granted} bytes against a {ceiling} byte ceiling; the allocation walk is wrong"
         )
 
+    generated_at = now_iso8601()
     return ExecutionPlan(
         decisions=tuple(decisions),
-        generated_at=now_iso8601(),
+        generated_at=generated_at,
         notes=tuple([*notes, *budget.notes[:4]]),
         granted_memory_bytes=granted,
+        # Identity is computed here, from the same five inputs the decisions
+        # were computed from, so that a plan can never carry fingerprints of
+        # something other than what produced it. Threading it in from a caller
+        # would allow exactly that mismatch.
+        identity=build_identity(
+            decisions,
+            inventory=inventory, budget=budget, policy=policy, registry=registry,
+            schema_version=PLAN_SCHEMA_VERSION,
+            created_at=generated_at,
+            now=now,
+            previous=previous.identity if previous is not None else None,
+            reason=reason,
+            maximum_age_seconds=maximum_age_seconds,
+        ),
     )
 
 

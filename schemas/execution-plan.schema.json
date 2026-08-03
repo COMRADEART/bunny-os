@@ -1,13 +1,68 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://bunny-os.org/schemas/execution-plan-1.schema.json",
+  "$id": "https://bunny-os.org/schemas/execution-plan-2.schema.json",
   "title": "Bunny OS execution plan",
-  "description": "What runs, where, and why. A plan is a value: producing it starts nothing, which is what makes it safe to ask a live machine for one. Every decision carries structured reasons rather than prose, so an explanation cannot drift from the arithmetic that produced it. Reasons here describe measurements and deterministic policy; no model reasoning appears in this document.",
+  "description": "What runs, where, and why. A plan is a value: producing it starts nothing, which is what makes it safe to ask a live machine for one. Every decision carries structured reasons rather than prose, so an explanation cannot drift from the arithmetic that produced it. Reasons here describe measurements and deterministic policy; no model reasoning appears in this document. Version 2 added the required identity block: a plan that cannot be identified is a plan whose staleness cannot be checked, and the applicator refuses to act on one.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "generatedAt", "decisions"],
+  "required": ["schemaVersion", "identity", "generatedAt", "decisions"],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": { "const": 2 },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planId", "schemaVersion", "revision", "contentDigest", "fingerprints"],
+      "description": "What makes this plan this plan. Every field answers a question the applicator asks before it acts on the plan; none of them identifies the machine.",
+      "properties": {
+        "planId": { "type": "string", "pattern": "^plan-[0-9a-f]{16}$" },
+        "schemaVersion": { "type": "integer", "minimum": 1 },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Monotonic along a chain of reevaluations. A plan at a revision no higher than the one in force is a replay and is refused."
+        },
+        "contentDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$",
+          "description": "Digest of what the plan says, independent of when it was said. Two plans with the same content digest describe the same desired state and need no transitions between them."
+        },
+        "fingerprints": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["inventory", "budget", "policy", "registry"],
+          "description": "What the decision was made against. Computed over canonical serialized content, never over object ordering, so two hosts that reached the same decision agree on its identity. Volatile timing is excluded: a plan is not a different plan for having been decided a second later.",
+          "properties": {
+            "inventory": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+            "budget": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+            "policy": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+            "registry": { "type": "string", "pattern": "^[0-9a-f]{32}$" }
+          }
+        },
+        "createdAt": { "type": "string" },
+        "createdAtMonotonic": {
+          "type": "number",
+          "description": "The engine's clock reading. Staleness is measured against this rather than against wall clock, which steps when NTP corrects it."
+        },
+        "maximumAgeSeconds": { "type": "number", "minimum": 0 },
+        "previousPlanId": { "type": ["string", "null"] },
+        "reevaluationReason": {
+          "type": "string",
+          "enum": [
+            "initial", "operator_requested",
+            "memory_pressure_entered", "memory_pressure_recovered",
+            "thermal_limit_entered", "thermal_limit_recovered",
+            "battery_critical", "battery_recovered",
+            "network_lost", "network_restored",
+            "display_attached", "display_removed", "audio_device_changed",
+            "cpu_saturation_entered", "cpu_saturation_recovered",
+            "gpu_memory_pressure_entered", "gpu_memory_pressure_recovered",
+            "service_failed", "remote_provider_unavailable",
+            "user_policy_changed", "manifest_registry_changed",
+            "apply_time_validation_failed"
+          ]
+        }
+      }
+    },
     "generatedAt": { "type": "string", "format": "date-time" },
     "grantedMemoryBytes": {
       "type": "integer",
@@ -25,7 +80,8 @@
         "suspended": { "type": "integer", "minimum": 0 },
         "stopped": { "type": "integer", "minimum": 0 },
         "deferred": { "type": "integer", "minimum": 0 },
-        "rejected": { "type": "integer", "minimum": 0 }
+        "rejected": { "type": "integer", "minimum": 0 },
+        "awaitingApproval": { "type": "integer", "minimum": 0 }
       }
     },
     "decisions": {
@@ -46,6 +102,10 @@
           "memoryGrantBytes": { "type": "integer", "minimum": 0 },
           "cpuPercent": { "type": "number", "minimum": 0, "maximum": 100 },
           "fallback": { "type": "string", "maxLength": 512 },
+          "requiresApproval": {
+            "type": "boolean",
+            "description": "Derived from the reason codes rather than stored alongside them. A separate flag could disagree with the reasons, which would leave the applicator and the user's explanation saying different things."
+          },
           "reasons": {
             "type": "array",
             "maxItems": 64,

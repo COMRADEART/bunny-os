@@ -661,18 +661,60 @@ is not a side effect this change is entitled to have. `capability/registry.py`
 already prefers the installed path when it exists, so the wiring is a build
 change with no code change.
 
-### The plan is produced but not applied
+### The applicator exists, but has never acted on a machine
 
-`capability/` decides what should run. Nothing here starts, stops, suspends or
-resource-limits a service. There is no cgroup writer, no systemd integration, no
-supervisor. The execution plan is a document; acting on it is future work with
-higher privilege requirements and its own threat model.
+`capability/apply/` now contains the reconciliation engine, the reservation
+ledger, the transaction and rollback model, a systemd backend and a cgroup v2
+backend. All of it is tested. **None of it has changed a real machine**, and the
+gap between those two statements is the point of this entry.
 
-### Runtime monitoring has no loop
+Specifically:
 
-`evaluate()` accepts a previous plan and a clock reading and produces a revised
-plan, and the hysteresis and cooldown behaviour is tested. **Nothing calls it on
-a timer.** `monitorIntervalSeconds` is honoured by nothing yet.
+- **The systemd backend has never talked to systemd.** Every test drives it
+  through an injected subprocess runner returning captured `systemctl` output.
+  No unit has been started, stopped, frozen or thawed by this code, on this host
+  or any other. Behaviour against a real service manager — job ordering,
+  `TimeoutStartSec` interaction, transient units, `Restart=` policies fighting
+  the applicator's own retry policy — is `NOT_MEASURED`.
+- **The cgroup backend has never written to a real cgroup hierarchy.** It is
+  tested against directory trees built in `tempfile`, which reproduce the file
+  layout but not kernel semantics. A real `memory.max` write can be rejected,
+  clamped, or accepted and then overridden by a parent slice; a plain file
+  cannot model any of that. The read-back-and-compare logic is therefore tested
+  for its arithmetic, not for its agreement with a kernel.
+- **No physical or virtual machine has been reconciled.** Every result comes
+  from `InMemoryBackend`, which models a service manager rather than measuring
+  one.
+
+The default backend is `DryRunBackend` and reaching a real host requires an
+explicit `--host` flag, an `allow_host_modification=True` backend and systemd's
+presence, so a developer checkout cannot act by accident. That is a safety
+property, not evidence that the acting path works.
+
+### The applicator is not part of the image build either
+
+Like `capability/`, `capability/apply/` is not copied into the OCI image by
+`build/scripts/install-root.py`, and no systemd unit invokes it. Nothing runs a
+reconciliation on a booted Bunny OS. Wiring it in is a build-affecting change
+that would invalidate the current reproducibility candidate and needs its own
+qualification cycle.
+
+### Runtime monitoring still has no loop
+
+`RuntimeMonitor` turns samples into typed reevaluation reasons, and its
+hysteresis, debounce, cooldown and coalescing behaviour is tested against
+synthetic traces. **Nothing calls `observe()` on a timer.** There is no daemon,
+no unit and no scheduler; `monitorIntervalSeconds` is honoured by
+`RuntimeMonitor.due()` and by nothing that calls it.
+
+### No memory figure is claimed for the applicator
+
+The applicator adds roughly 4,000 lines of Python across fifteen modules and no
+new dependency. **It has not been measured for resident size**, and no claim is
+made that it — or the capability runtime it sits on — fits within 64 MB. The
+constrained-node analysis in `docs/CAPABILITY_APPLICATOR.md` names which
+components would likely need a compiled implementation; that is a design
+judgement, not a measurement.
 
 ### Bandwidth is never measured
 
