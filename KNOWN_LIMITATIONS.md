@@ -737,6 +737,25 @@ explicit `--host` flag, an `allow_host_modification=True` backend and systemd's
 presence, so a developer checkout cannot act by accident. That is a safety
 property, not evidence that the acting path works.
 
+### The capability control plane is now in the image
+
+Superseded 2026-08-03. `capability/` is copied into the build context and
+installed: the package at `/usr/lib/bunny-os/python/capability` (44 modules,
+mode 0444), 14 service manifests at `/usr/share/bunny-os/capability/services`,
+the supervisor at `/usr/libexec/bunny-capability-supervisor`, an observe-only
+configuration at `/etc/bunny-os/capability/supervisor.json`, and
+`bunny-capability-supervisor.service`. Verified by inspecting the built
+artifact, not by reading the installer.
+
+The probe fixture, its unit, its manifest, the tests and all bytecode are
+excluded, and `install_capability` asserts their absence after copying.
+
+What this does **not** establish: no Bunny OS image has been booted. The
+supervisor has been run from installed paths inside the container image and on
+a Fedora 44 WSL2 host, neither of which is a boot.
+
+### The former statement, kept for the record
+
 ### The applicator is not part of the image build either
 
 Like `capability/`, `capability/apply/` is not copied into the OCI image by

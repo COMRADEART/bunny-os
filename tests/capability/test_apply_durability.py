@@ -482,6 +482,12 @@ class InstanceLockTests(unittest.TestCase):
         # proceeding would be the split-brain the lock exists to prevent.
         if os.name == "nt":
             self.skipTest("POSIX permission semantics required")
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            # root bypasses DAC, so a 0500 directory is still writable and the
+            # refusal this asserts cannot be provoked. Skipped rather than
+            # weakened: the behaviour under a genuinely unwritable directory is
+            # what matters, and root is not that case.
+            self.skipTest("running as root; directory permissions do not apply")
         directory = Path(tempfile.mkdtemp())
         os.chmod(directory, 0o500)
         try:
