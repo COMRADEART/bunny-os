@@ -22,6 +22,10 @@ build:createrepo_c
 lang:python3
 lang:python3-pip
 lang:python3-virtualenv
+# Required by host-readiness-gate.py, which validates the environment report
+# before evaluating it and fails closed when this is absent. Without it a host
+# can satisfy every hardware requirement and still be refused.
+lang:python3-jsonschema
 data:jq
 data:yq
 container:podman
