@@ -3,6 +3,9 @@
 
 export const TOKENS = Object.freeze({
   "layout": {
+    "characterIllustrationHeight": 300,
+    "characterMaximumPanelRatio": 0.45,
+    "characterMinimumPanelHeight": 640,
     "dockHeight": 68,
     "dockHeightCompact": 54,
     "dockIcon": 48,

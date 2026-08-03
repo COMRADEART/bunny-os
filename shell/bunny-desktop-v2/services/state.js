@@ -20,6 +20,9 @@ const EMPTY_STATE = Object.freeze({
     updates: 'Unavailable',
     mockMode: false,
     decisionAvailable: false,
+    bunnyEnabled: true,
+    resultConfirmed: false,
+    milestoneConfirmed: false,
 });
 
 
@@ -47,6 +50,9 @@ function normalize(value, mockMode) {
         updates: String(source.updates ?? EMPTY_STATE.updates),
         mockMode,
         decisionAvailable: mockMode ? false : source.decisionAvailable === true,
+        bunnyEnabled: source.bunnyEnabled !== false,
+        resultConfirmed: source.resultConfirmed === true,
+        milestoneConfirmed: source.milestoneConfirmed === true,
     });
 }
 

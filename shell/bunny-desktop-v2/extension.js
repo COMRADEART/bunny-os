@@ -22,7 +22,7 @@ export default class BunnyDesktopV2Extension extends Extension {
         this._modeController = new ModeController(this._settings);
         this._modeController.enable();
         this._state = new VisualState(this.path);
-        this._systemPanel = new SystemPanel(this._state, this._settings);
+        this._systemPanel = new SystemPanel(this._state, this._settings, this.path);
         this._components = [
             this._systemPanel,
             new TopBar(this._state, this.path, this._settings, this._systemPanel),

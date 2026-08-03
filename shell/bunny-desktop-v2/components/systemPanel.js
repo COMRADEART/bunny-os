@@ -12,9 +12,10 @@ import {QuickSettings} from './quickSettings.js';
 
 
 export class SystemPanel {
-    constructor(state, settings) {
+    constructor(state, settings, extensionPath) {
         this._state = state;
         this._settings = settings;
+        this._extensionPath = extensionPath;
         this._visible = false;
         this._activeTab = 'quick';
     }
@@ -50,7 +51,7 @@ export class SystemPanel {
         const openTab = tab => this.open(tab);
         this._tabs = new Map([
             ['quick', new QuickSettings(this._state, this._settings, openTab)],
-            ['assistant', new AssistantPanel(this._state)],
+            ['assistant', new AssistantPanel(this._state, this._extensionPath, openTab)],
             ['approvals', new ApprovalPanel(this._state)],
             ['activity', new ActivityPanel(this._state)],
         ]);
@@ -101,6 +102,8 @@ export class SystemPanel {
         const height = Math.max(TOKENS.layout.panelMinimumHeight, monitor.height - TOKENS.layout.topOffset - TOKENS.spacing['2xl']);
         this.actor.set_position(monitor.x + monitor.width - width - TOKENS.layout.edgeMargin, monitor.y + TOKENS.layout.topOffset);
         this.actor.set_size(width, height);
+        for (const tab of this._tabs.values())
+            tab.setAvailableHeight?.(height);
         if (!this._visible)
             this.actor.translation_x = width + TOKENS.spacing.xl;
     }

@@ -60,3 +60,4 @@
 .bunny-v2-minimized { opacity: 0.72; }
 .bunny-v2-severity-sensitive, .bunny-v2-severity-privileged { border-left: 3px solid #F0B45C; }
 .bunny-v2-severity-critical { border-left: 3px solid #EF6B73; }
+.bunny-v2-character-region { padding: 8px; }

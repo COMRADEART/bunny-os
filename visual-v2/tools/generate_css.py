@@ -79,6 +79,7 @@ def render() -> str:
 .bunny-v2-minimized {{ opacity: {read('opacity.json')['tokens']['secondary']}; }}
 .bunny-v2-severity-sensitive, .bunny-v2-severity-privileged {{ border-left: 3px solid {semantic['warning']}; }}
 .bunny-v2-severity-critical {{ border-left: 3px solid {semantic['danger']}; }}
+.bunny-v2-character-region {{ padding: {spacing['sm']}px; }}
 """
 
 
