@@ -51,7 +51,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import sys
@@ -172,10 +172,46 @@ def _path_literal(node: ast.AST) -> str | None:
     return None
 
 
-def install_routes(installer: Path) -> tuple[list[dict[str, Any]], list[str]]:
-    """Every ``copy_tree``/``copy_file`` route, and the calls that resisted parsing."""
-    tree = ast.parse(installer.read_text(encoding="utf-8"), filename=str(installer))
+def declared_routes(tree: ast.Module) -> list[dict[str, Any]]:
+    """Routes the installer declares in ``INSTALL_ROUTES``.
+
+    A destination computed inside a loop cannot be resolved from the AST, and an
+    analyser that reported such a path as "not installed" would be worse than no
+    analyser — it would license exactly the mistake this tool exists to catch.
+    So the installer declares those routes in a table it is itself driven by,
+    and this reads the table. A declaration the installer obeys cannot drift
+    from what the installer does.
+    """
     routes: list[dict[str, Any]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        targets = [item.id for item in node.targets if isinstance(item, ast.Name)]
+        if "INSTALL_ROUTES" not in targets:
+            continue
+        try:
+            table = ast.literal_eval(node.value)
+        except (ValueError, TypeError):
+            continue
+        for entry in table:
+            if not isinstance(entry, dict) or "sourceGlob" not in entry:
+                continue
+            routes.append({
+                "kind": "glob",
+                "sourcePath": entry["sourceGlob"],
+                "strip": entry.get("strip", ""),
+                "destination": entry["destination"],
+                "exclude": tuple(entry.get("exclude", ())),
+                "excludeStems": tuple(entry.get("excludeStems", ())),
+                "line": node.lineno,
+            })
+    return routes
+
+
+def install_routes(installer: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    """Every ``copy_tree``/``copy_file``/declared route, and what resisted parsing."""
+    tree = ast.parse(installer.read_text(encoding="utf-8"), filename=str(installer))
+    routes: list[dict[str, Any]] = list(declared_routes(tree))
     unresolved: list[str] = []
 
     for node in ast.walk(tree):
@@ -226,6 +262,30 @@ def classify(
     matched: list[dict[str, Any]] = []
     for route in routes:
         source = route["sourcePath"]
+        if route["kind"] == "glob":
+            # A declared route. fnmatch with ** semantics: PurePath.match does
+            # not handle ** the way glob does, so the comparison is done on the
+            # literal prefix and the suffix separately.
+            prefix, _, suffix = source.partition("**/")
+            if suffix:
+                if not normalised.startswith(prefix):
+                    continue
+                if not PurePosixPath(normalised).match(suffix):
+                    continue
+            elif not PurePosixPath(normalised).match(source):
+                continue
+            strip = route.get("strip", "")
+            remainder = normalised[len(strip):].lstrip("/") if strip else normalised
+            parts = PurePosixPath(remainder).parts
+            if set(route.get("exclude", ())).intersection(parts):
+                continue
+            if PurePosixPath(normalised).stem in route.get("excludeStems", ()):
+                continue
+            matched.append({
+                **route,
+                "installedAs": f"{route['destination'].rstrip('/')}/{remainder}",
+            })
+            continue
         if route["kind"] == "file":
             if normalised == source:
                 matched.append({**route, "installedAs": route["destination"]})

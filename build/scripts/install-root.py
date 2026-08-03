@@ -28,6 +28,91 @@ def copy_tree(source: Path, destination: Path, mode: int = 0o644) -> None:
             copy_file(item, target, mode)
 
 
+#: Install routes whose destination is computed rather than written literally.
+#:
+#: These exist as a table, and the code below is *driven* by the table, for one
+#: reason: ``build-input-closure.py`` cannot resolve a destination assembled
+#: inside a loop, and an analyser that silently reports such a path as
+#: "not installed" is worse than no analyser. A declaration the installer
+#: itself obeys cannot drift from what the installer does — if the table is
+#: wrong, the file lands somewhere unexpected and a test notices.
+#:
+#: ``sourceGlob`` is relative to the repository root; ``exclude`` drops any path
+#: with a matching first path component; ``strip`` is the prefix removed before
+#: joining onto ``destination``.
+INSTALL_ROUTES = (
+    {
+        "id": "capability-code",
+        "sourceGlob": "capability/**/*.py",
+        "strip": "capability",
+        "destination": "/usr/lib/bunny-os/python/capability",
+        "mode": 0o444,
+        # `testing` is the probe fixture and its unit; `services` is installed
+        # separately, read-only, at the path the registry looks for.
+        "exclude": ("testing", "services", "__pycache__"),
+    },
+    {
+        "id": "capability-manifests",
+        "sourceGlob": "capability/services/*.json",
+        "strip": "capability/services",
+        "destination": "/usr/share/bunny-os/capability/services",
+        "mode": 0o444,
+        "excludeStems": ("bunny-capability-probe",),
+    },
+)
+
+
+def install_capability(source: Path) -> None:
+    """Install the capability runtime, its applicator, and its manifests.
+
+    Table-driven, and explicit rather than a ``copy_tree`` of ``capability/``,
+    because two of its subdirectories must not ship. The exclusions are
+    asserted afterwards rather than assumed: a validation fixture reaching an
+    installed system is the kind of mistake that stays invisible until somebody
+    starts it.
+
+    No bytecode is generated. See ``docs/CAPABILITY_INSTALLED.md``: a ``.pyc``
+    embeds the source path and mtime, and pinning both well enough for two
+    builds to agree costs more than the import time it saves on a system whose
+    ``/usr`` is read-only at runtime anyway.
+    """
+    for route in INSTALL_ROUTES:
+        destination = Path(route["destination"])
+        strip = source / route["strip"]
+        excluded = set(route.get("exclude", ()))
+        excluded_stems = set(route.get("excludeStems", ()))
+        for item in sorted(source.glob(route["sourceGlob"])):
+            relative = item.relative_to(strip)
+            if excluded.intersection(relative.parts):
+                continue
+            if item.stem in excluded_stems:
+                continue
+            copy_file(item, destination / relative, route["mode"])
+
+    copy_file(
+        source / "services/bunny-capability-supervisor/bunny_capability_supervisor.py",
+        Path("/usr/libexec/bunny-capability-supervisor"), 0o555,
+    )
+    copy_file(
+        source / "config/bunny-os/capability-supervisor.json",
+        Path("/etc/bunny-os/capability/supervisor.json"), 0o644,
+    )
+
+    # Assert what must not be there, and what must. A fixture that shipped
+    # would be startable on a user's machine, and this is the cheapest place to
+    # find out that it did.
+    code_root = Path("/usr/lib/bunny-os/python/capability")
+    manifest_root = Path("/usr/share/bunny-os/capability/services")
+    for forbidden in sorted(code_root.rglob("*")):
+        if {"testing", "__pycache__"}.intersection(forbidden.parts):
+            raise SystemExit(f"BLOCKED: {forbidden} is a fixture and must not be installed")
+    if list(manifest_root.glob("*probe*")):
+        raise SystemExit("BLOCKED: the capability probe manifest must not be installed")
+    for required in ("apply/applicator.py", "supervisor.py", "engine.py"):
+        if not (code_root / required).is_file():
+            raise SystemExit(f"BLOCKED: {required} was not installed")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", required=True, type=Path)
@@ -129,6 +214,7 @@ def main() -> int:
     # identifiable way — an arbitrary image handed to the update path would
     # test the path against nothing.
     copy_file(source / "config/qualification-update-marker.json", Path("/usr/share/bunny-os/qualification-update-marker.json"), 0o444)
+    install_capability(source)
     copy_tree(source / "schemas", Path("/usr/share/bunny-os/schemas"), 0o444)
     copy_tree(source / "docs", Path("/usr/share/doc/bunny-os"), 0o444)
     copy_file(source / "ARCHITECTURE.md", Path("/usr/share/doc/bunny-os/ARCHITECTURE.md"), 0o444)

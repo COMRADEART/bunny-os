@@ -654,6 +654,7 @@ _PROGRAM_SOURCES = (
 #: Programs whose source file is not named after the installed program.
 _PROGRAM_ALIASES = {
     "bunny-update-agent": "services/bunny-update-agent/bunny_update_agent.py",
+    "bunny-capability-supervisor": "services/bunny-capability-supervisor/bunny_capability_supervisor.py",
 }
 
 #: Prefixes owned by something other than install-root.py.
