@@ -79,6 +79,23 @@ That refusal is retained as the negative control in
 `evidence-template/negative-control/`. A gate nobody has watched refuse is a gate
 nobody has checked.
 
+## The condition that used to be typed
+
+`git-byte-roundtrip` is mandatory, and until `verify-git-byte-policy.py` existed
+the collector wrote `null` for it and the checklist asked a human to change that
+to `true`. One mandatory condition was therefore satisfiable by typing a word —
+the condition guarding the property that PR #20 was written to protect.
+
+The script now runs the guard and writes the field itself. It writes `false` as
+readily as `true`, which is the outcome a hand-edit would never produce, and the
+checklist no longer contains the instruction. `test_the_checklist_no_longer_asks_for_a_hand_edit`
+keeps it that way, because a verifier nobody is told to run leaves the hand-edit
+in place.
+
+It also checks that the invalidated `physical-hardware` record is still
+invalidated and still wrong, so a host that quietly re-digested it cannot pass
+the remaining checks.
+
 ## The three roles
 
 One machine performs several programs, and the evidence must never blur them.
@@ -104,8 +121,10 @@ physical qualification host. That is the distinction the invalidated
 | `host-readiness.schema.json` | the gate's output |
 | `scripts/collect-environment.py` | observes the host; infers nothing |
 | `scripts/host-readiness-gate.py` | the 26 mandatory conditions |
+| `scripts/verify-git-byte-policy.py` | measures the byte policy and records its own result |
+| `scripts/retention-manifest.py` | manifests retained artefacts; refuses secret-bearing ones |
 | `scripts/reset-test-state.sh` | scope-aware, prefix-limited cleanup |
-| `tests/` | 42 tests, mostly refusals |
+| `tests/` | 71 tests, mostly refusals |
 | `PACKAGE_MANIFEST.md` | the toolchain, and how absence is recorded |
 | `OPERATOR_CHECKLIST.md` | the order to do things in |
 | `SECURITY_BOUNDARY.md` | what must never reach this repository |

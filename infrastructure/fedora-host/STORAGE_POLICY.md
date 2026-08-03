@@ -48,6 +48,13 @@ Every retained artifact gets a manifest row:
 `containsSecrets` is a decision, not a guess. Anything true there is not
 committed and not retained beyond the run.
 
+Built by `scripts/retention-manifest.py`, which digests every retained file and
+scans it for secret patterns. It exits 2 rather than describing a secret-bearing
+artefact as retained, and marks it `REVIEW_REQUIRED` rather than rewriting it —
+a passphrase is removed by a person who understands how it got there.
+
+An unreadable file is treated as unclean. Not scannable is not clean.
+
 Retention classes:
 
 | Class | Meaning |
