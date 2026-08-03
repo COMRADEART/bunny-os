@@ -1,0 +1,31 @@
+[Unit]
+Description=Bunny Shell Experimental compositor (BUNNY WAYLAND SHELL EXPERIMENT — NOT RELEASE QUALIFIED — DO NOT USE AS THE DEFAULT SESSION)
+Documentation=file:///usr/share/doc/bunny-shell-v3/PROTOTYPE_NOTICE.md
+# Deliberately not bound to graphical-session.target: an ordinary login must
+# never pull the experimental shell in. Only the experimental session launcher
+# starts this unit.
+PartOf=bunny-shell-experimental.target
+# The restart budget is enforced by bunny-shell-supervisor, not by systemd, so
+# that the same bounded policy applies to the developer nested run. systemd's
+# limits below are a second ceiling, not the primary one.
+OnFailure=bunny-shell-recovery.service
+
+[Service]
+Type=notify-reload
+NotifyAccess=all
+ExecStart=/usr/libexec/bunny-shell-supervisor --session-file /usr/share/bunny-shell-v3/bunny-shell-experimental.session
+# The supervisor exits 3 when it has given up and written a recovery marker.
+# That is a handled outcome, not a crash to be restarted.
+SuccessExitStatus=3
+Restart=no
+TimeoutStopSec=10
+# The compositor runs as the user. It never needs privilege: authentication is
+# delegated to PAM through an isolated helper and privileged operations go to
+# the existing system services.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=no
+Environment=BUNNY_SHELL_SESSION_KIND=experimental
+
+[Install]
+WantedBy=bunny-shell-experimental.target

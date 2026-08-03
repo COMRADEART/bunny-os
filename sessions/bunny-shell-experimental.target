@@ -1,0 +1,11 @@
+[Unit]
+Description=Bunny Shell Experimental session (BUNNY WAYLAND SHELL EXPERIMENT — NOT RELEASE QUALIFIED — DO NOT USE AS THE DEFAULT SESSION)
+Documentation=file:///usr/share/doc/bunny-shell-v3/PROTOTYPE_NOTICE.md
+# Deliberately NOT wanted by graphical-session.target and NOT installed into
+# any .wants directory. This target is reached only when the experimental
+# session launcher starts it, so an ordinary graphical login can never pull the
+# experimental shell in.
+Requires=bunny-shell-session.service
+After=bunny-shell-session.service
+RefuseManualStart=no
+StopWhenUnneeded=yes

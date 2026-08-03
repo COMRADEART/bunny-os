@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Bunny Shell Experimental
+Comment=BUNNY WAYLAND SHELL EXPERIMENT — NOT RELEASE QUALIFIED — DO NOT USE AS THE DEFAULT SESSION
+Exec=/usr/libexec/bunny-shell-experimental-session
+TryExec=/usr/libexec/bunny-shell-experimental-session
+Type=Application
+DesktopNames=BunnyShellExperimental;
+X-GDM-SessionRegisters=true
+X-Bunny-Visual-Prototype=true
+X-Bunny-Wayland-Shell-Experiment=true
+X-Bunny-Default-Session=false
+X-Bunny-Release-Qualified=false
+X-Bunny-Requires-Experimental-Mode=BUNNY_SHELL_EXPERIMENTAL

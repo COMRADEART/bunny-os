@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "branch": "visual/bunny-wayland-shell-v3",
+  "base": "visual/bunny-desktop-v2-dual-mode",
+  "phase": "Visual Phase V3 — native Wayland shell feasibility prototype",
+  "status": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "defaultSessionChanged": false,
+  "gnomeSessionRemoved": false,
+  "gnomeRemainsSupportedFallback": true,
+  "qualificationTargetsChanged": false,
+  "releaseGatesChanged": false,
+  "qualifiedImageChanged": false,
+  "productionKeysAllowed": false,
+  "publishableImage": false,
+  "mergeableIntoMain": false,
+  "requiresExplicitExperimentalMode": true,
+  "experimentalModeVariable": "BUNNY_SHELL_EXPERIMENTAL",
+  "isolatedFrom": [
+    "main",
+    "archive qualification",
+    "installed-system qualification",
+    "stable-release work",
+    "encrypted-unlock qualification",
+    "physical-hardware qualification",
+    "production signing",
+    "pilots"
+  ]
+}

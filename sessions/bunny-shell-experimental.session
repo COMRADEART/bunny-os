@@ -1,0 +1,19 @@
+[Bunny Shell Experimental Session]
+# BUNNY WAYLAND SHELL EXPERIMENT — NOT RELEASE QUALIFIED — DO NOT USE AS THE
+# DEFAULT SESSION.
+#
+# This is the component manifest for the experimental session. It deliberately
+# reuses gnome-session's key names so that the component set can be read by
+# either launch path, but the native session is NOT started by gnome-session:
+# it is started by bunny-shell-supervisor, which owns the bounded restart
+# policy. The keys below are read by sessions/bunny-shell-supervisor.
+Name=Bunny Shell Experimental
+IsRunnableHelper=/usr/libexec/bunny-shell-experimental-session --check
+RequiredComponents=bunny-shell-session;
+# Optional components are started after the compositor is accepting clients and
+# are never required for the session to be usable. A failure in any of these
+# degrades the shell; it does not end the session.
+OptionalComponents=bunny-top-bar;bunny-dock;bunny-notification-center;
+DefaultSession=false
+ReleaseQualified=false
+FallbackSession=gnome

@@ -1,0 +1,16 @@
+[Unit]
+Description=Bunny Shell Experimental recovery (BUNNY WAYLAND SHELL EXPERIMENT — NOT RELEASE QUALIFIED — DO NOT USE AS THE DEFAULT SESSION)
+Documentation=file:///usr/share/doc/bunny-shell-v3/CRASH_RECOVERY_REPORT.md
+# Reached when bunny-shell-session.service failed. This unit does not restart
+# the shell. It records the outcome and returns the user to the display manager
+# so GNOME can be selected.
+After=bunny-shell-session.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bunny-shell-supervisor --recovery
+# Recovery must never itself become a restart loop.
+Restart=no
+RemainAfterExit=no
+StandardOutput=journal
+StandardError=journal
