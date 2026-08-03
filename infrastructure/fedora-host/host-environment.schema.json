@@ -1,0 +1,226 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fedora qualification host environment report",
+  "description": "What a candidate measurement host actually is. Collected before any qualification run and referenced by every evidence record produced on that host. Sensitive identifiers are hashed, never recorded raw.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "environmentId", "role", "collectedAt", "operator", "host",
+    "os", "boot", "cpu", "memory", "storage", "graphics", "displays", "tpm",
+    "virtualisation", "selinux", "session", "accessibility", "inputMethod",
+    "crypto", "tooling", "git", "clock"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "environmentId": {
+      "type": "string",
+      "pattern": "^FQH-[0-9]{8}-[0-9]{2}$"
+    },
+    "role": {
+      "enum": ["host", "vm-qualification", "physical-target"],
+      "description": "Which of the three roles this report describes. Results from one role are never recorded in another role's cells."
+    },
+    "collectedAt": { "type": "string" },
+    "operator": { "type": "string", "minLength": 1 },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostname", "manufacturer", "model", "serialHash", "bareMetal"],
+      "properties": {
+        "hostname": { "type": "string" },
+        "manufacturer": { "type": "string" },
+        "model": { "type": "string" },
+        "serialHash": {
+          "type": "string",
+          "description": "sha256 of the serial, or the empty string when unavailable. The raw serial is never committed."
+        },
+        "bareMetal": { "type": "boolean" },
+        "hypervisorDetected": { "type": ["string", "null"] }
+      }
+    },
+    "os": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "versionId", "kernel"],
+      "properties": {
+        "name": { "type": "string" },
+        "versionId": { "type": "string" },
+        "kernel": { "type": "string" },
+        "isoDigest": { "type": ["string", "null"] },
+        "installedOn": { "type": ["string", "null"] }
+      }
+    },
+    "boot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "secureBoot"],
+      "properties": {
+        "mode": { "enum": ["uefi", "bios", "unknown"] },
+        "secureBoot": { "enum": ["enabled", "disabled", "unsupported", "unknown"] },
+        "platformSize": { "type": ["integer", "null"] }
+      }
+    },
+    "cpu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "logicalCores"],
+      "properties": {
+        "model": { "type": "string" },
+        "logicalCores": { "type": "integer" },
+        "virtualisationFlag": { "type": ["string", "null"] }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["totalBytes"],
+      "properties": { "totalBytes": { "type": "integer" } }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["availableBytesForEvidence", "devices"],
+      "properties": {
+        "availableBytesForEvidence": { "type": "integer" },
+        "devices": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "graphics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["drmCardNodes", "drmRenderNodes", "openglRenderer", "softwareRasteriser"],
+      "properties": {
+        "drmCardNodes": { "type": "array", "items": { "type": "string" } },
+        "drmRenderNodes": { "type": "array", "items": { "type": "string" } },
+        "pciIdentity": { "type": ["string", "null"] },
+        "kernelDriver": { "type": ["string", "null"] },
+        "mesaVersion": { "type": ["string", "null"] },
+        "openglRenderer": { "type": ["string", "null"] },
+        "vulkanDevice": { "type": ["string", "null"] },
+        "softwareRasteriser": {
+          "type": "boolean",
+          "description": "True when the renderer is llvmpipe, softpipe, swrast or any other software rasteriser. Such a renderer never qualifies GPU rendering."
+        }
+      }
+    },
+    "displays": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["connectedOutputs", "outputs"],
+      "properties": {
+        "connectedOutputs": {
+          "type": "integer",
+          "description": "Physically connected DRM connectors. Nested windows are not outputs."
+        },
+        "outputs": { "type": "array", "items": { "type": "object" } },
+        "mixedResolution": { "type": ["boolean", "null"] }
+      }
+    },
+    "tpm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["present", "version", "physical"],
+      "properties": {
+        "present": { "type": "boolean" },
+        "version": { "type": ["string", "null"] },
+        "manufacturer": { "type": ["string", "null"] },
+        "physical": {
+          "type": "boolean",
+          "description": "False for swtpm or any emulated device. A virtual TPM proves the software path, never the machine."
+        }
+      }
+    },
+    "virtualisation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kvmAvailable"],
+      "properties": {
+        "kvmAvailable": { "type": "boolean" },
+        "virtHostValidate": { "type": ["string", "null"] },
+        "qemuVersion": { "type": ["string", "null"] },
+        "libvirtVersion": { "type": ["string", "null"] }
+      }
+    },
+    "selinux": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": { "mode": { "enum": ["Enforcing", "Permissive", "Disabled", "unknown"] } }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "pipewire", "wireplumber", "portal"],
+      "properties": {
+        "type": { "enum": ["wayland", "x11", "tty", "unknown"] },
+        "desktop": { "type": ["string", "null"] },
+        "pipewire": { "type": "boolean" },
+        "wireplumber": { "type": "boolean" },
+        "portal": { "type": "boolean" },
+        "portalBackends": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "accessibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["orcaInstalled", "speechDispatcherInstalled"],
+      "properties": {
+        "orcaInstalled": { "type": "boolean" },
+        "orcaVersion": { "type": ["string", "null"] },
+        "speechDispatcherInstalled": { "type": "boolean" },
+        "speechDispatcherVersion": { "type": ["string", "null"] },
+        "atspiPresent": { "type": ["boolean", "null"] }
+      }
+    },
+    "inputMethod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["available"],
+      "properties": {
+        "available": { "type": "array", "items": { "type": "string" } },
+        "ibusVersion": { "type": ["string", "null"] },
+        "fcitx5Version": { "type": ["string", "null"] },
+        "engines": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "crypto": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cryptsetupVersion", "luks2Supported"],
+      "properties": {
+        "cryptsetupVersion": { "type": ["string", "null"] },
+        "luks2Supported": { "type": "boolean" },
+        "argon2idAvailable": { "type": ["boolean", "null"] }
+      }
+    },
+    "tooling": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "name to version for the recorded toolchain."
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "autocrlf", "byteRoundtripTestsPass"],
+      "properties": {
+        "version": { "type": "string" },
+        "autocrlf": { "type": ["string", "null"] },
+        "byteRoundtripTestsPass": { "type": ["boolean", "null"] }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["synchronised"],
+      "properties": {
+        "synchronised": { "type": "boolean" },
+        "timezone": { "type": ["string", "null"] },
+        "systemTime": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
