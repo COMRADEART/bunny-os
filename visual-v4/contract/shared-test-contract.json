@@ -1,0 +1,226 @@
+{
+  "allowedVerdicts": [
+    "SELECT_SMITHAY",
+    "SELECT_LIBMUTTER",
+    "CONTINUE_DUAL_TRACK",
+    "REOPEN_FRAMEWORK_SEARCH",
+    "NATIVE_SHELL_NOT_READY"
+  ],
+  "arms": [
+    "smithay",
+    "libmutter"
+  ],
+  "contract": "bunny-shell-v4-framework-closure",
+  "gates": [
+    {
+      "description": "real screen sharing through portals and PipeWire",
+      "group": "screen-sharing",
+      "id": "screen-sharing-portal-pipewire",
+      "mandatory": true
+    },
+    {
+      "description": "real screenshots through a portal",
+      "group": "screen-sharing",
+      "id": "screenshot-portal",
+      "mandatory": false
+    },
+    {
+      "description": "input-method-v2 or equivalent working input path",
+      "group": "input-methods",
+      "id": "input-method-v2",
+      "mandatory": true
+    },
+    {
+      "description": "IBus or Fcitx 5",
+      "group": "input-methods",
+      "id": "ime-daemon",
+      "mandatory": false
+    },
+    {
+      "description": "English input",
+      "group": "input-methods",
+      "id": "input-english",
+      "mandatory": false
+    },
+    {
+      "description": "Japanese input",
+      "group": "input-methods",
+      "id": "input-japanese",
+      "mandatory": false
+    },
+    {
+      "description": "Chinese input",
+      "group": "input-methods",
+      "id": "input-chinese",
+      "mandatory": false
+    },
+    {
+      "description": "Korean input where available",
+      "group": "input-methods",
+      "id": "input-korean",
+      "mandatory": false
+    },
+    {
+      "description": "candidate-popup positioning",
+      "group": "input-methods",
+      "id": "candidate-popup-positioning",
+      "mandatory": false
+    },
+    {
+      "description": "on-screen-keyboard path",
+      "group": "input-methods",
+      "id": "on-screen-keyboard",
+      "mandatory": false
+    },
+    {
+      "description": "real Orca session",
+      "group": "accessibility",
+      "id": "orca-session",
+      "mandatory": true
+    },
+    {
+      "description": "AT-SPI navigation",
+      "group": "accessibility",
+      "id": "atspi-navigation",
+      "mandatory": false
+    },
+    {
+      "description": "secure session locking",
+      "group": "session-lock",
+      "id": "secure-session-lock",
+      "mandatory": true
+    },
+    {
+      "description": "PAM-backed unlock",
+      "group": "session-lock",
+      "id": "pam-unlock",
+      "mandatory": true
+    },
+    {
+      "description": "invalid-password handling",
+      "group": "session-lock",
+      "id": "invalid-password",
+      "mandatory": false
+    },
+    {
+      "description": "lock-client crash behavior",
+      "group": "session-lock",
+      "id": "lock-client-crash",
+      "mandatory": false
+    },
+    {
+      "description": "XWayland",
+      "group": "compat",
+      "id": "xwayland",
+      "mandatory": false
+    },
+    {
+      "description": "pointer constraints",
+      "group": "compat",
+      "id": "pointer-constraints",
+      "mandatory": false
+    },
+    {
+      "description": "relative pointer",
+      "group": "compat",
+      "id": "relative-pointer",
+      "mandatory": false
+    },
+    {
+      "description": "application compatibility",
+      "group": "compat",
+      "id": "application-launch",
+      "mandatory": true
+    },
+    {
+      "description": "crash recovery",
+      "group": "compat",
+      "id": "crash-recovery",
+      "mandatory": false
+    },
+    {
+      "description": "GPU rendering",
+      "group": "rendering",
+      "id": "gpu-rendering",
+      "mandatory": true
+    },
+    {
+      "description": "linux-dmabuf",
+      "group": "rendering",
+      "id": "linux-dmabuf",
+      "mandatory": false
+    },
+    {
+      "description": "frame pacing",
+      "group": "rendering",
+      "id": "frame-pacing",
+      "mandatory": false
+    },
+    {
+      "description": "damage-driven rendering",
+      "group": "rendering",
+      "id": "damage-driven-rendering",
+      "mandatory": false
+    },
+    {
+      "description": "two-output presentation",
+      "group": "display",
+      "id": "two-output-presentation",
+      "mandatory": true
+    },
+    {
+      "description": "mixed-DPI scaling",
+      "group": "display",
+      "id": "mixed-dpi-scaling",
+      "mandatory": false
+    },
+    {
+      "description": "output hotplug",
+      "group": "display",
+      "id": "output-hotplug",
+      "mandatory": false
+    },
+    {
+      "description": "resident shell chrome",
+      "group": "shell",
+      "id": "resident-shell-chrome",
+      "mandatory": false
+    },
+    {
+      "description": "Regular Mode",
+      "group": "shell",
+      "id": "regular-mode",
+      "mandatory": false
+    },
+    {
+      "description": "Character Mode",
+      "group": "shell",
+      "id": "character-mode",
+      "mandatory": false
+    }
+  ],
+  "note": "One shared contract, measured identically for both arms. Only PASS satisfies a mandatory gate. A numeric score never overrides a failed or unmeasured mandatory gate.",
+  "resultStates": [
+    "PASS",
+    "FAIL",
+    "PARTIAL",
+    "NOT_IMPLEMENTED",
+    "NOT_AVAILABLE",
+    "NOT_RUN",
+    "INCONCLUSIVE"
+  ],
+  "satisfyingState": "PASS",
+  "schemaVersion": 1,
+  "scorecard": {
+    "accessibility": 18,
+    "application-compatibility": 10,
+    "bunny-visual-policy-independence": 5,
+    "input-methods": 12,
+    "maintenance-burden": 7,
+    "multi-display-and-scaling": 8,
+    "rendering-and-frame-pacing": 8,
+    "screen-sharing-and-portals": 12,
+    "security-boundary-ownership": 8,
+    "session-lock-and-authentication": 12
+  }
+}

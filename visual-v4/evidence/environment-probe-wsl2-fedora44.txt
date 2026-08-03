@@ -1,0 +1,52 @@
+# bunny-shell-v4 environment probe
+probed-at: 2026-08-03T14:51:19Z
+kernel: 6.18.33.2-microsoft-standard-WSL2
+os: Fedora Linux 44 (WSL)
+
+## DRM / KMS
+dev-dri: ABSENT
+  consequence: no KMS. No page-flip, no vblank, no connectors.
+  blocks: gpu-rendering, linux-dmabuf, frame-pacing,
+          two-output-presentation, output-hotplug
+
+## GPU renderer
+renderer: llvmpipe (LLVM 22.1.8, 256 bits)
+  classification: SOFTWARE RASTERISER
+  consequence: a software rasteriser cannot qualify GPU rendering.
+               Any frame timing measured here describes the CPU.
+
+## Wayland
+WAYLAND_DISPLAY: wayland-0
+XDG_RUNTIME_DIR: /run/user/0
+wayland-server: 1.25.0
+wayland-client: 1.25.0
+gtk4: 4.22.4
+
+## Components the shared contract needs
+Xwayland:          /usr/sbin/Xwayland
+pipewire:          /usr/sbin/pipewire
+wireplumber:       /usr/sbin/wireplumber
+ibus:              MISSING
+fcitx5:            MISSING
+orca:              MISSING
+speech-dispatcher: MISSING
+gnome-shell:       MISSING
+mutter:            MISSING
+weston:            /usr/sbin/weston
+cargo:             /usr/sbin/cargo
+rustc:             /usr/sbin/rustc
+libpipewire-0.3:   MISSING
+atspi-2:           MISSING
+libmutter-16:      MISSING
+libmutter-15:      MISSING
+pam:               MISSING
+
+## Session services
+pid1: systemd
+dbus-session: present
+logind: systemd 259 (259.8-1.fc44)
+
+## Verdict
+This host CANNOT qualify a compositor for production.
+Mandatory gates gpu-rendering and two-output-presentation are unmeasurable.
+Per C7, no framework may be selected from measurements taken here.
