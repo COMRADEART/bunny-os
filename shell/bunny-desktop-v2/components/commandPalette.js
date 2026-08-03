@@ -12,9 +12,10 @@ import {applyPresentationClasses} from './presentation.js';
 
 
 export class CommandPalette {
-    constructor(settings, systemPanel) {
+    constructor(settings, systemPanel, performance) {
         this._settings = settings;
         this._systemPanel = systemPanel;
+        this._performance = performance;
         this._selected = 0;
         this._visibleResults = [];
     }
@@ -119,11 +120,14 @@ export class CommandPalette {
     }
 
     open() {
+        const started = this._performance?.begin('command-palette-open');
         this._entry.set_text('');
         this._selected = 0;
         this._refresh();
         this._dialog.open(global.get_current_time());
         global.stage.set_key_focus(this._entry.clutter_text);
+        if (started !== undefined)
+            this._performance.end('command-palette-open', started);
     }
 
     applyPresentation(presentation) {

@@ -12,10 +12,11 @@ import {QuickSettings} from './quickSettings.js';
 
 
 export class SystemPanel {
-    constructor(state, settings, extensionPath) {
+    constructor(state, settings, extensionPath, performance) {
         this._state = state;
         this._settings = settings;
         this._extensionPath = extensionPath;
+        this._performance = performance;
         this._visible = false;
         this._activeTab = 'quick';
     }
@@ -74,9 +75,13 @@ export class SystemPanel {
     }
 
     open(id = 'quick') {
+        const measurement = id === 'assistant' ? 'assistant-panel-open' : 'quick-settings-open';
+        const started = this._performance?.begin(measurement);
         this._showTab(id);
         this._visible = true;
         this.actor.visible = true;
+        if (started !== undefined)
+            this._performance.end(measurement, started);
         this.actor.ease({translation_x: 0, opacity: 255, duration: this._presentation?.reducedMotion ? 0 : TOKENS.motion.panel});
     }
 

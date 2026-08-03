@@ -28,8 +28,9 @@ const PRESENTATION_KEYS = new Set([
 
 
 export class ModeController {
-    constructor(settings) {
+    constructor(settings, performance) {
         this._settings = settings;
+        this._performance = performance;
         this._components = new Set();
         this._settingsSignal = 0;
     }
@@ -97,9 +98,12 @@ export class ModeController {
     }
 
     _apply() {
+        const started = this._performance?.begin('visual-mode-switch');
         const presentation = this.snapshot();
         for (const component of this._components)
             component.applyPresentation?.(presentation);
+        if (started !== undefined)
+            this._performance.end('visual-mode-switch', started);
     }
 
     disable() {
