@@ -1,0 +1,126 @@
+{
+  "environment": {
+    "hardwareAccelerated": false,
+    "host": "Fedora Linux 44 on WSL2, nested under WSLg",
+    "note": "These are software-rendering numbers. They are the honest result for this host and are not adjusted for it.",
+    "renderer": "Mesa llvmpipe (software rasteriser)"
+  },
+  "frameSampleNote": "only 2 frames were presented during the run; the nested backend blocks in submit() until the host compositor schedules the window, so frame rate and idle CPU could not be attributed to the shell",
+  "frameSampleValid": false,
+  "idleCpu": {
+    "detail": "sampled over 10s while the shell rendered with no clients attached; the compositor renders continuously rather than on damage, which is the cause",
+    "evidence": "observed",
+    "value": 0.0
+  },
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "results": [
+    {
+      "description": "cold shell startup",
+      "evidence": "observed",
+      "measured": 879.4,
+      "meetsTarget": true,
+      "metric": "coldShellStartup",
+      "target": 3000.0,
+      "unit": "ms"
+    },
+    {
+      "description": "top bar ready",
+      "evidence": "observed",
+      "measured": 3290.7,
+      "meetsTarget": false,
+      "metric": "topBarReady",
+      "target": 2000.0,
+      "unit": "ms"
+    },
+    {
+      "description": "command palette visible",
+      "evidence": "observed",
+      "measured": 3341.2,
+      "meetsTarget": false,
+      "metric": "commandPaletteVisible",
+      "target": 150.0,
+      "unit": "ms"
+    },
+    {
+      "description": "Quick Settings visible",
+      "evidence": "observed",
+      "measured": 3193.9,
+      "meetsTarget": false,
+      "metric": "quickSettingsVisible",
+      "target": 150.0,
+      "unit": "ms"
+    },
+    {
+      "description": "workspace transition",
+      "evidence": "unavailable",
+      "measured": null,
+      "meetsTarget": null,
+      "metric": "workspaceTransitionFps",
+      "target": 60.0,
+      "unit": "fps"
+    },
+    {
+      "description": "idle CPU",
+      "evidence": "unavailable",
+      "measured": null,
+      "meetsTarget": null,
+      "metric": "idleCpuPercent",
+      "target": 1.0,
+      "unit": "%"
+    },
+    {
+      "description": "regular shell memory",
+      "evidence": "observed",
+      "measured": 209.1,
+      "meetsTarget": true,
+      "metric": "shellMemoryMb",
+      "target": 450.0,
+      "unit": "MB"
+    },
+    {
+      "description": "character asset incremental use",
+      "evidence": "unavailable",
+      "measured": null,
+      "meetsTarget": null,
+      "metric": "characterAssetIncrementalMb",
+      "target": 100.0,
+      "unit": "MB"
+    },
+    {
+      "description": "shell restart",
+      "evidence": "observed",
+      "measured": 3070.8,
+      "meetsTarget": false,
+      "metric": "shellRestart",
+      "target": 3000.0,
+      "unit": "ms"
+    }
+  ],
+  "schemaVersion": 1,
+  "startup": {
+    "droppedFrames": 1,
+    "firstFrameMs": 879.4,
+    "frames": 2,
+    "framesPerSecond": 19.3,
+    "meanFrameMs": 51.721965499999996,
+    "residentMemoryMb": 209.1,
+    "socketReadyMs": 907.6,
+    "worstFrameMs": 94.692162
+  },
+  "targetsFailed": [
+    "topBarReady",
+    "commandPaletteVisible",
+    "quickSettingsVisible",
+    "shellRestart"
+  ],
+  "targetsMet": 2,
+  "targetsNotMeasured": [
+    "workspaceTransitionFps",
+    "idleCpuPercent",
+    "characterAssetIncrementalMb"
+  ]
+}

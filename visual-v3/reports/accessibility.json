@@ -1,0 +1,134 @@
+{
+  "accessibleLabels": {
+    "accessibleLabelCalls": 16,
+    "evidence": "observed",
+    "liveRegionCalls": 1,
+    "note": "counted in source; not verified against a running AT-SPI tree"
+  },
+  "architecture": {
+    "accessibilityRoute": "AT-SPI via GTK, because the chrome is a client rather than compositor drawing",
+    "chromeDrawnByCompositor": false,
+    "compositorDrawnSurfaceAccessibility": "none; there is no AT-SPI for pixels",
+    "evidence": "inferred",
+    "shellChromeToolkit": "GTK 4"
+  },
+  "assistiveTechnologyNote": "No Orca session was run. Orca needs a session bus, speech-dispatcher and audio, none of which exist in this measurement environment. Every screen-reader statement in the V3 reports is therefore inferred from the toolkit, not observed.",
+  "assistiveTechnologySessionRun": false,
+  "atSpi": {
+    "atSpiBusReachable": true,
+    "atSpiPackagesInstalled": true,
+    "detail": "org.a11y.Bus present",
+    "evidence": "observed"
+  },
+  "compositorCapabilities": {
+    "capabilities": [
+      {
+        "capability": "screen reader reaches shell chrome",
+        "evidence": "inferred",
+        "mechanism": "AT-SPI via GTK 4 layer-shell clients",
+        "note": "The chrome is GTK, and GTK exposes AT-SPI. A real Orca session was not run in this environment, so parity is not claimed."
+      },
+      {
+        "capability": "screen reader reaches compositor-drawn surfaces",
+        "evidence": "unsupported",
+        "mechanism": "none",
+        "note": "Surfaces drawn by the compositor have no accessible representation. V3 avoids drawing chrome in the compositor for exactly this reason."
+      },
+      {
+        "capability": "keyboard navigation of shell surfaces",
+        "evidence": "inferred",
+        "mechanism": "GTK focus handling inside each layer-shell client",
+        "note": "Focus order is GTK's. The compositor guarantees only that the character layer is never focusable and that panels never steal focus."
+      },
+      {
+        "capability": "visible focus indicator",
+        "evidence": "observed",
+        "mechanism": "compositor focus policy plus GTK focus ring",
+        "note": "The compositor tracks a single focus target and refuses focus changes that no user action caused."
+      },
+      {
+        "capability": "high contrast",
+        "evidence": "inferred",
+        "mechanism": "GTK theme selection in shell clients",
+        "note": "Carried from the V2 token set; not re-measured against a contrast analyser in V3."
+      },
+      {
+        "capability": "200% scaling",
+        "evidence": "observed",
+        "mechanism": "wp-fractional-scale-v1 and GTK text scale",
+        "note": "Output scaling is implemented and unit tested; a 4K output at 200% resolves to 1920x1080 logical."
+      },
+      {
+        "capability": "reduced motion",
+        "evidence": "observed",
+        "mechanism": "compositor setting honoured by shell clients",
+        "note": "Reduced motion returns a zero animation duration rather than a shortened one."
+      },
+      {
+        "capability": "sticky keys, slow keys, mouse keys",
+        "evidence": "unavailable",
+        "mechanism": "libinput and xkbcommon",
+        "note": "These are seat-level features. The nested winit backend does not expose a libinput seat, so they could not be exercised in this environment."
+      },
+      {
+        "capability": "magnification",
+        "evidence": "unsupported",
+        "mechanism": "compositor output transform",
+        "note": "A compositor can magnify by scaling its output transform. V3 models the setting but does not implement the render path."
+      },
+      {
+        "capability": "accessible lock screen",
+        "evidence": "inferred",
+        "mechanism": "GTK lock client over ext-session-lock-v1",
+        "note": "The lock surface is a GTK client so it carries AT-SPI, but no assistive technology session was run against a locked screen."
+      }
+    ],
+    "notice": [
+      "BUNNY WAYLAND SHELL EXPERIMENT",
+      "NOT RELEASE QUALIFIED",
+      "DO NOT USE AS THE DEFAULT SESSION"
+    ],
+    "parityWithGnomeClaimable": false,
+    "schemaVersion": 1
+  },
+  "keyboard": {
+    "everyDockItemKeyboardReachable": true,
+    "evidence": "observed",
+    "overflowItemsReachable": true,
+    "surfacesThatNeverTakeKeyboard": [
+      "dock",
+      "top-bar"
+    ],
+    "surfacesThatTakeKeyboard": [
+      "approval-panel",
+      "assistant-panel",
+      "command-palette",
+      "launcher",
+      "lock-screen",
+      "notification-center",
+      "overview",
+      "quick-settings"
+    ]
+  },
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "parityWithGnomeClaimable": false,
+  "parityWithGnomeClaimed": false,
+  "scalingAndContrast": {
+    "evidence": "observed",
+    "highContrastFlagHonoured": true,
+    "magnification": {
+      "detail": "modelled as a setting; the render path is not implemented in V3",
+      "evidence": "unsupported"
+    },
+    "reducedMotionYieldsZeroDuration": true,
+    "twoHundredPercentScaling": {
+      "detail": "a 3840x2160 output at scale 2.0 resolves to 1920x1080 logical; covered by the compositor's output unit tests",
+      "evidence": "observed"
+    }
+  },
+  "schemaVersion": 1
+}

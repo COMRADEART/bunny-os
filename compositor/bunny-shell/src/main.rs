@@ -49,6 +49,9 @@ use crate::compositor::{BunnyShell, ClientState};
 use crate::config::{Config, VisualMode, NOTICE};
 use crate::diagnostics::{Evidence, Fact, RendererKind};
 
+/// One frame at 60 Hz.
+const FRAME_TARGET_MS: f64 = 1000.0 / 60.0;
+
 fn print_notice() {
     for line in NOTICE {
         eprintln!("{line}");
@@ -57,8 +60,10 @@ fn print_notice() {
 
 struct Arguments {
     self_check: bool,
+    accessibility: bool,
     diagnostics: bool,
     frames: Option<u64>,
+    run_seconds: Option<f64>,
     diagnostics_path: Option<PathBuf>,
     socket: Option<String>,
     spawn: Vec<String>,
@@ -67,8 +72,10 @@ struct Arguments {
 fn parse_arguments() -> Arguments {
     let mut arguments = Arguments {
         self_check: false,
+        accessibility: false,
         diagnostics: false,
         frames: None,
+        run_seconds: None,
         diagnostics_path: None,
         socket: None,
         spawn: Vec::new(),
@@ -77,9 +84,13 @@ fn parse_arguments() -> Arguments {
     while let Some(argument) = raw.next() {
         match argument.as_str() {
             "--self-check" => arguments.self_check = true,
+            "--accessibility" => arguments.accessibility = true,
             "--diagnostics" => arguments.diagnostics = true,
             "--frames" => {
                 arguments.frames = raw.next().and_then(|value| value.parse().ok());
+            }
+            "--run-seconds" => {
+                arguments.run_seconds = raw.next().and_then(|value| value.parse().ok());
             }
             "--diagnostics-output" => {
                 arguments.diagnostics_path = raw.next().map(PathBuf::from);
@@ -163,6 +174,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let arguments = parse_arguments();
     let environment = environment();
 
+    if arguments.accessibility {
+        // Emitted as JSON so the accessibility harness reads the capability
+        // list from the compositor itself rather than restating it.
+        let capabilities: Vec<serde_json::Value> = accessibility::capabilities()
+            .into_iter()
+            .map(|capability| {
+                serde_json::json!({
+                    "capability": capability.name,
+                    "mechanism": capability.mechanism,
+                    "evidence": capability.evidence.as_str(),
+                    "note": capability.note,
+                })
+            })
+            .collect();
+        let document = serde_json::json!({
+            "schemaVersion": 1,
+            "notice": NOTICE,
+            "parityWithGnomeClaimable": accessibility::parity_claimable(),
+            "capabilities": capabilities,
+        });
+        println!("{}", serde_json::to_string_pretty(&document).unwrap_or_default());
+        std::process::exit(0);
+    }
+
     if arguments.self_check {
         std::process::exit(self_check(&environment));
     }
@@ -237,7 +272,12 @@ fn run(config: Config, arguments: Arguments) -> Result<(), Box<dyn std::error::E
     let (listener, socket_display_name) = socket_name;
 
     eprintln!("bunny-shell: listening on WAYLAND_DISPLAY={socket_display_name}");
-    std::env::set_var("WAYLAND_DISPLAY", &socket_display_name);
+    // Deliberately NOT std::env::set_var("WAYLAND_DISPLAY", ...). In a nested
+    // run the compositor is itself a Wayland client of the host, and
+    // overwriting its own WAYLAND_DISPLAY points the winit backend's
+    // reconnection at our own socket — the compositor connects to itself, the
+    // handshake fails, and the event loop exits. Children get the socket
+    // through their spawn environment instead.
 
     state.diagnostics.renderer = rendering::renderer_fact(RendererKind::Gles);
     state.diagnostics.xwayland = Fact::new(
@@ -283,6 +323,7 @@ fn run(config: Config, arguments: Arguments) -> Result<(), Box<dyn std::error::E
     let start_time = Instant::now();
     let mut frames: u64 = 0;
     let mut first_frame_reported = false;
+    let mut client_error_reported = false;
     let bindings = input::default_bindings();
     let _ = &bindings;
 
@@ -290,6 +331,7 @@ fn run(config: Config, arguments: Arguments) -> Result<(), Box<dyn std::error::E
     for entry in &arguments.spawn {
         match std::process::Command::new(entry)
             .env("WAYLAND_DISPLAY", &socket_display_name)
+            .env("BUNNY_SHELL_EXPERIMENTAL", "1")
             .spawn()
         {
             Ok(_) => eprintln!("bunny-shell: spawned {entry}"),
@@ -323,18 +365,53 @@ fn run(config: Config, arguments: Arguments) -> Result<(), Box<dyn std::error::E
                 }
             }
             WinitEvent::CloseRequested => {
+                eprintln!("bunny-shell: host window close requested; ending the session");
                 state.running = false;
             }
             _ => {}
         });
 
-        if let smithay::reexports::winit::platform::pump_events::PumpStatus::Exit(_) = status {
+        if let smithay::reexports::winit::platform::pump_events::PumpStatus::Exit(code) = status {
+            eprintln!("bunny-shell: winit event loop exited with {code}");
             break;
         }
         if !state.running {
             break;
         }
 
+        // Client I/O runs on every iteration, never only on the frames we
+        // choose to draw: a client that connects between two frames must still
+        // be accepted, and a client that sends a request must still be read.
+        if let Some(stream) = listener.accept()? {
+            let client = display
+                .handle()
+                .insert_client(stream, Arc::new(ClientState::default()))?;
+            clients.push(client);
+        }
+        // A client dying is normal and must never end the session. Errors here
+        // are per-client, not per-compositor.
+        if let Err(error) = display.dispatch_clients(&mut state) {
+            if !client_error_reported {
+                client_error_reported = true;
+                eprintln!("bunny-shell: client dispatch error (suppressing repeats): {error}");
+            }
+        }
+        display.flush_clients()?;
+
+        // No rate limiting here, deliberately.
+        //
+        // `backend.submit()` blocks on the host compositor's frame callback, so
+        // in a nested run the host already paces us to its refresh rate. Adding
+        // a second rate limit on top is not merely redundant — it is fatal.
+        // Measured on this host: every variant that rate-limited the loop
+        // (sleeping the frame remainder, and skipping renders with a 2 ms
+        // slice) killed the winit event loop with exit code 1 inside a second
+        // and logged thousands of host connection resets. The unthrottled loop
+        // ran a full 12 s with zero resets, repeatedly.
+        //
+        // A DRM/KMS session has no host to pace against, so a real Bunny shell
+        // on hardware must supply its own pacing from the page-flip event. That
+        // is a V4 requirement, recorded in V4_PRODUCTION_REQUIREMENTS.md.
         let size = backend.window_size();
         let damage = Rectangle::from_size(size);
         {
@@ -361,22 +438,17 @@ fn run(config: Config, arguments: Arguments) -> Result<(), Box<dyn std::error::E
                 send_frames(surface.wl_surface(), start_time.elapsed().as_millis() as u32);
             }
 
-            if let Some(stream) = listener.accept()? {
-                let client = display
-                    .handle()
-                    .insert_client(stream, Arc::new(ClientState::default()))?;
-                clients.push(client);
-            }
-
-            display.dispatch_clients(&mut state)?;
             display.flush_clients()?;
         }
 
         backend.submit(Some(&[damage]))?;
 
         frames += 1;
+        // Record the cost of the frame's *work*, before any pacing sleep, so
+        // the number means "how long a frame takes to produce" rather than
+        // "how often we chose to produce one".
         let elapsed_ms = frame_started.elapsed().as_secs_f64() * 1000.0;
-        state.diagnostics.frame_timing.record(elapsed_ms, 16.67);
+        state.diagnostics.frame_timing.record(elapsed_ms, FRAME_TARGET_MS);
 
         if !first_frame_reported {
             first_frame_reported = true;
@@ -388,6 +460,11 @@ fn run(config: Config, arguments: Arguments) -> Result<(), Box<dyn std::error::E
 
         if let Some(limit) = config.run_for_frames {
             if frames >= limit {
+                break;
+            }
+        }
+        if let Some(seconds) = arguments.run_seconds {
+            if startup.elapsed().as_secs_f64() >= seconds {
                 break;
             }
         }

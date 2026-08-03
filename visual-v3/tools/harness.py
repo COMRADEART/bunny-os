@@ -89,9 +89,19 @@ def shell_environment(**overrides: str) -> dict[str, str]:
 class NestedShell:
     """Runs the compositor on its own socket and cleans up after itself."""
 
-    def __init__(self, socket: str, *, frames: int = 900, mode: str = "regular", log: Path | None = None):
+    def __init__(
+        self,
+        socket: str,
+        *,
+        seconds: float = 60.0,
+        mode: str = "regular",
+        log: Path | None = None,
+    ):
         self.socket = socket
-        self.frames = frames
+        # A frame count is not a time budget: with no clients attached the
+        # compositor produces thousands of frames a second, so a run bounded by
+        # frames ends before a client can connect.
+        self.seconds = seconds
         self.mode = mode
         self.log = log or (REPORTS / f"{socket}.log")
         self.process: subprocess.Popen | None = None
@@ -106,6 +116,21 @@ class NestedShell:
         return self.runtime_dir() / self.socket
 
     def __enter__(self) -> "NestedShell":
+        # The nested backend contends with the host compositor, and a start can
+        # lose that race. Retrying is honest here: a start that succeeds on the
+        # second attempt is still a start, and the alternative is a report full
+        # of "unavailable" caused by the harness rather than by the shell.
+        last_error: Exception | None = None
+        for attempt in range(3):
+            try:
+                return self._start()
+            except RuntimeError as error:
+                last_error = error
+                self.__exit__()
+                time.sleep(2)
+        raise last_error if last_error else RuntimeError("could not start the compositor")
+
+    def _start(self) -> "NestedShell":
         REPORTS.mkdir(parents=True, exist_ok=True)
         for suffix in ("", ".lock"):
             candidate = Path(str(self.socket_path()) + suffix)
@@ -118,8 +143,8 @@ class NestedShell:
                     str(BINARY),
                     "--socket",
                     self.socket,
-                    "--frames",
-                    str(self.frames),
+                    "--run-seconds",
+                    str(self.seconds),
                     "--diagnostics-output",
                     str(self.diagnostics_path),
                 ],

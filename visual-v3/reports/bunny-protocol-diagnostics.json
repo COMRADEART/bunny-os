@@ -1,0 +1,159 @@
+{
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "compositor_version": "0.3.0",
+  "framework": "smithay 0.7",
+  "renderer": {
+    "name": "renderer",
+    "value": "opengl-es",
+    "evidence": "observed",
+    "note": "Hardware path selected by the backend."
+  },
+  "gpu": {
+    "name": "gpu",
+    "value": "unknown",
+    "evidence": "unavailable"
+  },
+  "displays": [
+    {
+      "name": "bunny-nested-0",
+      "value": "1280x800 @ scale 1",
+      "evidence": "observed"
+    }
+  ],
+  "protocols": [
+    {
+      "name": "wl_compositor",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "wl_shm",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "wl_seat",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "wl_output",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "xdg_wm_base",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "xdg_activation_v1",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "zxdg_decoration_manager_v1",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "zxdg_output_manager_v1",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "wp_presentation",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "wp_viewporter",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "wp_fractional_scale_manager_v1",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "zwp_relative_pointer_manager_v1",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "zwp_text_input_manager_v3",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "zwp_idle_inhibit_manager_v1",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "zwlr_layer_shell_v1",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "ext_session_lock_manager_v1",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "wl_data_device_manager",
+      "value": "advertised",
+      "evidence": "observed"
+    },
+    {
+      "name": "zwp_primary_selection_device_manager_v1",
+      "value": "advertised",
+      "evidence": "observed"
+    }
+  ],
+  "xwayland": {
+    "name": "xwayland",
+    "value": "disabled",
+    "evidence": "observed"
+  },
+  "portals": {
+    "name": "portals",
+    "value": "not queried",
+    "evidence": "unavailable"
+  },
+  "pipewire": {
+    "name": "pipewire",
+    "value": "not queried",
+    "evidence": "unavailable"
+  },
+  "input_devices": [],
+  "frame_timing": {
+    "frames": 2,
+    "dropped": 2,
+    "mean_frame_milliseconds": 44.157016999999996,
+    "worst_frame_milliseconds": 46.934827
+  },
+  "memory": {
+    "name": "resident-memory",
+    "value": "208.4 MB",
+    "evidence": "observed"
+  },
+  "components": [
+    {
+      "name": "startup",
+      "value": "1021.8 ms",
+      "evidence": "observed"
+    }
+  ],
+  "recent_crashes": [],
+  "known_limitations": [
+    "Nested winit backend: no DRM/KMS output, no libinput seat.",
+    "No screencopy protocol: smithay 0.7 does not implement it.",
+    "Shell chrome is drawn by GTK layer-shell clients, not by the compositor."
+  ]
+}

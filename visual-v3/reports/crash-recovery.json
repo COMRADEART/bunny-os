@@ -10,7 +10,7 @@
     {
       "automaticRestartStopped": true,
       "crashRecords": 2,
-      "elapsedSeconds": 0.174,
+      "elapsedSeconds": 0.199,
       "endedInRecovery": true,
       "guidanceMentionsGnome": true,
       "infiniteLoop": false,
