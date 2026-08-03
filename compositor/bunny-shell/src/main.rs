@@ -64,6 +64,15 @@ struct Arguments {
     diagnostics: bool,
     frames: Option<u64>,
     run_seconds: Option<f64>,
+    /// Write one PNG of the composited output and keep running.
+    ///
+    /// This is an operator-only diagnostic reached through the command line at
+    /// start-up. It is deliberately NOT a protocol: no client can request it,
+    /// there is no Wayland interface for it, and it cannot be triggered by a
+    /// running application. Unrestricted compositor screenshots for ordinary
+    /// clients remain refused — see `security::authorise_capture`.
+    capture_frame: Option<PathBuf>,
+    capture_after_seconds: f64,
     diagnostics_path: Option<PathBuf>,
     socket: Option<String>,
     spawn: Vec<String>,
@@ -76,6 +85,8 @@ fn parse_arguments() -> Arguments {
         diagnostics: false,
         frames: None,
         run_seconds: None,
+        capture_frame: None,
+        capture_after_seconds: 20.0,
         diagnostics_path: None,
         socket: None,
         spawn: Vec::new(),
@@ -91,6 +102,14 @@ fn parse_arguments() -> Arguments {
             }
             "--run-seconds" => {
                 arguments.run_seconds = raw.next().and_then(|value| value.parse().ok());
+            }
+            "--capture-frame" => {
+                arguments.capture_frame = raw.next().map(PathBuf::from);
+            }
+            "--capture-after-seconds" => {
+                if let Some(value) = raw.next().and_then(|value| value.parse().ok()) {
+                    arguments.capture_after_seconds = value;
+                }
             }
             "--diagnostics-output" => {
                 arguments.diagnostics_path = raw.next().map(PathBuf::from);
@@ -324,6 +343,7 @@ fn run(config: Config, arguments: Arguments) -> Result<(), Box<dyn std::error::E
     let mut frames: u64 = 0;
     let mut first_frame_reported = false;
     let mut client_error_reported = false;
+    let mut captured = false;
     let bindings = input::default_bindings();
     let _ = &bindings;
 
@@ -438,6 +458,19 @@ fn run(config: Config, arguments: Arguments) -> Result<(), Box<dyn std::error::E
                 send_frames(surface.wl_surface(), start_time.elapsed().as_millis() as u32);
             }
 
+            if let Some(path) = &arguments.capture_frame {
+                // Triggered on elapsed time, not on a frame count. In a
+                // nested run the host decides how many frames we get, so a
+                // frame threshold may never be reached at all.
+                if !captured && startup.elapsed().as_secs_f64() >= arguments.capture_after_seconds {
+                    captured = true;
+                    match capture_framebuffer(renderer, &framebuffer, size, path) {
+                        Ok(()) => eprintln!("bunny-shell: captured a frame to {}", path.display()),
+                        Err(error) => eprintln!("bunny-shell: frame capture failed: {error}"),
+                    }
+                }
+            }
+
             display.flush_clients()?;
         }
 
@@ -494,6 +527,52 @@ fn run(config: Config, arguments: Arguments) -> Result<(), Box<dyn std::error::E
         println!("{report}");
     }
 
+    Ok(())
+}
+
+/// Write the composited output to a PNG.
+///
+/// Operator-only, reached from the command line at start-up. There is no
+/// protocol path to this function, so it does not weaken the rule that ordinary
+/// clients cannot screenshot through the compositor.
+fn capture_framebuffer(
+    renderer: &mut smithay::backend::renderer::gles::GlesRenderer,
+    framebuffer: &smithay::backend::renderer::gles::GlesTarget<'_>,
+    size: smithay::utils::Size<i32, smithay::utils::Physical>,
+    path: &std::path::Path,
+) -> Result<(), Box<dyn std::error::Error>> {
+    use smithay::backend::allocator::Fourcc;
+    use smithay::backend::renderer::ExportMem;
+
+    let region = Rectangle::from_size((size.w, size.h).into());
+    let mapping = renderer.copy_framebuffer(framebuffer, region, Fourcc::Abgr8888)?;
+    let pixels = renderer.map_texture(&mapping)?;
+
+    let width = size.w.max(1) as u32;
+    let height = size.h.max(1) as u32;
+    let stride = (width * 4) as usize;
+
+    // The frame is composed with Transform::Flipped180, and GL reads back from
+    // the bottom-left origin, so the rows arrive in the opposite order to the
+    // logical layout. Reversing them puts the top bar back at the top.
+    let mut oriented = Vec::with_capacity(pixels.len());
+    for row in (0..height as usize).rev() {
+        let start = row * stride;
+        let end = start + stride;
+        if end <= pixels.len() {
+            oriented.extend_from_slice(&pixels[start..end]);
+        }
+    }
+
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let file = std::fs::File::create(path)?;
+    let mut encoder = png::Encoder::new(std::io::BufWriter::new(file), width, height);
+    encoder.set_color(png::ColorType::Rgba);
+    encoder.set_depth(png::BitDepth::Eight);
+    let mut writer = encoder.write_header()?;
+    writer.write_image_data(&oriented)?;
     Ok(())
 }
 

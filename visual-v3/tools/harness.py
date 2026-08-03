@@ -96,12 +96,16 @@ class NestedShell:
         seconds: float = 60.0,
         mode: str = "regular",
         log: Path | None = None,
+        capture: Path | None = None,
+        capture_after_seconds: float = 20.0,
     ):
         self.socket = socket
         # A frame count is not a time budget: with no clients attached the
         # compositor produces thousands of frames a second, so a run bounded by
         # frames ends before a client can connect.
         self.seconds = seconds
+        self.capture = capture
+        self.capture_after_seconds = capture_after_seconds
         self.mode = mode
         self.log = log or (REPORTS / f"{socket}.log")
         self.process: subprocess.Popen | None = None
@@ -147,7 +151,17 @@ class NestedShell:
                     str(self.seconds),
                     "--diagnostics-output",
                     str(self.diagnostics_path),
-                ],
+                ]
+                + (
+                    [
+                        "--capture-frame",
+                        str(self.capture),
+                        "--capture-after-seconds",
+                        str(self.capture_after_seconds),
+                    ]
+                    if self.capture
+                    else []
+                ),
                 stdout=stream,
                 stderr=subprocess.STDOUT,
                 env=shell_environment(BUNNY_SHELL_MODE=self.mode),
