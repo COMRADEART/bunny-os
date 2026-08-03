@@ -564,23 +564,41 @@ The check is behaving correctly and the records block. They have deliberately
 from is the substitution the check exists to catch. Clearing this requires
 re-measuring the matrices, not recomputing a digest.
 
-### Evidence digests are not EOL-protected outside `qualification/`
+### Evidence digests were not EOL-protected outside `qualification/` — corrected
 
-`.gitattributes` marks `qualification/**`, `build/out/**`, `systemd/**`,
-`config/**` and `*.sh` as `-text` precisely so that attested bytes round-trip
-git exactly. `operations/data/**` is **not** covered, yet
-`operations/data/qualification-matrices.json` is attested by `contentDigest` in
-all twenty evidence records.
+> **Corrected 2026-08-03.** This section first stated that the hazard had "not
+> yet produced a wrong record". That was wrong, and the correction is below.
+> The protection has since been added; see `docs/EVIDENCE_BYTE_ROUNDTRIP.md`.
 
-Measured on a Windows checkout with `core.autocrlf=true`: that file contains 622
-CRLF pairs in the working tree and digests to `dcfe08e49c21`, where the committed
-LF bytes digest to `04c09f845bc4`. Any evidence generated or verified from such a
-checkout would carry a digest that no Linux checkout can reproduce.
+`.gitattributes` marked `qualification/**`, `build/out/**`, `systemd/**`,
+`config/**` and `*.sh` as `-text` precisely so that attested bytes round-trip git
+exactly. It did not cover the paths attested by
+`operations/data/release-evidence.json`.
 
-This has not yet produced a wrong record, because the records currently block for
-the unrelated staleness above. It is a live hazard for any future evidence pass
-run on Windows, and the narrow fix is to extend the `-text` protection to
-`operations/data/**`.
+A generic scan of every path bound to a `contentDigest` found **seven** such
+files, not one. On a Windows checkout with `core.autocrlf=true`, all seven
+differed from their committed bytes.
+
+**One had already been recorded from such a checkout.** The digest recorded for
+`operations/data/hardware-evidence.json` is `73fe6d481320`, which is that file's
+CRLF hash; its committed bytes hash to `4836c6c7e9ba`. That record verifies on
+Windows and fails on Linux, and `physical-hardware` is one of the fourteen
+candidate prerequisites.
+
+It must be **re-measured, not re-digested** — recomputing the hash would bind the
+record to bytes it was never measured from. Until then it is registered in
+`KNOWN_CRLF_BOUND_RECORDS` in `tests/evidence/test_byte_roundtrip.py`, which
+fails on any *new* occurrence.
+
+The correction lists each attested path individually rather than using
+`operations/data/** -text`, so the rule stays exactly as wide as the attestation.
+`test_every_attested_file_has_content_filtering_disabled` discovers attested
+paths from the evidence documents and fails until each is protected, so a newly
+attested file cannot slip through.
+
+This changed no evidence and no committed byte: the blob hashes of all seven
+files are identical before and after. It does not make the stale records above
+current — those remain stale and still block.
 
 ### One protected mutation test cannot run on Windows
 
