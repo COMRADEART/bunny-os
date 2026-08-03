@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Bunny Control Center
+Comment=Configure Bunny Desktop-specific behavior
+Exec=/usr/bin/bunny-command-center
+Icon=bunny-control-center
+Terminal=false
+Type=Application
+Categories=Settings;DesktopSettings;
+Keywords=Bunny;Settings;Appearance;Layout;Privacy;
+X-Bunny-Visual-Prototype=true

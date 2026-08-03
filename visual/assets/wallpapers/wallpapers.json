@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "license": "CC-BY-SA-4.0",
+  "generatedOutput": "build/visual/wallpapers",
+  "sizes": {
+    "16x9": [1920, 1080],
+    "16x10": [1920, 1200],
+    "ultrawide": [3440, 1440],
+    "4k": [3840, 2160]
+  },
+  "families": {
+    "bunny-night": {
+      "title": "Bunny Night",
+      "dark": ["#080A10", "#151821", "#8B7CFF", "#65C7F7"],
+      "light": ["#E8E9F0", "#F9F9F7", "#5948CC", "#245E7A"],
+      "composition": "nested-arcs"
+    },
+    "bunny-dawn": {
+      "title": "Bunny Dawn",
+      "dark": ["#17121B", "#302334", "#EF8C8B", "#F0B65A"],
+      "light": ["#FFF5EE", "#F6E6DD", "#B94F61", "#9A6400"],
+      "composition": "rising-horizon"
+    },
+    "bunny-cloud": {
+      "title": "Bunny Cloud",
+      "dark": ["#11151D", "#28303E", "#B9BFCC", "#65C7F7"],
+      "light": ["#F4F4F2", "#DDE4EA", "#6C7483", "#3C7D9B"],
+      "composition": "soft-bands"
+    },
+    "bunny-horizon": {
+      "title": "Bunny Horizon",
+      "dark": ["#0C1218", "#18313C", "#65C7F7", "#55C997"],
+      "light": ["#EEF7F7", "#D3E7E7", "#27708F", "#237053"],
+      "composition": "paired-horizon"
+    },
+    "bunny-focus": {
+      "title": "Bunny Focus",
+      "dark": ["#0C0E14", "#151821", "#8B7CFF", "#B9BFCC"],
+      "light": ["#F4F4F2", "#E7E9EE", "#5948CC", "#545B6B"],
+      "composition": "focus-channel"
+    },
+    "bunny-minimal": {
+      "title": "Bunny Minimal",
+      "dark": ["#0C0E14", "#10131B", "#65C7F7", "#8B7CFF"],
+      "light": ["#FAFAF8", "#F0F0ED", "#245E7A", "#5948CC"],
+      "composition": "single-mark"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+Window.SetBackgroundTopColor(0.047, 0.055, 0.078);
+Window.SetBackgroundBottomColor(0.047, 0.055, 0.078);
+mark.image = Image("bunny-plymouth.svg");
+mark.sprite = Sprite(mark.image);
+mark.sprite.SetX(Window.GetWidth() / 2 - mark.image.GetWidth() / 2);
+mark.sprite.SetY(Window.GetHeight() / 2 - mark.image.GetHeight() / 2);
+mark.sprite.SetOpacity(0.94);
+
+fun progress_callback(duration, progress) {
+  # Progress is supplied by Plymouth; no invented percentage is displayed.
+  mark.sprite.SetOpacity(0.72 + progress * 0.22);
+}
+Plymouth.SetBootProgressFunction(progress_callback);

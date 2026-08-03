@@ -1,0 +1,11 @@
+{
+  "$schema": "./schema.json",
+  "family": "radius",
+  "version": 1,
+  "tokens": {
+    "control-small": {"value": "9px", "type": "dimension"},
+    "card": {"value": "16px", "type": "dimension"},
+    "panel": {"value": "22px", "type": "dimension"},
+    "pill": {"value": "999px", "type": "dimension"}
+  }
+}
