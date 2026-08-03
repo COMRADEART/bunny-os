@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Bunny Diagnostics V2
-Comment=VISUAL PROTOTYPE ONLY — NOT RELEASE QUALIFIED — DO NOT MERGE INTO MAIN
-Exec=bunny-diagnostics-v2
-Icon=utilities-system-monitor-symbolic
-Terminal=false
-Type=Application
-Categories=System;Utility;
-X-Bunny-Visual-Prototype=true

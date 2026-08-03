@@ -1,9 +1,0 @@
-/* Generated from visual-v2/tokens. Do not hand edit. */
-/* VISUAL PROTOTYPE ONLY — NOT RELEASE QUALIFIED — DO NOT MERGE INTO MAIN */
-.bunny-window { background: #090C17; color: #F5F7FF; }
-.bunny-card { background: #182038; border: 1px solid rgba(190, 200, 255, 0.14); border-radius: 16px; padding: 16px; }
-.bunny-character-region { background: #0D1222; border-radius: 16px; padding: 8px; }
-.bunny-mock-banner { background: #F0B45C; color: #090C17; border-radius: 8px; padding: 8px 12px; font-weight: 700; }
-.bunny-state { color: #63C5FF; font-weight: 600; }
-.bunny-mono { font-family: 'Adwaita Mono'; font-size: 13px; }
-.caption { color: #B7BED4; font-size: 11px; }

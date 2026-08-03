@@ -1,9 +1,0 @@
-{
-  "uuid": "bunny-desktop-v2@bunny-os.org",
-  "name": "Bunny Desktop Visual V2",
-  "description": "VISUAL PROTOTYPE ONLY — NOT RELEASE QUALIFIED — DO NOT MERGE INTO MAIN",
-  "shell-version": ["45", "46", "47", "48"],
-  "settings-schema": "org.bunnyos.desktop.visual-v2",
-  "version": 2
-}
-
