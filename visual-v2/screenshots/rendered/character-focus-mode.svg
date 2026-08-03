@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <title>character-focus-mode — Bunny Desktop Visual V2 mock review</title>
+  <style>.title{fill:#F5F7FF;font:600 24px 'Adwaita Sans',sans-serif}.heading{fill:#F5F7FF;font:600 18px 'Adwaita Sans',sans-serif}.body{fill:#F5F7FF;font:15px 'Adwaita Sans',sans-serif}.label{fill:#F5F7FF;font:500 13px 'Adwaita Sans',sans-serif}.caption,.muted{fill:#B7BED4;font:13px 'Adwaita Sans',sans-serif}.warning{fill:#F0B45C;font:600 14px 'Adwaita Sans',sans-serif}</style>
+  <rect width="1920" height="1080" fill="#090C17"/>
+  <path d="M-80 980 C 40 180, 470 20, 790 1030" fill="none" stroke="#8C7CFF" stroke-opacity=".22" stroke-width="128" stroke-linecap="round"/>
+  <path d="M2000 980 C 1880 180, 1450 20, 1130 1030" fill="none" stroke="#63C5FF" stroke-opacity=".18" stroke-width="128" stroke-linecap="round"/>
+<rect width="1920" height="48" fill="#0D1222" fill-opacity=".96"/><text x="26" y="31" class="body">FocusMode</text><rect x="833" y="9" width="254" height="30" rx="12" fill="#182038"/><text x="873" y="30" class="label">Mon, May 12 · 10:30 AM</text><text x="1716" y="31" class="body">Exit Focus</text>
+
+
+  <rect x="24" y="1020" width="360" height="36" rx="10" fill="#F0B45C"/><text x="42" y="1044" fill="#090C17" font-family="Adwaita Sans,sans-serif" font-size="13" font-weight="700">VISUAL MOCK DATA · review artifact only</text>
+</svg>

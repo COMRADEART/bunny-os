@@ -1,6 +1,10 @@
 # Bunny Desktop V2 accessibility specification
 
-> VISUAL PROTOTYPE ONLY · NOT RELEASE QUALIFIED · DO NOT MERGE INTO MAIN
+> VISUAL PROTOTYPE ONLY
+>
+> NOT RELEASE QUALIFIED
+>
+> DO NOT MERGE INTO MAIN
 
 Regular and Character modes have the same keyboard, focus, state, contrast,
 scaling, and assistive-technology requirements. Character Mode cannot weaken a
@@ -33,4 +37,3 @@ consequence-confirmation control, and never preselect approval.
 `visual-v2/tools/a11y_audit.py` performs deterministic source and layout
 checks. It does not claim an Orca or real-session result; those remain manual
 Linux preview checks.
-

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 2,
+  "notice": "VISUAL PROTOTYPE ONLY — NOT RELEASE QUALIFIED — DO NOT MERGE INTO MAIN",
+  "mockEnvironment": "BUNNY_VISUAL_MOCK_MODE=1",
+  "scenarios": [
+    {"id": "regular-empty-desktop", "mode": "regular", "surface": "empty", "theme": "dark", "layout": "normal"},
+    {"id": "regular-command-palette", "mode": "regular", "surface": "palette", "theme": "dark", "layout": "normal"},
+    {"id": "regular-quick-settings", "mode": "regular", "surface": "quick", "theme": "dark", "layout": "normal"},
+    {"id": "regular-assistant-ready", "mode": "regular", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Ready"},
+    {"id": "regular-approval", "mode": "regular", "surface": "approval", "theme": "dark", "layout": "normal", "state": "Waiting for approval"},
+    {"id": "regular-privacy-local-only", "mode": "regular", "surface": "privacy", "theme": "dark", "layout": "normal", "state": "Local Only"},
+    {"id": "regular-focus-mode", "mode": "regular", "surface": "empty", "theme": "dark", "layout": "focus"},
+    {"id": "regular-compact-layout", "mode": "regular", "surface": "quick", "theme": "dark", "layout": "compact"},
+    {"id": "regular-light-theme", "mode": "regular", "surface": "quick", "theme": "light", "layout": "normal"},
+    {"id": "regular-high-contrast", "mode": "regular", "surface": "assistant", "theme": "highContrast", "layout": "normal", "state": "Ready"},
+    {"id": "regular-offline", "mode": "regular", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Offline"},
+    {"id": "regular-error", "mode": "regular", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Failed"},
+    {"id": "character-welcome", "mode": "character", "surface": "welcome", "theme": "dark", "layout": "normal", "state": "Ready", "pose": "welcome-wave"},
+    {"id": "character-assistant-ready", "mode": "character", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Ready", "pose": "idle-neutral"},
+    {"id": "character-thinking", "mode": "character", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Thinking", "pose": "thinking"},
+    {"id": "character-explaining", "mode": "character", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Explaining", "pose": "explaining"},
+    {"id": "character-requesting-approval", "mode": "character", "surface": "approval", "theme": "dark", "layout": "normal", "state": "Waiting for approval", "pose": "requesting-approval"},
+    {"id": "character-task-running", "mode": "character", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Running", "pose": "task-running"},
+    {"id": "character-task-completed", "mode": "character", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Completed", "resultConfirmed": true, "pose": "task-completed"},
+    {"id": "character-warning", "mode": "character", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Warning", "pose": "warning"},
+    {"id": "character-error", "mode": "character", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Failed", "pose": "error"},
+    {"id": "character-offline", "mode": "character", "surface": "assistant", "theme": "dark", "layout": "normal", "state": "Offline", "pose": "offline"},
+    {"id": "character-privacy-mode", "mode": "character", "surface": "privacy", "theme": "dark", "layout": "normal", "state": "Local Only", "pose": "privacy-mode"},
+    {"id": "character-compact-layout", "mode": "character", "surface": "assistant", "theme": "dark", "layout": "compact", "state": "Ready", "pose": null, "characterSuppressed": true},
+    {"id": "character-focus-mode", "mode": "character", "surface": "empty", "theme": "dark", "layout": "focus", "state": "Ready", "pose": null, "characterSuppressed": true},
+    {"id": "character-200-percent-scaling", "mode": "character", "surface": "assistant", "theme": "dark", "layout": "compact", "state": "Ready", "scale": 2, "pose": null, "characterSuppressed": true}
+  ]
+}

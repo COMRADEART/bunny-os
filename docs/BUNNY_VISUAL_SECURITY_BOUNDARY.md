@@ -1,6 +1,10 @@
 # Bunny Visual V2 security boundary
 
-> VISUAL PROTOTYPE ONLY · NOT RELEASE QUALIFIED · DO NOT MERGE INTO MAIN
+> VISUAL PROTOTYPE ONLY
+>
+> NOT RELEASE QUALIFIED
+>
+> DO NOT MERGE INTO MAIN
 
 The visual layer observes a bounded user-private state projection and dispatches
 only audited fixed actions. Command Palette input filters registered actions;
@@ -19,4 +23,3 @@ or accounts and does not contact a network service.
 The V2 branch does not change qualification evidence, release gates, stable or
 pilot status, signing records, reproducibility records, production keys, or
 the default session.
-

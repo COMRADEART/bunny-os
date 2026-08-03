@@ -1,6 +1,10 @@
 # Bunny Desktop V2 dual-mode contract
 
-> VISUAL PROTOTYPE ONLY · NOT RELEASE QUALIFIED · DO NOT MERGE INTO MAIN
+> VISUAL PROTOTYPE ONLY
+>
+> NOT RELEASE QUALIFIED
+>
+> DO NOT MERGE INTO MAIN
 
 `regular` and `character` are presentations of the same Bunny Desktop. They
 never select different commands, providers, approval adapters, settings
@@ -21,4 +25,3 @@ backends, application binaries, or security behavior.
 
 The mode can be changed from Quick Settings, Control Center, Command Palette,
 onboarding, or `Super+Alt+B`. Each entry point writes the same GSettings key.
-

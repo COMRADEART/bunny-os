@@ -1,6 +1,10 @@
 # Bunny Desktop V2 performance specification
 
-> VISUAL PROTOTYPE ONLY · NOT RELEASE QUALIFIED · DO NOT MERGE INTO MAIN
+> VISUAL PROTOTYPE ONLY
+>
+> NOT RELEASE QUALIFIED
+>
+> DO NOT MERGE INTO MAIN
 
 ## Interaction targets
 
@@ -22,4 +26,3 @@ to Regular Mode clears the cache.
 network or disk writes. `performance_audit.py` records deterministic build and
 static-source checks. Live GNOME timings require a Linux nested or disposable
 preview session and must never be inferred from deterministic rendering time.
-

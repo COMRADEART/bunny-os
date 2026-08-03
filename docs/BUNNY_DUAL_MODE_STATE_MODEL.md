@@ -1,6 +1,10 @@
 # Bunny dual-mode state model
 
-> VISUAL PROTOTYPE ONLY · NOT RELEASE QUALIFIED · DO NOT MERGE INTO MAIN
+> VISUAL PROTOTYPE ONLY
+>
+> NOT RELEASE QUALIFIED
+>
+> DO NOT MERGE INTO MAIN
 
 `visual-mode` selects `regular` or `character`; `layout-mode` independently
 selects `normal`, `compact`, or `focus`. Both dimensions feed one presentation
@@ -21,4 +25,3 @@ snapshot and one shared action registry.
 
 Regular Mode bypasses this mapping and renders activity, context, suggestions,
 and privacy information in the same space. No character placeholder survives.
-

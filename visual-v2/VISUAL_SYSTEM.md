@@ -1,6 +1,10 @@
 # Bunny Desktop V2 visual system
 
-> VISUAL PROTOTYPE ONLY · NOT RELEASE QUALIFIED · DO NOT MERGE INTO MAIN
+> VISUAL PROTOTYPE ONLY
+>
+> NOT RELEASE QUALIFIED
+>
+> DO NOT MERGE INTO MAIN
 
 Bunny Desktop uses a deep navy foundation, restrained violet and sky accents,
 layered surfaces, and typography-led hierarchy. Translucency is limited to
@@ -36,4 +40,3 @@ Micro feedback is 120 ms, panels are 180 ms, visual-mode reflow is 240 ms, and
 workspace movement is 280 ms. Reduced motion sets every nonessential duration
 to zero and removes scale, parallax, spring, character entrance, and wallpaper
 movement.
-

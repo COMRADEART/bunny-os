@@ -1,6 +1,10 @@
 # Bunny Desktop V2 architecture
 
-> VISUAL PROTOTYPE ONLY · NOT RELEASE QUALIFIED · DO NOT MERGE INTO MAIN
+> VISUAL PROTOTYPE ONLY
+>
+> NOT RELEASE QUALIFIED
+>
+> DO NOT MERGE INTO MAIN
 
 Bunny Desktop Preview is an additive GNOME session on Wayland. Its session file
 starts the upstream GNOME components and enables only the V2 extension. The
@@ -23,4 +27,3 @@ approval adapter boundary.
 
 The preview launcher requires `BUNNY_VISUAL_V2_PREVIEW=1`. Packaging excludes
 mock fixtures and refuses to run when `BUNNY_VISUAL_MOCK_MODE=1`.
-

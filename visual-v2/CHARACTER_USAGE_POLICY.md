@@ -1,8 +1,12 @@
 # Bunny guide usage policy
 
-> VISUAL PROTOTYPE ONLY · NOT RELEASE QUALIFIED · DO NOT MERGE INTO MAIN
+> VISUAL PROTOTYPE ONLY
+>
+> NOT RELEASE QUALIFIED
+>
+> DO NOT MERGE INTO MAIN
 
-Bunny Desktop has one canonical guide: an adult male technology guide with
+Bunny Desktop has one canonical guide: a young male technology guide with
 dark curly hair, warm brown skin, expressive brown eyes, a black minimalist
 hoodie, fitted black pants, and black canvas sneakers with white soles. His
 expression is calm, friendly, and intelligent. Clothing has no branding and he
@@ -38,4 +42,3 @@ region exposes a concise semantic sentence, never a filename or pose slug.
 Reduced motion removes character entrance effects. Assets are loaded lazily;
 the loader retains at most three recent file icons and clears them on return to
 Regular Mode.
-
