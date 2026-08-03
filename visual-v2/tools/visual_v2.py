@@ -38,6 +38,23 @@ def setup() -> int:
     return 0
 
 
+def validate_json() -> None:
+    for path in sorted((ROOT / "visual-v2").rglob("*.json")):
+        json.loads(path.read_text(encoding="utf-8"))
+    for path in sorted((ROOT / "shell" / "bunny-desktop-v2").rglob("*.json")):
+        json.loads(path.read_text(encoding="utf-8"))
+    json.loads((ROOT / "sessions" / "bunny-desktop-preview.json").read_text(encoding="utf-8"))
+
+
+def build() -> int:
+    setup()
+    validate_json()
+    run([sys.executable, str(ROOT / "visual-v2/tools/generate_css.py"), "--check"])
+    run([sys.executable, str(ROOT / "visual-v2/tools/render_wallpapers.py"), "--check"])
+    print("Design tokens, generated CSS, and static wallpaper assets are current")
+    return 0
+
+
 def unavailable(command: str) -> int:
     print(f"{command} is introduced by a later V2 implementation commit", file=sys.stderr)
     return 2
@@ -60,6 +77,8 @@ def main() -> int:
     command = parser.parse_args().command
     if command == "setup":
         return setup()
+    if command == "build":
+        return build()
     if command == "clean":
         return clean()
     return unavailable(command)
