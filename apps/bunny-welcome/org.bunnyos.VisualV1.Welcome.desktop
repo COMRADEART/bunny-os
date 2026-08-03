@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Welcome to Bunny OS
+Comment=Choose optional, offline-capable Bunny Desktop preferences
+Exec=/usr/bin/bunny-welcome
+Icon=bunny-welcome
+Terminal=false
+Type=Application
+Categories=Settings;System;
+Keywords=Bunny;Welcome;Onboarding;Privacy;Accessibility;
+X-Bunny-Visual-Prototype=true
+X-GNOME-Autostart-enabled=false

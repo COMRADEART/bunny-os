@@ -1,0 +1,18 @@
+{
+  "$schema": "./schema.json",
+  "family": "spacing",
+  "version": 1,
+  "tokens": {
+    "space-1": {"value": "4px", "type": "dimension"},
+    "space-2": {"value": "8px", "type": "dimension"},
+    "space-3": {"value": "12px", "type": "dimension"},
+    "space-4": {"value": "16px", "type": "dimension"},
+    "space-5": {"value": "24px", "type": "dimension"},
+    "space-6": {"value": "32px", "type": "dimension"},
+    "space-7": {"value": "48px", "type": "dimension"},
+    "compact-panel-margin": {"value": "10px", "type": "dimension"},
+    "normal-panel-margin": {"value": "18px", "type": "dimension"},
+    "minimum-pointer-target": {"value": "40px", "type": "dimension"},
+    "minimum-touch-target": {"value": "44px", "type": "dimension"}
+  }
+}

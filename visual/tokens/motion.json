@@ -1,0 +1,10 @@
+{
+  "$schema": "./schema.json",
+  "family": "motion",
+  "version": 1,
+  "tokens": {
+    "micro": {"value": "120ms", "reducedValue": "0ms", "type": "duration"},
+    "panel": {"value": "200ms", "reducedValue": "0ms", "type": "duration"},
+    "workspace": {"value": "260ms", "reducedValue": "0ms", "type": "duration"}
+  }
+}

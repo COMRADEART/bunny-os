@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <title>Bunny OS optional bootloader background</title>
+  <rect width="1920" height="1080" fill="#0C0E14"/>
+  <path d="M1240 120c0 420 110 700 410 900M1720 120c0 420-110 700-410 900" fill="none" stroke="#8B7CFF" stroke-opacity=".26" stroke-width="26" stroke-linecap="round"/>
+  <text x="96" y="980" fill="#B9BFCC" font-family="Adwaita Sans, sans-serif" font-size="28">Bunny OS</text>
+</svg>

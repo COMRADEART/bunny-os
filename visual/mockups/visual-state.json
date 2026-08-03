@@ -1,0 +1,7 @@
+{
+  "source": "shell/bunny-shell-extension/mock-state.json",
+  "activation": "BUNNY_VISUAL_MOCK_MODE=1",
+  "banner": "VISUAL MOCK DATA",
+  "productionAllowed": false,
+  "purpose": "Deterministic presentation states only; never functional evidence."
+}

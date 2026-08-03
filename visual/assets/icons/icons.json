@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "symbolic": ["bunny-command", "bunny-assistant", "bunny-approval", "bunny-diagnostics", "bunny-privacy", "bunny-layout"],
+  "applications": ["bunny-control-center", "bunny-assistant", "bunny-approval-center", "bunny-diagnostics", "bunny-welcome"],
+  "standardApplicationIconsRedrawn": false,
+  "output": "build/visual/icons"
+}

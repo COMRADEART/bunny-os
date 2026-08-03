@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "mockEnvironment": "BUNNY_VISUAL_MOCK_MODE=1",
+  "output": "build/visual/screenshots",
+  "scenarios": [
+    {"id": "empty-desktop", "title": "Empty desktop", "surface": "desktop", "theme": "dark", "mode": "normal"},
+    {"id": "multiple-windows", "title": "Multiple windows", "surface": "windows", "theme": "dark", "mode": "normal"},
+    {"id": "workspace-overview", "title": "Workspace overview", "surface": "overview", "theme": "dark", "mode": "normal"},
+    {"id": "command-palette", "title": "Bunny Command Palette", "surface": "palette", "theme": "dark", "mode": "normal"},
+    {"id": "quick-settings", "title": "Quick Settings", "surface": "quick", "theme": "dark", "mode": "normal"},
+    {"id": "assistant-panel", "title": "Bunny Assistant", "surface": "assistant", "theme": "dark", "mode": "normal"},
+    {"id": "approval-request", "title": "Sensitive approval", "surface": "approval", "theme": "dark", "mode": "normal"},
+    {"id": "critical-approval", "title": "Critical approval", "surface": "critical", "theme": "dark", "mode": "normal"},
+    {"id": "notification-center", "title": "Notification Center", "surface": "notifications", "theme": "dark", "mode": "normal"},
+    {"id": "focus-mode", "title": "FocusMode", "surface": "desktop", "theme": "dark", "mode": "focus"},
+    {"id": "compact-layout", "title": "CompactLayout", "surface": "windows", "theme": "dark", "mode": "compact"},
+    {"id": "light-mode", "title": "Light mode", "surface": "palette", "theme": "light", "mode": "normal"},
+    {"id": "dark-mode", "title": "Dark mode", "surface": "palette", "theme": "dark", "mode": "normal"},
+    {"id": "high-contrast", "title": "High contrast", "surface": "approval", "theme": "high", "mode": "normal"},
+    {"id": "scaling-200", "title": "200% scaling", "surface": "assistant", "theme": "dark", "mode": "compact", "scale": 2},
+    {"id": "offline", "title": "Offline", "surface": "assistant", "theme": "dark", "mode": "normal", "provider": "offline"},
+    {"id": "bunny-disabled", "title": "Bunny disabled", "surface": "assistant", "theme": "dark", "mode": "normal", "provider": "disabled"},
+    {"id": "provider-unavailable", "title": "Provider unavailable", "surface": "assistant", "theme": "light", "mode": "normal", "provider": "unavailable"}
+  ]
+}
