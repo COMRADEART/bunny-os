@@ -16,3 +16,22 @@ systemd/** -text
 config/** -text
 *.sh -text
 
+# Byte-attested evidence must bypass content filters.
+#
+# release/evidence.py verifies each record by hashing the file at its
+# evidenceReference and comparing against the recorded contentDigest. Any
+# checkout-time filter changes those bytes, so a record generated on one
+# platform stops verifying on another. That is not theoretical: the digest
+# recorded for hardware-evidence.json below matches this file's CRLF bytes on a
+# Windows checkout and not its committed bytes.
+#
+# These are listed one path at a time rather than as operations/data/** so that
+# the rule covers exactly what is attested. A new attested file needs a new line
+# here, and tests/evidence/test_byte_roundtrip.py fails until it gets one.
+evidence/build/beta-archive-digest.txt          -text
+evidence/build/beta-license-scan.log            -text
+evidence/vulnerability/beta-grype.json          -text
+operations/data/hardware-evidence.json          -text
+operations/data/pilot-requirements.json         -text
+operations/data/qualification-matrices.json     -text
+operations/data/signing-keys.json               -text
