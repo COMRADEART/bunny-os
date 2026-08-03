@@ -34,13 +34,23 @@ cp "${SRC}"/systemd/*.service "${SRC}"/systemd/*.socket \
 cp "${SRC}"/systemd/user/*.service "${SRC}"/systemd/user/*.timer \
    "${SRC}"/systemd/user/*.target /etc/systemd/user/
 
+# Drop-in directories. install-root.py copies the systemd tree wholesale, so a
+# new *.service.d/ lands in the image automatically; these globs do not, and a
+# drop-in this script never copies is a drop-in it silently cannot verify.
+for dropin in "${SRC}"/systemd/*.service.d; do
+    [ -d "$dropin" ] || continue
+    install -d "/etc/systemd/system/$(basename "$dropin")"
+    cp "$dropin"/*.conf "/etc/systemd/system/$(basename "$dropin")/"
+done
+
 # Exactly what install-root.py installs, to the paths it installs them to.
 install -m 0755 "${SRC}/services/bunny-system-broker/bin/bunny-system-broker" \
     /usr/libexec/bunny-system-broker
 install -m 0755 "${SRC}/services/bunny-update-agent/bunny_update_agent.py" \
     /usr/libexec/bunny-update-agent
 for name in bunny-health-check bunny-recovery-prepare bunny-recovery \
-            bunny-first-boot bunny-brlapi-key bunny-safe-graphics bunny-live-session; do
+            bunny-first-boot bunny-config-dir bunny-brlapi-key \
+            bunny-safe-graphics bunny-live-session; do
     install -m 0755 "${SRC}/scripts/${name}.py" "/usr/libexec/${name}"
 done
 install -m 0755 "${SRC}/shell/services/bin/bunny-shell-service" /usr/libexec/bunny-shell-service

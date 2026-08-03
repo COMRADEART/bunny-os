@@ -35,6 +35,16 @@ import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+# Importing dsq_disk patches ostree_disk's root detection to resolve the
+# root as the one filesystem holding /ostree/deploy. The installable disk
+# carries /ostree on the boot partition too, so the unpatched rule —
+# "exactly one filesystem holding /ostree" — refuses it outright. The
+# patched rule is not a guess: two filesystems holding /ostree/deploy are
+# refused exactly as before.
+sys.path.insert(0, str(
+    Path(__file__).resolve().parents[2] / "display-stack/scripts"))
+import dsq_disk  # noqa: E402,F401  (patches ostree_disk on import)
+
 from ostree_disk import (  # noqa: E402
     DiskLayoutError,
     guestfish,

@@ -28,6 +28,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -108,8 +109,15 @@ def resolve_context(root: Path | None = None, *, verify: bool = True) -> Install
     repository — but a present subject with a different digest is: a context
     that misdescribes an artifact on the same disk is worse than no context.
     """
+    # BUNNY_INSTALLED_CONTEXT names an alternative authority file.
+    #
+    # The BrlAPI regression runs against the corrected artifact
+    # while the Commit I/J records stay bound to the disk they
+    # measured. Editing this file in place would invalidate them.
+    # The default is unchanged.
+    override = os.environ.get("BUNNY_INSTALLED_CONTEXT")
     base = Path(root) if root else Path.cwd()
-    path = base / CONTEXT_PATH
+    path = Path(override) if override else base / CONTEXT_PATH
     if not path.is_file():
         raise ContextError(
             f"{CONTEXT_PATH} does not exist. Installed-system evidence has no authority "

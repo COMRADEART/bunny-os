@@ -1,0 +1,22 @@
+{
+  "builders": {
+    "hermetic-H1-30752170761": "38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd",
+    "hermetic-H2-30752176035": "38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd",
+    "local-fedora-wsl-a2": "38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd",
+    "local-fedora-wsl-b2": "38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd"
+  },
+  "correctionToTarget": {
+    "asRecordedInCommitO": "36736f369646e73a8c831578b267f72148f15e16af318677e13b870c72b84d08",
+    "field": "localArchiveDigest",
+    "measured": "38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd",
+    "why": "The digest recorded in Commit O is of an archive built at d7c43e8706fdc4ca99aaed44ac84d0b232817754, before Commit O existed. install-root.py writes sourceCommit into /usr/lib/bunny-os/release.json, so the archive digest is a function of the commit built and a target cannot bind the digest of an archive built from itself \u2014 the same self-reference the epoch lock avoids by naming a parent commit. Commit O is frozen and both hosted builds were dispatched against it, so the field is corrected here rather than amended there. The digest above is what all three builders produced from Commit O."
+  },
+  "localRepeatability": {
+    "dimensions": "17 of 17 MATCH",
+    "outcome": "REPRODUCIBLE"
+  },
+  "rawOciArchiveDigest": "38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd",
+  "schemaVersion": 1,
+  "targetCommit": "93d1f6fb4f23f6533be37fe829f670ce0630de86",
+  "targetName": "Commit O \u2014 first-login corrected archive target"
+}

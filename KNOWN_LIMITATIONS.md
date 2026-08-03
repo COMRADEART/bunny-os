@@ -2,6 +2,49 @@
 
 This root report mirrors the maintained detail in `docs/KNOWN_LIMITATIONS.md`.
 
+## Added by the first-login correction pass — 2026-08-02
+
+### The archive digest is a function of the commit built
+
+`build/scripts/install-root.py` writes `sourceCommit` into
+`/usr/lib/bunny-os/release.json`, so two builds of two different commits cannot
+be byte-identical however tightly the inputs are pinned. Measured here: a local
+pair built before the target commit existed agreed with each other
+(`36736f36…`) and disagreed with both hosted builds, which agreed with each
+other (`38ab0343…`); rebuilding the local pair at the target commit made all
+three identical.
+
+This constrains how any reproducibility pass must be sequenced: **the target
+commit has to exist before any build that will be compared against a hosted
+one.** It also means a reproducibility target cannot bind the digest of an
+archive built from itself — the same self-reference the epoch lock already
+avoids by naming a parent commit.
+
+Not a defect in the image, and not a limitation of the corrections. It is a
+property of the build that was not previously written down, and it cost a
+rebuild and a set of installation artifacts to rediscover.
+
+### The NSS window is wider than chronyd
+
+`chronyd` was the unit measured failing, and it is the unit this pass corrects.
+The mechanism, however, is not chronyd-specific: `/etc/nsswitch.conf` is a
+symlink to `/etc/authselect/nsswitch.conf`, `authselect apply-changes` rewrites
+that file on first boot, and for the width of that rewrite **no account
+provided by `/usr/lib/passwd` through the `altfiles` source resolves**. Any
+unit with a `User=` satisfied that way, spawning inside the window, is subject
+to the same race.
+
+A systematic sweep of units resolving `altfiles`-provided accounts is **not
+part of this pass**. Until it is done, the correction should be read as closing
+the one measured occurrence, not the class.
+
+### Disk-image byte reproducibility is still not claimed
+
+Root-filesystem reproducibility is established evidence. The generated qcow2
+and raw images are not byte-reproducible and the artifact record names why:
+partition GUIDs, filesystem UUIDs and the ESP volume id are unique per
+generation.
+
 ## Current limitations — 2026-07-30
 
 The list below is the accumulated per-phase detail. These are the limitations that

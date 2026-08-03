@@ -1,0 +1,5 @@
+# Per-run writable disks and firmware variable stores. Large, and they carry
+# guest state including the test-injected credential's shadow entry. Every
+# record names them by digest, so the evidence chain is unbroken without them.
+**/work/*.qcow2
+**/work/*.raw

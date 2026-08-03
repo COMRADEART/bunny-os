@@ -1,0 +1,11 @@
+{
+  "diskOverlay": {
+    "sha256": "4315ec833347db9344f48d869d184829e014f1e31ea2f62b779024b76022f67d",
+    "sizeBytes": 22282240
+  },
+  "ovmfVarsAfter": {
+    "sha256": "99f8a82379baec4e73fa6452d79f6bfd28e441cc84df2e029f6cbc8be4e4ec3c"
+  },
+  "tpmStateAfter": [],
+  "lifecycle": "working copies deleted after digest capture"
+}

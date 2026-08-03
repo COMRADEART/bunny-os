@@ -144,3 +144,50 @@ converted into one.
 Every VM record states `environment: qemu-kvm`, and the record schema, the
 context resolver and the adversarial tests each refuse to let one become
 physical evidence by relabelling.
+
+## Update 2026-08-02 — corrected installed system
+
+New installation artifacts, generated from the Commit O archive that four
+builders produced identically. The b9c317d artifacts are untouched: the new
+ones carry the Commit O short hash, so nothing collided and nothing was
+overwritten.
+
+```
+source commit    93d1f6fb4f23f6533be37fe829f670ce0630de86   (Commit O)
+source archive   38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd
+qcow2            bunny-os-93d1f6fb4f23.qcow2
+                 1c552675…  superseded, see below
+                 1290afe9eeb54b1d9f2385bc760d2ce5616d9580bc3b529ead5b55f6aa931249
+raw              afc7eea55823f31e…
+firmware         uefi
+partitioning     GPT: ESP + boot + root, ext4
+bootloader       bootupd-managed GRUB2, BLS entries
+deployed image   declares sourceCommit 93d1f6fb4f23… in /usr/lib/bunny-os/release.json
+```
+
+A first set of artifacts (`1c552675…`) was generated and then discarded. They
+were wrapped around the archive built at `d7c43e8`, before Commit O existed,
+so the deployment inside them declared that commit rather than the target. The
+cause is worth recording because it also explains an earlier reproducibility
+mismatch: `install-root.py` writes `sourceCommit` into
+`/usr/lib/bunny-os/release.json`, so the archive digest is a function of the
+commit built. The artifacts above are wrapped around the archive all four
+builders produced, and the deployment inside them declares Commit O.
+
+Measured on these artifacts:
+
+| | |
+|---|---|
+| First login (dsq-2) | 60/60 boots, 20/20 second logins, PASS |
+| Software TPM (tpmq-2) | 35/35 across seven cells, PASS |
+| BrlAPI (isq-2) | 3/3 installations, three distinct key digests, PASS |
+
+The BrlAPI result closes the defect the previous pass measured: on the
+b9c317d installed system `bunny-brlapi-key.service` never ran and
+`/etc/brlapi.key` was absent for the whole session. Here it runs on every
+installation, mints a key that is `0640` and root-owned with group `brlapi`,
+and the three installations produce three different digests — so the key is
+generated per install rather than baked into the image. The key value appears
+in no record, no log and no repository file; the records carry the digest.
+
+Physical braille hardware and physical TPM remain NOT_RUN.

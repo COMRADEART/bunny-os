@@ -1,0 +1,9 @@
+{
+  "installations": 3,
+  "keysPresent": 3,
+  "distinctKeys": 3,
+  "requiredMode": "0640",
+  "physicalBrailleDevice": "NOT_RUN",
+  "problems": [],
+  "verdict": "PASS"
+}

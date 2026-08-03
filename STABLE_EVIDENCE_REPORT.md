@@ -267,3 +267,24 @@ candidate count is whatever the gate recalculates from evidence — this
 addendum predicts nothing. Physical TPM evidence remains `NOT_RUN`, and the
 importer that produced the TPM verdict emits that state unconditionally: no
 software-TPM record can move a physical claim.
+
+## Update 2026-08-02 — corrected archive and its evidence
+
+| category | verdict | evidence |
+|---|---|---|
+| Archive reproducibility | PASS | Commit P; four builds of Commit O produced `38ab0343…`; 17/17 dimensions; builder independence PASS on both local+hosted pairs |
+| First-login reliability | PASS | Commit R; dsq-2, 60/60 boots, 20/20 second logins, 0 unexplained failures |
+| Chronyd NSS ordering | PASS | dsq-2; 0/60 identity failures; ordering asserted from both timestamps in all 80 analysed boots, 0 inversions |
+| Software-TPM boot | PASS | tpmq-2; 35/35 across seven cells; fresh NVRAM + TPM takes exactly one restoration reset, reused takes none |
+| BrlAPI engineering | PASS | isq-2; 3/3 installations, three distinct key digests, mode 0640, root-owned |
+| GDM reliability | PASS | carried from dsq-1 |
+| Physical TPM | NOT_RUN | software TPM only |
+| Physical braille device | NOT_RUN | key generation is not device support |
+| Encryption | NOT_QUALIFIED | unchanged |
+| Global SELinux | BLOCKED | unchanged |
+
+What the reproducibility figure does and does not say: four builds of one
+commit produced one archive, across two administrator boundaries. It does not
+say the disk images are byte-reproducible — they are not, and the artifact
+record names why: partition GUIDs, filesystem UUIDs and the ESP volume id are
+unique per generation.

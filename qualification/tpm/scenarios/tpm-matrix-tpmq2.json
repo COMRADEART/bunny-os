@@ -1,0 +1,158 @@
+{
+  "$comment": "SPDX-FileCopyrightText: 2026 ComradeArt / SPDX-License-Identifier: GPL-3.0-or-later",
+  "cells": [
+    {
+      "args": [
+        "--tpm",
+        "none",
+        "--on-reset",
+        "continue",
+        "--expected-resets",
+        "0",
+        "--require-target",
+        "--timeout",
+        "900",
+        "--disk-source",
+        "/var/tmp/bunny-installables-o2/bunny-os-93d1f6fb4f23.qcow2"
+      ],
+      "name": "no-tpm-cold",
+      "runs": 5
+    },
+    {
+      "args": [
+        "--tpm",
+        "crb",
+        "--tpm-state",
+        "fresh",
+        "--vars",
+        "fresh",
+        "--on-reset",
+        "continue",
+        "--max-resets",
+        "3",
+        "--expected-resets",
+        "1",
+        "--require-target",
+        "--timeout",
+        "1200",
+        "--disk-source",
+        "/var/tmp/bunny-installables-o2/bunny-os-93d1f6fb4f23.qcow2"
+      ],
+      "name": "crb-fresh-cold",
+      "runs": 5
+    },
+    {
+      "args": [
+        "--tpm",
+        "tis",
+        "--tpm-state",
+        "fresh",
+        "--vars",
+        "fresh",
+        "--on-reset",
+        "continue",
+        "--max-resets",
+        "3",
+        "--expected-resets",
+        "1",
+        "--require-target",
+        "--timeout",
+        "1200",
+        "--disk-source",
+        "/var/tmp/bunny-installables-o2/bunny-os-93d1f6fb4f23.qcow2"
+      ],
+      "name": "tis-fresh-cold",
+      "runs": 5
+    },
+    {
+      "args": [
+        "--tpm",
+        "crb",
+        "--on-reset",
+        "continue",
+        "--expected-resets",
+        "0",
+        "--require-target",
+        "--timeout",
+        "900",
+        "--disk-source",
+        "/var/tmp/bunny-installables-o2/bunny-os-93d1f6fb4f23.qcow2"
+      ],
+      "name": "crb-reused-cold",
+      "runs": 5,
+      "seed": [
+        "vars",
+        "tpm-state"
+      ],
+      "seedFrom": "crb-fresh-cold"
+    },
+    {
+      "args": [
+        "--tpm",
+        "tis",
+        "--on-reset",
+        "continue",
+        "--expected-resets",
+        "0",
+        "--require-target",
+        "--timeout",
+        "900",
+        "--disk-source",
+        "/var/tmp/bunny-installables-o2/bunny-os-93d1f6fb4f23.qcow2"
+      ],
+      "name": "tis-reused-cold",
+      "runs": 5,
+      "seed": [
+        "vars",
+        "tpm-state"
+      ],
+      "seedFrom": "tis-fresh-cold"
+    },
+    {
+      "args": [
+        "--tpm",
+        "crb",
+        "--on-reset",
+        "continue",
+        "--max-resets",
+        "3",
+        "--qemu-reset-after-target",
+        "--timeout",
+        "1800",
+        "--disk-source",
+        "/var/tmp/bunny-installables-o2/bunny-os-93d1f6fb4f23.qcow2"
+      ],
+      "name": "crb-qemu-reset",
+      "runs": 5,
+      "seed": [
+        "vars",
+        "tpm-state"
+      ],
+      "seedFrom": "crb-fresh-cold"
+    },
+    {
+      "args": [
+        "--tpm",
+        "tis",
+        "--on-reset",
+        "continue",
+        "--max-resets",
+        "3",
+        "--qemu-reset-after-target",
+        "--timeout",
+        "1800",
+        "--disk-source",
+        "/var/tmp/bunny-installables-o2/bunny-os-93d1f6fb4f23.qcow2"
+      ],
+      "name": "tis-qemu-reset",
+      "runs": 5,
+      "seed": [
+        "vars",
+        "tpm-state"
+      ],
+      "seedFrom": "tis-fresh-cold"
+    }
+  ],
+  "matrixVersion": "tpmq-1+tpmq-2",
+  "notes": "The seven supported software-TPM cells, rerun against the first-login corrected artifact. Physical TPM remains NOT_RUN."
+}

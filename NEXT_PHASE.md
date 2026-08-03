@@ -420,3 +420,32 @@ would each have produced evidence that looked correct.
 Everything else in this document is unchanged. The vulnerability position, the
 absent hardware, the absent reviews, the absent second signer and the absent
 production key all still block, and none of them is touched by this work.
+
+## Update 2026-08-02 — first-login corrections complete
+
+The first-login and chronyd product corrections are done and measured. The
+stop condition for that pass is reached: Commit O (archive target), Commit P
+(three-builder evidence), Commit Q (installed-system target) and Commit R
+(installed-system and regression evidence) all exist, and every protected gate
+has been recalculated.
+
+**The next workstream is encrypted unlock KDF calibration and reproducibility.**
+It has not been started. `KNOWN_LIMITATIONS.md` records the measured position:
+LUKS2 defaults to argon2id with a cost `cryptsetup` benchmarks on the machine
+that formats the volume, and the qualification VM is far slower than the
+builder — one run completed at about twenty minutes into the boot, two later
+runs were unfinished at forty-five. If that reading is right it is not only a
+test artifact: a disk encrypted on a fast machine and unlocked on a slow one is
+a real user situation, and a machine that appears dead for twenty minutes is
+indistinguishable from a failure to the person using it.
+
+Carried forward from this pass, and not addressed by it:
+
+* The NSS window is wider than chronyd. Any unit whose `User=` resolves through
+  the `altfiles` source during the authselect rewrite is subject to the same
+  race. This pass corrected and measured the one unit observed failing; a sweep
+  of units resolving `altfiles`-provided accounts is not done.
+* The archive digest is a function of the commit built, because
+  `install-root.py` writes `sourceCommit` into `/usr/lib/bunny-os/release.json`.
+  Any future reproducibility pass must create the target commit *before* any
+  build that will be compared against a hosted one.

@@ -55,7 +55,7 @@ def main() -> int:
     # the unit shipped, finalisation removes /etc/brlapi.key from the archive,
     # and nothing installed the program that mints it on first boot — so an
     # installed system would have left BRLTTY users without a working key.
-    script_names = ("bunny-health-check", "bunny-first-boot", "bunny-brlapi-key", "bunny-recovery-generator", "bunny-recovery-prepare", "bunny-recovery", "bunny-safe-graphics", "bunny-live-session")
+    script_names = ("bunny-health-check", "bunny-first-boot", "bunny-config-dir", "bunny-brlapi-key", "bunny-recovery-generator", "bunny-recovery-prepare", "bunny-recovery", "bunny-safe-graphics", "bunny-live-session")
     for name in script_names:
         destination = Path("/usr/lib/systemd/system-generators/bunny-recovery-generator") if name == "bunny-recovery-generator" else Path(f"/usr/libexec/{name}")
         copy_file(source / f"scripts/{name}.py", destination, 0o555)
@@ -72,6 +72,10 @@ def main() -> int:
         pass
     copy_file(source / "config/polkit/art.comrade.bunny-os.policy", Path("/usr/share/polkit-1/actions/art.comrade.bunny-os.policy"), 0o644)
     copy_file(source / "config/tmpfiles/bunny-os.conf", Path("/usr/lib/tmpfiles.d/bunny-os.conf"), 0o644)
+    # /usr/share/user-tmpfiles.d, not /usr/lib/user-tmpfiles.d: the latter is
+    # not in systemd's --user search path and a rule placed there is never
+    # read. Measured on fedora-bootc:44 — see config/user-tmpfiles/bunny-os.conf.
+    copy_file(source / "config/user-tmpfiles/bunny-os.conf", Path("/usr/share/user-tmpfiles.d/bunny-os.conf"), 0o644)
     copy_file(source / "config/firewalld/bunny-default.xml", Path("/usr/lib/firewalld/zones/bunny-default.xml"), 0o644)
     copy_file(source / "config/systemd/60-bunny-os.preset", Path("/usr/lib/systemd/system-preset/60-bunny-os.preset"), 0o644)
     copy_file(source / "config/systemd/60-bunny-os-user.preset", Path("/usr/lib/systemd/user-preset/60-bunny-os.preset"), 0o644)
@@ -191,7 +195,7 @@ def main() -> int:
     # could see the service that nothing started.
     subprocess.run(["/usr/bin/systemctl", "enable", "NetworkManager.service", "firewalld.service", "bunny-system-broker.socket", "bunny-health-check.service", "bunny-brlapi-key.service"], check=True)
     subprocess.run(["/usr/bin/systemctl", "enable", "bunny-recovery-shell.service"], check=True)
-    subprocess.run(["/usr/bin/systemctl", "--global", "enable", "bunny-first-boot.service"], check=True)
+    subprocess.run(["/usr/bin/systemctl", "--global", "enable", "bunny-first-boot.service", "bunny-config-dir.service"], check=True)
     if args.profile == "recovery":
         subprocess.run(["/usr/bin/systemctl", "set-default", "bunny-recovery.target"], check=True)
     elif args.profile in {"developer", "desktop", "shell", "shell-test", "live", "beta"}:
@@ -213,6 +217,17 @@ def main() -> int:
     # and the artifact is what gets installed. A build that produced an image
     # whose accessibility service is inert must fail here, where it is cheap,
     # rather than on a device where it is silent.
+    # The user-tmpfiles rule has the same failure shape as an unactivated
+    # unit: it is read from one search path, systemd never reports that it
+    # looked, and a rule in the wrong directory is indistinguishable from no
+    # rule at all until a fresh home fails to get its directories. Resolved
+    # before the unit table so the refusal below stays adjacent to the check
+    # that produces it.
+    user_tmpfiles_rule = Path("/usr/share/user-tmpfiles.d/bunny-os.conf")
+    inert_rule = [] if user_tmpfiles_rule.is_file() else [
+        f"the per-user tmpfiles rule (expected {user_tmpfiles_rule}; "
+        "/usr/lib/user-tmpfiles.d is not a --user search path)"]
+
     required_activation = {
         "bunny-brlapi-key.service": Path(
             "/etc/systemd/system/sysinit.target.wants/bunny-brlapi-key.service"
@@ -220,8 +235,18 @@ def main() -> int:
         "bunny-health-check.service": Path(
             "/etc/systemd/system/multi-user.target.wants/bunny-health-check.service"
         ),
+        # The two halves of the first-login correction. bunny-config-dir is
+        # what makes bunny-first-boot's sandbox constructible, and
+        # bunny-first-boot Requires= it, so an image where only one of them is
+        # activated starts no first-boot flow at all.
+        "bunny-config-dir.service": Path(
+            "/etc/systemd/user/graphical-session.target.wants/bunny-config-dir.service"
+        ),
+        "bunny-first-boot.service": Path(
+            "/etc/systemd/user/graphical-session.target.wants/bunny-first-boot.service"
+        ),
     }
-    missing_activation = [
+    missing_activation = inert_rule + [
         f"{unit} (expected {link})"
         for unit, link in required_activation.items()
         if not link.is_symlink()

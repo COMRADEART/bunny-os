@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "TPMQ-20260802-tis-reused-cold-002",
+  "sourceCommit": "12b5423b9f1b2fe4938bac393d8d65fb6b9fb47b",
+  "sourceArchiveDigest": "38ab0343c16f9528b95bcb180eb6999d406e0bbed96e5684f6f23333751cf3dd",
+  "installationArtifactDigest": "1290afe9eeb54b1d9f2385bc760d2ce5616d9580bc3b529ead5b55f6aa931249",
+  "qemuDigest": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+  "qemuVersion": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)",
+  "ovmfCodeDigest": "6551948da24a02553476c1c1edccb0bb92a57dce9d722d7b396ac14547e6d9af",
+  "ovmfVarsTemplateDigest": "035317bb2923a13c1dc57373d608521cc3a486f1e3119016727d54baccc6e8bb",
+  "swtpmDigest": "32c411b8d1b269ca6b5ae922e84459dec5669dc96ca17bb5cf8119f830ab7ce0",
+  "swtpmVersion": "0.10.1",
+  "libtpmsVersion": "0.10.2",
+  "scenarioVersion": "tpmq-2",
+  "environment": "qemu-kvm",
+  "acceleration": "kvm",
+  "machineType": "pc-q35-10.2",
+  "cpuModel": "host",
+  "diagnostic": false,
+  "diskAttached": true,
+  "ovmfVarsState": "reused",
+  "ovmfVarsSourceDigest": "ac9e929264c4da05942ea08dc51b2ce2e6bf16d98ef5290cccdb7d1df37574e1",
+  "ovmfVarsAfterDigest": "3f95e25c516b087d41d86ee57d73286c86e12db2c17a0df3606928681640182f",
+  "tpmInterface": "tis",
+  "tpmState": "reused",
+  "tpmStateSourceManifest": [
+    {
+      "path": ".lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0
+    },
+    {
+      "path": "tpm2-00.permall",
+      "sha256": "dc41484ab71e59fadf1a7678cdbe3ed56744efd2b19412e9dd096ed88ad52677",
+      "sizeBytes": 4473
+    }
+  ],
+  "secureBootState": "disabled",
+  "smmState": "off",
+  "bootType": "cold",
+  "onReset": "continue",
+  "expectation": "target",
+  "expectedResets": 0,
+  "guestResetCount": 0,
+  "stagesReached": [
+    "firmware-bds",
+    "boot-option-started",
+    "grub-menu",
+    "kernel-loaded",
+    "initramfs",
+    "health-check",
+    "multi-user",
+    "graphical"
+  ],
+  "lastStage": "graphical",
+  "failedUnits": [],
+  "secondBootTargetReached": null,
+  "result": "PASS",
+  "startedAt": "2026-08-03T02:26:35.383Z",
+  "completedAt": "2026-08-03T02:26:52.399Z",
+  "operator": "allamsettiraviteja2009",
+  "limitations": [],
+  "evidenceFiles": [
+    {
+      "path": "host-dmesg-tail.log",
+      "sha256": "a1a4cd977faff4d5be153b525434b15fd31f9b80df7e01fa22a02b38c331d49b",
+      "sizeBytes": 9379,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-command.json",
+      "sha256": "b6783d66d22dad457eab3e3d1853b502679559911545bff4a7d85bec9b8f8a81",
+      "sizeBytes": 2258,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qemu-debug.log",
+      "sha256": "a32e8781e7a9a324e9d373e2d685521d665380b23ee339b707abd9330da16290",
+      "sizeBytes": 10800,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "qmp-events.jsonl",
+      "sha256": "b81e030178cc979d27b6f573cadbcf1aab298857803488cd7bf81a9641af6ef4",
+      "sizeBytes": 777,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/final.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-boot-option-started.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-firmware-bds.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-graphical.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-grub-menu.ppm",
+      "sha256": "e9fc8920a7e915582da2d4eb374baad940fb4fb8bb3a46c9a07915cb4d0c7e44",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-health-check.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-initramfs.ppm",
+      "sha256": "eea055073b9d40e67c56c7c2223f5aed4d464253bbc56141be93a6d5bcefe407",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-kernel-loaded.ppm",
+      "sha256": "eea055073b9d40e67c56c7c2223f5aed4d464253bbc56141be93a6d5bcefe407",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "screenshots/stage-multi-user.ppm",
+      "sha256": "2617e8773e7bf65962467a54d212e36715ea674fbe3b7d05dc322c0dec209dc6",
+      "sizeBytes": 3072016,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "serial.log",
+      "sha256": "ffe4fac6af100ffdebbaa93dc682985d96adb4b413fc01714c10628a47832342",
+      "sizeBytes": 103938,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "swtpm-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "swtpm-stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "swtpm.log",
+      "sha256": "a6f8ac0094dac480690282c2c0104c68e0293cfe2268d74743ce50011a14e112",
+      "sizeBytes": 262726,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    },
+    {
+      "path": "work-manifest.json",
+      "sha256": "de4e6bcbd8e3896a59b458222703673d54162cdba11cd429a79c9e3281b15105",
+      "sizeBytes": 624,
+      "createdAt": "2026-08-03T02:26:52.399Z",
+      "collectionCommand": "run_tpm_experiment.py",
+      "retentionClass": "evidence"
+    }
+  ]
+}

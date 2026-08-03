@@ -1,3 +1,4 @@
+enable bunny-config-dir.service
 enable bunny-first-boot.service
 enable bunny-first-run.service
 disable bunny-desktop.service

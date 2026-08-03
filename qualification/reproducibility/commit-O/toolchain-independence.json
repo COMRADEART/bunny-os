@@ -1,0 +1,558 @@
+{
+  "builderImageDigest": "sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+  "note": "A tool-version difference blocks unless it is classified evidence-generation-only or unavailable-but-unused, with a reason and a test. 'unknown' always blocks: a tool whose effect on the artifact nobody has established cannot be assumed to have none.",
+  "pairs": [
+    {
+      "blocking": [],
+      "first": "hosted-ci-30566412012",
+      "recordedOnly": [
+        "grype"
+      ],
+      "result": "PASS",
+      "second": "hosted-H1-30680015881",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-ci-30566412012",
+      "recordedOnly": [
+        "grype"
+      ],
+      "result": "PASS",
+      "second": "hosted-H2-30680016612",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-ci-30566412012",
+      "recordedOnly": [
+        "grype",
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H1-30684077591",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-ci-30566412012",
+      "recordedOnly": [
+        "grype",
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H2-30684078309",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-ci-30566412012",
+      "recordedOnly": [
+        "grype",
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H1-30691438160",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-ci-30566412012",
+      "recordedOnly": [
+        "grype",
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H2-30691438881",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-ci-30566412012",
+      "recordedOnly": [
+        "grype",
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H1-30714175121",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-ci-30566412012",
+      "recordedOnly": [
+        "grype",
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H2-30714176083",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-ci-30566412012",
+      "recordedOnly": [
+        "grype",
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "local-fedora-wsl",
+      "unclassified": [
+        "image-builder"
+      ]
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30680015881",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H2-30680016612",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H1-30680015881",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H1-30684077591",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H1-30680015881",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H2-30684078309",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H1-30680015881",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H1-30691438160",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H1-30680015881",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H2-30691438881",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H1-30680015881",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H1-30714175121",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H1-30680015881",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H2-30714176083",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H1-30680015881",
+      "recordedOnly": [
+        "grype",
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "local-fedora-wsl",
+      "unclassified": [
+        "image-builder"
+      ]
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H2-30680016612",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H1-30684077591",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H2-30680016612",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H2-30684078309",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H2-30680016612",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H1-30691438160",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H2-30680016612",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H2-30691438881",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H2-30680016612",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H1-30714175121",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H2-30680016612",
+      "recordedOnly": [
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "hosted-H2-30714176083",
+      "unclassified": []
+    },
+    {
+      "blocking": [
+        "podman",
+        "python3",
+        "skopeo",
+        "tar"
+      ],
+      "first": "hosted-H2-30680016612",
+      "recordedOnly": [
+        "grype",
+        "syft"
+      ],
+      "result": "BLOCKED",
+      "second": "local-fedora-wsl",
+      "unclassified": [
+        "image-builder"
+      ]
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30684077591",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H2-30684078309",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30684077591",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H1-30691438160",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30684077591",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H2-30691438881",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30684077591",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H1-30714175121",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30684077591",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H2-30714176083",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30684077591",
+      "recordedOnly": [
+        "grype"
+      ],
+      "result": "BLOCKED",
+      "second": "local-fedora-wsl",
+      "unclassified": [
+        "image-builder"
+      ]
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H2-30684078309",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H1-30691438160",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H2-30684078309",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H2-30691438881",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H2-30684078309",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H1-30714175121",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H2-30684078309",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H2-30714176083",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H2-30684078309",
+      "recordedOnly": [
+        "grype"
+      ],
+      "result": "BLOCKED",
+      "second": "local-fedora-wsl",
+      "unclassified": [
+        "image-builder"
+      ]
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30691438160",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H2-30691438881",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30691438160",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H1-30714175121",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30691438160",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H2-30714176083",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30691438160",
+      "recordedOnly": [
+        "grype"
+      ],
+      "result": "BLOCKED",
+      "second": "local-fedora-wsl",
+      "unclassified": [
+        "image-builder"
+      ]
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H2-30691438881",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H1-30714175121",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H2-30691438881",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H2-30714176083",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H2-30691438881",
+      "recordedOnly": [
+        "grype"
+      ],
+      "result": "BLOCKED",
+      "second": "local-fedora-wsl",
+      "unclassified": [
+        "image-builder"
+      ]
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30714175121",
+      "recordedOnly": [],
+      "result": "PASS",
+      "second": "hosted-H2-30714176083",
+      "unclassified": []
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H1-30714175121",
+      "recordedOnly": [
+        "grype"
+      ],
+      "result": "BLOCKED",
+      "second": "local-fedora-wsl",
+      "unclassified": [
+        "image-builder"
+      ]
+    },
+    {
+      "blocking": [],
+      "first": "hosted-H2-30714176083",
+      "recordedOnly": [
+        "grype"
+      ],
+      "result": "BLOCKED",
+      "second": "local-fedora-wsl",
+      "unclassified": [
+        "image-builder"
+      ]
+    }
+  ],
+  "result": "BLOCKED",
+  "schemaVersion": 1
+}

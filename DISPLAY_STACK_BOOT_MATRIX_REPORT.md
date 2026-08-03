@@ -97,3 +97,64 @@ Watched throughout, zero failures in any phase: `avahi-daemon.service`, `avahi-d
 
 - GDM reliability: **PASS**
 - Display-stack reliability: **BLOCKED**
+
+## dsq-2 — the corrected archive, with a login (2026-08-02)
+
+The dsq-1 matrix below measured the b9c317d archive and never logged in. It
+remains evidence about that archive. dsq-2 reruns the same five cells against
+the corrected artifact (`bunny-os-93d1f6fb4f23.qcow2`,
+`1290afe9eeb54b1d…`, Commit Q `12b5423b9f1b`) and performs a first login on
+every boot.
+
+```
+                      A      B      C      D      E     total
+collected            20     10     10     10     10     60/60
+first-login PASS     20     10     10     10     10     60/60
+second-login PASS    10      -      -      5      5     20/20
+graphical.target     20     10     10     10     10     60/60
+seat0 created        20     10     10     10     10     60/60
+completion marker    20     10     10     10     10     60/60
+
+226/NAMESPACE         0      0      0      0      0        0
+chronyd 217/USER      0      0      0      0      0        0
+chronyd in window     0      0      0      0      0        0
+failed system units                                     none
+home problems         0      0      0      0      0        0
+```
+
+Per-unit dispositions, read from `USER_UNIT` in each run's user journal:
+
+```
+bunny-config-dir.service     activated-and-succeeded   60/60
+bunny-first-boot.service     activated-and-succeeded   60/60
+                             not re-run on all 20 second logins
+```
+
+Directory state, read offline from each powered-down overlay:
+
+```
+.config/bunny-os        directory  0700  uid 4242  gid 4242  config_home_t
+.config/systemd/user    directory  0700  uid 4242  gid 4242  systemd_unit_file_t
+first-boot-complete.json           0600  uid 4242  374 bytes
+```
+
+Guest resets against each cell's expectation:
+
+```
+A  expected 0   0 on 20 first boots, 0 on 10 second boots
+B  expected 0   0 on 10
+C  expected 1   1 on all 10
+D  expected 0   0 on 15
+E  expected 0   0 on 15
+```
+
+chronyd ordering, across the 80 analysed boots that carry both timestamps:
+
+```
+chronyd start minus authselect window end   min +0.009s  median +0.029s  max +0.254s
+authselect window width                     min  0.070s  median  0.224s  max  0.773s
+inversions                                  0
+```
+
+Compare dsq-1 on the same five cells: `bunny-first-boot.service` activated on
+60 boots and failed on 60; chronyd failed on 1. Both are zero here.
