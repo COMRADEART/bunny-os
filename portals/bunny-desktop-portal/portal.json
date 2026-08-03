@@ -1,0 +1,15 @@
+{
+  "compositorSideRequirement": null,
+  "description": "File chooser, OpenURI and Settings for Bunny shell clients.",
+  "implementedInV3": false,
+  "integrationApproach": "consume the existing xdg-desktop-portal backend rather than implement a Bunny backend",
+  "interface": "org.freedesktop.portal.Desktop",
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "portal": "bunny-desktop-portal",
+  "reason": "A portal backend is a security-critical component that grants applications access to the screen and the filesystem. Writing a Bunny one would mean re-implementing consent handling that xdg-desktop-portal-gtk already does correctly, and V3 found no Bunny-specific requirement that the existing backend cannot meet.",
+  "schemaVersion": 1
+}

@@ -1,0 +1,53 @@
+{
+  "boundedRestartHolds": true,
+  "notice": [
+    "BUNNY WAYLAND SHELL EXPERIMENT",
+    "NOT RELEASE QUALIFIED",
+    "DO NOT USE AS THE DEFAULT SESSION"
+  ],
+  "problems": [],
+  "scenarios": [
+    {
+      "automaticRestartStopped": true,
+      "crashRecords": 2,
+      "elapsedSeconds": 0.174,
+      "endedInRecovery": true,
+      "guidanceMentionsGnome": true,
+      "infiniteLoop": false,
+      "noCredentialInRecords": true,
+      "recoveryOfferedGnome": true,
+      "recoveryUsableWithoutCharacterMode": true,
+      "restartsAttempted": 1,
+      "scenario": "compositor exits 1 immediately, every time",
+      "supervisorExitCode": 3
+    },
+    {
+      "attempts": [
+        {
+          "attempt": 1,
+          "decision": "restart",
+          "outcome": "terminated by SIGKILL"
+        },
+        {
+          "attempt": 2,
+          "decision": "recover",
+          "outcome": "terminated by SIGKILL"
+        }
+      ],
+      "clientsPreserved": false,
+      "clientsPreservedNote": "Wayland clients connect to the compositor's socket. When the compositor process dies the connection is lost and the clients exit. Preserving them would need a socket-handover design that smithay does not provide.",
+      "evidence": "observed",
+      "finalDecision": "recover",
+      "recoveryMarkerWritten": true,
+      "restartsUsed": 1,
+      "scenario": "real compositor killed with SIGKILL",
+      "signalledDeathDetected": true,
+      "stoppedRestarting": true,
+      "uptimeBeforeEachKillSeconds": [
+        2.52,
+        2.52
+      ]
+    }
+  ],
+  "schemaVersion": 1
+}
