@@ -1,10 +1,29 @@
 {
   "classification": {
-    "componentResult": "A",
-    "detail": "peak 20.89 MiB inside 64 MiB, 43.11 MiB headroom, no reclaim events. This is the supervisor process only.",
-    "headline": "The control plane alone fits at this limit",
-    "systemDetail": "no Bunny OS image has been booted under this limit. This run measured a Python interpreter running the supervisor inside a cgroup; a booted system additionally carries a kernel, an init, a service manager and the base userspace, none of which is included above. The \u00a717 gate is unresolved until an image is booted and measured.",
-    "systemResult": "NOT_MEASURED"
+    "controlPlaneDetail": "Peak 20.89 MiB inside a 64 MiB kernel-enforced cgroup ceiling, 43.11 MiB headroom, zero OOM events and zero reclaim events. This is the supervisor process only.",
+    "controlPlaneProcessEnvelope": "PASS",
+    "doNotReport": "The overall 64 MiB system gate is NOT Result A. Result A applies only to the control-plane process envelope, which is a component measurement.",
+    "fullBunnyOsBootWithin64Mib": "NOT_MEASURED",
+    "measuredEnvironment": {
+      "bunnyOsImageBoot": false,
+      "cgroup": "cgroup v2",
+      "kind": "WSL2 virtualized Linux environment",
+      "physicalHardware": false,
+      "swap": "disabled",
+      "systemd": "systemd 259 (259.8-1.fc44)"
+    },
+    "measuredPeakMib": 20.89,
+    "memoryKindsDistinguished": {
+      "cgroupMemoryCurrent": "measured, memory.current",
+      "cgroupMemoryPeak": "measured, memory.peak",
+      "fullImageBootMemory": "NOT_MEASURED - no image was booted",
+      "initAndBaseUserspaceMemory": "NOT_MEASURED - the host's systemd and userspace are shared, not attributed",
+      "kernelMemory": "NOT_MEASURED - outside the cgroup, and the WSL2 kernel is not a Bunny OS kernel",
+      "pss": "measured, /proc/self/smaps_rollup Pss",
+      "pythonProcessRss": "measured, /proc/self/smaps_rollup Rss"
+    },
+    "systemLevel64MibGate": "NOT_RUN / BLOCKED",
+    "whyBlocked": "No Bunny OS image has been booted under a 64 MiB ceiling. What was measured is a Python interpreter running the supervisor inside a cgroup on a Fedora 44 WSL2 host. A booted system additionally carries a kernel, an init, a service manager and the base userspace, none of which is in the figure above. The system gate stays NOT_RUN until an actual constrained boot is performed."
   },
   "environment": {
     "architecture": "x86_64",
