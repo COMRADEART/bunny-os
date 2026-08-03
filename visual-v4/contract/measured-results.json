@@ -1,0 +1,388 @@
+{
+  "arms": {
+    "libmutter": {
+      "results": [
+        {
+          "evidence": null,
+          "id": "screen-sharing-portal-pipewire",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "screenshot-portal",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "input-method-v2",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "ime-daemon",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "input-english",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "input-japanese",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "input-chinese",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "input-korean",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "candidate-popup-positioning",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "on-screen-keyboard",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "orca-session",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "atspi-navigation",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "secure-session-lock",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "pam-unlock",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "invalid-password",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "lock-client-crash",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "xwayland",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "pointer-constraints",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "relative-pointer",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "application-launch",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "crash-recovery",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "gpu-rendering",
+          "reason": "no /dev/dri; OpenGL renderer is llvmpipe (software rasterizer). A software rasteriser cannot qualify GPU rendering.",
+          "state": "NOT_AVAILABLE"
+        },
+        {
+          "evidence": null,
+          "id": "linux-dmabuf",
+          "reason": "no DRM device, so no dmabuf import/export path with real format modifiers.",
+          "state": "NOT_AVAILABLE"
+        },
+        {
+          "evidence": null,
+          "id": "frame-pacing",
+          "reason": "no KMS page-flip and no vblank, so there is no clock to pace against.",
+          "state": "NOT_AVAILABLE"
+        },
+        {
+          "evidence": null,
+          "id": "damage-driven-rendering",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "two-output-presentation",
+          "reason": "no DRM connectors. Nested windows are not outputs presenting frames.",
+          "state": "NOT_AVAILABLE"
+        },
+        {
+          "evidence": null,
+          "id": "mixed-dpi-scaling",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "output-hotplug",
+          "reason": "no outputs exist to add or remove.",
+          "state": "NOT_AVAILABLE"
+        },
+        {
+          "evidence": null,
+          "id": "resident-shell-chrome",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "regular-mode",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        },
+        {
+          "evidence": null,
+          "id": "character-mode",
+          "reason": "compositor/bunny-mutter-v4 has no downstream shell implementation yet, so there is nothing to measure.",
+          "state": "NOT_IMPLEMENTED"
+        }
+      ]
+    },
+    "smithay": {
+      "results": [
+        {
+          "evidence": null,
+          "id": "screen-sharing-portal-pipewire",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "screenshot-portal",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "input-method-v2",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "ime-daemon",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "input-english",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "input-japanese",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "input-chinese",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "input-korean",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "candidate-popup-positioning",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "on-screen-keyboard",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "orca-session",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "atspi-navigation",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "secure-session-lock",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "pam-unlock",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "invalid-password",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "lock-client-crash",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "xwayland",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "pointer-constraints",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "relative-pointer",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "application-launch",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "crash-recovery",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "gpu-rendering",
+          "reason": "no /dev/dri; OpenGL renderer is llvmpipe (software rasterizer). A software rasteriser cannot qualify GPU rendering.",
+          "state": "NOT_AVAILABLE"
+        },
+        {
+          "evidence": null,
+          "id": "linux-dmabuf",
+          "reason": "no DRM device, so no dmabuf import/export path with real format modifiers.",
+          "state": "NOT_AVAILABLE"
+        },
+        {
+          "evidence": null,
+          "id": "frame-pacing",
+          "reason": "no KMS page-flip and no vblank, so there is no clock to pace against.",
+          "state": "NOT_AVAILABLE"
+        },
+        {
+          "evidence": null,
+          "id": "damage-driven-rendering",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "two-output-presentation",
+          "reason": "no DRM connectors. Nested windows are not outputs presenting frames.",
+          "state": "NOT_AVAILABLE"
+        },
+        {
+          "evidence": null,
+          "id": "mixed-dpi-scaling",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "output-hotplug",
+          "reason": "no outputs exist to add or remove.",
+          "state": "NOT_AVAILABLE"
+        },
+        {
+          "evidence": null,
+          "id": "resident-shell-chrome",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "regular-mode",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        },
+        {
+          "evidence": null,
+          "id": "character-mode",
+          "reason": "not executed in V4. The V3 prototype is the starting point; no V4 measurement has been made.",
+          "state": "NOT_RUN"
+        }
+      ]
+    }
+  },
+  "contract": "bunny-shell-v4-framework-closure",
+  "environment": "wsl2-fedora-44",
+  "note": "No gate in this file has been measured. States record why each is not PASS. NOT_AVAILABLE means this environment cannot support the measurement at all; NOT_RUN means it is measurable here but was not executed; NOT_IMPLEMENTED means the arm has no implementation to measure.",
+  "schemaVersion": 1
+}

@@ -28,3 +28,8 @@ sessions/** text=auto eol=lf
 visual-v3/tools/** text=auto eol=lf
 visual-v3/reports/** -text
 
+# V4 framework-closure evidence. The environment probe output is the evidence
+# behind every NOT_AVAILABLE gate, and a checkout that rewrites its line endings
+# rewrites evidence. Same reasoning as qualification/ above.
+visual-v4/evidence/** -text
+visual-v4/contract/** -text
