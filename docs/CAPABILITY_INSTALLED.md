@@ -514,6 +514,85 @@ requires systemd to be present and is refused alongside `--simulate` or
 `--inventory`: a rehearsal against synthetic hardware must not be able to act on
 real services.
 
+## Local completion gate results
+
+Five areas were required before a hosted dispatch could be considered. All ran
+against a real kernel; none is a hosted or physical-hardware result.
+
+### Installed-path vertical slice — **PASS**
+
+Run inside the built artifact under `systemd-nspawn`, importing from
+`/usr/lib/bunny-os/python/capability` (asserted, not assumed). 18 steps.
+
+| Check | Observed |
+|---|---|
+| code provenance | `/usr/lib/bunny-os/python/capability` |
+| unit cgroup | `/sys/fs/cgroup/system.slice/bunny-bunny-capability-probe.service` |
+| `memory.max` requested / effective | 33554432 / 33554432 |
+| `memory.current` | 17518592 |
+| `cgroup.procs` / `MainPID` | `[432]` / `432` |
+| reservation | committed then released |
+| reconciliation at convergence | no transition requested |
+
+### Runtime adaptation under real pressure — **PASS**
+
+A real allocator filling a 512 MiB cgroup to 96%, with the monitor reading
+`memory.current` and `memory.max` from the kernel.
+
+- a transient spike raised **nothing** (debounce)
+- sustained pressure raised **one** `memory_pressure_entered`
+- the pressured plan granted 23068672 bytes against 73400320 before it
+- **no optional service ran while an essential one was refused** — the refused
+  service was the lowest-priority essential, and the protected reserve was
+  never drawn on
+- a single good reading raised **nothing**; sustained recovery raised
+  `memory_pressure_recovered`
+- repeated replanning reached a fixed point
+- the whole cycle raised **2 events**
+
+**This found the cooldown defect.** The recovery event was being destroyed
+rather than delayed. See `docs/CAPABILITY_APPLICATOR.md`.
+
+### Failure injection — **PASS** (partial coverage)
+
+Covered: systemd absent, startup timeout, health failure after start, read-only
+state directory, full disk during write and during audit, corrupt ledger, stale
+lock metadata, approval expiry, plan supersession. Each asserts no leaked
+reservation, no unconstrained process, and that the explanation names the first
+failed invariant.
+
+**Not covered:** externally-managed transition on a real host, network loss
+before a remote dispatch (no provider exists to lose), circuit-breaker opening
+against a real repeatedly-failing unit.
+
+### Security boundaries — **PASS**
+
+Unit-name traversal, cgroup path traversal, manifest unit injection, plan
+fingerprint mismatch, replay, supersession, expired approval, approval for a
+different plan, secret redaction, state permissions, symlink redirection of
+state and approval files, atomic replacement confined to the state directory,
+observe-only cannot mutate, dry-run cannot reach the real backend, oversized and
+deeply nested structured input.
+
+**This found the `unit_name_for` input-validation gap.**
+
+### Cold pull of retained inputs — **PASS locally**
+
+All three published inputs resolve **anonymously by digest** from an isolated
+store — fresh `HOME`, empty auth file, no host `registries.conf`, no operator
+keyring, `GITHUB_TOKEN` removed from the environment, TLS verification on.
+
+| Input | Digest agreement |
+|---|---|
+| base | verified |
+| builder | verified |
+| snapshot | verified |
+
+**This does not retire the recorded cold-pull failure.** That failure was on a
+hosted runner, and only a hosted run can retire it. What this establishes is
+that the inputs are publicly fetchable by digest without this repository's
+credentials, from a machine that is not the publisher's CI.
+
 ## Known limitations
 
 - **No Bunny OS image has been booted.** All real-kernel validation ran on a

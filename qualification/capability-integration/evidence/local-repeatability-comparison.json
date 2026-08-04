@@ -337,12 +337,12 @@
     "fileDigests": {
       "detail": "105681 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "d187680f60f61faf7f1da8738070233a2ae824f01df7883ba1ae2e7b169e3319",
+        "__digest__": "dec7a2d23885ed928f3d23dd57bb4eeef4053f163e91b86c25ab68802c2b7ccd",
         "__memberCount__": 105681
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "d187680f60f61faf7f1da8738070233a2ae824f01df7883ba1ae2e7b169e3319",
+        "__digest__": "dec7a2d23885ed928f3d23dd57bb4eeef4053f163e91b86c25ab68802c2b7ccd",
         "__memberCount__": 105681
       }
     },
@@ -387,9 +387,9 @@
       }
     },
     "normalisedArchive": {
-      "first": "f6ddb976a2c5d0e4c13e04eb682d718836e7cbecea52c5c15f1d386d6ab9687a",
+      "first": "4fe4c56d194f803a05c0ae9ddeb8399fa1cb082c96878af694eb386110ace91e",
       "reductionForm": "verbatim",
-      "second": "f6ddb976a2c5d0e4c13e04eb682d718836e7cbecea52c5c15f1d386d6ab9687a"
+      "second": "4fe4c56d194f803a05c0ae9ddeb8399fa1cb082c96878af694eb386110ace91e"
     },
     "ociLayers": {
       "first": [
@@ -459,20 +459,20 @@
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
         "sha256:785a3a6aa4cb4753cdbf2933482d3e0458d9d7003af9dd07129c62f2a6ce617d",
-        "sha256:ab2c19358acdf9b94cf4f6c3bb6f748c67963b647c81f8df35f4d3d94c03574c",
+        "sha256:7ad6c2e814bacfb16b8083ccfe33979308af378ef6db5a04dcf0927cb5f99025",
         "sha256:e237054a682e974c110a6c11bde021523011737e05b200a57013847539000c68",
         "sha256:a4874227555b88c872aa2a0304259a1aedd6ee1be9d5b50e0ec628e876f2f53a",
         "sha256:42357d6b21ccc3c6857d01cc4f395bdd57e18bda8cb7834cf3a81d7cdfda9f13",
         "sha256:e05d37f3d0cefcaf1b1dfb9b778117a746a0da5d49a60c4c78fa32430cb2244c",
         "sha256:80de5036185731d7e97a7093ad01db2be938380bef2b35411c0b42d5d834bb92",
         "sha256:2df8f9bedc1e9fa18a4dc1aa97e93c13daee863cb4d042d227173d9e6f0af269",
-        "sha256:f3615a7eb03e3c69948fda9e5dfebdd4a8bb0772102b877d00b687365b54fa29",
+        "sha256:f1e07ea75876b5e62bced17c64005d12d35612d6e73c3b189603b93368808ce6",
         "sha256:e7784cd8d39976f3772025f26eee5769e7bd5fb24a132990503a9d4021ca6e1e",
         "sha256:843f4e58a8749d9da2f288c9a257822fb21a8306024d58540476bacb114af651",
         "sha256:e4dd6b92093a6d0001d5894edc347b62c591ebc2d24042e3c24c48f43ef37eea",
         "sha256:c335ab7a4d18bfbe8513da7a2ffcd7b0e882459e5cf02ac51830d4939497294c",
         "sha256:c386cca459ed2a24b5670553ecbb08f8eb5372a07689bce9045061e820d2bf9a",
-        "sha256:085a3c68450314ad05f28ce772c5b2e052e007b6cea14b9fbf512891585ff22d",
+        "sha256:1797f6e6d99d819204f1a7a6fc15747dc9e586b13a7c3e78210337ea19f586b2",
         "sha256:28835b3546239b45d25f4ebb455290d02ec84edbc58a557642b015ca72592541"
       ],
       "reductionForm": "verbatim",
@@ -543,20 +543,20 @@
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
         "sha256:785a3a6aa4cb4753cdbf2933482d3e0458d9d7003af9dd07129c62f2a6ce617d",
-        "sha256:ab2c19358acdf9b94cf4f6c3bb6f748c67963b647c81f8df35f4d3d94c03574c",
+        "sha256:7ad6c2e814bacfb16b8083ccfe33979308af378ef6db5a04dcf0927cb5f99025",
         "sha256:e237054a682e974c110a6c11bde021523011737e05b200a57013847539000c68",
         "sha256:a4874227555b88c872aa2a0304259a1aedd6ee1be9d5b50e0ec628e876f2f53a",
         "sha256:42357d6b21ccc3c6857d01cc4f395bdd57e18bda8cb7834cf3a81d7cdfda9f13",
         "sha256:e05d37f3d0cefcaf1b1dfb9b778117a746a0da5d49a60c4c78fa32430cb2244c",
         "sha256:80de5036185731d7e97a7093ad01db2be938380bef2b35411c0b42d5d834bb92",
         "sha256:2df8f9bedc1e9fa18a4dc1aa97e93c13daee863cb4d042d227173d9e6f0af269",
-        "sha256:f3615a7eb03e3c69948fda9e5dfebdd4a8bb0772102b877d00b687365b54fa29",
+        "sha256:f1e07ea75876b5e62bced17c64005d12d35612d6e73c3b189603b93368808ce6",
         "sha256:e7784cd8d39976f3772025f26eee5769e7bd5fb24a132990503a9d4021ca6e1e",
         "sha256:843f4e58a8749d9da2f288c9a257822fb21a8306024d58540476bacb114af651",
         "sha256:e4dd6b92093a6d0001d5894edc347b62c591ebc2d24042e3c24c48f43ef37eea",
         "sha256:c335ab7a4d18bfbe8513da7a2ffcd7b0e882459e5cf02ac51830d4939497294c",
         "sha256:c386cca459ed2a24b5670553ecbb08f8eb5372a07689bce9045061e820d2bf9a",
-        "sha256:085a3c68450314ad05f28ce772c5b2e052e007b6cea14b9fbf512891585ff22d",
+        "sha256:1797f6e6d99d819204f1a7a6fc15747dc9e586b13a7c3e78210337ea19f586b2",
         "sha256:28835b3546239b45d25f4ebb455290d02ec84edbc58a557642b015ca72592541"
       ]
     },
@@ -12744,9 +12744,9 @@
       }
     },
     "rawArchive": {
-      "first": "f6ddb976a2c5d0e4c13e04eb682d718836e7cbecea52c5c15f1d386d6ab9687a",
+      "first": "4fe4c56d194f803a05c0ae9ddeb8399fa1cb082c96878af694eb386110ace91e",
       "reductionForm": "verbatim",
-      "second": "f6ddb976a2c5d0e4c13e04eb682d718836e7cbecea52c5c15f1d386d6ab9687a"
+      "second": "4fe4c56d194f803a05c0ae9ddeb8399fa1cb082c96878af694eb386110ace91e"
     },
     "sbom": {
       "detail": "6076 members, identical (compared by digest over the full value)",
@@ -13060,12 +13060,12 @@
     "selinuxLabels": {
       "detail": "The archive-stage subcheck: the context every path is intended to receive, computed from the policy the image ships. No archive carries an applied security.selinux xattr \u2014 bootc install applies them on the target \u2014 so the applied subcheck stays outstanding under selinux.appliedSelinuxContexts and is not satisfied by this.",
       "first": {
-        "__digest__": "7b8a3a2d4fba8c1334f11d9e83d591bd6dd99eb3235769b25c6f2879f66af240",
-        "__memberCount__": 165242
+        "__digest__": "5ba27152173c88567d0e6b4c989f97bb5efd5d6583aa7cdbc33efbce75bff720",
+        "__memberCount__": 165243
       },
       "second": {
-        "__digest__": "7b8a3a2d4fba8c1334f11d9e83d591bd6dd99eb3235769b25c6f2879f66af240",
-        "__memberCount__": 165242
+        "__digest__": "5ba27152173c88567d0e6b4c989f97bb5efd5d6583aa7cdbc33efbce75bff720",
+        "__memberCount__": 165243
       }
     },
     "systemdUnits": {
@@ -15524,31 +15524,31 @@
         }
       ]
     },
-    "sourceCommit": "e4fdca400c282ab6828b2b347508ec2b964e170d"
+    "sourceCommit": "96112e99d6e1cd977845c95f88a47207e3596117"
   },
   "schemaVersion": 1,
   "selinux": {
     "intendedSelinuxContexts": {
-      "detail": "165242 members, identical (compared by digest over the full value)",
+      "detail": "165243 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "7b8a3a2d4fba8c1334f11d9e83d591bd6dd99eb3235769b25c6f2879f66af240",
-        "__memberCount__": 165242
+        "__digest__": "5ba27152173c88567d0e6b4c989f97bb5efd5d6583aa7cdbc33efbce75bff720",
+        "__memberCount__": 165243
       },
       "second": {
-        "__digest__": "7b8a3a2d4fba8c1334f11d9e83d591bd6dd99eb3235769b25c6f2879f66af240",
-        "__memberCount__": 165242
+        "__digest__": "5ba27152173c88567d0e6b4c989f97bb5efd5d6583aa7cdbc33efbce75bff720",
+        "__memberCount__": 165243
       }
     },
     "resolvedCounts": [
-      165242,
-      165242
+      165243,
+      165243
     ],
     "specifications": [
       "file_contexts",
       "file_contexts"
     ]
   },
-  "sourceCommit": "e4fdca400c282ab6828b2b347508ec2b964e170d",
+  "sourceCommit": "96112e99d6e1cd977845c95f88a47207e3596117",
   "volatilePathDiagnostic": {
     "differing": [],
     "differingCount": 0,
