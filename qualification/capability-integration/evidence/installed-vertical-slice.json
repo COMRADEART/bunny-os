@@ -17,19 +17,19 @@
     },
     {
       "architecture": "x86_64",
-      "availableBytes": 15575945216,
+      "availableBytes": 15127728128,
       "step": "inventory",
-      "usableBytes": 16561369088
+      "usableBytes": 16561385472
     },
     {
-      "allocatable": 13428461568,
+      "allocatable": 12980244480,
       "reserve": 2147483648,
       "step": "budget",
       "viable": true
     },
     {
       "grantBytes": 33554432,
-      "planId": "plan-34e576bf8879f1e7",
+      "planId": "plan-67a761c7693b82b0",
       "probeAction": "start_local",
       "revision": 1,
       "step": "plan"
@@ -53,13 +53,13 @@
     },
     {
       "detail": "systemctl start bunny-bunny-capability-probe.service succeeded",
-      "planId": "plan-34e576bf8879f1e7",
+      "planId": "plan-67a761c7693b82b0",
       "probeResult": "succeeded",
       "step": "apply"
     },
     {
       "isActive": "active",
-      "mainPid": "432",
+      "mainPid": "421",
       "step": "systemd-state"
     },
     {
@@ -73,15 +73,15 @@
       "step": "set-property"
     },
     {
-      "memoryCurrent": "17518592",
+      "memoryCurrent": "17424384",
       "memoryMax": "33554432",
-      "memoryPeak": "17526784",
+      "memoryPeak": "17424384",
       "requestedBytes": 33554432,
       "step": "cgroup-readback"
     },
     {
-      "mainPid": "432",
-      "procs": "432",
+      "mainPid": "421",
+      "procs": "421",
       "step": "cgroup-membership"
     },
     {
@@ -98,11 +98,11 @@
     {
       "probeTransitions": [],
       "step": "idempotency",
-      "totalTransitions": 8
+      "totalTransitions": 7
     },
     {
-      "availableAfter": 13457821696,
-      "availableBefore": 13424267264,
+      "availableAfter": 13009604608,
+      "availableBefore": 12976050176,
       "ok": true,
       "released": 1,
       "step": "stop",

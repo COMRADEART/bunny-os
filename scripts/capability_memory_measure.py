@@ -89,7 +89,13 @@ def baseline() -> dict[str, object]:
 #: is a fresh interpreter with nothing of this script's imports resident.
 _PROBE = r'''
 import json, os, sys, time
-sys.path.insert(0, {root!r})
+# Installed layout first, so a run inside the artifact measures the installed
+# package. Without this the probe injected the script's own parent directory,
+# which inside the image is /opt — and the measurement reported "cannot run at
+# this limit" for a missing import rather than for memory.
+for _candidate in ("/usr/lib/bunny-os/python", {root!r}):
+    if os.path.isdir(_candidate) and _candidate not in sys.path:
+        sys.path.insert(0, _candidate)
 
 def smaps():
     out = {{}}
@@ -145,7 +151,11 @@ config = SupervisorConfig(
     state_directory=work / "state",
     runtime_directory=work / "run",
     audit_path=work / "audit.jsonl",
-    service_directory=pathlib.Path({root!r}) / "capability/services",
+    service_directory=(
+        pathlib.Path("/usr/share/bunny-os/capability/services")
+        if os.path.isdir("/usr/share/bunny-os/capability/services")
+        else pathlib.Path({root!r}) / "capability/services"
+    ),
     maximum_cycles={cycles},
     constrained_monitoring=True,
     discovery_budget_ms=1500,
@@ -239,6 +249,7 @@ def measure(limit_mib: int, *, mode: str, cycles: int, swap: bool) -> dict[str, 
         "peakMib": round(peak_bytes / MIB, 2) if peak_bytes else None,
         "headroomMib": round((limit_mib * MIB - peak_bytes) / MIB, 2) if peak_bytes else None,
         "measurement": payload,
+        "importFailed": "ModuleNotFoundError" in stderr or "ImportError" in stderr,
         "stderrTail": stderr if completed.returncode != 0 else "",
     }
 
@@ -276,6 +287,17 @@ def classify(results: list[dict[str, object]], target_mib: int = 64) -> dict[str
             "is included above. The §17 gate is unresolved until an image is booted and measured."
         ),
     }
+    if not at_target["booted"] and not at_target["oomKilled"] and at_target.get("importFailed"):
+        return {
+            **unmeasured,
+            "componentResult": "NOT_MEASURED",
+            "headline": "The run did not start",
+            "detail": (
+                "the measured process failed before allocating anything, so nothing about "
+                "memory was established. Reporting this as a limit failure would be a "
+                "harness bug wearing a measurement's clothes."
+            ),
+        }
     if not at_target["booted"] or at_target["oomKilled"]:
         return {
             **unmeasured,

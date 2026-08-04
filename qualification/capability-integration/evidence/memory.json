@@ -1,45 +1,26 @@
 {
   "classification": {
-    "controlPlaneDetail": "Peak 20.89 MiB inside a 64 MiB kernel-enforced cgroup ceiling, 43.11 MiB headroom, zero OOM events and zero reclaim events. This is the supervisor process only.",
-    "controlPlaneProcessEnvelope": "PASS",
-    "doNotReport": "The overall 64 MiB system gate is NOT Result A. Result A applies only to the control-plane process envelope, which is a component measurement.",
-    "fullBunnyOsBootWithin64Mib": "NOT_MEASURED",
-    "measuredEnvironment": {
-      "bunnyOsImageBoot": false,
-      "cgroup": "cgroup v2",
-      "kind": "WSL2 virtualized Linux environment",
-      "physicalHardware": false,
-      "swap": "disabled",
-      "systemd": "systemd 259 (259.8-1.fc44)"
-    },
-    "measuredPeakMib": 20.89,
-    "memoryKindsDistinguished": {
-      "cgroupMemoryCurrent": "measured, memory.current",
-      "cgroupMemoryPeak": "measured, memory.peak",
-      "fullImageBootMemory": "NOT_MEASURED - no image was booted",
-      "initAndBaseUserspaceMemory": "NOT_MEASURED - the host's systemd and userspace are shared, not attributed",
-      "kernelMemory": "NOT_MEASURED - outside the cgroup, and the WSL2 kernel is not a Bunny OS kernel",
-      "pss": "measured, /proc/self/smaps_rollup Pss",
-      "pythonProcessRss": "measured, /proc/self/smaps_rollup Rss"
-    },
-    "systemLevel64MibGate": "NOT_RUN / BLOCKED",
-    "whyBlocked": "No Bunny OS image has been booted under a 64 MiB ceiling. What was measured is a Python interpreter running the supervisor inside a cgroup on a Fedora 44 WSL2 host. A booted system additionally carries a kernel, an init, a service manager and the base userspace, none of which is in the figure above. The system gate stays NOT_RUN until an actual constrained boot is performed."
+    "componentResult": "A",
+    "detail": "peak 22.42 MiB inside 64 MiB, 41.58 MiB headroom, no reclaim events. This is the supervisor process only.",
+    "headline": "The control plane alone fits at this limit",
+    "systemDetail": "no Bunny OS image has been booted under this limit. This run measured a Python interpreter running the supervisor inside a cgroup; a booted system additionally carries a kernel, an init, a service manager and the base userspace, none of which is included above. The \u00a717 gate is unresolved until an image is booted and measured.",
+    "systemResult": "NOT_MEASURED"
   },
   "environment": {
     "architecture": "x86_64",
     "baseline": {
-      "MemAvailable": 15726665728,
-      "MemFree": 15413927936,
+      "MemAvailable": 15665799168,
+      "MemFree": 15231164416,
       "MemTotal": 16561385472,
-      "SwapFree": 4294967296,
+      "SwapFree": 4292964352,
       "SwapTotal": 4294967296,
-      "processCount": 92
+      "processCount": 25
     },
     "cyclesPerRun": 2,
     "emulated": false,
     "kernel": "6.18.33.2-microsoft-standard-WSL2",
     "mode": "observe",
-    "python": "3.14.3",
+    "python": "3.14.6",
     "swapPermitted": false,
     "virtualisation": "wsl"
   },
@@ -47,81 +28,82 @@
   "results": [
     {
       "booted": true,
-      "durationSeconds": 0.734,
+      "durationSeconds": 0.466,
       "exitCode": 0,
-      "headroomMib": 43.11,
+      "headroomMib": 41.58,
+      "importFailed": false,
       "limitMib": 64,
       "limitReachedEvents": 0,
       "measurement": {
         "blocked": 0,
-        "cgroup": "/sys/fs/cgroup/system.slice/bunny-cap-measure-64-1012.scope",
+        "cgroup": "/sys/fs/cgroup/system.slice/bunny-cap-measure-64-142.scope",
         "cycles": 2,
-        "memoryCurrent": "20537344",
+        "memoryCurrent": "21135360",
         "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
-        "memoryPeak": "21905408",
+        "memoryPeak": "23506944",
         "phases": [
           {
-            "atMonotonic": 239.1707,
-            "memoryCurrent": "4943872",
-            "memoryPeak": "4943872",
+            "atMonotonic": 1594.9393,
+            "memoryCurrent": "5226496",
+            "memoryPeak": "5226496",
             "phase": "interpreter-started",
             "smaps": {
-              "Pss": 7052288,
-              "Rss": 11272192
+              "Pss": 6110208,
+              "Rss": 11501568
             }
           },
           {
-            "atMonotonic": 239.4472,
-            "memoryCurrent": "17358848",
-            "memoryPeak": "17358848",
+            "atMonotonic": 1595.0251,
+            "memoryCurrent": "15912960",
+            "memoryPeak": "15912960",
             "phase": "modules-imported",
             "smaps": {
-              "Pss": 19424256,
-              "Rss": 26550272
+              "Pss": 16405504,
+              "Rss": 24936448
             }
           },
           {
-            "atMonotonic": 239.4516,
-            "memoryCurrent": "17354752",
-            "memoryPeak": "17358848",
+            "atMonotonic": 1595.0335,
+            "memoryCurrent": "16171008",
+            "memoryPeak": "16171008",
             "phase": "supervisor-prepared",
             "smaps": {
-              "Pss": 19629056,
-              "Rss": 26820608
+              "Pss": 16566272,
+              "Rss": 25174016
             }
           },
           {
-            "atMonotonic": 239.6416,
-            "memoryCurrent": "19935232",
-            "memoryPeak": "21639168",
+            "atMonotonic": 1595.2088,
+            "memoryCurrent": "21311488",
+            "memoryPeak": "23314432",
             "phase": "cycle-1",
             "smaps": {
-              "Pss": 19776512,
-              "Rss": 26968064
+              "Pss": 16456704,
+              "Rss": 25604096
             }
           },
           {
-            "atMonotonic": 239.813,
-            "memoryCurrent": "20619264",
-            "memoryPeak": "21905408",
+            "atMonotonic": 1595.3764,
+            "memoryCurrent": "21135360",
+            "memoryPeak": "23506944",
             "phase": "cycle-2",
             "smaps": {
-              "Pss": 19870720,
-              "Rss": 27062272
+              "Pss": 16830464,
+              "Rss": 25690112
             }
           },
           {
-            "atMonotonic": 239.8137,
-            "memoryCurrent": "20537344",
-            "memoryPeak": "21905408",
+            "atMonotonic": 1595.3767,
+            "memoryCurrent": "21135360",
+            "memoryPeak": "23506944",
             "phase": "idle-after-cycles",
             "smaps": {
-              "Pss": 19751936,
-              "Rss": 26943488
+              "Pss": 16830464,
+              "Rss": 25690112
             }
           }
         ],
-        "planId": "plan-5778a69556cf0aae",
+        "planId": "plan-c900bd89f392f0f4",
         "problems": [],
         "transitions": 9,
         "warnings": []
@@ -129,88 +111,89 @@
       "mode": "observe",
       "oomEvents": 0,
       "oomKilled": false,
-      "peakBytes": 21905408,
-      "peakMib": 20.89,
+      "peakBytes": 23506944,
+      "peakMib": 22.42,
       "stderrTail": "",
       "swapPermitted": false
     },
     {
       "booted": true,
-      "durationSeconds": 0.538,
+      "durationSeconds": 0.298,
       "exitCode": 0,
-      "headroomMib": 110.47,
+      "headroomMib": 110.33,
+      "importFailed": false,
       "limitMib": 128,
       "limitReachedEvents": 0,
       "measurement": {
         "blocked": 0,
-        "cgroup": "/sys/fs/cgroup/system.slice/bunny-cap-measure-128-1012.scope",
+        "cgroup": "/sys/fs/cgroup/system.slice/bunny-cap-measure-128-142.scope",
         "cycles": 2,
-        "memoryCurrent": "16973824",
+        "memoryCurrent": "16818176",
         "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
-        "memoryPeak": "18382848",
+        "memoryPeak": "18530304",
         "phases": [
           {
-            "atMonotonic": 239.9044,
-            "memoryCurrent": "4956160",
-            "memoryPeak": "4956160",
+            "atMonotonic": 1595.4375,
+            "memoryCurrent": "5226496",
+            "memoryPeak": "5226496",
             "phase": "interpreter-started",
             "smaps": {
-              "Pss": 6985728,
-              "Rss": 11280384
+              "Pss": 6059008,
+              "Rss": 11501568
             }
           },
           {
-            "atMonotonic": 240.0329,
-            "memoryCurrent": "14024704",
-            "memoryPeak": "14024704",
+            "atMonotonic": 1595.501,
+            "memoryCurrent": "14139392",
+            "memoryPeak": "14139392",
             "phase": "modules-imported",
             "smaps": {
-              "Pss": 17405952,
-              "Rss": 24555520
+              "Pss": 15956992,
+              "Rss": 24870912
             }
           },
           {
-            "atMonotonic": 240.0371,
-            "memoryCurrent": "14278656",
-            "memoryPeak": "14282752",
+            "atMonotonic": 1595.5032,
+            "memoryCurrent": "14397440",
+            "memoryPeak": "14397440",
             "phase": "supervisor-prepared",
             "smaps": {
-              "Pss": 17684480,
-              "Rss": 24932352
+              "Pss": 16093184,
+              "Rss": 25100288
             }
           },
           {
-            "atMonotonic": 240.1982,
-            "memoryCurrent": "16203776",
-            "memoryPeak": "17379328",
+            "atMonotonic": 1595.5893,
+            "memoryCurrent": "16760832",
+            "memoryPeak": "17928192",
             "phase": "cycle-1",
             "smaps": {
-              "Pss": 18077696,
-              "Rss": 25325568
+              "Pss": 16424960,
+              "Rss": 25497600
             }
           },
           {
-            "atMonotonic": 240.3556,
-            "memoryCurrent": "16973824",
-            "memoryPeak": "18382848",
+            "atMonotonic": 1595.6744,
+            "memoryCurrent": "16818176",
+            "memoryPeak": "18530304",
             "phase": "cycle-2",
             "smaps": {
-              "Pss": 18192384,
-              "Rss": 25440256
+              "Pss": 17233920,
+              "Rss": 25628672
             }
           },
           {
-            "atMonotonic": 240.3565,
-            "memoryCurrent": "16973824",
-            "memoryPeak": "18382848",
+            "atMonotonic": 1595.6748,
+            "memoryCurrent": "16818176",
+            "memoryPeak": "18530304",
             "phase": "idle-after-cycles",
             "smaps": {
-              "Pss": 18192384,
-              "Rss": 25440256
+              "Pss": 17233920,
+              "Rss": 25628672
             }
           }
         ],
-        "planId": "plan-b86a144394ad1aa9",
+        "planId": "plan-e0d1dd2faa770a9a",
         "problems": [],
         "transitions": 9,
         "warnings": []
@@ -218,88 +201,89 @@
       "mode": "observe",
       "oomEvents": 0,
       "oomKilled": false,
-      "peakBytes": 18382848,
-      "peakMib": 17.53,
+      "peakBytes": 18530304,
+      "peakMib": 17.67,
       "stderrTail": "",
       "swapPermitted": false
     },
     {
       "booted": true,
-      "durationSeconds": 0.602,
+      "durationSeconds": 0.275,
       "exitCode": 0,
-      "headroomMib": 238.39,
+      "headroomMib": 238.46,
+      "importFailed": false,
       "limitMib": 256,
       "limitReachedEvents": 0,
       "measurement": {
         "blocked": 0,
-        "cgroup": "/sys/fs/cgroup/system.slice/bunny-cap-measure-256-1012.scope",
+        "cgroup": "/sys/fs/cgroup/system.slice/bunny-cap-measure-256-142.scope",
         "cycles": 2,
-        "memoryCurrent": "16879616",
+        "memoryCurrent": "16781312",
         "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
-        "memoryPeak": "18468864",
+        "memoryPeak": "18386944",
         "phases": [
           {
-            "atMonotonic": 240.4416,
-            "memoryCurrent": "5218304",
-            "memoryPeak": "5218304",
+            "atMonotonic": 1595.7249,
+            "memoryCurrent": "5222400",
+            "memoryPeak": "5222400",
             "phase": "interpreter-started",
             "smaps": {
-              "Pss": 6975488,
-              "Rss": 11272192
+              "Pss": 6412288,
+              "Rss": 11505664
             }
           },
           {
-            "atMonotonic": 240.5951,
-            "memoryCurrent": "14286848",
-            "memoryPeak": "14286848",
+            "atMonotonic": 1595.7862,
+            "memoryCurrent": "14397440",
+            "memoryPeak": "14397440",
             "phase": "modules-imported",
             "smaps": {
-              "Pss": 17397760,
-              "Rss": 24555520
+              "Pss": 16620544,
+              "Rss": 24870912
             }
           },
           {
-            "atMonotonic": 240.6015,
-            "memoryCurrent": "14282752",
-            "memoryPeak": "14286848",
+            "atMonotonic": 1595.7883,
+            "memoryCurrent": "14393344",
+            "memoryPeak": "14397440",
             "phase": "supervisor-prepared",
             "smaps": {
-              "Pss": 17672192,
-              "Rss": 24928256
+              "Pss": 16773120,
+              "Rss": 25100288
             }
           },
           {
-            "atMonotonic": 240.7752,
-            "memoryCurrent": "16367616",
-            "memoryPeak": "17596416",
+            "atMonotonic": 1595.8698,
+            "memoryCurrent": "16211968",
+            "memoryPeak": "17764352",
             "phase": "cycle-1",
             "smaps": {
-              "Pss": 18069504,
-              "Rss": 25325568
+              "Pss": 17104896,
+              "Rss": 25497600
             }
           },
           {
-            "atMonotonic": 240.9559,
-            "memoryCurrent": "16879616",
-            "memoryPeak": "18468864",
+            "atMonotonic": 1595.9496,
+            "memoryCurrent": "16781312",
+            "memoryPeak": "18386944",
             "phase": "cycle-2",
             "smaps": {
-              "Pss": 18180096,
-              "Rss": 25436160
+              "Pss": 17235968,
+              "Rss": 25628672
             }
           },
           {
-            "atMonotonic": 240.9567,
-            "memoryCurrent": "16879616",
-            "memoryPeak": "18468864",
+            "atMonotonic": 1595.95,
+            "memoryCurrent": "16781312",
+            "memoryPeak": "18386944",
             "phase": "idle-after-cycles",
             "smaps": {
-              "Pss": 18180096,
-              "Rss": 25436160
+              "Pss": 17235968,
+              "Rss": 25628672
             }
           }
         ],
-        "planId": "plan-939ae4857a427055",
+        "planId": "plan-39775d08be66088d",
         "problems": [],
         "transitions": 9,
         "warnings": []
@@ -307,88 +291,89 @@
       "mode": "observe",
       "oomEvents": 0,
       "oomKilled": false,
-      "peakBytes": 18468864,
-      "peakMib": 17.61,
+      "peakBytes": 18386944,
+      "peakMib": 17.54,
       "stderrTail": "",
       "swapPermitted": false
     },
     {
       "booted": true,
-      "durationSeconds": 0.605,
+      "durationSeconds": 0.297,
       "exitCode": 0,
-      "headroomMib": 494.54,
+      "headroomMib": 494.0,
+      "importFailed": false,
       "limitMib": 512,
       "limitReachedEvents": 0,
       "measurement": {
         "blocked": 0,
-        "cgroup": "/sys/fs/cgroup/system.slice/bunny-cap-measure-512-1012.scope",
+        "cgroup": "/sys/fs/cgroup/system.slice/bunny-cap-measure-512-142.scope",
         "cycles": 2,
-        "memoryCurrent": "16609280",
+        "memoryCurrent": "17874944",
         "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
-        "memoryPeak": "18305024",
+        "memoryPeak": "18874368",
         "phases": [
           {
-            "atMonotonic": 241.0703,
-            "memoryCurrent": "4939776",
-            "memoryPeak": "4943872",
+            "atMonotonic": 1596.0167,
+            "memoryCurrent": "5226496",
+            "memoryPeak": "5226496",
             "phase": "interpreter-started",
             "smaps": {
-              "Pss": 6992896,
-              "Rss": 11350016
+              "Pss": 6403072,
+              "Rss": 11423744
             }
           },
           {
-            "atMonotonic": 241.2058,
-            "memoryCurrent": "14008320",
-            "memoryPeak": "14008320",
+            "atMonotonic": 1596.0829,
+            "memoryCurrent": "14139392",
+            "memoryPeak": "14139392",
             "phase": "modules-imported",
             "smaps": {
-              "Pss": 17426432,
-              "Rss": 24629248
+              "Pss": 16621568,
+              "Rss": 24858624
             }
           },
           {
-            "atMonotonic": 241.2109,
-            "memoryCurrent": "14266368",
-            "memoryPeak": "14266368",
+            "atMonotonic": 1596.0849,
+            "memoryCurrent": "14397440",
+            "memoryPeak": "14397440",
             "phase": "supervisor-prepared",
             "smaps": {
-              "Pss": 17704960,
-              "Rss": 25006080
+              "Pss": 16774144,
+              "Rss": 25088000
             }
           },
           {
-            "atMonotonic": 241.3899,
-            "memoryCurrent": "16162816",
-            "memoryPeak": "17768448",
+            "atMonotonic": 1596.1662,
+            "memoryCurrent": "17039360",
+            "memoryPeak": "18046976",
             "phase": "cycle-1",
             "smaps": {
-              "Pss": 18098176,
-              "Rss": 25399296
+              "Pss": 17105920,
+              "Rss": 25485312
             }
           },
           {
-            "atMonotonic": 241.5611,
-            "memoryCurrent": "16609280",
-            "memoryPeak": "18305024",
+            "atMonotonic": 1596.2469,
+            "memoryCurrent": "17874944",
+            "memoryPeak": "18874368",
             "phase": "cycle-2",
             "smaps": {
-              "Pss": 18212864,
-              "Rss": 25513984
+              "Pss": 17236992,
+              "Rss": 25616384
             }
           },
           {
-            "atMonotonic": 241.5621,
-            "memoryCurrent": "16609280",
-            "memoryPeak": "18305024",
+            "atMonotonic": 1596.2472,
+            "memoryCurrent": "17874944",
+            "memoryPeak": "18874368",
             "phase": "idle-after-cycles",
             "smaps": {
-              "Pss": 18212864,
-              "Rss": 25513984
+              "Pss": 17236992,
+              "Rss": 25616384
             }
           }
         ],
-        "planId": "plan-df38a22683867e4a",
+        "planId": "plan-7c3208fd0d7fb9d8",
         "problems": [],
         "transitions": 9,
         "warnings": []
@@ -396,8 +381,8 @@
       "mode": "observe",
       "oomEvents": 0,
       "oomKilled": false,
-      "peakBytes": 18305024,
-      "peakMib": 17.46,
+      "peakBytes": 18874368,
+      "peakMib": 18.0,
       "stderrTail": "",
       "swapPermitted": false
     }

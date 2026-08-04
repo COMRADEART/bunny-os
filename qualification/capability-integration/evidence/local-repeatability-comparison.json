@@ -337,12 +337,12 @@
     "fileDigests": {
       "detail": "105681 members, identical (compared by digest over the full value)",
       "first": {
-        "__digest__": "dec7a2d23885ed928f3d23dd57bb4eeef4053f163e91b86c25ab68802c2b7ccd",
+        "__digest__": "293f6772c00d219fc9b2c1658013a771a40910ff86eeb35071756eea39ad0acc",
         "__memberCount__": 105681
       },
       "reductionForm": "digest+differences",
       "second": {
-        "__digest__": "dec7a2d23885ed928f3d23dd57bb4eeef4053f163e91b86c25ab68802c2b7ccd",
+        "__digest__": "293f6772c00d219fc9b2c1658013a771a40910ff86eeb35071756eea39ad0acc",
         "__memberCount__": 105681
       }
     },
@@ -387,9 +387,9 @@
       }
     },
     "normalisedArchive": {
-      "first": "4fe4c56d194f803a05c0ae9ddeb8399fa1cb082c96878af694eb386110ace91e",
+      "first": "81d9d4f1701fa5847e4ad61fa3318872b66ed597c7cf6067cf7af6f410d6e6a0",
       "reductionForm": "verbatim",
-      "second": "4fe4c56d194f803a05c0ae9ddeb8399fa1cb082c96878af694eb386110ace91e"
+      "second": "81d9d4f1701fa5847e4ad61fa3318872b66ed597c7cf6067cf7af6f410d6e6a0"
     },
     "ociLayers": {
       "first": [
@@ -458,11 +458,11 @@
         "sha256:5d54fd4b57ae38321730975e9301cbaa13be19423f5bbac56fd9c150b19aaa81",
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
-        "sha256:785a3a6aa4cb4753cdbf2933482d3e0458d9d7003af9dd07129c62f2a6ce617d",
+        "sha256:ef75072fa3138af5d3028768c8b5d8431656e17f9581a3427ce842a1c7b3f06d",
         "sha256:7ad6c2e814bacfb16b8083ccfe33979308af378ef6db5a04dcf0927cb5f99025",
         "sha256:e237054a682e974c110a6c11bde021523011737e05b200a57013847539000c68",
         "sha256:a4874227555b88c872aa2a0304259a1aedd6ee1be9d5b50e0ec628e876f2f53a",
-        "sha256:42357d6b21ccc3c6857d01cc4f395bdd57e18bda8cb7834cf3a81d7cdfda9f13",
+        "sha256:f609e8f34957f5610682af28897dae3ffc945fea1019f2edbc586732ec58bb33",
         "sha256:e05d37f3d0cefcaf1b1dfb9b778117a746a0da5d49a60c4c78fa32430cb2244c",
         "sha256:80de5036185731d7e97a7093ad01db2be938380bef2b35411c0b42d5d834bb92",
         "sha256:2df8f9bedc1e9fa18a4dc1aa97e93c13daee863cb4d042d227173d9e6f0af269",
@@ -472,7 +472,7 @@
         "sha256:e4dd6b92093a6d0001d5894edc347b62c591ebc2d24042e3c24c48f43ef37eea",
         "sha256:c335ab7a4d18bfbe8513da7a2ffcd7b0e882459e5cf02ac51830d4939497294c",
         "sha256:c386cca459ed2a24b5670553ecbb08f8eb5372a07689bce9045061e820d2bf9a",
-        "sha256:1797f6e6d99d819204f1a7a6fc15747dc9e586b13a7c3e78210337ea19f586b2",
+        "sha256:04e6c4e57f630d66e56fc4ef746bfcecf733b34aebf1c944ecdda33b1244c179",
         "sha256:28835b3546239b45d25f4ebb455290d02ec84edbc58a557642b015ca72592541"
       ],
       "reductionForm": "verbatim",
@@ -542,11 +542,11 @@
         "sha256:5d54fd4b57ae38321730975e9301cbaa13be19423f5bbac56fd9c150b19aaa81",
         "sha256:8a22ec7f97f055ac13c31281f6c5f7662196dfb39d465c2c5cd1b740c7c98df3",
         "sha256:ad312c5c40ccd18a3c639cc139211f3c4284e568b69b2e748027cee057986fe0",
-        "sha256:785a3a6aa4cb4753cdbf2933482d3e0458d9d7003af9dd07129c62f2a6ce617d",
+        "sha256:ef75072fa3138af5d3028768c8b5d8431656e17f9581a3427ce842a1c7b3f06d",
         "sha256:7ad6c2e814bacfb16b8083ccfe33979308af378ef6db5a04dcf0927cb5f99025",
         "sha256:e237054a682e974c110a6c11bde021523011737e05b200a57013847539000c68",
         "sha256:a4874227555b88c872aa2a0304259a1aedd6ee1be9d5b50e0ec628e876f2f53a",
-        "sha256:42357d6b21ccc3c6857d01cc4f395bdd57e18bda8cb7834cf3a81d7cdfda9f13",
+        "sha256:f609e8f34957f5610682af28897dae3ffc945fea1019f2edbc586732ec58bb33",
         "sha256:e05d37f3d0cefcaf1b1dfb9b778117a746a0da5d49a60c4c78fa32430cb2244c",
         "sha256:80de5036185731d7e97a7093ad01db2be938380bef2b35411c0b42d5d834bb92",
         "sha256:2df8f9bedc1e9fa18a4dc1aa97e93c13daee863cb4d042d227173d9e6f0af269",
@@ -556,7 +556,7 @@
         "sha256:e4dd6b92093a6d0001d5894edc347b62c591ebc2d24042e3c24c48f43ef37eea",
         "sha256:c335ab7a4d18bfbe8513da7a2ffcd7b0e882459e5cf02ac51830d4939497294c",
         "sha256:c386cca459ed2a24b5670553ecbb08f8eb5372a07689bce9045061e820d2bf9a",
-        "sha256:1797f6e6d99d819204f1a7a6fc15747dc9e586b13a7c3e78210337ea19f586b2",
+        "sha256:04e6c4e57f630d66e56fc4ef746bfcecf733b34aebf1c944ecdda33b1244c179",
         "sha256:28835b3546239b45d25f4ebb455290d02ec84edbc58a557642b015ca72592541"
       ]
     },
@@ -12744,9 +12744,9 @@
       }
     },
     "rawArchive": {
-      "first": "4fe4c56d194f803a05c0ae9ddeb8399fa1cb082c96878af694eb386110ace91e",
+      "first": "81d9d4f1701fa5847e4ad61fa3318872b66ed597c7cf6067cf7af6f410d6e6a0",
       "reductionForm": "verbatim",
-      "second": "4fe4c56d194f803a05c0ae9ddeb8399fa1cb082c96878af694eb386110ace91e"
+      "second": "81d9d4f1701fa5847e4ad61fa3318872b66ed597c7cf6067cf7af6f410d6e6a0"
     },
     "sbom": {
       "detail": "6076 members, identical (compared by digest over the full value)",
@@ -15524,7 +15524,7 @@
         }
       ]
     },
-    "sourceCommit": "96112e99d6e1cd977845c95f88a47207e3596117"
+    "sourceCommit": "339b629524b2022fa33bcd373bd314f302ea82e4"
   },
   "schemaVersion": 1,
   "selinux": {
@@ -15548,7 +15548,7 @@
       "file_contexts"
     ]
   },
-  "sourceCommit": "96112e99d6e1cd977845c95f88a47207e3596117",
+  "sourceCommit": "339b629524b2022fa33bcd373bd314f302ea82e4",
   "volatilePathDiagnostic": {
     "differing": [],
     "differingCount": 0,
