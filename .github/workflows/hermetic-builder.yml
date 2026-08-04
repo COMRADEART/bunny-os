@@ -244,6 +244,31 @@ jobs:
           sudo rm -rf /var/lib/containers/storage /run/containers/storage
           sudo podman info --format 'runtime={{.Host.OCIRuntime.Name}} {{.Host.OCIRuntime.Version}}'
 
+      # No registry login happens before this point, deliberately.
+      #
+      # An earlier hosted pair authenticated to ghcr with the runner's scoped
+      # GITHUB_TOKEN before hydrating. That does not change the identity of
+      # content addressed by digest, so those artifacts remain valid - but it
+      # meant the hosted runs could not demonstrate that an independent party
+      # can obtain the inputs WITHOUT this repository's credentials, which is
+      # the claim the retention policy actually makes. A pull that succeeds
+      # only because the puller happens to be us establishes availability
+      # to us.
+      #
+      # So the anonymous attempt comes first and is mandatory. If it fails the
+      # run fails here, rather than falling back to a credential and producing
+      # an artifact whose input availability nobody established.
+      - name: Prove the retained inputs are pullable with no credential at all
+        id: anonymous
+        run: |
+          set -euo pipefail
+          cold="$(mktemp -d)"
+          mkdir -p "$cold/auth" "$cold/conf" "$cold/run"
+          printf '{"auths":{}}' > "$cold/auth/auth.json"
+          printf 'unqualified-search-registries = []' > "$cold/conf/registries.conf"
+          env -u GITHUB_TOKEN -u GH_TOKEN -u DOCKER_CONFIG HOME="$cold" XDG_RUNTIME_DIR="$cold/run" REGISTRY_AUTH_FILE="$cold/auth/auth.json" CONTAINERS_REGISTRIES_CONF="$cold/conf/registries.conf" python scripts/supply-chain/cold-pull-inputs.py --publication build/inputs/input-publication-lock.json --authfile "$cold/auth/auth.json" --report build/out/qualification/anonymous-cold-pull.json
+          rm -rf "$cold"
+
       - name: Authenticate to the registry, read-only
         run: |
           set -euo pipefail
@@ -469,6 +494,7 @@ jobs:
             build/out/ci/runner-environment.txt
             build/out/ci/hydrated-inputs.json
             build/out/qualification/hydrated-inputs.json
+            build/out/qualification/anonymous-cold-pull.json
             build/out/ci/databases/**
             build/out/ci/layer-inventory.json
             build/out/ci/sbom.spdx.json
