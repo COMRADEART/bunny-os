@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-presentation-state.schema.json",
+  "title": "Bunny Companion presentation state",
+  "description": "Everything a companion user interface is permitted to know, projected from the canonical event stream in schemas/companion-core-event.schema.json. This is a *presentation* schema and carries no authority: nothing here is stored, nothing is replayed from it, and a client cannot cause anything by sending one. It exists so that the surface can be rebuilt from the record rather than from a parallel copy of it, and so that what the surface may contain is a list somebody can read. The absent fields are the specification: there is no property here for hidden model reasoning, an API credential, a provider token, a raw or unredacted tool result, a screen capture, a microphone sample, or an arbitrary internal object, and adding one would require changing this file. Every string that reaches a screen has been through companion.privacy.display_summary at the \"ui\" audience ceiling, whose maximum classification is \"sensitive\": a \"secret\" task's contents arrive as a withheld marker with contentWithheld set.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "sessionId", "taskId", "phase", "basePhase", "statusText",
+    "progress", "approvalState", "recommendation", "revision"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "sessionId": { "type": "string", "maxLength": 128 },
+    "taskId": { "type": "string", "maxLength": 128 },
+    "phase": {
+      "enum": [
+        "idle", "starting", "recovering", "understanding", "planning",
+        "waiting_for_approval", "listening", "speaking", "working", "reviewing",
+        "presenting_result", "success", "cancelling", "cancelled", "paused",
+        "blocked", "error", "disconnected"
+      ],
+      "description": "What the surface shows, after priority resolution. Where several are true at once the order in companion.presentation.PHASE_PRIORITY decides, so an unanswered approval outranks work in progress and an error outranks everything. \"disconnected\" is produced only by a client that cannot reach the runtime; the runtime never emits it."
+    },
+    "basePhase": {
+      "enum": [
+        "idle", "starting", "recovering", "understanding", "planning",
+        "waiting_for_approval", "listening", "speaking", "working", "reviewing",
+        "presenting_result", "success", "cancelling", "cancelled", "paused",
+        "blocked", "error", "disconnected"
+      ],
+      "description": "What the event stream alone produced, before priority. Kept so a client can explain what it is showing and a test can tell a mapping fault from a priority fault."
+    },
+    "statusText": {
+      "type": "string",
+      "maxLength": 512,
+      "description": "A deterministic sentence derived from the event type and its sanitized payload. Never a model's words and never free-form provider output."
+    },
+    "progress": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Monotonic. A fraction that retreated would tell the user the machine had lost track, which the record does not say."
+    },
+    "activeExecutor": { "type": "string", "maxLength": 128 },
+    "reviewers": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 128 } },
+    "observations": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reviewerId", "severity", "category", "summary"],
+        "properties": {
+          "reviewerId": { "type": "string", "maxLength": 128 },
+          "severity": { "enum": ["info", "low", "medium", "high", "blocking"] },
+          "category": { "enum": ["correctness", "security", "privacy", "improvement", "policy"] },
+          "summary": { "type": "string", "maxLength": 240 },
+          "suggestedAction": { "type": "string", "maxLength": 240 },
+          "evidenceEventIds": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 64 } },
+          "disagreement": {
+            "type": "boolean",
+            "description": "True for an observation the runtime recorded as a material disagreement. Separate from severity so that a client does not have to re-derive the threshold, and so a disagreement stays visible after the executor revises around it."
+          },
+          "roundNumber": { "type": "integer", "minimum": 0 },
+          "absent": { "type": "boolean", "description": "The reviewer produced nothing. Silence is never assent." }
+        }
+      }
+    },
+    "currentOperation": { "type": "string", "maxLength": 128 },
+    "currentTool": { "type": "string", "maxLength": 128 },
+    "approvalState": { "enum": ["not_required", "pending", "granted", "denied", "expired"] },
+    "approvals": {
+      "type": "array",
+      "maxItems": 16,
+      "description": "Open questions. Every field an answer must repeat back is here; the runtime checks all of them against the request it recorded before a decision is accepted.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "requestId", "sessionId", "taskId", "planId", "transitionId", "action",
+          "destination", "dataClassification", "safeDefault"
+        ],
+        "properties": {
+          "requestId": { "type": "string", "maxLength": 512 },
+          "sessionId": { "type": "string", "maxLength": 128 },
+          "taskId": { "type": "string", "maxLength": 128 },
+          "planId": { "type": "string", "maxLength": 256 },
+          "transitionId": { "type": "string", "maxLength": 512 },
+          "action": { "type": "string", "maxLength": 64 },
+          "reason": { "type": "string", "maxLength": 512 },
+          "destination": {
+            "enum": ["local", "remote"],
+            "description": "The binding destination, in the approval layer's vocabulary. This is the value the runtime recorded and therefore the value an answer must repeat."
+          },
+          "destinationDetail": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "The specific place, for the person reading the dialog. Display only, and deliberately outside the binding: it is a rendering, not a record."
+          },
+          "providerId": { "type": "string", "maxLength": 256 },
+          "dataClassification": { "enum": ["none", "public", "internal", "personal", "sensitive", "secret"] },
+          "estimatedCostUnits": { "type": ["integer", "null"], "minimum": 0 },
+          "destinationFingerprint": { "type": "string", "maxLength": 128 },
+          "expiresAtMonotonic": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Shown so the user can see the question will lapse. Not part of the binding an answer repeats: the runtime checks expiry against its own record, because a client-supplied expiry is the one field an attacker would want to restate."
+          },
+          "alternatives": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 240 } },
+          "safeDefault": {
+            "const": "denied",
+            "description": "What happens if nobody answers. Always a denial for a sensitive action; there is no configuration that makes it a grant."
+          },
+          "decision": { "enum": ["pending", "granted", "denied", "expired"] }
+        }
+      }
+    },
+    "resultSummary": { "type": "string", "maxLength": 240 },
+    "errorSummary": { "type": "string", "maxLength": 512 },
+    "privacyClassification": { "enum": ["public", "internal", "personal", "sensitive", "secret"] },
+    "dataLocality": { "enum": ["device-only", "trusted-remote", "any"] },
+    "localityIndicator": { "enum": ["local", "remote"] },
+    "paidProvider": { "type": "boolean" },
+    "listening": { "type": "boolean", "description": "A microphone is on. Set by the client, never by the runtime: audio never becomes an event." },
+    "speaking": { "type": "boolean" },
+    "microphoneActive": { "type": "boolean" },
+    "recommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["implementation", "eligible", "limitedByImplementation", "placement", "captions"],
+      "properties": {
+        "implementation": {
+          "enum": ["static-image", "audio-only", "text-only"],
+          "description": "What will actually be drawn. Restricted to what this build implements; animated 2D and 3D are not in this list because there is no renderer for them in this phase."
+        },
+        "eligible": {
+          "enum": ["full-3d", "lightweight-3d", "animated-2d", "static-image", "audio-only", "text-only"],
+          "description": "What the machine and the capability policy would permit. May name something this build cannot draw — saying so is the honest form of \"eligible\" and is why it is a separate field."
+        },
+        "limitedByImplementation": { "type": "boolean" },
+        "placement": { "enum": ["center", "docked", "compact", "task-panel", "speech-bubble"] },
+        "captions": {
+          "const": true,
+          "description": "Captions are produced in every presentation, including audio-only. They are the authoritative rendering of what the companion said; audio is the optional one."
+        },
+        "audioAvailable": { "type": "boolean" },
+        "planId": { "type": "string", "maxLength": 256 },
+        "reasons": { "type": "array", "maxItems": 16, "items": { "type": "string", "maxLength": 240 } }
+      }
+    },
+    "explanationReference": {
+      "type": "string",
+      "maxLength": 256,
+      "description": "Which part of the record explains the current decision — a capability plan id, or a plan the approval was raised against. A reference, not an explanation: the explanation is in the event stream."
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The event sequence this state was folded up to. A client sends it back as afterSequence and is given only what it has not seen."
+    },
+    "contentWithheld": {
+      "type": "boolean",
+      "description": "Something the projection read was above the \"ui\" ceiling and arrived as a marker. A surface showing a redacted view should say so rather than look complete."
+    }
+  }
+}

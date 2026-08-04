@@ -462,6 +462,16 @@ class CompanionRuntime:
             },
             producer="user",
             classification=task.classification,
+            # The summary is the user's words and carries the task's class. The
+            # rest is declared runtime fact, and pinning the whole event at the
+            # summary's class withheld it — so a `secret` task's own privacy
+            # indicator arrived at the surface as "[withheld: secret]", which is
+            # the one field that exists to say a task is secret. Same reasoning
+            # and same fix as `session_created`'s policy blocks above.
+            internal_fields=(
+                "classification", "dataLocality", "requiresOffline",
+                "costLimitUnits", "executionDeadlineSeconds",
+            ),
         )
         session = session.with_task(task.task_id, self.clock.wall())
         self._sessions[session_id] = session
@@ -537,11 +547,19 @@ class CompanionRuntime:
         runner's own copy will still say the task is running. Checking at each
         phase boundary is what stops a cancelled task being carried through
         review, result and completion by a loop that never looked again.
+
+        ``paused`` counts, and did not always. ``pause_task`` writes the pause
+        from another caller exactly as ``cancel`` writes a cancellation, and the
+        runner used to carry straight on and put its own ``executing`` back over
+        it at the next save — so a pause issued through the Approval Centre or
+        the CLI appeared to work and then silently undid itself. Pausing is not
+        cancelling and needs its own entry rather than a shared flag, but it
+        needs the same protection.
         """
         persisted = self.store.load_task(task.session_id, task.task_id)
         if persisted is None:
             return None
-        if persisted.terminal or persisted.cancellation_state != "none":
+        if persisted.terminal or persisted.cancellation_state != "none" or persisted.state == "paused":
             return persisted
         return None
 
@@ -557,8 +575,13 @@ class CompanionRuntime:
         the run path. The canceller itself writes directly; it is the source.
         """
         persisted = self.store.load_task(task.session_id, task.task_id)
-        if persisted is not None and (persisted.terminal or persisted.cancellation_state != "none"):
-            # Somebody else has taken this task terminal or begun stopping it.
+        if persisted is not None and (
+            persisted.terminal
+            or persisted.cancellation_state != "none"
+            or persisted.state == "paused"
+        ):
+            # Somebody else has taken this task terminal, begun stopping it, or
+            # paused it.
             # The runner has lost authority over the document and writes
             # nothing — not even a merge, because its `state` field is stale too
             # and writing it back would resurrect a cancelled task as
@@ -739,6 +762,15 @@ class CompanionRuntime:
                 )
 
             task = self._settle_approvals(session, task, plan, executor, decision)
+            stopped = self._stopped(task)
+            if stopped is not None:
+                # Approvals are where a task spends most of its wall-clock time
+                # with a person looking at it, so this is where a stop lands.
+                # `_settle_approvals` already returns the stopped task, but
+                # returning it was not enough: `_execute_plan` would still be
+                # called with it and, for a pause, would run the plan anyway —
+                # its own guard only looked at the cancellation fields.
+                return stopped
             task, results = self._execute_plan(session, task, plan)
             operation_results = list(results)
 
@@ -852,7 +884,13 @@ class CompanionRuntime:
         last_request_id = ""
         for index, requirement in enumerate(requirements):
             transition_id = transition_ids[index]
-            request, response, reference = self.gate.raise_request(
+            # Prepared and *written down* before anybody is asked. With an
+            # Approval Centre attached the ask blocks for as long as a person
+            # takes; emitting afterwards left the stream silent for exactly that
+            # window, so a client reconnecting while the user was being asked
+            # something replayed a task that looked like it was quietly working.
+            # See companion.approvals.ApprovalGate.prepare.
+            request, reference = self.gate.prepare(
                 task, requirement, plan, transition_id=transition_id, now=self.clock.monotonic(),
             )
             task = task.with_approval(reference)
@@ -881,6 +919,21 @@ class CompanionRuntime:
 
             stopped = self._stopped(task)
             if stopped is not None:
+                return stopped
+
+            # The blocking half. An interactive consent source parks here until
+            # somebody answers or the request expires; the refusing default
+            # returns immediately. Either way the question is already in the
+            # stream above, so a client that connects during the wait sees it.
+            self.gate.seek_consent(
+                request, plan, transition_id=transition_id, now=self.clock.monotonic(),
+            )
+
+            stopped = self._stopped(task)
+            if stopped is not None:
+                # Somebody pressed stop while the question was on screen. This
+                # is the most likely moment for it and the check has to be
+                # after the wait, not only before it.
                 return stopped
 
             try:
@@ -966,6 +1019,12 @@ class CompanionRuntime:
                     cancellation_cause=persisted.cancellation_cause,
                 )
             if task.cancellation_state != "none":
+                break
+            if persisted is not None and persisted.state == "paused":
+                # A pause landed between two operations. Stopping here rather
+                # than at the end of the plan is the difference between pausing
+                # and asking politely.
+                task = persisted
                 break
             key = keys[index]
             if key in completed:
@@ -1226,8 +1285,43 @@ class CompanionRuntime:
         return current
 
     def pause_task(self, session_id: str, task_id: str) -> CompanionTask:
+        """Set a task aside, and take its outstanding questions off the screen.
+
+        The withdrawal is the part that is easy to leave out. A paused task is
+        not being run, so a question about it authorises nothing — and leaving
+        it pending would keep an Approve button in front of somebody for work
+        that has stopped, ticking towards an expiry they cannot see. It is the
+        same rule cancellation applies in :mod:`companion.cancellation`, for the
+        same reason, and resuming asks again rather than spending consent given
+        before the pause.
+        """
         task = self.task(session_id, task_id)
         paused = self._transition(task, "paused", {"pausedFrom": task.state}, paused_from=task.state)
+        withdrawn = self.gate.invalidate_for_task(
+            paused,
+            detail=(
+                f"task {task_id} was paused; this question no longer authorises anything "
+                "and will be asked again if the task resumes"
+            ),
+        )
+        if withdrawn:
+            paused = replace(paused, approvals=tuple(
+                replace(reference, decision="expired")
+                if reference.request_id in withdrawn else reference
+                for reference in paused.approvals
+            ))
+            self._emit(
+                session_id, task_id, "approval_resolved",
+                {
+                    "requestId": withdrawn[0],
+                    "decision": "expired",
+                    "withdrawn": list(withdrawn),
+                    "pausedFrom": task.state,
+                    "detail": "the task was paused; the question was withdrawn, not answered",
+                },
+                producer="policy",
+                classification=task.classification,
+            )
         self._checkpoint(self.session(session_id), paused)
         return paused
 
@@ -1238,7 +1332,12 @@ class CompanionRuntime:
         target = task.paused_from or "classifying"
         resumed = self._transition(task, target, {"resumedTo": target})
         resumed = replace(resumed, paused_from="")
-        self._checkpoint(self.session(session_id), resumed)
+        # Authoritative, because this *is* the authority for un-pausing. The
+        # protective write refuses when the persisted task is paused — which is
+        # exactly what it is here, by definition — so a protective resume
+        # emitted its event and then declined to write the document, leaving a
+        # task whose stream said "resumed" and whose projection said "paused".
+        self._checkpoint(self.session(session_id), resumed, authoritative=True)
         return resumed
 
 

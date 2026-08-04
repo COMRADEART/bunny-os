@@ -1,0 +1,50 @@
+#!/usr/bin/python3
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Open the Bunny Companion window.
+
+A client and nothing else. It starts no runtime, owns no store and holds no task
+state; if the companion service is not running this prints how to start it and
+exits, rather than quietly becoming a second runtime — which is how a desktop
+ends up with two things that both believe they own the user's task history.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+import sys
+
+for _candidate in (Path("/usr/lib/bunny-os/python"), Path(__file__).resolve().parents[3]):
+    if _candidate.is_dir() and str(_candidate) not in sys.path:
+        sys.path.insert(0, str(_candidate))
+
+from companion.protocol import (  # noqa: E402
+    CompanionClient,
+    CompanionClientError,
+    default_endpoint_path,
+)
+
+
+def main() -> int:
+    endpoint = default_endpoint_path()
+    try:
+        CompanionClient(endpoint, timeout=5.0).health()
+    except (CompanionClientError, OSError) as exc:
+        print(
+            f"bunny-companion: no companion runtime is listening on {endpoint} ({exc}).\n"
+            "Start it with:  systemctl --user start bunny-companion.service\n"
+            "Or run one in the foreground:  bunny-os companion serve",
+            file=sys.stderr,
+        )
+        return 4
+    from companion.gtk_shell import run  # imported late: GTK is not needed to fail above
+
+    try:
+        return run(endpoint)
+    except RuntimeError as exc:
+        print(f"bunny-companion: {exc}", file=sys.stderr)
+        return 5
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-protocol.schema.json",
+  "title": "Bunny Companion local protocol envelope",
+  "description": "The request and response envelope carried over the private local socket at $XDG_RUNTIME_DIR/bunny-companion/runtime.sock. One newline-terminated JSON object each way, at most 65536 bytes in and 4194304 bytes out. The operation must be one of the names below: there is no generic filesystem, command, provider or attribute operation, and a request naming anything else is refused before the runtime is reached. Nothing here is deserialised into a Python object by name, no pickle is used, and no field is ever passed to a shell. A peer declaring a different schemaVersion is refused rather than served with a guess; there is no negotiation and no downgrade path, because both halves of this protocol come from the same build.",
+  "type": "object",
+  "$defs": {
+    "operation": {
+      "enum": [
+        "health",
+        "create_session",
+        "list_sessions",
+        "get_session",
+        "submit_task",
+        "list_tasks",
+        "get_task",
+        "get_events",
+        "get_presentation_state",
+        "resolve_approval",
+        "cancel_task",
+        "pause_task",
+        "resume_task"
+      ]
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "requestId", "operation"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "description": "Echoed in the answer. A reply whose requestId does not match is discarded by the client, so a confused or replayed response cannot be read as an answer to something else."
+        },
+        "operation": { "$ref": "#/$defs/operation" },
+        "params": {
+          "type": "object",
+          "description": "Per-operation, and validated strictly: a parameter the operation does not declare is refused rather than ignored. An ignored parameter is one the caller believes took effect."
+        },
+        "transportToken": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Required only on the loopback-TCP developer fallback used where the platform has no AF_UNIX. Compared in constant time. Absent on the Unix-socket transport that ships, where the peer's user id is checked instead."
+        }
+      }
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "requestId", "ok"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "requestId": { "type": "string", "maxLength": 128 },
+        "operation": { "type": "string", "maxLength": 64 },
+        "ok": { "type": "boolean" },
+        "result": { "type": "object", "description": "Present when ok is true." },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "message"],
+          "description": "Present when ok is false. The message is one bounded sentence; there is no stack trace on the wire, because a trace is a map of the runtime's internals handed to whatever asked for it.",
+          "properties": {
+            "code": {
+              "enum": [
+                "invalid_request",
+                "unknown_operation",
+                "unsupported_version",
+                "request_too_large",
+                "permission_denied",
+                "not_found",
+                "approval_expired",
+                "approval_replayed",
+                "approval_mismatch",
+                "approval_denied",
+                "approval_error",
+                "capability_refused",
+                "limit_exceeded",
+                "invalid_transition",
+                "integrity_error",
+                "store_error",
+                "runtime_refused",
+                "runtime_error",
+                "oversized_response",
+                "runtime_unavailable",
+                "invalid_response"
+              ]
+            },
+            "message": { "type": "string", "maxLength": 512 }
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [{ "$ref": "#/$defs/request" }, { "$ref": "#/$defs/response" }]
+}

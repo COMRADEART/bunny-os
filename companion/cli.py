@@ -136,6 +136,47 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
     demo.add_argument("--demo-root", type=Path, default=None, help="where the demo store is written")
     demo.add_argument("--refuse-approval", action="store_true", help="run with nobody answering the approval")
 
+    # -- the integrated half ------------------------------------------------
+
+    health = group.add_parser("health", help="report the runtime's health (read-only)")
+    health.add_argument("--endpoint", type=Path, default=None,
+                        help="ask a running companion service over its socket instead")
+
+    presentation = group.add_parser(
+        "presentation", help="project one task's events into presentation state (read-only)"
+    )
+    presentation.add_argument("task_id", nargs="?", default=None)
+    presentation.add_argument("--session", dest="session_id", default=None)
+    presentation.add_argument("--endpoint", type=Path, default=None,
+                              help="ask a running companion service over its socket instead")
+
+    serve = group.add_parser("serve", help="RUNS the canonical companion service in the foreground")
+    serve.add_argument("--endpoint", type=Path, default=None, help="socket path to bind")
+    serve.add_argument("--no-recover", action="store_true", help="skip the start-up recovery pass")
+    serve.add_argument("--once", action="store_true",
+                       help="bind, report, and stop; for checking the endpoint without holding it")
+
+    shell = group.add_parser("shell", help="RUNS the GTK client against a companion service")
+    shell.add_argument("--endpoint", type=Path, default=None, help="socket path to connect to")
+    shell.add_argument("--text-only", action="store_true", help="prefer the text-only presentation")
+
+    migrate = group.add_parser(
+        "migrate-ux-store", help="inspect, IMPORT or roll back a UX-prototype SQLite store"
+    )
+    migrate.add_argument("--source", type=Path, default=None, help="path to companion.sqlite3")
+    migrate.add_argument("--apply", action="store_true",
+                         help="PERFORMS the archive import; without it this is a dry run")
+    migrate.add_argument("--rollback", action="store_true", help="REMOVES a previous archive import")
+    migrate.add_argument("--name", default="ux-shell-sqlite", help="archive directory name")
+
+    integration = group.add_parser(
+        "run-integration-slice",
+        help="RUNS the full service-plus-client vertical slice in a scratch directory",
+    )
+    integration.add_argument("--slice-root", type=Path, default=None)
+    integration.add_argument("--no-speech", action="store_true",
+                             help="do not attempt the local system voice")
+
 
 def _assessment(args: argparse.Namespace) -> tuple[Assessment, str]:
     """Build the capability assessment the runtime decides against."""
@@ -195,6 +236,23 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
     """Run one companion command and return its document."""
     if args.companion_command == "run-demo":
         return _run_demo(args)
+    if args.companion_command == "run-integration-slice":
+        return _run_integration_slice(args)
+    if args.companion_command == "serve":
+        return _serve(args)
+    if args.companion_command == "shell":
+        return _shell(args)
+    if args.companion_command == "migrate-ux-store":
+        return _migrate(args)
+    # `health` and `presentation` can be answered either by a running service —
+    # which is the authority while it holds the store — or by reading the store
+    # directly. The socket is preferred when one was named or is present: asking
+    # the process that is running is always a better answer than asking the
+    # files underneath it.
+    if args.companion_command in ("health", "presentation"):
+        served = _via_socket(args)
+        if served is not None:
+            return served
 
     runtime, banner = build_runtime(args)
     try:
@@ -223,6 +281,12 @@ def _dispatch_with_runtime(runtime: CompanionRuntime, args: argparse.Namespace) 
 
     if command == "approvals":
         return _approvals_command(runtime, args)
+
+    if command == "health":
+        return _health(runtime)
+
+    if command == "presentation":
+        return _presentation(runtime, args)
 
     if command == "recover":
         if args.dry_run:
@@ -374,6 +438,214 @@ def _plan_for(runtime: CompanionRuntime, request_id: str) -> str:
     if request is None:
         raise CompanionError(f"no approval request with id {request_id!r} was raised")
     return request.plan_id
+
+
+def _health(runtime: CompanionRuntime) -> dict[str, Any]:
+    """The runtime's own account of itself, read straight from the store.
+
+    Used when no service is running. It reports the same shape the socket's
+    ``health`` returns so a caller does not have to know which answered, with
+    ``servedBy`` naming which did — because "the service says it is healthy" and
+    "the files look healthy" are different claims.
+    """
+    from .characters import CharacterError, load_static_character
+    from .protocol import PROTOCOL_SCHEMA_VERSION
+    from .voice import SystemVoice
+
+    reports = []
+    for session_id in runtime.store.session_ids():
+        reports.append(runtime.store.validate(session_id).to_json())
+    voice = SystemVoice()
+    try:
+        character = load_static_character()
+        character_detail = character.to_json() if character is not None else None
+        character_problem = ""
+    except CharacterError as exc:
+        character_detail = None
+        character_problem = str(exc)
+    return {
+        "effect": "read-only",
+        "servedBy": "store",
+        "ok": all(item["consistent"] for item in reports),
+        "protocolSchemaVersion": PROTOCOL_SCHEMA_VERSION,
+        "storeRoot": str(runtime.store.root),
+        "sessions": len(reports),
+        "storeReports": reports,
+        "executors": sorted(runtime._executors),
+        "reviewers": list(runtime.reviewer_ids()),
+        "approvalWarnings": list(runtime.approvals.warnings),
+        "pendingApprovals": [item.request_id for item in runtime.approvals.pending()],
+        "voice": voice.describe(),
+        "character": character_detail,
+        "characterProblem": character_problem,
+        "microphoneActive": False,
+        "microphonePolicy": "explicit activation only; never at start-up",
+        "remoteProviders": [],
+    }
+
+
+def _presentation(runtime: CompanionRuntime, args: argparse.Namespace) -> dict[str, Any]:
+    """Fold a task's events into the state a surface would draw."""
+    from .presentation import project_presentation
+
+    task_id = getattr(args, "task_id", None)
+    session_id = getattr(args, "session_id", None)
+    if task_id:
+        session_id, task = runtime.find_task(task_id)
+        events = runtime.events(session_id, task_id=task.task_id)
+    elif session_id:
+        events = runtime.events(session_id)
+    else:
+        identifiers = runtime.store.session_ids()
+        if not identifiers:
+            return {"effect": "read-only", "servedBy": "store", "state": None,
+                    "detail": "this store holds no sessions"}
+        session_id = identifiers[-1]
+        events = runtime.events(session_id)
+    state = project_presentation(events)
+    return {
+        "effect": "read-only",
+        "servedBy": "store",
+        "sessionId": session_id,
+        "taskId": task_id or state.task_id,
+        "state": state.to_json(),
+        "events": len(events),
+    }
+
+
+def _via_socket(args: argparse.Namespace) -> dict[str, Any] | None:
+    """Ask a running service, or return ``None`` if there is not one.
+
+    A named endpoint that cannot be reached is an error rather than a silent
+    fall-through to the store: the caller asked a specific service a question
+    and deserves to be told it was not there.
+    """
+    from .protocol import CompanionClient, CompanionClientError, default_endpoint_path
+
+    named = getattr(args, "endpoint", None)
+    endpoint = Path(named) if named else default_endpoint_path()
+    if named is None and not endpoint.exists():
+        return None
+    client = CompanionClient(endpoint, timeout=10.0)
+    try:
+        if args.companion_command == "health":
+            return {"effect": "read-only", "servedBy": "service", **dict(client.health())}
+        answer = client.get_presentation_state(
+            getattr(args, "task_id", None) or None,
+            session_id=getattr(args, "session_id", None) or None,
+        )
+        return {"effect": "read-only", "servedBy": "service", **dict(answer)}
+    except (CompanionClientError, OSError) as exc:
+        if named is None:
+            # An endpoint file left behind by a service that died. Fall back to
+            # reading the store, which is what the user wanted anyway.
+            return None
+        raise CompanionError(f"the companion service at {endpoint} could not be reached: {exc}") from exc
+
+
+def _serve(args: argparse.Namespace) -> dict[str, Any]:
+    """Run the canonical service. Blocks until stopped, unless ``--once``."""
+    from .service import CompanionService, ServiceOptions
+
+    root = args.root or default_root()
+    service = CompanionService(ServiceOptions(
+        root=root,
+        endpoint=args.endpoint,
+        machine=getattr(args, "simulate", None),
+        recover_on_start=not args.no_recover,
+    )).start()
+    document = {
+        "effect": (
+            f"STARTED the canonical companion service on {service.server.describe()['endpoint']}. "
+            "It owns the sessions, the tasks and the event stream; clients are views onto it."
+        ),
+        **service.describe(),
+    }
+    if args.once:
+        service.close()
+        document["effect"] += " The endpoint was released immediately because --once was given."
+        return document
+    try:
+        service.serve_forever()
+    finally:
+        service.close()
+    return document
+
+
+def _shell(args: argparse.Namespace) -> dict[str, Any]:
+    """Launch the GTK client. Never a runtime — always a client of one."""
+    from .gtk_shell import run as run_shell
+    from .presentation import AccessibilityPreferences
+
+    preferences = AccessibilityPreferences(prefer_text_only=bool(args.text_only))
+    try:
+        code = run_shell(args.endpoint)
+    except RuntimeError as exc:
+        raise CompanionError(str(exc)) from exc
+    return {
+        "effect": "RAN the Bunny Companion window; the runtime it connected to is unaffected by its exit",
+        "exitCode": code,
+        "preferences": preferences.to_json(),
+    }
+
+
+def _migrate(args: argparse.Namespace) -> dict[str, Any]:
+    """Inspect, archive or roll back a UX-prototype SQLite store."""
+    from .migration import (
+        default_donor_paths,
+        import_donor_store,
+        inspect_donor_store,
+        rollback_donor_import,
+    )
+
+    root = args.root or default_root()
+    if args.rollback:
+        outcome = rollback_donor_import(root, name=args.name)
+        return {
+            "effect": (
+                f"REMOVED the donor archive at {outcome['destination']}"
+                if outcome["removed"] else "read-only"
+            ),
+            **outcome,
+        }
+    source = args.source
+    if source is None:
+        source = next((item for item in default_donor_paths() if item.is_file()), None)
+    if source is None:
+        return {
+            "effect": "read-only",
+            "found": False,
+            "searched": [str(item) for item in default_donor_paths()],
+            "detail": "no UX-prototype SQLite store was found; there is nothing to migrate",
+        }
+    inspection = inspect_donor_store(Path(source))
+    report = import_donor_store(Path(source), root, name=args.name, dry_run=not args.apply)
+    return {
+        "effect": (
+            f"ARCHIVED {source} under {report.destination}; the canonical event store was not written"
+            if report.performed else "read-only (dry run; pass --apply to perform the archive)"
+        ),
+        "inspection": inspection,
+        "report": report.to_json(),
+    }
+
+
+def _run_integration_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .vertical_slice import SLICE_REQUEST, run_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-companion-slice-"))
+    report = run_slice(root, speak=not args.no_speech)
+    return {
+        "effect": (
+            f"RAN the integrated vertical slice in {root}: a service, a socket, a client, an "
+            "approval, two restarts and a replay. No network, provider or credential was used."
+        ),
+        "root": str(root),
+        "request": SLICE_REQUEST,
+        **report.to_json(),
+    }
 
 
 def _run_demo(args: argparse.Namespace) -> dict[str, Any]:

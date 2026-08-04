@@ -385,6 +385,47 @@ def _atomic_write_json(path: Path, document: Mapping[str, Any]) -> None:
     _fsync_directory(path.parent)
 
 
+#: How many times a read will look again when it meets a file mid-replacement,
+#: and how long it waits between attempts. Small: this is a window of
+#: microseconds, and a fault that survives fifty milliseconds of retrying is a
+#: real fault rather than a race.
+_READ_ATTEMPTS = 5
+_READ_BACKOFF_SECONDS = 0.01
+
+
+def _read_bytes_stable(path: Path) -> bytes:
+    """Read a file another writer may be atomically replacing underneath.
+
+    ``os.replace`` is atomic *for the filesystem*: a reader sees the old
+    contents or the new ones, never a mixture. On POSIX it is also atomic for
+    *readers*, and this is a plain read that succeeds first time. On Windows the
+    replacement is implemented as a rename over an existing name, and a reader
+    that opens the path in the instant between can be refused with EACCES —
+    which is not a damaged file, not a permissions problem, and not something to
+    report as either.
+
+    The companion meets this constantly now that a runtime worker writes task
+    projections while the protocol serves readers from the same store. It cost
+    a run of the suite to find, and reporting it as "the task document is not
+    readable" is exactly the wrong diagnosis to hand somebody.
+
+    Bounded, and the last failure is re-raised rather than swallowed: a store
+    that genuinely cannot be read must still say so.
+    """
+    last: OSError | None = None
+    for attempt in range(_READ_ATTEMPTS):
+        try:
+            return path.read_bytes()
+        except OSError as exc:
+            last = exc
+            time.sleep(_READ_BACKOFF_SECONDS * (attempt + 1))
+    raise last if last is not None else OSError(f"{path} could not be read")
+
+
+def _read_text_stable(path: Path) -> str:
+    return _read_bytes_stable(path).decode("utf-8")
+
+
 def _fsync_directory(directory: Path) -> None:
     """Make a rename durable. A no-op where the platform has no directory fd.
 
@@ -456,7 +497,7 @@ class CompanionStore:
 
     def metadata(self) -> dict[str, Any]:
         try:
-            document = json.loads(self.metadata_path.read_text(encoding="utf-8"))
+            document = json.loads(_read_text_stable(self.metadata_path))
         except FileNotFoundError:
             raise StoreError(f"{self.root} is not an initialised companion store") from None
         except (OSError, json.JSONDecodeError) as exc:
@@ -490,7 +531,7 @@ class CompanionStore:
                 "migrations": [],
             }
         try:
-            document = json.loads(path.read_text(encoding="utf-8"))
+            document = json.loads(_read_text_stable(path))
         except (OSError, json.JSONDecodeError) as exc:
             raise StoreError(f"{path} is not readable: {exc}") from exc
         if not isinstance(document, Mapping):
@@ -514,7 +555,7 @@ class CompanionStore:
             return StreamRead(anchor_hash=anchor_hash, anchor_sequence=anchor_sequence)
 
         try:
-            raw = path.read_bytes()
+            raw = _read_bytes_stable(path)
         except OSError as exc:
             raise StoreError(f"{path} is not readable: {exc}") from exc
 
@@ -697,7 +738,7 @@ class CompanionStore:
         if not path.is_file():
             return None
         try:
-            document = json.loads(path.read_text(encoding="utf-8"))
+            document = json.loads(_read_text_stable(path))
         except (OSError, json.JSONDecodeError) as exc:
             raise StoreError(f"{path} is not readable: {exc}") from exc
         return CompanionSession.from_json(document)
@@ -710,7 +751,7 @@ class CompanionStore:
         if not path.is_file():
             return None
         try:
-            document = json.loads(path.read_text(encoding="utf-8"))
+            document = json.loads(_read_text_stable(path))
         except (OSError, json.JSONDecodeError) as exc:
             raise StoreError(f"{path} is not readable: {exc}") from exc
         return CompanionTask.from_json(document)
@@ -807,7 +848,7 @@ class CompanionStore:
             anchor_hash = str(stream.get("anchorHash", GENESIS_HASH))
             anchor_sequence = int(stream.get("anchorSequence", 0) or 0)
 
-            raw = path.read_text(encoding="utf-8")
+            raw = _read_text_stable(path)
             documents = [json.loads(line) for line in raw.split("\n") if line.strip()]
             versions = sorted({int(item.get("schemaVersion", 0) or 0) for item in documents})
             if not versions or versions == [EVENT_SCHEMA_VERSION]:

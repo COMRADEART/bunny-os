@@ -576,7 +576,7 @@ class ApprovalGate:
         """
         return f"{plan.fingerprint}:{index}:{requirement.action}"
 
-    def raise_request(
+    def prepare(
         self,
         task: CompanionTask,
         requirement: ApprovalRequirement,
@@ -584,8 +584,23 @@ class ApprovalGate:
         *,
         transition_id: str,
         now: float,
-    ) -> tuple[ApprovalRequest, ApprovalResponse, ApprovalReference]:
-        """Put one question, and record what it was a question about."""
+    ) -> tuple[ApprovalRequest, ApprovalReference]:
+        """Record the question durably, without yet asking anybody.
+
+        Split out from :meth:`raise_request` so the runtime can write the
+        ``approval_requested`` event **before** a consent source is consulted.
+        With an Approval Centre attached, consulting the consent source blocks
+        for as long as a person takes to answer — and while it blocked, the
+        event that says a question was asked had not been written. The question
+        was durable in this store, but the *stream* — the thing §7 has a
+        restarted client replay to rebuild what it should be showing — did not
+        mention it. A client that reconnected during exactly the window in which
+        the user is being asked something would show a task quietly working.
+
+        The two halves are used together everywhere. :meth:`raise_request`
+        remains as their composition for callers with a non-blocking consent
+        source, which is every test and the headless demonstration.
+        """
         request_id = f"approval:{task.task_id}:{transition_id}"
         request = ApprovalRequest(
             request_id=request_id,
@@ -604,21 +619,6 @@ class ApprovalGate:
             safe_default="denied",
         )
         response = self.store.request(request)
-        if response.decision == "pending":
-            # Ask whatever stands in for a person. The answer, if there is one,
-            # is recorded before it is used, so a grant that authorised an act
-            # is in the durable record whether or not the act then succeeded.
-            said = self.consent.answer(request, now=now)
-            if said == "granted":
-                response = self.store.grant(
-                    request_id, plan_id=plan.plan_id, now=now,
-                    detail=f"granted for plan {plan.fingerprint} step {transition_id}",
-                )
-            elif said == "denied":
-                response = self.store.deny(
-                    request_id, plan_id=plan.plan_id,
-                    detail=f"declined for plan {plan.fingerprint} step {transition_id}",
-                )
         reference = ApprovalReference(
             request_id=request_id,
             action=requirement.action,
@@ -628,7 +628,60 @@ class ApprovalGate:
             transition_id=transition_id,
             destination_fingerprint=requirement.fingerprint,
         )
-        return request, response, reference
+        return request, reference
+
+    def seek_consent(
+        self,
+        request: ApprovalRequest,
+        plan: TaskPlan,
+        *,
+        transition_id: str,
+        now: float,
+    ) -> ApprovalResponse:
+        """Ask whatever stands in for a person, and record what they said.
+
+        The answer is written to the durable store *before* it is used, so a
+        grant that authorised an act is in the record whether or not the act
+        then succeeded. May block: an interactive consent source waits for a
+        human, and that is the whole reason this is a separate call.
+        """
+        existing = self.store.decision_for(request.request_id)
+        if existing is not None and existing.decision != "pending":
+            return existing
+        said = self.consent.answer(request, now=now)
+        if said == "granted":
+            return self.store.grant(
+                request.request_id, plan_id=plan.plan_id, now=now,
+                detail=f"granted for plan {plan.fingerprint} step {transition_id}",
+            )
+        if said == "denied":
+            return self.store.deny(
+                request.request_id, plan_id=plan.plan_id,
+                detail=f"declined for plan {plan.fingerprint} step {transition_id}",
+            )
+        return self.store.decision_for(request.request_id) or ApprovalResponse(
+            request.request_id, "pending", plan_id=plan.plan_id
+        )
+
+    def raise_request(
+        self,
+        task: CompanionTask,
+        requirement: ApprovalRequirement,
+        plan: TaskPlan,
+        *,
+        transition_id: str,
+        now: float,
+    ) -> tuple[ApprovalRequest, ApprovalResponse, ApprovalReference]:
+        """Put one question and take the answer in one step.
+
+        The composition of :meth:`prepare` and :meth:`seek_consent`, for callers
+        whose consent source does not block.
+        """
+        request, reference = self.prepare(
+            task, requirement, plan, transition_id=transition_id, now=now
+        )
+        response = self.seek_consent(request, plan, transition_id=transition_id, now=now)
+        return request, response, replace(reference, decision=response.decision)
 
     def resolve(
         self,
@@ -708,22 +761,46 @@ class ApprovalGate:
     def invalidate_for_task(self, task: CompanionTask, *, detail: str) -> tuple[str, ...]:
         """Withdraw every outstanding approval belonging to one task.
 
-        Used by cancellation. A pending question about a task nobody is running
-        any more must not stay on a user's screen, and a granted one must not
-        survive into whatever runs next.
+        Used by cancellation, by pausing, and by a replan that supersedes the
+        plan a question was asked about. A pending question about a task nobody
+        is running any more must not stay on a user's screen, and a granted one
+        must not survive into whatever runs next.
+
+        **The task document is not the only source, and relying on it alone was
+        a real hole.** A question becomes durable in
+        :meth:`CompanionApprovalStore.request` the moment it is raised; the
+        reference reaches the *task document* a few lines later, when the runner
+        next saves. Cancel or pause inside that window — which is precisely the
+        window in which the user is looking at the question and most likely to
+        press stop — and this method iterated an empty list and withdrew
+        nothing. The question stayed pending, and the surface went on showing an
+        Approve button for a task that had been stopped.
+
+        So the store is asked too. Requests name their task in ``service_id``,
+        which :meth:`raise_request` sets to ``companion.task.<id>``, and that is
+        a fact recorded at the same instant as the request itself rather than
+        one that catches up later.
         """
+        owner = f"companion.task.{task.task_id}"
+        candidates: dict[str, str] = {
+            reference.request_id: reference.plan_id for reference in task.approvals
+        }
+        for request_id, request in self.store.requests.items():
+            if request.service_id == owner:
+                candidates.setdefault(request_id, request.plan_id)
+
         withdrawn: list[str] = []
-        for reference in task.approvals:
-            response = self.store.decision_for(reference.request_id)
+        for request_id in sorted(candidates):
+            if request_id not in self.store.requests:
+                continue
+            response = self.store.decision_for(request_id)
             if response is not None and response.decision not in ("granted", "pending"):
                 continue
-            if reference.request_id not in self.store.requests:
-                continue
-            self.store.responses[reference.request_id] = ApprovalResponse(
-                reference.request_id, "expired",
-                plan_id=reference.plan_id, responder="system", detail=detail,
+            self.store.responses[request_id] = ApprovalResponse(
+                request_id, "expired",
+                plan_id=candidates[request_id], responder="system", detail=detail,
             )
-            withdrawn.append(reference.request_id)
+            withdrawn.append(request_id)
         if withdrawn:
             self.store.save()
         return tuple(withdrawn)

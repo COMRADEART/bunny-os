@@ -46,6 +46,16 @@ def main() -> int:
 
     copy_tree(source / "services/bunny-system-broker/src/bunny_system_broker", Path("/usr/lib/bunny-system-broker/bunny_system_broker"))
     copy_tree(source / "tools/bunny-os/bunny_os", Path("/usr/lib/bunny-os/python/bunny_os"))
+    # The capability runtime and the companion, on the same import path as
+    # bunny_os so that `bunny-os companion` works on an installed system without
+    # a second copy of either. The companion imports the capability runtime for
+    # every routing decision; installing one without the other would give the
+    # user service an ImportError on each restart, so they move together and
+    # bunny-companion.service carries a ConditionPathExists naming the
+    # dependency if they ever do not.
+    copy_tree(source / "capability", Path("/usr/lib/bunny-os/python/capability"))
+    copy_tree(source / "companion", Path("/usr/lib/bunny-os/python/companion"))
+    copy_file(source / "services/bunny-companion/bunny_companion_service.py", Path("/usr/libexec/bunny-companion-service"), 0o555)
     copy_tree(source / "installer", Path("/usr/lib/bunny-installer/installer"))
     copy_file(source / "services/bunny-system-broker/bin/bunny-system-broker", Path("/usr/libexec/bunny-system-broker"), 0o555)
     copy_file(source / "services/bunny-update-agent/bunny_update_agent.py", Path("/usr/libexec/bunny-update-agent"), 0o555)
@@ -101,6 +111,10 @@ def main() -> int:
         subprocess.run(["/usr/bin/dconf", "update"], check=True)
         copy_tree(source / "shell/themes", Path("/usr/share/bunny-shell/themes"), 0o444)
         copy_tree(source / "shell/assets/wallpapers", Path("/usr/share/backgrounds/bunny-os"), 0o444)
+        # 0444: the character is read-only data on a read-only filesystem, and
+        # companion.characters refuses it outright if it is ever found
+        # executable — which is the check that would catch a replacement.
+        copy_tree(source / "shell/assets/companion", Path("/usr/share/bunny-shell/companion"), 0o444)
         copy_tree(source / "shell/icons/hicolor", Path("/usr/share/icons/hicolor"), 0o444)
         copy_tree(source / "shell/schemas", Path("/usr/share/bunny-os/schemas/shell"), 0o444)
         subprocess.run(["/usr/bin/gtk-update-icon-cache", "--force", "/usr/share/icons/hicolor"], check=False)
