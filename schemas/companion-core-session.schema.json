@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-core-session.schema.json",
+  "title": "Bunny Companion session",
+  "description": "The standing context a task is submitted into: how private this work is, how much it may cost, and whether any of it may leave the device. Asked once per session so that consent does not become a reflex answered per task. This document is a projection of the session's event stream and can always be rebuilt from it; where the two disagree the stream is authoritative. It contains no credentials, no authentication state and nothing that identifies the machine.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "sessionId", "title", "createdAt", "lastActivityAt", "status",
+    "activeTaskIds", "completedTaskIds", "privacyPolicy", "costPolicy",
+    "localityPreference", "eventStreamRevision"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "sessionId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "description": "Restricted because it becomes a directory name; an identifier containing a path separator is a traversal waiting for somewhere to happen."
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "User-visible, credential-scrubbed and bounded."
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "lastActivityAt": { "type": "string", "format": "date-time" },
+    "status": { "enum": ["active", "paused", "closed"] },
+    "activeTaskIds": { "type": "array", "items": { "type": "string" } },
+    "completedTaskIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "\"No longer running\", which covers failure and cancellation. A task cannot appear in both lists."
+    },
+    "privacyPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultClassification", "maximumRemoteClassification", "allowRemote"],
+      "description": "Defaults are the strict end. A session created without an explicit policy treats its content as personal and permits nothing off-device.",
+      "properties": {
+        "defaultClassification": {
+          "enum": ["public", "internal", "personal", "sensitive", "secret"]
+        },
+        "maximumRemoteClassification": {
+          "enum": ["public", "internal", "personal", "sensitive"],
+          "description": "Cannot be secret: secret data never leaves the device, so there is no way to express that it may."
+        },
+        "allowRemote": { "type": "boolean" }
+      }
+    },
+    "costPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["taskLimitUnits", "sessionLimitUnits", "approvalThresholdUnits"],
+      "description": "Whole currency minor units. Zero means nothing may be spent, which is not the same as no limit — there is deliberately no way to express \"unlimited\", because a spend authorised by omission is not an authorisation.",
+      "properties": {
+        "taskLimitUnits": { "type": "integer", "minimum": 0 },
+        "sessionLimitUnits": { "type": "integer", "minimum": 0 },
+        "approvalThresholdUnits": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "localityPreference": {
+      "enum": ["device-only", "trusted-remote", "any"],
+      "description": "The capability router's own vocabulary, unchanged, so a preference set here reaches the router without a translation that could be wrong."
+    },
+    "selectedExecutor": {
+      "type": "string",
+      "description": "Advisory only. Every task re-runs the capability check; a session that pinned an executor would keep using it after the machine stopped being able to."
+    },
+    "selectedReviewers": { "type": "array", "items": { "type": "string" } },
+    "capabilityPlanReference": {
+      "type": "string",
+      "description": "Fingerprint of the capability plan the last decision in this session was made against."
+    },
+    "eventStreamRevision": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Sequence number of the last event written. Compared against the stream's tip on load; a disagreement means the process died between the append and this write, and the stream wins."
+    }
+  }
+}

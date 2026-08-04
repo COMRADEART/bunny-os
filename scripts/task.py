@@ -226,7 +226,7 @@ def main() -> int:
         "test-decommission", "test-pilot",
         "test-release-closure", "test-licensing", "test-reproducibility", "test-signing",
         "test-release", "test-hardware-evidence", "test-accessibility-evidence", "test-pilot-gates",
-        "test-capability",
+        "test-capability", "test-companion",
     ))
     args = parser.parse_args()
     if args.command == "audit":

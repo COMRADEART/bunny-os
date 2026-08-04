@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-core-reviewer-observation.schema.json",
+  "title": "Bunny Companion reviewer observation",
+  "description": "One structured remark from an observation-only reviewer. Reviewers may inspect a redacted view of a task and say what is wrong with it; they may not execute tools, modify files, approve actions, control applications, change configuration, send task data anywhere, or override the executor. This document is the whole of what a reviewer can put into the record. The reviewerId is checked against the identity the runtime invoked, so a reviewer cannot attribute a remark — or a disagreement — to another.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reviewerId", "severity", "category", "summary"],
+  "properties": {
+    "reviewerId": { "type": "string", "minLength": 1 },
+    "severity": {
+      "enum": ["info", "low", "medium", "high", "blocking"],
+      "description": "\"blocking\" does not stop the task — reviewers cannot stop anything — but high and above are recorded as a disagreement rather than an observation, and a disagreement stays in the stream even after the executor revises around it."
+    },
+    "category": { "enum": ["correctness", "security", "privacy", "improvement", "policy"] },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 960 },
+    "suggestedAction": { "type": "string", "maxLength": 240 },
+    "evidenceEventIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Events in the same session that support the remark, so a reader can check it rather than take it."
+    }
+  },
+  "examples": [
+    {
+      "reviewerId": "local.test-reviewer",
+      "severity": "info",
+      "category": "correctness",
+      "summary": "The proposed output omits the requested validation step.",
+      "suggestedAction": "Run validation before completion.",
+      "evidenceEventIds": []
+    }
+  ]
+}

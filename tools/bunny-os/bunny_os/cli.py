@@ -9,6 +9,7 @@ import sys
 from typing import Any
 
 from . import capability_cli as capability_module
+from . import companion_cli as companion_module
 from . import qualification as qualification_module
 from .client import BrokerClientError, request
 from .info import human as hardware_human, inventory
@@ -84,6 +85,7 @@ def parser() -> argparse.ArgumentParser:
     verify.add_argument("--public-key", type=Path, default=Path("/usr/share/bunny-os/media-keys/release.pem"))
     qualification_module.add_arguments(sub)
     capability_module.add_arguments(sub)
+    companion_module.add_arguments(sub)
     return root
 
 
@@ -142,6 +144,14 @@ def main() -> int:
             if not args.json and isinstance(value, str):
                 print(value)
                 return 0
+        elif args.command == "companion":
+            # Local and user-owned, like capability: the companion store belongs
+            # to the person running the command, so nothing here needs the
+            # broker and nothing here should wait on it.
+            try:
+                value = companion_module.dispatch(args)
+            except companion_module.CompanionError as exc:
+                raise BrokerClientError("companion_refused", str(exc)) from exc
         elif args.command == "media":
             from installer.validation.media import MediaVerificationError, verify_manifest
 
