@@ -119,11 +119,14 @@ class VerticalSliceTests(unittest.TestCase):
 
         # A new client represents a restarted UI. The service and task remain.
         second_ui = CompanionClient(self.root / "runtime.sock")
-        restored = second_ui.snapshot(task_id)
+        approval_centre = CompanionViewModel(second_ui, active_task_id=task_id)
+        approval_centre.connect()
+        restored = approval_centre.snapshot
+        self.assertIsNotNone(restored)
         self.assertEqual(restored["latestSequence"], pending["latestSequence"])
         self.assertEqual(restored["state"]["state"], "waiting_for_approval")
-        approval = restored["approvals"][0]
-        completed = second_ui.resolve_approval(task_id, approval, "approve")
+        approval = approval_centre.approvals[0]
+        completed = approval_centre.resolve(approval, "approve")
         self.assertEqual(completed["task"]["currentPhase"], "completed")
         self.assertEqual(completed["state"]["state"], "success")
         self.assertEqual(completed["task"]["toolOperations"][0]["status"], "completed")
