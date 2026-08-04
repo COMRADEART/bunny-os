@@ -206,13 +206,16 @@ class CompanionRuntime:
             phase=phase,
         )
 
-    @staticmethod
-    def _visual_hint(decision: PresentationDecision) -> VisualPresentationHint:
+    def _visual_hint(self, decision: PresentationDecision) -> VisualPresentationHint:
         return VisualPresentationHint(
             implementation=decision.implementation,
             placement=decision.placement,
-            reduced_motion=any("motion" in reason for reason in decision.reasons),
-            high_contrast=False,
+            reduced_motion=(
+                self.presentation_signals.reduced_motion
+                or self.presentation_signals.no_animation
+            ),
+            high_contrast=self.presentation_signals.high_contrast,
+            text_scale=self.presentation_signals.text_scale,
             explanation="; ".join(decision.reasons)[:512],
         )
 

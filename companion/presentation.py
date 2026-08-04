@@ -93,6 +93,7 @@ class PresentationSignals:
     reduced_motion: bool = False
     no_animation: bool = False
     high_contrast: bool = False
+    text_scale: float = 1.0
     remote_rendering_requested: bool = False
     remote_rendering_permitted: bool = False
 
@@ -103,6 +104,8 @@ class PresentationSignals:
             raise ValueError("available VRAM cannot be negative")
         if self.battery_percent is not None and not 0.0 <= self.battery_percent <= 100.0:
             raise ValueError("battery percentage is invalid")
+        if not 0.75 <= self.text_scale <= 3.0:
+            raise ValueError("text scale is outside the supported range")
 
 
 @dataclass(frozen=True)
@@ -222,7 +225,9 @@ def select_presentation(
     return PresentationDecision(
         implementation=selected,
         placement=placement_for_phase(phase),
-        captions=selected != PresentationKind.AUDIO_ONLY or not signals.audio_output_available,
+        # Captions remain in the typed stream even in audio-only/headless
+        # presentation so a remote or later visual client can render them.
+        captions=True,
         visual_listening_indicator=not no_display and selected != PresentationKind.AUDIO_ONLY,
         visual_speaking_indicator=not no_display and selected != PresentationKind.AUDIO_ONLY,
         plan_id=plan.plan_id,

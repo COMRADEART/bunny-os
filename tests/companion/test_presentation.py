@@ -102,6 +102,18 @@ class AdaptivePresentationTests(unittest.TestCase):
         )
         self.assertEqual(result.implementation, PresentationKind.STATIC_IMAGE)
 
+    def test_audio_only_keeps_captions_in_the_typed_stream(self) -> None:
+        result = select_presentation(
+            plan(PresentationKind.AUDIO_ONLY),
+            PresentationSignals(display_available=False, headless=True, audio_output_available=True),
+        )
+        self.assertEqual(result.implementation, PresentationKind.AUDIO_ONLY)
+        self.assertTrue(result.captions)
+
+    def test_accessibility_text_scale_is_bounded(self) -> None:
+        with self.assertRaises(ValueError):
+            PresentationSignals(text_scale=4.0)
+
     def test_capability_plan_is_a_ceiling(self) -> None:
         result = select_presentation(
             plan(PresentationKind.TEXT_ONLY),

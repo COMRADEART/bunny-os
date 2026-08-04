@@ -248,6 +248,41 @@ class ApprovalCentreTests(unittest.TestCase):
         with self.assertRaises(ApprovalExpired):
             self.centre.resolve(self.resolution(view), current_plan_id=view.plan_id, now=901.0)
 
+    def test_pending_approval_expires_safely_across_boot_identity_change(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "approvals.json"
+            task = make_task("task-boot-expiry")
+            proposal = self.proposal(transition_id="transition-boot-expiry")
+            first = ApprovalCentre(path, boot_identity="boot-one")
+            first.request(task, proposal, self.agent, now=10.0)
+            first.associate(f"approval:{proposal.transition_id}", task.task_id)
+            self.assertEqual(len(first.pending(task_id=task.task_id, now=11.0)), 1)
+
+            second = ApprovalCentre(path, boot_identity="boot-two")
+            second.associate(f"approval:{proposal.transition_id}", task.task_id)
+            self.assertEqual(second.pending(task_id=task.task_id, now=1.0), ())
+            record = second.store.get(f"approval:{proposal.transition_id}")
+            self.assertIsNotNone(record)
+            self.assertEqual(record.decision, "expired")
+            view = second.view(record, task_id=task.task_id, now=1.0)
+            with self.assertRaises(ApprovalExpired):
+                second.resolve(
+                    self.resolution(view),
+                    current_plan_id=proposal.plan_id,
+                    now=1.0,
+                )
+
+    def test_pending_approval_survives_same_boot_service_restart(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "approvals.json"
+            task = make_task("task-same-boot")
+            proposal = self.proposal(transition_id="transition-same-boot")
+            first = ApprovalCentre(path, boot_identity="boot-one")
+            first.request(task, proposal, self.agent, now=10.0)
+            second = ApprovalCentre(path, boot_identity="boot-one")
+            second.associate(f"approval:{proposal.transition_id}", task.task_id)
+            self.assertEqual(len(second.pending(task_id=task.task_id, now=11.0)), 1)
+
     def test_superseded_plan_is_rejected(self) -> None:
         view = self.requested()
         with self.assertRaises(SupersededPlan):

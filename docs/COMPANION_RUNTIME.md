@@ -75,7 +75,7 @@ The default shell avoids focus changes during event refresh. Opening the applica
 
 `AgentProvider`, `VoiceProvider`, and `SpeechInputProvider` are replaceable contracts. Agent descriptors name model capabilities, context, tools, streaming, structured output, image/audio support, locality, cost, privacy, authentication state, availability, health, cancellation, and usage. There are no credentials in a descriptor.
 
-`SystemVoiceProvider` is a real, optional local adapter for Speech Dispatcher, eSpeak NG, or the macOS system `say` command. It uses argument arrays, supports cancellation, and sends no data remotely. If none is present, the event stream records degradation and synchronized captions remain. No voice cloning or voice-sample upload exists.
+`VoiceRouter` evaluates an ordered primary/fallback list and skips unhealthy providers. It also skips remote or paid speech unless the caller supplies the corresponding prior policy approval. The runtime's current task path supplies neither, so it can select only a healthy local free voice or the explicit captions-only endpoint. `SystemVoiceProvider` is a real, optional local adapter for Speech Dispatcher, eSpeak NG, or the macOS system `say` command. It uses argument arrays, supports cancellation, and sends no data remotely. If none is present, the event stream records degradation and synchronized captions remain. No voice cloning or voice-sample upload exists.
 
 `MicrophoneController` is the mandatory activation gate for speech input. It refuses absent/disabled microphones, silent activation, unenabled continuous conversation, and unapproved remote audio. The visible/transmitting indicator is raised before a provider can start and cleared on failure or cancellation. No production speech-recognition adapter is claimed in this slice.
 
@@ -88,6 +88,7 @@ The default shell avoids focus changes during event refresh. Opening the applica
 - Character packages are data-only and reject traversal, symlinks, executable files/modes, hidden undeclared files, oversized entries, suspicious compression, excessive resources, missing license/fallback, unsupported renderers, and hash mismatch.
 - UI state shows remote-provider, screen-sharing, audio-transmission, paid-service, reviewer-context, system-modification, and microphone indicators.
 - Unanswered approval remains pending and authorizes nothing.
+- Pending approval deadlines use the existing capability record's monotonic time. A private Linux boot-id marker preserves them across same-boot service restarts and safely expires them after a reboot or untrusted marker; platforms without a boot identity report that check as unverified.
 
 ## Running the provider-free slice
 
@@ -112,7 +113,7 @@ bunny-companion approve TASK_ID
 - No commercial or remote AI, voice, or speech-recognition adapter is implemented.
 - No executable browser, coding, or desktop-control adapter is connected in the first slice.
 - The GTK UI is implemented but has not been visually or assistive-technology validated on a booted Bunny OS image in this development environment.
-- System voice availability is discovered, not guaranteed; captions are the verified fallback.
+- System voice availability is discovered, not guaranteed; captions and deterministic local-fallback selection are verified, but no physical speaker was exercised here.
 - The shipped character is a static fallback. Animated 2D and 3D renderer adapters remain future work.
 - GNOME compositor integration for verified click-through, active application geometry, cross-monitor snapping, and focus policy remains future work.
 - The new installed paths are build-affecting and require a new reproducibility and image-qualification candidate. They do not change the already qualified capability candidate commit.

@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
+import time
 import unittest
 
 from companion.approval import ApprovalResolution
@@ -166,6 +169,61 @@ class VerticalSliceTests(unittest.TestCase):
         self.assertEqual(denied["task"]["currentPhase"], "blocked")
         self.assertEqual(denied["state"]["state"], "blocked")
         self.assertNotIn("tool_started", [item["eventType"] for item in denied["events"]])
+
+
+class ProcessBoundaryVerticalSliceTests(unittest.TestCase):
+    def test_service_entry_point_completes_provider_free_task(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as directory:
+            temporary = Path(directory)
+            endpoint = temporary / "runtime.sock"
+            process = subprocess.Popen(
+                [
+                    sys.executable,
+                    str(root / "services/bunny-companion/bunny_companion_service.py"),
+                    "--state-directory", str(temporary / "state"),
+                    "--socket", str(endpoint),
+                    "--conservative",
+                ],
+                cwd=root,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            try:
+                client = CompanionClient(endpoint, timeout=1.0)
+                deadline = time.monotonic() + 10.0
+                last_error: Exception | None = None
+                while time.monotonic() < deadline:
+                    if process.poll() is not None:
+                        break
+                    try:
+                        health = client.health()
+                        break
+                    except (CompanionClientError, OSError) as exc:
+                        last_error = exc
+                        time.sleep(0.05)
+                else:
+                    self.fail(f"companion service did not become ready: {last_error}")
+                if process.poll() is not None:
+                    stdout, stderr = process.communicate(timeout=1.0)
+                    self.fail(f"companion service exited early: {stdout} {stderr}")
+                self.assertFalse(health["commercialProviderRequired"])
+                pending = client.submit("Complete a harmless process-boundary task.")
+                completed = client.resolve_approval(
+                    pending["task"]["taskId"], pending["approvals"][0], "approve"
+                )
+                self.assertEqual(completed["task"]["currentPhase"], "completed")
+                self.assertEqual(completed["state"]["state"], "success")
+            finally:
+                if process.poll() is None:
+                    process.terminate()
+                try:
+                    process.communicate(timeout=5.0)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.communicate(timeout=5.0)
 
 
 class RuntimeRecoveryTests(unittest.TestCase):

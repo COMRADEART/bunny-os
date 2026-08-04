@@ -75,6 +75,18 @@ class CharacterDirectoryTests(unittest.TestCase):
         finally:
             directory.cleanup()
 
+    def test_unknown_manifest_field_is_rejected_without_optional_schema_library(self) -> None:
+        document = manifest()
+        document["executableHook"] = "payload"
+        with self.assertRaisesRegex(CharacterPackageError, "unsupported fields"):
+            CharacterPackage.from_json(document)
+
+    def test_non_object_asset_is_rejected(self) -> None:
+        document = manifest()
+        document["assetFiles"].append("fallback.png")
+        with self.assertRaisesRegex(CharacterPackageError, "asset must be an object"):
+            CharacterPackage.from_json(document)
+
     def test_missing_fallback_is_rejected(self) -> None:
         document = manifest()
         document["fallbackImage"] = "missing.png"

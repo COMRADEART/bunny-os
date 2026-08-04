@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+import os
 from pathlib import Path
 import time
 from typing import Any, Mapping
@@ -35,6 +36,18 @@ class ApprovalScopeMismatch(ApprovalError):
 
 class SupersededPlan(ApprovalError):
     pass
+
+
+_AUTO_BOOT_IDENTITY = object()
+
+
+def _system_boot_identity() -> str | None:
+    """Return the Linux boot id used by installed Bunny OS, if available."""
+    try:
+        value = Path("/proc/sys/kernel/random/boot_id").read_text(encoding="ascii").strip()
+    except OSError:
+        return None
+    return value if value else None
 
 
 @dataclass(frozen=True)
@@ -122,10 +135,64 @@ class ApprovalOutcome:
 class ApprovalCentre:
     """Scope-validating visual/API surface for capability approval records."""
 
-    def __init__(self, path: Path) -> None:
+    def __init__(
+        self,
+        path: Path,
+        *,
+        boot_identity: str | None | object = _AUTO_BOOT_IDENTITY,
+    ) -> None:
         self.store = DurableApprovalStore(path=path)
-        self.warnings = self.store.load()
+        warnings = list(self.store.load())
         self._task_by_request: dict[str, str] = {}
+        identity = _system_boot_identity() if boot_identity is _AUTO_BOOT_IDENTITY else boot_identity
+        if identity is None:
+            warnings.append(
+                "boot identity is unavailable; cross-boot monotonic approval expiry was not verified"
+            )
+        else:
+            bounded_text(str(identity), "boot identity", 128)
+            warnings.extend(self._bind_pending_to_boot(str(identity)))
+        self.warnings = tuple(warnings)
+
+    def _bind_pending_to_boot(self, identity: str) -> tuple[str, ...]:
+        """Expire restored pending records if their monotonic clock was another boot."""
+        marker = self.store.path.with_suffix(self.store.path.suffix + ".boot-id")
+        warnings: list[str] = []
+        previous: str | None = None
+        marker_trusted = True
+        try:
+            if marker.is_symlink():
+                marker_trusted = False
+                warnings.append("approval boot marker is a symlink and was not trusted")
+            elif marker.is_file():
+                previous = marker.read_text(encoding="ascii").strip()
+        except OSError as exc:
+            marker_trusted = False
+            warnings.append(f"approval boot marker could not be read: {type(exc).__name__}")
+
+        if self.store.pending() and (not marker_trusted or previous != identity):
+            for record in self.store.pending():
+                self.store.cancel_for_transition(
+                    record.request.transition_id,
+                    detail="the request was safely expired because the system boot identity changed",
+                )
+            warnings.append("pending approvals from another or unknown boot were expired")
+
+        if marker_trusted:
+            temporary = marker.with_suffix(marker.suffix + ".new")
+            try:
+                marker.parent.mkdir(parents=True, exist_ok=True)
+                if temporary.is_symlink():
+                    raise PermissionError("temporary boot marker is a symlink")
+                temporary.write_text(identity + "\n", encoding="ascii", newline="\n")
+                try:
+                    temporary.chmod(0o600)
+                except OSError:
+                    pass
+                os.replace(temporary, marker)
+            except OSError as exc:
+                warnings.append(f"approval boot marker could not be persisted: {type(exc).__name__}")
+        return tuple(warnings)
 
     @staticmethod
     def request_for(task: TaskSession, proposal: ExecutionProposal, agent: AgentIdentity, *, now: float) -> CapabilityApprovalRequest:
@@ -217,6 +284,8 @@ class ApprovalCentre:
         request = record.request
         if request.expires_at_monotonic > 0 and moment > request.expires_at_monotonic:
             self.store.expire(moment)
+            raise ApprovalExpired("the approval request has expired; no action was taken")
+        if record.decision == "expired":
             raise ApprovalExpired("the approval request has expired; no action was taken")
         if record.decision != "pending":
             raise ApprovalReplay("the approval request was already resolved; replay was rejected")

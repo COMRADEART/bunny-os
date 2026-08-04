@@ -52,6 +52,13 @@ MAX_DECLARED_VRAM_BYTES = 16 * 1024 * 1024 * 1024
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _SENSITIVE_METADATA = re.compile(r"(?i)(api.?key|authorization|credential|password|private.?key|secret|token)")
+_PACKAGE_FIELDS = frozenset({
+    "schemaVersion", "packageId", "creator", "license", "characterName", "version",
+    "supportedRenderer", "assetFiles", "thumbnail", "fallbackImage", "skeleton",
+    "animationMap", "lipSync", "facialExpressionMap", "resourceEstimates",
+    "minimumRenderingCapability", "promptProvenance", "generationMetadata",
+})
+_ASSET_FIELDS = frozenset({"path", "sha256", "sizeBytes", "mediaType"})
 
 
 class CharacterPackageError(ValueError):
@@ -76,6 +83,8 @@ def _no_sensitive_metadata(value: Any, *, path: str = "metadata", depth: int = 0
     if depth > 8:
         raise CharacterPackageError(f"{path} is nested too deeply")
     if isinstance(value, Mapping):
+        if len(value) > 256:
+            raise CharacterPackageError(f"{path} contains too many fields")
         for key, item in value.items():
             text = str(key)
             if _SENSITIVE_METADATA.search(text):
@@ -115,6 +124,13 @@ class CharacterAsset:
 
     @classmethod
     def from_json(cls, value: Mapping[str, Any]) -> "CharacterAsset":
+        if not isinstance(value, Mapping):
+            raise CharacterPackageError("character asset must be an object")
+        unexpected = set(value).difference(_ASSET_FIELDS)
+        if unexpected:
+            raise CharacterPackageError(
+                "character asset contains unsupported fields: " + ", ".join(sorted(map(str, unexpected)))
+            )
         return cls(
             path=str(value.get("path", "")),
             sha256=str(value.get("sha256", "")),
@@ -224,15 +240,30 @@ class CharacterPackage:
 
     @classmethod
     def from_json(cls, value: Mapping[str, Any]) -> "CharacterPackage":
+        if not isinstance(value, Mapping):
+            raise CharacterPackageError("character package manifest must be an object")
+        unexpected = set(value).difference(_PACKAGE_FIELDS)
+        if unexpected:
+            raise CharacterPackageError(
+                "character package contains unsupported fields: " + ", ".join(sorted(map(str, unexpected)))
+            )
         if value.get("schemaVersion") != CHARACTER_PACKAGE_SCHEMA_VERSION:
             raise CharacterPackageError("unsupported character package schemaVersion")
         assets = value.get("assetFiles")
         if not isinstance(assets, list):
             raise CharacterPackageError("assetFiles must be an array")
+        if any(not isinstance(item, Mapping) for item in assets):
+            raise CharacterPackageError("every character asset must be an object")
         required_objects = ("skeleton", "animationMap", "lipSync", "facialExpressionMap", "resourceEstimates")
         for name in required_objects:
             if not isinstance(value.get(name), Mapping):
                 raise CharacterPackageError(f"{name} must be an object")
+        for optional in ("promptProvenance", "generationMetadata"):
+            if optional in value and not isinstance(value[optional], Mapping):
+                raise CharacterPackageError(f"{optional} must be an object")
+        unexpected_resources = set(value["resourceEstimates"]).difference({"memoryBytes", "vramBytes"})
+        if unexpected_resources:
+            raise CharacterPackageError("resourceEstimates contains unsupported fields")
         return cls(
             package_id=str(value.get("packageId", "")),
             creator=str(value.get("creator", "")),
@@ -240,7 +271,7 @@ class CharacterPackage:
             character_name=str(value.get("characterName", "")),
             version=str(value.get("version", "")),
             supported_renderer=str(value.get("supportedRenderer", "")),
-            assets=tuple(CharacterAsset.from_json(item) for item in assets if isinstance(item, Mapping)),
+            assets=tuple(CharacterAsset.from_json(item) for item in assets),
             thumbnail=str(value.get("thumbnail", "")),
             fallback_image=str(value.get("fallbackImage", "")),
             skeleton=dict(value.get("skeleton") or {}),
