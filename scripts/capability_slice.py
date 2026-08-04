@@ -27,7 +27,15 @@ import subprocess
 import sys
 import time
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+# Installed layout first. BUNNY_SLICE_INSTALLED=1 makes that mandatory: the
+# point of the installed-path run is to exercise what shipped, and silently
+# falling back to a source tree would produce a passing result about code the
+# artifact does not contain.
+_INSTALLED = Path("/usr/lib/bunny-os/python")
+if _INSTALLED.is_dir():
+    sys.path.insert(0, str(_INSTALLED))
+if os.environ.get("BUNNY_SLICE_INSTALLED") != "1":
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from capability.apply.applicator import Applicator, ApplicatorSettings
 from capability.apply.audit import InMemoryAuditSink
@@ -44,6 +52,7 @@ from capability.policy import Policy
 from capability.registry import load_registry
 from capability.scores import compute_scores
 
+REQUIRE_INSTALLED = os.environ.get("BUNNY_SLICE_INSTALLED") == "1"
 SERVICE = "bunny.capability.probe"
 UNIT = os.environ.get("UNIT", "bunny-bunny-capability-probe.service")
 STATE = Path(os.environ.get("STATE", "/tmp/cap-slice-state"))
@@ -94,13 +103,34 @@ def main() -> int:
             print(f"  FAIL {name}: {detail}")
 
     print("=== environment ===")
+    import capability as _capability_package
+
+    package_path = Path(_capability_package.__file__).resolve()
+    record("code-provenance", importedFrom=str(package_path.parent),
+           requireInstalled=REQUIRE_INSTALLED)
+    if REQUIRE_INSTALLED:
+        check(
+            "the capability package was imported from the installed path",
+            str(package_path).startswith("/usr/lib/bunny-os/python/"),
+            f"imported from {package_path}",
+        )
+        check(
+            "the supervisor entry point exists at its installed path",
+            Path("/usr/libexec/bunny-capability-supervisor").is_file(),
+            "/usr/libexec/bunny-capability-supervisor",
+        )
+
     environment = detect_environment()
     record("cgroup-environment", version=environment.version, usable=environment.usable,
            controllers=",".join(environment.available_controllers), detail=environment.detail)
     check("cgroup v2 usable", environment.usable, environment.detail)
 
     print("\n=== 1-6: discover, score, budget, plan ===")
-    registry = load_registry(Path("capability/services"))
+    manifest_directory = (
+        Path("/usr/share/bunny-os/capability/services") if REQUIRE_INSTALLED
+        else Path("capability/services")
+    )
+    registry = load_registry(manifest_directory)
     policy = Policy()
     inventory = discover(budget_ms=2000, probe_runtimes=False)
     scores = compute_scores(inventory)

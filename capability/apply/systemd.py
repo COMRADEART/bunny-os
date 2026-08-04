@@ -76,6 +76,12 @@ DEFAULT_UNIT_PREFIX = "bunny-"
 #: Bunny OS service.
 _UNIT_NAME = re.compile(r"^[a-z0-9][a-z0-9._-]{0,62}\.service$")
 
+#: The service-id shape the registry enforces. Re-checked here because this
+#: module must not depend on having been called through the registry: a name
+#: builder that trusts its caller is one that will eventually be called by
+#: something that did not check.
+_SERVICE_ID = re.compile(r"^[a-z][a-z0-9]*(\.[a-z0-9][a-z0-9-]*)+$")
+
 #: Output kept from a failing command. Bounded because a service that writes
 #: continuously to stderr must not be able to fill a constrained node's disk
 #: through this backend's diagnostics.
@@ -108,7 +114,21 @@ def unit_name_for(service_id: str, *, prefix: str = DEFAULT_UNIT_PREFIX) -> str:
     manifest cannot name somebody else's unit. If a service ever needs a unit
     name that this rule does not produce, the rule changes here, in reviewed
     code, rather than in a JSON file that ships with a service.
+
+    **The input is validated, not only the output.** Checking the derived name
+    alone was not enough: ``".."`` transliterates to ``bunny---.service``, which
+    passes the unit-name pattern. That particular string escapes nothing — it
+    has no separator and the allowlist would refuse it — but a function that
+    turns a path traversal into a plausible unit name is one refactor away from
+    being a real hole. The service-id shape is checked first, the same way
+    :func:`capability.apply.cgroup.safe_group_name` checks it before building a
+    path.
     """
+    if not isinstance(service_id, str) or not _SERVICE_ID.match(service_id):
+        raise ValueError(
+            f"{service_id!r} is not a valid Bunny OS service id and will not be turned "
+            "into a unit name"
+        )
     slug = service_id.replace(".", "-")
     name = f"{prefix}{slug}.service"
     if not valid_unit_name(name):
