@@ -45,7 +45,7 @@ def _fixed_spawn(argv: list[str]) -> None:
         "/usr/bin/gnome-control-center", "/usr/bin/nautilus", "/usr/bin/gnome-terminal",
         "/usr/bin/bunny-launcher", "/usr/bin/bunny-settings", "/usr/bin/bunny-workspace",
         "/usr/bin/bunny-approvals", "/usr/bin/bunny-tasks", "/usr/bin/bunny-plans",
-        "/usr/bin/bunny-terminal", "/usr/bin/bunny-os",
+        "/usr/bin/bunny-terminal", "/usr/bin/bunny-os", "/usr/bin/bunny-companion",
     }
     if not argv or argv[0] not in allowed:
         raise ValueError("unapproved desktop launch target")

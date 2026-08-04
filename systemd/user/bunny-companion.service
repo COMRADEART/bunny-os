@@ -1,0 +1,35 @@
+[Unit]
+Description=Bunny Companion task and presentation runtime
+Documentation=file:///usr/share/doc/bunny-os/COMPANION_RUNTIME.md
+PartOf=graphical-session.target bunny-shell.target
+After=graphical-session-pre.target
+StartLimitIntervalSec=60s
+StartLimitBurst=4
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/bunny-companion-service
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=15s
+RuntimeDirectory=bunny-companion
+RuntimeDirectoryMode=0700
+StateDirectory=bunny-companion
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+MemoryMax=128M
+TasksMax=96
+SystemCallArchitectures=native
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target

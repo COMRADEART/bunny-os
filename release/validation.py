@@ -655,6 +655,7 @@ _PROGRAM_SOURCES = (
 _PROGRAM_ALIASES = {
     "bunny-update-agent": "services/bunny-update-agent/bunny_update_agent.py",
     "bunny-capability-supervisor": "services/bunny-capability-supervisor/bunny_capability_supervisor.py",
+    "bunny-companion-service": "services/bunny-companion/bunny_companion_service.py",
 }
 
 #: Prefixes owned by something other than install-root.py.

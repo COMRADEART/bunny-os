@@ -32,6 +32,7 @@ REQUIRED_DOCS = (
     "docs/DESKTOP_SEARCH.md", "docs/BUNNY_TERMINAL.md", "docs/SYSTEM_SETTINGS.md", "docs/NOTIFICATIONS.md",
     "docs/APPROVAL_CENTRE.md", "docs/PRIVACY_DASHBOARD.md", "docs/DESIGN_SYSTEM.md", "docs/VISUAL_IDENTITY.md",
     "docs/ACCESSIBILITY.md", "docs/MULTI_MONITOR.md", "docs/SAFE_SHELL.md", "docs/PERFORMANCE.md",
+    "docs/COMPANION_RUNTIME.md", "docs/COMPANION_CHARACTER_GENERATION.md",
     "PHASE_2_REPORT.md", "SHELL_SECURITY_REVIEW.md", "DESKTOP_PERFORMANCE_REPORT.md", "ACCESSIBILITY_REPORT.md",
 )
 PHASE3_DOCS = (
@@ -226,7 +227,7 @@ def main() -> int:
         "test-decommission", "test-pilot",
         "test-release-closure", "test-licensing", "test-reproducibility", "test-signing",
         "test-release", "test-hardware-evidence", "test-accessibility-evidence", "test-pilot-gates",
-        "test-capability",
+        "test-capability", "test-companion",
     ))
     args = parser.parse_args()
     if args.command == "audit":

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Bunny Companion
+Comment=Follow real task state, reviewer observations, captions, and approvals
+Exec=/usr/bin/bunny-companion
+Icon=bunny-shell
+Terminal=false
+Categories=Utility;System;Accessibility;
+Keywords=Companion;Tasks;Approval;Voice;Bunny;
+StartupNotify=true
+X-GNOME-SingleWindow=true

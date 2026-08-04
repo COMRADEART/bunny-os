@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-task-1.schema.json",
+  "title": "Bunny Companion task session",
+  "description": "A bounded persistent task record. User and display text is redacted before persistence; secrets and hidden model reasoning are not fields in this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "taskId", "sessionId", "userRequest", "userRequestSha256", "displaySummary",
+    "taskClassification", "requiredCapabilities", "privacyClassification", "dataLocalityRequirements",
+    "costPolicy", "latencyPreference", "offlineRequired", "executor", "reviewers", "currentPhase",
+    "progress", "approvals", "toolOperations", "outputs", "errors", "cancellationState",
+    "createdAt", "completedAt", "auditReferences"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "taskId": { "$ref": "#/$defs/identifier" },
+    "sessionId": { "$ref": "#/$defs/identifier" },
+    "userRequest": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "userRequestSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "displaySummary": { "type": "string", "minLength": 1, "maxLength": 280 },
+    "taskClassification": { "$ref": "#/$defs/identifier" },
+    "requiredCapabilities": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true },
+    "privacyClassification": { "type": "string", "enum": ["public", "internal", "sensitive", "restricted"] },
+    "dataLocalityRequirements": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 128 } },
+    "costPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paidProvidersAllowed", "ceilingMinorUnits", "currency"],
+      "properties": {
+        "paidProvidersAllowed": { "type": "boolean" },
+        "ceilingMinorUnits": { "type": "integer", "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+      }
+    },
+    "latencyPreference": { "type": "string", "enum": ["interactive", "balanced", "throughput"] },
+    "offlineRequired": { "type": "boolean" },
+    "executor": { "oneOf": [{ "$ref": "#/$defs/agent" }, { "type": "null" }] },
+    "reviewers": { "type": "array", "maxItems": 32, "items": { "$ref": "#/$defs/agent" } },
+    "currentPhase": { "type": "string", "enum": ["created", "classifying", "planning", "waiting_for_approval", "executing", "reviewing", "blocked", "drafting", "completed", "failed", "cancelled", "paused"] },
+    "progress": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "approvals": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/identifier" } },
+    "toolOperations": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["operationId", "toolId", "actionSummary", "status", "progress", "startedAt", "completedAt"],
+        "properties": {
+          "operationId": { "$ref": "#/$defs/identifier" },
+          "toolId": { "$ref": "#/$defs/identifier" },
+          "actionSummary": { "type": "string", "minLength": 1, "maxLength": 512 },
+          "status": { "type": "string", "enum": ["requested", "waiting_for_approval", "running", "completed", "failed", "cancelled"] },
+          "progress": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+          "startedAt": { "type": ["string", "null"], "format": "date-time" },
+          "completedAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["outputId", "kind", "displaySummary", "reference"],
+        "properties": {
+          "outputId": { "$ref": "#/$defs/identifier" },
+          "kind": { "$ref": "#/$defs/identifier" },
+          "displaySummary": { "type": "string", "maxLength": 2000 },
+          "reference": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "displayMessage", "recoverable", "explanationReference"],
+        "properties": {
+          "code": { "$ref": "#/$defs/identifier" },
+          "displayMessage": { "type": "string", "maxLength": 1000 },
+          "recoverable": { "type": "boolean" },
+          "explanationReference": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] }
+        }
+      }
+    },
+    "cancellationState": { "type": "string", "enum": ["active", "requested", "cancelled"] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": ["string", "null"], "format": "date-time" },
+    "auditReferences": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/identifier" } }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+\\-]{0,127}$" },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agentId", "providerId", "modelId", "locality"],
+      "properties": {
+        "agentId": { "$ref": "#/$defs/identifier" },
+        "providerId": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] },
+        "modelId": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] },
+        "locality": { "type": "string", "enum": ["none", "local", "remote", "hybrid"] }
+      }
+    }
+  }
+}

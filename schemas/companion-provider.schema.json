@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-provider-1.schema.json",
+  "title": "Bunny Companion provider descriptor",
+  "description": "Provider identity, declared features, locality, availability, and health. Credentials are intentionally absent.",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/agentProvider" },
+    { "$ref": "#/$defs/voiceProvider" },
+    { "$ref": "#/$defs/speechInputProvider" }
+  ],
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+\\-]{0,127}$" },
+    "locality": { "type": "string", "enum": ["none", "local", "remote", "hybrid"] },
+    "privacy": { "type": "string", "enum": ["public", "internal", "sensitive", "restricted"] },
+    "agentProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "providerId", "modelId", "capabilities", "contextWindowLimit", "toolSupport", "streamingSupport",
+        "structuredOutputSupport", "imageSupport", "audioSupport", "locality", "costClass",
+        "privacyClassification", "authenticationState", "availability", "health"
+      ],
+      "properties": {
+        "providerId": { "$ref": "#/$defs/identifier" },
+        "modelId": { "$ref": "#/$defs/identifier" },
+        "capabilities": { "type": "array", "maxItems": 128, "items": { "$ref": "#/$defs/identifier" } },
+        "contextWindowLimit": { "type": "integer", "minimum": 0 },
+        "toolSupport": { "type": "boolean" },
+        "streamingSupport": { "type": "boolean" },
+        "structuredOutputSupport": { "type": "boolean" },
+        "imageSupport": { "type": "boolean" },
+        "audioSupport": { "type": "boolean" },
+        "locality": { "$ref": "#/$defs/locality" },
+        "costClass": { "type": "string", "enum": ["free", "metered", "paid", "unknown"] },
+        "privacyClassification": { "$ref": "#/$defs/privacy" },
+        "authenticationState": { "type": "string", "enum": ["not_required", "configured", "missing", "invalid", "unknown"] },
+        "availability": { "type": "string", "enum": ["available", "unavailable", "degraded", "unknown"] },
+        "health": { "type": "string", "enum": ["healthy", "degraded", "unhealthy", "unknown"] }
+      }
+    },
+    "voiceProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "voiceId", "languages", "styles", "streaming", "cancellation", "audioFormats", "locality", "costClass", "privacyClassification", "health", "fallbackProviderId"],
+      "properties": {
+        "providerId": { "$ref": "#/$defs/identifier" },
+        "voiceId": { "$ref": "#/$defs/identifier" },
+        "languages": { "type": "array", "maxItems": 128, "items": { "type": "string", "maxLength": 64 } },
+        "styles": { "type": "array", "maxItems": 128, "items": { "type": "string", "maxLength": 64 } },
+        "streaming": { "type": "boolean" },
+        "cancellation": { "type": "boolean" },
+        "audioFormats": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 64 } },
+        "locality": { "$ref": "#/$defs/locality" },
+        "costClass": { "type": "string", "enum": ["free", "metered", "paid", "unknown"] },
+        "privacyClassification": { "$ref": "#/$defs/privacy" },
+        "health": { "type": "string", "enum": ["healthy", "degraded", "unavailable", "unknown"] },
+        "fallbackProviderId": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] }
+      }
+    },
+    "speechInputProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "languages", "partialTranscription", "cancellation", "locality", "privacyClassification", "health"],
+      "properties": {
+        "providerId": { "$ref": "#/$defs/identifier" },
+        "languages": { "type": "array", "maxItems": 128, "items": { "type": "string", "maxLength": 64 } },
+        "partialTranscription": { "type": "boolean" },
+        "cancellation": { "type": "boolean" },
+        "locality": { "$ref": "#/$defs/locality" },
+        "privacyClassification": { "$ref": "#/$defs/privacy" },
+        "health": { "type": "string", "enum": ["healthy", "degraded", "unavailable", "unknown"] }
+      }
+    }
+  }
+}

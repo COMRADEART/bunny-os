@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "packageId": "replace.creator.character",
+  "creator": "REPLACE WITH CREATOR",
+  "license": "REPLACE WITH LICENSE IDENTIFIER OR TEXT",
+  "characterName": "REPLACE WITH CHARACTER NAME",
+  "version": "1.0.0",
+  "supportedRenderer": "static-image",
+  "assetFiles": [
+    {
+      "path": "assets/fallback.png",
+      "sha256": "REPLACE_WITH_LOWERCASE_SHA256",
+      "sizeBytes": 1,
+      "mediaType": "image/png"
+    }
+  ],
+  "thumbnail": "assets/fallback.png",
+  "fallbackImage": "assets/fallback.png",
+  "skeleton": {},
+  "animationMap": {
+    "idle": "assets/fallback.png",
+    "greeting": "assets/fallback.png",
+    "listening": "assets/fallback.png",
+    "thinking": "assets/fallback.png",
+    "planning": "assets/fallback.png",
+    "typing": "assets/fallback.png",
+    "researching": "assets/fallback.png",
+    "speaking": "assets/fallback.png",
+    "presenting": "assets/fallback.png",
+    "success": "assets/fallback.png",
+    "warning": "assets/fallback.png",
+    "error": "assets/fallback.png",
+    "waiting": "assets/fallback.png",
+    "sleeping": "assets/fallback.png",
+    "repositioning": "assets/fallback.png"
+  },
+  "lipSync": {},
+  "facialExpressionMap": {},
+  "resourceEstimates": {
+    "memoryBytes": 1048576,
+    "vramBytes": 0
+  },
+  "minimumRenderingCapability": "static-image",
+  "promptProvenance": {},
+  "generationMetadata": {}
+}

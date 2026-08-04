@@ -1,11 +1,11 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 from pathlib import Path
 import sys
 
 system = Path("/usr/lib/bunny-os/python")
 sys.path.insert(0, str(system if system.exists() else Path(__file__).resolve().parents[3]))
+
 from companion.cli import main
 
-# The Approval Centre is a view of the companion runtime's authoritative,
-# scoped capability approval records. It never grants from a shell cache.
-raise SystemExit(main("bunny-companion", []))
+raise SystemExit(main("bunny-companion"))

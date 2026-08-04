@@ -1,5 +1,6 @@
 enable bunny-config-dir.service
 enable bunny-first-boot.service
 enable bunny-first-run.service
+enable bunny-companion.service
 disable bunny-desktop.service
 disable bunny-shell.target

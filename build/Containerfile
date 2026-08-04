@@ -22,6 +22,7 @@ COPY build /tmp/bunny-os/build
 # integrated; before that this directory was deliberately absent from the build
 # context, which is what made every capability commit non-build-affecting.
 COPY capability /tmp/bunny-os/capability
+COPY companion /tmp/bunny-os/companion
 COPY config /tmp/bunny-os/config
 COPY desktop-integration /tmp/bunny-os/desktop-integration
 COPY docs /tmp/bunny-os/docs

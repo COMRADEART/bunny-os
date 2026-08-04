@@ -59,6 +59,14 @@ INSTALL_ROUTES = (
         "mode": 0o444,
         "excludeStems": ("bunny-capability-probe",),
     },
+    {
+        "id": "companion-code",
+        "sourceGlob": "companion/**/*.py",
+        "strip": "companion",
+        "destination": "/usr/lib/bunny-os/python/companion",
+        "mode": 0o444,
+        "exclude": ("__pycache__",),
+    },
 )
 
 
@@ -94,6 +102,10 @@ def install_capability(source: Path) -> None:
         Path("/usr/libexec/bunny-capability-supervisor"), 0o555,
     )
     copy_file(
+        source / "services/bunny-companion/bunny_companion_service.py",
+        Path("/usr/libexec/bunny-companion-service"), 0o555,
+    )
+    copy_file(
         source / "config/bunny-os/capability-supervisor.json",
         Path("/etc/bunny-os/capability/supervisor.json"), 0o644,
     )
@@ -111,6 +123,10 @@ def install_capability(source: Path) -> None:
     for required in ("apply/applicator.py", "supervisor.py", "engine.py"):
         if not (code_root / required).is_file():
             raise SystemExit(f"BLOCKED: {required} was not installed")
+    companion_root = Path("/usr/lib/bunny-os/python/companion")
+    for required in ("runtime.py", "protocol.py", "gtk_shell.py"):
+        if not (companion_root / required).is_file():
+            raise SystemExit(f"BLOCKED: companion/{required} was not installed")
 
 
 def main() -> int:
@@ -186,6 +202,7 @@ def main() -> int:
         subprocess.run(["/usr/bin/dconf", "update"], check=True)
         copy_tree(source / "shell/themes", Path("/usr/share/bunny-shell/themes"), 0o444)
         copy_tree(source / "shell/assets/wallpapers", Path("/usr/share/backgrounds/bunny-os"), 0o444)
+        copy_tree(source / "shell/assets/companion", Path("/usr/share/bunny-shell/companion"), 0o444)
         copy_tree(source / "shell/icons/hicolor", Path("/usr/share/icons/hicolor"), 0o444)
         copy_tree(source / "shell/schemas", Path("/usr/share/bunny-os/schemas/shell"), 0o444)
         subprocess.run(["/usr/bin/gtk-update-icon-cache", "--force", "/usr/share/icons/hicolor"], check=False)
@@ -281,7 +298,7 @@ def main() -> int:
     # could see the service that nothing started.
     subprocess.run(["/usr/bin/systemctl", "enable", "NetworkManager.service", "firewalld.service", "bunny-system-broker.socket", "bunny-health-check.service", "bunny-brlapi-key.service"], check=True)
     subprocess.run(["/usr/bin/systemctl", "enable", "bunny-recovery-shell.service"], check=True)
-    subprocess.run(["/usr/bin/systemctl", "--global", "enable", "bunny-first-boot.service", "bunny-config-dir.service"], check=True)
+    subprocess.run(["/usr/bin/systemctl", "--global", "enable", "bunny-first-boot.service", "bunny-config-dir.service", "bunny-companion.service"], check=True)
     if args.profile == "recovery":
         subprocess.run(["/usr/bin/systemctl", "set-default", "bunny-recovery.target"], check=True)
     elif args.profile in {"developer", "desktop", "shell", "shell-test", "live", "beta"}:
@@ -330,6 +347,9 @@ def main() -> int:
         ),
         "bunny-first-boot.service": Path(
             "/etc/systemd/user/graphical-session.target.wants/bunny-first-boot.service"
+        ),
+        "bunny-companion.service": Path(
+            "/etc/systemd/user/graphical-session.target.wants/bunny-companion.service"
         ),
     }
     missing_activation = inert_rule + [

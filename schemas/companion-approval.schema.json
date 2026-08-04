@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-approval-1.schema.json",
+  "title": "Bunny Companion Approval Centre view",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "requestId", "taskId", "requestedAction", "whyNeeded", "requestingAgent", "dataAffected",
+    "destination", "providerDestination", "locality", "estimatedCostUnits", "resourceImpact",
+    "alternatives", "expiration", "planId", "transitionId", "status", "safeDefault", "actions"
+  ],
+  "properties": {
+    "requestId": { "$ref": "#/$defs/identifier" },
+    "taskId": { "$ref": "#/$defs/identifier" },
+    "requestedAction": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "whyNeeded": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "requestingAgent": { "$ref": "#/$defs/identifier" },
+    "dataAffected": { "type": "string", "maxLength": 512 },
+    "destination": { "type": "string", "enum": ["local", "remote"] },
+    "providerDestination": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] },
+    "locality": { "type": "string", "enum": ["local", "remote"] },
+    "estimatedCostUnits": { "type": ["integer", "null"], "minimum": 0 },
+    "resourceImpact": { "type": "object", "maxProperties": 64 },
+    "alternatives": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 512 } },
+    "expiration": { "type": "string", "format": "date-time" },
+    "planId": { "$ref": "#/$defs/identifier" },
+    "transitionId": { "$ref": "#/$defs/identifier" },
+    "status": { "type": "string", "enum": ["pending", "granted", "denied", "expired"] },
+    "safeDefault": { "const": "denied" },
+    "actions": { "const": ["approve", "deny", "cancel_task"] }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+\\-]{0,127}$" }
+  }
+}

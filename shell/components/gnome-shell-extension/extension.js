@@ -21,6 +21,7 @@ const FIXED_ACTIONS = new Map([
     ['privacy', ['/usr/bin/bunny-privacy']],
     ['notifications', ['/usr/bin/bunny-notifications']],
     ['quick-settings', ['/usr/bin/bunny-quick-settings']],
+    ['companion', ['/usr/bin/bunny-companion']],
 ]);
 
 function launch(name) {
@@ -57,6 +58,7 @@ export default class BunnyShellExtension extends Extension {
             ['Open launcher', 'launcher'],
             ['Quick settings', 'quick-settings'],
             ['Ask Bunny', 'command'],
+            ['Open companion', 'companion'],
             ['Workspaces', 'workspaces'],
             ['Approvals', 'approvals'],
             ['Tasks', 'tasks'],
