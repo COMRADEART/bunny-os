@@ -1,0 +1,116 @@
+{
+  "checks": {
+    "fallbacks": {
+      "animatedLoop": true,
+      "animatedPlayback": "loop",
+      "degradedFrame": "working-1",
+      "degradedPlayback": "loop",
+      "reducedMotionFrame": "working-1",
+      "reducedMotionLoop": false,
+      "reducedMotionPlayback": "static-first-frame"
+    },
+    "interruption": {
+      "interruptedTo": "error"
+    },
+    "loopingAnimation": {
+      "animation": "working",
+      "configuredChangesPerSecond": 4.0,
+      "distinctFrameIndices": [
+        0,
+        1
+      ],
+      "first": {
+        "animation": "working",
+        "assetId": "working-1",
+        "atMs": 0.36,
+        "frameIndex": 0,
+        "path": "/usr/share/bunny-os/companion/characters/default-bunny/assets/working-1.png"
+      },
+      "frameChanges": 9,
+      "framesDelivered": 291,
+      "last": {
+        "animation": "working",
+        "assetId": "working-2",
+        "atMs": 2992.46,
+        "frameIndex": 1,
+        "path": "/usr/share/bunny-os/companion/characters/default-bunny/assets/working-2.png"
+      },
+      "observedChangesPerSecond": 3.0,
+      "returnedToFirstFrame": true,
+      "seconds": 3.0
+    },
+    "oneShot": {
+      "animation": "success",
+      "distinctFrameIndices": [
+        0
+      ],
+      "first": {
+        "animation": "success",
+        "assetId": "success",
+        "atMs": 0.17,
+        "frameIndex": 0,
+        "path": "/usr/share/bunny-os/companion/characters/default-bunny/assets/success.png"
+      },
+      "frameChanges": 0,
+      "framesDelivered": 119,
+      "last": {
+        "animation": "idle",
+        "assetId": "idle-1",
+        "atMs": 995.95,
+        "frameIndex": 0,
+        "path": "/usr/share/bunny-os/companion/characters/default-bunny/assets/idle-1.png"
+      },
+      "observedChangesPerSecond": 0.0,
+      "returnedToFirstFrame": true,
+      "seconds": 1.0
+    },
+    "restart": {
+      "after": "working-1",
+      "before": "working-1"
+    },
+    "teardown": {
+      "drained": true,
+      "iterationsToDrain": 2
+    }
+  },
+  "display": {
+    "available": true,
+    "display": null,
+    "isGnomeSession": false,
+    "isPhysicalHardware": false,
+    "kind": "wayland-wslg-remoted",
+    "note": "A real Wayland compositor supplied by the WSLg system distribution and composited by the Windows host. Real enough to decode, draw and time frames. NOT a GNOME session, NOT physical hardware, and NOT a performance measurement for any target device.",
+    "waylandDisplay": "wayland-0"
+  },
+  "gate": {
+    "failures": [],
+    "passed": true
+  },
+  "gtkVersion": "4.22.4",
+  "logs": {
+    "serious": [],
+    "total": 0
+  },
+  "package": {
+    "animations": [
+      "error",
+      "idle",
+      "listening",
+      "moving",
+      "sleeping",
+      "speaking",
+      "speaking-closed",
+      "speaking-open",
+      "success",
+      "thinking",
+      "warning",
+      "working"
+    ],
+    "id": "default-bunny",
+    "root": "/usr/share/bunny-os/companion/characters/default-bunny"
+  },
+  "provenance": {
+    "animatedRenderer": "/usr/lib/bunny-os/python/companion/character/animated_renderer.py"
+  },
+  "schema": "bunny-os/gtk-animation-probe/1"
+}
