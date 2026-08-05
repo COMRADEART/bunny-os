@@ -86,6 +86,7 @@ EVENT_KINDS = (
     "speech_rejected",
     "speech_started",
     "audio_started",
+    "viseme_timeline",
     "viseme",
     "mouth_neutral",
     "speech_finished",
@@ -683,6 +684,7 @@ class VoiceWorker:
             "visemeConfidence": utterance.timeline.confidence,
         }))
 
+        self._emit_viseme_timeline(request, utterance.timeline)
         frame = utterance.scheduler.start(utterance.timeline)
         if utterance.measurement is not None:
             utterance.measurement.first_viseme_at = self.clock.monotonic()
@@ -773,6 +775,7 @@ class VoiceWorker:
             "visemeConfidence": utterance.timeline.confidence,
         }))
 
+        self._emit_viseme_timeline(request, utterance.timeline)
         frame = utterance.scheduler.start(utterance.timeline)
         if utterance.measurement is not None:
             utterance.measurement.first_viseme_at = self.clock.monotonic()
@@ -889,6 +892,26 @@ class VoiceWorker:
     def _emit_viseme(self, request: VoiceRequest, frame: Any) -> None:
         self._emit(self._event("viseme", request, frame.to_json()))
 
+    def _emit_viseme_timeline(self, request: VoiceRequest, timeline: Any) -> None:
+        """The whole timeline, once, before the first frame of it is scheduled.
+
+        A renderer cannot drive a
+        :class:`companion.character.lipsync.LipSyncController` from the frame
+        stream alone: the controller takes a timeline and advances against a
+        playback position, which is what makes its drift arithmetic mean
+        anything. Sending the events once at the start is cheaper than sending
+        the timeline on every frame and is the only way the renderer's own view
+        of the timeline can be the same object the worker is scheduling.
+
+        Like ``viseme``, this is delivered live and never retained: a bounded
+        event ring holding a few hundred mouth events would push out the ones a
+        person actually wants to read, and a client that wants the timeline is
+        already subscribed.
+        """
+        self._emit(self._event(
+            "viseme_timeline", request, timeline.to_json(include_events=True),
+        ))
+
     def _event(self, kind: str, request: VoiceRequest, payload: Mapping[str, Any]) -> VoiceEvent:
         return VoiceEvent(
             kind=kind,
@@ -906,7 +929,7 @@ class VoiceWorker:
             # utterance would swamp a bounded ring and push out the events a
             # person actually wants to read, and a subscriber that wants them is
             # already receiving them live.
-            if event.kind != "viseme":
+            if event.kind not in ("viseme", "viseme_timeline"):
                 self._events.append(event)
                 if len(self._events) > 256:
                     del self._events[:-256]

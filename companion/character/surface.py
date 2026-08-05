@@ -400,6 +400,9 @@ class CharacterPresenter:
     def cancel_lip_sync(self, reason: str = "audio interrupted") -> LipSyncStatus:
         return self.controller.cancel_lip_sync(reason)
 
+    def finish_lip_sync(self) -> LipSyncStatus:
+        return self.controller.finish_lip_sync()
+
     # -- packages ----------------------------------------------------------
 
     def reload_package(self) -> bool:

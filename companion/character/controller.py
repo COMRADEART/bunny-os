@@ -197,6 +197,25 @@ class CharacterRendererController:
             self.renderer.set_mouth_shape("neutral")
         return self.lip_status
 
+    def finish_lip_sync(self) -> LipSyncStatus:
+        """The utterance ended of its own accord; the mouth returns to neutral.
+
+        Distinct from :meth:`cancel_lip_sync` in the record and identical on the
+        screen, which is correct: a completed utterance and an interrupted one
+        both leave a closed mouth, and only one of them is a cancellation.
+
+        Not expressible as ``advance_lip_sync`` past the end of the timeline. An
+        *inactive* controller's ``advance`` returns its current status — whose
+        shape is the last shape it held — and the renderer would then be told to
+        draw the mouth mid-syllable again.
+        """
+        if self.lip_sync is None:
+            raise RuntimeError("lip sync requires a loaded character package")
+        self.lip_status = self.lip_sync.finish()
+        if self.renderer is not None:
+            self.renderer.set_mouth_shape("neutral")
+        return self.lip_status
+
     def report_renderer_failure(self, code: str, explanation: str) -> RendererFailureEvent:
         if self.renderer is None:
             event = RendererFailureEvent("renderer.failed", "text-only", code, explanation, False, True)

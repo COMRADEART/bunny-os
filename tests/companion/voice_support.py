@@ -476,6 +476,7 @@ class _ScriptedHandle(PlaybackHandle):
         entered: threading.Event | None,
         fail: str,
         monotonic: Callable[[], float],
+        real_time: bool = False,
     ) -> None:
         self.request_id = request_id
         self.backend_id = backend_id
@@ -493,6 +494,7 @@ class _ScriptedHandle(PlaybackHandle):
         self._done = threading.Event()
         self._stopped = False
         self.finished = False
+        self._real_time = real_time
         if entered is not None:
             entered.set()
         if gate is None:
@@ -517,6 +519,12 @@ class _ScriptedHandle(PlaybackHandle):
         if self._gate is not None and not self._gate.is_set():
             return None
         if self._paused:
+            return None
+        if self._real_time and (self.elapsed_seconds - self.paused_seconds) < self.audio_seconds:
+            # Still playing. Without this a scripted playback completes before
+            # the worker's mouth loop turns once, so the only viseme frame that
+            # ever exists is the opening one — and a test asserting "the mouth
+            # moved" would be asserting something about the fixture.
             return None
         return 1 if self._fail == "exit" else 0
 
@@ -612,6 +620,7 @@ class ScriptedBackend:
         playback_entered: threading.Event | None = None,
         fail: str = "",
         monotonic: Callable[[], float] | None = None,
+        real_time: bool = False,
     ) -> None:
         import time as _time
 
@@ -623,6 +632,10 @@ class ScriptedBackend:
         self.playback_gate = playback_gate
         self.playback_entered = playback_entered
         self.fail = fail
+        #: Hold the playback open for the length of the audio, so the worker's
+        #: mouth loop actually turns. Off by default: most tests want playback
+        #: to finish at once and would otherwise pay for the wait.
+        self.real_time = real_time
         self._now = monotonic or _time.monotonic
         self.closed = False
         self.plays = 0
@@ -689,6 +702,7 @@ class ScriptedBackend:
             entered=self.playback_entered,
             fail=self.fail,
             monotonic=self._now,
+            real_time=self.real_time,
         )
         self.handles.append(handle)
         return handle
