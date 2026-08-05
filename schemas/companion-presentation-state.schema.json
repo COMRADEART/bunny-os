@@ -131,8 +131,8 @@
       "required": ["implementation", "eligible", "limitedByImplementation", "placement", "captions"],
       "properties": {
         "implementation": {
-          "enum": ["static-image", "audio-only", "text-only"],
-          "description": "What will actually be drawn. Restricted to what this build implements; animated 2D and 3D are not in this list because there is no renderer for them in this phase."
+          "enum": ["animated-2d", "static-image", "audio-only", "text-only"],
+          "description": "What will actually be drawn. Restricted to what this build implements. animated-2d is here because companion.character.animated_renderer exists; 3D is not, because no 3D renderer does. A value only joins this list when a renderer is behind it."
         },
         "eligible": {
           "enum": ["full-3d", "lightweight-3d", "animated-2d", "static-image", "audio-only", "text-only"],

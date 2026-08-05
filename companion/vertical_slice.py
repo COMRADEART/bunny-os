@@ -123,9 +123,12 @@ def run_slice(root: Path, *, machine: str = "laptop", speak: bool = True) -> Sli
         root=root,
         endpoint=endpoint,
         machine=machine,
-        # Short enough that a slice which somehow reaches an unanswered approval
-        # fails in seconds rather than parking a gate for five minutes.
-        consent_wait_seconds=_WAIT_SECONDS,
+        # Comfortably longer than the slice's own answering deadline, so the
+        # loop always wins the race. Setting both to the same value meant that
+        # on a loaded machine the runtime's consent could lapse while the slice
+        # was still working through its questions — and the slice then failed at
+        # step 13 for a reason that had nothing to do with the runtime.
+        consent_wait_seconds=_WAIT_SECONDS * 3,
     )
     service = CompanionService(options).start()
     try:

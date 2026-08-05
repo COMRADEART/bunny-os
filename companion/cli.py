@@ -51,6 +51,15 @@ from .session import CostPolicy, LOCALITY_PREFERENCES, PrivacyPolicy
 from .store import CompanionStore
 from .task import CANCELLATION_CAUSES
 from .tools import ToolBroker
+from .character.diagnostics import (
+    registry_for as character_registry_for,
+    renderer_projection,
+    run_diagnostic_demo,
+)
+from .character.errors import CharacterError
+from .character.importer import CharacterPackageImporter
+from .character.package import validate_package_directory
+from .character.schema import PackageTrustState
 
 __all__ = ["add_arguments", "default_root", "dispatch"]
 
@@ -169,6 +178,46 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
     migrate.add_argument("--rollback", action="store_true", help="REMOVES a previous archive import")
     migrate.add_argument("--name", default="ux-shell-sqlite", help="archive directory name")
 
+    character = group.add_parser("character", help="character package diagnostics and selection")
+    character_group = character.add_subparsers(dest="character_command", required=True)
+    character_group.add_parser("list", help="list built-in and imported packages (read-only)")
+    character_inspect = character_group.add_parser("inspect", help="inspect every installed version of a package")
+    character_inspect.add_argument("package_id")
+    character_validate = character_group.add_parser("validate", help="validate a package directory (read-only)")
+    character_validate.add_argument("path", type=Path)
+    character_import = character_group.add_parser("import", help="IMPORTS a package directory or .zip archive")
+    character_import.add_argument("path", type=Path)
+    character_select = character_group.add_parser("select", help="SELECTS an installed character package")
+    character_select.add_argument("package_id")
+    character_select.add_argument("--digest", default=None, help="select one exact installed package digest")
+    character_trust = character_group.add_parser(
+        "trust", help="SETS a package's trust state (disable or quarantine a package)"
+    )
+    character_trust.add_argument("package_digest")
+    character_trust.add_argument("state", choices=[
+        # Only the states a person may assert. `built-in` is a property of
+        # where a package came from and `verified-integrity` is a property of
+        # its bytes; neither is somebody's opinion, so neither is settable here.
+        PackageTrustState.DISABLED.value,
+        PackageTrustState.QUARANTINED.value,
+        PackageTrustState.IMPORTED_UNVERIFIED.value,
+    ])
+
+    renderer = group.add_parser("renderer", help="character renderer diagnostics")
+    renderer_group = renderer.add_subparsers(dest="renderer_command", required=True)
+    renderer_group.add_parser("status", help="show effective renderer status (read-only)")
+    renderer_group.add_parser("explain", help="explain package, plan and fallback selection (read-only)")
+    renderer_demo = renderer_group.add_parser("demo", help="RUNS the provider-free renderer demonstration")
+    renderer_demo.add_argument("--demo-root", type=Path, default=None)
+    renderer_demo.add_argument("--performance", action="store_true",
+                               help="include development-host microbenchmarks")
+
+    character_slice = group.add_parser(
+        "run-character-slice",
+        help="RUNS the installed character vertical slice against a real companion service",
+    )
+    character_slice.add_argument("--slice-root", type=Path, default=None)
+
     integration = group.add_parser(
         "run-integration-slice",
         help="RUNS the full service-plus-client vertical slice in a scratch directory",
@@ -238,6 +287,12 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
         return _run_demo(args)
     if args.companion_command == "run-integration-slice":
         return _run_integration_slice(args)
+    if args.companion_command == "run-character-slice":
+        return _run_character_slice(args)
+    if args.companion_command == "character":
+        return _character_command(args)
+    if args.companion_command == "renderer":
+        return _renderer_command(args)
     if args.companion_command == "serve":
         return _serve(args)
     if args.companion_command == "shell":
@@ -644,6 +699,129 @@ def _run_integration_slice(args: argparse.Namespace) -> dict[str, Any]:
         ),
         "root": str(root),
         "request": SLICE_REQUEST,
+        **report.to_json(),
+    }
+
+
+def _character_command(args: argparse.Namespace) -> dict[str, Any]:
+    """Package diagnostics and selection. Reads unless it says otherwise."""
+    root = args.root or default_root()
+    registry = character_registry_for(root)
+    command = args.character_command
+    if command == "list":
+        selected = registry.selected()
+        return {
+            "effect": "read-only",
+            "selectedDigest": selected.package_digest if selected else None,
+            "packages": [item.to_json() for item in registry.list()],
+        }
+    if command == "inspect":
+        selected = registry.selected()
+        packages = []
+        for record in registry.inspect(args.package_id):
+            trust = (
+                PackageTrustState.BUILT_IN
+                if record.trust_state is PackageTrustState.BUILT_IN
+                else PackageTrustState.VERIFIED_INTEGRITY
+            )
+            value = record.to_json()
+            try:
+                validated = validate_package_directory(record.path, trust_state=trust)
+                value["validation"] = validated.to_json()
+                value["validationError"] = None
+            except CharacterError as exc:
+                # Reported, not raised: inspecting a set of packages must not
+                # stop at the first damaged one, which is precisely the one the
+                # user is inspecting them to find.
+                value["validation"] = None
+                value["validationError"] = {"type": type(exc).__name__, "message": str(exc)}
+            value["selected"] = selected is not None and selected.package_digest == record.package_digest
+            packages.append(value)
+        return {"effect": "read-only", "packageId": args.package_id, "packages": packages}
+    if command == "validate":
+        package = validate_package_directory(
+            args.path, trust_state=PackageTrustState.IMPORTED_UNVERIFIED
+        )
+        return {
+            "effect": "read-only",
+            "validation": package.to_json(),
+            "manifest": package.manifest.to_json(),
+            # Said on every path that reports a successful validation. §4:
+            # integrity does not establish creator trust, and the one place a
+            # user is most likely to conclude otherwise is the moment they are
+            # told the package is valid.
+            "warning": "Integrity verification does not establish creator trust.",
+        }
+    if command == "import":
+        record = CharacterPackageImporter(registry).import_package(args.path)
+        return {
+            "effect": f"IMPORTED character package {record.package_id} without activating it",
+            "package": record.to_json(),
+            "warning": "The bytes match the manifest; the creator remains untrusted.",
+        }
+    if command == "select":
+        record = registry.select(args.package_id, package_digest=args.digest)
+        return {
+            "effect": f"SELECTED character package {record.package_id}",
+            "package": record.to_json(),
+        }
+    if command == "trust":
+        record = registry.set_trust_state(args.package_digest, PackageTrustState(args.state))
+        return {
+            "effect": f"SET the trust state of {record.package_digest[:16]} to {args.state}",
+            "package": record.to_json(),
+        }
+    raise CompanionError(f"unknown character command: {command!r}")
+
+
+def _renderer_command(args: argparse.Namespace) -> dict[str, Any]:
+    if args.renderer_command == "demo":
+        value = run_diagnostic_demo(args.demo_root, performance=bool(args.performance))
+        return {
+            "effect": (
+                f"RAN the provider-free character renderer demonstration in {value['root']}; "
+                "no task record was created and no runtime was started"
+            ),
+            **value,
+        }
+    assessment, banner = _assessment(args)
+    value = renderer_projection(args.root or default_root(), assessment)
+    result: dict[str, Any] = {"effect": "read-only", **value}
+    if args.renderer_command == "explain":
+        mapped = value.get("mappedState") or {}
+        result["explanation"] = {
+            "characterState": mapped.get("characterState"),
+            "resolvedPackageState": mapped.get("resolvedPackageState"),
+            "fallbackChain": mapped.get("fallbackChain", []),
+            "priorityReason": mapped.get("priorityReason"),
+            "degradationExplanation": mapped.get("degradationExplanation"),
+            "trustState": value.get("selectedPackage", {}).get("trustState"),
+            "creatorTrusted": value.get("selectedPackage", {}).get("creatorTrusted"),
+            "integrityVerified": value.get("selectedPackage", {}).get("integrityVerified"),
+            "note": (
+                "Integrity verification does not establish creator trust, and an eligible "
+                "presentation above animated-2d is not implemented in this build."
+            ),
+        }
+    if banner:
+        result["simulationBanner"] = banner
+    return result
+
+
+def _run_character_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .character.vertical_slice import run_character_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-character-slice-"))
+    report = run_character_slice(root)
+    return {
+        "effect": (
+            f"RAN the installed character vertical slice in {root}: a companion service, a "
+            "validated package, an approval, lip-sync, degradation and a renderer restart. "
+            "No network, provider or credential was used."
+        ),
+        "root": str(root),
         **report.to_json(),
     }
 

@@ -35,3 +35,18 @@ operations/data/hardware-evidence.json          -text
 operations/data/pilot-requirements.json         -text
 operations/data/qualification-matrices.json     -text
 operations/data/signing-keys.json               -text
+
+# Character package assets are attested by the package's own manifest.
+#
+# companion/character/package.py verifies every declared asset against the
+# sizeBytes and sha256 in manifest.json before a renderer may touch it, and
+# refuses the whole package on a mismatch. A checkout-time EOL filter changes
+# those bytes, so a package that verifies on the machine that built it stops
+# verifying everywhere else.
+#
+# Measured, not anticipated: LICENSE.txt is 308 bytes committed and 314 bytes
+# in a Windows checkout with core.autocrlf=true, and the built-in character —
+# which §16 requires to pass the same validator as an imported one — failed its
+# own integrity check in 23 tests. The PNGs were unaffected because git already
+# treats them as binary; it is the one text file in the package that broke it.
+assets/companion/characters/** -text

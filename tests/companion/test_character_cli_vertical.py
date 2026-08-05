@@ -1,0 +1,272 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+from companion import cli as companion_cli
+from companion.character.defaults import default_character_path
+from companion.character.demo import run_character_demo
+from companion.character.diagnostics import selected_package
+from companion.character.importer import CharacterPackageImporter, PackageRegistry
+from companion.character.mapper import map_character_state
+from companion.character.vertical_slice import run_character_slice
+from companion.character.performance import measure_renderer_performance
+from companion.character.package import validate_package_directory
+
+
+def parse(*argv: str, root: Path) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog="bunny-os")
+    sub = parser.add_subparsers(dest="command", required=True)
+    companion_cli.add_arguments(sub)
+    return parser.parse_args(["companion", "--root", str(root), "--simulate", "laptop", *argv])
+
+
+class CharacterCommandTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory(prefix="bunny-character-cli-")
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+
+    def command(self, *argv: str) -> dict:
+        result = companion_cli.dispatch(parse(*argv, root=self.root))
+        json.dumps(result)
+        return result
+
+    def test_exact_diagnostic_command_tree_exists(self) -> None:
+        for argv in (
+            ("character", "list"),
+            ("character", "inspect", "org.bunny-os.default-bunny"),
+            ("character", "validate", str(default_character_path())),
+            ("character", "import", str(default_character_path())),
+            ("character", "select", "org.bunny-os.default-bunny"),
+            ("character", "trust", "0" * 64, "disabled"),
+            ("renderer", "status"),
+            ("renderer", "explain"),
+            ("renderer", "demo"),
+        ):
+            with self.subTest(argv=argv):
+                parsed = parse(*argv, root=self.root)
+                self.assertEqual(parsed.command, "companion")
+
+    def test_character_list_inspect_and_validate_are_read_only(self) -> None:
+        listing = self.command("character", "list")
+        self.assertEqual(listing["effect"], "read-only")
+        self.assertEqual(listing["packages"][0]["trustState"], "built-in")
+        inspected = self.command("character", "inspect", "org.bunny-os.default-bunny")
+        self.assertEqual(inspected["effect"], "read-only")
+        validated = self.command("character", "validate", str(default_character_path()))
+        self.assertEqual(validated["effect"], "read-only")
+        self.assertFalse(validated["validation"]["creatorTrusted"])
+
+    def test_import_and_select_name_their_mutation(self) -> None:
+        imported = self.command("character", "import", str(default_character_path()))
+        self.assertIn("IMPORTED", imported["effect"])
+        self.assertFalse(imported["package"]["creatorTrusted"])
+        selected = self.command("character", "select", imported["package"]["packageId"],
+                                "--digest", imported["package"]["packageDigest"])
+        self.assertIn("SELECTED", selected["effect"])
+
+    def test_renderer_status_uses_capability_plan(self) -> None:
+        status = self.command("renderer", "status")
+        self.assertEqual(status["effect"], "read-only")
+        self.assertIn(status["presentation"]["effectivePresentation"],
+                      {"text-only", "static-image", "animated-2d"})
+        self.assertTrue(status["capabilityPlan"]["planId"])
+        self.assertIn("resourceDeclaration", status)
+        self.assertIn("observedResourceUse", status)
+        self.assertIn("missingStates", status)
+        self.assertIn("rendererErrors", status)
+        self.assertIn("SIMULATED HARDWARE", status["simulationBanner"])
+
+    def test_invalid_package_cli_returns_structured_json_error(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "tools/bunny-os/bin/bunny-os",
+                "--json",
+                "companion",
+                "character",
+                "validate",
+                str(self.root / "missing"),
+            ],
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        document = json.loads(result.stdout)
+        self.assertFalse(document["ok"])
+        self.assertEqual(document["error"]["code"], "companion_refused")
+
+    def test_corrupt_selected_package_falls_back_to_builtin(self) -> None:
+        registry = PackageRegistry(
+            self.root / "fallback-registry", built_in_paths=(default_character_path(),)
+        )
+        imported = CharacterPackageImporter(registry).import_package(default_character_path())
+        registry.select(imported.package_id, package_digest=imported.package_digest)
+        frame = next(imported.path.glob("assets/*.png"))
+        frame.write_bytes(b"corrupt after installation")
+        selected, package, event = selected_package(registry)
+        self.assertEqual(selected.trust_state.value, "built-in")
+        self.assertEqual(package.trust_state.value, "built-in")
+        self.assertEqual(event["eventType"], "renderer.package-fallback")
+        self.assertTrue(event["taskContinues"])
+
+    def test_renderer_explain_shows_state_fallback_and_trust(self) -> None:
+        """§5: the fallback path used must be visible to a person."""
+        explained = self.command("renderer", "explain")["explanation"]
+        self.assertTrue(explained["fallbackChain"])
+        self.assertTrue(explained["characterState"])
+        self.assertTrue(explained["priorityReason"])
+        self.assertEqual(explained["trustState"], "built-in")
+        self.assertTrue(explained["integrityVerified"])
+        # §4: integrity is not creator trust, and the diagnostic says so.
+        self.assertIn("does not establish creator trust", explained["note"])
+        self.assertIn("animated-2d", explained["note"])
+
+    def test_renderer_demo_command_runs_all_steps(self) -> None:
+        result = self.command("renderer", "demo", "--demo-root", str(self.root / "demo"))
+        self.assertTrue(result["passed"], result["failures"])
+        self.assertEqual(len(result["steps"]), 23)
+        self.assertEqual(result["commercialProvider"], "none")
+
+
+class VerticalSliceAndPerformanceTests(unittest.TestCase):
+    def test_a_completed_task_maps_to_success_not_a_stale_review_warning(self) -> None:
+        """The canonical projection decides; a spent disagreement is history.
+
+        Driven through the *real* service and the canonical projection rather
+        than through a helper that re-read the store — the helper this replaces
+        was the second interpretation of the record that §2 forbids.
+        """
+        with tempfile.TemporaryDirectory(prefix="bunny-character-projection-") as temporary:
+            report = run_character_slice(Path(temporary))
+        self.assertTrue(report.passed, report.failures)
+        steps = {item["step"]: item for item in report.to_json()["steps"]}
+        self.assertEqual(steps[16]["characterState"], "success")
+        self.assertEqual(steps[24]["after"]["state"], "completed")
+
+    def test_the_installed_slice_exercises_the_required_renderer_story(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="bunny-character-slice-") as temporary:
+            report = run_character_slice(Path(temporary))
+        document = report.to_json()
+        self.assertTrue(document["passed"], document["failures"])
+        names = [step["name"] for step in document["steps"]]
+        for required in (
+            "load the validated default character package",
+            "anchor the approval bubble to the character",
+            "play generic lip-sync events",
+            "degrade animated 2D to static",
+            "degrade static to text-only",
+            "recover only after hysteresis",
+            "restart the renderer",
+            "verify the task never restarted or was cancelled",
+        ):
+            self.assertIn(required, names)
+        # What the host could not run is reported as NOT_RUN, never as a pass.
+        self.assertTrue(document["notRun"])
+        self.assertFalse(document["gtkWidgetsExercised"])
+        for step in document["steps"]:
+            self.assertIn(step.get("ok"), (True, None))
+
+    def test_performance_measurement_has_every_required_dimension_and_scope(self) -> None:
+        package = validate_package_directory(default_character_path())
+        result = measure_renderer_performance(package)
+        for key in (
+            "packageLoadMs", "staticImageMemoryBytes", "animatedRendererMemoryBytes",
+            "idleCpuPercent", "activeAnimationCpuPercent",
+            "averageFrameTickMs", "droppedFramesInIntentionalGap",
+            "bubbleUpdateMicroseconds", "stateTransitionMs", "rendererRestartMs", "packageImportMs",
+        ):
+            with self.subTest(key=key):
+                self.assertIn(key, result)
+                self.assertGreaterEqual(result[key], 0)
+        self.assertIn("No Raspberry Pi", result["scope"])
+        self.assertGreaterEqual(result["idleCpuSampleMs"], 150)
+        self.assertGreaterEqual(result["activeAnimationCpuSampleMs"], 450)
+        decisions = {
+            item["budget"]: item["effectivePresentation"]
+            for item in result["representativeBudgetDecisions"]
+        }
+        self.assertEqual(decisions["text-only-ceiling"], "text-only")
+        self.assertEqual(decisions["static-ceiling"], "static-image")
+        self.assertEqual(decisions["animation-fits"], "animated-2d")
+        self.assertEqual(decisions["runtime-memory-pressure"], "static-image")
+
+
+class BuildAndBoundaryTests(unittest.TestCase):
+    def test_installed_image_copies_runtime_renderer_and_data_assets(self) -> None:
+        installer = Path("build/scripts/install-root.py").read_text(encoding="utf-8")
+        self.assertIn('source / "companion"', installer)
+        self.assertIn('source / "capability"', installer)
+        self.assertIn('/usr/share/bunny-os/capability/services', installer)
+        self.assertIn('source / "assets/companion/characters"', installer)
+        self.assertIn('/usr/share/bunny-os/companion/characters', installer)
+        containerfile = Path("build/Containerfile").read_text(encoding="utf-8")
+        for source in ("assets", "capability", "companion"):
+            self.assertIn(f"COPY {source} /tmp/bunny-os/{source}", containerfile)
+
+    def test_there_is_one_client_and_no_second_character_application(self) -> None:
+        """One restartable client, decided in the integration phase.
+
+        The renderer's first implementation shipped its own window, its own
+        desktop entry and its own store poller. Two clients would be two things
+        polling the same runtime and two places a user could be shown a
+        different answer, so the character renders inside the companion window
+        instead.
+        """
+        self.assertFalse(Path("shell/services/bin/bunny-companion-character").exists())
+        self.assertFalse(Path(
+            "shell/components/applications/art.comrade.BunnyCompanionCharacter.desktop"
+        ).exists())
+        self.assertTrue(Path("shell/services/bin/bunny-companion").is_file())
+
+    def test_the_surface_is_headless_import_safe(self) -> None:
+        import companion.character.surface as surface
+
+        self.assertTrue(hasattr(surface, "CharacterPresenter"))
+        source = Path("companion/character/surface.py").read_text(encoding="utf-8")
+        self.assertNotIn("import gi", source.split('"""')[-1])
+
+
+    def test_the_surface_never_reads_the_record_directly(self) -> None:
+        """§2: no second reader of tasks or events."""
+        import ast
+
+        for name in ("surface.py", "integration.py", "mapper.py"):
+            tree = ast.parse(Path(f"companion/character/{name}").read_text(encoding="utf-8"))
+            reached = {
+                node.module for node in ast.walk(tree)
+                if isinstance(node, ast.ImportFrom) and node.module
+            }
+            for forbidden in ("companion.store", "companion.events", "companion.task"):
+                with self.subTest(module=name, forbidden=forbidden):
+                    self.assertNotIn(forbidden, reached)
+
+    def test_default_package_contains_no_executable_or_active_content(self) -> None:
+        suffixes = {path.suffix.casefold() for path in default_character_path().rglob("*") if path.is_file()}
+        self.assertEqual(suffixes, {".json", ".txt", ".png"})
+        self.assertFalse(suffixes & {".py", ".js", ".sh", ".svg", ".html", ".so", ".dll"})
+
+    def test_renderer_controller_has_no_runtime_execution_dependency(self) -> None:
+        source = Path("companion/character/controller.py").read_text(encoding="utf-8")
+        for forbidden in ("CompanionRuntime", "ToolBroker", "grant_approval", "cancel_task", "choose_provider"):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, source)
+
+    def test_no_3d_renderer_is_claimed_or_implemented(self) -> None:
+        files = "\n".join(path.name for path in Path("companion/character").glob("*.py"))
+        self.assertNotIn("3d_renderer", files.casefold())
+        self.assertFalse(Path("companion/character/three_d_renderer.py").exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

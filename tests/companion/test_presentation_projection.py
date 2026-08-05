@@ -67,10 +67,25 @@ class MappingTests(unittest.TestCase):
         self.assertEqual(sorted(PHASE_PRIORITY), sorted(PRESENTATION_PHASES))
 
     def test_only_implemented_presentations_can_be_selected(self) -> None:
+        """A rung joins this ladder only when a renderer is behind it.
+
+        ``animated-2d`` was absent until :mod:`companion.character.animated_renderer`
+        existed; it is here now because that renderer does. 3D is still absent
+        because no 3D renderer exists, and a test that let it in would be the
+        one line between "not implemented" and "claimed".
+        """
         self.assertTrue(IMPLEMENTED_PRESENTATIONS <= set(PRESENTATION_KINDS))
-        self.assertNotIn("animated-2d", IMPLEMENTED_PRESENTATIONS)
+        self.assertIn("animated-2d", IMPLEMENTED_PRESENTATIONS)
         self.assertNotIn("lightweight-3d", IMPLEMENTED_PRESENTATIONS)
         self.assertNotIn("full-3d", IMPLEMENTED_PRESENTATIONS)
+        from pathlib import Path as _Path
+
+        renderers = {
+            path.name for path in
+            (_Path(__file__).resolve().parents[2] / "companion" / "character").glob("*renderer*.py")
+        }
+        self.assertIn("animated_renderer.py", renderers)
+        self.assertFalse(any("3d" in name for name in renderers))
 
 
 class PriorityTests(unittest.TestCase):
@@ -330,7 +345,7 @@ class MarkupTests(unittest.TestCase):
 class PresentationSelectionTests(unittest.TestCase):
     """§11: only implementations that exist may be selected."""
 
-    def test_a_capable_machine_is_still_given_a_static_image(self) -> None:
+    def test_a_capable_machine_is_given_animation_but_never_3d(self) -> None:
         decision = select_presentation(
             PresentationSignals(
                 available_memory_bytes=8 * 1024 ** 3, gpu_available=True,
@@ -338,7 +353,8 @@ class PresentationSelectionTests(unittest.TestCase):
             )
         )
         self.assertIn(decision.implementation, IMPLEMENTED_PRESENTATIONS)
-        self.assertEqual(decision.implementation, "static-image")
+        self.assertEqual(decision.implementation, "animated-2d")
+        # The machine would permit 3D. This build says so and draws 2D.
         self.assertEqual(decision.eligible, "full-3d")
         self.assertTrue(decision.limited_by_implementation)
         self.assertTrue(any("this build implements" in reason for reason in decision.reasons))

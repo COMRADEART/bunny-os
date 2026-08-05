@@ -157,11 +157,17 @@ _KIND_RANK = {name: index for index, name in enumerate(PRESENTATION_KINDS)}
 #:
 #: The distinction between *eligible* and *implemented* is load-bearing and is
 #: the reason :class:`PresentationRecommendation` carries both. A capability
-#: plan may well say this machine could run an animated 2D companion; this build
-#: has no animated 2D renderer, so it says "eligible" and selects a static
-#: image. Collapsing the two would make the presentation state claim a renderer
-#: that does not exist, and every consumer downstream would believe it.
-IMPLEMENTED_PRESENTATIONS = frozenset({"static-image", "audio-only", "text-only"})
+#: plan may well say this machine could run a full 3D companion; this build has
+#: no 3D renderer, so it says "eligible" and selects something it has.
+#: Collapsing the two would make the presentation state claim a renderer that
+#: does not exist, and every consumer downstream would believe it.
+#:
+#: ``animated-2d`` was added when :mod:`companion.character.animated_renderer`
+#: was implemented, and not before. It is one line, and it is the line that
+#: makes every consumer start believing animation is available — so it moves
+#: only when there is a renderer behind it, which is why the previous phase left
+#: it out and said so.
+IMPLEMENTED_PRESENTATIONS = frozenset({"animated-2d", "static-image", "audio-only", "text-only"})
 
 #: Where the surface may sit. Naming only; a Wayland compositor decides actual
 #: placement and :func:`window_directive` says so rather than pretending.

@@ -28,13 +28,14 @@ __all__ = ["DEFAULT_SERVICE_DIRECTORY", "Registry", "build_registry"]
 #: Manifests shipped with Bunny OS, read from the source tree.
 DEFAULT_SERVICE_DIRECTORY = Path(__file__).resolve().parent / "services"
 
-#: Where manifests will live on an installed system. **Nothing installs them
-#: there yet** — this package is not part of the image build. Adding files to
-#: the image would change the built artifact and invalidate the current
-#: reproducibility candidate, which is not a side effect this change is entitled
-#: to have. The lookup is written now so that wiring the image later needs no
-#: code change here; until then it simply never matches and the source tree is
-#: used. Recorded in ``KNOWN_LIMITATIONS.md``.
+#: Where manifests live on an installed system.
+#:
+#: They are installed there now: ``build/scripts/install-root.py`` copies
+#: ``capability/services`` to this path. That was written as a future intention
+#: when the capability package was not in the image at all; the character
+#: renderer line is deliberately build-affecting and explicitly not covered by
+#: the earlier reproducibility candidate, so the wiring landed with it. A source
+#: checkout still falls back to the adjacent ``services`` directory.
 _INSTALLED_SERVICE_DIRECTORY = Path("/usr/share/bunny-os/capability/services")
 
 

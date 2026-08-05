@@ -28,6 +28,21 @@ def copy_tree(source: Path, destination: Path, mode: int = 0o644) -> None:
             copy_file(item, target, mode)
 
 
+def copy_python_package(source: Path, destination: Path) -> None:
+    """Install only Python source from a repository package.
+
+    Narrower than :func:`copy_tree` on purpose. These packages carry test
+    fixtures, probe helpers and sample data that have no business in an image:
+    a fixture is untrusted-input-shaped content sitting on the read-only root,
+    and shipping it enlarges both the artifact and the attack surface for no
+    benefit. 0444 because everything here is a library nothing should write.
+    """
+    destination.mkdir(parents=True, exist_ok=True)
+    for item in sorted(source.rglob("*.py")):
+        if not any(part in {"__pycache__", "testing", "tests"} for part in item.parts):
+            copy_file(item, destination / item.relative_to(source), 0o444)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", required=True, type=Path)
@@ -53,8 +68,12 @@ def main() -> int:
     # user service an ImportError on each restart, so they move together and
     # bunny-companion.service carries a ConditionPathExists naming the
     # dependency if they ever do not.
-    copy_tree(source / "capability", Path("/usr/lib/bunny-os/python/capability"))
-    copy_tree(source / "companion", Path("/usr/lib/bunny-os/python/companion"))
+    copy_python_package(source / "capability", Path("/usr/lib/bunny-os/python/capability"))
+    copy_python_package(source / "companion", Path("/usr/lib/bunny-os/python/companion"))
+    # The capability service manifests are data the runtime reads at start-up.
+    # Without them the registry silently falls back to the source tree, which
+    # does not exist on an installed system.
+    copy_tree(source / "capability/services", Path("/usr/share/bunny-os/capability/services"), 0o444)
     copy_file(source / "services/bunny-companion/bunny_companion_service.py", Path("/usr/libexec/bunny-companion-service"), 0o555)
     copy_tree(source / "installer", Path("/usr/lib/bunny-installer/installer"))
     copy_file(source / "services/bunny-system-broker/bin/bunny-system-broker", Path("/usr/libexec/bunny-system-broker"), 0o555)
@@ -115,6 +134,14 @@ def main() -> int:
         # companion.characters refuses it outright if it is ever found
         # executable — which is the check that would catch a replacement.
         copy_tree(source / "shell/assets/companion", Path("/usr/share/bunny-shell/companion"), 0o444)
+        # Character packages are data, never imported as code. 0444 matches the
+        # validator's refusal of an executable bit, so a package that arrived
+        # with one would be refused rather than drawn.
+        copy_tree(
+            source / "assets/companion/characters",
+            Path("/usr/share/bunny-os/companion/characters"),
+            0o444,
+        )
         copy_tree(source / "shell/icons/hicolor", Path("/usr/share/icons/hicolor"), 0o444)
         copy_tree(source / "shell/schemas", Path("/usr/share/bunny-os/schemas/shell"), 0o444)
         subprocess.run(["/usr/bin/gtk-update-icon-cache", "--force", "/usr/share/icons/hicolor"], check=False)

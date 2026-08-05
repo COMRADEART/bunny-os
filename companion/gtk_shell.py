@@ -64,6 +64,44 @@ __all__ = [
 ]
 
 
+def _character_preferences(preferences: AccessibilityPreferences):
+    """Translate the client's accessibility settings for the character.
+
+    Two dataclasses with overlapping fields, deliberately not merged: the
+    client's set is about the *window* and the character's is about a renderer
+    that may not exist. Translating explicitly is what stops a preference added
+    to one silently changing the other.
+    """
+    from .character.mapper import AccessibilityPreferences as CharacterPreferences
+
+    return CharacterPreferences(
+        reduced_motion=preferences.reduced_motion,
+        no_animation=preferences.no_animation,
+        high_contrast=preferences.high_contrast,
+        # The client scales text; the character scales itself and its bubble.
+        bubble_scale=max(0.75, min(3.0, preferences.text_scale)),
+    )
+
+
+def _character_presenter(root: Path | None):
+    """Build a character presenter, or ``None`` if there is no usable package.
+
+    Absence is not an error. Text-only is a supported presentation and a client
+    that refused to open because it could not find a picture would be a client
+    that fails for the least important reason it has.
+    """
+    if root is None:
+        return None
+    try:
+        from .character.surface import CharacterPresenter
+
+        return CharacterPresenter(root)
+    except Exception:
+        # Every character failure is a presentation failure. The window opens,
+        # the task runs, and the surface is text.
+        return None
+
+
 @dataclass
 class CompanionViewModel:
     """Everything the window knows, and how it comes to know it.
@@ -89,6 +127,11 @@ class CompanionViewModel:
     speaking: bool = False
     spoken_result: str = ""
     health: Mapping[str, Any] = field(default_factory=dict)
+    #: The character, when one could be loaded. Presentation only: it is fed the
+    #: same :class:`companion.presentation.PresentationState` this model already
+    #: holds and can reach nothing else.
+    character: Any = None
+    character_update: Any = None
 
     # -- connection --------------------------------------------------------
 
@@ -159,7 +202,27 @@ class CompanionViewModel:
         self.revision = max(self.revision, int(self.state.revision or 0))
         self.session_id = str(answer.get("sessionId", "")) or self.session_id
         self.task_id = str(answer.get("taskId", "")) or self.task_id
+        self._update_character()
         return self.state
+
+    def _update_character(self) -> None:
+        """Feed the character the projection this model already holds.
+
+        Wrapped, because the character is decoration over a surface that is
+        already complete: a renderer fault must reach the picture and stop
+        there, never the caption, the approval or the task.
+        """
+        if self.character is None:
+            return
+        try:
+            self.character_update = self.character.update(
+                self.state,
+                accessibility=_character_preferences(self.preferences),
+                speaking=self.speaking,
+            )
+        except Exception as exc:  # pragma: no cover - the renderer's own guard runs first
+            self.character_update = None
+            self.last_error = f"the character surface degraded safely: {exc}"
 
     @property
     def replayed_phase(self) -> str:
@@ -248,8 +311,25 @@ class CompanionViewModel:
         return self.state.status_text or describe_phase(self.phase)
 
     def character_description(self) -> str:
-        """What the picture would be saying, in words. Never omitted."""
+        """What the picture would be saying, in words. Never omitted.
+
+        Prefers the character package's own description when one is loaded, and
+        falls back to the built-in phrasing otherwise — so the text-only surface
+        says the same thing whether or not a character exists.
+        """
+        if self.character_update is not None and self.character_update.description:
+            return self.character_update.description
         return describe_phase(self.phase)
+
+    def character_frame(self) -> Any:
+        """The frame to draw, or ``None`` for a text-only surface."""
+        return self.character_update.frame if self.character_update is not None else None
+
+    def character_presentation(self) -> str:
+        """Which renderer is actually in use right now."""
+        if self.character_update is None:
+            return "text-only"
+        return self.character_update.effective_presentation
 
     def indicator(self) -> str:
         labels = {
@@ -370,6 +450,7 @@ class CompanionViewModel:
             self.character_description(),
             self.caption(),
             self.privacy_line(),
+            f"Character: {self.character_presentation()}",
             "",
         ]
         lines.extend(f"{name}: {value}" for name, value in self.task_rows())
@@ -555,10 +636,13 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
         self.Gdk, self.Gio, self.GLib, self.Gtk = Gdk, Gio, GLib, Gtk
         self.preferences = preferences or AccessibilityPreferences()
         voice = SystemVoice()
+        from .cli import default_root
+
         self.model = CompanionViewModel(
             client=CompanionClient(endpoint, timeout=5.0),
             preferences=self.preferences,
             voice=voice if voice.available else None,
+            character=_character_presenter(default_root()),
         )
         self.character = None
         try:
@@ -789,8 +873,22 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
         self.progress.set_fraction(max(0.0, min(1.0, state.progress)))
         self.progress.set_text(f"{state.progress:.0%}")
         self.error_label.set_text(self.model.connection_error or self.model.last_error or "")
+        # The character frame, when a renderer produced one. Falls back to the
+        # shipped static asset so a window without a character package still
+        # shows something, and to nothing at all when the presentation is text.
+        frame = self.model.character_frame()
         if self.picture is not None:
-            self.picture.set_visible(state.recommendation.implementation == "static-image")
+            if frame is not None:
+                self.picture.set_filename(str(frame.asset_path))
+                self.picture.update_property(
+                    [self.Gtk.AccessibleProperty.LABEL], [frame.accessibility_description]
+                )
+                self.picture.set_visible(True)
+            else:
+                self.picture.set_visible(
+                    self.model.character_presentation() == "static-image"
+                    and self.character is not None
+                )
 
         self._clear_dynamic()
         self._draw_task_panel()
