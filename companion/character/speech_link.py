@@ -42,6 +42,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import threading
+import time
 from typing import Any, Callable, Mapping, Sequence
 
 from .lipsync import LipSyncEvent, LipSyncStatus, MouthShape
@@ -177,7 +178,7 @@ class VisemeLink:
         # ``GLib.idle_add``; the choice belongs to whoever owns the main loop,
         # not to this module, which must stay importable with no GTK present.
         self._dispatch = dispatch or (lambda action: action())
-        self._now = monotonic or __import__("time").monotonic
+        self._now = monotonic or time.monotonic
         self._maximum = maximum_frames
 
         self._guard = threading.RLock()

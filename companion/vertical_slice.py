@@ -37,7 +37,7 @@ import time
 from typing import Any, Mapping
 
 from .gtk_shell import CompanionViewModel
-from .presentation import PresentationProjector
+from .presentation import IMPLEMENTED_PRESENTATIONS, PRESENTATION_KINDS, PresentationProjector
 from .protocol import CompanionClient, CompanionClientError
 from .service import CompanionService, ServiceOptions
 from .voice import SystemVoice
@@ -334,12 +334,40 @@ def run_slice(root: Path, *, machine: str = "laptop", speak: bool = True) -> Sli
         )
 
         # 18-20. The surface: character, captions, voice.
+        # The property is that the character says what the canonical projection
+        # says, drawn by the renderer the canonical recommendation chose. It is
+        # *not* that the renderer is a static image.
+        #
+        # This step asserted `implementation in ("static-image", "text-only",
+        # "audio-only")` — written when the renderer was static-only, and never
+        # revisited when animated-2d landed. On a machine capable enough to be
+        # recommended animation it failed with everything working correctly, and
+        # the same run passes or fails depending on how much memory the host
+        # happens to have free. A check whose answer moves with the weather is
+        # not a check.
+        drawn_by = model.character_presentation()
+        recommended = state.recommendation.implementation
+        # The ladder is ordered heaviest first, so a *larger* index is a lighter
+        # renderer. What is allowed is the recommendation or a degradation of
+        # it; what is not is a client drawing something heavier than the
+        # canonical recommendation permitted.
+        #
+        # This slice runs its client with no character root, so it legitimately
+        # draws text-only while the projection recommends animation. That is the
+        # degradation ladder working, and it is the reason this is a bound
+        # rather than an equality.
+        degraded_not_exceeded = (
+            PRESENTATION_KINDS.index(drawn_by) >= PRESENTATION_KINDS.index(recommended)
+        )
         report.record(
-            18, "the static character reflects the canonical state",
+            18, "the character reflects the canonical state",
             model.character_description().endswith("finished.")
-            and state.recommendation.implementation in ("static-image", "text-only", "audio-only"),
+            and recommended in IMPLEMENTED_PRESENTATIONS
+            and degraded_not_exceeded,
             description=model.character_description(),
-            implementation=state.recommendation.implementation,
+            implementation=recommended,
+            drawnBy=drawn_by,
+            drawnAtOrBelowRecommendation=degraded_not_exceeded,
             eligible=state.recommendation.eligible,
             limitedByImplementation=state.recommendation.limited_by_implementation,
         )
