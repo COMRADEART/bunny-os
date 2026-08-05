@@ -63,6 +63,12 @@ from .presentation import (
 from .protocol import CompanionServer, MAX_EVENT_PAGE, PROTOCOL_SCHEMA_VERSION
 from .recovery import recover
 from .runtime import CompanionRuntime
+# The *preferences* type only. The service reaches the voice runtime through
+# :meth:`CompanionService._build_voice`, which imports it inside the function —
+# so a build with no voice package still imports this module, and the dependency
+# runs one way: the companion knows about voice, voice knows nothing about the
+# companion's runtime.
+from .voice.policy import VoicePreferences
 
 __all__ = [
     "CompanionGateway",
@@ -485,6 +491,7 @@ class CompanionGateway:
         display_available: bool = True,
         endpoint_description: Mapping[str, Any] | None = None,
         clock: Clock | None = None,
+        voice: "VoiceService | None" = None,
     ) -> None:
         self.runtime = runtime
         self.consent = consent
@@ -493,6 +500,11 @@ class CompanionGateway:
         self.display_available = display_available
         self.endpoint_description = dict(endpoint_description or {})
         self.clock = clock or SystemClock()
+        #: Optional. A gateway with no voice runtime answers every ``voice_*``
+        #: operation with a refusal that says so, rather than raising: a client
+        #: asking a machine with speech disabled why it is not talking should be
+        #: told, and §8 means the answer costs the task nothing either way.
+        self.voice = voice
         self._work: "queue.Queue[str | None]" = queue.Queue()
         self._running: set[str] = set()
         self._queued: set[str] = set()
@@ -788,10 +800,31 @@ class CompanionGateway:
         state, projector = self._project(events)
         later = [event for event in events if event.sequence > afterSequence]
         page = later[: min(limit, MAX_EVENT_PAGE)]
+        # The caption is published to the voice runtime here, at the one place
+        # the canonical projection is produced for a client. Publishing is not
+        # speaking: it records what the authoritative caption currently is and
+        # returns an identifier a client may later pass to ``voice_speak``.
+        # Doing it anywhere else would mean the voice runtime reading the event
+        # stream itself, which is the second interpretation §1 forbids.
+        caption_id = ""
+        if self.voice is not None and state.task_id:
+            try:
+                caption = self.voice.publish(state)
+                caption_id = caption.caption_id
+                self.voice.refresh(
+                    capability_signals=projector.capability_signals,
+                    foreground_workload=len(self._running),
+                )
+            except Exception:  # noqa: BLE001 - presentation must survive a voice fault
+                caption_id = ""
         return {
             "sessionId": session_id,
             "taskId": taskId or state.task_id,
             "state": state.to_json(),
+            #: What ``voice_speak`` takes. Empty when there is no voice runtime
+            #: or nothing speakable, which a client treats as "no speech
+            #: available" — never as a reason not to show the caption.
+            "captionId": caption_id,
             # The events since the client's revision, so it can fold them itself
             # and arrive at the same value. Not required — the state above is
             # complete — but §7 asks the client to be able to rebuild by replay
@@ -951,11 +984,25 @@ class CompanionGateway:
         # that had not stopped.
         released = self.consent.abandon(taskId, request_ids=self._outstanding_requests(taskId))
         outcome = cancel_task(self.runtime, session_id, task.task_id, cause=cause, detail=detail)
+        # §7: cancelling a task stops that task's speech, queued and current.
+        # After the cancellation, not before: the task's own outcome does not
+        # depend on speech stopping, and stopping speech first would leave a
+        # window where a cancellation that then failed had already silenced a
+        # task that carried on running.
+        silenced: tuple[str, ...] = ()
+        if self.voice is not None:
+            try:
+                silenced = self.voice.worker.cancel_task(
+                    task.task_id, reason="the task was cancelled"
+                )
+            except Exception:  # noqa: BLE001 - a voice fault must not fail a cancellation
+                silenced = ()
         return {
             "sessionId": session_id,
             "cancellation": outcome.to_json(),
             "task": outcome.task.view(PRESENTATION_AUDIENCE),
             "releasedApprovals": list(released),
+            "silencedUtterances": list(silenced),
         }
 
     def pause_task(self, *, taskId: str, sessionId: str | None) -> dict[str, Any]:
@@ -992,6 +1039,85 @@ class CompanionGateway:
         return {"sessionId": session_id, "task": task.view(PRESENTATION_AUDIENCE), "scheduled": "queued"}
 
     # -- internals ---------------------------------------------------------
+
+    # -- speech ------------------------------------------------------------
+    #
+    # Eight methods, each one line of delegation to
+    # :class:`companion.voice.service.VoiceService`. Deliberately thin: this
+    # gateway holds the runtime, and any logic living here would be logic with a
+    # runtime in reach. The voice service has no runtime, no store and no
+    # session, which is what makes "voice cannot change task state" a fact about
+    # the object graph rather than a rule somebody has to keep.
+
+    def _voice_unavailable(self, operation: str) -> dict[str, Any]:
+        return {
+            "available": False,
+            "operation": operation,
+            "reason": (
+                "this companion service is running without a voice runtime; the captions "
+                "are the whole of the output and the task is unaffected"
+            ),
+            "captionRetained": True,
+            "taskAffected": False,
+        }
+
+    def voice_health(self) -> dict[str, Any]:
+        if self.voice is None:
+            return self._voice_unavailable("voice_health")
+        return {"available": True, **self.voice.voice_health()}
+
+    def voice_list(self, *, language: str, limit: int) -> dict[str, Any]:
+        if self.voice is None:
+            return self._voice_unavailable("voice_list")
+        return {"available": True, **self.voice.voice_list(language=language, limit=limit)}
+
+    def voice_status(self) -> dict[str, Any]:
+        if self.voice is None:
+            return self._voice_unavailable("voice_status")
+        return {"available": True, **self.voice.voice_status()}
+
+    def voice_speak(
+        self,
+        *,
+        captionId: str,
+        priority: str,
+        interruptionPolicy: str,
+        voiceId: str,
+        replay: bool,
+    ) -> dict[str, Any]:
+        if self.voice is None:
+            return self._voice_unavailable("voice_speak")
+        return {"available": True, **self.voice.voice_speak(
+            captionId=captionId,
+            priority=priority,
+            interruptionPolicy=interruptionPolicy,
+            voiceId=voiceId,
+            replay=replay,
+        )}
+
+    def voice_cancel(
+        self, *, requestId: str, taskId: str, cancellationToken: str
+    ) -> dict[str, Any]:
+        if self.voice is None:
+            return self._voice_unavailable("voice_cancel")
+        return {"available": True, **self.voice.voice_cancel(
+            requestId=requestId, taskId=taskId, cancellationToken=cancellationToken
+        )}
+
+    def voice_pause(self) -> dict[str, Any]:
+        if self.voice is None:
+            return self._voice_unavailable("voice_pause")
+        return {"available": True, **self.voice.voice_pause()}
+
+    def voice_resume(self) -> dict[str, Any]:
+        if self.voice is None:
+            return self._voice_unavailable("voice_resume")
+        return {"available": True, **self.voice.voice_resume()}
+
+    def voice_explain(self, *, requestId: str) -> dict[str, Any]:
+        if self.voice is None:
+            return self._voice_unavailable("voice_explain")
+        return {"available": True, **self.voice.voice_explain(requestId=requestId)}
 
     def _outstanding_requests(self, task_id: str) -> tuple[tuple[str, float], ...]:
         """Unanswered questions belonging to one task, whether or not asked yet.
@@ -1085,6 +1211,13 @@ class ServiceOptions:
     #: without deciding about the tasks it was in the middle of is a runtime
     #: that will make the decision later, implicitly, by running one of them.
     recover_on_start: bool = True
+    #: Build a voice runtime inside this service. §18's decision: one service,
+    #: one isolated worker, no second unit and no second task runtime. Turning
+    #: it off leaves every ``voice_*`` operation answering "no voice runtime"
+    #: and changes nothing else — which is the property §8 asks for, expressed
+    #: as a configuration flag that a deployment can actually set.
+    voice_enabled: bool = True
+    voice_preferences: "VoicePreferences | None" = None
 
 
 class CompanionService:
@@ -1110,6 +1243,7 @@ class CompanionService:
         display = options.display_available
         if display is None:
             display = bool(os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY"))
+        self.voice = self._build_voice() if options.voice_enabled else None
         self.gateway = CompanionGateway(
             self.runtime,
             consent=self.consent,
@@ -1117,6 +1251,7 @@ class CompanionService:
             audio_output_available=bool(audio),
             display_available=bool(display),
             clock=self.runtime.clock,
+            voice=self.voice,
         )
         self.server = CompanionServer(
             self.gateway, options.endpoint,
@@ -1124,6 +1259,27 @@ class CompanionService:
             prefer_loopback=options.prefer_loopback,
         )
         self.gateway.endpoint_description = self.server.describe()
+
+    def _build_voice(self) -> "VoiceService | None":
+        """Construct the voice runtime, or carry on without one.
+
+        A failure here is swallowed on purpose and is the clearest statement of
+        §8 in the codebase: a companion whose *service* would not start because
+        a synthesiser was misconfigured would have made speech load-bearing for
+        tasks, which is exactly the arrangement this phase exists to prevent.
+        The captions are unaffected and every ``voice_*`` operation reports the
+        absence.
+        """
+        from .voice.service import VoiceService, VoiceServiceOptions
+
+        try:
+            return VoiceService(VoiceServiceOptions(
+                runtime_directory=self.root / "voice",
+                preferences=self.options.voice_preferences or VoicePreferences(),
+                clock=self.runtime.clock,
+            ))
+        except Exception:  # noqa: BLE001 - speech is never a reason not to start
+            return None
 
     def _build_runtime(self, consent: ConsentSource) -> CompanionRuntime:
         from capability.runtime import assess, assess_current_machine
@@ -1176,6 +1332,12 @@ class CompanionService:
         # Releasing grants nothing: the waiters return with no decision and the
         # safe default applies.
         self.consent.abandon_all()
+        # Before the task worker is joined. A voice worker still playing holds a
+        # child process and an audio device, and stopping it first means the
+        # service's own shutdown is bounded by the player's termination
+        # escalation rather than by whatever the task worker is doing.
+        if self.voice is not None:
+            self.voice.close()
         self.gateway.stop_worker()
         self.runtime.stop()
 
@@ -1184,6 +1346,10 @@ class CompanionService:
             "storeRoot": str(self.root),
             "endpoint": self.server.describe(),
             "recovery": self.recovery,
+            "voice": self.voice.describe() if self.voice is not None else {
+                "workerRunning": False,
+                "reason": "voice is disabled for this service",
+            },
         }
 
     def serve_forever(self) -> None:

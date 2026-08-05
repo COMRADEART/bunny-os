@@ -19,6 +19,21 @@ class MouthShape(str, Enum):
     NEUTRAL = "neutral"
 
 
+#: How a mouth shape's timing was arrived at, in descending order of how much
+#: it knows about the sound. Carried on every event so a surface — and a report
+#: — can say which, because the five are not interchangeable: ``amplitude`` is a
+#: measurement of the samples that will be played, ``text-estimate`` is
+#: arithmetic over the characters, and ``speaking-state`` knows only that
+#: something is being said.
+#:
+#: ``text-estimate`` was added when the voice runtime landed. A provider that
+#: owns its own playback (Speech Dispatcher) never hands over samples, so
+#: amplitude is unavailable and the honest label for what remains is not
+#: ``viseme`` — that would claim provider-native timing this build has never
+#: received.
+LIP_SYNC_SOURCES = frozenset({"phoneme", "viseme", "amplitude", "text-estimate", "speaking-state"})
+
+
 @dataclass(frozen=True)
 class LipSyncEvent:
     timestamp_ms: int
@@ -28,7 +43,7 @@ class LipSyncEvent:
     def __post_init__(self) -> None:
         if self.timestamp_ms < 0:
             raise ValueError("lip-sync timestamps cannot be negative")
-        if self.source not in {"phoneme", "viseme", "amplitude", "speaking-state"}:
+        if self.source not in LIP_SYNC_SOURCES:
             raise ValueError("lip-sync source is unsupported")
 
     def to_json(self) -> dict[str, Any]:

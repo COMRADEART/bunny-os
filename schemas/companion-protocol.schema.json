@@ -19,7 +19,15 @@
         "resolve_approval",
         "cancel_task",
         "pause_task",
-        "resume_task"
+        "resume_task",
+        "voice_health",
+        "voice_list",
+        "voice_status",
+        "voice_speak",
+        "voice_cancel",
+        "voice_pause",
+        "voice_resume",
+        "voice_explain"
       ]
     },
     "request": {

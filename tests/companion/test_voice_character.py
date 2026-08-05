@@ -73,31 +73,46 @@ class VoiceArgumentTests(unittest.TestCase):
             self.assertGreaterEqual(speed, 80)
             self.assertLessEqual(speed, 450)
 
-    def test_no_call_in_the_module_reaches_a_shell(self) -> None:
-        """Checked against the syntax tree, not the text.
+    def test_no_call_in_the_package_reaches_a_shell(self) -> None:
+        """Checked against the syntax tree, not the text, across every module.
 
-        The module's own docstring says ``shell=True`` while explaining that it
-        never does it, so a grep finds the explanation and reports it as the
-        offence.
+        A grep is the wrong tool twice over: several modules say ``shell=True``
+        in a docstring while explaining that they never do it, and the package
+        is now a dozen files where it used to be one — so a check that named a
+        single path would pass while a new provider shelled out beside it.
+
+        ``shell=False`` written explicitly is accepted and is what this package
+        does. It is not noise: it states the intent at the call site and it
+        survives a future where somebody changes a default.
         """
         import ast
 
-        tree = ast.parse(
-            (Path(__file__).resolve().parents[2] / "companion" / "voice.py").read_text(
-                encoding="utf-8"
-            )
-        )
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            for keyword in node.keywords:
-                self.assertNotEqual(keyword.arg, "shell", "voice.py passes shell=")
-            target = node.func
-            if isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name):
-                self.assertNotIn(
-                    f"{target.value.id}.{target.attr}",
-                    ("os.system", "os.popen", "subprocess.getoutput", "subprocess.call"),
-                )
+        package = Path(__file__).resolve().parents[2] / "companion" / "voice"
+        modules = sorted(package.glob("*.py"))
+        self.assertGreaterEqual(len(modules), 12, "the voice package lost modules")
+        for module in modules:
+            tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Call):
+                    continue
+                for keyword in node.keywords:
+                    if keyword.arg != "shell":
+                        continue
+                    self.assertIsInstance(
+                        keyword.value, ast.Constant,
+                        f"{module.name} passes a computed shell=",
+                    )
+                    self.assertIs(
+                        keyword.value.value, False,
+                        f"{module.name} passes shell={keyword.value.value!r}",
+                    )
+                target = node.func
+                if isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name):
+                    self.assertNotIn(
+                        f"{target.value.id}.{target.attr}",
+                        ("os.system", "os.popen", "subprocess.getoutput", "subprocess.call"),
+                        f"{module.name} reaches a shell",
+                    )
 
 
 class VoiceFailureTests(unittest.TestCase):

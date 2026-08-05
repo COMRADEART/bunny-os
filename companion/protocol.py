@@ -341,7 +341,60 @@ OPERATIONS: Mapping[str, Operation] = {
             ),
             mutating=True,
         ),
+        # -- speech ------------------------------------------------------
+        #
+        # §17's eight, and deliberately no ninth. Note what none of them takes:
+        # no executable, no argument list, no output path, no provider module,
+        # no URL, no device handle. ``voice_speak`` does not even take *text* —
+        # it takes a caption identifier, and the runtime derives the utterance
+        # from the caption it already published. A client cannot make the
+        # companion say something the user was not shown, which is §8 enforced
+        # by the shape of the request rather than by a check inside it.
+        Operation("voice_health"),
+        Operation(
+            "voice_list",
+            (
+                Parameter("language", "string", maximum_length=8, default=""),
+                Parameter("limit", "integer", default=64, minimum=1, maximum=512),
+            ),
+        ),
+        Operation("voice_status"),
+        Operation(
+            "voice_speak",
+            (
+                Parameter("captionId", "identifier", required=True),
+                Parameter("priority", "string", maximum_length=32, default=""),
+                Parameter("interruptionPolicy", "string", maximum_length=32, default=""),
+                Parameter("voiceId", "string", maximum_length=64, default=""),
+                # An explicit "read that again". §20 permits a replay only as a
+                # new request from a person; nothing in the runtime sets this.
+                Parameter("replay", "boolean", default=False),
+            ),
+            mutating=True,
+        ),
+        Operation(
+            "voice_cancel",
+            (
+                Parameter("requestId", "identifier", default=""),
+                Parameter("taskId", "identifier", default=""),
+                Parameter("cancellationToken", "identifier", default=""),
+            ),
+            mutating=True,
+        ),
+        Operation("voice_pause", mutating=True),
+        Operation("voice_resume", mutating=True),
+        Operation(
+            "voice_explain",
+            (Parameter("requestId", "identifier", default=""),),
+        ),
     )
+}
+
+#: The speech subset, by name. Kept as a derived view rather than a second
+#: literal so that the two can never disagree about what a parameter is bounded
+#: at — :mod:`companion.voice.service` validates against exactly these objects.
+VOICE_OPERATIONS: Mapping[str, Operation] = {
+    name: item for name, item in OPERATIONS.items() if name.startswith("voice_")
 }
 
 
@@ -367,6 +420,14 @@ class RuntimeGateway(TypingProtocol):
     def cancel_task(self, **params: Any) -> Mapping[str, Any]: ...
     def pause_task(self, **params: Any) -> Mapping[str, Any]: ...
     def resume_task(self, **params: Any) -> Mapping[str, Any]: ...
+    def voice_health(self, **params: Any) -> Mapping[str, Any]: ...
+    def voice_list(self, **params: Any) -> Mapping[str, Any]: ...
+    def voice_status(self, **params: Any) -> Mapping[str, Any]: ...
+    def voice_speak(self, **params: Any) -> Mapping[str, Any]: ...
+    def voice_cancel(self, **params: Any) -> Mapping[str, Any]: ...
+    def voice_pause(self, **params: Any) -> Mapping[str, Any]: ...
+    def voice_resume(self, **params: Any) -> Mapping[str, Any]: ...
+    def voice_explain(self, **params: Any) -> Mapping[str, Any]: ...
 
 
 class CompanionProtocol:
