@@ -25,7 +25,7 @@ doing it — each of which was passing every test at the time.
 | Based on | `b825dd4aa181c30e1f2eceb878c261ec2201b247` (verified: `git rev-parse` at start) |
 | Prior gate commit | `0cf81a135b24619f74bbecfcdd48d3a69f33c2fd` |
 | **Gate commit** | `60ba76e1176ca04ac44a9df158a1ad89776ec520` — every gate iteration records it |
-| **Final SHA** | the evidence-and-report commit that follows the gate commit; §14. The closure over `60ba76e..final` is required to show 0 installed paths, and does. |
+| **Final SHA** | `3113fb3e69a8747e1d156dc2da048ed933606efd` plus this line's own commit; the analyser over `60ba76e..HEAD` reports **0 installed, 0 context-only** — post-gate commits touch only evidence and this report |
 
 Everything the voice-runtime phase recorded is pinned by digest in
 `qualification/companion-voice-closure/preserved-evidence.json` **before any
