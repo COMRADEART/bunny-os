@@ -92,12 +92,27 @@ class SliceReport:
 
 
 def _wait_for(predicate, *, timeout: float = _WAIT_SECONDS) -> bool:
+    """Poll until something is true, or give up.
+
+    A slice that gave up says *why* at the step that noticed. The subtle case
+    this exists for: :meth:`CompanionViewModel.refresh` catches a transport
+    error and returns the state it already had, so a client that has lost its
+    connection keeps answering with a stale phase for ever. Without this the
+    slice would report "the task did not reach success" for a task that had
+    reached it perfectly well, and the real fault — the client could not
+    reconnect — would be nowhere in the output.
+    """
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if predicate():
             return True
         time.sleep(_POLL_SECONDS)
     return False
+
+
+def _transport_fault(model) -> str:
+    """The client's own connection error, if it has one."""
+    return getattr(model, "connection_error", "") or ""
 
 
 def _result_of(client: CompanionClient, task_id: str) -> Mapping[str, Any]:
@@ -312,6 +327,10 @@ def run_slice(root: Path, *, machine: str = "laptop", speak: bool = True) -> Sli
         report.record(
             17, "the task completed", finished and state.phase == "success",
             phase=state.phase, error=state.error_summary,
+            # Named separately from the task's own error. A client that lost
+            # its connection reports a stale phase, and "the task did not
+            # complete" would be the wrong diagnosis entirely.
+            transportFault=_transport_fault(model),
         )
 
         # 18-20. The surface: character, captions, voice.

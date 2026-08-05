@@ -148,12 +148,27 @@ class _SliceClock:
 
 
 def _wait_for(predicate, timeout: float = _WAIT) -> bool:
+    """Poll until something is true, or give up.
+
+    A slice that gave up says *why* at the step that noticed. The subtle case
+    this exists for: :meth:`CompanionViewModel.refresh` catches a transport
+    error and returns the state it already had, so a client that has lost its
+    connection keeps answering with a stale phase for ever. Without this the
+    slice would report "the task did not reach success" for a task that had
+    reached it perfectly well, and the real fault — the client could not
+    reconnect — would be nowhere in the output.
+    """
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if predicate():
             return True
         time.sleep(_POLL)
     return False
+
+
+def _transport_fault(model) -> str:
+    """The client's own connection error, if it has one."""
+    return getattr(model, "connection_error", "") or ""
 
 
 def _states_from_record(
@@ -377,6 +392,7 @@ def run_character_slice(root: Path) -> CharacterSliceReport:
             finished and success.snapshot.mapped_state.character_state.value == "success",
             phase=state.phase,
             characterState=success.snapshot.mapped_state.character_state.value,
+            transportFault=_transport_fault(model),
         )
 
         before = {

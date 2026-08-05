@@ -63,7 +63,16 @@ def _wait_for(predicate, timeout: float = _WAIT) -> bool:
 class ServiceTestCase(unittest.TestCase):
     """One service, one endpoint, and a raw socket alongside the client."""
 
-    consent_wait_seconds = 8.0
+    #: Longer than :data:`_WAIT`, deliberately.
+    #:
+    #: A test that answers approvals gives itself ``_WAIT`` to work through
+    #: them; if the runtime's own consent lapses first, the task is denied and
+    #: the test fails somewhere unrelated to what it was checking. At 8s
+    #: against a 45s answering budget that happened about one run in six on a
+    #: loaded machine. The service must outlast the test, not race it.
+    #:
+    #: Tests that *want* an unanswered approval override this downwards.
+    consent_wait_seconds = _WAIT * 2
 
     def setUp(self) -> None:
         self._directory = tempfile.TemporaryDirectory()

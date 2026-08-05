@@ -243,7 +243,7 @@ Host: Windows 11 (10.0.26200), CPython 3.14.6, `jsonschema` present.
 
 | Suite | Tests | Result |
 | --- | ---: | --- |
-| `tests/companion` (all) | **531** | **OK**, 5 skipped |
+| `tests/companion` (all) | **531** | OK on ~2 runs in 3; see the flake note below |
 | — character tests | 185 | OK, 2 skipped |
 | — `test_character_package_validation.py` | 32 | OK |
 | — `test_character_speech_position.py` | 30 | OK |
@@ -269,6 +269,53 @@ package root.
 
 **§19's functional list** is covered by the mapper, renderer, adaptation and
 speech tests, all of which run without a compositor.
+
+**A test-harness limitation worth naming.** This host has no `AF_UNIX`, so the
+companion protocol falls back to loopback TCP (documented in the integration
+phase as a developer transport). Every service the suite starts and every poll
+it makes consumes an ephemeral port with a 120-second `TIME_WAIT`, so running
+the full suite repeatedly back-to-back exhausted the range and produced failures
+in the slice and IPC tests that had nothing to do with the code. Two changes
+removed the pressure rather than hiding it:
+
+- each vertical slice now runs **once per test class** and its result is
+  asserted many times, rather than being re-run per test — it is deterministic
+  and expensive, so this is better design regardless;
+- `ServiceTestCase.consent_wait_seconds` is now longer than the test's own
+  answering deadline. At 8 s against a 45 s budget, the runtime's consent could
+  lapse while a test was still working through its approvals, and the test then
+  failed at an unrelated step. The service must outlast the test, not race it.
+
+The shipped transport is a Unix socket with no port to exhaust. None of this
+affects the product; it is recorded because a flaky gate costs real time and the
+cause is not obvious from the failure.
+
+**An unresolved flake, stated plainly.** After those two changes the full
+companion suite still fails roughly one run in three, always in the
+service-driven tests — most often
+`test_integration_slice.VerticalSliceTests` (a step reporting that the task did
+not reach `success`) or `test_protocol_ipc.OperationTests`. What is known:
+
+- it does **not** reproduce in isolation: `run_slice` passed 8/8 consecutively
+  when run directly, and `test_protocol_ipc` passed 6/6 as a module;
+- it appears only inside the full in-process suite, where many services have
+  been started and closed beforehand;
+- it correlates loosely with wall-clock slowdown (failing whole-suite runs took
+  100–145 s against 40 s for passing ones) but has also occurred on a fast run,
+  so load is not the whole story;
+- the character suite (185 tests) has not failed once across every run.
+
+What has been ruled out: timeout budgets (a task completes in ~0.2 s against a
+45 s budget, and one loopback round trip measures 8.4 ms), and the consent
+race described above.
+
+It is **not** diagnosed, and it is not being reported as if it were. The most
+likely remaining mechanisms are ephemeral-port pressure from the loopback
+developer transport and residual threads from previously closed services in the
+same interpreter — both properties of running this on a host with no `AF_UNIX`.
+Confirming that needs a Linux run over the real Unix socket, which is also where
+the memory figures have to be taken. Until then this is an open item, listed in
+§24.
 
 ## 21. Installed vertical-slice result
 
@@ -369,6 +416,11 @@ Containerfile agree.
 10. Sleeping, greeting, waiting-for-user, moving and unavailable are character
     states with no canonical presentation phase that produces them, so they are
     reachable through the package and the API but not through a running task.
+11. **The full companion suite is flaky on this host, roughly one run in three,
+    in the service-driven tests only.** Undiagnosed; see §20. It does not
+    reproduce in isolation and has never affected the character tests. Needs a
+    Linux run over the real Unix socket to settle, which the memory
+    measurements need anyway.
 
 ## 25. Unverified assumptions
 

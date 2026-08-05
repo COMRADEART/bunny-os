@@ -21,14 +21,27 @@ from companion.vertical_slice import SLICE_REQUEST, run_slice
 
 
 class VerticalSliceTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self._directory = tempfile.TemporaryDirectory()
-        self.addCleanup(self._directory.cleanup)
-        self.root = Path(self._directory.name)
+    """One slice run, many assertions.
+
+    The slice is deterministic and expensive: it starts two services and makes
+    several hundred connections. Running it once per *test* meant three runs
+    here and three more in the character suite, which on the loopback developer
+    transport walks through the host's ephemeral port range and fails for a
+    reason that has nothing to do with the companion.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._directory = tempfile.TemporaryDirectory()
+        cls.root = Path(cls._directory.name)
+        cls.report = run_slice(cls.root, speak=False)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls._directory.cleanup()
 
     def test_the_whole_provider_free_slice_passes(self) -> None:
-        report = run_slice(self.root, speak=False)
-        document = report.to_json()
+        document = self.report.to_json()
         self.assertTrue(
             document["passed"],
             "failed steps: " + "; ".join(
@@ -47,16 +60,14 @@ class VerticalSliceTests(unittest.TestCase):
         self.assertFalse(document["gtkWidgetsExercised"])
 
     def test_the_slice_proves_the_binding_check_by_failing_it_first(self) -> None:
-        report = run_slice(self.root, speak=False)
-        step = next(item for item in report.to_json()["steps"] if item["step"] == 12)
+        step = next(item for item in self.report.to_json()["steps"] if item["step"] == 12)
         self.assertTrue(step["ok"])
         self.assertEqual(step["code"], "approval_mismatch")
         self.assertEqual(step["altered"], "destination")
 
     def test_the_slice_answers_more_than_one_question(self) -> None:
         """The reviewer forces a replan, which supersedes the first consent."""
-        report = run_slice(self.root, speak=False)
-        step = next(item for item in report.to_json()["steps"] if item["step"] == 11)
+        step = next(item for item in self.report.to_json()["steps"] if item["step"] == 11)
         self.assertGreaterEqual(len(step["approvals"]), 2)
         self.assertEqual(step["error"], "")
 

@@ -140,6 +140,17 @@ class CharacterCommandTests(unittest.TestCase):
 
 
 class VerticalSliceAndPerformanceTests(unittest.TestCase):
+    """One slice run, many assertions — see the note in test_integration_slice."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._directory = tempfile.TemporaryDirectory(prefix="bunny-character-slice-")
+        cls.report = run_character_slice(Path(cls._directory.name))
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls._directory.cleanup()
+
     def test_a_completed_task_maps_to_success_not_a_stale_review_warning(self) -> None:
         """The canonical projection decides; a spent disagreement is history.
 
@@ -147,17 +158,13 @@ class VerticalSliceAndPerformanceTests(unittest.TestCase):
         than through a helper that re-read the store — the helper this replaces
         was the second interpretation of the record that §2 forbids.
         """
-        with tempfile.TemporaryDirectory(prefix="bunny-character-projection-") as temporary:
-            report = run_character_slice(Path(temporary))
-        self.assertTrue(report.passed, report.failures)
-        steps = {item["step"]: item for item in report.to_json()["steps"]}
+        self.assertTrue(self.report.passed, self.report.failures)
+        steps = {item["step"]: item for item in self.report.to_json()["steps"]}
         self.assertEqual(steps[16]["characterState"], "success")
         self.assertEqual(steps[24]["after"]["state"], "completed")
 
     def test_the_installed_slice_exercises_the_required_renderer_story(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="bunny-character-slice-") as temporary:
-            report = run_character_slice(Path(temporary))
-        document = report.to_json()
+        document = self.report.to_json()
         self.assertTrue(document["passed"], document["failures"])
         names = [step["name"] for step in document["steps"]]
         for required in (
