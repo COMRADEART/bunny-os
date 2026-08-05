@@ -5,7 +5,7 @@ Branch `fix/companion-pause-approval-consistency`.
 | | |
 | --- | --- |
 | **Starting commit** | `4f8ea552d54654a75f2c6b4014d1c1dfdfb8cca2` |
-| **Gate commit** | `8c67193c7b5a0804f46f1d71ff8c97416ba9826d` — all three gates |
+| **Final / gate commit** | `8b334e2b1809143bcf67dd3452852c094b10f315` — all three gates |
 | **Base branch** | `feature/companion-linux-validation` |
 
 The previous phase left four things open: service stress at 98/100, the 50-run
@@ -106,7 +106,69 @@ returns `"replayed"` without consulting anything that has to catch up. This one
 is security-relevant: replay protection that depends on another thread's
 progress is not protection.
 
+**The protective write was not atomic.** `_save_running_task` guards every
+write on the run path: it reads the persisted task and declines if somebody
+else has taken it — terminal, cancelling, or paused. But the read and the write
+were two steps, and pausing is exactly what happens in between. Traced with a
+stack dump at the write site: the pause and the runner's block *both* observed
+`waiting_for_approval`, both concluded they were clear to proceed, and the
+block's write landed second. Holding the lifecycle lock across the pair is what
+makes the guard mean anything; without it, it was advisory.
+
+**The lifecycle epoch could be reset by a stale write.** The same shape one
+field down. A worker holding a task object from before a resume writes it back,
+and the object carries `lifecycle_epoch` from the previous attempt — so the
+epoch went to zero and approval outcomes from before the resume started
+matching again, which is precisely what the epoch exists to prevent.
+`_save_running_task` now merges the persisted epoch when it is higher, for the
+same reason it already merged the cancellation fields: the runner has
+legitimate progress to record and only that one field is stale. Found by one of
+this phase's own tests, at two failures in fifty.
+
 Result: the Linux pause probe went from **1 failure in 3** to **250/250**.
+
+**Six defects, and the last three were each found by a gate rather than ahead
+of it.** That is the gates working, and it is also the honest shape of this
+phase: reasoning found the first, and measurement found the rest.
+
+### One shape, closed everywhere rather than where it was caught
+
+Every one of the six is the same shape: **two writers on one task document,
+separated by a check that had gone stale by the time the write happened.** Once
+that was clear, the remaining lifecycle transitions were put under the same lock
+without waiting for a gate to find them — `resume_task` and
+`companion.cancellation.cancel_task` both read the task, decide, and write
+several times, and a pause landing in the middle would interleave with all of
+it.
+
+Fixing only what a gate catches leaves the rest of the class in place. The lock
+is reentrant, so the transitions that call each other are unaffected, and it
+covers pausing, resuming, cancelling, the runner's block, and every protective
+write on the run path.
+
+No path holds it across the blocking consent call — the protective write takes
+and releases it *before* `seek_consent` — so pausing never waits for the answer
+it exists to stop waiting for. It is always acquired before the consent
+source's own lock and never the reverse, so there is no ordering inversion.
+
+### Three of these tests were mine, and they were flaky
+
+Stated because it is part of the record. Three tests in
+`test_lifecycle_races.py` used `ParkedTaskCase.parked()` — which deliberately
+leaves a *real* worker thread running — and then asserted on the task document.
+Asserting on a document two threads are writing makes a test about concurrency
+whether or not it meant to be one, and these meant to be about what pause and
+resume *mean*. They failed at about one run in fifteen on Linux.
+
+The failures were mine, not the product's. `ResumeTests` now settles the worker
+before asserting, and the concurrency property has its own test in
+`PauseRaceTests` where it belongs. Measured after: **50 consecutive clean runs
+of the whole race matrix on Linux.**
+
+A soak that catches your own bad test is still the soak working. It is worth
+noticing that the same reflex — assert on shared state without establishing who
+else can write it — produced both the defects and the tests that failed to pin
+them down.
 
 ## 3. Corrected event semantics
 
@@ -281,7 +343,7 @@ target device. The probe records `isGnomeSession: false` and
 
 ## 10. Gates
 
-All three ran against `8c67193c7b5a0804f46f1d71ff8c97416ba9826d`, recorded per
+All three ran against `8b334e2b1809143bcf67dd3452852c094b10f315`, recorded per
 iteration by the harness rather than once in a header — a header would not
 prove the tree stayed still underneath a run.
 
@@ -304,6 +366,26 @@ previous version could have passed while hiding something:
   modules**;
 - pending approvals, active executors, held answers and held store locks were
   not recorded at all.
+
+### Thread, socket, descriptor and memory trends
+
+From the 50-run complete-suite gate on Linux, which is the longest continuous
+run and therefore the one a trend would show in:
+
+| | Result |
+| --- | --- |
+| thread delta per iteration | **0**, one iteration at +1 (transient, not cumulative) |
+| descriptor delta per iteration | **0** across all 50 |
+| listening-socket delta | **0** |
+| temporary directories | **0** |
+| executor leases / consent waiters / held answers / pending approvals / store locks | **empty** at every iteration |
+| RSS against baseline | 41.9 MiB rising to a plateau; last ten iterations 53.4–55.4 MiB, oscillating |
+
+Threads, sockets, descriptors and temporary files **do not accumulate** — that
+is what §14.12 asks and it is met. Memory rises over roughly the first twenty
+iterations and then oscillates without trending, which reads as allocator and
+interpreter warm-up reaching a steady state. Stated as what it is: a plateau
+over fifty runs, not a proof about a service left running for a week.
 
 ## 11. Windows and Linux measure different things
 
@@ -339,7 +421,48 @@ Skip counts differ for a reason worth stating: **18 skipped on Windows, 1 on
 Linux**. The difference is `AF_UNIX` and `/proc` — the tests written for the
 shipped transport do not run on the host that has no shipped transport.
 
-## 12. Known limitations
+## 12. Complete test results
+
+Every suite §13 names, on both hosts where the host can run it.
+
+| Suite | Windows | Linux |
+| --- | --- | --- |
+| Complete companion tests (includes character, protocol, approvals, store, pause/resume, recovery, presentation) | **599 OK**, 18 skipped | **599 OK**, 1 skipped |
+| Capability tests | **697 OK** | not re-run (unchanged by this branch) |
+| Repository validation (`task.py validate`) | **PASS**, 0 failing validators | — |
+| Full repository suite (`task.py test`) | 3078 tests, **1 error**, 37 skipped | the failing test passes |
+| Real GTK smoke | — | **pass**, 0 criticals |
+| Real GTK animation | — | **pass**, 0 criticals |
+| Installed artifact inventory | — | **pass**, 98 modules, 0 refusals |
+| Installed provenance | — | **pass**, all three modules installed |
+| Installed vertical slice | — | **20/20**, 25 steps |
+
+**Classification of the one non-pass.**
+`tests.display_stack.test_evidence_gate.MutationTests.test_duplicate_boot_check_is_load_bearing`
+fails on Windows with `OSError [WinError 1314] A required privilege is not
+held by the client` — creating a symbolic link needs a privilege this account
+does not have. It is **unsupported environment**, not a regression: the same
+test was run on Linux and passes, and nothing in this branch touches the
+display stack.
+
+## 13. NOT_RUN items
+
+Distinguished from passes, because a check that never ran is not a check that
+succeeded:
+
+- **ShellCheck** — not installed on this host; repository validation records
+  the skip rather than counting it.
+- **systemd unit analysis** — needs `BUNNY_VERIFY_SYSTEMD=1` and
+  `systemd-analyze` against an installed Fedora fixture.
+- **Windows symlink test** — above.
+- **Capability suite on Linux** — not re-run there; this branch changes nothing
+  under `capability/`, and it passes on Windows.
+- **A booted disk image** — the artifact was installed onto a host and
+  inspected; `osbuild`'s image was not booted.
+- **Physical hardware** — none.
+- **A second real user for peer rejection** — substituted credential only.
+
+## 14. Known limitations
 
 1. **No physical hardware.** Every Linux result is from a WSL2 utility VM.
 2. **No GNOME session**, and no desktop-session claim.
@@ -370,7 +493,7 @@ shipped transport do not run on the host that has no shipped transport.
    credential, not a second real user.
 11. **Frame-rate figures are development-machine figures.**
 
-## 13. Reproducibility and build impact
+## 15. Reproducibility and build impact
 
 - **Build-affecting.** `companion/` is copied into the image by
   `install-root.py`, so every change here changes the artifact.

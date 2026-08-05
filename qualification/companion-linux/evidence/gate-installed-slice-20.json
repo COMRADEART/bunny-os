@@ -10,7 +10,7 @@
  "longestConsecutivePass": 20,
  "stepCount": 25,
  "notRunSteps": [],
- "secondsMin": 0.424,
- "secondsMax": 0.441,
+ "secondsMin": 0.425,
+ "secondsMax": 0.442,
  "failures": []
 }

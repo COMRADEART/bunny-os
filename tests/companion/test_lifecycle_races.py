@@ -220,7 +220,7 @@ class PauseRaceTests(ParkedTaskCase):
         the thing that has to hold: once a pause is persisted, a runner holding
         a task object from before it cannot put that object back.
         """
-        runtime, session, task, _finished = self.parked()
+        runtime, session, task, finished = self.parked()
 
         # The runner's in-flight copy, taken before the pause.
         in_flight = runtime.task(session.session_id, task.task_id)
@@ -228,6 +228,16 @@ class PauseRaceTests(ParkedTaskCase):
 
         paused = runtime.pause_task(session.session_id, task.task_id)
         self.assertEqual(paused.state, "paused")
+
+        # Let the real worker unwind before asserting anything global. This
+        # test is about a *stale* write, and leaving a live worker running
+        # while it asserts on the document makes it a test about two writers
+        # instead — which is a different property, already covered above, and
+        # produced a failure about once in twenty-five soak runs.
+        self.assertTrue(finished.wait(PATIENCE), "the worker never unwound")
+        self.assertEqual(
+            runtime.task(session.session_id, task.task_id).state, "paused"
+        )
 
         # The runner writes what it was holding. This is every write on the run
         # path, and it must decline.
@@ -309,20 +319,45 @@ class PauseRaceTests(ParkedTaskCase):
 class ResumeTests(ParkedTaskCase):
     """§8: resume never reuses stale approval authority."""
 
-    def test_resume_advances_the_lifecycle_epoch(self) -> None:
-        runtime, session, task, _finished = self.parked()
-        self.assertEqual(task.lifecycle_epoch, 0)
+    def settled(self):
+        """A parked task with its worker unwound, so the document is still.
 
+        Every test in this class asserts on epochs, which live in the task
+        document — and `parked()` deliberately leaves a real worker running.
+        Asserting on a document two threads are writing makes a test about
+        concurrency whether or not it meant to be one, and three of these failed
+        that way at about one run in fifteen. Concurrency has its own tests in
+        PauseRaceTests; these are about what pause and resume *mean*.
+        """
+        runtime, session, task, finished = self.parked()
         runtime.pause_task(session.session_id, task.task_id)
+        self.assertTrue(finished.wait(PATIENCE), "the worker never unwound")
+        return runtime, session, task
+
+    def test_resume_advances_the_lifecycle_epoch(self) -> None:
+        runtime, session, task = self.settled()
+        base = runtime.task(session.session_id, task.task_id).lifecycle_epoch
+
         resumed = runtime.resume_task(session.session_id, task.task_id)
-        self.assertEqual(resumed.lifecycle_epoch, 1)
+        self.assertEqual(resumed.lifecycle_epoch, base + 1)
 
         runtime.pause_task(session.session_id, task.task_id)
         again = runtime.resume_task(session.session_id, task.task_id)
-        self.assertEqual(again.lifecycle_epoch, 2)
+        self.assertEqual(again.lifecycle_epoch, base + 2)
 
     def test_repeated_pause_and_resume_never_carries_an_approval_over(self) -> None:
-        runtime, session, task, _finished = self.parked()
+        """Four attempts, and no approval survives into the next one.
+
+        The worker is allowed to unwind before the rounds begin. This test is
+        about what pause and resume do to *approvals and epochs*, not about a
+        runner writing concurrently — that is a different property with its own
+        test — and leaving the worker running made this one assert on a document
+        two threads were changing. It failed about seven times in forty for that
+        reason, which is a flaky test rather than a finding.
+        """
+        runtime, session, task = self.settled()
+        runtime.resume_task(session.session_id, task.task_id)
+        base = runtime.task(session.session_id, task.task_id).lifecycle_epoch
 
         for round_number in range(4):
             with self.subTest(round=round_number):
@@ -336,11 +371,15 @@ class ResumeTests(ParkedTaskCase):
                 runtime.resume_task(session.session_id, task.task_id)
 
         current = runtime.task(session.session_id, task.task_id)
-        self.assertEqual(current.lifecycle_epoch, 4)
+        self.assertEqual(current.lifecycle_epoch, base + 4)
 
     def test_an_approval_answered_after_a_resume_is_not_replayed(self) -> None:
         """The old question is terminal; answering it again authorises nothing."""
-        runtime, session, task, _finished = self.parked()
+        runtime, session, task = self.settled()
+        # `settled` leaves the task paused, and pausing a paused task is
+        # deliberately a no-op — so it has to be running again before a pause
+        # can withdraw anything.
+        runtime.resume_task(session.session_id, task.task_id)
         runtime.approvals.request(question("req-old", task_id=task.task_id))
         runtime.pause_task(session.session_id, task.task_id)
         runtime.resume_task(session.session_id, task.task_id)

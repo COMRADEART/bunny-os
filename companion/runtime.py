@@ -656,6 +656,18 @@ class CompanionRuntime:
         cancellation fields are read back and merged in before every write from
         the run path. The canceller itself writes directly; it is the source.
         """
+        # Under the lifecycle lock, because reading the persisted task and
+        # writing over it is a check followed by an act, and pausing is exactly
+        # the thing that happens in between. Traced: a pause and the runner's
+        # block both observed `waiting_for_approval` and both proceeded, so the
+        # block's write landed after the pause's and the user's pause was lost.
+        # Holding the lock across the pair is what makes the guard mean
+        # anything. Reentrant, so the callers that already hold it — the
+        # lifecycle transitions themselves — are unaffected.
+        with self._lifecycle_guard:
+            return self._save_running_task_locked(task)
+
+    def _save_running_task_locked(self, task: CompanionTask) -> CompanionTask:
         persisted = self.store.load_task(task.session_id, task.task_id)
         if persisted is not None and (
             persisted.terminal
@@ -671,6 +683,19 @@ class CompanionRuntime:
             # event stream, which is authoritative anyway and from which
             # recovery rebuilds the ledger.
             return persisted
+        if persisted is not None and persisted.lifecycle_epoch > task.lifecycle_epoch:
+            # The task was paused and resumed while this phase was in flight, so
+            # the copy about to be written is from the previous attempt and
+            # carries the previous epoch. Writing it would reset the epoch, and
+            # the epoch is the only thing separating this attempt's approval
+            # outcomes from the last one's — an outcome from before the resume
+            # would start matching again.
+            #
+            # Merged rather than refused, for the same reason the cancellation
+            # fields are merged: the runner still has legitimate progress to
+            # record, and only this one field is stale. Monotonic, so taking the
+            # larger value is always the newer one.
+            task = replace(task, lifecycle_epoch=persisted.lifecycle_epoch)
         self.store.save_task(task)
         return task
 
@@ -1575,6 +1600,15 @@ class CompanionRuntime:
                 unregister(request_id)
 
     def resume_task(self, session_id: str, task_id: str) -> CompanionTask:
+        # Under the lifecycle lock, like pausing and cancelling. Every defect
+        # this phase found had the same shape — two writers on one task
+        # document, separated by a check that had gone stale by the time the
+        # write happened — and resuming is a lifecycle transition with exactly
+        # that structure. Locked before a gate had to find it.
+        with self._lifecycle_guard:
+            return self._resume_task_locked(session_id, task_id)
+
+    def _resume_task_locked(self, session_id: str, task_id: str) -> CompanionTask:
         task = self.task(session_id, task_id)
         if task.state != "paused":
             raise CompanionError(f"task {task_id} is {task.state!r} and is not paused")

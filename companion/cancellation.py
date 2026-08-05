@@ -85,10 +85,33 @@ def cancel_task(
     Idempotent: cancelling an already-cancelled task returns the outcome of the
     cancellation that happened rather than doing it again or refusing. A user who
     presses stop twice has not made a mistake.
+
+    Runs under the runtime's lifecycle lock, like pausing and resuming. Every
+    defect the pause-consistency phase found had one shape — two writers on one
+    task document, separated by a check that had gone stale by the time the
+    write happened — and cancelling is a lifecycle transition with exactly that
+    structure. It reads the task, decides, and writes several times; a pause
+    landing in the middle would interleave with all of it.
     """
     if cause not in CANCELLATION_CAUSES or not cause:
         raise CompanionError(f"cancellation cause must be one of {[c for c in CANCELLATION_CAUSES if c]}")
 
+    with runtime._lifecycle_guard:
+        return _cancel_task_locked(
+            runtime, session_id, task_id,
+            cause=cause, detail=detail, partial_outputs=partial_outputs,
+        )
+
+
+def _cancel_task_locked(
+    runtime: "CompanionRuntime",
+    session_id: str,
+    task_id: str,
+    *,
+    cause: str,
+    detail: str,
+    partial_outputs: Sequence[ProducedOutput],
+) -> CancellationOutcome:
     session = runtime.session(session_id)
     task = runtime.task(session_id, task_id)
 
