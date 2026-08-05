@@ -14,6 +14,7 @@ import threading
 import time
 import unittest
 
+from companion.character.lipsync import MouthShape
 from companion.voice.audio import AudioRouter, DegradationRecord
 from companion.voice.captions import CaptionLedger, SpeechDisposition
 from companion.voice.policy import VoiceDecision, VoicePolicy, VoicePreferences, VoiceSignals
@@ -370,6 +371,68 @@ class CancellationRaceTests(unittest.TestCase):
         self.assertTrue(harness.worker.stop(timeout=BARRIER_TIMEOUT))
         self.assertIsNone(harness.worker.status()["current"])
         self.assertTrue(all(handle.finished for handle in backend.handles))
+
+    def test_the_audio_device_disappears_during_a_cancellation(self) -> None:
+        """§19: the two failures arrive together, and neither is lost.
+
+        The order is the race. The cancellation is raised first and the device is
+        taken away before the worker has finished tearing the playback down, so
+        the teardown path runs against a backend that has stopped answering.
+        The utterance must still settle as *cancelled* — not failed, because the
+        user's cancel is what ended it — and the caption must survive both.
+        """
+        gate = threading.Event()
+        entered = threading.Event()
+        backend = ScriptedBackend(playback_gate=gate, playback_entered=entered)
+        harness = WorkerHarness(backends=[backend]).start()
+        self.addCleanup(harness.close)
+        harness.worker.submit(make_request(request_id="a", text="a sentence being played"))
+        self.assertTrue(entered.wait(BARRIER_TIMEOUT))
+
+        harness.worker.cancel("a")
+        backend.set_reachable(False)
+
+        self.assertTrue(harness.worker.drain(timeout=BARRIER_TIMEOUT))
+        self.assertEqual(harness.dispositions()["a"], SpeechDisposition.CANCELLED)
+        self.assertTrue(all(handle.finished for handle in backend.handles))
+        self.assertIsNone(harness.worker.status()["current"])
+        for record in harness.router.degradations:
+            self.assertTrue(record.captions_retained)
+            self.assertFalse(record.task_affected)
+
+    def test_the_renderer_restarts_while_the_worker_is_driving_visemes(self) -> None:
+        """§19: a renderer that came back mid-utterance does not restart the mouth run.
+
+        Driven through the worker's own scheduler while an utterance is
+        genuinely in flight, rather than against a scheduler in isolation: the
+        property that matters is that the *worker* keeps its place, and a
+        scheduler tested alone cannot show that.
+        """
+        gate = threading.Event()
+        entered = threading.Event()
+        harness = WorkerHarness(
+            backends=[ScriptedBackend(playback_gate=gate, playback_entered=entered)]
+        ).start()
+        self.addCleanup(harness.close)
+        try:
+            harness.worker.submit(make_request(
+                request_id="a", text="a long enough sentence for the mouth to be moving"
+            ))
+            self.assertTrue(entered.wait(BARRIER_TIMEOUT))
+            self.assertTrue(harness.wait_for(
+                lambda: (harness.worker.status()["current"] or {}).get("visemeSource") != ""
+            ))
+            current = harness.worker._current  # noqa: SLF001 - the test owns this worker
+            self.assertIsNotNone(current)
+            before = current.scheduler.index
+            frame = current.scheduler.reset_for_renderer_restart()
+            self.assertEqual(frame.shape, MouthShape.NEUTRAL)
+            self.assertEqual(current.scheduler.index, before, "the mouth run restarted")
+            self.assertTrue(current.scheduler.active)
+        finally:
+            gate.set()
+        self.assertTrue(harness.worker.drain(timeout=BARRIER_TIMEOUT))
+        self.assertEqual(harness.dispositions()["a"], SpeechDisposition.PLAYED)
 
     def test_an_expired_request_is_never_spoken(self) -> None:
         harness = WorkerHarness().start()
