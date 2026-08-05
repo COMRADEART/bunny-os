@@ -122,6 +122,10 @@ class VisemeLinkReport:
 
     accepted: int = 0
     drawn: int = 0
+    #: Accepted frames whose shape was the one already on screen. The mouth was
+    #: correct and did not move; counted so ``drawn`` can be read as "mouth
+    #: changes" rather than "frames received".
+    held: int = 0
     rejected: dict[str, int] = field(default_factory=dict)
     distinct_shapes: set[str] = field(default_factory=set)
     requests: list[str] = field(default_factory=list)
@@ -133,6 +137,7 @@ class VisemeLinkReport:
         return {
             "accepted": self.accepted,
             "drawn": self.drawn,
+            "held": self.held,
             "rejected": dict(sorted(self.rejected.items())),
             "rejectedTotal": sum(self.rejected.values()),
             "distinctShapes": sorted(self.distinct_shapes),
@@ -183,6 +188,8 @@ class VisemeLink:
         self._cancelled: set[str] = set()
         self._revision = 0
         self._frame_revision = 0
+        self._last_admitted: tuple[str, int, int] = ("", -1, -1)
+        self._last_shape = ""
         self.report = VisemeLinkReport()
         self.last_frame: MouthFrame | None = None
         self.frames: list[MouthFrame] = []
@@ -235,6 +242,7 @@ class VisemeLink:
             self._request_id = str(payload.get("requestId") or event.request_id)
             self._sequence = -1
             self._count = 0
+            self._last_admitted = ("", -1, -1)
             self._active = True
             self._frame_revision = self._revision
             self._cancelled.discard(self._request_id)
@@ -259,10 +267,19 @@ class VisemeLink:
         source = str(payload.get("sourceMethod", ""))
 
         with self._guard:
+            if (request_id, sequence, position_ms) == self._last_admitted:
+                # The same frame twice, to the millisecond. Distinct from the
+                # scheduler repeating a sequence at a *later* position, which is
+                # it holding a shape and is the ordinary case — treating that as
+                # a duplicate counted 107 of them in one compositor run and said
+                # nothing true about any of them.
+                self._reject("duplicate", locked=True)
+                return
             reason = self._admit(request_id, sequence)
             if reason:
                 self._reject(reason, locked=True)
                 return
+            self._last_admitted = (request_id, sequence, position_ms)
             self._sequence = sequence
             self._count += 1
             revision = self._frame_revision
@@ -307,7 +324,13 @@ class VisemeLink:
         self._settle(event, "neutral-on-completion")
 
     _on_speech_failed = _on_speech_finished
-    _on_speech_degraded = _on_speech_finished
+
+    # ``speech_degraded`` is deliberately absent. It is emitted *during* an
+    # utterance — a device that went away, a provider that fell back — and the
+    # utterance carries on. Treating it as terminal marked the request complete
+    # and stopped the mouth for the rest of the speech; measured on the first
+    # compositor run as 146 frames refused with reason ``after-completion``
+    # while the audio was still playing.
 
     def _on_worker_stopped(self, event: Any) -> None:
         """A voice-worker restart returns the mouth to neutral, always.
@@ -363,8 +386,6 @@ class VisemeLink:
             return "stale-request"
         if not self._active:
             return "after-completion"
-        if sequence == self._sequence:
-            return "duplicate"
         if sequence < self._sequence:
             return "out-of-order"
         if self._count >= self._maximum:
@@ -384,6 +405,15 @@ class VisemeLink:
 
     def _emit(self, frame: MouthFrame) -> None:
         with self._guard:
+            if frame.origin == "timeline" and frame.shape == self._last_shape:
+                # The scheduler is holding a shape. Redrawing the same file
+                # forty times a second is work the compositor does not need and
+                # a "frame change" nobody could count, so this is recorded as a
+                # hold rather than drawn. Not a rejection: the timeline advanced
+                # and the mouth is correct, it simply did not move.
+                self.report.held += 1
+                return
+            self._last_shape = frame.shape
             self.last_frame = frame
             self.frames.append(frame)
             if len(self.frames) > self.history_limit:

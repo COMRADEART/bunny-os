@@ -283,8 +283,10 @@ class TheNegativeCases(unittest.TestCase):
         link = self._link()
         self.recorder.fail_after = 2
         link.on_voice_event(_timeline_event("a"))
-        for index in range(4):
-            link.on_voice_event(_viseme("a", index, "open-small", index * 40))
+        # Distinct shapes, because an unchanged shape is held rather than drawn
+        # and a renderer that is never called cannot crash.
+        for index, shape in enumerate(("open-small", "open-wide", "closed", "rounded")):
+            link.on_voice_event(_viseme("a", index, shape, index * 40))
         self.assertGreater(link.report.renderer_failures, 0)
         self.assertGreater(link.report.rejected.get("renderer-failed", 0), 0)
 

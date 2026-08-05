@@ -64,6 +64,16 @@ CAPTION = (
 )
 
 
+def _median(values: list[float]) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return round(ordered[middle], 3)
+    return round((ordered[middle - 1] + ordered[middle]) / 2, 3)
+
+
 def display_environment() -> dict[str, Any]:
     """What display this is, named honestly."""
     wayland = os.environ.get("WAYLAND_DISPLAY")
@@ -329,6 +339,10 @@ class Probe:
         self.picture.set_filename(str(path))
         self.drawn.append({
             "atMs": self.now_ms(),
+            # When the link accepted it, on the worker's thread. The difference
+            # between the two is what the main loop added, and it is the only
+            # part of the delay this probe is in a position to measure.
+            "emittedAtMs": round((frame.at_monotonic - self.started) * 1000, 3),
             "requestId": frame.request_id,
             "sequence": frame.sequence,
             "shape": frame.shape,
@@ -390,10 +404,31 @@ class Probe:
         timeline_frames = [item for item in frames if item["origin"] == "timeline"]
 
         audio_started = self._event_ms("audio_started", request.request_id)
-        first_viseme = timeline_frames[0]["atMs"] if timeline_frames else None
+        first_viseme = self._event_ms("viseme", request.request_id)
         first_drawn = frames[0]["atMs"] if frames else None
         neutral = [item for item in frames if item["shape"] == "neutral"]
-        drift = [abs(item["driftMs"]) for item in timeline_frames]
+        # Three different things, all called "drift" by somebody.
+        #
+        # `scheduler` is the worker's own number, and on the file-playback path
+        # it is structurally zero: the worker has no audio clock independent of
+        # the playback handle, so it passes the same position as both arguments.
+        # Reported with that stated rather than presented as a measurement.
+        #
+        # `presentation` is the real one: how far the mouth frame that was drawn
+        # lags the point in the audio it belongs to, measured from the audio
+        # start on this machine's clock. It includes the synthesis-to-draw path,
+        # the main loop and the compositor.
+        #
+        # `dispatch` is the part of that this probe added by marshalling onto
+        # the main loop.
+        scheduler_drift = [abs(item["driftMs"]) for item in timeline_frames]
+        presentation_drift = [
+            round(item["atMs"] - audio_started - item["positionMs"], 3)
+            for item in timeline_frames
+        ] if audio_started is not None else []
+        dispatch_latency = [
+            round(item["atMs"] - item["emittedAtMs"], 3) for item in timeline_frames
+        ]
 
         self.report["checks"]["fullUtterance"] = {
             "requestId": request.request_id,
@@ -407,21 +442,45 @@ class Probe:
             "endedNeutral": bool(frames) and frames[-1]["shape"] == "neutral",
             "sampleCount": self._sample_count(request.request_id),
             "timingMethod": self._viseme_source(request.request_id),
+            "held": self.link.report.held,
+            # Bounded, and the point of the whole probe: the actual sequence of
+            # files handed to Gtk.Picture, in order, with when.
+            "frameTrace": [
+                {
+                    "atMs": item["atMs"], "shape": item["shape"],
+                    "positionMs": item["positionMs"], "asset": Path(item["path"]).name,
+                }
+                for item in frames[:80]
+            ],
         }
         self.report["measurements"]["fullUtterance"] = {
             "audioStartedAtMs": audio_started,
             "firstVisemeAtMs": first_viseme,
             "firstRenderedMouthFrameAtMs": first_drawn,
             "finalNeutralAtMs": neutral[-1]["atMs"] if neutral else None,
-            "maximumObservedDriftMs": max(drift) if drift else 0,
-            "framesWhileAudioActive": len([
+            "mouthChangesWhileAudioActive": len([
                 item for item in timeline_frames
                 if audio_started is not None and item["atMs"] >= audio_started
             ]),
+            "maximumObservedDriftMs": max(
+                (abs(item) for item in presentation_drift), default=None,
+            ),
+            "medianObservedDriftMs": _median(presentation_drift),
+            "maximumDispatchLatencyMs": max(dispatch_latency, default=None),
+            "schedulerReportedDriftMs": max(scheduler_drift) if scheduler_drift else 0,
+            "schedulerDriftNote": (
+                "structurally zero on the file-playback path: a one-shot player exposes "
+                "no clock, so the worker passes the playback handle's position as both "
+                "the timeline position and the audio clock. It is not a measurement and "
+                "is reported here so that nobody reads the zero as one."
+            ),
             "note": (
                 "Timing method is MEASURED AMPLITUDE over the synthesiser's own samples "
                 "in 40 ms windows. No phoneme boundary was measured anywhere in this "
-                "build, and no claim of phoneme-accurate lip sync is made."
+                "build, and no claim of phoneme-accurate lip sync is made. "
+                "maximumObservedDriftMs is the presentation drift: how far a drawn mouth "
+                "frame sat from the point in the audio it belongs to, from the audio "
+                "start on this machine's clock."
             ),
         }
 
@@ -433,8 +492,8 @@ class Probe:
             self.fail("a mouth frame carried a request id the audio did not")
         if not self.report["checks"]["fullUtterance"]["endedNeutral"]:
             self.fail("the mouth did not return to neutral when the utterance completed")
-        if self.report["measurements"]["fullUtterance"]["framesWhileAudioActive"] < 2:
-            self.fail("no mouth frames were drawn while the audio was active")
+        if self.report["measurements"]["fullUtterance"]["mouthChangesWhileAudioActive"] < 2:
+            self.fail("the mouth did not change while the audio was active")
         if self.report["checks"]["fullUtterance"]["revisions"] != [1]:
             self.fail("a mouth frame was drawn against a revision the renderer was not showing")
         self._assert_caption(request, "fullUtterance")
@@ -506,6 +565,13 @@ class Probe:
             "lastShape": self.drawn[-1]["shape"] if self.drawn else None,
             "origin": self.drawn[-1]["origin"] if self.drawn else None,
             "workerRunning": self.voice.worker.running,
+            "note": (
+                "restart_worker cancels the utterance in flight before it stops the "
+                "worker, so the neutral usually arrives by the cancellation path rather "
+                "than the worker-stopped one. Both end neutral, which is the property; "
+                "the worker-stopped path is covered directly in "
+                "tests/companion/test_voice_renderer_link.py"
+            ),
         }
         if not self.drawn or self.drawn[-1]["shape"] != "neutral":
             self.fail("a voice-worker restart left the mouth mid-syllable")
