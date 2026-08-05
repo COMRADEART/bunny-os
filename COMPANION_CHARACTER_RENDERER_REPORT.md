@@ -317,6 +317,42 @@ Confirming that needs a Linux run over the real Unix socket, which is also where
 the memory figures have to be taken. Until then this is an open item, listed in
 §24.
 
+> **Correction — 2026-08-05 UTC, `feature/companion-linux-validation`.**
+>
+> The paragraph above is left standing because it is the record of what was
+> believed, and both of the mechanisms it calls "most likely" were wrong. The
+> flake is diagnosed. It was two defects, and neither was a property of running
+> without `AF_UNIX`:
+>
+> 1. **The store's writer had no retry.** `_read_bytes_stable` already
+>    documented that Windows refuses a rename over a path a reader holds open,
+>    and retried — but only on the reading side. `os.replace` raised
+>    `[WinError 5]`, the store turned it into a `StoreError`,
+>    `CompanionService._serve_work` caught that as an ordinary refusal, and the
+>    task froze in `waiting_for_executor` with nothing running, nothing queued
+>    and no record anywhere. Captured verbatim once the worker was made to keep
+>    what it swallowed. Windows-only: on POSIX the rename succeeds.
+> 2. **An approval was visible before it was answerable.** The request reaches
+>    the store — and so the Approval Centre — before the single worker registers
+>    its consent waiter. An answer arriving in that window was dropped and a
+>    cancellation released nothing.
+>
+> The two ruled-out hypotheses were correctly ruled out. Ephemeral-port pressure
+> was disproved directly by a controlled experiment: 20 slices over `AF_UNIX`
+> and 20 over a forced loopback transport, same machine and same workload, all
+> 40 passing with a peak `TIME_WAIT` of zero. Residual threads were disproved by
+> the per-iteration inventory: **every** failure occurred with a thread and
+> descriptor delta of exactly zero, which is the signature of a race and not of
+> accumulation.
+>
+> The Linux run the paragraph asked for was done and is what made the shape
+> clear — not because it reproduced the failure, but because it did not. Fifty-two
+> consecutive Linux runs passed while one Windows run in three failed, which is
+> what pointed at a platform-specific filesystem behaviour rather than at the
+> companion's own logic.
+>
+> Full account: `COMPANION_LINUX_VALIDATION_REPORT.md`.
+
 ## 21. Installed vertical-slice result
 
 `bunny-os companion run-character-slice` — **24/24 passed, 1 `NOT_RUN`.**
@@ -416,11 +452,18 @@ Containerfile agree.
 10. Sleeping, greeting, waiting-for-user, moving and unavailable are character
     states with no canonical presentation phase that produces them, so they are
     reachable through the package and the API but not through a running task.
-11. **The full companion suite is flaky on this host, roughly one run in three,
-    in the service-driven tests only.** Undiagnosed; see §20. It does not
+11. ~~**The full companion suite is flaky on this host, roughly one run in
+    three, in the service-driven tests only.** Undiagnosed; see §20. It does not
     reproduce in isolation and has never affected the character tests. Needs a
     Linux run over the real Unix socket to settle, which the memory
-    measurements need anyway.
+    measurements need anyway.~~
+    **Resolved 2026-08-05 UTC on `feature/companion-linux-validation`.** Two
+    defects: an unretried `os.replace` in the store's writer, which on Windows
+    is refused while a reader holds the path open and froze the task silently;
+    and an approval that became visible to clients before the worker was able
+    to receive an answer for it. Both are fixed with regression tests that
+    construct the interleaving rather than wait for it. The struck-through text
+    is kept because the correction is part of the record; see §20.
 
 ## 25. Unverified assumptions
 

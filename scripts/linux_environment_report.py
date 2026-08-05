@@ -534,7 +534,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     arguments = parser.parse_args(argv)
 
-    if not arguments.require_installed:
+    if arguments.require_installed:
+        # Exactly what /usr/libexec/bunny-companion-service does, and nothing
+        # else. Adding the source tree as well — which the development path
+        # below does — would make the gate unable to fail: the import would
+        # succeed from the checkout and the provenance check would then be
+        # reporting on a fallback the installed service never uses.
+        if INSTALLED_ROOT.is_dir() and str(INSTALLED_ROOT) not in sys.path:
+            sys.path.insert(0, str(INSTALLED_ROOT))
+    else:
         # Development runs are allowed to import from the checkout, and say so.
         for candidate in (INSTALLED_ROOT, Path(__file__).resolve().parents[1]):
             if candidate.is_dir() and str(candidate) not in sys.path:

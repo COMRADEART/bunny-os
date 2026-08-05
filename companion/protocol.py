@@ -768,10 +768,18 @@ class CompanionServer:
         return self._thread
 
     def close(self) -> None:
-        try:
-            self._server.shutdown()
-        except Exception:  # pragma: no cover - shutdown before serve_forever
-            pass
+        # Only shut down a loop that is running. ``socketserver.shutdown`` waits
+        # for ``serve_forever`` to acknowledge, and when nothing is serving that
+        # acknowledgement never comes — so this blocked for ever rather than
+        # raising. The previous guard caught an exception that is never thrown
+        # and left the real hazard in place: a runtime that fails between
+        # binding and serving, and is then closed by a ``finally``, hung on the
+        # way out instead of releasing its socket.
+        if self._thread is not None:
+            try:
+                self._server.shutdown()
+            except OSError:  # pragma: no cover - the loop is already gone
+                pass
         self._server.server_close()
         if self._thread is not None:
             self._thread.join(timeout=5.0)
