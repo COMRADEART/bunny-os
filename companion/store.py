@@ -375,7 +375,7 @@ def _atomic_write_json(path: Path, document: Mapping[str, Any]) -> None:
             os.chmod(temporary, 0o600)
         except OSError:
             pass
-        os.replace(temporary, path)
+        _replace_stable(temporary, path)
     except OSError as exc:
         try:
             temporary.unlink()
@@ -424,6 +424,40 @@ def _read_bytes_stable(path: Path) -> bytes:
 
 def _read_text_stable(path: Path) -> str:
     return _read_bytes_stable(path).decode("utf-8")
+
+
+def _replace_stable(temporary: Path, path: Path) -> None:
+    """Rename over a destination a reader may have open.
+
+    The mirror image of :func:`_read_bytes_stable`, and it was missing. That
+    function documents the Windows behaviour precisely — a rename over an
+    existing name meets a reader that has the path open and is refused with
+    EACCES — but it only defended the *reader*. The writer met the same window
+    from the other side and had no retry at all.
+
+    The consequence was not a bad read; it was a frozen task. ``os.replace``
+    raised, the store turned it into a :class:`StoreError`, and
+    ``CompanionService._serve_work`` caught it as an ordinary refusal and moved
+    on, leaving the task in whatever state it had last persisted — most often
+    ``waiting_for_executor``, with nothing running, nothing queued and no
+    explanation anywhere. That is the intermittent suite failure, and it is
+    Windows-only: on POSIX a rename over an open file simply succeeds, which is
+    why 52 consecutive Linux runs never reproduced it while one Windows run in
+    three did.
+
+    Bunny OS runs on Linux, where this loop retries nothing. It exists so that
+    the development host stops manufacturing failures that the product does not
+    have.
+    """
+    last: OSError | None = None
+    for attempt in range(_READ_ATTEMPTS):
+        try:
+            os.replace(temporary, path)
+            return
+        except OSError as exc:
+            last = exc
+            time.sleep(_READ_BACKOFF_SECONDS * (attempt + 1))
+    raise last if last is not None else OSError(f"{path} could not be replaced")
 
 
 def _fsync_directory(directory: Path) -> None:

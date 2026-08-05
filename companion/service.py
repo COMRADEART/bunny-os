@@ -37,18 +37,19 @@ a result, because none of those were ever attached to a socket.
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass, field
 import os
 from pathlib import Path
 import queue
 import threading
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from capability.apply.approval import ApprovalRequest
 
 from .approvals import CompanionApprovalStore, ConsentSource
 from .cancellation import cancel_task
-from .clock import Clock, SystemClock
+from .clock import Clock, SystemClock, iso8601
 from .errors import CompanionError, StoreError
 from .events import TaskEvent
 from .presentation import (
@@ -97,6 +98,20 @@ class _Waiter:
     decision: str = ""
 
 
+@dataclass(frozen=True)
+class _HeldAnswer:
+    """A decision given before the task asked for it.
+
+    It carries the question's expiry and owner so that it can be discarded on
+    exactly the same terms as a waiting task would have been: when the request
+    lapses, when the task is cancelled or paused, and when the service stops.
+    """
+
+    decision: str
+    expires_at_monotonic: float
+    service_id: str
+
+
 class InteractiveConsent(ConsentSource):
     """A consent source that waits for a person, and gives up safely.
 
@@ -113,13 +128,56 @@ class InteractiveConsent(ConsentSource):
         self.maximum_wait_seconds = maximum_wait_seconds
         self._guard = threading.Lock()
         self._waiting: dict[str, _Waiter] = {}
+        #: Answers that arrived before the task got round to asking.
+        #:
+        #: A question becomes visible to the Approval Centre when the runtime
+        #: writes it to the store, which happens *before* the worker calls
+        #: :meth:`answer` and registers a waiter. A person — or a test — who
+        #: answers inside that window used to find nobody listening, and the
+        #: decision was dropped: the worker then waited out its entire consent
+        #: budget and the task stalled for as long as that budget allowed,
+        #: despite the answer having already been given. Holding the decision
+        #: here closes the window from the other side.
+        #:
+        #: Keyed by request id. Bounded by the number of questions that are
+        #: live and unanswered, because nothing reaches it that has not already
+        #: been checked against a live, unexpired, unanswered request.
+        self._answered_early: dict[str, _HeldAnswer] = {}
+        #: Questions belonging to a task that was cancelled or paused before any
+        #: worker asked them. Refused on arrival rather than waited on. Valued
+        #: by the question's expiry for the same reason as the held answers: a
+        #: long-running service must not accumulate one entry per cancellation
+        #: for the rest of its life.
+        self._refuse_on_arrival: dict[str, float] = {}
 
     # -- the ConsentSource interface --------------------------------------
 
     def answer(self, request: ApprovalRequest, *, now: float) -> str | None:
         waiter = _Waiter(request=request)
         with self._guard:
-            self._waiting[request.request_id] = waiter
+            # Claiming an early answer and registering the waiter happen under
+            # one acquisition of the lock. Split across two, a decision landing
+            # between them would be recorded as early, found by nobody, and
+            # dropped — which is the defect this exists to fix, reintroduced one
+            # level down.
+            self._discard_lapsed(now)
+            if request.request_id in self._refuse_on_arrival:
+                # The task was cancelled or paused while this question was
+                # outstanding. Refusing here rather than waiting is what keeps a
+                # cancelled task from holding a worker.
+                self._refuse_on_arrival.pop(request.request_id, None)
+                self._answered_early.pop(request.request_id, None)
+                return None
+            early = self._answered_early.pop(request.request_id, None)
+            if early is None:
+                self._waiting[request.request_id] = waiter
+        if early is not None:
+            # An answer held here is still subject to the question's own expiry,
+            # exactly as a waiting one is. Granting past it would honour consent
+            # given for a question that had already lapsed.
+            if early.expires_at_monotonic > 0 and now >= early.expires_at_monotonic:
+                return None
+            return early.decision
         try:
             remaining = self.maximum_wait_seconds
             if request.expires_at_monotonic > 0:
@@ -137,26 +195,94 @@ class InteractiveConsent(ConsentSource):
 
     # -- the Approval Centre side -----------------------------------------
 
-    def resolve(self, request_id: str, decision: str) -> bool:
-        """Deliver an answer. Returns whether anybody was waiting for it."""
+    def resolve(
+        self,
+        request_id: str,
+        decision: str,
+        *,
+        expires_at_monotonic: float = 0.0,
+        service_id: str = "",
+        hold_for_pending_ask: bool = False,
+    ) -> str:
+        """Deliver an answer, and say what became of it.
+
+        Returns ``"released"`` when a waiting task was woken, ``"held"`` when
+        nobody was waiting yet and the answer has been kept for the task that is
+        about to ask, and ``"unclaimed"`` when nobody was waiting and the answer
+        was not kept.
+
+        ``hold_for_pending_ask`` is what separates the second case from the
+        third, and only a caller that has already established the question is
+        live may set it. :meth:`CompanionGateway.resolve_approval` does exactly
+        that before it calls here: the request exists, every binding field
+        matches what the person was shown, it has not expired, and it has not
+        already been answered. Holding a decision that has passed those checks
+        cannot authorise anything that answering a moment later would not have
+        authorised anyway; holding one that had not would be a way to pre-approve
+        a question nobody has asked yet.
+        """
         if decision not in ("granted", "denied"):
             raise ValueError("an approval decision is 'granted' or 'denied'")
         with self._guard:
             waiter = self._waiting.get(request_id)
             if waiter is None:
-                return False
+                if not hold_for_pending_ask:
+                    return "unclaimed"
+                self._answered_early[request_id] = _HeldAnswer(
+                    decision=decision,
+                    expires_at_monotonic=expires_at_monotonic,
+                    service_id=service_id,
+                )
+                return "held"
             waiter.decision = decision
         waiter.gate.set()
-        return True
+        return "released"
 
-    def abandon(self, task_id: str) -> tuple[str, ...]:
+    def abandon(
+        self,
+        task_id: str,
+        *,
+        request_ids: Sequence[str] | Sequence[tuple[str, float]] = (),
+    ) -> tuple[str, ...]:
         """Stop waiting on every question belonging to one task.
 
         Used by cancellation and by pausing. The waiters are released with *no*
         decision, so the safe default applies and nothing is authorised by a
         task ending or being set aside.
+
+        ``request_ids`` names questions that are outstanding but that no worker
+        has reached yet, and it closes the mirror image of the early-answer
+        window. A task becomes visibly "waiting for approval" when its request
+        is written to the store, which is before the worker calls :meth:`answer`.
+        Cancelling in that window released nothing, and the worker then parked on
+        a question belonging to a task that had already been cancelled — held for
+        the whole consent budget, which is precisely what cancelling is supposed
+        to prevent. Naming the outstanding requests here refuses them on arrival
+        instead.
+
+        Passing request ids rather than remembering the task is deliberate. A
+        paused task resumes and asks again, and it asks with *new* request ids;
+        refusing by task would refuse those too, and a resumed task would be
+        unable to obtain consent for the rest of the service's life.
         """
-        return self._release(lambda waiter: waiter.request.service_id == f"companion.task.{task_id}")
+        service_id = f"companion.task.{task_id}"
+        # Accepts bare ids as well as (id, expiry) pairs, so a caller that has
+        # no expiry to hand is not forced to invent one.
+        refusals = {
+            (item[0], item[1]) if isinstance(item, tuple) else (item, 0.0)
+            for item in request_ids
+        }
+        with self._guard:
+            self._refuse_on_arrival.update(refusals)
+        released = self._release(
+            lambda waiter: waiter.request.service_id == service_id,
+            held=lambda answer: answer.service_id == service_id,
+        )
+        # Both halves are reported: a question whose waiter was woken and one
+        # that will be refused the moment it is asked have the same consequence
+        # for the person who cancelled, and a caller that saw only the first
+        # would think nothing had been stopped.
+        return tuple(sorted(set(released) | {request_id for request_id, _expiry in refusals}))
 
     def abandon_all(self) -> tuple[str, ...]:
         """Release every waiter. Used when the service itself is stopping.
@@ -166,22 +292,61 @@ class InteractiveConsent(ConsentSource):
         parked on an unanswered question is a worker that cannot be joined. It
         releases with no decision, so stopping the service authorises nothing.
         """
-        return self._release(lambda _waiter: True)
+        with self._guard:
+            self._refuse_on_arrival.clear()
+        return self._release(lambda _waiter: True, held=lambda _answer: True)
 
-    def _release(self, matches) -> tuple[str, ...]:
+    def _release(self, matches, *, held) -> tuple[str, ...]:
+        """Release matching waiters, and drop the held answers alongside them.
+
+        Both halves matter. A waiter that is not released holds a worker; a held
+        answer that is not dropped would be handed to a question asked after the
+        task it belonged to was cancelled, which is consent surviving the thing
+        it was given for.
+        """
         with self._guard:
             waiters = [
                 (request_id, waiter)
                 for request_id, waiter in self._waiting.items()
                 if matches(waiter)
             ]
+            for request_id in [
+                request_id
+                for request_id, answer in self._answered_early.items()
+                if held(answer)
+            ]:
+                self._answered_early.pop(request_id, None)
         for _request_id, waiter in waiters:
             waiter.gate.set()
         return tuple(request_id for request_id, _waiter in waiters)
 
+    def _discard_lapsed(self, now: float) -> None:
+        """Drop anything whose question has expired. Caller holds the lock.
+
+        Both maps are swept together: an expired question cannot be answered and
+        cannot be refused, because there is nothing left to answer or refuse.
+        """
+        for request_id in [
+            request_id
+            for request_id, answer in self._answered_early.items()
+            if answer.expires_at_monotonic > 0 and now >= answer.expires_at_monotonic
+        ]:
+            self._answered_early.pop(request_id, None)
+        for request_id in [
+            request_id
+            for request_id, expires_at in self._refuse_on_arrival.items()
+            if expires_at > 0 and now >= expires_at
+        ]:
+            self._refuse_on_arrival.pop(request_id, None)
+
     def waiting_for(self) -> tuple[ApprovalRequest, ...]:
         with self._guard:
             return tuple(self._waiting[key].request for key in sorted(self._waiting))
+
+    def held_answers(self) -> tuple[str, ...]:
+        """Request ids with an answer waiting for the question. For diagnostics."""
+        with self._guard:
+            return tuple(sorted(self._answered_early))
 
 
 # --------------------------------------------------------------------------- #
@@ -218,6 +383,8 @@ class CompanionGateway:
         self._work: "queue.Queue[str | None]" = queue.Queue()
         self._running: set[str] = set()
         self._queued: set[str] = set()
+        #: The last few faults the worker swallowed. See :meth:`_record_fault`.
+        self._faults: "deque[dict[str, Any]]" = deque(maxlen=32)
         self._guard = threading.Lock()
         self._worker: threading.Thread | None = None
         self._stopping = threading.Event()
@@ -260,21 +427,47 @@ class CompanionGateway:
             try:
                 session_id, task = self.runtime.find_task(item)
                 self.runtime.run_task(session_id, task.task_id)
-            except CompanionError:
+            except CompanionError as exc:
                 # The refusal is already in the event stream — the runtime
                 # writes one before it raises. Swallowed here because a worker
                 # that died on a blocked task would take every later task with
                 # it, and the record already says what happened.
-                pass
-            except Exception:
+                self._record_fault(item, exc, classified=True)
+            except Exception as exc:  # noqa: BLE001 - the fault is data
                 # Third-party code — an executor, a reviewer, a tool — faulted
                 # in a way the runtime did not classify. The worker survives;
                 # the task's own record carries whatever the runtime managed to
                 # write before it unwound.
-                pass
+                self._record_fault(item, exc, classified=False)
             finally:
                 with self._guard:
                     self._running.discard(item)
+
+    def _record_fault(self, task_id: str, error: BaseException, *, classified: bool) -> None:
+        """Keep what the worker swallowed, so that it can be asked about later.
+
+        The worker must survive a task that faults, or one bad task would take
+        every later one with it. But surviving silently is how a task comes to
+        sit in ``waiting_for_executor`` with nothing running, nothing queued and
+        no explanation anywhere — which is exactly the shape the intermittent
+        suite failure presented, and the reason it went two phases without a
+        diagnosis. Swallowing the exception and discarding the evidence are
+        separable, and only the first one is necessary.
+
+        Bounded, because an unbounded fault log on a long-running service is a
+        memory leak with a helpful name.
+        """
+        with self._guard:
+            self._faults.append({
+                "taskId": task_id,
+                "error": f"{type(error).__name__}: {error}",
+                "classified": classified,
+                "at": iso8601(self.clock.wall()),
+            })
+
+    def recent_faults(self) -> list[dict[str, Any]]:
+        with self._guard:
+            return list(self._faults)
 
     def _schedule(self, task_id: str) -> str:
         with self._guard:
@@ -331,6 +524,9 @@ class CompanionGateway:
             "runningTasks": running,
             "queuedTasks": queued,
             "awaitingApproval": [item.request_id for item in self.consent.waiting_for()],
+            # A task that stopped without reaching a terminal state left its
+            # reason here, and nowhere else.
+            "recentWorkerFaults": self.recent_faults(),
             "audioOutputAvailable": self.audio_output_available,
             "displayAvailable": self.display_available,
             # Stated rather than implied. A reader should not have to infer from
@@ -534,12 +730,23 @@ class CompanionGateway:
                 f"{requestId!r} was already {existing.decision}; an approval is answered once"
             )
 
-        delivered = self.consent.resolve(requestId, decision)
-        if not delivered:
-            # Nobody is waiting. The decision is recorded anyway — it is the
-            # user's answer and belongs in the record — but the task it was
-            # about has already moved on, and saying so is better than letting
-            # the user believe they unblocked something.
+        # Every check above has established that this question is live: it
+        # exists, it is about what the person was shown, it has not expired and
+        # it has not been answered. That is precisely the licence the consent
+        # source needs to hold the answer for a task that is about to ask for
+        # it rather than discard it.
+        outcome = self.consent.resolve(
+            requestId,
+            decision,
+            expires_at_monotonic=request.expires_at_monotonic,
+            service_id=request.service_id,
+            hold_for_pending_ask=True,
+        )
+        if outcome == "unclaimed":
+            # Nobody is waiting and nobody will. The decision is recorded anyway
+            # — it is the user's answer and belongs in the record — but the task
+            # it was about has already moved on, and saying so is better than
+            # letting the user believe they unblocked something.
             if decision == "granted":
                 self.runtime.approvals.grant(
                     requestId, plan_id=planId, now=now, responder="user",
@@ -553,11 +760,16 @@ class CompanionGateway:
         return {
             "requestId": requestId,
             "decision": decision,
-            "delivered": delivered,
-            "detail": (
-                "the waiting task was released with your answer" if delivered
-                else "your answer was recorded; the task was no longer waiting for it"
-            ),
+            # "held" is a delivery. The answer reaches the task that asks for
+            # it, and the only difference the person could observe is that it
+            # arrived before the question rather than after.
+            "delivered": outcome in ("released", "held"),
+            "outcome": outcome,
+            "detail": {
+                "released": "the waiting task was released with your answer",
+                "held": "your answer is recorded and the task will take it as soon as it asks",
+                "unclaimed": "your answer was recorded; the task was no longer waiting for it",
+            }[outcome],
         }
 
     def cancel_task(self, *, taskId: str, sessionId: str | None, cause: str, detail: str) -> dict[str, Any]:
@@ -566,7 +778,7 @@ class CompanionGateway:
         # consent call; cancelling without waking it would leave the worker held
         # until the request expired, and the user watching a "cancelled" task
         # that had not stopped.
-        released = self.consent.abandon(taskId)
+        released = self.consent.abandon(taskId, request_ids=self._outstanding_requests(taskId))
         outcome = cancel_task(self.runtime, session_id, task.task_id, cause=cause, detail=detail)
         return {
             "sessionId": session_id,
@@ -582,8 +794,9 @@ class CompanionGateway:
         # phase boundary, so the pause has to be on disk before the thing that
         # will look for it is woken. Released with no decision, so pausing a
         # task that was waiting for consent authorises nothing.
+        outstanding = self._outstanding_requests(taskId)
         task = self.runtime.pause_task(session_id, taskId)
-        released = self.consent.abandon(taskId)
+        released = self.consent.abandon(taskId, request_ids=outstanding)
         return {
             "sessionId": session_id,
             "task": task.view(PRESENTATION_AUDIENCE),
@@ -597,6 +810,21 @@ class CompanionGateway:
         return {"sessionId": session_id, "task": task.view(PRESENTATION_AUDIENCE), "scheduled": "queued"}
 
     # -- internals ---------------------------------------------------------
+
+    def _outstanding_requests(self, task_id: str) -> tuple[tuple[str, float], ...]:
+        """Unanswered questions belonging to one task, whether or not asked yet.
+
+        Taken from the approval store rather than from the consent source: the
+        store is where a request appears the moment it exists, which is the whole
+        point — the ones that matter here are exactly those that are visible to
+        the person and not yet reached by a worker.
+        """
+        service_id = f"companion.task.{task_id}"
+        return tuple(
+            (request.request_id, request.expires_at_monotonic)
+            for request in self.runtime.approvals.pending()
+            if request.service_id == service_id
+        )
 
     def _locate(self, task_id: str, session_id: str | None):
         if session_id:
@@ -667,6 +895,10 @@ class ServiceOptions:
     audio_output_available: bool | None = None
     display_available: bool | None = None
     require_unix: bool | None = None
+    #: Force the developer TCP transport on a platform that has AF_UNIX.
+    #: A diagnostic for comparing the two transports under one workload; see
+    #: companion.protocol.CompanionServer. Never set in production.
+    prefer_loopback: bool = False
     #: Run a recovery pass at start-up. On by default: a runtime that starts
     #: without deciding about the tasks it was in the middle of is a runtime
     #: that will make the decision later, implicitly, by running one of them.
@@ -705,7 +937,9 @@ class CompanionService:
             clock=self.runtime.clock,
         )
         self.server = CompanionServer(
-            self.gateway, options.endpoint, require_unix=options.require_unix
+            self.gateway, options.endpoint,
+            require_unix=options.require_unix,
+            prefer_loopback=options.prefer_loopback,
         )
         self.gateway.endpoint_description = self.server.describe()
 

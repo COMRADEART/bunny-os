@@ -166,7 +166,12 @@ class ServiceTestCase(unittest.TestCase):
             self.fail(
                 f"{task_id} did not finish within {_WAIT}s: state={task['state']!r}, "
                 f"progress={task.get('progress')}, running={health.get('runningTasks')}, "
-                f"queued={health.get('queuedTasks')}, awaiting={health.get('awaitingApproval')}"
+                f"queued={health.get('queuedTasks')}, awaiting={health.get('awaitingApproval')}, "
+                # Without this the interesting case — the worker took the task,
+                # faulted, swallowed the fault to stay alive, and left the task
+                # in a non-terminal state — reads as a timeout with an empty
+                # queue and no cause anywhere.
+                f"workerFaults={health.get('recentWorkerFaults')}"
             )
         return task_id
 

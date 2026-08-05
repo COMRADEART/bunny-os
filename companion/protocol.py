@@ -619,9 +619,28 @@ class CompanionServer:
         endpoint: Path | None = None,
         *,
         require_unix: bool | None = None,
+        prefer_loopback: bool = False,
     ) -> None:
+        """``prefer_loopback`` is a diagnostic, and only a diagnostic.
+
+        It forces the developer TCP transport on a platform that has ``AF_UNIX``,
+        so the two transports can be compared on one machine under one workload:
+        identical code, identical tests, only the transport differs. It was
+        added to test the hypothesis that the intermittent suite failure came
+        from the loopback fallback. On Linux the experiment refuted that
+        hypothesis rather than confirming it — 20 slices over ``AF_UNIX`` and 20
+        over forced loopback both passed, with a peak ``TIME_WAIT`` count of
+        zero. The argument stays because a refuting experiment is worth being
+        able to repeat, and because it is the only way to reach the fallback
+        transport on a machine that has ``AF_UNIX``.
+
+        It is a constructor argument and not an environment variable on purpose:
+        nothing outside a test or a stress harness can reach it, and
+        :class:`companion.service.CompanionService` only passes it when a
+        caller has explicitly set it in :class:`~companion.service.ServiceOptions`.
+        """
         self.endpoint = Path(endpoint or default_endpoint_path())
-        self.unix = hasattr(socket, "AF_UNIX")
+        self.unix = hasattr(socket, "AF_UNIX") and not prefer_loopback
         if require_unix is None:
             require_unix = os.environ.get("BUNNY_COMPANION_REQUIRE_UNIX") == "1"
         if require_unix and not self.unix:
