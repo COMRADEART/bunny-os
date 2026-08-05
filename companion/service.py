@@ -1244,21 +1244,38 @@ class CompanionService:
         if display is None:
             display = bool(os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY"))
         self.voice = self._build_voice() if options.voice_enabled else None
-        self.gateway = CompanionGateway(
-            self.runtime,
-            consent=self.consent,
-            preferences=options.preferences,
-            audio_output_available=bool(audio),
-            display_available=bool(display),
-            clock=self.runtime.clock,
-            voice=self.voice,
-        )
-        self.server = CompanionServer(
-            self.gateway, options.endpoint,
-            require_unix=options.require_unix,
-            prefer_loopback=options.prefer_loopback,
-        )
-        self.gateway.endpoint_description = self.server.describe()
+        # Everything after the voice runtime is built runs inside this, because
+        # the voice runtime has a *started thread* in it and construction can
+        # still fail: `CompanionServer` raises `DuplicateRuntime` when a second
+        # service is pointed at a live endpoint, which is a supported and tested
+        # refusal. Before there was a voice runtime a half-built service leaked
+        # nothing; now it would strand a worker thread that nobody holds a
+        # reference to and nothing can ever stop.
+        #
+        # Found by §22's thread-delta column: fifty complete suite runs
+        # accumulated a hundred `companion-voice` threads, two per run, and the
+        # tests themselves all passed.
+        try:
+            self.gateway = CompanionGateway(
+                self.runtime,
+                consent=self.consent,
+                preferences=options.preferences,
+                audio_output_available=bool(audio),
+                display_available=bool(display),
+                clock=self.runtime.clock,
+                voice=self.voice,
+            )
+            self.server = CompanionServer(
+                self.gateway, options.endpoint,
+                require_unix=options.require_unix,
+                prefer_loopback=options.prefer_loopback,
+            )
+            self.gateway.endpoint_description = self.server.describe()
+        except BaseException:
+            if self.voice is not None:
+                self.voice.close()
+                self.voice = None
+            raise
 
     def _build_voice(self) -> "VoiceService | None":
         """Construct the voice runtime, or carry on without one.

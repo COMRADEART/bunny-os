@@ -249,6 +249,66 @@ class ServiceBoundaryTests(unittest.TestCase):
         self.assertIn("isolated worker", described["mode"])
 
 
+class ServiceConstructionTests(unittest.TestCase):
+    """A construction that fails must not leave a worker thread behind."""
+
+    def _voice_threads(self) -> int:
+        return sum(1 for item in threading.enumerate() if item.name == "companion-voice")
+
+    def test_a_failed_service_construction_releases_its_voice_runtime(self) -> None:
+        """§6: no leaked thread — including when the service never finished being built.
+
+        `CompanionService.__init__` builds the voice runtime, which starts a
+        thread, and only then binds the endpoint — where a second service on a
+        live endpoint is refused with `DuplicateRuntime`. The half-built service
+        is discarded by the caller, so if the constructor does not release the
+        worker itself nothing ever can: no reference to it survives.
+
+        Found by the §22 thread-delta column rather than by any assertion. Fifty
+        complete suite runs accumulated a hundred `companion-voice` threads —
+        two per run — while every test in them passed.
+        """
+        from companion.protocol import DuplicateRuntime
+        from companion.service import CompanionService, ServiceOptions
+
+        root = Path(tempfile.mkdtemp())
+        endpoint = root / "runtime.sock"
+        first = CompanionService(ServiceOptions(
+            root=root, endpoint=endpoint, machine="laptop",
+        )).start()
+        self.addCleanup(first.close)
+
+        before = self._voice_threads()
+        with self.assertRaises(DuplicateRuntime):
+            CompanionService(ServiceOptions(
+                root=root, endpoint=endpoint, machine="laptop",
+            ))
+        deadline = time.monotonic() + 10.0
+        while time.monotonic() < deadline and self._voice_threads() > before:
+            time.sleep(0.02)
+        self.assertEqual(
+            self._voice_threads(), before,
+            "a refused service construction left its voice worker running",
+        )
+
+    def test_a_service_with_voice_disabled_starts_no_worker(self) -> None:
+        from companion.service import CompanionService, ServiceOptions
+
+        before = self._voice_threads()
+        service = CompanionService(ServiceOptions(
+            root=Path(tempfile.mkdtemp()), machine="laptop", voice_enabled=False,
+        ))
+        try:
+            self.assertIsNone(service.voice)
+            self.assertEqual(self._voice_threads(), before)
+            answer = service.gateway.voice_health()
+            self.assertFalse(answer["available"])
+            self.assertTrue(answer["captionRetained"])
+            self.assertFalse(answer["taskAffected"])
+        finally:
+            service.close()
+
+
 class JournalTests(unittest.TestCase):
     def setUp(self) -> None:
         self.directory = Path(tempfile.mkdtemp())

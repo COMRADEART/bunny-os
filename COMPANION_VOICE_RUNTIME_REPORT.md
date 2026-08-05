@@ -12,14 +12,19 @@ Branch `feature/companion-voice-runtime`.
 | Expected starting commit | `dfb0cd7` |
 | **Resolved starting SHA** | `dfb0cd71239d4ccef2a8821613e87efe4bba9723` |
 | Working tree at branch creation | clean (`git status --porcelain` empty, untracked included) |
-| **Gate commit** | `ecc0afec8529e3ebc6adf1f519229fdcde02bea3` |
+| **Gate commit** | `af0025bd92433ccb2fe0fd985a9595e166e371fe` |
 | Final SHA | recorded in §29 below |
 
-An earlier candidate gate commit, `65bdd63`, had gates 1 and 3 pass on it. It was
-**discarded** rather than reported: auditing §19's thirteen races against the
-suite found one missing entirely and one covered only in isolation, and a gate
-that did not run a test is not evidence for that test. The two tests were added
-and all three gates were re-run from scratch on `ecc0afe`.
+**Two earlier candidate gate commits were discarded rather than reported.**
+
+`65bdd63` had gates 1 and 3 pass on it. Auditing §19's thirteen races against
+the suite found one missing entirely and one covered only against a scheduler in
+isolation. A gate that did not run a test is not evidence for that test, so the
+tests were added and the gates restarted on `ecc0afe`.
+
+`ecc0afe` had gates 1 and 3 pass on it too — and the audio it measured was
+**noise**. See §18a. Everything measured on it was discarded and all three gates
+were re-run from scratch on `af0025b`.
 
 The completed pause/approval branch was not modified. `feature/companion-voice-runtime`
 was created from its exact head and every commit in this phase is on the new
@@ -485,6 +490,69 @@ No systemd unit file changed. The voice runtime starts and stops with
 | Task-authority reachability | Absent from the import graph |
 | Child process refusal of `SIGTERM` | Escalated to `SIGKILL` and reaped, bounded |
 | Zombie children | Zero across the gate runs |
+
+---
+
+## 18a. The defect the gates could not see
+
+Worth its own section because it is the most instructive result of the phase.
+
+`/usr/bin/paplay` is a **symlink to `pacat`**, a multi-call binary that decides
+what it does from `argv[0]`: invoked as `paplay` it parses a sound file; invoked
+as `pacat` it reads **raw PCM**. `resolve_executable` resolved the symlink and
+returned the target, so the runtime exec'd `pacat`, which played a WAV's RIFF
+header and its mono 22 050 Hz samples as stereo 44 100 Hz raw data.
+
+**0.73 seconds of noise where 2.80 seconds of speech belonged. Exit code 0.**
+
+Everything downstream agreed it had worked:
+
+* the playback outcome said `succeeded`, because the player exited zero;
+* the disposition was `played`;
+* the vertical slice passed 24 of 25 steps on it, including "start audio",
+  "complete playback" and "emit generic visemes";
+* the 100-run and 20-run gates passed on it, with zero deltas on every column;
+* every §24 latency figure it produced was arithmetic about the wrong audio.
+
+No test in the suite could tell, because no test asked **how long it took**. The
+only symptom was a number that did not add up: a lifecycle which speaks a
+2.8-second utterance completing in 0.9 seconds, next to a direct measurement
+showing `paplay` blocks for exactly the audio duration.
+
+Two changes:
+
+1. `resolve_executable` returns the trusted path that was **asked for** rather
+   than the symlink target. The target is still resolved and still checked for
+   being inside a trusted directory, a regular file, executable and not
+   group-writable — nothing about the substitution defence is weakened. What is
+   preserved is the program's own idea of which program it is.
+2. `PlaybackHandle` refuses to call a playback successful when the player exited
+   zero having spent less than `PLAYBACK_COMPLETION_FLOOR` (0.6) of the audio's
+   duration on it. Exit status alone cannot distinguish "played" from "played
+   the wrong thing". The floor is 0.6 rather than something tighter because a
+   server may legitimately drop the tail of a stream, and the case this catches
+   is off by a factor of four rather than a few percent.
+
+After the fix: `paplay` runs **2.823 s** for **2.799 s** of audio — ratio 1.009.
+
+**This was not a quirk of one program.** On the reference target:
+
+```text
+lrwxrwxrwx  /usr/bin/paplay  -> pacat
+lrwxrwxrwx  /usr/bin/pw-play -> pw-cat
+-rwxr-xr-x  /usr/bin/aplay            (and /usr/bin/arecord -> aplay)
+```
+
+**Two of the three players in the allowlist are multi-call symlinks**, and the
+third is the target of one. `pw-play` had the identical defect and would have
+shown it on any host with a working PipeWire sink — this one has none, so the
+PipeWire path was never taken and the bug was invisible there. The fix is
+uniform and covers all of them.
+
+The general lesson is recorded because it will recur: **a green gate is evidence
+that nothing crashed, not that anything worked.** Multi-call binaries are
+ordinary on a Linux system, and any code that canonicalises a path before
+exec'ing silently changes what they do.
 
 ---
 
