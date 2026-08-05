@@ -13,7 +13,12 @@ Branch `feature/companion-voice-runtime`.
 | **Resolved starting SHA** | `dfb0cd71239d4ccef2a8821613e87efe4bba9723` |
 | Working tree at branch creation | clean (`git status --porcelain` empty, untracked included) |
 | **Gate commit** | `0cf81a135b24619f74bbecfcdd48d3a69f33c2fd` |
-| Final SHA | recorded in §29 below |
+| **Final SHA** | `be2e3cf9db0fcf966703a0edcd67da38f69f2043` |
+
+**Nothing installed changed after the gate commit.** The analyzer across
+`0cf81a1..HEAD` examines seven paths — this report and six evidence artifacts —
+and classifies all seven **unreachable** from the build, exit status 0. The code
+the gates ran on is the code on the branch.
 
 **Three earlier candidate gate commits were discarded rather than reported.**
 Each one had passed the gates; each was thrown away because passing was not the
