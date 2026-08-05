@@ -445,15 +445,20 @@ Every suite §13 names, on both hosts where the host can run it.
 
 | Suite | Windows | Linux |
 | --- | --- | --- |
-| Complete companion tests (includes character, protocol, approvals, store, pause/resume, recovery, presentation) | **599 OK**, 18 skipped | **599 OK**, 1 skipped |
+| Complete companion tests (character, protocol, approvals, store durability, pause/resume, recovery, presentation, worker faults, lifecycle races, Unix transport) | **599 OK**, 18 skipped | **599 OK**, 1 skipped |
 | Capability tests | **697 OK** | not re-run (unchanged by this branch) |
 | Repository validation (`task.py validate`) | **PASS**, 0 failing validators | — |
 | Full repository suite (`task.py test`) | 3078 tests, **1 error**, 37 skipped | the failing test passes |
 | Real GTK smoke | — | **pass**, 0 criticals |
 | Real GTK animation | — | **pass**, 0 criticals |
 | Installed artifact inventory | — | **pass**, 98 modules, 0 refusals |
-| Installed provenance | — | **pass**, all three modules installed |
+| Installed provenance | — | **pass**, all three modules from the installed tree |
 | Installed vertical slice | — | **20/20**, 25 steps |
+
+All re-run against the finalized code. The only commits after the gate commit
+add this report and the evidence files: `git diff 66652d0..HEAD -- companion/
+scripts/ tests/ schemas/` is empty, so the gates and these results describe the
+same program.
 
 **Classification of the one non-pass.**
 `tests.display_stack.test_evidence_gate.MutationTests.test_duplicate_boot_check_is_load_bearing`

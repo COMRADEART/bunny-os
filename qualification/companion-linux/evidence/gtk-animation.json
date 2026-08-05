@@ -22,16 +22,16 @@
       "first": {
         "animation": "working",
         "assetId": "working-1",
-        "atMs": 0.36,
+        "atMs": 0.34,
         "frameIndex": 0,
         "path": "/usr/share/bunny-os/companion/characters/default-bunny/assets/working-1.png"
       },
       "frameChanges": 9,
-      "framesDelivered": 291,
+      "framesDelivered": 292,
       "last": {
         "animation": "working",
         "assetId": "working-2",
-        "atMs": 2992.46,
+        "atMs": 2998.22,
         "frameIndex": 1,
         "path": "/usr/share/bunny-os/companion/characters/default-bunny/assets/working-2.png"
       },
@@ -47,16 +47,16 @@
       "first": {
         "animation": "success",
         "assetId": "success",
-        "atMs": 0.17,
+        "atMs": 0.25,
         "frameIndex": 0,
         "path": "/usr/share/bunny-os/companion/characters/default-bunny/assets/success.png"
       },
       "frameChanges": 0,
-      "framesDelivered": 119,
+      "framesDelivered": 122,
       "last": {
         "animation": "idle",
         "assetId": "idle-1",
-        "atMs": 995.95,
+        "atMs": 999.33,
         "frameIndex": 0,
         "path": "/usr/share/bunny-os/companion/characters/default-bunny/assets/idle-1.png"
       },
