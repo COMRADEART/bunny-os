@@ -1,0 +1,281 @@
+{
+  "captionsAuthoritative": true,
+  "compositorValidated": false,
+  "effect": "RAN the installed voice-to-renderer slice in /tmp/bunny-voice-renderer-slice-a15ajbei: a canonical caption, a local synthesiser, the worker's own viseme timeline, the lip-sync controller and the mouth shapes a renderer would have been handed. The pixels need a display and are proved separately by scripts/gtk_voice_viseme_probe.py; the steps that need one are reported NOT_RUN here rather than omitted.",
+  "failedCount": 0,
+  "link": {
+    "active": false,
+    "captionsAuthoritative": true,
+    "closed": true,
+    "count": 2,
+    "frameRevision": 1,
+    "lastFrame": {
+      "atMonotonic": 1468.32373659,
+      "driftMs": 0,
+      "mouthShape": "neutral",
+      "origin": "neutral-on-restart",
+      "positionMs": 0,
+      "requestId": "speech-f67628e65ba94b0dac08a94b5cf4f628",
+      "revision": 1,
+      "sequence": -1,
+      "sourceMethod": ""
+    },
+    "maximumFrames": 4096,
+    "mouthMayChangeCaption": false,
+    "mouthMayChangeTask": false,
+    "rendererAttached": false,
+    "report": {
+      "accepted": 152,
+      "distinctNonNeutralShapes": [
+        "closed",
+        "open-medium",
+        "open-small",
+        "open-wide"
+      ],
+      "distinctShapes": [
+        "closed",
+        "neutral",
+        "open-medium",
+        "open-small",
+        "open-wide"
+      ],
+      "drawn": 64,
+      "held": 91,
+      "maximumDriftMs": 0,
+      "neutralReturns": 2,
+      "rejected": {},
+      "rejectedTotal": 0,
+      "rendererFailures": 0,
+      "requests": [
+        "speech-e1666ccc6a5746218ab743b497d7fca5",
+        "speech-f67628e65ba94b0dac08a94b5cf4f628"
+      ]
+    },
+    "requestId": "speech-f67628e65ba94b0dac08a94b5cf4f628",
+    "revision": 1,
+    "sequence": 1
+  },
+  "measurements": {
+    "cancellationToNeutralMs": 23.525,
+    "distinctNonNeutralShapes": [
+      "closed",
+      "open-medium",
+      "open-small",
+      "open-wide"
+    ],
+    "mouthChanges": 60
+  },
+  "notRunCount": 2,
+  "notes": [
+    "Timing method is measured amplitude over the synthesiser's own samples. No phoneme boundary was measured, and no phoneme-accurate lip sync is claimed."
+  ],
+  "passed": true,
+  "passedCount": 16,
+  "requestIds": [
+    "speech-e1666ccc6a5746218ab743b497d7fca5",
+    "speech-f67628e65ba94b0dac08a94b5cf4f628"
+  ],
+  "root": "/tmp/bunny-voice-renderer-slice-a15ajbei",
+  "schemaVersion": 1,
+  "shapesDrawn": [
+    "open-small",
+    "open-wide",
+    "open-small",
+    "open-wide",
+    "open-small",
+    "open-wide",
+    "open-medium",
+    "open-small",
+    "closed",
+    "open-small",
+    "open-medium",
+    "open-small",
+    "closed",
+    "open-small",
+    "open-medium",
+    "open-small",
+    "open-medium",
+    "open-wide",
+    "open-medium",
+    "open-small",
+    "open-wide",
+    "open-medium",
+    "open-small",
+    "open-medium",
+    "open-wide",
+    "open-small",
+    "open-wide",
+    "closed",
+    "open-small",
+    "open-medium",
+    "open-small",
+    "open-medium",
+    "open-small",
+    "closed",
+    "open-small",
+    "closed",
+    "open-small",
+    "open-wide",
+    "open-small",
+    "open-medium",
+    "open-small",
+    "closed",
+    "open-small",
+    "open-medium",
+    "open-wide",
+    "open-medium",
+    "open-wide",
+    "open-medium",
+    "open-small",
+    "open-medium",
+    "open-small",
+    "open-medium",
+    "open-small",
+    "open-wide",
+    "open-medium",
+    "open-small",
+    "open-wide",
+    "open-medium",
+    "open-small",
+    "closed",
+    "neutral"
+  ],
+  "slice": "voice-to-renderer",
+  "stepCount": 18,
+  "steps": [
+    {
+      "detail": "store at /tmp/bunny-voice-renderer-slice-a15ajbei",
+      "name": "start the installed companion service with its voice runtime",
+      "startupSteps": [
+        "validate-configuration",
+        "acquire-singleton",
+        "bind-endpoint",
+        "initialise-durable-state",
+        "construct-voice-worker",
+        "start-voice-worker",
+        "publish-readiness"
+      ],
+      "status": "PASS",
+      "step": 1
+    },
+    {
+      "detail": "package org.bunny-os.default-bunny",
+      "mouthShapes": [
+        "closed",
+        "neutral",
+        "open-medium",
+        "open-small",
+        "open-wide",
+        "rounded",
+        "smile"
+      ],
+      "name": "build a character presenter from the installed package",
+      "status": "PASS",
+      "step": 2
+    },
+    {
+      "detail": "companion.character.speech_link.VisemeLink",
+      "name": "join the voice worker to the renderer",
+      "status": "PASS",
+      "step": 3
+    },
+    {
+      "detail": "accepted",
+      "name": "speak a canonical caption",
+      "requestId": "speech-e1666ccc6a5746218ab743b497d7fca5",
+      "status": "PASS",
+      "step": 4
+    },
+    {
+      "detail": "settled",
+      "name": "the utterance settles",
+      "status": "PASS",
+      "step": 5
+    },
+    {
+      "detail": "companion.voice.visemes, carried by the viseme_timeline event",
+      "name": "the timeline came from the voice runtime, not a fixture",
+      "source": "amplitude",
+      "status": "PASS",
+      "step": 6
+    },
+    {
+      "detail": "closed, open-medium, open-small, open-wide",
+      "name": "at least two distinct non-neutral mouth shapes",
+      "shapes": [
+        "closed",
+        "open-medium",
+        "open-small",
+        "open-wide"
+      ],
+      "status": "PASS",
+      "step": 7
+    },
+    {
+      "detail": "60 frame(s)",
+      "name": "mouth frames are ordered",
+      "status": "PASS",
+      "step": 8
+    },
+    {
+      "detail": "speech-e1666ccc6a5746218ab743b497d7fca5",
+      "name": "every mouth frame carries the audio's request id",
+      "status": "PASS",
+      "step": 9
+    },
+    {
+      "detail": "revision 1 throughout",
+      "name": "every mouth frame carries the current presentation revision",
+      "status": "PASS",
+      "step": 10
+    },
+    {
+      "detail": "neutral-on-completion",
+      "name": "completion returned the mouth to neutral",
+      "status": "PASS",
+      "step": 11
+    },
+    {
+      "detail": "Bunny counted the words in your document and is showing you the result.",
+      "name": "the caption is unchanged by anything the mouth did",
+      "status": "PASS",
+      "step": 12
+    },
+    {
+      "detail": "0 mouth change(s) after neutral",
+      "name": "cancellation returns the mouth to neutral and stops it",
+      "status": "PASS",
+      "step": 13
+    },
+    {
+      "detail": "neutral-on-cancellation",
+      "name": "a voice-worker restart leaves the mouth neutral",
+      "status": "PASS",
+      "step": 14
+    },
+    {
+      "detail": "degraded-to-neutral",
+      "name": "a renderer restart resumes safely or degrades explicitly",
+      "status": "PASS",
+      "step": 15
+    },
+    {
+      "detail": "neutral-on-restart",
+      "name": "closing the link leaves the mouth neutral and no callback behind",
+      "status": "PASS",
+      "step": 16
+    },
+    {
+      "detail": "this slice records what the widget would have been handed; the pixels are proved by scripts/gtk_voice_viseme_probe.py, which needs a display",
+      "name": "the mouth frames reach a compositor",
+      "status": "NOT_RUN",
+      "step": 17
+    },
+    {
+      "detail": "no physical speaker has been validated anywhere in this build",
+      "name": "the audio reaches a physical speaker",
+      "status": "NOT_RUN",
+      "step": 18
+    }
+  ]
+}

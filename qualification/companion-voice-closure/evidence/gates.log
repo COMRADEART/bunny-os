@@ -1,0 +1,351 @@
+=== gate commit ===
+60ba76e1176ca04ac44a9df158a1ad89776ec520
+2026-08-05T20:15:37Z
+
+=== environment ===
+{
+  "audioStackLabel": "WSLg audio bridge presenting a PulseAudio-compatible socket onto an RDP sink; PipeWire runs for this user and reports zero Audio/Sink nodes; ALSA has no card",
+  "backends": [
+    {
+      "available": true,
+      "backendId": "pipewire",
+      "checkedAtMonotonic": 1404.323337561,
+      "consecutiveFailures": 0,
+      "defaultDevice": "",
+      "detail": "the PipeWire graph contains no audio sink",
+      "deviceCount": 0,
+      "kind": "pipewire",
+      "reachable": false,
+      "ready": false
+    },
+    {
+      "available": true,
+      "backendId": "pulse",
+      "checkedAtMonotonic": 1404.323337561,
+      "consecutiveFailures": 0,
+      "defaultDevice": "RDPSink",
+      "detail": "",
+      "deviceCount": 1,
+      "kind": "pulse-compatible",
+      "reachable": true,
+      "ready": true
+    },
+    {
+      "available": true,
+      "backendId": "alsa",
+      "checkedAtMonotonic": 1404.323337561,
+      "consecutiveFailures": 0,
+      "defaultDevice": "",
+      "detail": "aplay: device_list:279: no soundcards found...",
+      "deviceCount": 0,
+      "kind": "alsa",
+      "reachable": false,
+      "ready": false
+    }
+  ],
+  "commit": "60ba76e1176ca04ac44a9df158a1ad89776ec520",
+  "filesystem": "/home/bunny/bunny-os-closure",
+  "physicalSpeakerValidated": false,
+  "playerContracts": [
+    {
+      "backendId": "pipewire",
+      "completionFloor": 0.6,
+      "inputFormat": "sound-file",
+      "multicallSiblings": [
+        "pw-cat",
+        "pw-record",
+        "pw-midiplay",
+        "pw-midirecord"
+      ],
+      "program": "pw-play",
+      "requiredArguments": [
+        "--volume=",
+        "--"
+      ]
+    },
+    {
+      "backendId": "pulse",
+      "completionFloor": 0.6,
+      "inputFormat": "sound-file",
+      "multicallSiblings": [
+        "pacat",
+        "parec",
+        "parecord",
+        "pamon"
+      ],
+      "program": "paplay",
+      "requiredArguments": [
+        "--client-name=",
+        "--"
+      ]
+    },
+    {
+      "backendId": "alsa",
+      "completionFloor": 0.6,
+      "inputFormat": "sound-file",
+      "multicallSiblings": [
+        "arecord"
+      ],
+      "program": "aplay",
+      "requiredArguments": [
+        "-q",
+        "--"
+      ]
+    }
+  ],
+  "providers": [
+    {
+      "authenticated": true,
+      "available": true,
+      "checkedAtMonotonic": 0.0,
+      "consecutiveFailures": 0,
+      "detail": "",
+      "healthy": true,
+      "implementationId": "espeak-ng/espeak-ng",
+      "programName": "espeak-ng",
+      "providerId": "espeak-ng",
+      "ready": true
+    },
+    {
+      "authenticated": true,
+      "available": true,
+      "checkedAtMonotonic": 0.0,
+      "consecutiveFailures": 0,
+      "detail": "",
+      "healthy": true,
+      "implementationId": "speech-dispatcher/spd-say",
+      "programName": "spd-say",
+      "providerId": "speech-dispatcher",
+      "ready": true
+    }
+  ],
+  "python": "3.14.3",
+  "resolvedPlayerPaths": {
+    "aplay": {
+      "isMulticallSymlink": false,
+      "realpath": "/usr/bin/aplay",
+      "resolved": "/usr/bin/aplay",
+      "trusted": true
+    },
+    "espeak": {
+      "detail": "'espeak' is not installed in a trusted directory",
+      "resolved": ""
+    },
+    "espeak-ng": {
+      "isMulticallSymlink": false,
+      "realpath": "/usr/bin/espeak-ng",
+      "resolved": "/usr/bin/espeak-ng",
+      "trusted": true
+    },
+    "pactl": {
+      "isMulticallSymlink": false,
+      "realpath": "/usr/bin/pactl",
+      "resolved": "/usr/bin/pactl",
+      "trusted": true
+    },
+    "paplay": {
+      "isMulticallSymlink": true,
+      "realpath": "/usr/bin/pacat",
+      "resolved": "/usr/bin/paplay",
+      "trusted": true
+    },
+    "pw-dump": {
+      "isMulticallSymlink": false,
+      "realpath": "/usr/bin/pw-dump",
+      "resolved": "/usr/bin/pw-dump",
+      "trusted": true
+    },
+    "pw-play": {
+      "isMulticallSymlink": true,
+      "realpath": "/usr/bin/pw-cat",
+      "resolved": "/usr/bin/pw-play",
+      "trusted": true
+    },
+    "say": {
+      "detail": "'say' is not installed in a trusted directory",
+      "resolved": ""
+    },
+    "spd-conf": {
+      "isMulticallSymlink": false,
+      "realpath": "/usr/bin/spd-conf",
+      "resolved": "/usr/bin/spd-conf",
+      "trusted": true
+    },
+    "spd-say": {
+      "isMulticallSymlink": false,
+      "realpath": "/usr/bin/spd-say",
+      "resolved": "/usr/bin/spd-say",
+      "trusted": true
+    }
+  },
+  "selectedBackend": "pulse",
+  "selectedDevice": "RDPSink",
+  "selectionReasons": [
+    "pipewire: the PipeWire graph contains no audio sink"
+  ],
+  "uid": "1000",
+  "user": "bunny",
+  "voiceCount": 653
+}
+
+=== repository validation ===
+repository validation: PASS
+  ok    JSON parsing                     316 documents parsed
+  ok    Schema validation                49 schemas
+  ok    Python compilation               608 files compiled in memory
+  ok    Shell syntax                     69 scripts parsed by bash -n
+  ok    ShellCheck                       69 scripts, no suppression
+  ok    Desktop entries                  10 entries (2 session, 8 launcher)
+  ok    XML and SVG                      9 XML/SVG assets parsed
+  ok    Licence headers                  476 declarations over 679 files, all within ['Apache-2.0', 'GPL-3.0-or-later']
+  ok    Workflow YAML                    6 workflows parsed
+  ok    Committed evidence consistency   26 record(s) agree on candidate 79bb99ddb39d
+  ok    GNOME extension syntax           extension.js parsed by node --check
+  skip  systemd units                    requires BUNNY_VERIFY_SYSTEMD=1 and systemd-analyze on an installed Fedora fixture
+  ok    systemd unit programs            22 units, 1 recorded gap(s)
+  ok    Shell layout                     7 required shell directories
+  ok    Capability manifests             14 manifests, 5 essential, 28 MiB essential floor
+wrote build/out/qualification/repository-validation.json
+
+=== build-input closure tests ===
+The two answers come from one function, and this is the assertion of it. ... ok
+
+----------------------------------------------------------------------
+Ran 34 tests in 0.291s
+
+OK
+
+=== build-input closure over the three ranges ===
+install-root.py installs only what build/scripts/install_routes.py models
+--- 66652d0..dfb0cd7 ---
+  declared install routes: 67
+
+  examined 10 path(s): 0 installed, 0 context-only, 10 unreachable
+
+  BUILD-AFFECTING: no installed path found
+
+  Unreachable from the build:
+--- 0cf81a1..b825dd4 ---
+  declared install routes: 67
+
+  examined 7 path(s): 0 installed, 0 context-only, 7 unreachable
+
+  BUILD-AFFECTING: no installed path found
+
+  Unreachable from the build:
+--- dfb0cd7..b825dd4 ---
+  declared install routes: 67
+
+  examined 41 path(s): 22 installed, 2 context-only, 17 unreachable
+
+  BUILD-AFFECTING: YES
+  profiles affected: beta, desktop, developer, live, minimal, recovery, shell, shell-test
+
+--- b825dd4..HEAD ---
+  declared install routes: 67
+
+  examined 33 path(s): 13 installed, 5 context-only, 15 unreachable
+
+  BUILD-AFFECTING: YES
+  profiles affected: beta, desktop, developer, live, minimal, recovery, shell, shell-test
+
+
+=== voice tests ===
+----------------------------------------------------------------------
+Ran 311 tests in 3.319s
+
+OK
+
+=== renderer tests ===
+----------------------------------------------------------------------
+Ran 247 tests in 4.643s
+
+OK
+
+=== service start-up ordering tests ===
+----------------------------------------------------------------------
+Ran 19 tests in 3.833s
+
+OK
+
+=== complete companion suite ===
+----------------------------------------------------------------------
+Ran 961 tests in 35.786s
+
+OK (skipped=1)
+
+=== capability suite ===
+----------------------------------------------------------------------
+Ran 697 tests in 2.315s
+
+OK
+
+=== installed voice vertical slice ===
+voice slice passed True steps 25
+
+=== installed voice-to-renderer slice ===
+voice-renderer slice passed True steps 18 notRun 2
+
+=== GATE 1: 100 voice-worker lifecycle runs ===
+{
+  "artifact": "/home/bunny/closure-evidence/gate-voice-100.json",
+  "exitStatus": 0,
+  "failed": 0,
+  "firstFailure": null,
+  "longestConsecutivePass": 100,
+  "passed": 100,
+  "requested": 100,
+  "seconds": 307.65,
+  "stderrTail": [],
+  "target": "voice"
+}
+
+=== GATE 3: 20 installed voice vertical slices ===
+{
+  "artifact": "/home/bunny/closure-evidence/gate-voice-slice-20.json",
+  "exitStatus": 0,
+  "failed": 0,
+  "firstFailure": null,
+  "longestConsecutivePass": 20,
+  "passed": 20,
+  "requested": 20,
+  "seconds": 95.28,
+  "stderrTail": [],
+  "target": "voice-slice"
+}
+
+=== GATE 4: 20 installed voice-to-renderer slices ===
+{
+  "artifact": "/home/bunny/closure-evidence/gate-voice-renderer-slice-20.json",
+  "exitStatus": 0,
+  "failed": 0,
+  "firstFailure": null,
+  "longestConsecutivePass": 20,
+  "passed": 20,
+  "requested": 20,
+  "seconds": 84.66,
+  "stderrTail": [],
+  "target": "voice-renderer-slice"
+}
+
+=== GATE 2: 50 complete companion-suite runs ===
+{
+  "artifact": "/home/bunny/closure-evidence/gate-suite-50.json",
+  "exitStatus": 0,
+  "failed": 0,
+  "firstFailure": null,
+  "longestConsecutivePass": 50,
+  "passed": 50,
+  "requested": 50,
+  "seconds": 1765.19,
+  "stderrTail": [],
+  "target": "suite"
+}
+
+=== compositor viseme probe ===
+probe exit=0
+probe gate {'failures': [], 'passed': True}
+
+=== DONE ===
+60ba76e1176ca04ac44a9df158a1ad89776ec520
+2026-08-05T20:54:31Z

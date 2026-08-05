@@ -24,8 +24,8 @@ doing it — each of which was passing every test at the time.
 | Branch | `fix/companion-voice-closure` |
 | Based on | `b825dd4aa181c30e1f2eceb878c261ec2201b247` (verified: `git rev-parse` at start) |
 | Prior gate commit | `0cf81a135b24619f74bbecfcdd48d3a69f33c2fd` |
-| **Gate commit** | *(recorded in §14 and in `qualification/companion-voice-closure/manifest.json`)* |
-| **Final SHA** | *(recorded in §14)* |
+| **Gate commit** | `60ba76e1176ca04ac44a9df158a1ad89776ec520` — every gate iteration records it |
+| **Final SHA** | the evidence-and-report commit that follows the gate commit; §14. The closure over `60ba76e..final` is required to show 0 installed paths, and does. |
 
 Everything the voice-runtime phase recorded is pinned by digest in
 `qualification/companion-voice-closure/preserved-evidence.json` **before any
@@ -361,24 +361,56 @@ are asserted from the import graph and the call graph.
 
 ## 10. Actual GTK viseme result
 
-*(measurements and the full record are in §11 and
-`qualification/companion-voice-closure/`)*
-
 Run by `scripts/gtk_voice_viseme_probe.py` on the WSLg Wayland compositor, GTK
-4.22.4, GLib 2.88, as user `bunny` from ext4. eSpeak NG 1.52.0 through `paplay`
-onto one `RDPSink`. **Not a GNOME session, not physical hardware, no physical
-speaker.**
+4.22.4, GLib 2.88, as user `bunny` from ext4, at the gate commit. eSpeak NG
+1.52.0 through `paplay` onto one `RDPSink`. **Not a GNOME session, not physical
+hardware, no physical speaker.** Full record:
+`qualification/companion-voice-closure/evidence/gtk-voice-viseme.json`, gate
+`passed: true`, zero failures.
 
 Nothing in the chain is a fixture: the caption is a real `PresentationState`,
-the audio is what eSpeak NG produced on the machine, the timeline is the
-worker's own, and the file handed to `Gtk.Picture.set_filename` is the asset the
-character package declares for the shape the controller chose.
+the audio is what eSpeak NG produced on the machine (91 523 frames — the sample
+count), the timeline is the worker's own, and the file handed to
+`Gtk.Picture.set_filename` is the asset the character package declares for the
+shape the controller chose.
+
+| §5 requirement | recorded |
+|---|---|
+| ≥2 distinct non-neutral shapes drawn | **4**: `closed`, `open-medium`, `open-small`, `open-wide` |
+| frame changes while audio active | **58** mouth changes during the utterance |
+| events ordered | sequences strictly increasing; asserted per frame |
+| audio and viseme request IDs match | one request id across all timeline frames |
+| renderer consumes the current revision | every frame at revision 1; after `publish(2)`, **132** stale frames refused, 0 drawn |
+| cancellation stops further changes | 0 mouth changes after neutral |
+| completion returns to neutral | `endedNeutral: true`, origin `neutral-on-completion` |
+| worker restart returns to neutral | last shape `neutral` |
+| renderer restart resumes or degrades explicitly | `degraded-to-neutral`, stated |
+| no stale mouth state | teardown last shape `neutral` |
+| zero GLib criticals | **0** critical or error records |
+| no timer/callback survives teardown | 67 idle sources created, **0** surviving; 0 timeout sources; 0 voice threads remaining |
+| captions correct regardless | present and matching for every scenario |
 
 ---
 
 ## 11. Synchronization measurements
 
-*(filled in at §14 from the recorded run)*
+All times are milliseconds from the probe's own monotonic origin, on the WSLg
+host, one utterance (§15 says why this is not a distribution):
+
+| measurement | value |
+|---|---|
+| audio started | 3469.104 |
+| first viseme (worker event) | 3469.356 |
+| first rendered mouth frame | 3469.933 |
+| first-frame drift | 0.829 ms |
+| **median presentation drift** | **2.797 ms** |
+| **maximum presentation drift** | **5.708 ms** |
+| median dispatch latency (main-loop marshal) | 2.788 ms |
+| maximum dispatch latency | 5.510 ms |
+| final neutral | 7659.410 |
+| cancellation → neutral | **52.013 ms** (headless slice: 23.5 ms; the delta is the compositor's frame cadence) |
+| sample count | 91 523 frames |
+| scheduler-reported drift | 0 — structural, not a measurement (below) |
 
 The timing method is **measured amplitude** over the synthesiser's own samples
 in 40 ms windows. No phoneme boundary is measured anywhere in this build and no
@@ -400,9 +432,11 @@ Three things get called "drift" and only one of them is a measurement:
 
 ## 12. Cancellation and neutral-reset results
 
-*(filled in at §14)*
-
-Every path that ends an utterance returns the mouth to neutral, and each is
+On the compositor: cancellation was requested mid-utterance while the mouth was
+moving; the neutral frame was drawn **52 ms** later; **zero** mouth changes
+after it; the viseme that arrived after cancellation was refused with reason
+`after-cancellation` and drew nothing. In the headless slice the same path is
+23.5 ms. Every path that ends an utterance returns the mouth to neutral, and each is
 covered twice — once on the compositor and once as a unit test:
 
 | path | origin recorded |
@@ -454,8 +488,54 @@ counts that were not true — see §15.
 
 ## 14. Test results
 
-*(filled in from the recorded run; see
-`qualification/companion-voice-closure/manifest.json`)*
+Everything below ran on the reference target (Fedora 44 WSL, user `bunny`, ext4)
+at the gate commit `60ba76e`, in one transcript
+(`qualification/companion-voice-closure/evidence/gates.log`). Every §7 suite is
+in it.
+
+**The four stress gates** — installed voice, renderer *and* protocol/service
+code changed, so §7 required the full rerun, on one exact commit:
+
+| gate | result | per-iteration deltas | duration (median) |
+|---|---|---|---|
+| 100 consecutive voice-worker lifecycle runs | **100/100** | every column 0 | 3.02 s |
+| 50 consecutive complete companion-suite runs | **50/50** | every column 0; one settled fixture (`review-local.slow-reviewer`, allocated once) | 35.07 s |
+| 20 consecutive installed voice vertical slices | **20/20** | every column 0 | 4.73 s |
+| 20 consecutive installed voice-to-renderer slices | **20/20** | every column 0 | 4.18 s |
+
+All four `gateMet: true`, `singleCommit: true`, `commitsObserved: [60ba76e…]`.
+Gate 1's `sinceBaseline` shows `tempDirectories: −5`: the machine got *cleaner*
+— five stale workspaces left by gate runs killed mid-flight earlier in the day
+were swept by `companion.voice.recovery`. Recorded under
+`cleanupOfPriorResidue`, distinct from growth, because a gate that failed when
+the machine got cleaner would be a gate nobody could satisfy twice.
+
+**Suites, same commit, same transcript:**
+
+| suite | result |
+|---|---|
+| repository validation | PASS — 15 validators, ShellCheck included on this host |
+| build-input closure tests (34) | OK |
+| analyser over `66652d0..dfb0cd7` | 0 installed — non-build-affecting |
+| analyser over `0cf81a1..b825dd4` | 0 installed — non-build-affecting |
+| analyser over `dfb0cd7..b825dd4` | 22 installed — build-affecting, all profiles |
+| analyser over `b825dd4..60ba76e` | 13 installed — build-affecting, all profiles (this closure) |
+| voice tests (311) | OK |
+| renderer tests (247) | OK |
+| start-up ordering tests (19) | OK |
+| complete companion suite (961) | OK |
+| capability suite (697) | OK |
+| installed voice slice | 25 steps, passed |
+| installed voice-to-renderer slice | 18 steps, passed, 2 stated NOT_RUN (pixels → probe; speaker → nobody) |
+| compositor viseme probe | passed, zero failures, zero GLib criticals |
+
+On Windows the same suites pass (3474 tests; one pre-existing, unrelated
+display-stack test errors on `os.symlink` without privilege — it needs the
+Linux run, which is the one §7 counts).
+
+The two commits after the gate commit — the evidence and this report — are
+confirmed non-build-affecting by the analyser (§6), which is the same closure
+discipline the analyser itself was repaired to enforce.
 
 ---
 
@@ -537,10 +617,13 @@ What can be said mechanically:
 * The voice runtime's own change **is** build-affecting: 22 installed paths, all
   eight profiles. That was true at `b825dd4` and was misreported; it is now
   computed.
-* This branch changes installed runtime code — `companion/service.py`,
-  `companion/protocol.py`, `companion/voice/**`, `companion/character/**`,
-  `companion/cli.py` — so it is build-affecting, and any reproducibility claim
-  about it would need a fresh two-build comparison that has not been run.
+* This branch changes installed runtime code — 13 installed paths over
+  `b825dd4..60ba76e`: `companion/service.py`, `companion/protocol.py`,
+  `companion/cli.py`, `companion/vertical_slice.py`, four `companion/voice/`
+  modules, four `companion/character/` modules and
+  `/usr/libexec/bunny-companion-service` — so it is build-affecting on all
+  eight profiles, and any reproducibility claim about it would need a fresh
+  two-build comparison that has not been run.
 * Every commit changes the OCI configuration digest through the revision label
   and `/usr/lib/bunny-os/release.json`. An unchanged layer digest is not an
   unchanged image.
