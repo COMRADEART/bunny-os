@@ -109,6 +109,33 @@ class AllowlistTests(unittest.TestCase):
         self.assertIn("writable by group or other", str(caught.exception))
 
     @unittest.skipUnless(POSIX, "symbolic links are a POSIX arrangement")
+    def test_a_multi_call_binary_is_invoked_under_the_name_that_was_asked_for(self) -> None:
+        """Resolution must not rewrite argv[0] for a program that reads it.
+
+        `/usr/bin/paplay` is a symlink to `pacat`, and `pacat` decides what it
+        does from its own name: under `paplay` it parses a sound file, under
+        `pacat` it reads raw PCM. Returning the symlink target made the runtime
+        exec `pacat`, which played a WAV's header and its mono samples as stereo
+        raw data — 0.73 s of noise where 2.80 s of speech belonged, exit code 0.
+
+        The resolved target is still checked; what is returned is the trusted
+        path that was asked for.
+        """
+        directory = Path(tempfile.mkdtemp())
+        real = directory / "pacat"
+        real.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        real.chmod(0o755)
+        (directory / "paplay").symlink_to(real)
+
+        found, trusted = resolve_executable("paplay", directories=(str(directory),))
+        self.assertTrue(trusted)
+        self.assertEqual(
+            Path(found).name, "paplay",
+            "the program was resolved to its symlink target, which changes what it does",
+        )
+        self.assertEqual(Path(found).parent, directory)
+
+    @unittest.skipUnless(POSIX, "symbolic links are a POSIX arrangement")
     def test_a_trusted_name_linking_out_of_the_trusted_set_is_refused(self) -> None:
         trusted = Path(tempfile.mkdtemp())
         elsewhere = Path(tempfile.mkdtemp())

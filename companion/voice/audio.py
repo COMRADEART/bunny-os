@@ -91,6 +91,17 @@ DEGRADATION_KINDS = (
     "renderer-unavailable",
 )
 
+#: How much of an utterance a player must actually have played before its zero
+#: exit status is believed. Cancellation and pausing are accounted for
+#: separately, so this only fires when a player claimed success having spent far
+#: too little time on the audio.
+#:
+#: Six tenths rather than something tighter: an audio server may legitimately
+#: drop the tail of a stream at shutdown, and a floor at 0.95 would turn that
+#: into a failure. The case this catches — a player that read the file in
+#: completely the wrong format — is off by a factor of four, not a few percent.
+PLAYBACK_COMPLETION_FLOOR = 0.6
+
 #: How much stdout a discovery command may produce before it is treated as
 #: hostile. ``pw-dump`` on a busy graph is genuinely large; a megabyte is well
 #: past anything real and well short of anything that matters.
@@ -234,6 +245,10 @@ class PlaybackOutcome:
     #: one-shot player, and reporting a request as a measurement would put a
     #: number into §24 that nothing measured.
     requested_latency_ms: int = 0
+    #: True when the player exited zero having spent far too little time on the
+    #: audio. Kept as its own field rather than folded into ``detail`` so a gate
+    #: can count it.
+    truncated: bool = False
     detail: str = ""
     outcome: CommandOutcome | None = None
 
@@ -252,6 +267,7 @@ class PlaybackOutcome:
             "pausedSeconds": round(self.paused_seconds, 6),
             "audioSeconds": round(self.audio_seconds, 6),
             "requestedLatencyMs": self.requested_latency_ms,
+            "truncated": self.truncated,
             "detail": self.detail,
             "command": self.outcome.to_json() if self.outcome is not None else None,
         }
@@ -415,6 +431,27 @@ class PlaybackHandle:
             duration_seconds=self.elapsed_seconds, timed_out=timed_out, cancelled=cancelled
         )
         succeeded = outcome.exit_code == 0 and not cancelled and not timed_out
+        truncated = ""
+        if succeeded and self.audio_seconds:
+            # A player that exited zero having played the wrong thing is not a
+            # success, and exit status alone cannot tell the difference. Every
+            # player in the allowlist blocks for the duration of the audio, so
+            # finishing far too early means it did not play what it was given.
+            #
+            # This is here because it happened: /usr/bin/paplay is a symlink to
+            # pacat, a multi-call binary that reads raw PCM under its own name
+            # and a sound file under paplay's. Resolving the symlink made the
+            # runtime exec pacat, which played a WAV header and mono samples as
+            # stereo raw data — 0.73 s of noise where 2.80 s of speech belonged,
+            # exit code 0. Nothing downstream could tell, and no test that only
+            # checked "did it succeed" ever would.
+            played = self.elapsed_seconds - self.paused_seconds
+            if played < self.audio_seconds * PLAYBACK_COMPLETION_FLOOR:
+                succeeded = False
+                truncated = (
+                    f"the player exited successfully after {played:.2f}s of "
+                    f"{self.audio_seconds:.2f}s of audio; it did not play what it was given"
+                )
         return PlaybackOutcome(
             request_id=self.request_id,
             backend_id=self.backend_id,
@@ -425,9 +462,10 @@ class PlaybackHandle:
             paused_seconds=self.paused_seconds,
             audio_seconds=self.audio_seconds,
             requested_latency_ms=self.requested_latency_ms,
+            truncated=bool(truncated),
             detail=(
                 "played" if succeeded
-                else outcome.stderr or (
+                else truncated or outcome.stderr or (
                     "cancelled" if cancelled else
                     "the player exceeded its time bound" if timed_out else
                     f"the player exited {outcome.exit_code}"

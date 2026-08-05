@@ -221,7 +221,24 @@ def resolve_executable(
         safe, reason = _permissions_safe(resolved)
         if not safe:
             raise ExecutableRefused(f"{resolved} {reason}; it was refused")
-        return str(resolved), True
+        # The *requested* path is returned, not the symlink target, and the
+        # difference is not cosmetic. Several of the programs in the allowlist
+        # are multi-call binaries that decide what they do from ``argv[0]``:
+        # ``/usr/bin/paplay`` is a symlink to ``pacat``, and ``pacat`` invoked
+        # under its own name reads its input as *raw PCM* while ``paplay`` parses
+        # it as a sound file.
+        #
+        # Returning the resolved target made the runtime exec ``pacat``, which
+        # played a WAV's RIFF header and mono samples as stereo raw data at the
+        # wrong rate — 0.73 seconds of noise where 2.80 seconds of speech should
+        # have been, and it exited 0, so nothing downstream could tell. The
+        # duration mismatch is what caught it.
+        #
+        # The security properties are unchanged: the target was resolved and
+        # checked above, and the path returned here is itself inside a trusted
+        # directory. What is preserved is the program's own idea of which
+        # program it is.
+        return str(candidate), True
 
     if any(Path(item).is_dir() for item in directories):
         # At least one trusted directory exists and the program is not in it.

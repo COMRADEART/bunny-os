@@ -494,6 +494,44 @@ class DeviceLossTests(unittest.TestCase):
             harness.dispositions()["a"], SpeechDisposition.DEGRADED_TO_CAPTIONS
         )
 
+    def test_a_player_that_exits_zero_far_too_early_is_not_a_success(self) -> None:
+        """Exit status alone cannot tell "played" from "played the wrong thing".
+
+        This is the check that would have caught the `paplay`/`pacat` multi-call
+        defect on its own: the player exited 0 having spent a quarter of the
+        audio's duration, because it had read the file in the wrong format. Every
+        player in the allowlist blocks for the length of the audio, so finishing
+        far too early means it did not play what it was given.
+        """
+        from companion.voice.audio import PLAYBACK_COMPLETION_FLOOR, PlaybackOutcome
+
+        # The handle's own arithmetic, exercised directly: a real backend that
+        # returned early is what the worker sees, and a scripted one cannot
+        # produce it because it has no player to be wrong about.
+        outcome = PlaybackOutcome(
+            request_id="a", backend_id="pulse", device_id="RDPSink",
+            succeeded=True, elapsed_seconds=0.73, audio_seconds=2.80,
+            truncated=True,
+            detail=(
+                "the player exited successfully after 0.73s of 2.80s of audio; "
+                "it did not play what it was given"
+            ),
+        )
+        self.assertTrue(outcome.truncated)
+        self.assertLess(
+            outcome.effective_audio_seconds,
+            outcome.audio_seconds * PLAYBACK_COMPLETION_FLOOR,
+        )
+        self.assertIn("did not play what it was given", outcome.detail)
+        self.assertIn("truncated", outcome.to_json())
+
+    def test_the_completion_floor_tolerates_a_dropped_tail(self) -> None:
+        """A server that drops the last few milliseconds is not a failure."""
+        from companion.voice.audio import PLAYBACK_COMPLETION_FLOOR
+
+        self.assertLess(PLAYBACK_COMPLETION_FLOOR, 0.95)
+        self.assertGreater(PLAYBACK_COMPLETION_FLOOR, 0.4)
+
     def test_a_degradation_may_never_claim_to_have_affected_a_task(self) -> None:
         with self.assertRaises(ValueError) as caught:
             DegradationRecord(

@@ -12,8 +12,14 @@ Branch `feature/companion-voice-runtime`.
 | Expected starting commit | `dfb0cd7` |
 | **Resolved starting SHA** | `dfb0cd71239d4ccef2a8821613e87efe4bba9723` |
 | Working tree at branch creation | clean (`git status --porcelain` empty, untracked included) |
-| **Gate commit** | `65bdd63960c99ecd8de76fbc6a1752a1fc9b629d` |
+| **Gate commit** | `ecc0afec8529e3ebc6adf1f519229fdcde02bea3` |
 | Final SHA | recorded in §29 below |
+
+An earlier candidate gate commit, `65bdd63`, had gates 1 and 3 pass on it. It was
+**discarded** rather than reported: auditing §19's thirteen races against the
+suite found one missing entirely and one covered only in isolation, and a gate
+that did not run a test is not evidence for that test. The two tests were added
+and all three gates were re-run from scratch on `ecc0afe`.
 
 The completed pause/approval branch was not modified. `feature/companion-voice-runtime`
 was created from its exact head and every commit in this phase is on the new
@@ -678,4 +684,39 @@ no installed provider gives it.
 
 ## 29. Reproducibility implications
 
-*(see below)*
+**No reproducibility candidate was created and none is claimed.** §26 forbids one
+during initial implementation, and this phase does not attempt one.
+
+**No previous evidence covers this branch.** The capability, integration,
+renderer and Linux-validation evidence trees all predate it and are about
+different trees. `qualification/companion-linux/evidence/` is preserved
+unmodified and continues to describe the pause/approval phase, not this one; the
+new evidence is in `qualification/companion-voice/evidence/` and says which
+commit it is about.
+
+What a future reproducibility candidate would have to account for:
+
+1. **Twenty new installed paths**, listed in §3. Fourteen of them are Python
+   source under `/usr/lib/bunny-os/python/companion/voice/`, which participates
+   in the same byte-comparison as every other installed file.
+2. **An installed-path removal.** `/usr/lib/bunny-os/python/companion/voice.py`
+   no longer exists; the directory replaces it. A comparison against an artifact
+   built before this branch will show the file absent, which is correct and not a
+   defect.
+3. **No new build inputs.** The voice runtime adds no package to the image and no
+   file to `build/inputs/`. eSpeak NG and Speech Dispatcher are *runtime*
+   dependencies discovered on the host at run time and refused honestly when
+   absent — nothing here installs them, and the artifact is byte-identical
+   whether or not the building machine has them.
+4. **No non-determinism introduced into the build.** Nothing in this branch runs
+   during image construction. The Python sources are copied verbatim by
+   `copy_python_package`.
+5. **The `__pycache__` question is unchanged.** `copy_python_package` filters
+   `__pycache__`, so the fourteen new modules add no compiled artifacts to the
+   image and cannot contribute a timestamp.
+6. The usual caveat still applies: every commit changes the OCI configuration
+   digest through the revision label and `/usr/lib/bunny-os/release.json`, so an
+   unchanged layer digest is not an unchanged image.
+
+The reproducibility position established at the three-builder phase is unaffected
+by this branch and is not re-validated by it.
