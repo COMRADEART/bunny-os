@@ -447,9 +447,14 @@ class CaptionLedger:
             shown = self.clock.monotonic() if monotonic is None else monotonic
             updated = Caption(**{**caption.__dict__, "shown_at_monotonic": shown})
             self._captions[caption_id] = updated
-            measurement = self._measurements.get(caption_id)
-            if measurement is not None and measurement.caption_shown_at is None:
-                measurement.caption_shown_at = shown
+            # Measurements are keyed by *request*, and one caption can have more
+            # than one — an explicit replay is a second request against the same
+            # caption. So every measurement waiting on this caption's display
+            # time gets it, rather than a lookup by the wrong key finding
+            # nothing and silently leaving §14's zero point unset.
+            for measurement in self._measurements.values():
+                if measurement.caption_id == caption_id and measurement.caption_shown_at is None:
+                    measurement.caption_shown_at = shown
             return updated
 
     # ----------------------------------------------------------------- #

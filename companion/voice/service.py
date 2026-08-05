@@ -127,8 +127,19 @@ class VoiceService:
     def __init__(self, options: VoiceServiceOptions | None = None) -> None:
         self.options = options or VoiceServiceOptions()
         self.clock = self.options.clock
-        self.registry = self.options.registry or local_providers(resolver=self.options.resolver)
-        self.router = self.options.router or AudioRouter(resolver=self.options.resolver)
+        # ``is None`` throughout. :class:`ProviderRegistry` defines ``__len__``,
+        # so an empty one is falsy, and ``or`` would replace a caller's
+        # deliberately-empty registry with the real local providers — a test
+        # asserting "a machine with no providers falls back to captions" would
+        # instead have exercised whatever the host happened to have installed.
+        self.registry = (
+            local_providers(resolver=self.options.resolver)
+            if self.options.registry is None else self.options.registry
+        )
+        self.router = (
+            AudioRouter(resolver=self.options.resolver)
+            if self.options.router is None else self.options.router
+        )
         self.policy = VoicePolicy(self.options.preferences)
         self.ledger = CaptionLedger(ids=self.options.ids, clock=self.clock)
         self.queue = SpeechQueue(maximum_depth=self.options.maximum_queue_depth)

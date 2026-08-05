@@ -453,7 +453,14 @@ class VoicePolicy:
     ) -> None:
         self.preferences = preferences or VoicePreferences()
         self.restore_observations = max(1, restore_observations)
+        # Deliberately the quietest outcome, so a policy that is never asked
+        # anything never speaks. It is a *placeholder* rather than an observed
+        # degradation, which is why ``_observed`` exists: hysteresis protects
+        # against a flapping machine, and there is nothing to flap against
+        # before the first reading. Without the flag a perfectly good machine
+        # took three refresh cycles to start speaking, and the tests caught it.
         self._decision = VoiceDecision()
+        self._observed = False
         self._pending: VoiceDecision | None = None
         self._streak = 0
         self._transitions: list[dict[str, Any]] = []
@@ -480,6 +487,12 @@ class VoicePolicy:
             self.preferences = preferences
             self._pending = None
             self._streak = 0
+            # A setting change is a new starting point, not a step on a ladder.
+            # Without this, turning speech back on would climb out of
+            # ``silent-text-only`` through the machine hysteresis and take
+            # several refresh cycles — which a person would read as the switch
+            # being broken.
+            self._observed = False
 
     def observe(self, signals: VoiceSignals, *, monotonic: float = 0.0) -> VoiceDecision:
         candidate = evaluate(signals, self.preferences)
@@ -487,6 +500,17 @@ class VoicePolicy:
             current = self._decision
             current_rank = _OUTCOME_RANK[current.outcome]
             candidate_rank = _OUTCOME_RANK[candidate.outcome]
+
+            if not self._observed:
+                # The first reading is adopted whole. There is no previous
+                # observation for it to be an oscillation away from.
+                self._observed = True
+                if candidate.outcome != current.outcome:
+                    self._record(current, candidate, "initial", monotonic)
+                self._decision = candidate
+                self._pending = None
+                self._streak = 0
+                return candidate
 
             if candidate_rank > current_rank:
                 self._record(current, candidate, "degraded", monotonic)

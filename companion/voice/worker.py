@@ -229,7 +229,11 @@ class VoiceWorker:
         self.router = router
         self.policy = policy
         self.ledger = ledger
-        self.queue = queue or SpeechQueue()
+        # ``is None``, not ``or``. :class:`SpeechQueue` defines ``__len__``, so an
+        # empty queue is falsy and ``queue or SpeechQueue()`` silently replaced a
+        # caller's queue with a fresh one — every utterance was spoken correctly
+        # and every disposition was recorded into an object nobody could see.
+        self.queue = SpeechQueue() if queue is None else queue
         self.clock = clock or SystemClock()
         self.tick_seconds = max(0.001, tick_seconds)
         #: Optional, and the runtime always supplies one. Without it the worker
@@ -344,16 +348,34 @@ class VoiceWorker:
         now = self.clock.monotonic()
         with self._guard:
             previous = self._seen.get(request.request_id)
-            if previous is not None and previous != request.text_digest:
-                outcome = QueueOutcome(
-                    accepted=False,
-                    disposition=SpeechDisposition.DROPPED,
-                    detail=(
-                        "this request id has already been served with different text; "
-                        "serving it again would make the record disagree with the speech"
-                    ),
-                    request_id=request.request_id,
-                )
+            if previous is not None:
+                # Two different answers for two different situations, and the
+                # difference is the content.
+                if previous != request.text_digest:
+                    outcome = QueueOutcome(
+                        accepted=False,
+                        disposition=SpeechDisposition.DROPPED,
+                        detail=(
+                            "this request id has already been served with different text; "
+                            "serving it again would make the record disagree with the speech"
+                        ),
+                        request_id=request.request_id,
+                    )
+                else:
+                    # A retry: the same id and the same words. Submission is
+                    # idempotent, so this is *not* a second utterance. A client
+                    # that resent a request over a connection it was unsure of
+                    # must not make the companion say it twice — §19 lists a
+                    # replayed request as a race for exactly this reason.
+                    outcome = QueueOutcome(
+                        accepted=False,
+                        disposition=SpeechDisposition.COALESCED,
+                        detail=(
+                            "this request has already been served; submission is idempotent, "
+                            "and an explicit replay is a new request"
+                        ),
+                        request_id=request.request_id,
+                    )
                 self.queue.record(request, outcome.disposition, outcome.detail)
                 self._emit(self._event("speech_rejected", request, {"detail": outcome.detail}))
                 return outcome
@@ -664,6 +686,11 @@ class VoiceWorker:
         frame = utterance.scheduler.start(utterance.timeline)
         if utterance.measurement is not None:
             utterance.measurement.first_viseme_at = self.clock.monotonic()
+        # Emitted, not merely computed. The opening frame is the one that tells
+        # a renderer the timeline exists, which source it came from and how much
+        # to trust it — and for an utterance short enough that the loop below
+        # never turns, it is the only frame there would otherwise be.
+        self._emit_viseme(request, frame)
 
         # Drive the mouth in this thread while the player runs. No timer, no
         # second thread: the worker is already awake and has nothing else to do,
@@ -749,6 +776,7 @@ class VoiceWorker:
         frame = utterance.scheduler.start(utterance.timeline)
         if utterance.measurement is not None:
             utterance.measurement.first_viseme_at = self.clock.monotonic()
+        self._emit_viseme(request, frame)
 
         # The provider blocks holding its own audio, so the mouth is driven from
         # a ticker this worker creates, owns and joins. On the estimated clock:

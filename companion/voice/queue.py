@@ -35,7 +35,7 @@ the things that never make a sound. That is what makes §22's gate assertable:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import heapq
 import itertools
 import threading
@@ -50,6 +50,13 @@ __all__ = [
     "QueuedUtterance",
     "SpeechQueue",
 ]
+
+#: Utterances that say the task is over. Only these supersede narration.
+_TERMINAL_PRIORITIES = frozenset({Priority.TASK_RESULT, Priority.TASK_ERROR})
+
+#: Utterances that describe a task still in progress, and are therefore the ones
+#: a terminal outcome makes untrue.
+_NARRATION_PRIORITIES = frozenset({Priority.PROGRESS_UPDATE, Priority.DECORATIVE})
 
 
 @dataclass
@@ -248,12 +255,26 @@ class SpeechQueue:
 
             displaced: list[tuple[str, str]] = []
 
-            # -- supersession: a result retires this task's narration ------
-            if request.priority.value <= Priority.TASK_RESULT.value:
+            # -- supersession: a terminal outcome retires this task's narration --
+            #
+            # §7 names one case: "a newer task result may supersede an older
+            # progress utterance". A task *error* is included here and nothing
+            # else is, and the boundary is the difference between a statement
+            # that the task is over and an interjection while it continues.
+            # Narrating "counting the words" after "that failed" tells the user
+            # something that is no longer true; a critical warning or an
+            # approval prompt does not end the task, so the narration behind it
+            # is still accurate and is interrupted rather than discarded.
+            #
+            # An earlier version superseded on anything ranked at or above a
+            # result, which meant a warning silently emptied the queue. The
+            # tests caught it: a warning had displaced three queued lines that
+            # were still true.
+            if request.priority in _TERMINAL_PRIORITIES:
                 for entry in self._live_entries():
                     if (
                         entry.request.task_id == request.task_id
-                        and entry.request.priority.value > Priority.TASK_RESULT.value
+                        and entry.request.priority in _NARRATION_PRIORITIES
                     ):
                         self._withdraw(
                             entry, SpeechDisposition.SUPERSEDED,
@@ -265,14 +286,19 @@ class SpeechQueue:
             if self._live >= self.maximum_depth:
                 weakest = self._weakest()
                 if weakest is None or weakest.request.priority.value <= request.priority.value:
-                    return QueueOutcome(
-                        accepted=False,
-                        disposition=SpeechDisposition.DROPPED,
-                        detail=(
-                            f"the speech queue is at its bound of {self.maximum_depth} and nothing "
-                            f"queued is less urgent than {request.priority.wire}"
+                    # Through ``_refuse`` so this lands in the ledger. It used to
+                    # return the outcome directly, which meant the one path a
+                    # runaway narration loop actually takes was the one path
+                    # that recorded nothing — §7 asks for every utterance's
+                    # disposition, and "the queue was full" is a disposition.
+                    return replace(
+                        self._refuse(
+                            request, SpeechDisposition.DROPPED,
+                            (
+                                f"the speech queue is at its bound of {self.maximum_depth} and "
+                                f"nothing queued is less urgent than {request.priority.wire}"
+                            ),
                         ),
-                        request_id=request.request_id,
                         displaced=tuple(displaced),
                     )
                 self._withdraw(

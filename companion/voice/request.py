@@ -75,10 +75,20 @@ VOICE_REQUEST_SCHEMA_VERSION = 1
 #: rather than against a payload.
 MAX_SPEECH_CHARACTERS = 4000
 
-#: The byte bound, on the UTF-8 encoding that actually crosses the pipe. Four
-#: times the character bound so that text in any script has the same practical
-#: allowance, and so that the limit that bites is the one a person can predict.
-MAX_SPEECH_BYTES = 16 * 1024
+#: The byte bound, on the UTF-8 encoding that actually crosses the pipe.
+#:
+#: **Three** times the character bound, not four, and the difference is the
+#: whole point of having a second bound at all. UTF-8 encodes at most four bytes
+#: per character, so a byte limit at ``4 × MAX_SPEECH_CHARACTERS`` can never be
+#: reached — the character check would always fire first, and the byte check
+#: would be decoration that a reader could mistake for protection. At three
+#: times, every script that encodes in three bytes or fewer (which is Latin,
+#: Greek, Cyrillic, Hebrew, Arabic, Devanagari, Han, Hiragana, Katakana and
+#: Hangul — that is, all of prose) gets the full character allowance, while text
+#: that is mostly four-byte characters is refused. Four-byte UTF-8 is emoji and
+#: historic scripts; 4000 emoji is not a caption, and a synthesiser handed one
+#: would produce four thousand descriptions of pictures.
+MAX_SPEECH_BYTES = 3 * MAX_SPEECH_CHARACTERS
 
 #: Formats a request may ask for. Deliberately short and deliberately all
 #: uncompressed or losslessly framed: every one of these can be produced by a
