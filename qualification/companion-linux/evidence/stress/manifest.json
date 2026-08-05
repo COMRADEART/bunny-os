@@ -112,6 +112,71 @@
       "file": null,
       "name": "05-linux-service-stress",
       "note": "No machine-readable artefact exists for this measurement; the run printed to a console. The caption is the record."
+    },
+    {
+      "bytes": 98653,
+      "caption": "SUPERSEDES 03. Windows service target, 100 runs, after all six fixes. 100/100, longest consecutive 100, and no non-zero delta against baseline on any iteration.",
+      "commit": "66652d048fa1eacd3fbdd05892750a73fa255c4e",
+      "file": "06-final-service-100.json",
+      "name": "06-final-service-100",
+      "sha256": "3946c9cea2c32dec34d2ad998203ea5cda7504d57ba135471b3b85c6ab90fc11",
+      "summary": {
+        "failed": 0,
+        "failingIterations": [],
+        "finalDeltaVsBaseline": {
+          "consentWaiters": [],
+          "executorLeases": [],
+          "liveRuntimes": 0,
+          "liveServices": 0,
+          "tempDirectories": 0,
+          "threads": 0
+        },
+        "longestConsecutivePass": 100,
+        "order": "declared",
+        "passed": 100,
+        "runs": 100,
+        "secondsMax": 19.65,
+        "secondsMin": 18.429,
+        "target": "service"
+      }
+    },
+    {
+      "bytes": 65487,
+      "caption": "The 50-run complete-suite gate, on Linux over AF_UNIX. 50/50, longest 50. This gate had never been executed before this branch; the last stress run of the same test module failed five times in fifty.",
+      "commit": "66652d048fa1eacd3fbdd05892750a73fa255c4e",
+      "file": "07-final-suite-50.json",
+      "name": "07-final-suite-50",
+      "sha256": "24b0ff7bb5186b0abb107b6077b9aacf7b93d9909c5dd2b6560237949aaad4ed",
+      "summary": {
+        "failed": 0,
+        "failingIterations": [],
+        "finalDeltaVsBaseline": {
+          "consentWaiters": [],
+          "descriptors": 0,
+          "executorLeases": [],
+          "liveRuntimes": 0,
+          "liveServices": 0,
+          "socketDescriptors": 0,
+          "tcpListen": 0,
+          "tcpTimeWait": 0,
+          "tempDirectories": 0,
+          "threads": 2
+        },
+        "longestConsecutivePass": 50,
+        "order": "declared",
+        "passed": 50,
+        "runs": 50,
+        "secondsMax": 17.481,
+        "secondsMin": 15.673,
+        "target": "suite"
+      }
+    },
+    {
+      "caption": "20 consecutive installed character vertical slices from /usr/lib/bunny-os/python, all 25 steps, 0.422-0.484s. Recorded in gate-installed-slice-20.json.",
+      "commit": "66652d048fa1eacd3fbdd05892750a73fa255c4e",
+      "file": null,
+      "name": "08-final-installed-slice-20",
+      "note": "No machine-readable artefact exists for this measurement; the run printed to a console. The caption is the record."
     }
   ],
   "schema": "bunny-os/preserved-stress-evidence/1"

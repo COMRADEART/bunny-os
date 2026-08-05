@@ -5,7 +5,7 @@ Branch `fix/companion-pause-approval-consistency`.
 | | |
 | --- | --- |
 | **Starting commit** | `4f8ea552d54654a75f2c6b4014d1c1dfdfb8cca2` |
-| **Final / gate commit** | `8b334e2b1809143bcf67dd3452852c094b10f315` — all three gates |
+| **Final / gate commit** | `66652d048fa1eacd3fbdd05892750a73fa255c4e` — all three gates |
 | **Base branch** | `feature/companion-linux-validation` |
 
 The previous phase left four things open: service stress at 98/100, the 50-run
@@ -343,11 +343,24 @@ target device. The probe records `isGnomeSession: false` and
 
 ## 10. Gates
 
-All three ran against `8b334e2b1809143bcf67dd3452852c094b10f315`, recorded per
+All three ran against `66652d048fa1eacd3fbdd05892750a73fa255c4e`, recorded per
 iteration by the harness rather than once in a header — a header would not
 prove the tree stayed still underneath a run.
 
-*(Results filled in below as each completes; a failure resets that gate.)*
+| Gate | Required | Measured | Met |
+| --- | --- | --- | --- |
+| Installed vertical slices | 20 consecutive | **20/20**, all 25 steps, 0.422–0.484 s | **yes** |
+| Complete companion-suite runs | 50 consecutive | **50/50**, longest 50, 15.7–17.5 s | **yes** |
+| Service-driven suite runs | 100 consecutive | **100/100**, longest 100, 18.4–19.7 s | **yes** |
+
+**All three met, on one commit.** The 50-run gate had never been executed
+before this branch, and the last time that test module ran under stress it
+failed five times in fifty. The 100-run gate stood at 98/100 when this phase
+began.
+
+Gate 1 recorded **no non-zero delta against its baseline at all** — every
+thread, descriptor, socket, lease, waiter, held answer, pending approval and
+store-lock count returned to where it started, on all 100 iterations.
 
 Per iteration the harness records: run number, commit, exit status, duration,
 thread delta, descriptor delta, listening-socket delta, temporary-file count,
@@ -374,17 +387,22 @@ run and therefore the one a trend would show in:
 
 | | Result |
 | --- | --- |
-| thread delta per iteration | **0**, one iteration at +1 (transient, not cumulative) |
+| threads against baseline | **+2 by iteration 2, then flat at +2 for the remaining 48** |
+| non-daemon threads | **0** — nothing that would hold the process open |
 | descriptor delta per iteration | **0** across all 50 |
 | listening-socket delta | **0** |
 | temporary directories | **0** |
 | executor leases / consent waiters / held answers / pending approvals / store locks | **empty** at every iteration |
-| RSS against baseline | 41.9 MiB rising to a plateau; last ten iterations 53.4–55.4 MiB, oscillating |
+| RSS against baseline | rises for roughly the first twenty iterations, then oscillates around +52 MiB without trending |
 
-Threads, sockets, descriptors and temporary files **do not accumulate** — that
-is what §14.12 asks and it is met. Memory rises over roughly the first twenty
-iterations and then oscillates without trending, which reads as allocator and
-interpreter warm-up reaching a steady state. Stated as what it is: a plateau
+Threads, sockets, descriptors and temporary files **do not accumulate** — §14.12
+is met. The `+2` is worth stating precisely rather than rounding to zero: it
+appears in the first two iterations and never moves again, which is two threads
+created on first use, not two per run. Forty-eight consecutive iterations at the
+same value is the evidence for that, and the non-daemon count of zero is the
+evidence that neither would keep the process alive.
+
+Memory reaches a steady state and oscillates. Stated as what it is: a plateau
 over fifty runs, not a proof about a service left running for a week.
 
 ## 11. Windows and Linux measure different things

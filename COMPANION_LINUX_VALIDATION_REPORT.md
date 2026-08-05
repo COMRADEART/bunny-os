@@ -338,6 +338,28 @@ task holds no worker anyway, because the runner notices the pause at its next
 phase boundary. Measured before and after: the change did **not** alter the
 failure rate, so it is a correctness improvement and not a fix.
 
+> **Superseded — `fix/companion-pause-approval-consistency`.**
+>
+> The text above stands as the record of what was known here. The open defect
+> is fixed, and it was **six** defects rather than one, all with the same
+> shape: two writers on one task document, separated by a check that had gone
+> stale by the time the write happened.
+>
+> The reading above — "one of the two questions expires, and an expiry is
+> recorded as a denial" — was correct as far as it went and incomplete. Every
+> `ApprovalError` was written as `denied`, a transition event then defaulted to
+> `denied` a second time, the pause's own write was protective and lost to the
+> runner, an approval could be answered twice before the worker recorded the
+> first, `_save_running_task`'s guard was a check-then-act that pausing landed
+> inside, and a stale write could reset the lifecycle epoch.
+>
+> This report's §7 said "no gate is claimed on the strength of a 97 % pass
+> rate", and that was the right call: the residue was real and it was five more
+> defects. All three gates are now met. See
+> `COMPANION_PAUSE_APPROVAL_REPORT.md` and
+> `qualification/companion-linux/evidence/stress/manifest.json`, which keeps the
+> superseded results beside the superseding ones rather than over them.
+
 ## 8. Scope held
 
 - No AI providers, commercial voice services, speech recognition, full 3D
