@@ -543,17 +543,63 @@ class CompanionRuntime:
             else:
                 task = self._reattach_executor(task, decision)
             task = self._plan_and_execute(session, task, decision)
+        # Each handler re-reads the task and then checks whether somebody has
+        # already stopped it. Without that check the runner's own verdict
+        # overwrote theirs: a task paused while its question was on screen
+        # raised ApprovalError a moment later — because the question had been
+        # withdrawn, which is exactly what pausing does — and the handler wrote
+        # `blocked` over the `paused` that had just been persisted. The user
+        # pressed pause and the task reported itself blocked.
+        #
+        # The check belongs here rather than inside `_block`, because failing
+        # is not the same as being stopped: a task that genuinely faulted
+        # should record that even if it was also cancelled, whereas a refusal
+        # caused *by* the stop should not.
         except CapabilityRefused as exc:
-            task = self._block(session, self._latest(session_id, task), str(exc), exc.reasons)
+            task = self._block_unless_stopped(
+                session, session_id, task, str(exc), exc.reasons
+            )
         except CoordinationLimitExceeded as exc:
             task = self._fail(session, self._latest(session_id, task), "coordination_limit", str(exc))
         except ApprovalError as exc:
-            task = self._block(session, self._latest(session_id, task), str(exc), (str(exc),))
+            task = self._block_unless_stopped(
+                session, session_id, task, str(exc), (str(exc),)
+            )
         except (MalformedOutput, ExecutorUnavailable) as exc:
             task = self._fail(session, self._latest(session_id, task), "executor_fault", str(exc))
         finally:
             self.leases.release(task_id)
         return task
+
+    def _block_unless_stopped(
+        self,
+        session: CompanionSession,
+        session_id: str,
+        task: CompanionTask,
+        summary: str,
+        reasons: Sequence[str],
+    ) -> CompanionTask:
+        """Block the task, unless somebody has already stopped it.
+
+        A pause or a cancellation withdraws the task's outstanding questions,
+        and withdrawing them is what makes the runner's next approval check
+        raise. Blocking on that refusal would be recording the *consequence* of
+        the user's action as a fault of the task's own, over the top of the
+        state they asked for.
+
+        Under the lifecycle lock, because reading the state and writing over it
+        have to be one step. Checking first and blocking afterwards was still
+        wrong, just less often: the pause landed in between, the check saw a
+        task that was not yet stopped, and `blocked` went over the `paused` that
+        arrived a moment later. The event order showed the block first and the
+        store disagreed, which is what two writers on one document look like.
+        """
+        with self._lifecycle_guard:
+            current = self._latest(session_id, task)
+            stopped = self._stopped(current)
+            if stopped is not None:
+                return stopped
+            return self._block(session, current, summary, reasons)
 
     def _register_waiter(self, request) -> bool:
         """Take a consent waiter before the question becomes durable.
@@ -1017,7 +1063,14 @@ class CompanionRuntime:
                 # ApprovalDenied means somebody said no.
                 state = getattr(exc, "terminal_state", "invalidated")
                 previous = self.approvals.decision_for(request.request_id)
-                task = task.with_approval(replace(reference, decision="denied"))
+                # The reference records what happened too, and it also used to
+                # say "denied" for everything. It is read back by
+                # `_fill_required` when the task transitions to blocked, so a
+                # wrong value here reappears as a second wrong event.
+                task = task.with_approval(replace(
+                    reference,
+                    decision="denied" if state in USER_REFUSAL_STATES else "expired",
+                ))
                 self._emit(
                     task.session_id, task.task_id, "approval_resolved",
                     terminal_record(
@@ -1431,9 +1484,16 @@ class CompanionRuntime:
             # decision: pausing authorises nothing.
             self._release_waiters(task_id, withdrawn)
 
-            # 7-8. The plan's authority is gone with the approvals, and the
-            # lease is released so nothing may be started on this task's behalf.
+            # 7. The plan's authority is gone with the approvals, and the lease
+            # is released so nothing may be started on this task's behalf.
             self.leases.release(task_id)
+
+            # 8. Tell the executor, once, and do not wait on its answer. An
+            # executor that hangs in `cancel` must not hold the pause open —
+            # the same rule cancellation applies, for the same reason. Only
+            # executors that declare support are called; the rest have nothing
+            # to stop.
+            self._signal_executor_paused(task)
 
             task = replace(task, approvals=tuple(
                 replace(reference, decision="expired")
@@ -1462,8 +1522,41 @@ class CompanionRuntime:
             paused = self._transition(
                 task, "paused", {"pausedFrom": paused_from}, paused_from=paused_from
             )
-            self._checkpoint(self.session(session_id), paused)
+            # Authoritative, because this *is* the authority for pausing — the
+            # same reason `resume_task` is authoritative for un-pausing, and
+            # cancellation for cancelling.
+            #
+            # A protective write declines when it sees a task somebody else
+            # has taken — and the runner, working from a phase that began before
+            # the pause, is somebody else. Traced on Linux at about one run in
+            # three: the runner read `waiting_for_approval`, reached its own
+            # verdict, and the pause did not end up persisted. The exact
+            # interleaving is not reconstructed here and is not claimed; what is
+            # claimed is the rule, which is that whoever the user asked wins.
+            # Everything the runner writes afterwards is protective and declines
+            # against the pause, which is the half that already worked.
+            self._checkpoint(self.session(session_id), paused, authoritative=True)
             return paused
+
+    def _signal_executor_paused(self, task: CompanionTask) -> None:
+        """Tell the executor the task is being set aside. Best effort, by design.
+
+        Its answer is not waited on and its faults are swallowed rather than
+        raised: an executor that throws on the way out does not get to stop a
+        pause, because the steps that matter to the user have already happened
+        by the time this runs.
+        """
+        if not task.executor_id:
+            return
+        executor = self.executor(task.executor_id)
+        if executor is None or not executor.declaration.supports_cancellation:
+            return
+        try:
+            executor.cancel(
+                context_for(task, plan_revision=task.plan_revision), "paused"
+            )
+        except Exception:  # noqa: BLE001 - third-party code; its faults are not fatal
+            pass
 
     def _release_waiters(self, task_id: str, request_ids: Sequence[str]) -> None:
         """Wake anything parked on a question that has just been withdrawn.
@@ -1512,6 +1605,29 @@ def _iso(clock: Clock) -> str:
     return iso8601(clock.wall())
 
 
+#: How a recorded approval reference reads as a terminal state in the event
+#: stream. The reference uses the durable store's vocabulary; the event uses the
+#: companion's, and only one of them can say "a person refused".
+_REFERENCE_TERMINAL_STATE = {
+    "granted": "approved",
+    "denied": "denied-by-user",
+    "expired": "invalidated",
+}
+
+
+def _reference_terminal_state(reference: ApprovalReference | None, target: str) -> str:
+    """What actually happened to the last approval, in the event's vocabulary.
+
+    Falls back on the target only when there is no reference to read, which is a
+    transition into ``blocked`` for a reason that was never about an approval at
+    all — and ``invalidated`` is the honest word for that, because nobody
+    answered anything.
+    """
+    if reference is not None and reference.decision in _REFERENCE_TERMINAL_STATE:
+        return _REFERENCE_TERMINAL_STATE[reference.decision]
+    return "approved" if target != "blocked" else "invalidated"
+
+
 def _fill_required(event_type: str, task: CompanionTask, target: str, body: dict[str, Any]) -> dict[str, Any]:
     """Supply the payload fields a transition's event type must carry.
 
@@ -1528,7 +1644,16 @@ def _fill_required(event_type: str, task: CompanionTask, target: str, body: dict
     elif event_type == "approval_resolved":
         last = task.approvals[-1] if task.approvals else None
         body.setdefault("requestId", last.request_id if last is not None else "")
-        body.setdefault("decision", "denied" if target == "blocked" else "granted")
+        # From the approval that was actually recorded, not from the target.
+        #
+        # This defaulted to "denied" whenever the target was `blocked`, which is
+        # every transition out of `waiting_for_approval` that did not proceed —
+        # including one caused by the user pausing. The runtime has already
+        # emitted an accurate `approval_resolved` by the time this fires, so the
+        # transition event was a second record of the same fact carrying a worse
+        # value, and it is the one the projection folded last. A paused task
+        # showed as blocked because of this line.
+        body.setdefault("decision", _reference_terminal_state(last, target))
     elif event_type == "task_failed":
         body.setdefault("error", "the task failed")
     elif event_type == "task_cancelled":

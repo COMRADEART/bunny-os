@@ -105,6 +105,34 @@ class AnswerArrivalTests(unittest.TestCase):
         self.assertTrue(consent.register(question()))
         self.assertFalse(consent.register(question()))
 
+    def test_a_second_answer_is_a_replay_before_the_worker_records_the_first(self) -> None:
+        """Replay protection must not wait for the durable store.
+
+        The gateway detected a second answer by asking the approval store
+        whether a decision existed — but that decision is written by the
+        *worker*, after it wakes from the consent call. A second answer
+        arriving in between found "pending" and was accepted. Measured at about
+        one run in thirty before this; deterministic here, because nothing has
+        woken the worker at all.
+        """
+        consent = InteractiveConsent(maximum_wait_seconds=PATIENCE)
+        consent.register(question())
+        self.assertEqual(
+            consent.resolve("req-1", "granted", hold_for_pending_ask=True), "released"
+        )
+        self.assertEqual(
+            consent.resolve("req-1", "granted", hold_for_pending_ask=True), "replayed"
+        )
+        # And a denial cannot overwrite a grant either; one answer is one answer.
+        self.assertEqual(
+            consent.resolve("req-1", "denied", hold_for_pending_ask=True), "replayed"
+        )
+
+    def test_a_replayed_answer_is_refused_even_with_no_waiter(self) -> None:
+        consent = InteractiveConsent(maximum_wait_seconds=PATIENCE)
+        self.assertEqual(consent.resolve("req-1", "granted"), "unclaimed")
+        self.assertEqual(consent.resolve("req-1", "granted"), "replayed")
+
     def test_a_rolled_back_registration_leaves_nothing_answerable(self) -> None:
         consent = InteractiveConsent(maximum_wait_seconds=0.05)
         consent.register(question())
@@ -176,6 +204,48 @@ class PauseRaceTests(ParkedTaskCase):
             if request.service_id == f"companion.task.{task.task_id}"
         ]
         self.assertEqual(pending, [], "an approve button outlived the pause")
+
+    def test_a_pause_beats_the_runner_reaching_its_own_verdict(self) -> None:
+        """Whoever the user asked wins.
+
+        The runner can reach a verdict from a phase that began before the pause
+        — withdrawing its questions is exactly what makes its next approval
+        check raise — and it used to write `blocked` over the `paused` the user
+        had just asked for. Traced on Linux at about one run in three: the
+        runner read `waiting_for_approval`, blocked, and the pause that followed
+        was written protectively and therefore declined to assert itself.
+
+        Constructed as the invariant rather than as the interleaving, because
+        the interleaving needs two threads inside one lock and the invariant is
+        the thing that has to hold: once a pause is persisted, a runner holding
+        a task object from before it cannot put that object back.
+        """
+        runtime, session, task, _finished = self.parked()
+
+        # The runner's in-flight copy, taken before the pause.
+        in_flight = runtime.task(session.session_id, task.task_id)
+        self.assertNotEqual(in_flight.state, "paused")
+
+        paused = runtime.pause_task(session.session_id, task.task_id)
+        self.assertEqual(paused.state, "paused")
+
+        # The runner writes what it was holding. This is every write on the run
+        # path, and it must decline.
+        runtime._save_running_task(in_flight)
+        self.assertEqual(
+            runtime.task(session.session_id, task.task_id).state, "paused",
+            "a runner write from before the pause put the old state back",
+        )
+
+        # And the runner's verdict is refused outright rather than applied.
+        settled = runtime._block_unless_stopped(
+            runtime.session(session.session_id), session.session_id, in_flight,
+            "the question was withdrawn", ("withdrawn",),
+        )
+        self.assertEqual(settled.state, "paused")
+        self.assertEqual(
+            runtime.task(session.session_id, task.task_id).state, "paused"
+        )
 
     def test_pause_with_two_questions_withdraws_both(self) -> None:
         runtime, session, task, _finished = self.parked()

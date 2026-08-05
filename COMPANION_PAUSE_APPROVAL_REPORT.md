@@ -5,7 +5,7 @@ Branch `fix/companion-pause-approval-consistency`.
 | | |
 | --- | --- |
 | **Starting commit** | `4f8ea552d54654a75f2c6b4014d1c1dfdfb8cca2` |
-| **Final commit** | *(see §12; all three gates ran on one commit)* |
+| **Gate commit** | `951ae15b2139f0313c32048c4f5fb0bae05259ce` — all three gates |
 | **Base branch** | `feature/companion-linux-validation` |
 
 The previous phase left four things open: service stress at 98/100, the 50-run
@@ -239,7 +239,33 @@ Not a GNOME session, not physical hardware, not a performance figure for any
 target device. The probe records `isGnomeSession: false` and
 `isPhysicalHardware: false` in its own output.
 
-## 10. Windows and Linux measure different things
+## 10. Gates
+
+All three ran against `951ae15b2139f0313c32048c4f5fb0bae05259ce`, recorded per
+iteration by the harness rather than once in a header — a header would not
+prove the tree stayed still underneath a run.
+
+*(Results filled in below as each completes; a failure resets that gate.)*
+
+Per iteration the harness records: run number, commit, exit status, duration,
+thread delta, descriptor delta, listening-socket delta, temporary-file count,
+pending approvals, active executors, executor leases, consent waiters, held
+answers and held store locks. The last six are absolute rather than
+differenced — they should be *empty* between iterations, and a delta of zero
+against a baseline that already had one reads as clean when it is not.
+
+Two corrections were made to the harness before the gates ran, both because the
+previous version could have passed while hiding something:
+
+- the "complete suite" target was a **hand-written list of 22 modules**, and a
+  hand-written list of everything is wrong the moment somebody adds a file. Five
+  modules written during this phase were missing from it, including the ones
+  covering the defect the gate exists to catch. It now discovers: **27
+  modules**;
+- pending approvals, active executors, held answers and held store locks were
+  not recorded at all.
+
+## 11. Windows and Linux measure different things
 
 Kept separately, and neither substitutes for the other:
 
@@ -249,7 +275,7 @@ Kept separately, and neither substitutes for the other:
 - **Linux** validates the installed transport, `SO_PEERCRED` peer identity and
   systemd user-service integration, over a real Unix socket.
 
-## 11. Known limitations
+## 12. Known limitations
 
 1. **No physical hardware.** Every Linux result is from a WSL2 utility VM.
 2. **No GNOME session**, and no desktop-session claim.
@@ -267,7 +293,7 @@ Kept separately, and neither substitutes for the other:
    credential, not a second real user.
 8. **Frame-rate figures are development-machine figures.**
 
-## 12. Reproducibility and build impact
+## 13. Reproducibility and build impact
 
 - **Build-affecting.** `companion/` is copied into the image by
   `install-root.py`, so every change here changes the artifact.

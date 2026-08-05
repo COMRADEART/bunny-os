@@ -189,6 +189,17 @@ class InteractiveConsent(ConsentSource):
         #: long-running service must not accumulate one entry per cancellation
         #: for the rest of its life.
         self._refuse_on_arrival: dict[str, float] = {}
+        #: Questions that have already been answered once, and when they lapse.
+        #:
+        #: Replay protection cannot wait for the durable store. The gateway used
+        #: to detect a second answer by asking the approval store whether a
+        #: decision existed — but the decision is written by the *worker*, after
+        #: it wakes from the consent call, and a second answer arriving before
+        #: that was found to be still "pending" and accepted. Measured at about
+        #: one run in thirty. An approval authorises one act; the moment an
+        #: answer is taken is the moment a second one becomes a replay, and that
+        #: moment is here.
+        self._answered: dict[str, float] = {}
 
     # -- registration, before the question exists anywhere else ------------
 
@@ -296,8 +307,9 @@ class InteractiveConsent(ConsentSource):
 
         Returns ``"released"`` when a waiting task was woken, ``"held"`` when
         nobody was waiting yet and the answer has been kept for the task that is
-        about to ask, and ``"unclaimed"`` when nobody was waiting and the answer
-        was not kept.
+        about to ask, ``"unclaimed"`` when nobody was waiting and the answer was
+        not kept, and ``"replayed"`` when this question has already been
+        answered once.
 
         ``hold_for_pending_ask`` is what separates the second case from the
         third, and only a caller that has already established the question is
@@ -312,6 +324,11 @@ class InteractiveConsent(ConsentSource):
         if decision not in ("granted", "denied"):
             raise ValueError("an approval decision is 'granted' or 'denied'")
         with self._guard:
+            if request_id in self._answered:
+                # Answered once already. Whether the worker has got round to
+                # writing that down is not this question's business.
+                return "replayed"
+            self._answered[request_id] = expires_at_monotonic
             waiter = self._waiting.get(request_id)
             if waiter is None:
                 if not hold_for_pending_ask:
@@ -426,6 +443,14 @@ class InteractiveConsent(ConsentSource):
             if expires_at > 0 and now >= expires_at
         ]:
             self._refuse_on_arrival.pop(request_id, None)
+        for request_id in [
+            request_id
+            for request_id, expires_at in self._answered.items()
+            if expires_at > 0 and now >= expires_at
+        ]:
+            # Safe to forget: a lapsed question cannot be replayed, because the
+            # approval store refuses it on its own expiry.
+            self._answered.pop(request_id, None)
 
     def waiting_for(self) -> tuple[ApprovalRequest, ...]:
         with self._guard:
@@ -878,6 +903,16 @@ class CompanionGateway:
             service_id=request.service_id,
             hold_for_pending_ask=True,
         )
+        if outcome == "replayed":
+            from .errors import ApprovalReplayed
+
+            # The check above asks the durable store, and the store learns the
+            # decision from the *worker*, after it wakes. A second answer that
+            # arrives before that found "pending" and was accepted — measured at
+            # about one run in thirty. The consent source knows immediately.
+            raise ApprovalReplayed(
+                f"{requestId!r} has already been answered; an approval is answered once"
+            )
         if outcome == "unclaimed":
             # Nobody is waiting and nobody will. The decision is recorded anyway
             # — it is the user's answer and belongs in the record — but the task
