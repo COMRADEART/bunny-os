@@ -280,6 +280,17 @@ class CompanionTask:
     #: The phase a pause interrupted, so resume returns to it rather than
     #: guessing. Empty whenever the task is not paused.
     paused_from: str = ""
+    #: Which attempt at running this task is the current one.
+    #:
+    #: Incremented on every resume. A task that is paused and resumed asks its
+    #: questions again, and the answers to the *previous* attempt's questions
+    #: must not be able to change what the current attempt shows or authorises.
+    #: Comparing plan and transition ids is not enough for that: a resume that
+    #: produces an identical plan produces identical ids, which is deliberate —
+    #: it is how an unchanged plan keeps an answer that still applies — but it
+    #: also means an outcome recorded against the old attempt would match the
+    #: new one on every other field. The epoch is the field that cannot match.
+    lifecycle_epoch: int = 0
     progress: float = 0.0
     plan_revision: int = 0
     approvals: tuple[ApprovalReference, ...] = ()
@@ -464,6 +475,7 @@ class CompanionTask:
             "reviewerIds": list(self.reviewer_ids),
             "state": self.state,
             "pausedFrom": self.paused_from,
+            "lifecycleEpoch": self.lifecycle_epoch,
             "progress": self.progress,
             "planRevision": self.plan_revision,
             "reviewRounds": self.review_rounds,
@@ -539,6 +551,9 @@ class CompanionTask:
                 reviewer_ids=tuple(str(item) for item in document.get("reviewerIds", ())),
                 state=str(document.get("state", INITIAL_STATE)),
                 paused_from=str(document.get("pausedFrom", "")),
+                # Absent in tasks written before epochs existed. Zero is the
+                # right reading of a task that never had a second attempt.
+                lifecycle_epoch=int(document.get("lifecycleEpoch", 0) or 0),
                 progress=float(document.get("progress", 0.0) or 0.0),
                 plan_revision=int(document.get("planRevision", 0) or 0),
                 review_rounds=int(document.get("reviewRounds", 0) or 0),

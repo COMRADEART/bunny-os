@@ -222,6 +222,49 @@ EVENT_PHASES: Mapping[str, str] = {
     "task_state_changed": "",
 }
 
+#: Approval endings that mean the system withdrew the question, not that a
+#: person answered it.
+#:
+#: None of them may move the presentation phase. A task the user paused is
+#: paused, and it should project that way because its lifecycle says so — not
+#: because "paused" was given a higher visual rank than "blocked" to paper over
+#: a withdrawal being recorded as a refusal. That was the defect: pausing wrote
+#: the withdrawn question into the record as ``denied``, denial blocks, and a
+#: paused task showed as blocked about once in fifty runs.
+_SYSTEM_WITHDRAWALS = frozenset({
+    "invalidated",
+    "superseded",
+    "cancelled-with-task",
+    "cancelled-with-pause",
+})
+
+#: How a terminal state is summarised for a client.
+#:
+#: The record keeps seven states; the surface needs four, because what a person
+#: has to be able to tell apart is: it was allowed, I said no, it ran out of
+#: time, or the system took the question back. Collapsing the last of those into
+#: "denied" is the same defect the record had — it tells somebody they refused
+#: something they did not.
+PRESENTED_APPROVAL_STATE = {
+    "approved": "granted",
+    "granted": "granted",
+    "denied-by-user": "denied",
+    "denied": "denied",
+    "expired": "expired",
+    "invalidated": "withdrawn",
+    "superseded": "withdrawn",
+    "cancelled-with-task": "withdrawn",
+    "cancelled-with-pause": "withdrawn",
+}
+
+#: What to say about each withdrawal, when the event carries no reason.
+_WITHDRAWAL_TEXT = {
+    "invalidated": "the question was withdrawn and will be asked again if it is still needed",
+    "superseded": "the plan changed, so the question was withdrawn and will be asked again",
+    "cancelled-with-task": "the task was cancelled, so the question was withdrawn",
+    "cancelled-with-pause": "the task was paused, so the question was withdrawn",
+}
+
 #: Canonical task state -> phase, for the transitions whose event type carries
 #: nothing but the move (``task_state_changed``) and for recovery's decisions.
 TASK_STATE_PHASES: Mapping[str, str] = {
@@ -598,6 +641,8 @@ class PresentationProjector:
         }
         self._resolved: dict[str, str] = {}
         self._last_decision = ""
+        #: The attempt whose approval outcomes count. See :data:`_SYSTEM_WITHDRAWALS`.
+        self._lifecycle_epoch = 0
 
     # -- reading -----------------------------------------------------------
 
@@ -865,6 +910,33 @@ class PresentationProjector:
     ) -> tuple[str, str]:
         decision = str(payload.get("decision", "denied"))
         request_id = str(payload.get("requestId", ""))
+
+        # §7: an outcome recorded against an earlier attempt at this task says
+        # nothing about the current one. A resume produces the same plan and
+        # transition ids when the plan is unchanged — deliberately, so that an
+        # answer which still applies is kept — so every other field would match
+        # and only the epoch distinguishes them.
+        epoch = payload.get("lifecycleEpoch")
+        if isinstance(epoch, int) and epoch < self._lifecycle_epoch:
+            return status, base
+        if isinstance(epoch, int):
+            self._lifecycle_epoch = max(self._lifecycle_epoch, epoch)
+
+        # A question the system withdrew is not an answer, and none of these
+        # says anything about where the task went. Reporting them as a phase was
+        # the defect: a task somebody paused projected as `blocked`, because the
+        # withdrawal was written as a denial and a denial blocks. Only a person
+        # declining blocks a task.
+        if decision in _SYSTEM_WITHDRAWALS:
+            if request_id:
+                self._settle(request_id, decision)
+            self._last_decision = decision
+            detail = payload.get("reason") or payload.get("detail") or _WITHDRAWAL_TEXT.get(
+                decision, "the question was withdrawn and not answered"
+            )
+            # The phase the stream already had, not this event's own mapping.
+            return _text(str(detail), limit=MAX_STATUS_LENGTH), self.state.base_phase
+
         withdrawn = payload.get("withdrawn")
         if isinstance(withdrawn, list) and withdrawn:
             # A *withdrawal*, not an answer: the plan was superseded by a
@@ -886,7 +958,7 @@ class PresentationProjector:
         if request_id:
             self._settle(request_id, decision)
         self._last_decision = decision
-        if decision == "granted":
+        if decision in ("granted", "approved"):
             return "You approved it; carrying on.", "working"
         if decision == "expired":
             changes["error_summary"] = _text(
@@ -948,7 +1020,7 @@ class PresentationProjector:
         if self._pending:
             return "pending"
         if self._last_decision:
-            return self._last_decision
+            return PRESENTED_APPROVAL_STATE.get(self._last_decision, self._last_decision)
         return "not_required"
 
     # -- client-side indicators -------------------------------------------

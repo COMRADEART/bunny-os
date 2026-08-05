@@ -128,16 +128,15 @@ class InteractiveConsent(ConsentSource):
         self.maximum_wait_seconds = maximum_wait_seconds
         self._guard = threading.Lock()
         self._waiting: dict[str, _Waiter] = {}
-        #: Answers that arrived before the task got round to asking.
+        #: Answers that arrived before anything was waiting for them.
         #:
-        #: A question becomes visible to the Approval Centre when the runtime
-        #: writes it to the store, which happens *before* the worker calls
-        #: :meth:`answer` and registers a waiter. A person — or a test — who
-        #: answers inside that window used to find nobody listening, and the
-        #: decision was dropped: the worker then waited out its entire consent
-        #: budget and the task stalled for as long as that budget allowed,
-        #: despite the answer having already been given. Holding the decision
-        #: here closes the window from the other side.
+        #: With :meth:`register` called before the question is persisted, this
+        #: should now be unreachable through the runtime's own path — the waiter
+        #: exists before the Approval Centre can see anything to answer. It is
+        #: kept because it costs nothing and because "should be unreachable" is
+        #: a claim about every caller, present and future, rather than about
+        #: this class; a consent source that silently discarded a real answer
+        #: would fail in the one direction that matters.
         #:
         #: Keyed by request id. Bounded by the number of questions that are
         #: live and unanswered, because nothing reaches it that has not already
@@ -150,26 +149,74 @@ class InteractiveConsent(ConsentSource):
         #: for the rest of its life.
         self._refuse_on_arrival: dict[str, float] = {}
 
+    # -- registration, before the question exists anywhere else ------------
+
+    def register(self, request: ApprovalRequest) -> bool:
+        """Take a waiter for a question that has not been persisted yet.
+
+        This is the fix for the visible-but-unanswerable window, and it fixes it
+        at the source. Previously the first thing that existed was the durable
+        request, which is also what makes the question displayable — so between
+        the store write and the worker reaching :meth:`answer` there was a
+        period in which a person could see a question and answer it, and the
+        answer had nowhere to go.
+
+        Registering first inverts that. When the Approval Centre can see the
+        question, something is already waiting for the answer, and there is no
+        window left to lose one in.
+
+        Returns whether a waiter was taken. ``False`` means one already exists
+        for this request id, which the caller must treat as a failure to
+        register rather than as success: two waiters for one question would let
+        an answer release only one of them.
+        """
+        with self._guard:
+            if request.request_id in self._waiting:
+                return False
+            self._waiting[request.request_id] = _Waiter(request=request)
+            return True
+
+    def unregister(self, request_id: str) -> None:
+        """Drop a waiter for a question that never became durable.
+
+        The rollback half of :meth:`register`. If persistence fails after
+        registration, nothing may be left behind that could receive an answer:
+        the question does not exist, so an answer to it must not either.
+        """
+        with self._guard:
+            waiter = self._waiting.pop(request_id, None)
+            self._answered_early.pop(request_id, None)
+        if waiter is not None:
+            # Released with no decision, in case anything is already parked on
+            # it. Nothing is authorised by a question being withdrawn.
+            waiter.gate.set()
+
     # -- the ConsentSource interface --------------------------------------
 
     def answer(self, request: ApprovalRequest, *, now: float) -> str | None:
-        waiter = _Waiter(request=request)
         with self._guard:
-            # Claiming an early answer and registering the waiter happen under
-            # one acquisition of the lock. Split across two, a decision landing
+            # Claiming an early answer and taking the waiter happen under one
+            # acquisition of the lock. Split across two, a decision landing
             # between them would be recorded as early, found by nobody, and
-            # dropped — which is the defect this exists to fix, reintroduced one
-            # level down.
+            # dropped — the original defect, reintroduced one level down.
             self._discard_lapsed(now)
             if request.request_id in self._refuse_on_arrival:
-                # The task was cancelled or paused while this question was
-                # outstanding. Refusing here rather than waiting is what keeps a
-                # cancelled task from holding a worker.
+                # The task was cancelled while this question was outstanding.
+                # Refusing here rather than waiting is what keeps a cancelled
+                # task from holding a worker.
                 self._refuse_on_arrival.pop(request.request_id, None)
                 self._answered_early.pop(request.request_id, None)
+                self._waiting.pop(request.request_id, None)
                 return None
             early = self._answered_early.pop(request.request_id, None)
-            if early is None:
+            # The waiter is normally already here, taken by `register` before
+            # the question was persisted. Creating one is the fallback for a
+            # consent source used without registration — the composed
+            # `raise_request` path, which every test and the headless
+            # demonstration still use.
+            waiter = self._waiting.get(request.request_id)
+            if early is None and waiter is None:
+                waiter = _Waiter(request=request)
                 self._waiting[request.request_id] = waiter
         if early is not None:
             # An answer held here is still subject to the question's own expiry,
@@ -789,35 +836,29 @@ class CompanionGateway:
 
     def pause_task(self, *, taskId: str, sessionId: str | None) -> dict[str, Any]:
         session_id, _task = self._locate(taskId, sessionId)
-        # Written first, then the waiters are released. That order matters: the
-        # runner notices a pause by re-reading the persisted task at its next
-        # phase boundary, so the pause has to be on disk before the thing that
-        # will look for it is woken. Released with no decision, so pausing a
-        # task that was waiting for consent authorises nothing.
+        # One call, because pausing is one transaction and it belongs to the
+        # runtime. It used to be split: the runtime wrote the pause and this
+        # method released the waiters afterwards, which left a window between
+        # "the task says paused" and "nothing is waiting on its questions" — and
+        # ordering the two halves correctly from out here was never possible,
+        # because whichever went first the other was observable on its own.
+        # CompanionRuntime.pause_task now enumerates the outstanding questions
+        # from the durable approval authority, withdraws them, releases their
+        # waiters and only then emits task_paused, under the lifecycle lock.
+        before = set(self.runtime.approvals.requests)
         task = self.runtime.pause_task(session_id, taskId)
-        # No pre-refusal here, deliberately, and this is not an oversight.
-        #
-        # Cancelling pre-refuses the questions a worker has not reached yet, so
-        # that it cannot park on one belonging to a task that has stopped. Doing
-        # the same when pausing was measurably wrong: a pre-refused question
-        # returns "nobody answered", the approval layer applies the safe default,
-        # and the record gains a *denial* — whereas pausing already withdraws its
-        # questions through ApprovalGate.invalidate_for_task, which records them
-        # as expired with "the task was paused; the question was withdrawn, not
-        # answered". Withdrawn and denied are different things to have said to a
-        # person, and only one of them is true.
-        #
-        # Measured: adding it here failed
-        # test_pausing_a_task_waiting_for_consent_actually_stops_it about once in
-        # fifty, with the task correctly `paused` and the projection reporting
-        # `blocked` because a denial outranks a pause. A paused task holds no
-        # worker anyway — the runner notices the pause at its next phase boundary
-        # and stops — so there is nothing here for a pre-refusal to save.
-        released = self.consent.abandon(taskId)
+        owner = f"companion.task.{taskId}"
+        released = sorted(
+            request_id
+            for request_id in before
+            if self.runtime.approvals.requests[request_id].service_id == owner
+            and (self.runtime.approvals.decision_for(request_id) or None) is not None
+            and self.runtime.approvals.decision_for(request_id).decision != "pending"
+        )
         return {
             "sessionId": session_id,
             "task": task.view(PRESENTATION_AUDIENCE),
-            "releasedApprovals": list(released),
+            "releasedApprovals": released,
         }
 
     def resume_task(self, *, taskId: str, sessionId: str | None) -> dict[str, Any]:

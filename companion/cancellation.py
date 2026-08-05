@@ -159,6 +159,7 @@ def cancel_task(
     withdrawn = runtime.gate.invalidate_for_task(
         task,
         detail=f"task {task_id} was cancelled ({cause}); this question no longer authorises anything",
+        terminal_state="cancelled-with-task",
     )
 
     # 5. Keep whatever was produced. Partial output is still the user's.

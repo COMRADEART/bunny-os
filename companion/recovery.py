@@ -291,6 +291,7 @@ def _recover_task(
     invalidated = runtime.gate.invalidate_for_task(
         task,
         detail="the runtime restarted; approvals granted before it did not survive",
+        terminal_state="invalidated",
     )
     task = replace(task, approvals=tuple(
         replace(reference, decision="expired") if reference.request_id in invalidated else reference

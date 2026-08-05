@@ -30,20 +30,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 import re
+import threading
 from typing import Any, Mapping, Sequence
 
 from capability.router import RemoteProvider
 from capability.runtime import Assessment
 
 from .approvals import (
+    USER_REFUSAL_STATES,
     ApprovalGate,
     CompanionApprovalStore,
     ConsentSource,
     RefusingConsent,
     requirements_for,
+    terminal_record,
 )
 from .capability_bridge import CapabilityDecision, evaluate_task
-from .clock import Clock, SystemClock
+from .clock import Clock, SystemClock, iso8601
 from .coordination import (
     CoordinationPolicy,
     ExecutorLeases,
@@ -53,6 +56,7 @@ from .coordination import (
 )
 from .errors import (
     ApprovalError,
+    ApprovalInvalidated,
     CapabilityRefused,
     CompanionError,
     CoordinationLimitExceeded,
@@ -67,7 +71,7 @@ from .ids import IdSource, RandomIds, operation_key
 from .privacy import display_summary
 from .reviewer import Reviewer
 from .session import CompanionSession, CostPolicy, PrivacyPolicy
-from .states import require_transition
+from .states import TERMINAL_STATES, require_transition
 from .store import CompanionStore
 from .task import (
     ApprovalReference,
@@ -164,6 +168,18 @@ class CompanionRuntime:
         self._reviewers = {getattr(item, "reviewer_id", ""): item for item in options.reviewers}
         self._sessions: dict[str, CompanionSession] = {}
         self._started = False
+        #: Serialises the operations that change where a task is in its life —
+        #: pausing, resuming and cancelling.
+        #:
+        #: Not a lock over running a task. A task spends most of its wall-clock
+        #: time blocked inside a consent call, and holding a lock across that
+        #: would make pausing wait for the answer it exists to stop waiting for.
+        #: What this protects is the *transition*: each of these has to
+        #: enumerate outstanding approvals, withdraw them, release their
+        #: waiters and persist a new state, and two of them interleaving leaves
+        #: a task that is half paused with live approval authority. Reentrant
+        #: because cancellation calls through the runtime's own helpers.
+        self._lifecycle_guard = threading.RLock()
 
     # -- lifecycle ---------------------------------------------------------
 
@@ -539,6 +555,26 @@ class CompanionRuntime:
             self.leases.release(task_id)
         return task
 
+    def _register_waiter(self, request) -> bool:
+        """Take a consent waiter before the question becomes durable.
+
+        Optional on the consent source. A blocking source — the Approval Centre
+        — needs it, because it is the one with a window to lose an answer in. A
+        non-blocking source answers inside the same call that asks, so there is
+        no window and nothing to register; ``RefusingConsent`` and
+        ``ScriptedConsent`` implement neither method and are handled here rather
+        than made to grow a pair of no-ops each.
+        """
+        register = getattr(self.gate.consent, "register", None)
+        if register is None:
+            return True
+        return bool(register(request))
+
+    def _unregister_waiter(self, request_id: str) -> None:
+        unregister = getattr(self.gate.consent, "unregister", None)
+        if unregister is not None:
+            unregister(request_id)
+
     def _stopped(self, task: CompanionTask) -> CompanionTask | None:
         """The persisted task, if something has stopped it; otherwise ``None``.
 
@@ -816,6 +852,7 @@ class CompanionRuntime:
                     f"plan {plan.plan_id} revision {plan.revision} was superseded in response to "
                     "review; consent given for it does not carry over"
                 ),
+                terminal_state="superseded",
             )
             if withdrawn:
                 self._emit(
@@ -890,9 +927,35 @@ class CompanionRuntime:
             # window, so a client reconnecting while the user was being asked
             # something replayed a task that looked like it was quietly working.
             # See companion.approvals.ApprovalGate.prepare.
-            request, reference = self.gate.prepare(
+            # §4's order, and the order matters at every step.
+            #
+            # 1. Build the identity. Nothing is visible yet: no store, no
+            #    stream, no task document.
+            request, reference = self.gate.build(
                 task, requirement, plan, transition_id=transition_id, now=self.clock.monotonic(),
             )
+            # 2. Register the waiter, *before* the question is persisted. The
+            #    durable write is what makes a question displayable, so
+            #    registering after it left a window in which a person could see
+            #    a question and answer it with nothing listening.
+            registered = self._register_waiter(request)
+            if not registered:
+                # Nothing was persisted, nothing was emitted, nothing can be
+                # displayed and nothing is authorised. A question nobody can
+                # answer must not exist at all.
+                raise ApprovalInvalidated(
+                    f"a consent waiter for {request.request_id!r} could not be taken; "
+                    "the question was not raised"
+                )
+            # 3. Persist. From here the question is real and answerable.
+            try:
+                response = self.gate.persist(request)
+            except Exception:
+                # Roll the registration back. A waiter for a question that does
+                # not exist would hold a worker on something nobody can see.
+                self._unregister_waiter(request.request_id)
+                raise
+            reference = replace(reference, decision=response.decision)
             task = task.with_approval(reference)
             self._emit(
                 task.session_id, task.task_id, "approval_requested",
@@ -943,15 +1006,35 @@ class CompanionRuntime:
                     now=self.clock.monotonic(),
                 )
             except ApprovalError as exc:
+                # The terminal state comes from the exception, not from a
+                # constant. This line used to say "denied" for every failure
+                # here, which meant a question withdrawn because somebody
+                # pressed pause was written into the record as a refusal by the
+                # person. It was not: `ApprovalGate.invalidate_for_task` had
+                # already recorded it as withdrawn, and this overwrote that with
+                # a denial — which then outranked the pause in the presentation
+                # fold and made a paused task project as blocked. Only
+                # ApprovalDenied means somebody said no.
+                state = getattr(exc, "terminal_state", "invalidated")
+                previous = self.approvals.decision_for(request.request_id)
                 task = task.with_approval(replace(reference, decision="denied"))
                 self._emit(
                     task.session_id, task.task_id, "approval_resolved",
-                    {
-                        "requestId": request.request_id,
-                        "decision": "denied",
-                        "detail": str(exc),
-                        "planId": plan.plan_id,
-                    },
+                    terminal_record(
+                        request_id=request.request_id,
+                        task_id=task.task_id,
+                        plan_id=plan.plan_id,
+                        transition_id=transition_id,
+                        state=state,
+                        previous_state=(
+                            previous.decision if previous is not None else "pending"
+                        ),
+                        reason=str(exc),
+                        actor="user" if state in USER_REFUSAL_STATES else "system",
+                        at=iso8601(self.clock.wall()),
+                        binding_digest=reference.destination_fingerprint,
+                        lifecycle_epoch=task.lifecycle_epoch,
+                    ),
                     classification=task.classification,
                 )
                 self._checkpoint(session, task)
@@ -962,9 +1045,19 @@ class CompanionRuntime:
             self._emit(
                 task.session_id, task.task_id, "approval_resolved",
                 {
-                    "requestId": request.request_id,
-                    "decision": "granted",
-                    "planId": plan.plan_id,
+                    **terminal_record(
+                        request_id=request.request_id,
+                        task_id=task.task_id,
+                        plan_id=plan.plan_id,
+                        transition_id=transition_id,
+                        state="approved",
+                        previous_state="pending",
+                        reason="the user approved this step",
+                        actor=answer.responder if answer is not None else "user",
+                        at=iso8601(self.clock.wall()),
+                        binding_digest=reference.destination_fingerprint,
+                        lifecycle_epoch=task.lifecycle_epoch,
+                    ),
                     "planRevision": plan.revision,
                     "responder": answer.responder if answer is not None else "user",
                 },
@@ -1294,44 +1387,116 @@ class CompanionRuntime:
         same rule cancellation applies in :mod:`companion.cancellation`, for the
         same reason, and resuming asks again rather than spending consent given
         before the pause.
+
+        The order below is the whole of it, and it is the order rather than the
+        steps that was wrong before. ``task_paused`` used to be emitted *first*,
+        while the questions were still pending and their waiters still live — so
+        a client that saw the pause and immediately re-read the projection could
+        be shown an Approve button for a task that had already stopped. The
+        questions are withdrawn and their waiters released before anything says
+        the task is paused.
         """
-        task = self.task(session_id, task_id)
-        paused = self._transition(task, "paused", {"pausedFrom": task.state}, paused_from=task.state)
-        withdrawn = self.gate.invalidate_for_task(
-            paused,
-            detail=(
-                f"task {task_id} was paused; this question no longer authorises anything "
-                "and will be asked again if the task resumes"
-            ),
-        )
-        if withdrawn:
-            paused = replace(paused, approvals=tuple(
+        with self._lifecycle_guard:
+            # 1-2. Under the lock, and only from a state that can pause.
+            task = self.task(session_id, task_id)
+            if task.state in TERMINAL_STATES:
+                raise CompanionError(
+                    f"task {task_id} is {task.state!r} and has already finished; "
+                    "a finished task cannot be paused"
+                )
+            if task.state == "paused":
+                # Idempotent rather than an error: two clients pressing pause is
+                # not a fault, and the second must not withdraw a second time or
+                # emit a second task_paused.
+                return task
+
+            paused_from = task.state
+
+            # 3-4. Enumerate from the durable approval authority. The task
+            # document is not enough on its own: a question is durable the
+            # moment it is raised and reaches the task document only at the next
+            # save, and that gap is exactly when somebody is looking at the
+            # question and most likely to press pause.
+            withdrawn = self.gate.invalidate_for_task(
+                task,
+                detail=(
+                    f"task {task_id} was paused; this question no longer authorises anything "
+                    "and will be asked again if the task resumes"
+                ),
+                terminal_state="cancelled-with-pause",
+            )
+
+            # 5-6. Release every waiter for those questions, including any the
+            # worker has registered but not yet reached. Released with no
+            # decision: pausing authorises nothing.
+            self._release_waiters(task_id, withdrawn)
+
+            # 7-8. The plan's authority is gone with the approvals, and the
+            # lease is released so nothing may be started on this task's behalf.
+            self.leases.release(task_id)
+
+            task = replace(task, approvals=tuple(
                 replace(reference, decision="expired")
                 if reference.request_id in withdrawn else reference
-                for reference in paused.approvals
+                for reference in task.approvals
             ))
-            self._emit(
-                session_id, task_id, "approval_resolved",
-                {
-                    "requestId": withdrawn[0],
-                    "decision": "expired",
-                    "withdrawn": list(withdrawn),
-                    "pausedFrom": task.state,
-                    "detail": "the task was paused; the question was withdrawn, not answered",
-                },
-                producer="policy",
-                classification=task.classification,
+            if withdrawn:
+                # Before task_paused, so that no reader can observe a paused
+                # task with a question still pending.
+                self._emit(
+                    session_id, task_id, "approval_resolved",
+                    {
+                        "requestId": withdrawn[0],
+                        "decision": "cancelled-with-pause",
+                        "withdrawn": list(withdrawn),
+                        "pausedFrom": paused_from,
+                        "lifecycleEpoch": task.lifecycle_epoch,
+                        "reason": "the task was paused; the question was withdrawn, not answered",
+                        "detail": "the task was paused; the question was withdrawn, not answered",
+                    },
+                    producer="policy",
+                    classification=task.classification,
+                )
+
+            # 9-11. Now the state, the event and the projection.
+            paused = self._transition(
+                task, "paused", {"pausedFrom": paused_from}, paused_from=paused_from
             )
-        self._checkpoint(self.session(session_id), paused)
-        return paused
+            self._checkpoint(self.session(session_id), paused)
+            return paused
+
+    def _release_waiters(self, task_id: str, request_ids: Sequence[str]) -> None:
+        """Wake anything parked on a question that has just been withdrawn.
+
+        Tolerant of a consent source with no waiters to release — the refusing
+        and scripted sources answer inside the call that asks, so there is never
+        anything parked on them.
+        """
+        consent = self.gate.consent
+        abandon = getattr(consent, "abandon", None)
+        if abandon is not None:
+            abandon(task_id)
+        unregister = getattr(consent, "unregister", None)
+        if unregister is not None:
+            for request_id in request_ids:
+                unregister(request_id)
 
     def resume_task(self, session_id: str, task_id: str) -> CompanionTask:
         task = self.task(session_id, task_id)
         if task.state != "paused":
             raise CompanionError(f"task {task_id} is {task.state!r} and is not paused")
         target = task.paused_from or "classifying"
-        resumed = self._transition(task, target, {"resumedTo": target})
-        resumed = replace(resumed, paused_from="")
+        # A new attempt, and it says so. §8: the questions this attempt asks are
+        # new questions, and the outcomes recorded against the previous attempt
+        # must not be able to authorise or display anything here. An unchanged
+        # plan produces the same plan and transition ids on purpose — that is how
+        # an answer which still applies is kept — so the epoch is the only field
+        # that separates the two attempts, and the projection filters on it.
+        epoch = task.lifecycle_epoch + 1
+        resumed = self._transition(
+            task, target, {"resumedTo": target, "lifecycleEpoch": epoch}
+        )
+        resumed = replace(resumed, paused_from="", lifecycle_epoch=epoch)
         # Authoritative, because this *is* the authority for un-pausing. The
         # protective write refuses when the persisted task is paused — which is
         # exactly what it is here, by definition — so a protective resume

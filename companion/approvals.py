@@ -55,8 +55,10 @@ from capability.apply.identity import digest
 from .errors import (
     ApprovalDenied,
     ApprovalExpired,
+    ApprovalInvalidated,
     ApprovalMismatch,
     ApprovalReplayed,
+    MalformedOutput,
     StoreError,
 )
 from .executor import TaskPlan
@@ -66,6 +68,8 @@ from .task import ApprovalReference, CompanionTask
 from .tools import ToolBroker
 
 __all__ = [
+    "APPROVAL_TERMINAL_STATES",
+    "USER_REFUSAL_STATES",
     "ApprovalGate",
     "ApprovalRequirement",
     "CompanionApprovalStore",
@@ -75,7 +79,76 @@ __all__ = [
     "destination_fingerprint",
     "operations_needing_approval",
     "requirements_for",
+    "terminal_record",
 ]
+
+#: How a question can finish, in the companion's own record.
+#:
+#: Deliberately richer than the durable store's vocabulary, which is shared with
+#: the capability applicator and stays as it is. The store answers "may this act
+#: proceed"; this answers "what happened to the question", and those are
+#: different questions with different audiences. Writing one word for all of
+#: them was a defect with a user-visible consequence: a question withdrawn
+#: because somebody pressed pause was recorded as ``denied``, which says a
+#: person refused, and the paused task then projected as ``blocked``.
+APPROVAL_TERMINAL_STATES = (
+    "approved",
+    "denied-by-user",
+    "expired",
+    "invalidated",
+    "superseded",
+    "cancelled-with-task",
+    "cancelled-with-pause",
+)
+
+#: The only states that mean a person actively refused. Everything else is the
+#: system withdrawing a question, and no surface may present it as a refusal.
+USER_REFUSAL_STATES = frozenset({"denied-by-user"})
+
+
+def terminal_record(
+    *,
+    request_id: str,
+    task_id: str,
+    plan_id: str,
+    transition_id: str,
+    state: str,
+    previous_state: str,
+    reason: str,
+    actor: str,
+    at: str,
+    binding_digest: str = "",
+    lifecycle_epoch: int = 0,
+) -> dict[str, Any]:
+    """One question's ending, with everything needed to audit it later.
+
+    Every field is here because its absence made a real record ambiguous.
+    ``previous_state`` distinguishes a question that was withdrawn while pending
+    from one withdrawn after it had been granted — the second is consent being
+    taken back and the first is not. ``actor`` distinguishes the person from the
+    system. ``lifecycle_epoch`` is what lets a projection ignore the outcome of
+    a question asked before the task was paused and resumed.
+    """
+    if state not in APPROVAL_TERMINAL_STATES:
+        raise MalformedOutput(
+            f"{state!r} is not an approval terminal state; expected one of "
+            f"{list(APPROVAL_TERMINAL_STATES)}"
+        )
+    return {
+        "requestId": request_id,
+        "taskId": task_id,
+        "planId": plan_id,
+        "transitionId": transition_id,
+        "decision": state,
+        "previousState": previous_state,
+        "reason": reason,
+        "actor": actor,
+        "at": at,
+        "bindingDigest": binding_digest,
+        "lifecycleEpoch": lifecycle_epoch,
+        # Said explicitly so that no reader has to infer it from the word.
+        "userRefused": state in USER_REFUSAL_STATES,
+    }
 
 
 def destination_fingerprint(
@@ -565,6 +638,13 @@ class ApprovalGate:
     #: is the replay this set exists to catch. It is per-run because a run is the
     #: lifetime of the monotonic clock the expiry is measured on.
     consumed: set[tuple[str, str, str]] = field(default_factory=set)
+    #: Request id to the terminal state it was withdrawn into, for questions the
+    #: system took back. Kept beside the durable store rather than in it because
+    #: the store's vocabulary is shared with the capability applicator; see
+    #: :meth:`invalidate_for_task`. In memory, like ``consumed``, and for the
+    #: same reason: it describes this run, and after a restart a task is
+    #: recovered rather than resumed mid-question.
+    withdrawn: dict[str, str] = field(default_factory=dict)
 
     def transition_id(self, plan: TaskPlan, index: int, requirement: ApprovalRequirement) -> str:
         """Identify one approvable step by the *content* of the plan.
@@ -575,6 +655,60 @@ class ApprovalGate:
         plan asks a new one, which is exactly the supersession rule §12 requires.
         """
         return f"{plan.fingerprint}:{index}:{requirement.action}"
+
+    def build(
+        self,
+        task: CompanionTask,
+        requirement: ApprovalRequirement,
+        plan: TaskPlan,
+        *,
+        transition_id: str,
+        now: float,
+    ) -> tuple[ApprovalRequest, ApprovalReference]:
+        """Construct the question's identity, and write nothing anywhere.
+
+        Separated from :meth:`prepare` so that a consent waiter can be
+        registered *before* the question becomes durable. The order matters and
+        the wrong one was a defect: a question reaches the durable store — and
+        therefore the Approval Centre — before the worker registers anything to
+        receive an answer, so an answer given in that window arrived to nobody.
+
+        Building first makes the identity available to register against without
+        any of it being visible yet: nothing here touches the store, the event
+        stream or the task document, so a failure between this and
+        :meth:`prepare` leaves no question anybody could see or answer.
+        """
+        request_id = f"approval:{task.task_id}:{transition_id}"
+        request = ApprovalRequest(
+            request_id=request_id,
+            plan_id=plan.plan_id,
+            transition_id=transition_id,
+            service_id=f"companion.task.{task.task_id}",
+            action=requirement.action,
+            reason=requirement.reason,
+            data_affected=requirement.data_affected,
+            destination="remote" if requirement.destination != "local" else "local",
+            provider_id=requirement.provider_id,
+            estimated_cost_units=requirement.estimated_cost_units,
+            resource_impact={"planRevision": plan.revision, "planFingerprint": plan.fingerprint},
+            expires_at_monotonic=now + self.ttl_seconds,
+            alternatives=requirement.alternatives,
+            safe_default="denied",
+        )
+        reference = ApprovalReference(
+            request_id=request_id,
+            action=requirement.action,
+            decision="pending",
+            plan_id=plan.plan_id,
+            plan_revision=plan.revision,
+            transition_id=transition_id,
+            destination_fingerprint=requirement.fingerprint,
+        )
+        return request, reference
+
+    def persist(self, request: ApprovalRequest) -> ApprovalResponse:
+        """Make a built question durable. This is what makes it displayable."""
+        return self.store.request(request)
 
     def prepare(
         self,
@@ -600,35 +734,16 @@ class ApprovalGate:
         The two halves are used together everywhere. :meth:`raise_request`
         remains as their composition for callers with a non-blocking consent
         source, which is every test and the headless demonstration.
+
+        Now itself the composition of :meth:`build` and :meth:`persist`, so that
+        there is one construction of a question and not two. A caller that needs
+        to register a consent waiter between the two uses them directly.
         """
-        request_id = f"approval:{task.task_id}:{transition_id}"
-        request = ApprovalRequest(
-            request_id=request_id,
-            plan_id=plan.plan_id,
-            transition_id=transition_id,
-            service_id=f"companion.task.{task.task_id}",
-            action=requirement.action,
-            reason=requirement.reason,
-            data_affected=requirement.data_affected,
-            destination="remote" if requirement.destination != "local" else "local",
-            provider_id=requirement.provider_id,
-            estimated_cost_units=requirement.estimated_cost_units,
-            resource_impact={"planRevision": plan.revision, "planFingerprint": plan.fingerprint},
-            expires_at_monotonic=now + self.ttl_seconds,
-            alternatives=requirement.alternatives,
-            safe_default="denied",
+        request, reference = self.build(
+            task, requirement, plan, transition_id=transition_id, now=now
         )
-        response = self.store.request(request)
-        reference = ApprovalReference(
-            request_id=request_id,
-            action=requirement.action,
-            decision=response.decision,
-            plan_id=plan.plan_id,
-            plan_revision=plan.revision,
-            transition_id=transition_id,
-            destination_fingerprint=requirement.fingerprint,
-        )
-        return request, reference
+        response = self.persist(request)
+        return request, replace(reference, decision=response.decision)
 
     def seek_consent(
         self,
@@ -745,6 +860,17 @@ class ApprovalGate:
                 f"{request_id!r} has not been answered; the safe default is denial and nothing was done"
             )
         if response.decision == "expired":
+            state = self.withdrawn.get(request_id)
+            if state is not None:
+                # Withdrawn by a stop, not lapsed by a clock. Reporting this as
+                # an expiry was the visible half of the pause defect: the worker
+                # arrived after the pause had already withdrawn the question and
+                # overwrote "withdrawn" with an ending that blocks.
+                raise ApprovalInvalidated(
+                    f"approval {request_id!r} was withdrawn before it was answered"
+                    + (f": {response.detail}" if response.detail else ""),
+                    terminal_state=state,
+                )
             raise ApprovalExpired(f"approval {request_id!r} has expired; nothing was done")
         if response.decision == "denied":
             raise ApprovalDenied(
@@ -758,7 +884,13 @@ class ApprovalGate:
         self.consumed.add(spent)
         return replace(reference, decision="granted")
 
-    def invalidate_for_task(self, task: CompanionTask, *, detail: str) -> tuple[str, ...]:
+    def invalidate_for_task(
+        self,
+        task: CompanionTask,
+        *,
+        detail: str,
+        terminal_state: str = "invalidated",
+    ) -> tuple[str, ...]:
         """Withdraw every outstanding approval belonging to one task.
 
         Used by cancellation, by pausing, and by a replan that supersedes the
@@ -800,6 +932,15 @@ class ApprovalGate:
                 request_id, "expired",
                 plan_id=candidates[request_id], responder="system", detail=detail,
             )
+            # The durable store's vocabulary is shared with the capability
+            # applicator and has one word — "expired" — for every way a question
+            # can end without an answer. That is right for the store, whose
+            # question is only "may this act proceed". It is not enough for the
+            # record: a question withdrawn because the user paused and one that
+            # simply timed out mean different things to the person who was
+            # looking at it. The distinction is kept here so that a worker
+            # arriving afterwards reports what actually happened.
+            self.withdrawn[request_id] = terminal_state
             withdrawn.append(request_id)
         if withdrawn:
             self.store.save()

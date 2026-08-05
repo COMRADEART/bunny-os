@@ -69,7 +69,10 @@
     },
     "currentOperation": { "type": "string", "maxLength": 128 },
     "currentTool": { "type": "string", "maxLength": 128 },
-    "approvalState": { "enum": ["not_required", "pending", "granted", "denied", "expired"] },
+    "approvalState": {
+      "description": "How the current question ended. 'withdrawn' means the system took the question back — because the task was paused, cancelled, or the plan was superseded — and is deliberately distinct from 'denied', which means a person refused. A surface that showed 'denied' for a withdrawal would tell somebody they had refused something they never saw.",
+      "enum": ["not_required", "pending", "granted", "denied", "expired", "withdrawn"]
+    },
     "approvals": {
       "type": "array",
       "maxItems": 16,
