@@ -64,8 +64,11 @@ __all__ = [
     "CompanionClientError",
     "CompanionProtocol",
     "CompanionServer",
+    "DuplicateRuntime",
+    "PeerRefused",
     "ProtocolError",
     "RuntimeGateway",
+    "RuntimeSingleton",
     "default_endpoint_path",
     "default_runtime_directory",
 ]
@@ -671,16 +674,143 @@ class _LoopbackServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         super().__init__(("127.0.0.1", 0), _Handler)
 
 
+class RuntimeSingleton:
+    """The claim on "one runtime owns this session", taken before anything binds.
+
+    Two things share this responsibility and they are not the same thing.
+
+    The *probe* — connect to the endpoint and see whether anybody answers —
+    tells a live runtime from a crashed one, and must: a live runtime must not
+    be displaced, because two runtimes over one store would both drive tasks and
+    both believe they held the lease; and a stale socket must be removed,
+    because a crash must not make the companion permanently unstartable.
+
+    The probe alone is racy, and the race is not theoretical. Two services
+    starting together both find no endpoint, both decide it is stale, both
+    unlink and both bind — and the second unlinks the first's socket out from
+    under it. The loser keeps serving on a socket no client can reach. So the
+    probe runs *underneath an exclusive advisory lock* on a file beside the
+    endpoint, held for the life of the process by the kernel.
+
+    A lock file rather than a second exclusion mechanism with its own idea of
+    liveness: the lock is held by the open descriptor, so a process that dies —
+    for any reason, including SIGKILL — releases it, and there is no stale state
+    to reconcile. The file's continued existence means nothing and is never
+    consulted.
+    """
+
+    def __init__(self, endpoint: Path) -> None:
+        self.endpoint = Path(endpoint)
+        self.path = self.endpoint.with_name(self.endpoint.name + ".lock")
+        self._descriptor: int | None = None
+
+    @property
+    def held(self) -> bool:
+        return self._descriptor is not None
+
+    def acquire(self) -> "RuntimeSingleton":
+        """Take the claim, or raise :class:`DuplicateRuntime`."""
+        if self._descriptor is not None:
+            raise RuntimeError("this singleton is already held")
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        descriptor = os.open(self.path, os.O_RDWR | os.O_CREAT, _FILE_MODE)
+        try:
+            _lock_exclusive(descriptor)
+        except OSError as exc:
+            os.close(descriptor)
+            raise DuplicateRuntime(
+                f"another Bunny companion runtime holds {self.path}; one runtime owns "
+                "the session"
+            ) from exc
+        except NotImplementedError:
+            # No advisory locking on this platform. The probe below is then the
+            # whole of the exclusion, which is what it was before this class
+            # existed — recorded rather than pretended away.
+            pass
+        self._descriptor = descriptor
+        return self
+
+    def release(self) -> None:
+        """Give it up. Safe to call twice, and safe after a fault."""
+        descriptor, self._descriptor = self._descriptor, None
+        if descriptor is None:
+            return
+        try:
+            _unlock(descriptor)
+        except OSError:  # pragma: no cover - the descriptor is going away anyway
+            pass
+        os.close(descriptor)
+        try:
+            self.path.unlink()
+        except OSError:
+            pass
+
+    def describe(self) -> dict[str, Any]:
+        return {
+            "lockPath": str(self.path),
+            "held": self.held,
+            "advisoryLockingAvailable": _ADVISORY_LOCKING,
+        }
+
+    def __enter__(self) -> "RuntimeSingleton":
+        return self.acquire()
+
+    def __exit__(self, *_exc: object) -> None:
+        self.release()
+
+
+try:  # pragma: no cover - one branch per platform
+    import fcntl
+
+    _ADVISORY_LOCKING = True
+
+    def _lock_exclusive(descriptor: int) -> None:
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+    def _unlock(descriptor: int) -> None:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+
+except ImportError:  # pragma: no cover - Windows development hosts
+    try:
+        import msvcrt
+
+        _ADVISORY_LOCKING = True
+
+        def _lock_exclusive(descriptor: int) -> None:
+            msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+
+        def _unlock(descriptor: int) -> None:
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
+
+    except ImportError:
+        _ADVISORY_LOCKING = False
+
+        def _lock_exclusive(descriptor: int) -> None:
+            raise NotImplementedError("this platform has no advisory file locking")
+
+        def _unlock(descriptor: int) -> None:
+            raise NotImplementedError("this platform has no advisory file locking")
+
+
 class CompanionServer:
-    """Binds the endpoint, refuses a second runtime, and serves requests."""
+    """Binds the endpoint, refuses a second runtime, and serves requests.
+
+    The gateway may be attached after the bind. That is not a convenience: it is
+    what lets a service acquire its singleton and bind its endpoint *before* it
+    builds anything that owns a thread, so a refusal at the door costs nothing
+    to unwind. Requests cannot arrive before :meth:`start`, and :meth:`start`
+    refuses without a gateway.
+    """
 
     def __init__(
         self,
-        gateway: RuntimeGateway,
+        gateway: RuntimeGateway | None = None,
         endpoint: Path | None = None,
         *,
         require_unix: bool | None = None,
         prefer_loopback: bool = False,
+        singleton: RuntimeSingleton | None = None,
     ) -> None:
         """``prefer_loopback`` is a diagnostic, and only a diagnostic.
 
@@ -711,17 +841,47 @@ class CompanionServer:
             )
         self.transport_token = ""
         self._thread: threading.Thread | None = None
+        self.gateway = gateway
+        #: ``None`` when the caller did not acquire one, in which case the
+        #: probe below is the whole of the exclusion — the arrangement that
+        #: shipped before :class:`RuntimeSingleton` existed, and the one every
+        #: test that constructs a bare server still uses.
+        self.singleton = singleton
         self._make_directory()
+        # Always. When a singleton is held the probe cannot race another
+        # starter, and what it is still doing is the stale-endpoint removal —
+        # which is not about exclusion at all: a crashed runtime leaves a socket
+        # file behind and ``bind()`` would fail on it. When no singleton was
+        # acquired the probe is the whole of the exclusion, as it was before.
         self._refuse_duplicate()
         if self.unix:
-            protocol = CompanionProtocol(gateway)
+            protocol = CompanionProtocol(gateway) if gateway is not None else None
             self._server = _UnixServer(str(self.endpoint), protocol)
             _restrict(self.endpoint)
         else:
             self.transport_token = uuid.uuid4().hex
-            protocol = CompanionProtocol(gateway, transport_token=self.transport_token)
+            protocol = (
+                CompanionProtocol(gateway, transport_token=self.transport_token)
+                if gateway is not None else None
+            )
             self._server = _LoopbackServer(protocol)
             self._write_endpoint_file()
+
+    def attach(self, gateway: RuntimeGateway) -> None:
+        """Give the bound endpoint something to serve.
+
+        Safe because nothing is serving yet: the socket is bound and listening
+        at the kernel, and a connection that arrives before :meth:`start` sits
+        in the accept backlog. There is no window in which a request reaches a
+        protocol with no gateway behind it.
+        """
+        if self._thread is not None:
+            raise RuntimeError("this server is already serving; the gateway cannot be replaced")
+        self.gateway = gateway
+        self._server.protocol = (
+            CompanionProtocol(gateway, transport_token=self.transport_token)
+            if self.transport_token else CompanionProtocol(gateway)
+        )
 
     # -- endpoint ----------------------------------------------------------
 
@@ -822,6 +982,14 @@ class CompanionServer:
     def start(self) -> threading.Thread:
         if self._thread is not None:
             raise RuntimeError("this server is already serving")
+        if self.gateway is None:
+            # Fail closed. A server that began accepting with no gateway would
+            # answer every request with an internal error, which reads to a
+            # client exactly like a runtime that is up and broken rather than
+            # one that never finished starting.
+            raise RuntimeError(
+                "this server has no gateway attached; call attach() before serving"
+            )
         self._thread = threading.Thread(
             target=self.serve_forever, name="bunny-companion-protocol", daemon=True
         )
@@ -849,6 +1017,11 @@ class CompanionServer:
             self.endpoint.unlink()
         except OSError:
             pass
+        # After the socket is gone, never before: the claim is what stops a
+        # second runtime binding, and releasing it while this one still held the
+        # endpoint would let the next starter through to a bind that fails.
+        if self.singleton is not None:
+            self.singleton.release()
 
     def __enter__(self) -> "CompanionServer":
         self.start()

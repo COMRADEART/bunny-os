@@ -27,7 +27,7 @@ for _candidate in (Path("/usr/lib/bunny-os/python"), Path(__file__).resolve().pa
         sys.path.insert(0, str(_candidate))
 
 from companion.protocol import DuplicateRuntime  # noqa: E402
-from companion.service import CompanionService, ServiceOptions  # noqa: E402
+from companion.service import CompanionService, ServiceOptions, StartupFailed  # noqa: E402
 
 
 def _state_root() -> Path:
@@ -50,6 +50,15 @@ def main() -> int:
     except DuplicateRuntime as exc:
         print(f"bunny-companion-service: {exc}", file=sys.stderr)
         return 3
+    except StartupFailed as exc:
+        # Names the step, because "it did not start" and "it did not start at
+        # initialise-durable-state" are different problems for whoever reads the
+        # journal, and the service has already released everything it held.
+        print(
+            f"bunny-companion-service: start-up failed at {exc.step}: {exc.cause}",
+            file=sys.stderr,
+        )
+        return 4 if isinstance(exc.cause, OSError) else 5
     except OSError as exc:
         print(f"bunny-companion-service: the endpoint could not be bound: {exc}", file=sys.stderr)
         return 4

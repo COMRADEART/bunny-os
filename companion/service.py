@@ -60,7 +60,15 @@ from .presentation import (
     select_presentation,
     signals_from_capability_event,
 )
-from .protocol import CompanionServer, MAX_EVENT_PAGE, PROTOCOL_SCHEMA_VERSION
+from .protocol import (
+    CompanionServer,
+    DuplicateRuntime,
+    MAX_EVENT_PAGE,
+    PROTOCOL_SCHEMA_VERSION,
+    PeerRefused,
+    RuntimeSingleton,
+    default_endpoint_path,
+)
 from .recovery import recover
 from .runtime import CompanionRuntime
 # The *preferences* type only. The service reaches the voice runtime through
@@ -71,8 +79,10 @@ from .runtime import CompanionRuntime
 from .voice.policy import VoicePreferences
 
 __all__ = [
+    "STARTUP_SEQUENCE",
     "CompanionGateway",
     "CompanionService",
+    "StartupFailed",
     "InteractiveConsent",
     "PRESENTATION_AUDIENCE",
 ]
@@ -1220,62 +1230,295 @@ class ServiceOptions:
     voice_preferences: "VoicePreferences | None" = None
 
 
+#: The order a companion service comes up in, and the whole of it.
+#:
+#: Order is the fix, not the rollback. The measured defect — §18b of the voice
+#: runtime report — was a voice worker started *before* the endpoint bind that
+#: raises ``DuplicateRuntime``: fifty complete suite runs accumulated a hundred
+#: stranded `companion-voice` threads, two per run, and every test in every run
+#: passed. That was first fixed by unwinding the worker when the bind failed,
+#: which is correct and is still here. But a resource that is never created
+#: before the thing most likely to refuse cannot be stranded by that refusal at
+#: all, and the two cheap refusals — a bad configuration and a second runtime —
+#: now both happen before anything owns a thread, a process or a device.
+#:
+#: So: everything that can say no comes first, in increasing order of what it
+#: costs to undo.
+STARTUP_SEQUENCE: tuple[str, ...] = (
+    "validate-configuration",
+    "acquire-singleton",
+    "bind-endpoint",
+    "initialise-durable-state",
+    "construct-voice-worker",
+    "start-voice-worker",
+    "publish-readiness",
+)
+
+
+#: The order resources are released in. **Not** the reverse of the order they
+#: were created in — shutdown order is a design with reasons, and every one of
+#: the three departures below was measured rather than reasoned about:
+#:
+#: *Endpoint first.* A client that connects while the runtime is being torn down
+#: reaches a service whose store is already stopping. Closing the socket first
+#: turns that into a connection refusal, which is the truth. It is also what
+#: shipped: releasing it last instead cost the protocol suite ten seconds, one
+#: ``socketserver.shutdown`` poll interval at a time.
+#:
+#: *Consent next.* A task parked on an unanswered question holds the task worker
+#: for the rest of the consent timeout. Releasing the waiters grants nothing —
+#: they return with no decision and the safe default applies — and a service
+#: that did not do this before joining the worker took the full consent timeout
+#: to stop, which ``TimeoutStopSec`` turns into a kill mid-append every time
+#: somebody left a dialog open. Measured: the protocol suite went from 16 s to
+#: 86 s when a plain reverse-creation unwind put this after the worker join.
+#:
+#: *Voice before the task worker.* A voice worker still playing holds a child
+#: process and an audio device. Stopping it first bounds the shutdown by the
+#: player's own termination escalation rather than by whatever the task worker
+#: happens to be doing.
+#:
+#: The singleton is last and is usually not on the stack at all:
+#: ``CompanionServer.close`` releases it after the socket is gone, which is the
+#: order that matters — the claim is what stops a second runtime binding, and
+#: releasing it while this one still held the socket would let the next starter
+#: through to a bind that fails. It stays here for the window between step 2 and
+#: step 3, when the claim is held and no server owns it yet.
+RELEASE_ORDER: tuple[str, ...] = (
+    "endpoint",
+    "consent",
+    "voice-runtime",
+    "task-worker",
+    "durable-state",
+    "singleton",
+)
+
+
+class StartupFailed(RuntimeError):
+    """A start-up step refused, and everything before it has been unwound."""
+
+    def __init__(self, step: str, cause: BaseException) -> None:
+        super().__init__(f"companion start-up failed at {step}: {cause}")
+        self.step = step
+        self.cause = cause
+
+
 class CompanionService:
-    """One runtime, one worker, one socket. Started by the user unit."""
+    """One runtime, one worker, one socket. Started by the user unit.
+
+    Comes up in :data:`STARTUP_SEQUENCE` and unwinds in the reverse of it. The
+    unwind is a stack of closures pushed as each resource is created, so a step
+    added without a matching release is a step whose resource is visibly not on
+    the stack rather than one that quietly leaks — and the steps that create
+    nothing push nothing.
+    """
 
     def __init__(self, options: ServiceOptions) -> None:
         self.options = options
         self.root = Path(options.root)
+        self.recovery: dict[str, Any] = {}
+        self.consent: InteractiveConsent | None = None
+        self.runtime: CompanionRuntime | None = None
+        self.voice: "VoiceService | None" = None
+        self.gateway: CompanionGateway | None = None
+        self.server: CompanionServer | None = None
+        self.singleton: RuntimeSingleton | None = None
+        self._stop = threading.Event()
+        self._unwind: list[tuple[str, Any]] = []
+        self._completed: list[str] = []
+        self._ready = False
+        self._bring_up()
+
+    # -- start-up ----------------------------------------------------------
+
+    def _bring_up(self) -> None:
+        """Steps 1 to 6. Step 7 is :meth:`start`, and unwinds through here too."""
+        for step in STARTUP_SEQUENCE[:-1]:
+            self._step(step, getattr(self, "_step_" + step.replace("-", "_")))
+
+    def _step(self, name: str, action: Any) -> None:
+        try:
+            action()
+        except BaseException as exc:
+            self.unwind()
+            if isinstance(exc, (DuplicateRuntime, PeerRefused)):
+                # Preserved as itself. A caller that catches DuplicateRuntime to
+                # say "the companion is already running" must keep working, and
+                # wrapping it would turn a supported refusal into a crash.
+                raise
+            raise StartupFailed(name, exc) from exc
+        self._completed.append(name)
+
+    def unwind(self) -> None:
+        """Release everything created so far, in :data:`RELEASE_ORDER`.
+
+        Every release is attempted. A release that raises must not stop the ones
+        behind it, because the resource it failed to free is one resource and
+        the ones it would have skipped are all the others.
+
+        Anything held that :data:`RELEASE_ORDER` does not name is released last,
+        newest first. That is a backstop, not a design: a resource nobody
+        ordered is still freed, and ``test_every_held_resource_is_named_in_the
+        _release_order`` fails until somebody says where it belongs.
+        """
+        held = {name: release for name, release in self._unwind}
+        ordered = [name for name in RELEASE_ORDER if name in held]
+        ordered += [name for name, _ in reversed(self._unwind) if name not in set(RELEASE_ORDER)]
+        self._unwind = []
+        for name in ordered:
+            try:
+                held[name]()
+            except BaseException:  # noqa: BLE001 - an unwind never raises
+                continue
+
+    @property
+    def held_resources(self) -> tuple[str, ...]:
+        """What this service currently owns, newest last."""
+        return tuple(name for name, _ in self._unwind)
+
+    @property
+    def completed_steps(self) -> tuple[str, ...]:
+        return tuple(self._completed)
+
+    def _step_validate_configuration(self) -> None:
+        """Everything that can be refused before a single resource exists.
+
+        First on purpose. A bad root or an endpoint that is a symlink is a
+        refusal that should cost nothing, and the cheapest possible unwind is
+        the one with nothing on the stack.
+        """
+        options = self.options
+        if not str(options.root):
+            raise ValueError("a companion service needs a store root")
+        self.root = Path(options.root)
+        if self.root.exists() and not self.root.is_dir():
+            raise NotADirectoryError(f"{self.root} exists and is not a directory")
+        preferences = options.voice_preferences
+        if options.voice_enabled and preferences is not None:
+            # Checked here rather than inside the voice runtime, because
+            # ``_build_voice`` swallows every exception on purpose — §8: a
+            # misconfigured synthesiser must never be a reason the service does
+            # not start. That is right for a missing program and wrong for a
+            # rate of −1, which is a configuration error the operator wants told
+            # about rather than a silently voiceless service.
+            if not 0.0 <= preferences.volume <= 1.0:
+                raise ValueError(
+                    f"voice volume {preferences.volume} is outside 0.0-1.0; a preference "
+                    "may only ever make the output quieter"
+                )
+            if not 0.1 <= preferences.speaking_rate <= 4.0:
+                raise ValueError(
+                    f"voice speaking rate {preferences.speaking_rate} is outside 0.1-4.0"
+                )
+            if not preferences.language:
+                raise ValueError("a voice preference must name a language")
+        self.endpoint = Path(options.endpoint) if options.endpoint else default_endpoint_path()
+        if self.endpoint.is_symlink():
+            raise PeerRefused(f"{self.endpoint} is a symbolic link; refusing to bind through it")
+        self.audio_output_available = options.audio_output_available
+        if self.audio_output_available is None:
+            from .voice import local_voice_available
+
+            self.audio_output_available = local_voice_available()
+        self.display_available = options.display_available
+        if self.display_available is None:
+            self.display_available = bool(
+                os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY")
+            )
+
+    def _step_acquire_singleton(self) -> None:
+        singleton = RuntimeSingleton(self.endpoint)
+        singleton.acquire()
+        self.singleton = singleton
+        self._unwind.append(("singleton", singleton.release))
+
+    def _step_bind_endpoint(self) -> None:
+        """The socket, with nothing behind it yet.
+
+        Before the store, before the voice worker, before anything with a
+        thread. The gateway is attached at step 7; requests cannot arrive until
+        the serving loop starts, and ``CompanionServer.start`` refuses without
+        one.
+        """
+        server = CompanionServer(
+            None, self.endpoint,
+            require_unix=self.options.require_unix,
+            prefer_loopback=self.options.prefer_loopback,
+            singleton=self.singleton,
+        )
+        self.server = server
+        # ``close`` releases the singleton too, so it is popped from the stack
+        # here to keep the release exactly once.
+        self._unwind = [item for item in self._unwind if item[0] != "singleton"]
+        self._unwind.append(("endpoint", server.close))
+
+    def _step_initialise_durable_state(self) -> None:
         # Built before the runtime and handed to it, rather than substituted
         # afterwards. A runtime that was constructed with the refusing default
         # and then had its consent source replaced would refuse everything for
         # however long the substitution was missing, and the failure mode of a
         # forgotten line would be an approval nobody could answer.
-        self.consent = InteractiveConsent(maximum_wait_seconds=options.consent_wait_seconds)
+        self.consent = InteractiveConsent(
+            maximum_wait_seconds=self.options.consent_wait_seconds
+        )
+        self._unwind.append(("consent", self.consent.abandon_all))
         self.runtime = self._build_runtime(self.consent)
-        self.recovery: dict[str, Any] = {}
-        self._stop = threading.Event()
-        audio = options.audio_output_available
-        if audio is None:
-            from .voice import local_voice_available
+        self._unwind.append(("durable-state", self._release_durable_state))
 
-            audio = local_voice_available()
-        display = options.display_available
-        if display is None:
-            display = bool(os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY"))
-        self.voice = self._build_voice() if options.voice_enabled else None
-        # Everything after the voice runtime is built runs inside this, because
-        # the voice runtime has a *started thread* in it and construction can
-        # still fail: `CompanionServer` raises `DuplicateRuntime` when a second
-        # service is pointed at a live endpoint, which is a supported and tested
-        # refusal. Before there was a voice runtime a half-built service leaked
-        # nothing; now it would strand a worker thread that nobody holds a
-        # reference to and nothing can ever stop.
-        #
-        # Found by §22's thread-delta column: fifty complete suite runs
-        # accumulated a hundred `companion-voice` threads, two per run, and the
-        # tests themselves all passed.
-        try:
-            self.gateway = CompanionGateway(
-                self.runtime,
-                consent=self.consent,
-                preferences=options.preferences,
-                audio_output_available=bool(audio),
-                display_available=bool(display),
-                clock=self.runtime.clock,
-                voice=self.voice,
-            )
-            self.server = CompanionServer(
-                self.gateway, options.endpoint,
-                require_unix=options.require_unix,
-                prefer_loopback=options.prefer_loopback,
-            )
-            self.gateway.endpoint_description = self.server.describe()
-        except BaseException:
+    def _release_durable_state(self) -> None:
+        if self.runtime is not None:
+            self.runtime.stop()
+
+    def _step_construct_voice_worker(self) -> None:
+        """Constructed, not started. The two are separate steps for a reason.
+
+        A constructed worker owns a queue, a journal and a provider registry and
+        no thread; a started one owns a thread that nothing else holds a
+        reference to. Splitting them means the resource that was hardest to
+        clean up is the last one created.
+
+        The gateway is assembled here too, because it is the same kind of thing:
+        a façade over the runtime and the voice worker that owns nothing until
+        ``start_worker`` is called at step 7. Callers hold ``service.gateway``
+        without serving — the CLI does, and so do the fault tests — so it has to
+        exist once construction returns.
+        """
+        if self.options.voice_enabled:
+            self.voice = self._build_voice()
             if self.voice is not None:
-                self.voice.close()
-                self.voice = None
-            raise
+                self._unwind.append(("voice-runtime", self.voice.close))
+        assert self.runtime is not None and self.server is not None
+        self.gateway = CompanionGateway(
+            self.runtime,
+            consent=self.consent,
+            preferences=self.options.preferences,
+            audio_output_available=bool(self.audio_output_available),
+            display_available=bool(self.display_available),
+            clock=self.runtime.clock,
+            voice=self.voice,
+        )
+        self.gateway.endpoint_description = self.server.describe()
+
+    def _step_start_voice_worker(self) -> None:
+        if self.voice is not None:
+            self.voice.worker.start()
+
+    def _step_publish_readiness(self) -> None:
+        """The recovery pass, the task worker and the serving loop.
+
+        Last, and the only step after which a client can see anything. A service
+        that failed here would have been visible as up-and-broken, which is why
+        everything that can refuse happens before it.
+        """
+        assert self.runtime is not None and self.server is not None and self.gateway is not None
+        self.server.attach(self.gateway)
+        self.runtime.start()
+        if self.options.recover_on_start:
+            self.recovery = recover(self.runtime).to_json()
+        self.gateway.start_worker()
+        self._unwind.append(("task-worker", self.gateway.stop_worker))
+        self.server.start()
+        self._ready = True
 
     def _build_voice(self) -> "VoiceService | None":
         """Construct the voice runtime, or carry on without one.
@@ -1289,11 +1532,17 @@ class CompanionService:
         """
         from .voice.service import VoiceService, VoiceServiceOptions
 
+        assert self.runtime is not None
         try:
             return VoiceService(VoiceServiceOptions(
                 runtime_directory=self.root / "voice",
                 preferences=self.options.voice_preferences or VoicePreferences(),
                 clock=self.runtime.clock,
+                # Constructed here, started at step 6. The split is the whole
+                # point of having two steps: a constructed worker owns no
+                # thread, so a failure between the two unwinds a queue rather
+                # than chasing something already running.
+                start_worker=False,
             ))
         except Exception:  # noqa: BLE001 - speech is never a reason not to start
             return None
@@ -1332,36 +1581,50 @@ class CompanionService:
     # -- lifecycle ---------------------------------------------------------
 
     def start(self) -> "CompanionService":
-        self.runtime.start()
-        if self.options.recover_on_start:
-            self.recovery = recover(self.runtime).to_json()
-        self.gateway.start_worker()
-        self.server.start()
+        """Step 7. Idempotent, and unwinds the whole service if it refuses."""
+        if self._ready:
+            return self
+        self._step("publish-readiness", self._step_publish_readiness)
         return self
 
+    @property
+    def ready(self) -> bool:
+        return self._ready
+
     def close(self) -> None:
+        """Release everything, newest first.
+
+        The order below is the reverse of the order things were created in, and
+        two of the steps are load-bearing rather than tidy.
+
+        The task worker is stopped before the consent source is abandoned in the
+        stack order, but ``_release_durable_state`` abandons consent *before* it
+        stops the runtime: a task parked on an unanswered question holds the
+        worker for the rest of the consent timeout, and a service that took five
+        minutes to stop would be killed by ``TimeoutStopSec`` mid-append every
+        time somebody left a dialog open. Releasing grants nothing — the waiters
+        return with no decision and the safe default applies.
+
+        The voice runtime sits above the task worker on the stack and therefore
+        stops first. A voice worker still playing holds a child process and an
+        audio device, so stopping it first bounds the shutdown by the player's
+        termination escalation rather than by whatever the task worker is doing.
+        """
         self._stop.set()
-        self.server.close()
-        # Before the worker is joined, not after. A task parked on an
-        # unanswered question holds the worker for the rest of the consent
-        # timeout, and a service that took five minutes to stop would be killed
-        # by `TimeoutStopSec` mid-append every time somebody left a dialog open.
-        # Releasing grants nothing: the waiters return with no decision and the
-        # safe default applies.
-        self.consent.abandon_all()
-        # Before the task worker is joined. A voice worker still playing holds a
-        # child process and an audio device, and stopping it first means the
-        # service's own shutdown is bounded by the player's termination
-        # escalation rather than by whatever the task worker is doing.
-        if self.voice is not None:
-            self.voice.close()
-        self.gateway.stop_worker()
-        self.runtime.stop()
+        self._ready = False
+        self.unwind()
 
     def describe(self) -> dict[str, Any]:
         return {
             "storeRoot": str(self.root),
-            "endpoint": self.server.describe(),
+            "endpoint": self.server.describe() if self.server is not None else {},
+            "singleton": self.singleton.describe() if self.singleton is not None else {},
+            "startup": {
+                "sequence": list(STARTUP_SEQUENCE),
+                "completed": list(self.completed_steps),
+                "held": list(self.held_resources),
+                "ready": self._ready,
+            },
             "recovery": self.recovery,
             "voice": self.voice.describe() if self.voice is not None else {
                 "workerRunning": False,
