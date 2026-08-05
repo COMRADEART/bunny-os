@@ -12,19 +12,18 @@ Branch `feature/companion-voice-runtime`.
 | Expected starting commit | `dfb0cd7` |
 | **Resolved starting SHA** | `dfb0cd71239d4ccef2a8821613e87efe4bba9723` |
 | Working tree at branch creation | clean (`git status --porcelain` empty, untracked included) |
-| **Gate commit** | `af0025bd92433ccb2fe0fd985a9595e166e371fe` |
+| **Gate commit** | `0cf81a135b24619f74bbecfcdd48d3a69f33c2fd` |
 | Final SHA | recorded in §29 below |
 
-**Two earlier candidate gate commits were discarded rather than reported.**
+**Three earlier candidate gate commits were discarded rather than reported.**
+Each one had passed the gates; each was thrown away because passing was not the
+same as being right.
 
-`65bdd63` had gates 1 and 3 pass on it. Auditing §19's thirteen races against
-the suite found one missing entirely and one covered only against a scheduler in
-isolation. A gate that did not run a test is not evidence for that test, so the
-tests were added and the gates restarted on `ecc0afe`.
-
-`ecc0afe` had gates 1 and 3 pass on it too — and the audio it measured was
-**noise**. See §18a. Everything measured on it was discarded and all three gates
-were re-run from scratch on `af0025b`.
+| Candidate | Gate outcome | Why it was discarded |
+| --- | --- | --- |
+| `65bdd63` | gates 1 and 3 green | Auditing §19's thirteen races against the suite found one untested and one covered only against a scheduler in isolation. A gate that did not run a test is not evidence for that test. |
+| `ecc0afe` | gates 1 and 3 green | **The audio it measured was noise.** See §18a. Every latency figure on it was arithmetic about the wrong sound. |
+| `af0025b` | **all three green** — 100/100, 50/50, 20/20 | The §22 thread-delta column showed **+101 threads and +100 live voice workers** across the fifty suite runs, while every test in every run passed. See §18b. |
 
 The completed pause/approval branch was not modified. `feature/companion-voice-runtime`
 was created from its exact head and every commit in this phase is on the new
@@ -554,11 +553,105 @@ that nothing crashed, not that anything worked.** Multi-call binaries are
 ordinary on a Linux system, and any code that canonicalises a path before
 exec'ing silently changes what they do.
 
+## 18b. The leak the tests could not see
+
+`af0025b` passed all three gates — 100/100, 50/50, 20/20, zero failures. The
+columns beside the pass/fail counts said something else:
+
+```text
+gate 2 (50 complete companion-suite runs)
+  per-iteration delta   threads +2 .. +3      liveVoiceWorkers +2 .. +2
+  since baseline        threads +101          liveVoiceWorkers +100
+                        rssBytes +117,559,296
+  final thread names    100 x companion-voice
+```
+
+A hundred voice worker threads, two per suite run, accumulated while every test
+in every run passed.
+
+The cause: `CompanionService.__init__` builds the voice runtime — which starts a
+thread — and *then* binds the endpoint, where a second service pointed at a live
+endpoint is refused with `DuplicateRuntime`. That refusal is supported and
+tested. The half-built service is discarded by the caller, so nothing held a
+reference to the worker and nothing could ever stop it. Before this branch a
+half-built service leaked nothing, because there was no thread in it to leak.
+
+Everything after the voice runtime is built now runs inside a `try` that closes
+it and re-raises, and a test asserts the thread count is unchanged across a
+refused construction rather than trusting the arrangement.
+
+**This is the entire argument for §22's resource columns.** The gate's pass
+criterion is test outcomes, and by that criterion the run was clean. What made
+the leak visible was counting something the tests never look at, across enough
+repetitions for two per run to become a hundred.
+
 ---
 
 ## 19. Stress-gate results
 
-*(filled from the run on the gate commit — see the tables below)*
+**All three gates pass on one commit: `0cf81a135b24619f74bbecfcdd48d3a69f33c2fd`.**
+
+Every iteration of every gate records the commit it ran on, and all 170 agree.
+Run as `bunny` (uid 1000) from ext4 under `/home/bunny`, under `systemd-run` so a
+dropped client or a WSL idle-stop could not truncate it.
+
+| Gate | Required | Result | Longest consecutive | Exit |
+| --- | --- | --- | --- | --- |
+| 1 — voice-worker lifecycle | 100 | **100 / 100** | 100 | 0 |
+| 2 — complete companion-suite | 50 | **50 / 50** | 50 | 0 |
+| 3 — installed voice vertical slice | 20 | **20 / 20** | 20 | 0 |
+
+Durations:
+
+| Gate | min | median | max | total |
+| --- | --- | --- | --- | --- |
+| 1 | 2.992 s | 3.002 s | 3.503 s | 300.9 s |
+| 2 | 27.363 s | 28.109 s | 28.613 s | 1404.5 s |
+| 3 | 4.617 s | 4.630 s | 4.748 s | 92.7 s |
+
+Gate 1 at 3.0 s per lifecycle and gate 3 at 4.6 s per slice are the durations of
+utterances that were **actually spoken** — the figure that exposed §18a was a
+gate-1 median of 0.9 s.
+
+### Resource deltas — §22's columns
+
+Every column below is per iteration, min..max across all iterations of that gate.
+
+| Column | Gate 1 (100) | Gate 2 (50) | Gate 3 (20) |
+| --- | --- | --- | --- |
+| Process delta (live services / runtimes) | +0 | +0 | +0 |
+| Thread delta | +0 | +0 | +0 |
+| Non-daemon thread delta | +0 | +0 | +0 |
+| File-descriptor delta | +0 | +0 | +0 |
+| Child-process delta | +0 | +0 | +0 |
+| Zombie children | +0 | +0 | +0 |
+| Audio-handle delta | +0 | +0 | +0 |
+| Temporary-workspace delta | +0 | +0 | +0 |
+| Live voice workers | +0 | +0 | +0 |
+| Live voice services | +0 | +0 | +0 |
+| Queue depth *(absolute between iterations)* | 0 | 0 | 0 |
+| Active request count *(absolute)* | 0 | 0 | 0 |
+
+Queue depth and active request count are recorded as **absolutes**, not
+differences: either being non-zero between iterations is wrong whatever it was
+before, and a delta of zero against a dirty baseline would read as clean.
+
+**One non-zero figure, and it is not a leak.** Gate 2 ends one thread above its
+baseline: `review-local.slow-reviewer`, a lazily-built fixture in
+`tests/companion/support.py`. It is created on iteration 1 and 49 of the 50
+iterations have a thread delta of exactly zero. The manifest separates the two
+cases by counting how many iterations moved a column rather than by whether the
+total is non-zero — a resource allocated once and then stable is a fixture, and
+a gate that called it a leak would cry wolf until nobody read it. The same
+pattern was recorded in the pause/approval phase.
+
+RSS grows across every gate (13–117 MB) and is deliberately excluded from the
+leak criterion: CPython does not return freed arenas to the operating system, so
+a rising RSS with flat object, thread, descriptor and child counts is the
+allocator, not the runtime. The object counts are the ones that would move.
+
+The evidence, with sha256 digests, is in
+`qualification/companion-voice/evidence/manifest.json`.
 
 ---
 
@@ -610,9 +703,76 @@ result each time (24/25, `espeak-ng`, `pulse`, amplitude, 29–31 ms caption lea
 
 ---
 
-## 21–22. Measurements
+## 21. Memory measurements
 
-*(see below)*
+Fedora Linux 44 (WSL), user `bunny`, commit `0cf81a13`, 30 utterances, all 30
+spoken through eSpeak NG to the `pulse` backend. **PSS is included wherever the
+kernel exposes `smaps_rollup`**, which it does here.
+
+| Metric | n | min | median | p95 | max |
+| --- | --- | --- | --- | --- | --- |
+| Voice worker idle RSS | 1 | 28.395 MiB | — | — | — |
+| Voice worker idle PSS | 1 | 21.649 MiB | — | — | — |
+| Provider process RSS | 4 | 8.008 | 8.209 | 8.383 | 8.383 MiB |
+| Provider process PSS | 4 | 5.156 | 5.360 | 5.489 | 5.489 MiB |
+| Playback backend RSS | 14 098 | 5.539 | 5.727 | 5.918 | 5.969 MiB |
+| Playback backend PSS | 14 098 | 1.604 | 3.063 | 3.131 | 3.279 MiB |
+| Companion + voice RSS | 30 | 28.789 | 31.242 | 31.703 | 31.703 MiB |
+| Companion + voice PSS | 30 | 21.929 | 24.406 | 24.866 | 24.866 MiB |
+| Temporary storage peak | 30 | 0.060 | 0.153 | 0.614 | 0.616 MiB |
+
+**`n` is honest and two of these are small.** The idle figure is a single
+reading by construction — it is taken once, before anything speaks. The provider
+figure has only **4** samples because eSpeak NG synthesises in ~22 ms and the
+10 ms sampling loop rarely catches it alive; with n=4 the median and p95 are
+almost the same number and are reported rather than smoothed. The playback
+backend has 14 098 samples because `paplay` is alive for the length of every
+utterance.
+
+**None of this is Bunny OS memory usage.** "Companion + voice" is one Python
+interpreter holding the companion runtime and the voice runtime. A desktop, a
+compositor, a shell and a browser are not in it. The emitted document carries
+that caveat too.
+
+**The renderer is not in these figures.** No compositor runs here; the character
+renderer's own measurements are in the renderer phase's report.
+
+## 22. Latency measurements
+
+| Metric | n | min | median | p95 | max |
+| --- | --- | --- | --- | --- | --- |
+| Synthesis latency | 30 | 21 | 22 | 25 | 25 ms |
+| Time to first audio | 30 | 29 | 38 | 48 | 51 ms |
+| Caption-to-audio offset | 30 | 29 | 38.5 | 48 | 51 ms |
+| Viseme-to-audio offset | 30 | 0 | 0 | 0 | 0 ms |
+| Cancellation latency | 10 | 1.349 | 1.403 | 1.767 | 1.767 ms |
+| Device-loss degradation latency | 10 | 0.068 | 0.073 | 0.191 | 0.191 ms |
+| Worker restart time | 10 | 0.164 | 0.183 | 0.725 | 0.725 ms |
+| Process CPU during an utterance | 30 | 330 | 785 | 3300 | 3310 ms |
+
+Every figure is inside §14's tolerances: the caption leads the audio by 29–51 ms
+(tolerance 0–2000 ms) and the mouth starts within 0 ms of the audio (tolerance
+±120 ms).
+
+Reading them honestly:
+
+* **Caption-to-audio and time-to-first-audio are the same number** because the
+  slice marks the caption shown immediately before building the request. On a
+  real client the caption is displayed by a compositor first, and the offset
+  would be larger. This is the *runtime's* contribution, not the whole path.
+* **Viseme-to-audio is 0 ms and that is arithmetic, not precision.** The worker
+  starts the scheduler in the same millisecond it records the audio start, so
+  the measurement confirms nothing is *inserted* between them — it does not
+  measure how well a mouth on screen tracks a sound in a room, which needs a
+  compositor and a microphone.
+* **The p95 for the four smaller samples is at or near the maximum by
+  construction.** With n=10 there is no 95th percentile; the emitted document
+  says so on each row rather than printing a number that looks like one.
+* **CPU is not separable between synthesis and playback.** It is the parent
+  process's own user+system time across the whole utterance, and the child's CPU
+  is not in it. The wide spread (330 ms to 3.3 s) tracks utterance length.
+* **The audio path makes an RDP hop.** Latency here includes the WSLg bridge and
+  would differ on a machine with a sound card.
 
 ## 23. Complete test results
 
@@ -687,7 +847,25 @@ Listed in full in `docs/companion-voice.md` §17. The material ones:
 
 ## 25. NOT_RUN items
 
-*(see below)*
+Everything that was not exercised, with the reason. None is a failure and none
+is claimed as a pass.
+
+| Item | Why |
+| --- | --- |
+| **Vertical slice step 14 — animate the character mouth** | Needs a compositor. The viseme timeline drives `companion.character.lipsync`, which the *character* slice exercises against the renderer; no compositor runs in the voice slice. |
+| **Physical speaker validation** | Audio reaches an RDP sink through the WSLg bridge. No speaker was involved anywhere, and every emitted document carries `physicalSpeakerValidated: false`. |
+| **PipeWire playback path** | `pw-play` is installed and PipeWire runs, but the graph has **zero `Audio/Sink` nodes** on this host, so the backend is correctly not-ready and was never selected. The `pw-play`→`pw-cat` multi-call defect (§18a) was fixed by the same change but has not been *observed* to work, because there is no sink to play to. |
+| **ALSA playback path** | `aplay -l` reports no soundcards. Correctly not-ready; never selected. |
+| **The older `espeak` binary** | Declared as a fallback for `espeak-ng`; only `espeak-ng` is installed on the reference target. |
+| **Speech Dispatcher as the *selected* provider** | It is installed, healthy and enumerates 653 voices, and its adapter is tested — but eSpeak NG is preferred by the registry order, so the streaming path was never the one a slice or gate actually took end to end. It is reached in tests through scripted providers and in the code through the fallback path. |
+| **Provider-native viseme timing** | No provider produces it; `from_provider_timing` raises. |
+| **Phoneme viseme timing** | No provider produces boundaries; `from_phoneme_timing` raises. |
+| **Speech recognition** | Not implemented; §26. |
+| **Remote voice providers** | Not implemented and refused structurally; §27. |
+| **3D rendering** | Not implemented; §28. |
+| **Reproducibility candidate** | Forbidden by §26 during initial implementation; §29. |
+| **24 POSIX-only tests on Windows** | File modes, symlinks, ownership, process groups and `SIGTERM` refusal cannot be expressed there. All 24 run on Linux. |
+| **systemd unit-level restart** | The voice runtime has no unit of its own by design (§17). Worker restart is exercised through `restart_worker`, and service startup/shutdown through the slice; no `systemctl restart bunny-companion.service` was run on an installed image. |
 
 ---
 
@@ -788,3 +966,29 @@ What a future reproducibility candidate would have to account for:
 
 The reproducibility position established at the three-builder phase is unaffected
 by this branch and is not re-validated by it.
+
+---
+
+## Completion standard
+
+| # | Requirement | Status |
+| --- | --- | --- |
+| 1 | A real local provider speaks canonical caption text | **Met.** eSpeak NG 1.52.0 speaks the caption the canonical projection produced, through `paplay` to `RDPSink`; 30/30 utterances spoken in the measurement run, 24/25 slice steps, 20/20 slices under gate 3. |
+| 2 | Voice cannot mutate task authority | **Met.** Enforced by the import graph and asserted from it; the worker holds no store, runtime, session or approval object. Slice step 23 checks task id, state and result across a voice restart. |
+| 3 | Captions remain available when voice fails | **Met.** Slice steps 18 and 20; every `DegradationRecord` carries `captionsRetained: true` and the type refuses `task_affected=True`. |
+| 4 | Cancellation stops provider and playback resources | **Met.** Five §19 cancellation points tested; child-process, audio-handle and workspace deltas are +0 across 170 gate iterations. |
+| 5 | No child process, thread, descriptor, timer or temporary file leaks | **Met**, and it took two attempts — §18b. All columns +0 per iteration across all three gates; the single thread above gate 2's baseline is a test fixture allocated once. |
+| 6 | Audio-device loss degrades to captions | **Met.** Slice steps 19–21; `local-neural-or-system-voice` → `captions-only` → restored after hysteresis. |
+| 7 | Generic visemes animate the existing renderer | **Partly met.** The timeline is produced from measured amplitude and converted to the renderer's own `LipSyncEvent`, and `LipSyncController` accepts it — but no compositor draws it in this phase. Slice step 14 is `NOT_RUN`. |
+| 8 | Renderer returns to neutral after completion or cancellation | **Met.** Terminal neutral on every path, asserted in tests and at slice step 16. |
+| 9 | Completed speech does not replay after restart | **Met.** Slice step 25; recovery reports `replayed: []` and `automaticReplay: false`. |
+| 10 | Voice cloning and remote transmission absent | **Met.** No cloning surface, no network import, no credential field, no remote provider; asserted from the syntax tree. |
+| 11 | The 100/50/20 stress gates pass on one commit | **Met** on `0cf81a13`; all 170 iterations record that commit. |
+| 12 | Linux memory and latency measured | **Met.** §21 and §22, with `n` on every row and `NOT_RUN` where a figure could not be taken. |
+| 13 | The provider-free installed vertical slice passes | **Met.** 24 PASS, 1 NOT_RUN, 0 FAIL; no network and no commercial provider. |
+| 14 | No release or reproducibility qualification claimed | **Met.** §29. |
+
+**Item 7 is the one qualification.** The viseme pipeline is complete and
+measured; what has not happened is a compositor drawing the mouth. That is the
+character renderer's own validated surface and is deliberately not re-claimed
+here.
