@@ -53,27 +53,29 @@ SERVICE_MODULES = (
     "tests.companion.test_character_cli_vertical",
 )
 
-SUITE_MODULES = SERVICE_MODULES + (
-    "tests.companion.test_approvals",
-    "tests.companion.test_cli",
-    "tests.companion.test_events_store",
-    "tests.companion.test_executors_reviewers",
-    "tests.companion.test_privacy_slice",
-    "tests.companion.test_recovery_cancellation",
-    "tests.companion.test_schemas",
-    "tests.companion.test_sessions_tasks",
-    "tests.companion.test_presentation_projection",
-    "tests.companion.test_integration_authority",
-    "tests.companion.test_voice_character",
-    "tests.companion.test_migration_and_recovery",
-    "tests.companion.test_character_adaptation",
-    "tests.companion.test_character_image_boundary",
-    "tests.companion.test_character_importer",
-    "tests.companion.test_character_mapper",
-    "tests.companion.test_character_package_validation",
-    "tests.companion.test_character_renderers",
-    "tests.companion.test_character_speech_position",
-)
+def _discover_suite_modules() -> tuple[str, ...]:
+    """Every companion test module there is, found rather than listed.
+
+    This was a hand-written list, and a hand-written list of "the complete
+    suite" is wrong the moment somebody adds a module — silently, and in the
+    direction that makes a gate easier to pass. Five modules written during this
+    phase were missing from it, including the ones covering the defect the gate
+    exists to catch.
+
+    Service modules first, then the rest in a stable order: the service-driven
+    tests are where every failure has ever been, and running them first means a
+    failing iteration fails sooner.
+    """
+    directory = Path(__file__).resolve().parents[1] / "tests" / "companion"
+    found = sorted(
+        f"tests.companion.{path.stem}"
+        for path in directory.glob("test_*.py")
+    )
+    rest = tuple(name for name in found if name not in SERVICE_MODULES)
+    return SERVICE_MODULES + rest
+
+
+SUITE_MODULES = _discover_suite_modules()
 
 
 # --------------------------------------------------------------------------- #
@@ -181,6 +183,10 @@ def runtime_inventory() -> dict[str, Any]:
 
     leases: list[str] = []
     waiters: list[str] = []
+    held_answers: list[str] = []
+    pending_approvals: list[str] = []
+    executors: set[str] = set()
+    locked_stores: list[str] = []
     services = 0
     runtimes = 0
     for item in _gc.get_objects():
@@ -196,9 +202,31 @@ def runtime_inventory() -> dict[str, Any]:
                 leases.extend(getattr(item, "leases").leases)
             except Exception:
                 pass
+            try:
+                # §11 wants the count of questions still outstanding. A run that
+                # ends with one is a run that left an approve button behind.
+                pending_approvals.extend(
+                    request.request_id for request in item.approvals.pending()
+                )
+            except Exception:
+                pass
+            try:
+                executors.update(getattr(item, "_executors", {}))
+            except Exception:
+                pass
         elif name == "InteractiveConsent":
             try:
                 waiters.extend(getattr(item, "_waiting", {}))
+                held_answers.extend(getattr(item, "_answered_early", {}))
+            except Exception:
+                pass
+        elif name == "CompanionStore":
+            try:
+                # A lock left held is the shape of an interrupted write, and it
+                # is invisible in a thread or descriptor count.
+                marker = getattr(item, "root", None)
+                if marker is not None and (Path(marker) / "session.lock").exists():
+                    locked_stores.append(str(marker))
             except Exception:
                 pass
     return {
@@ -206,6 +234,10 @@ def runtime_inventory() -> dict[str, Any]:
         "liveRuntimes": runtimes,
         "executorLeases": sorted(leases),
         "consentWaiters": sorted(waiters),
+        "heldAnswers": sorted(held_answers),
+        "pendingApprovals": sorted(pending_approvals),
+        "activeExecutors": sorted(executors),
+        "lockedStores": sorted(locked_stores),
     }
 
 
@@ -219,6 +251,43 @@ def memory_inventory() -> dict[str, Any]:
     except OSError:
         pass
     return {"result": "NOT_RUN", "reason": "this platform has no /proc/self/status"}
+
+
+_COMMIT_CACHE: list[str] = []
+
+
+def _commit() -> str:
+    """The commit under test, and whether the tree is dirty.
+
+    Read once and cached: shelling out per iteration would add a process spawn
+    to every measurement, and the whole point of recording it is that it does
+    not change during a run. A dirty tree is reported as such rather than
+    silently attributed to the last commit — a gate result belongs to what was
+    actually executed.
+    """
+    if _COMMIT_CACHE:
+        return _COMMIT_CACHE[0]
+    value = "unknown"
+    try:
+        import subprocess
+
+        root = Path(__file__).resolve().parents[1]
+        head = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            capture_output=True, text=True, timeout=20, check=False,
+        )
+        if head.returncode == 0:
+            value = head.stdout.strip()
+            dirty = subprocess.run(
+                ["git", "-C", str(root), "status", "--porcelain"],
+                capture_output=True, text=True, timeout=20, check=False,
+            )
+            if dirty.returncode == 0 and dirty.stdout.strip():
+                value += "-dirty"
+    except Exception:  # noqa: BLE001 - a missing git is not a harness failure
+        value = "unknown"
+    _COMMIT_CACHE.append(value)
+    return value
 
 
 def snapshot(label: str) -> dict[str, Any]:
@@ -258,8 +327,15 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
         start, end = _get(before, *path), _get(after, *path)
         if isinstance(start, int) and isinstance(end, int):
             result[name] = end - start
-    result["executorLeases"] = _get(after, "runtime", "executorLeases") or []
-    result["consentWaiters"] = _get(after, "runtime", "consentWaiters") or []
+    # Absolute rather than differenced. A lease, a waiter, a held answer, an
+    # outstanding question or a held store lock should be *empty* between
+    # iterations, not merely unchanged — a delta of zero against a baseline that
+    # already had one would read as clean.
+    for name in (
+        "executorLeases", "consentWaiters", "heldAnswers",
+        "pendingApprovals", "activeExecutors", "lockedStores",
+    ):
+        result[name] = _get(after, "runtime", name) or []
     return result
 
 
@@ -352,6 +428,10 @@ def run_in_process(target: str, runs: int, *, order: str, verbose: bool) -> dict
             "failures": outcome.get("failures", []),
             "errors": outcome.get("errors", []),
             "pid": os.getpid(),
+            # Per iteration rather than once per run, because §11 requires all
+            # three gates to be run on the same finalized commit and a single
+            # header would not prove the tree did not move underneath a run.
+            "commit": _commit(),
             "delta": _delta(before, after),
             "sinceBaseline": _delta(baseline, after),
         }
