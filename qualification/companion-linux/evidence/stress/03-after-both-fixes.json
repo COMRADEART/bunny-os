@@ -1,0 +1,2928 @@
+{
+  "baseline": {
+    "descriptors": {
+      "reason": "this platform has no /proc/self/fd",
+      "result": "NOT_RUN"
+    },
+    "label": "baseline",
+    "memory": {
+      "reason": "this platform has no /proc/self/status",
+      "result": "NOT_RUN"
+    },
+    "runtime": {
+      "consentWaiters": [],
+      "executorLeases": [],
+      "liveRuntimes": 0,
+      "liveServices": 0
+    },
+    "sockets": {
+      "tcp": "NOT_RUN: no /proc/net/tcp",
+      "unix": "NOT_RUN: no /proc/net/unix"
+    },
+    "tempDirectories": 26,
+    "threads": {
+      "count": 1,
+      "names": [
+        "MainThread"
+      ],
+      "nonDaemon": 1
+    }
+  },
+  "failed": 2,
+  "final": {
+    "descriptors": {
+      "reason": "this platform has no /proc/self/fd",
+      "result": "NOT_RUN"
+    },
+    "label": "final",
+    "memory": {
+      "reason": "this platform has no /proc/self/status",
+      "result": "NOT_RUN"
+    },
+    "runtime": {
+      "consentWaiters": [],
+      "executorLeases": [],
+      "liveRuntimes": 0,
+      "liveServices": 0
+    },
+    "sockets": {
+      "tcp": "NOT_RUN: no /proc/net/tcp",
+      "unix": "NOT_RUN: no /proc/net/unix"
+    },
+    "tempDirectories": 26,
+    "threads": {
+      "count": 1,
+      "names": [
+        "MainThread"
+      ],
+      "nonDaemon": 1
+    }
+  },
+  "finalConsecutivePass": 37,
+  "firstFailure": {
+    "delta": {
+      "consentWaiters": [],
+      "executorLeases": [],
+      "liveRuntimes": 0,
+      "liveServices": 0,
+      "nonDaemonThreads": 0,
+      "tempDirectories": 0,
+      "threads": 0
+    },
+    "detail": [
+      "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 297, in test_pausing_a_task_waiting_for_consent_actually_stops_it\n    self.assertEqual(state[\"phase\"], \"paused\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'blocked' != 'paused'\n- blocked\n+ paused\n\n"
+    ],
+    "errors": [],
+    "failures": [
+      "test_pausing_a_task_waiting_for_consent_actually_stops_it (tests.companion.test_protocol_ipc.OperationTests.test_pausing_a_task_waiting_for_consent_actually_stops_it)"
+    ],
+    "gcSeconds": 0.0068,
+    "iteration": 40,
+    "ok": false,
+    "order": [
+      "tests.companion.test_protocol_ipc",
+      "tests.companion.test_integration_slice",
+      "tests.companion.test_character_cli_vertical"
+    ],
+    "pid": 14880,
+    "ran": 63,
+    "seconds": 18.683,
+    "sinceBaseline": {
+      "consentWaiters": [],
+      "executorLeases": [],
+      "liveRuntimes": 0,
+      "liveServices": 0,
+      "nonDaemonThreads": 0,
+      "tempDirectories": 0,
+      "threads": 0
+    }
+  },
+  "iterations": [
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0078,
+      "iteration": 1,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.305,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.007,
+      "iteration": 2,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.119,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0066,
+      "iteration": 3,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.85,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0072,
+      "iteration": 4,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.671,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0065,
+      "iteration": 5,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.973,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0074,
+      "iteration": 6,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.826,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.008,
+      "iteration": 7,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.988,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0081,
+      "iteration": 8,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.836,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0066,
+      "iteration": 9,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.739,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0089,
+      "iteration": 10,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.534,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0071,
+      "iteration": 11,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.337,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0068,
+      "iteration": 12,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.995,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0067,
+      "iteration": 13,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.001,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0064,
+      "iteration": 14,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.376,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0068,
+      "iteration": 15,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.505,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0068,
+      "iteration": 16,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.954,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0064,
+      "iteration": 17,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.8,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0069,
+      "iteration": 18,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.821,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0068,
+      "iteration": 19,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.833,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0065,
+      "iteration": 20,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.931,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0066,
+      "iteration": 21,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.2,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0067,
+      "iteration": 22,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.15,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.008,
+      "iteration": 23,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.274,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0082,
+      "iteration": 24,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.141,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0065,
+      "iteration": 25,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.925,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0077,
+      "iteration": 26,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.011,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0083,
+      "iteration": 27,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.32,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0069,
+      "iteration": 28,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.068,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0084,
+      "iteration": 29,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.421,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0069,
+      "iteration": 30,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.635,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0071,
+      "iteration": 31,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.7,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.008,
+      "iteration": 32,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.921,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.008,
+      "iteration": 33,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.975,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.007,
+      "iteration": 34,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.848,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0067,
+      "iteration": 35,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.934,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0068,
+      "iteration": 36,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.987,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0094,
+      "iteration": 37,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.669,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0079,
+      "iteration": 38,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.201,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0076,
+      "iteration": 39,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.35,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "detail": [
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 297, in test_pausing_a_task_waiting_for_consent_actually_stops_it\n    self.assertEqual(state[\"phase\"], \"paused\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'blocked' != 'paused'\n- blocked\n+ paused\n\n"
+      ],
+      "errors": [],
+      "failures": [
+        "test_pausing_a_task_waiting_for_consent_actually_stops_it (tests.companion.test_protocol_ipc.OperationTests.test_pausing_a_task_waiting_for_consent_actually_stops_it)"
+      ],
+      "gcSeconds": 0.0068,
+      "iteration": 40,
+      "ok": false,
+      "order": [
+        "tests.companion.test_protocol_ipc",
+        "tests.companion.test_integration_slice",
+        "tests.companion.test_character_cli_vertical"
+      ],
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.683,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0081,
+      "iteration": 41,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.107,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0094,
+      "iteration": 42,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.816,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0067,
+      "iteration": 43,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.716,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0085,
+      "iteration": 44,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.717,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0088,
+      "iteration": 45,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.977,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0081,
+      "iteration": 46,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.983,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0066,
+      "iteration": 47,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.08,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0074,
+      "iteration": 48,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.618,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0069,
+      "iteration": 49,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.098,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0067,
+      "iteration": 50,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.038,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0071,
+      "iteration": 51,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.031,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0088,
+      "iteration": 52,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.957,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0072,
+      "iteration": 53,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.851,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0064,
+      "iteration": 54,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.701,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0064,
+      "iteration": 55,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.144,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0085,
+      "iteration": 56,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.773,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.008,
+      "iteration": 57,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.53,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0068,
+      "iteration": 58,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.744,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.007,
+      "iteration": 59,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.007,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0081,
+      "iteration": 60,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.207,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.007,
+      "iteration": 61,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.082,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0075,
+      "iteration": 62,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.045,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "detail": [
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 297, in test_pausing_a_task_waiting_for_consent_actually_stops_it\n    self.assertEqual(state[\"phase\"], \"paused\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'blocked' != 'paused'\n- blocked\n+ paused\n\n"
+      ],
+      "errors": [],
+      "failures": [
+        "test_pausing_a_task_waiting_for_consent_actually_stops_it (tests.companion.test_protocol_ipc.OperationTests.test_pausing_a_task_waiting_for_consent_actually_stops_it)"
+      ],
+      "gcSeconds": 0.0068,
+      "iteration": 63,
+      "ok": false,
+      "order": [
+        "tests.companion.test_protocol_ipc",
+        "tests.companion.test_integration_slice",
+        "tests.companion.test_character_cli_vertical"
+      ],
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.975,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0063,
+      "iteration": 64,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.969,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0076,
+      "iteration": 65,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.213,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.007,
+      "iteration": 66,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.766,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0074,
+      "iteration": 67,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.024,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0075,
+      "iteration": 68,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.841,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.007,
+      "iteration": 69,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.161,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0108,
+      "iteration": 70,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.963,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0088,
+      "iteration": 71,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.874,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0081,
+      "iteration": 72,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.118,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0077,
+      "iteration": 73,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.108,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0076,
+      "iteration": 74,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.24,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0068,
+      "iteration": 75,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.831,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0074,
+      "iteration": 76,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.169,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0077,
+      "iteration": 77,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.688,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0074,
+      "iteration": 78,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.944,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0077,
+      "iteration": 79,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.096,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0069,
+      "iteration": 80,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.781,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0066,
+      "iteration": 81,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.068,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0068,
+      "iteration": 82,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.691,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0066,
+      "iteration": 83,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.893,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0065,
+      "iteration": 84,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.938,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0064,
+      "iteration": 85,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.939,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0077,
+      "iteration": 86,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.738,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.008,
+      "iteration": 87,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.037,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0065,
+      "iteration": 88,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.774,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0077,
+      "iteration": 89,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.648,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0071,
+      "iteration": 90,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.644,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.009,
+      "iteration": 91,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.29,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0063,
+      "iteration": 92,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.688,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.01,
+      "iteration": 93,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.916,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0071,
+      "iteration": 94,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.498,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0071,
+      "iteration": 95,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.154,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0073,
+      "iteration": 96,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 18.995,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0074,
+      "iteration": 97,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.226,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0066,
+      "iteration": 98,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.125,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0073,
+      "iteration": 99,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.037,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0067,
+      "iteration": 100,
+      "ok": true,
+      "pid": 14880,
+      "ran": 63,
+      "seconds": 19.042,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    }
+  ],
+  "longestConsecutivePass": 39,
+  "mode": "in-process",
+  "order": "declared",
+  "passed": 98,
+  "runs": 100,
+  "target": "service"
+}
