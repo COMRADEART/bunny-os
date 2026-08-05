@@ -211,12 +211,35 @@ class VerticalSliceAndPerformanceTests(unittest.TestCase):
 
 class BuildAndBoundaryTests(unittest.TestCase):
     def test_installed_image_copies_runtime_renderer_and_data_assets(self) -> None:
-        installer = Path("build/scripts/install-root.py").read_text(encoding="utf-8")
-        self.assertIn('source / "companion"', installer)
-        self.assertIn('source / "capability"', installer)
-        self.assertIn('/usr/share/bunny-os/capability/services', installer)
-        self.assertIn('source / "assets/companion/characters"', installer)
-        self.assertIn('/usr/share/bunny-os/companion/characters', installer)
+        """Asserted against the declaration the installer is driven by.
+
+        This used to search ``install-root.py`` for the string
+        ``source / "companion"``, which is how a test can pass while the thing
+        it is about is broken: the string was there, the package was installed,
+        and the closure analyser that read the same file for the same substrings
+        still reported the whole package as not reaching the image. The install
+        set is now data in ``build/scripts/install_routes.py``, so this asserts
+        the route rather than the spelling of the call that executes it.
+        """
+        import sys as _sys
+
+        scripts = Path("build/scripts").resolve()
+        if str(scripts) not in _sys.path:
+            _sys.path.insert(0, str(scripts))
+        from install_routes import INSTALL_ROUTES
+
+        routes = {route.source: route for route in INSTALL_ROUTES}
+        self.assertEqual(routes["companion"].kind, "package")
+        self.assertEqual(routes["companion"].destination, "/usr/lib/bunny-os/python/companion")
+        self.assertEqual(routes["capability"].kind, "package")
+        self.assertEqual(routes["capability"].destination, "/usr/lib/bunny-os/python/capability")
+        self.assertEqual(
+            routes["capability/services"].destination,
+            "/usr/share/bunny-os/capability/services",
+        )
+        characters = routes["assets/companion/characters"]
+        self.assertEqual(characters.destination, "/usr/share/bunny-os/companion/characters")
+        self.assertEqual(characters.mode, 0o444)
         containerfile = Path("build/Containerfile").read_text(encoding="utf-8")
         for source in ("assets", "capability", "companion"):
             self.assertIn(f"COPY {source} /tmp/bunny-os/{source}", containerfile)
