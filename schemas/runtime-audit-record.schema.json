@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/runtime-audit-record-1.schema.json",
+  "title": "Bunny OS runtime audit record",
+  "description": "One thing the plan applicator did, with its evidence and its reasoning in separate fields. Mixing them produces a log in which 'the service was stopped because memory was low' cannot be checked, because nobody can tell which half was read off a meter and which half was inference. There is deliberately no field for a credential, a prompt or a task payload, so there is no path by which one is logged; free text is redacted on the way in rather than on the way out, because a redactor at the read end protects nothing once the bytes are on disk.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "event", "atMonotonic"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "event": {
+      "type": "string",
+      "description": "A stable identifier. Consumers match on this, never on a message.",
+      "enum": [
+        "plan.generated", "plan.superseded", "plan.rejected",
+        "reconcile.started", "reconcile.finished",
+        "transition.attempted", "transition.succeeded", "transition.failed",
+        "transition.postponed", "transition.rolled_back",
+        "backend.operation",
+        "reservation.taken", "reservation.committed", "reservation.released",
+        "reservation.reclaimed",
+        "approval.requested", "approval.resolved",
+        "policy.rejected", "runtime.pressure", "circuit.changed",
+        "remote.state_changed"
+      ]
+    },
+    "atMonotonic": {
+      "type": "number",
+      "description": "The applicator's clock, matching every other time in the runtime. Not wall clock, which steps when NTP corrects it."
+    },
+    "severity": { "type": "string", "enum": ["info", "notice", "warning"] },
+    "planId": { "type": "string", "maxLength": 64 },
+    "serviceId": { "type": "string", "maxLength": 128 },
+    "transitionId": { "type": "string", "maxLength": 256 },
+    "observed": {
+      "type": "object",
+      "description": "What was measured or returned. Facts."
+    },
+    "inferred": {
+      "type": "object",
+      "description": "What the applicator concluded. Reasoning, and labelled as such so a reader can tell it apart from the evidence."
+    }
+  }
+}

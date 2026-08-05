@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.desktop.search",
+  "title": "Private desktop search index",
+  "description": "Builds and serves the local search index. Purely background work: it is the first thing suspended under memory pressure and nothing waits on it.",
+  "essential": false,
+  "priority": "background",
+  "budgetCategory": "optional_services",
+  "requirements": {
+    "memory": {
+      "minimumBytes": 100663296,
+      "recommendedBytes": 268435456
+    },
+    "storage": {
+      "writable": true,
+      "minimumFreeBytes": 2147483648
+    }
+  },
+  "dependencies": {
+    "requires": [
+      "bunny.shell.session"
+    ]
+  },
+  "execution": {
+    "suspendable": true,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 900,
+    "estimatedPeakMemoryBytes": 314572800
+  },
+  "implementations": [
+    {
+      "id": "indexer",
+      "title": "Local index builder",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 100663296,
+          "recommendedBytes": 268435456
+        },
+        "scores": {
+          "storage_performance": 20.0
+        }
+      }
+    }
+  ]
+}

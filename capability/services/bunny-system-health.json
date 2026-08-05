@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.system.health",
+  "title": "Boot health reporting",
+  "description": "Offline post-boot health checks and boot-success evidence. Runs before any network exists and never requires one.",
+  "essential": true,
+  "priority": "critical",
+  "budgetCategory": "essential_services",
+  "requirements": {
+    "memory": {
+      "minimumBytes": 4194304,
+      "recommendedBytes": 6291456
+    }
+  },
+  "execution": {
+    "suspendable": false,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 80,
+    "estimatedPeakMemoryBytes": 8388608
+  },
+  "implementations": [
+    {
+      "id": "health-check",
+      "title": "Local health check",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 4194304,
+          "recommendedBytes": 6291456
+        }
+      }
+    }
+  ]
+}

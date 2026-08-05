@@ -1,0 +1,741 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Consent: what has to be asked, and every way an answer stops counting.
+
+This is a binding layer over the interface Bunny OS already has.
+:class:`capability.apply.approval.ApprovalStore` defines what a request looks
+like and states the rule that matters most — *an unanswered request involving
+remote execution, money, destruction of user work, or interruption of something
+in progress is denied* — and nothing here weakens it. What is added is the part
+a companion task needs and a service transition does not: an approval belongs to
+**this task**, at **this transition**, under **this plan**, to **this
+destination**, and stops counting the moment any of those change.
+
+Six checks, each of which is a real way consent gets misused:
+
+``expired``      time ran out; consent to act now is not consent later
+``replayed``     an already-answered request presented a second time
+``wrong task``   an answer for one task used to authorise another
+``wrong transition`` an answer for one step used to authorise a different step
+``superseded``   the plan changed under the approval; the numbers a person saw
+                 are not the numbers that would now apply
+``destination``  the place the data would go changed after the person agreed
+
+The destination check is the reason :class:`companion.task.ApprovalReference`
+carries a fingerprint rather than a name. Comparing a digest of *everything*
+about the destination — the provider, the locality, the retention, whether it
+trains on input — catches the case where the provider id stayed the same and its
+declaration did not.
+
+Approvals do not survive a restart. Expiry is measured on the monotonic clock,
+which restarts with the machine, so an approval granted before a reboot cannot
+have its expiry evaluated afterwards. Rather than guess, :meth:`CompanionApprovalStore.load`
+expires everything from a previous run and records that it did. The audit trail
+survives; the *permission* does not.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field, replace
+import json
+import os
+from pathlib import Path
+import tempfile
+from typing import Any, Mapping, Protocol, Sequence
+
+from capability.apply.approval import (
+    APPROVAL_DECISIONS,
+    DEFAULT_APPROVAL_TTL_SECONDS,
+    SENSITIVE_ACTIONS,
+    ApprovalRequest,
+    ApprovalResponse,
+)
+from capability.apply.identity import digest
+
+from .errors import (
+    ApprovalDenied,
+    ApprovalExpired,
+    ApprovalMismatch,
+    ApprovalReplayed,
+    StoreError,
+)
+from .executor import TaskPlan
+from .privacy import rank
+from .session import CompanionSession
+from .task import ApprovalReference, CompanionTask
+from .tools import ToolBroker
+
+__all__ = [
+    "ApprovalGate",
+    "ApprovalRequirement",
+    "CompanionApprovalStore",
+    "ConsentSource",
+    "RefusingConsent",
+    "ScriptedConsent",
+    "destination_fingerprint",
+    "operations_needing_approval",
+    "requirements_for",
+]
+
+
+def destination_fingerprint(
+    *,
+    destination: str,
+    provider_declaration: Mapping[str, Any] | None = None,
+) -> str:
+    """Everything about where data would go, in one comparable value."""
+    return digest({
+        "destination": destination,
+        "provider": dict(provider_declaration) if provider_declaration else None,
+    })
+
+
+@dataclass(frozen=True)
+class ApprovalRequirement:
+    """One question that must be put to a person before an act."""
+
+    action: str
+    reason: str
+    destination: str = "local"
+    provider_id: str | None = None
+    estimated_cost_units: int | None = None
+    data_affected: str = "none"
+    alternatives: tuple[str, ...] = ()
+    #: The operation this is about, when it is about one. Empty for
+    #: task-level approvals such as dispatching the whole task remotely.
+    operation_name: str = ""
+    destination_declaration: Mapping[str, Any] | None = None
+
+    def __post_init__(self) -> None:
+        if self.action not in SENSITIVE_ACTIONS:
+            raise ApprovalMismatch(
+                f"{self.action!r} is not a sensitive action; only sensitive actions are asked about"
+            )
+        if not self.alternatives:
+            raise ApprovalMismatch(
+                f"{self.action!r} must state what the user gets if they decline"
+            )
+
+    @property
+    def fingerprint(self) -> str:
+        return destination_fingerprint(
+            destination=self.destination,
+            provider_declaration=self.destination_declaration,
+        )
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "action": self.action,
+            "reason": self.reason,
+            "destination": self.destination,
+            "providerId": self.provider_id,
+            "estimatedCostUnits": self.estimated_cost_units,
+            "dataAffected": self.data_affected,
+            "alternatives": list(self.alternatives),
+            "operationName": self.operation_name,
+            "destinationFingerprint": self.fingerprint,
+        }
+
+
+def requirements_for(
+    task: CompanionTask,
+    session: CompanionSession,
+    plan: TaskPlan,
+    *,
+    executor_is_local: bool,
+    executor_provider_id: str = "",
+    executor_cost_class: str = "free",
+    broker: ToolBroker | None = None,
+    provider_declaration: Mapping[str, Any] | None = None,
+) -> tuple[ApprovalRequirement, ...]:
+    """Everything about this plan that needs a person to say yes.
+
+    Derived from the *declarations*, not from the executor's own opinion. An
+    executor that set ``requires_approval=False`` on an operation whose tool
+    declares itself destructive still produces a requirement here — §12 lists
+    what must be asked about, and an executor is not a party to that decision.
+    """
+    requirements: list[ApprovalRequirement] = []
+
+    if not executor_is_local:
+        requirements.append(ApprovalRequirement(
+            action="remote_dispatch",
+            reason=(
+                f"Task {task.task_id} would be performed by {executor_provider_id or 'a remote provider'} "
+                f"rather than on this device."
+            ),
+            destination=executor_provider_id or "remote",
+            provider_id=executor_provider_id or None,
+            estimated_cost_units=plan.estimated_cost_units,
+            data_affected=task.classification,
+            alternatives=("Wait for a local executor.", "Cancel the task."),
+            destination_declaration=provider_declaration,
+        ))
+        if rank(task.classification) >= rank("personal"):
+            requirements.append(ApprovalRequirement(
+                action="send_sensitive_data",
+                reason=(
+                    f"The task is classified {task.classification} and its contents would leave this device."
+                ),
+                destination=executor_provider_id or "remote",
+                provider_id=executor_provider_id or None,
+                data_affected=task.classification,
+                alternatives=("Run the task locally.", "Cancel the task."),
+                destination_declaration=provider_declaration,
+            ))
+
+    if executor_cost_class == "paid" or plan.estimated_cost_units > 0:
+        threshold = session.cost_policy.approval_threshold_units
+        if plan.estimated_cost_units >= threshold:
+            requirements.append(ApprovalRequirement(
+                action="paid_provider",
+                reason=(
+                    f"This plan is estimated to spend {plan.estimated_cost_units} units."
+                ),
+                destination=executor_provider_id or "remote",
+                provider_id=executor_provider_id or None,
+                estimated_cost_units=plan.estimated_cost_units,
+                data_affected=task.classification,
+                alternatives=("Use a free local executor.", "Cancel the task."),
+                destination_declaration=provider_declaration,
+            ))
+
+    for operation in plan.operations:
+        declaration = broker.declaration(operation.tool) if broker is not None else None
+        external = operation.destination != "local" or (declaration is not None and declaration.external_destination)
+        if declaration is not None and declaration.destructive:
+            requirements.append(ApprovalRequirement(
+                action="discard_unsaved_state",
+                reason=f"Operation {operation.name!r} uses {operation.tool!r}, which is declared destructive.",
+                destination=operation.destination,
+                data_affected=task.classification,
+                alternatives=("Skip this step.", "Cancel the task."),
+                operation_name=operation.name,
+            ))
+        if declaration is not None and declaration.interrupts_user:
+            requirements.append(ApprovalRequirement(
+                action="interrupt_user_work",
+                reason=f"Operation {operation.name!r} would interrupt what you are doing.",
+                destination=operation.destination,
+                data_affected=task.classification,
+                alternatives=("Do this later.", "Cancel the task."),
+                operation_name=operation.name,
+            ))
+        if external:
+            requirements.append(ApprovalRequirement(
+                action="remote_dispatch",
+                reason=(
+                    f"Operation {operation.name!r} would reach {operation.destination!r}, "
+                    "which is outside this device."
+                ),
+                destination=operation.destination,
+                provider_id=operation.destination if operation.destination != "local" else None,
+                estimated_cost_units=operation.estimated_cost_units,
+                data_affected=task.classification,
+                alternatives=("Plan this step locally.", "Cancel the task."),
+                operation_name=operation.name,
+                destination_declaration=provider_declaration,
+            ))
+    return tuple(requirements)
+
+
+# --------------------------------------------------------------------------- #
+# The store
+# --------------------------------------------------------------------------- #
+
+
+@dataclass
+class CompanionApprovalStore:
+    """A durable :class:`capability.apply.approval.ApprovalStore`.
+
+    It satisfies the existing protocol — :meth:`request` and
+    :meth:`approved_services` — so anything in Bunny OS that already knows how
+    to talk to an approval store can talk to this one. The additions are what a
+    persisted store needs: answers can be recorded, and a run that inherits a
+    file written by a previous run expires everything in it.
+
+    Persisted with the same atomic-replace discipline as
+    :mod:`companion.store`, because a half-written approval file is a file that
+    might read as a grant.
+    """
+
+    path: Path | None = None
+    default_ttl_seconds: float = DEFAULT_APPROVAL_TTL_SECONDS
+    requests: dict[str, ApprovalRequest] = field(default_factory=dict)
+    responses: dict[str, ApprovalResponse] = field(default_factory=dict)
+    #: What loading found that had to be invalidated. Surfaced by the runtime as
+    #: recovery warnings rather than swallowed.
+    warnings: tuple[str, ...] = ()
+    #: Identifies this process run. Anything in the file bearing a different one
+    #: was granted against a monotonic clock that no longer exists.
+    run_id: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.run_id:
+            self.run_id = "run-" + os.urandom(8).hex()
+
+    # -- the ApprovalStore protocol ----------------------------------------
+
+    def request(self, item: ApprovalRequest) -> ApprovalResponse:
+        """Raise a request and return the answer known right now. Never blocks.
+
+        The question is made durable here, not when it is answered. A request
+        that only reached the disk once somebody replied would be invisible for
+        exactly the window in which it is waiting to be replied to — which is
+        the whole of its useful life, and the only window in which
+        ``bunny-os companion approvals`` has anything to show.
+        """
+        self.requests[item.request_id] = item
+        self.save()
+        existing = self.responses.get(item.request_id)
+        if existing is not None:
+            return existing
+        return ApprovalResponse(item.request_id, "pending", plan_id=item.plan_id)
+
+    def approved_services(self, plan_id: str, now: float) -> frozenset[str]:
+        approved: set[str] = set()
+        for request_id, response in self.responses.items():
+            item = self.requests.get(request_id)
+            if item is not None and response.valid(now, plan_id=plan_id):
+                approved.add(item.service_id)
+        return frozenset(approved)
+
+    # -- answering ---------------------------------------------------------
+
+    def grant(self, request_id: str, *, plan_id: str, now: float, responder: str = "user", detail: str = "") -> ApprovalResponse:
+        item = self.requests.get(request_id)
+        if item is None:
+            raise ApprovalMismatch(f"no approval request with id {request_id!r} was raised")
+        response = ApprovalResponse(
+            request_id, "granted", plan_id=plan_id,
+            granted_at_monotonic=now,
+            expires_at_monotonic=now + self.default_ttl_seconds,
+            responder=responder, detail=detail,
+        )
+        self.responses[request_id] = response
+        self.save()
+        return response
+
+    def deny(self, request_id: str, *, plan_id: str = "", responder: str = "user", detail: str = "") -> ApprovalResponse:
+        response = ApprovalResponse(request_id, "denied", plan_id=plan_id, responder=responder, detail=detail)
+        self.responses[request_id] = response
+        self.save()
+        return response
+
+    def expire(self, now: float) -> tuple[str, ...]:
+        """Mark timed-out requests and grants expired. Returns what lapsed."""
+        lapsed: list[str] = []
+        for request_id in sorted(self.requests):
+            item = self.requests[request_id]
+            response = self.responses.get(request_id)
+            if response is not None and response.decision not in ("granted", "pending"):
+                continue
+            timed_out = (
+                item.expired(now)
+                if response is None or response.decision == "pending"
+                else (response.expires_at_monotonic > 0 and now > response.expires_at_monotonic)
+            )
+            if timed_out:
+                self.responses[request_id] = ApprovalResponse(
+                    request_id, "expired", plan_id=item.plan_id, responder="system",
+                    detail="the request timed out; the safe default applied and nothing was done",
+                )
+                lapsed.append(request_id)
+        if lapsed:
+            self.save()
+        return tuple(lapsed)
+
+    def invalidate_for_plan(self, plan_id: str) -> tuple[str, ...]:
+        """Expire every grant made against a plan that has been superseded."""
+        lapsed: list[str] = []
+        for request_id in sorted(self.responses):
+            response = self.responses[request_id]
+            if response.decision == "granted" and response.plan_id and response.plan_id != plan_id:
+                self.responses[request_id] = replace(
+                    response, decision="expired",
+                    detail=f"the plan this was granted against ({response.plan_id}) has been superseded",
+                )
+                lapsed.append(request_id)
+        if lapsed:
+            self.save()
+        return tuple(lapsed)
+
+    def pending(self) -> tuple[ApprovalRequest, ...]:
+        return tuple(
+            self.requests[request_id]
+            for request_id in sorted(self.requests)
+            if self.responses.get(request_id, ApprovalResponse(request_id, "pending")).decision == "pending"
+        )
+
+    def decision_for(self, request_id: str) -> ApprovalResponse | None:
+        return self.responses.get(request_id)
+
+    # -- persistence -------------------------------------------------------
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "schemaVersion": 1,
+            "kind": "bunny-companion-approvals",
+            "runId": self.run_id,
+            "requests": [self.requests[key].to_json() for key in sorted(self.requests)],
+            "responses": [self.responses[key].to_json() for key in sorted(self.responses)],
+        }
+
+    def save(self) -> None:
+        if self.path is None:
+            return
+        self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        encoded = json.dumps(self.to_json(), indent=2, sort_keys=True) + "\n"
+        handle = tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", newline="\n", dir=str(self.path.parent),
+            prefix=self.path.name + ".", suffix=".tmp", delete=False,
+        )
+        temporary = Path(handle.name)
+        try:
+            with handle:
+                handle.write(encoded)
+                handle.flush()
+                os.fsync(handle.fileno())
+            try:
+                os.chmod(temporary, 0o600)
+            except OSError:
+                pass
+            os.replace(temporary, self.path)
+        except OSError as exc:
+            try:
+                temporary.unlink()
+            except OSError:
+                pass
+            raise StoreError(f"{self.path} could not be written: {exc}") from exc
+
+    @classmethod
+    def load(cls, path: Path, *, default_ttl_seconds: float = DEFAULT_APPROVAL_TTL_SECONDS) -> "CompanionApprovalStore":
+        """Read a stored approval file, invalidating everything from before.
+
+        A grant recorded by a previous run carries an expiry on a monotonic
+        clock that no longer exists. It is not extended, not re-evaluated and
+        not honoured; it is expired, and the fact is returned as a warning so
+        the runtime can record it in the event stream. The request survives so
+        a user can see what was asked and answer it again.
+        """
+        store = cls(path=path, default_ttl_seconds=default_ttl_seconds)
+        if not path.is_file():
+            return store
+        try:
+            document = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise StoreError(f"{path} is not a readable approval record: {exc}") from exc
+        if not isinstance(document, Mapping) or document.get("kind") != "bunny-companion-approvals":
+            raise StoreError(f"{path} is not a companion approval record")
+
+        for item in document.get("requests", ()):
+            request = _request_from_json(item)
+            store.requests[request.request_id] = request
+        invalidated: list[str] = []
+        for item in document.get("responses", ()):
+            response = _response_from_json(item)
+            if response.decision in ("granted", "pending"):
+                store.responses[response.request_id] = replace(
+                    response, decision="expired", responder="system",
+                    detail=(
+                        "this was recorded by an earlier run; its expiry was measured on a monotonic "
+                        "clock that did not survive the restart, so it was expired rather than assumed"
+                    ),
+                )
+                invalidated.append(response.request_id)
+            else:
+                store.responses[response.request_id] = response
+        # A request raised before the restart and never answered is equally
+        # unusable: nothing recorded when it would have timed out either.
+        for request_id in sorted(store.requests):
+            if request_id not in store.responses:
+                store.responses[request_id] = ApprovalResponse(
+                    request_id, "expired", plan_id=store.requests[request_id].plan_id, responder="system",
+                    detail="this request was outstanding when the runtime stopped and did not survive it",
+                )
+                invalidated.append(request_id)
+        if invalidated:
+            store.warnings = (
+                f"{len(invalidated)} approval(s) from a previous run were expired on load; "
+                "consent does not survive a restart",
+            )
+        return store
+
+
+def _request_from_json(document: Mapping[str, Any]) -> ApprovalRequest:
+    return ApprovalRequest(
+        request_id=str(document.get("requestId", "")),
+        plan_id=str(document.get("planId", "")),
+        transition_id=str(document.get("transitionId", "")),
+        service_id=str(document.get("serviceId", "")),
+        action=str(document.get("action", "")),
+        reason=str(document.get("reason", "")),
+        data_affected=str(document.get("dataAffected", "none")),
+        destination=str(document.get("destination", "local")),
+        provider_id=document.get("providerId"),
+        estimated_cost_units=document.get("estimatedCostUnits"),
+        resource_impact=dict(document.get("resourceImpact") or {}),
+        expires_at_monotonic=float(document.get("expiresAtMonotonic", 0.0) or 0.0),
+        alternatives=tuple(str(item) for item in document.get("alternatives", ())),
+        safe_default=str(document.get("safeDefault", "denied")),
+    )
+
+
+def _response_from_json(document: Mapping[str, Any]) -> ApprovalResponse:
+    decision = str(document.get("decision", "pending"))
+    if decision not in APPROVAL_DECISIONS:
+        raise StoreError(f"unknown stored approval decision: {decision!r}")
+    return ApprovalResponse(
+        request_id=str(document.get("requestId", "")),
+        decision=decision,
+        plan_id=str(document.get("planId", "")),
+        granted_at_monotonic=float(document.get("grantedAtMonotonic", 0.0) or 0.0),
+        expires_at_monotonic=float(document.get("expiresAtMonotonic", 0.0) or 0.0),
+        responder=str(document.get("responder", "user")),
+        detail=str(document.get("detail", "")),
+    )
+
+
+# --------------------------------------------------------------------------- #
+# The gate
+# --------------------------------------------------------------------------- #
+
+
+class ConsentSource(Protocol):
+    """Whatever stands between a raised question and a person's answer.
+
+    Deliberately an interface with a refusing default. This phase has no user
+    interface, so there is nothing here that can actually ask anybody; what
+    there is, is the shape of the asking, and a default that answers *no* to
+    everything. A runtime with no consent source connected behaves exactly like
+    Bunny OS with no Approval Centre: it records the question and does nothing.
+    """
+
+    def answer(self, request: ApprovalRequest, *, now: float) -> str | None:
+        """``"granted"``, ``"denied"``, or ``None`` for "nobody answered yet"."""
+
+
+@dataclass(frozen=True)
+class RefusingConsent:
+    """The default. Records every question and grants nothing.
+
+    Not a placeholder. A machine with no way to ask a person must not act as
+    though they said yes, and this is the implementation of that sentence.
+    """
+
+    def answer(self, request: ApprovalRequest, *, now: float) -> str | None:
+        return None
+
+
+@dataclass(frozen=True)
+class ScriptedConsent:
+    """A stand-in for a person, for the vertical slice and the tests.
+
+    Grants exactly the actions it was configured with and denies the rest. It
+    exists so the demonstration can show consent being *given* — an approval
+    flow only ever exercised in its refusing direction is one whose granting
+    direction has never run. It must never be the default and is never
+    constructed by :class:`companion.runtime.CompanionRuntime` itself.
+    """
+
+    granted_actions: tuple[str, ...] = ()
+    denied_actions: tuple[str, ...] = ()
+    #: Actions to leave unanswered, to exercise the no-response path.
+    silent_actions: tuple[str, ...] = ()
+
+    def answer(self, request: ApprovalRequest, *, now: float) -> str | None:
+        if request.action in self.silent_actions:
+            return None
+        if request.action in self.denied_actions:
+            return "denied"
+        if request.action in self.granted_actions:
+            return "granted"
+        return None
+
+
+@dataclass
+class ApprovalGate:
+    """Binds approvals to one task, one transition, one plan and one destination."""
+
+    store: CompanionApprovalStore
+    ttl_seconds: float = DEFAULT_APPROVAL_TTL_SECONDS
+    consent: ConsentSource = field(default_factory=RefusingConsent)
+    #: (task, transition, plan fingerprint) triples already spent in this run.
+    #: An approval authorises one act; presenting the same one for a second act
+    #: is the replay this set exists to catch. It is per-run because a run is the
+    #: lifetime of the monotonic clock the expiry is measured on.
+    consumed: set[tuple[str, str, str]] = field(default_factory=set)
+
+    def transition_id(self, plan: TaskPlan, index: int, requirement: ApprovalRequirement) -> str:
+        """Identify one approvable step by the *content* of the plan.
+
+        Derived from the plan fingerprint rather than the revision number, so
+        that a replan producing an identical plan asks the same question and an
+        answer already given still applies — and a replan producing a different
+        plan asks a new one, which is exactly the supersession rule §12 requires.
+        """
+        return f"{plan.fingerprint}:{index}:{requirement.action}"
+
+    def raise_request(
+        self,
+        task: CompanionTask,
+        requirement: ApprovalRequirement,
+        plan: TaskPlan,
+        *,
+        transition_id: str,
+        now: float,
+    ) -> tuple[ApprovalRequest, ApprovalResponse, ApprovalReference]:
+        """Put one question, and record what it was a question about."""
+        request_id = f"approval:{task.task_id}:{transition_id}"
+        request = ApprovalRequest(
+            request_id=request_id,
+            plan_id=plan.plan_id,
+            transition_id=transition_id,
+            service_id=f"companion.task.{task.task_id}",
+            action=requirement.action,
+            reason=requirement.reason,
+            data_affected=requirement.data_affected,
+            destination="remote" if requirement.destination != "local" else "local",
+            provider_id=requirement.provider_id,
+            estimated_cost_units=requirement.estimated_cost_units,
+            resource_impact={"planRevision": plan.revision, "planFingerprint": plan.fingerprint},
+            expires_at_monotonic=now + self.ttl_seconds,
+            alternatives=requirement.alternatives,
+            safe_default="denied",
+        )
+        response = self.store.request(request)
+        if response.decision == "pending":
+            # Ask whatever stands in for a person. The answer, if there is one,
+            # is recorded before it is used, so a grant that authorised an act
+            # is in the durable record whether or not the act then succeeded.
+            said = self.consent.answer(request, now=now)
+            if said == "granted":
+                response = self.store.grant(
+                    request_id, plan_id=plan.plan_id, now=now,
+                    detail=f"granted for plan {plan.fingerprint} step {transition_id}",
+                )
+            elif said == "denied":
+                response = self.store.deny(
+                    request_id, plan_id=plan.plan_id,
+                    detail=f"declined for plan {plan.fingerprint} step {transition_id}",
+                )
+        reference = ApprovalReference(
+            request_id=request_id,
+            action=requirement.action,
+            decision=response.decision,
+            plan_id=plan.plan_id,
+            plan_revision=plan.revision,
+            transition_id=transition_id,
+            destination_fingerprint=requirement.fingerprint,
+        )
+        return request, response, reference
+
+    def resolve(
+        self,
+        task: CompanionTask,
+        request_id: str,
+        *,
+        plan: TaskPlan,
+        requirement: ApprovalRequirement,
+        transition_id: str,
+        now: float,
+    ) -> ApprovalReference:
+        """Check an answer against the act it is being used to authorise.
+
+        Every refusal below is a separate exception type, because the caller
+        does different things with each: an expired approval can be asked for
+        again, a superseded one means replan first, and a replayed one means
+        something is wrong with the caller.
+        """
+        reference = task.approval(request_id)
+        if reference is None:
+            raise ApprovalMismatch(
+                f"approval {request_id!r} does not belong to task {task.task_id}"
+            )
+        if reference.transition_id != transition_id:
+            raise ApprovalMismatch(
+                f"approval {request_id!r} was granted for transition {reference.transition_id!r} "
+                f"and is being used for {transition_id!r}"
+            )
+        spent = (task.task_id, transition_id, plan.fingerprint)
+        if spent in self.consumed:
+            raise ApprovalReplayed(
+                f"approval {request_id!r} has already authorised this step of this plan; "
+                "an approval authorises one act and cannot be spent twice"
+            )
+        if reference.destination_fingerprint != requirement.fingerprint:
+            raise ApprovalMismatch(
+                f"approval {request_id!r} was granted against a different destination; "
+                "the place this would send data has changed since the question was answered"
+            )
+        if reference.plan_id != plan.plan_id or reference.plan_revision != plan.revision:
+            raise ApprovalMismatch(
+                f"approval {request_id!r} was granted against plan {reference.plan_id}"
+                f"@{reference.plan_revision} and the current plan is {plan.plan_id}@{plan.revision}; "
+                "a superseded plan invalidates the consent given for it"
+            )
+
+        request = self.store.requests.get(request_id)
+        if request is None:
+            raise ApprovalMismatch(f"no approval request with id {request_id!r} was raised")
+        response = self.store.decision_for(request_id)
+
+        if response is None or response.decision == "pending":
+            # Nobody answered. §12: no response defaults to no action. This is
+            # the branch that must never be softened.
+            if request.expired(now):
+                self.store.expire(now)
+                raise ApprovalExpired(
+                    f"nobody answered {request_id!r} before it expired; nothing was done"
+                )
+            raise ApprovalDenied(
+                f"{request_id!r} has not been answered; the safe default is denial and nothing was done"
+            )
+        if response.decision == "expired":
+            raise ApprovalExpired(f"approval {request_id!r} has expired; nothing was done")
+        if response.decision == "denied":
+            raise ApprovalDenied(
+                f"approval {request_id!r} was denied"
+                + (f": {response.detail}" if response.detail else "")
+            )
+        if not response.valid(now, plan_id=plan.plan_id):
+            raise ApprovalExpired(
+                f"approval {request_id!r} is no longer valid for plan {plan.plan_id}"
+            )
+        self.consumed.add(spent)
+        return replace(reference, decision="granted")
+
+    def invalidate_for_task(self, task: CompanionTask, *, detail: str) -> tuple[str, ...]:
+        """Withdraw every outstanding approval belonging to one task.
+
+        Used by cancellation. A pending question about a task nobody is running
+        any more must not stay on a user's screen, and a granted one must not
+        survive into whatever runs next.
+        """
+        withdrawn: list[str] = []
+        for reference in task.approvals:
+            response = self.store.decision_for(reference.request_id)
+            if response is not None and response.decision not in ("granted", "pending"):
+                continue
+            if reference.request_id not in self.store.requests:
+                continue
+            self.store.responses[reference.request_id] = ApprovalResponse(
+                reference.request_id, "expired",
+                plan_id=reference.plan_id, responder="system", detail=detail,
+            )
+            withdrawn.append(reference.request_id)
+        if withdrawn:
+            self.store.save()
+        return tuple(withdrawn)
+
+
+def operations_needing_approval(
+    plan: TaskPlan,
+    requirements: Sequence[ApprovalRequirement],
+) -> frozenset[str]:
+    """Names of operations that cannot run until somebody says yes."""
+    named = {item.operation_name for item in requirements if item.operation_name}
+    if any(not item.operation_name for item in requirements):
+        # A task-level requirement gates everything in the plan.
+        return frozenset(item.name for item in plan.operations)
+    return frozenset(named)

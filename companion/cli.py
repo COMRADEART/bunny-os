@@ -1,0 +1,393 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""The ``bunny-os companion`` command group.
+
+Every command returns a JSON-serialisable document and none of them prints. The
+UX shell is going to consume this, and a shell that parsed human-formatted text
+would break the first time somebody improved a sentence — so the structure *is*
+the interface, and the human rendering is
+:func:`bunny_os.cli._emit`'s problem rather than this module's.
+
+Two conventions are load-bearing.
+
+**Mutating commands say so, in the document.** Every result carries an
+``effect`` field: ``"read-only"``, or a sentence naming what changed. A UX shell
+can therefore tell a user what a command did without knowing which commands
+mutate, and a transcript of a support session can be read years later by
+somebody who does not.
+
+**Nothing here reaches the network or a provider.** The runtime it builds has
+one local executor and one local reviewer, and the approval source is the
+refusing default unless the caller explicitly asks otherwise. ``run-demo`` is
+the only command that supplies consent, and it says which consent it supplied.
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+from pathlib import Path
+from typing import Any
+
+from capability.model import inventory_from_json
+from capability.policy import PolicyError, load_policy
+from capability.registry import load_registry
+from capability.runtime import Assessment, assess, assess_current_machine
+from capability.simulate import MACHINES, describe, simulate
+
+from .approvals import CompanionApprovalStore, RefusingConsent
+from .privacy import AUDIENCES
+from .cancellation import cancel_task
+from .clock import SystemClock
+from .coordination import CoordinationPolicy
+from .demo import DEMO_REQUEST, run_demo
+from .errors import CompanionError
+from .executor import DeterministicLocalExecutor
+from .ids import RandomIds
+from .recovery import recover
+from .reviewer import DeterministicLocalReviewer
+from .runtime import CompanionRuntime, RuntimeOptions
+from .session import CostPolicy, LOCALITY_PREFERENCES, PrivacyPolicy
+from .store import CompanionStore
+from .task import CANCELLATION_CAUSES
+from .tools import ToolBroker
+
+__all__ = ["add_arguments", "default_root", "dispatch"]
+
+_SIMULATION_BANNER = (
+    "SIMULATED HARDWARE - {name}: {description}. "
+    "The capability decisions below are the policy engine's answers for a synthetic "
+    "inventory. They are not a measurement of any physical machine."
+)
+
+
+def default_root() -> Path:
+    """Where the companion keeps its store.
+
+    ``BUNNY_COMPANION_ROOT`` first, then the XDG state directory. Under the user
+    rather than under ``/var``: a companion session is one person's
+    conversation, and putting it somewhere system-wide would make it readable by
+    every account on a shared machine.
+    """
+    override = os.environ.get("BUNNY_COMPANION_ROOT")
+    if override:
+        return Path(override)
+    state = os.environ.get("XDG_STATE_HOME")
+    base = Path(state) if state else Path.home() / ".local" / "state"
+    return base / "bunny-os" / "companion"
+
+
+def add_arguments(subparsers: argparse._SubParsersAction) -> None:
+    """Attach ``companion`` to the ``bunny-os`` command tree."""
+    root = subparsers.add_parser("companion", help="the headless Bunny Companion runtime")
+    root.add_argument("--root", type=Path, default=None, help="companion store directory")
+    root.add_argument("--simulate", choices=sorted(MACHINES), help="decide against simulated hardware")
+    root.add_argument("--inventory", type=Path, help="decide against a saved capability inventory")
+    root.add_argument("--policy", type=Path, help="capability policy file")
+    root.add_argument("--services", type=Path, help="service manifest directory")
+    group = root.add_subparsers(dest="companion_command", required=True)
+
+    group.add_parser("sessions", help="list sessions (read-only)")
+
+    session = group.add_parser("session", help="session operations")
+    session_group = session.add_subparsers(dest="session_command", required=True)
+    create = session_group.add_parser("create", help="CREATES a new session")
+    create.add_argument("--title", default="Companion session")
+    create.add_argument("--locality", choices=LOCALITY_PREFERENCES, default="device-only")
+    create.add_argument("--allow-remote", action="store_true", help="permit remote execution from this session")
+    create.add_argument("--task-limit-units", type=int, default=0)
+    create.add_argument("--session-limit-units", type=int, default=0)
+    inspect = session_group.add_parser("inspect", help="show one session (read-only)")
+    inspect.add_argument("session_id")
+    for name, help_text in (("pause", "PAUSES"), ("resume", "RESUMES"), ("close", "CLOSES")):
+        parser = session_group.add_parser(name, help=f"{help_text} a session")
+        parser.add_argument("session_id")
+
+    task = group.add_parser("task", help="task operations")
+    task_group = task.add_subparsers(dest="task_command", required=True)
+    submit = task_group.add_parser("submit", help="CREATES a task, and runs it with --run")
+    submit.add_argument("--session", required=True, dest="session_id")
+    submit.add_argument("--request", required=True)
+    submit.add_argument("--run", action="store_true", help="RUNS the task immediately")
+    submit.add_argument("--classification", default=None)
+    submit.add_argument("--cost-limit-units", type=int, default=None)
+    task_inspect = task_group.add_parser("inspect", help="show one task (read-only)")
+    task_inspect.add_argument("task_id")
+    task_inspect.add_argument("--audience", default="ui", choices=AUDIENCES,
+                              help="render for this audience")
+    task_events = task_group.add_parser("events", help="show one task's events (read-only)")
+    task_events.add_argument("task_id")
+    task_events.add_argument("--audience", default="ui", choices=AUDIENCES)
+    task_run = task_group.add_parser("run", help="RUNS an existing task")
+    task_run.add_argument("task_id")
+    task_cancel = task_group.add_parser("cancel", help="CANCELS a task")
+    task_cancel.add_argument("task_id")
+    task_cancel.add_argument("--cause", choices=[item for item in CANCELLATION_CAUSES if item], default="user")
+    task_cancel.add_argument("--detail", default="")
+
+    approvals = group.add_parser("approvals", help="approval questions and answers")
+    approvals.add_argument("--grant", dest="grant_id", help="RECORDS a grant for one request id")
+    approvals.add_argument("--deny", dest="deny_id", help="RECORDS a denial for one request id")
+
+    recovery = group.add_parser("recover", help="RECOVERS incomplete tasks after a restart")
+    recovery.add_argument("--dry-run", action="store_true", help="validate only; change nothing")
+
+    demo = group.add_parser("run-demo", help="RUNS the headless vertical slice in a scratch directory")
+    demo.add_argument("--demo-root", type=Path, default=None, help="where the demo store is written")
+    demo.add_argument("--refuse-approval", action="store_true", help="run with nobody answering the approval")
+
+
+def _assessment(args: argparse.Namespace) -> tuple[Assessment, str]:
+    """Build the capability assessment the runtime decides against."""
+    try:
+        registry = load_registry(getattr(args, "services", None))
+        policy = load_policy(getattr(args, "policy", None))
+    except (PolicyError, Exception) as exc:  # ManifestError is not exported here
+        raise CompanionError(f"the capability configuration could not be read: {exc}") from exc
+
+    if getattr(args, "simulate", None):
+        name = args.simulate
+        return (
+            assess(simulate(name), policy=policy, registry=registry),
+            _SIMULATION_BANNER.format(name=name, description=describe(name)),
+        )
+    if getattr(args, "inventory", None):
+        import json
+
+        try:
+            document = json.loads(Path(args.inventory).read_text(encoding="utf-8"))
+            inventory = inventory_from_json(document)
+        except (OSError, ValueError) as exc:
+            raise CompanionError(f"{args.inventory} is not a readable capability inventory: {exc}") from exc
+        return (
+            assess(inventory, policy=policy, registry=registry),
+            f"Capability decisions were made against the inventory in {args.inventory}, "
+            f"detected {inventory.detected_at}.",
+        )
+    return assess_current_machine(policy_path=getattr(args, "policy", None)), ""
+
+
+def build_runtime(args: argparse.Namespace) -> tuple[CompanionRuntime, str]:
+    """Assemble the runtime a command will act through.
+
+    One local executor, one local reviewer, the refusing consent source and no
+    providers. There is no flag that adds a remote provider, because there is no
+    provider adapter in this build to add.
+    """
+    root = args.root or default_root()
+    assessment, banner = _assessment(args)
+    options = RuntimeOptions(
+        store=CompanionStore(root / "store"),
+        assessment=assessment,
+        executors=(DeterministicLocalExecutor(),),
+        reviewers=(DeterministicLocalReviewer(),),
+        broker=ToolBroker(),
+        approvals=CompanionApprovalStore.load(root / "approvals.json"),
+        consent=RefusingConsent(),
+        policy=CoordinationPolicy(),
+        clock=SystemClock(),
+        ids=RandomIds(),
+    )
+    return CompanionRuntime(options).start(), banner
+
+
+def dispatch(args: argparse.Namespace) -> dict[str, Any]:
+    """Run one companion command and return its document."""
+    if args.companion_command == "run-demo":
+        return _run_demo(args)
+
+    runtime, banner = build_runtime(args)
+    try:
+        document = _dispatch_with_runtime(runtime, args)
+    finally:
+        runtime.stop()
+    if banner:
+        document["simulationBanner"] = banner
+    return document
+
+
+def _dispatch_with_runtime(runtime: CompanionRuntime, args: argparse.Namespace) -> dict[str, Any]:
+    command = args.companion_command
+
+    if command == "sessions":
+        return {
+            "effect": "read-only",
+            "sessions": [item.to_json() for item in runtime.sessions()],
+        }
+
+    if command == "session":
+        return _session_command(runtime, args)
+
+    if command == "task":
+        return _task_command(runtime, args)
+
+    if command == "approvals":
+        return _approvals_command(runtime, args)
+
+    if command == "recover":
+        if args.dry_run:
+            return {
+                "effect": "read-only",
+                "reports": [
+                    runtime.store.validate(session_id).to_json()
+                    for session_id in runtime.store.session_ids()
+                ],
+            }
+        report = recover(runtime)
+        return {
+            "effect": (
+                f"RECOVERED {len(report.decisions)} task(s) across {len(report.sessions)} session(s); "
+                "incomplete tasks were parked or returned to planning and nothing was repeated"
+            ),
+            **report.to_json(),
+        }
+
+    raise CompanionError(f"unknown companion command: {command!r}")
+
+
+def _session_command(runtime: CompanionRuntime, args: argparse.Namespace) -> dict[str, Any]:
+    if args.session_command == "create":
+        session = runtime.create_session(
+            args.title,
+            privacy_policy=PrivacyPolicy(allow_remote=bool(args.allow_remote)),
+            cost_policy=CostPolicy(
+                task_limit_units=args.task_limit_units,
+                session_limit_units=args.session_limit_units,
+            ),
+            locality_preference=args.locality,
+        )
+        return {
+            "effect": f"CREATED session {session.session_id}",
+            "session": session.to_json(),
+        }
+    if args.session_command == "inspect":
+        session = runtime.session(args.session_id)
+        return {
+            "effect": "read-only",
+            "session": session.to_json(),
+            "tasks": [task.to_json() for task in runtime.store.tasks(args.session_id)],
+            "store": runtime.store.validate(args.session_id).to_json(),
+        }
+    if args.session_command == "pause":
+        session = runtime.pause_session(args.session_id)
+        return {"effect": f"PAUSED session {session.session_id}", "session": session.to_json()}
+    if args.session_command == "resume":
+        session = runtime.resume_session(args.session_id)
+        return {"effect": f"RESUMED session {session.session_id}", "session": session.to_json()}
+    if args.session_command == "close":
+        session = runtime.close_session(args.session_id)
+        return {"effect": f"CLOSED session {session.session_id}", "session": session.to_json()}
+    raise CompanionError(f"unknown session command: {args.session_command!r}")
+
+
+def _task_command(runtime: CompanionRuntime, args: argparse.Namespace) -> dict[str, Any]:
+    if args.task_command == "submit":
+        task = runtime.submit_task(
+            args.session_id,
+            args.request,
+            classification=args.classification,
+            cost_limit_units=args.cost_limit_units,
+        )
+        effect = f"CREATED task {task.task_id}"
+        if args.run:
+            task = runtime.run_task(args.session_id, task.task_id)
+            effect += f" and RAN it to {task.state}"
+        return {"effect": effect, "task": task.to_json()}
+
+    if args.task_command == "run":
+        session_id, task = runtime.find_task(args.task_id)
+        task = runtime.run_task(session_id, task.task_id)
+        return {"effect": f"RAN task {task.task_id} to {task.state}", "task": task.to_json()}
+
+    if args.task_command == "inspect":
+        session_id, task = runtime.find_task(args.task_id)
+        return {
+            "effect": "read-only",
+            "sessionId": session_id,
+            "audience": args.audience,
+            "task": task.view(args.audience),
+        }
+
+    if args.task_command == "events":
+        session_id, task = runtime.find_task(args.task_id)
+        events = runtime.events(session_id, task_id=task.task_id)
+        return {
+            "effect": "read-only",
+            "sessionId": session_id,
+            "taskId": task.task_id,
+            "audience": args.audience,
+            "events": [event.view(args.audience) for event in events],
+        }
+
+    if args.task_command == "cancel":
+        session_id, task = runtime.find_task(args.task_id)
+        outcome = cancel_task(
+            runtime, session_id, task.task_id, cause=args.cause, detail=args.detail
+        )
+        return {
+            "effect": (
+                f"CANCELLED task {task.task_id}; new operations were stopped, "
+                f"{len(outcome.withdrawn_approvals)} approval(s) withdrawn and "
+                f"{len(outcome.unknown_operations)} operation(s) recorded as unknown"
+            ),
+            "cancellation": outcome.to_json(),
+            "task": outcome.task.to_json(),
+        }
+    raise CompanionError(f"unknown task command: {args.task_command!r}")
+
+
+def _approvals_command(runtime: CompanionRuntime, args: argparse.Namespace) -> dict[str, Any]:
+    effect = "read-only"
+    if args.grant_id:
+        runtime.approvals.grant(
+            args.grant_id, plan_id=_plan_for(runtime, args.grant_id),
+            now=runtime.clock.monotonic(), responder="user",
+            detail="granted from the command line",
+        )
+        effect = (
+            f"RECORDED a grant for {args.grant_id}. Note that consent does not survive a "
+            "restart: expiry is measured on a monotonic clock, so this grant is expired "
+            "when the next process loads the file. It is a record of what you decided, "
+            "not a standing permission."
+        )
+    if args.deny_id:
+        runtime.approvals.deny(
+            args.deny_id, plan_id=_plan_for(runtime, args.deny_id),
+            responder="user", detail="declined from the command line",
+        )
+        effect = f"RECORDED a denial for {args.deny_id}"
+    return {
+        "effect": effect,
+        "pending": [item.to_json() for item in runtime.approvals.pending()],
+        "answered": [
+            {"request": runtime.approvals.requests[key].to_json(),
+             "response": runtime.approvals.responses[key].to_json()}
+            for key in sorted(runtime.approvals.responses)
+            if key in runtime.approvals.requests
+        ],
+        "warnings": list(runtime.approvals.warnings),
+    }
+
+
+def _plan_for(runtime: CompanionRuntime, request_id: str) -> str:
+    request = runtime.approvals.requests.get(request_id)
+    if request is None:
+        raise CompanionError(f"no approval request with id {request_id!r} was raised")
+    return request.plan_id
+
+
+def _run_demo(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    root = args.demo_root or Path(tempfile.mkdtemp(prefix="bunny-companion-demo-"))
+    report = run_demo(root, grant_approval=not args.refuse_approval)
+    return {
+        "effect": (
+            f"RAN the headless vertical slice in {root}; a session, a task and its whole event "
+            "history were written there. No network, provider or credential was used."
+        ),
+        "root": str(root),
+        "request": DEMO_REQUEST,
+        "consent": "refused (nobody answered)" if args.refuse_approval else "granted by a scripted stand-in for the user",
+        **report.to_json(),
+    }

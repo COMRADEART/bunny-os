@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.speech.synthesis",
+  "title": "Speech synthesis",
+  "description": "Turns text into speech. The system voice at the bottom of the ladder needs 32 MiB, so a machine with an audio output almost always has a voice.",
+  "essential": false,
+  "priority": "standard",
+  "budgetCategory": "text_to_speech",
+  "requirements": {
+    "audio": {
+      "outputRequired": true
+    }
+  },
+  "execution": {
+    "suspendable": true,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 800,
+    "estimatedPeakMemoryBytes": 1073741824
+  },
+  "implementations": [
+    {
+      "id": "local-neural-gpu",
+      "title": "GPU neural voice",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 1610612736,
+          "recommendedBytes": 2147483648
+        },
+        "gpu": {
+          "required": true,
+          "runtime": "cuda"
+        },
+        "audio": {
+          "outputRequired": true
+        }
+      }
+    },
+    {
+      "id": "local-neural-cpu",
+      "title": "Lightweight local neural voice",
+      "locality": "local",
+      "rank": 2,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 536870912,
+          "recommendedBytes": 805306368
+        },
+        "cpu": {
+          "minimumScore": 40.0
+        },
+        "audio": {
+          "outputRequired": true
+        }
+      }
+    },
+    {
+      "id": "local-system-voice",
+      "title": "Minimal local system voice",
+      "locality": "local",
+      "rank": 3,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 33554432,
+          "recommendedBytes": 50331648
+        },
+        "audio": {
+          "outputRequired": true
+        }
+      }
+    },
+    {
+      "id": "remote-provider",
+      "title": "Configured voice provider",
+      "locality": "remote",
+      "rank": 4,
+      "provider": "configured-voice-provider",
+      "costsMoney": true,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 25165824,
+          "recommendedBytes": 33554432
+        },
+        "network": {
+          "required": true
+        },
+        "audio": {
+          "outputRequired": true
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.system.capability",
+  "title": "Capability runtime",
+  "description": "Hardware discovery, budgets and the policy engine. This service is what decides whether the others run, so it must run first and must be able to run on the smallest supported machine.",
+  "essential": true,
+  "priority": "critical",
+  "budgetCategory": "essential_services",
+  "requirements": {
+    "memory": {
+      "minimumBytes": 6291456,
+      "recommendedBytes": 12582912
+    }
+  },
+  "execution": {
+    "suspendable": false,
+    "restartPolicy": "always"
+  },
+  "startup": {
+    "estimatedMilliseconds": 200,
+    "estimatedPeakMemoryBytes": 14680064
+  },
+  "implementations": [
+    {
+      "id": "capability-runtime",
+      "title": "Local capability runtime",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 6291456,
+          "recommendedBytes": 12582912
+        }
+      }
+    }
+  ]
+}

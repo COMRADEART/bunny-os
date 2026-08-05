@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/resource-budget-1.schema.json",
+  "title": "Bunny OS resource budget",
+  "description": "How much of a machine Bunny OS may safely consume. Two memory figures are reported and neither substitutes for the other: allocatableBytes is what may be consumed on an idle machine and is the planning number; currentlyAllocatableBytes is what may be committed right now and is the admission number. protectedReserveBytes is subtracted before either and is allocatable by nothing, essential services included.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "confidence", "viable", "memory", "cpu", "gpu", "storage"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "confidence": { "type": "string", "enum": ["measured", "partial", "unknown"] },
+    "viable": {
+      "type": "boolean",
+      "description": "False when essential services declare more memory than the machine can allocate. A non-viable machine funds whatever control plane it can and refuses everything optional."
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protectedReserveBytes", "allocatableBytes", "currentlyAllocatableBytes", "essentialServicesBytes", "categories"],
+      "properties": {
+        "usableBytes": { "type": ["integer", "null"], "minimum": 0, "description": "The smaller of physical memory and any cgroup ceiling. Null when neither was measured, which is not the same as zero." },
+        "currentlyAvailableBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "protectedReserveBytes": { "type": "integer", "minimum": 0 },
+        "allocatableBytes": { "type": "integer", "minimum": 0 },
+        "currentlyAllocatableBytes": { "type": "integer", "minimum": 0 },
+        "essentialServicesBytes": { "type": "integer", "minimum": 0 },
+        "essentialShortfallBytes": { "type": "integer", "minimum": 0 },
+        "optionalServicesBytes": { "type": "integer", "minimum": 0 },
+        "foregroundWorkloadBytes": { "type": ["integer", "null"], "minimum": 0, "description": "Memory already in use that is not Bunny OS's. Budgeting on top of it rather than assuming it will be released is what stops an admission decision evicting the user's work." },
+        "categories": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["category", "bytesAllowed", "funded", "purpose"],
+            "properties": {
+              "category": { "type": "string", "maxLength": 64 },
+              "bytesAllowed": { "type": "integer", "minimum": 0 },
+              "funded": { "type": "boolean", "description": "False when the category's share would fall below the size at which funding it is pointless. An unfunded category is reported with the shortfall rather than given a token allocation nothing could use." },
+              "purpose": { "type": "string", "maxLength": 256 },
+              "reason": { "type": "string", "maxLength": 512 }
+            }
+          }
+        }
+      }
+    },
+    "cpu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backgroundQuotaPercent", "interactiveQuotaPercent"],
+      "properties": {
+        "backgroundQuotaPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "interactiveQuotaPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "effectiveCores": { "type": "number", "minimum": 0, "description": "Schedulable cores including any cgroup quota, not the physical core count." }
+      }
+    },
+    "gpu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["localInferenceAllowed", "renderingAllowed"],
+      "properties": {
+        "localInferenceAllowed": { "type": "boolean" },
+        "renderingAllowed": { "type": "boolean" },
+        "reasons": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 512 } }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cacheBytes", "logBytes", "temporaryBytes"],
+      "properties": {
+        "cacheBytes": { "type": "integer", "minimum": 0 },
+        "logBytes": { "type": "integer", "minimum": 0 },
+        "temporaryBytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "notes": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 512 } }
+  }
+}

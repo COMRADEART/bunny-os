@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.shell.session",
+  "title": "Bunny Shell desktop session",
+  "description": "The graphical session. Needs a display and enough memory to hold a compositor; degrades to the safe session, which is the same shell with the extension inert.",
+  "essential": false,
+  "priority": "important",
+  "budgetCategory": "user_applications",
+  "requirements": {
+    "display": {
+      "required": true
+    },
+    "storage": {
+      "writable": true
+    }
+  },
+  "execution": {
+    "suspendable": false,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 3500,
+    "estimatedPeakMemoryBytes": 943718400
+  },
+  "implementations": [
+    {
+      "id": "full-shell",
+      "title": "Bunny Shell on GNOME",
+      "locality": "local",
+      "rank": 1,
+      "description": "The full session with the Bunny extension, launcher, workspaces and search surfaces.",
+      "requirements": {
+        "memory": {
+          "minimumBytes": 536870912,
+          "recommendedBytes": 1610612736
+        },
+        "display": {
+          "required": true,
+          "minimumResolution": "1024x600"
+        },
+        "scores": {
+          "graphics": 20.0
+        }
+      }
+    },
+    {
+      "id": "safe-shell",
+      "title": "Bunny Safe Shell",
+      "locality": "local",
+      "rank": 2,
+      "description": "The same session with the Bunny target stopped and the extension a no-op. Not a reduced product: the identical shell with one component inert.",
+      "requirements": {
+        "memory": {
+          "minimumBytes": 268435456,
+          "recommendedBytes": 536870912
+        },
+        "display": {
+          "required": true
+        }
+      }
+    }
+  ]
+}

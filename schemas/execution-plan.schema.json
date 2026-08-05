@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/execution-plan-2.schema.json",
+  "title": "Bunny OS execution plan",
+  "description": "What runs, where, and why. A plan is a value: producing it starts nothing, which is what makes it safe to ask a live machine for one. Every decision carries structured reasons rather than prose, so an explanation cannot drift from the arithmetic that produced it. Reasons here describe measurements and deterministic policy; no model reasoning appears in this document. Version 2 added the required identity block: a plan that cannot be identified is a plan whose staleness cannot be checked, and the applicator refuses to act on one.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "identity", "generatedAt", "decisions"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planId", "schemaVersion", "revision", "contentDigest", "fingerprints"],
+      "description": "What makes this plan this plan. Every field answers a question the applicator asks before it acts on the plan; none of them identifies the machine.",
+      "properties": {
+        "planId": { "type": "string", "pattern": "^plan-[0-9a-f]{16}$" },
+        "schemaVersion": { "type": "integer", "minimum": 1 },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Monotonic along a chain of reevaluations. A plan at a revision no higher than the one in force is a replay and is refused."
+        },
+        "contentDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$",
+          "description": "Digest of what the plan says, independent of when it was said. Two plans with the same content digest describe the same desired state and need no transitions between them."
+        },
+        "fingerprints": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["inventory", "budget", "policy", "registry"],
+          "description": "What the decision was made against. Computed over canonical serialized content, never over object ordering, so two hosts that reached the same decision agree on its identity. Volatile timing is excluded: a plan is not a different plan for having been decided a second later.",
+          "properties": {
+            "inventory": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+            "budget": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+            "policy": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+            "registry": { "type": "string", "pattern": "^[0-9a-f]{32}$" }
+          }
+        },
+        "createdAt": { "type": "string" },
+        "createdAtMonotonic": {
+          "type": "number",
+          "description": "The engine's clock reading. Staleness is measured against this rather than against wall clock, which steps when NTP corrects it."
+        },
+        "maximumAgeSeconds": { "type": "number", "minimum": 0 },
+        "previousPlanId": { "type": ["string", "null"] },
+        "reevaluationReason": {
+          "type": "string",
+          "enum": [
+            "initial", "operator_requested",
+            "memory_pressure_entered", "memory_pressure_recovered",
+            "thermal_limit_entered", "thermal_limit_recovered",
+            "battery_critical", "battery_recovered",
+            "network_lost", "network_restored",
+            "display_attached", "display_removed", "audio_device_changed",
+            "cpu_saturation_entered", "cpu_saturation_recovered",
+            "gpu_memory_pressure_entered", "gpu_memory_pressure_recovered",
+            "service_failed", "remote_provider_unavailable",
+            "user_policy_changed", "manifest_registry_changed",
+            "apply_time_validation_failed"
+          ]
+        }
+      }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "grantedMemoryBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total granted across running services. Never exceeds the budget's allocatable figure; the engine asserts this before returning a plan."
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "running": { "type": "integer", "minimum": 0 },
+        "local": { "type": "integer", "minimum": 0 },
+        "remote": { "type": "integer", "minimum": 0 },
+        "suspended": { "type": "integer", "minimum": 0 },
+        "stopped": { "type": "integer", "minimum": 0 },
+        "deferred": { "type": "integer", "minimum": 0 },
+        "rejected": { "type": "integer", "minimum": 0 },
+        "awaitingApproval": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["serviceId", "action", "reasons"],
+        "properties": {
+          "serviceId": { "type": "string", "maxLength": 128 },
+          "action": {
+            "type": "string",
+            "enum": ["start_local", "start_remote", "suspend", "stop", "defer", "reject"],
+            "description": "'Start with reduced limits' and 'select a lightweight backend' are not separate actions: reducing a service is selecting a lower-ranked implementation, and modelling it twice would let the two disagree."
+          },
+          "implementationId": { "type": ["string", "null"], "maxLength": 64 },
+          "memoryGrantBytes": { "type": "integer", "minimum": 0 },
+          "cpuPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+          "fallback": { "type": "string", "maxLength": 512 },
+          "requiresApproval": {
+            "type": "boolean",
+            "description": "Derived from the reason codes rather than stored alongside them. A separate flag could disagree with the reasons, which would leave the applicator and the user's explanation saying different things."
+          },
+          "reasons": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["code", "message"],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "enum": [
+                    "selected", "degraded", "user-disabled", "pin-honoured", "pin-unsatisfiable",
+                    "requirement-unmet", "requirement-unknown", "budget-exhausted", "no-implementation",
+                    "conflict", "dependency-unavailable", "remote-not-permitted", "remote-approval-required",
+                    "remote-unreachable", "metered-network", "sensitive-data-local-only",
+                    "paid-api-confirmation", "essential-shortfall", "hysteresis-hold", "cooldown-hold",
+                    "resource-pressure"
+                  ],
+                  "description": "requirement-unmet and requirement-unknown are distinct: telling a user their machine lacks memory it may well have is a worse error than telling them it could not be measured."
+                },
+                "message": { "type": "string", "maxLength": 1024 },
+                "required": {},
+                "measured": {}
+              }
+            }
+          },
+          "checks": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["requirement", "satisfied"],
+              "properties": {
+                "requirement": { "type": "string", "maxLength": 128 },
+                "satisfied": { "type": ["boolean", "null"], "description": "null means the requirement could not be evaluated. Treated as not satisfied for admission, and reported as undetermined in explanations." },
+                "required": {},
+                "measured": {},
+                "detail": { "type": "string", "maxLength": 512 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notes": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 512 } }
+  }
+}

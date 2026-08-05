@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/service-capability-manifest-1.schema.json",
+  "title": "Bunny OS service capability manifest",
+  "description": "What one Bunny OS service or feature declares it needs. Implementations are the degradation ladder: rank 1 is the richest form and higher ranks are progressively reduced, so implementation selection and degradation are the same deterministic walk and cannot disagree. A manifest declares requirements only; it never declares an outcome, a mode, or a hardware class. There is no field in which a product tier could be written.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "title", "essential", "budgetCategory", "implementations"],
+  "$defs": {
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "memory": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minimumBytes": { "type": ["integer", "null"], "minimum": 0, "description": "Below this the service cannot start. Checked against the allocatable budget, never against free physical memory." },
+            "recommendedBytes": { "type": ["integer", "null"], "minimum": 0, "description": "Granted instead of the minimum when the budget can afford it, so a service is not left permanently reclaiming." }
+          }
+        },
+        "cpu": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minimumScore": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+            "minimumCores": { "type": ["number", "null"], "minimum": 0, "description": "Effective cores, which include any cgroup quota." }
+          }
+        },
+        "gpu": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required": { "type": "boolean" },
+            "runtime": { "type": ["string", "null"], "enum": ["any", "cuda", "rocm", "vulkan", null], "description": "'any' means a bound driver and a render node. A named runtime must have been verified; the presence of a PCI device never satisfies this." },
+            "minimumVramBytes": { "type": ["integer", "null"], "minimum": 0, "description": "Compared against the largest single device, never the sum: work must fit in one of them." }
+          }
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minimumFreeBytes": { "type": ["integer", "null"], "minimum": 0 },
+            "writable": { "type": "boolean" }
+          }
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "required": { "type": "boolean" } }
+        },
+        "display": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required": { "type": "boolean" },
+            "minimumResolution": { "type": ["string", "null"], "pattern": "^[0-9]{2,5}x[0-9]{2,5}$" }
+          }
+        },
+        "audio": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "outputRequired": { "type": "boolean" },
+            "inputRequired": { "type": "boolean" }
+          }
+        },
+        "scores": {
+          "type": "object",
+          "description": "Gates on named capability dimensions, so a service can require e.g. storage_performance >= 40 without a bespoke field being invented for it.",
+          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 100 }
+        }
+      }
+    }
+  },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9][a-z0-9-]*)+$", "maxLength": 128 },
+    "title": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "description": { "type": "string", "maxLength": 1024 },
+    "essential": {
+      "type": "boolean",
+      "description": "An essential service is part of the control plane. It is funded off the top before any discretionary pool exists, must have a local implementation, and may only depend on other essential services."
+    },
+    "priority": {
+      "description": "Importance under contention, as a band name or 0..100. This is a ranking among services within one Bunny OS, not a product tier. The band names deliberately avoid 'low' and 'high': in this codebase those are reserved words, and a manifest containing them should be a validation failure rather than something a reader has to disambiguate.",
+      "oneOf": [
+        { "type": "string", "enum": ["critical", "important", "standard", "deferred", "background"] },
+        { "type": "integer", "minimum": 0, "maximum": 100 }
+      ]
+    },
+    "budgetCategory": {
+      "type": "string",
+      "enum": ["essential_services", "optional_services", "user_applications", "local_ai_inference", "companion_rendering", "speech_recognition", "text_to_speech", "agent_orchestration", "caching", "logs", "temporary_files"],
+      "description": "Must be 'essential_services' if and only if essential is true. Essential memory is taken off the top rather than competed for; a category that could be outbid would not be essential."
+    },
+    "handlesSensitiveData": {
+      "type": "boolean",
+      "description": "When true, no remote implementation may be selected unless remoteExecution.allowSensitiveData is explicitly true, independently of whether remote execution is enabled at all."
+    },
+    "requirements": { "$ref": "#/$defs/requirements" },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requires": { "type": "array", "maxItems": 32, "items": { "type": "string" } },
+        "conflictsWith": { "type": "array", "maxItems": 32, "items": { "type": "string" }, "description": "Must be declared symmetrically by both services, or the engine's decision would depend on evaluation order." }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "suspendable": { "type": "boolean" },
+        "restartPolicy": { "type": "string", "enum": ["never", "on-failure", "always"] }
+      }
+    },
+    "startup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "estimatedMilliseconds": { "type": "integer", "minimum": 0 },
+        "estimatedPeakMemoryBytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "implementations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "locality", "rank"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "maxLength": 64 },
+          "title": { "type": "string", "maxLength": 128 },
+          "description": { "type": "string", "maxLength": 1024 },
+          "locality": { "type": "string", "enum": ["local", "remote"] },
+          "rank": { "type": "integer", "minimum": 1, "description": "1 is the richest implementation. The engine takes the first whose requirements are met, walking upward." },
+          "provider": { "type": ["string", "null"], "maxLength": 128, "description": "Required in practice for remote implementations: an unnamed destination cannot be allowlisted, so it can never be authorised." },
+          "costsMoney": { "type": "boolean" },
+          "sendsUserDataRemotely": { "type": "boolean", "description": "May not be false when locality is 'remote'." },
+          "requirements": { "$ref": "#/$defs/requirements" }
+        }
+      }
+    }
+  }
+}

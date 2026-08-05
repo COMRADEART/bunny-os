@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.agent.orchestrator",
+  "title": "Agent orchestration",
+  "description": "Coordinates one active execution agent and any advisory agents. Requires inference: an orchestrator with nothing to orchestrate is deferred, not started empty.",
+  "essential": false,
+  "priority": "standard",
+  "budgetCategory": "agent_orchestration",
+  "handlesSensitiveData": true,
+  "requirements": {
+    "memory": {
+      "minimumBytes": 134217728,
+      "recommendedBytes": 402653184
+    }
+  },
+  "dependencies": {
+    "requires": [
+      "bunny.inference.local"
+    ]
+  },
+  "execution": {
+    "suspendable": true,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 600,
+    "estimatedPeakMemoryBytes": 419430400
+  },
+  "implementations": [
+    {
+      "id": "multi-agent",
+      "title": "Execution agent with reviewers",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 402653184,
+          "recommendedBytes": 805306368
+        },
+        "cpu": {
+          "minimumScore": 45.0
+        }
+      }
+    },
+    {
+      "id": "single-agent",
+      "title": "One execution agent",
+      "locality": "local",
+      "rank": 2,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 134217728,
+          "recommendedBytes": 201326592
+        }
+      }
+    }
+  ]
+}

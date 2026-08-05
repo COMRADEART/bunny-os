@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.system.recovery",
+  "title": "Recovery entry point",
+  "description": "Keeps the recovery target reachable from a physical console. Depends on nothing, including the network, because it is what is left when everything else has failed.",
+  "essential": true,
+  "priority": "critical",
+  "budgetCategory": "essential_services",
+  "requirements": {
+    "memory": {
+      "minimumBytes": 4194304,
+      "recommendedBytes": 4194304
+    }
+  },
+  "execution": {
+    "suspendable": false,
+    "restartPolicy": "never"
+  },
+  "startup": {
+    "estimatedMilliseconds": 40,
+    "estimatedPeakMemoryBytes": 6291456
+  },
+  "implementations": [
+    {
+      "id": "recovery-target",
+      "title": "Local recovery target",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 4194304,
+          "recommendedBytes": 4194304
+        }
+      }
+    }
+  ]
+}

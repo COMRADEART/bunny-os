@@ -74,6 +74,7 @@ Release builds additionally require `BUNNY_RELEASE_BUILD=1`, a digest-pinned `BU
 ## Repository map
 
 - `build/`: OCI image, profiles, package manifests, trust placeholders, image-builder wrappers.
+- `capability/`: the capability runtime — hardware discovery, capability scoring, resource budgets, service manifests, and the deterministic policy engine that decides what runs on this machine and why.
 - `services/`: local privileged broker and root-only update agent.
 - `systemd/`, `config/`, `selinux/`: service, policy, firewall, sysctl, and MAC inputs.
 - `tools/bunny-os/`: conventional management CLI and local hardware inventory.
@@ -91,6 +92,36 @@ Phase 3 source now adds an Anaconda/bootc installation architecture, typed non-d
 Phase 5 source adds privacy-safe beta feedback/triage, failure signatures, installer transaction journals, stable evidence rules, compatibility/preservation/hardware/candidate gates, maintenance alerts, stable-support documentation, and demonstrations. Phase 4/public-beta inputs are absent, so the stable recommendation is `NO-GO`. Run `make gate-phase-5`; expect `make gate-stable-candidate` and `make gate-stable-release` to remain blocked until complete signed runtime evidence and approvals exist. Start with `docs/PHASE_5_BASELINE.md` and `PHASE_5_REPORT.md`.
 
 Phase 7 source adds OEM profiles and factory finalisation (`oem/`), device identity, enrolment, a typed policy agent, fleet rings, a closed remote-administration boundary, multi-tenant scoping, audit chaining, air-gapped management, kiosk and shared-device profiles, and decommissioning (`enterprise/`), plus an optional end-to-end encrypted sync client (`sync/`). All three packages are standard-library only, and executors that would touch hardware or perform real cryptography report themselves unavailable rather than degrading.
+
+## Capability runtime
+
+`capability/` is the foundation that makes Bunny OS one operating system across
+every machine it is installed on. It detects hardware, measures usable resources
+inside whatever ceilings are imposed, calculates safe budgets, evaluates service
+requirements against them, and produces a deterministic execution plan with a
+stated reason for every decision.
+
+**There are no modes.** No Low, Balanced, High or Ultra; no Raspberry Pi edition
+and no DGX edition. A 64 MB ARM board and a 512 GB eight-accelerator server run
+the same image, the same fourteen service manifests and the same policy engine.
+What differs is which implementation of each service was selected and which
+features were refused — and both machines answer `bunny-os capability explain`
+in the same format. This implements constitutional requirement **C11** from
+`docs/phase-1/BUNNY_OS_PHASE_1.md`: *a profile keyed on a product tier fails
+review.*
+
+```text
+bunny-os capability inspect | scores | budget | plan | status | policy
+bunny-os capability explain <service-id>
+bunny-os capability plan --simulate embedded-64mb        # any of eleven simulations
+```
+
+Start with `docs/CAPABILITY_RUNTIME.md`. `MODE_MIGRATION_REPORT.md` records the
+sweep for prior mode implementations — one collapsed hardware label was found
+and migrated; no mode system existed. The subsystem produces a plan and does
+**not** apply it, the 64 MB target is calculated rather than measured, and no
+physical hardware has been exercised; see `KNOWN_LIMITATIONS.md` under
+"Capability runtime".
 
 On any development host run `python scripts/task.py phase7-audit` and the `test-*` commands directly; all pass. On a host with `make`, `gate-phase-7-source` composes them. `gate-phase-7`, `gate-oem-pilot`, `gate-enterprise-pilot`, and `gate-sync-pilot` all fail closed, because no stable release exists. No pilot may begin, no device may be manufactured, no fleet may be deployed, and no hosted sync service may launch. Start with `docs/PHASE_7_BASELINE.md`, `PHASE_7_REPORT.md`, and `demos/07-oem-enterprise-sync/`.
 

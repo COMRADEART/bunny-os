@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "id": "bunny.browser.automation",
+  "title": "Browser automation",
+  "description": "Drives a browser for the agent. Needs a display and roughly a gigabyte; there is no headless-remote implementation, so on a server this feature is unavailable and says so.",
+  "essential": false,
+  "priority": "deferred",
+  "budgetCategory": "user_applications",
+  "handlesSensitiveData": true,
+  "requirements": {
+    "memory": {
+      "minimumBytes": 1073741824,
+      "recommendedBytes": 2147483648
+    },
+    "display": {
+      "required": true
+    },
+    "storage": {
+      "writable": true,
+      "minimumFreeBytes": 2147483648
+    }
+  },
+  "dependencies": {
+    "requires": [
+      "bunny.shell.session"
+    ]
+  },
+  "execution": {
+    "suspendable": true,
+    "restartPolicy": "on-failure"
+  },
+  "startup": {
+    "estimatedMilliseconds": 5000,
+    "estimatedPeakMemoryBytes": 2147483648
+  },
+  "implementations": [
+    {
+      "id": "local-browser",
+      "title": "Local browser engine",
+      "locality": "local",
+      "rank": 1,
+      "requirements": {
+        "memory": {
+          "minimumBytes": 1073741824,
+          "recommendedBytes": 2147483648
+        },
+        "display": {
+          "required": true
+        }
+      }
+    }
+  ]
+}
