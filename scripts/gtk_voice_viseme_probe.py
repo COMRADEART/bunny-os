@@ -247,6 +247,14 @@ class Probe:
         window.set_default_size(320, 320)
         window.present()
         self.picture = picture
+        # Let the window finish coming up before anything is timed. The first
+        # measured run put the first mouth frame 500 ms behind its audio and the
+        # ten frames after it within 0.4 ms of each other, which is not a
+        # synchronisation figure — it is the compositor realising a window and
+        # then the whole queue draining at once. Warming up first makes the
+        # number that comes out the steady-state one, and the first-frame
+        # latency is reported on its own below rather than folded into it.
+        self.pump(seconds=1.5)
 
         presenter = CharacterPresenter(package.root.parent)
         self.presenter = presenter
@@ -466,7 +474,9 @@ class Probe:
                 (abs(item) for item in presentation_drift), default=None,
             ),
             "medianObservedDriftMs": _median(presentation_drift),
+            "firstFrameDriftMs": presentation_drift[0] if presentation_drift else None,
             "maximumDispatchLatencyMs": max(dispatch_latency, default=None),
+            "medianDispatchLatencyMs": _median(dispatch_latency),
             "schedulerReportedDriftMs": max(scheduler_drift) if scheduler_drift else 0,
             "schedulerDriftNote": (
                 "structurally zero on the file-playback path: a one-shot player exposes "

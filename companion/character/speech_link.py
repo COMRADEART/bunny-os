@@ -70,6 +70,8 @@ REJECTION_REASONS = (
     "duplicate",
     "after-cancellation",
     "after-completion",
+    "after-renderer-restart",
+    "after-worker-restart",
     "stale-revision",
     "count-exceeded",
     "unsupported-shape",
@@ -190,6 +192,8 @@ class VisemeLink:
         self._frame_revision = 0
         self._last_admitted: tuple[str, int, int] = ("", -1, -1)
         self._last_shape = ""
+        #: Why the link is not accepting frames, set by whatever stopped it.
+        self._inactive_reason = "no-active-request"
         self.report = VisemeLinkReport()
         self.last_frame: MouthFrame | None = None
         self.frames: list[MouthFrame] = []
@@ -244,6 +248,7 @@ class VisemeLink:
             self._count = 0
             self._last_admitted = ("", -1, -1)
             self._active = True
+            self._inactive_reason = "after-completion"
             self._frame_revision = self._revision
             self._cancelled.discard(self._request_id)
             self._completed.discard(self._request_id)
@@ -339,11 +344,15 @@ class VisemeLink:
         will never be finished, and a mouth left in the shape of half a syllable
         is the most visible symptom of a runtime that lost track of itself.
         """
-        self._settle(event, "neutral-on-restart", cancelled=True)
+        self._settle(
+            event, "neutral-on-restart", cancelled=True, reason="after-worker-restart",
+        )
 
     # ----------------------------------------------------------------- #
 
-    def _settle(self, event: Any, origin: str, *, cancelled: bool = False) -> None:
+    def _settle(
+        self, event: Any, origin: str, *, cancelled: bool = False, reason: str = "",
+    ) -> None:
         request_id = str(getattr(event, "request_id", "") or self._request_id)
         with self._guard:
             if cancelled and request_id:
@@ -352,6 +361,9 @@ class VisemeLink:
                 self._completed.add(request_id)
             was_active = self._active
             self._active = False
+            self._inactive_reason = reason or (
+                "after-cancellation" if cancelled else "after-completion"
+            )
             revision = self._frame_revision
             presenter = self.presenter
             if was_active or self.last_frame is None or not self.last_frame.neutral:
@@ -385,7 +397,12 @@ class VisemeLink:
         if request_id != self._request_id:
             return "stale-request"
         if not self._active:
-            return "after-completion"
+            # Whichever thing deactivated the link said why. Falling through to
+            # a fixed "after-completion" here counted 146 frames under that name
+            # on the first compositor run, and every one of them was a frame
+            # that arrived after the *renderer* was replaced mid-utterance — a
+            # different fact with a different remedy.
+            return self._inactive_reason
         if sequence < self._sequence:
             return "out-of-order"
         if self._count >= self._maximum:
@@ -455,6 +472,8 @@ class VisemeLink:
         with self._guard:
             self.presenter = presenter
             self._active = False
+            self._inactive_reason = "after-renderer-restart"
+            self._last_shape = ""
             request_id = self._request_id
             revision = self._frame_revision
         self._emit(MouthFrame(
@@ -476,6 +495,7 @@ class VisemeLink:
             already_neutral = self.last_frame is not None and self.last_frame.neutral
             self._closed = True
             self._active = False
+            self._inactive_reason = "link-closed"
             revision = self._frame_revision
             request_id = self._request_id
             presenter = self.presenter
