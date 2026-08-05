@@ -502,6 +502,17 @@ class _CommandBackend:
         self._failures = 0
         self._devices: tuple[AudioDevice, ...] = ()
         self._closed = False
+        #: A diagnostic switch, off by default and never set by the runtime.
+        #: §23 step 19 asks the slice to "remove the audio device or simulate
+        #: backend loss", and on a machine whose speaker cannot be unplugged by
+        #: a script this is how the loss is produced. Everything downstream of
+        #: it is real: the router's selection, the typed degradation record, the
+        #: policy's descent and the hysteresis on the way back.
+        #:
+        #: Deliberately *not* a way to fake a working backend. It can only make
+        #: a backend look worse than it is, so no measurement can be flattered
+        #: by it.
+        self._simulated_loss = False
         self._guard = threading.RLock()
 
     def _resolve_once(self) -> None:
@@ -569,6 +580,17 @@ class _CommandBackend:
         devices: Sequence[AudioDevice] = ()
         detail = self._resolution_error if not available else ""
         reachable = False
+        if self._simulated_loss:
+            return self._remember(BackendHealth(
+                backend_id=self.backend_id,
+                kind=self.kind,
+                available=available,
+                reachable=False,
+                device_count=0,
+                detail="a simulated backend loss is in effect for this diagnostic run",
+                checked_at_monotonic=monotonic,
+                consecutive_failures=self._failures,
+            ), ())
         if available:
             try:
                 devices = self.discover()
@@ -587,10 +609,25 @@ class _CommandBackend:
             checked_at_monotonic=monotonic,
             consecutive_failures=self._failures,
         )
+        return self._remember(health, devices)
+
+    def _remember(self, health: BackendHealth, devices: Sequence[AudioDevice]) -> BackendHealth:
         with self._guard:
             self._health = health
             self._devices = tuple(devices)
         return health
+
+    def set_reachable(self, value: bool) -> None:
+        """Diagnostic only: make this backend report itself unreachable.
+
+        Named to match :class:`ScriptedBackend`'s own method so the vertical
+        slice takes one path whether it is running against a fake or against
+        ``paplay``. Clears the cached health so the next reading is the new one
+        rather than a five-second-old answer.
+        """
+        with self._guard:
+            self._simulated_loss = not value
+            self._health = None
 
     def record(self, succeeded: bool) -> None:
         with self._guard:

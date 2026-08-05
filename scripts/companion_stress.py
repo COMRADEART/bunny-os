@@ -241,6 +241,120 @@ def runtime_inventory() -> dict[str, Any]:
     }
 
 
+#: Programs the voice runtime is allowed to start. Kept in step with
+#: :data:`companion.voice.execution.ALLOWED_EXECUTABLES`; a name here that is
+#: not there would count a child that could not exist, and the reverse would
+#: miss a leak.
+_VOICE_CHILDREN = frozenset({
+    "espeak-ng", "espeak", "spd-say", "say",
+    "paplay", "pacat", "pw-play", "aplay", "pactl", "pw-dump",
+})
+
+
+def voice_inventory() -> dict[str, Any]:
+    """§22's voice-specific counts: children, audio, temporary files, queue.
+
+    Child processes are read from ``/proc`` rather than from any bookkeeping
+    this runtime keeps, which is the whole point: a child the runtime *thinks*
+    it reaped and a child the kernel still has are exactly the pair a leak lives
+    between, and asking the runtime would return the runtime's own opinion.
+
+    Audio handles are counted the same way, as live player processes. There is
+    no file descriptor to count — every backend here is a one-shot player
+    holding its own connection to the audio server — so "an audio handle" is
+    "a player that is still running", and after an utterance ends there must be
+    none.
+    """
+    children: list[str] = []
+    players: list[str] = []
+    zombies: list[str] = []
+    proc = Path("/proc")
+    if proc.is_dir():
+        own = os.getpid()
+        for entry in proc.iterdir():
+            if not entry.name.isdigit():
+                continue
+            try:
+                status = (entry / "status").read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            parent = 0
+            name = ""
+            state = ""
+            for line in status.splitlines():
+                if line.startswith("PPid:"):
+                    parent = int(line.split()[1])
+                elif line.startswith("Name:"):
+                    name = line.split(maxsplit=1)[1].strip() if len(line.split()) > 1 else ""
+                elif line.startswith("State:"):
+                    state = line.split()[1] if len(line.split()) > 1 else ""
+                if parent and name and state:
+                    break
+            if parent != own:
+                continue
+            children.append(name)
+            if state == "Z":
+                zombies.append(name)
+            if name in _VOICE_CHILDREN:
+                players.append(name)
+    else:
+        return {
+            "result": "NOT_RUN",
+            "reason": "this platform has no /proc, so child and audio handles cannot be counted",
+            "temporaryWorkspaces": len(list(Path(tempfile.gettempdir()).glob("bunny-voice-*"))),
+            **_voice_object_inventory(),
+        }
+
+    workspaces = sorted(Path(tempfile.gettempdir()).glob("bunny-voice-*"))
+    return {
+        "childProcesses": len(children),
+        "childNames": sorted(set(children)),
+        "zombies": len(zombies),
+        "audioHandles": len(players),
+        "audioNames": sorted(set(players)),
+        "temporaryWorkspaces": len(workspaces),
+        "temporaryFiles": sum(
+            1 for item in workspaces for _ in item.rglob("*") if item.is_dir()
+        ),
+        **_voice_object_inventory(),
+    }
+
+
+def _voice_object_inventory() -> dict[str, Any]:
+    """Queue depth and active requests, from whatever workers are still alive.
+
+    Both must be zero between iterations. A queue that still has depth is an
+    utterance the previous run neither spoke nor recorded, and an active request
+    is a worker that never let go of one.
+    """
+    import gc as _gc
+
+    depth = 0
+    active = 0
+    workers = 0
+    services = 0
+    for item in _gc.get_objects():
+        try:
+            name = type(item).__name__
+        except Exception:  # pragma: no cover - exotic proxies
+            continue
+        if name == "VoiceWorker":
+            workers += 1
+            try:
+                depth += len(item.queue)
+                active += 1 if getattr(item, "_current", None) is not None else 0
+            except Exception:
+                continue
+        elif name == "VoiceService":
+            services += 1
+    return {
+        "liveVoiceWorkers": workers,
+        "liveVoiceServices": services,
+        "queueDepth": depth,
+        "activeRequests": active,
+    }
+
+
 def memory_inventory() -> dict[str, Any]:
     """RSS from /proc, or NOT_RUN. Never a substitute measurement."""
     try:
@@ -310,6 +424,7 @@ def snapshot(label: str) -> dict[str, Any]:
         "descriptors": descriptor_inventory(),
         "sockets": socket_inventory(),
         "runtime": runtime_inventory(),
+        "voice": voice_inventory(),
         "memory": memory_inventory(),
         "tempDirectories": len(list(Path(tempfile.gettempdir()).glob("bunny-*"))),
     }
@@ -336,10 +451,23 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
         ("liveRuntimes", ("runtime", "liveRuntimes")),
         ("rssBytes", ("memory", "rssBytes")),
         ("tempDirectories", ("tempDirectories",)),
+        # §22's voice columns.
+        ("childProcesses", ("voice", "childProcesses")),
+        ("zombies", ("voice", "zombies")),
+        ("audioHandles", ("voice", "audioHandles")),
+        ("temporaryWorkspaces", ("voice", "temporaryWorkspaces")),
+        ("liveVoiceWorkers", ("voice", "liveVoiceWorkers")),
+        ("liveVoiceServices", ("voice", "liveVoiceServices")),
     ):
         start, end = _get(before, *path), _get(after, *path)
         if isinstance(start, int) and isinstance(end, int):
             result[name] = end - start
+    # Absolute, like the runtime's own leases below and for the same reason: a
+    # queue with depth or a request still active between iterations is wrong
+    # whatever it was before, and a delta of zero against a dirty baseline would
+    # read as clean.
+    for name in ("queueDepth", "activeRequests"):
+        result[name] = _get(after, "voice", name) or 0
     # Absolute rather than differenced. A lease, a waiter, a held answer, an
     # outstanding question or a held store lock should be *empty* between
     # iterations, not merely unchanged — a delta of zero against a baseline that
@@ -403,6 +531,105 @@ def _run_integration_slice() -> dict[str, Any]:
     return {"ok": report["passed"], "failures": report["failures"], "ran": len(report["steps"])}
 
 
+def _run_voice_lifecycle() -> dict[str, Any]:
+    """One complete voice-worker lifetime, against the real local providers.
+
+    §22's first gate is "voice-worker lifecycle runs", and the thing being
+    repeated is the whole lifetime rather than a test: build a service, speak,
+    cancel, degrade, restart the worker, close. That is the sequence a leak
+    would accumulate across, and it is deliberately *not* the unit tests —
+    those run under gate 2 and mostly use scripted providers, so a child process
+    or an audio handle left behind by the real ones would never appear.
+    """
+    from companion.voice.captions import SpeechDisposition
+    from companion.voice.policy import VoicePreferences
+    from companion.voice.request import Priority
+    from companion.voice.service import VoiceService, VoiceServiceOptions
+
+    problems: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-voice-") as directory:
+        service = VoiceService(VoiceServiceOptions(
+            runtime_directory=Path(directory),
+            preferences=VoicePreferences(speak_progress=True),
+        ))
+        try:
+            from companion.presentation import PresentationState
+
+            def _state(revision: int, text: str) -> PresentationState:
+                return PresentationState(
+                    session_id="stress-session", task_id="stress-task",
+                    phase="presenting_result", base_phase="presenting_result",
+                    result_summary=text, revision=revision,
+                )
+
+            # 1. speak, and let it finish.
+            first = service.publish(_state(1, "The first stress utterance, spoken to the end."))
+            service.ledger.mark_shown(first.caption_id)
+            request, reason = service.speak(first.caption_id, priority=Priority.TASK_RESULT)
+            if request is not None and not service.worker.drain(timeout=60.0):
+                problems.append("the first utterance did not settle")
+
+            # 2. speak, and cancel it before it can.
+            second = service.publish(_state(2, "The second stress utterance, cancelled part way through it."))
+            service.ledger.mark_shown(second.caption_id)
+            cancelled, _why = service.speak(second.caption_id, priority=Priority.TASK_RESULT)
+            if cancelled is not None:
+                service.voice_cancel(requestId=cancelled.request_id)
+                if not service.worker.drain(timeout=60.0):
+                    problems.append("the cancelled utterance did not settle")
+
+            # 3. lose the audio, and check the captions survive it.
+            for backend in service.router.backends:
+                setter = getattr(backend, "set_reachable", None)
+                if setter is not None:
+                    setter(False)
+            service.refresh()
+            third = service.publish(_state(3, "The third stress utterance, with no audio device."))
+            service.ledger.mark_shown(third.caption_id)
+            service.speak(third.caption_id, priority=Priority.TASK_RESULT)
+            service.worker.drain(timeout=30.0)
+            if service.ledger.get(third.caption_id) is None:
+                problems.append("the caption did not survive the audio loss")
+            for backend in service.router.backends:
+                setter = getattr(backend, "set_reachable", None)
+                if setter is not None:
+                    setter(True)
+
+            # 4. restart the worker, and check nothing replays.
+            before = sum(service.queue.counts().values())
+            report = service.restart_worker(timeout=30.0)
+            if report.replayed:
+                problems.append(f"the restart replayed {len(report.replayed)} utterance(s)")
+            service.worker.drain(timeout=15.0)
+            if sum(service.queue.counts().values()) != before:
+                problems.append("an utterance appeared after the restart")
+
+            status = service.voice_status()
+            if status["queueDepth"]:
+                problems.append(f"the queue still holds {status['queueDepth']} utterance(s)")
+            if status["activeRequests"]:
+                problems.append("an utterance was still active at the end of the lifecycle")
+            if not status["captionsAuthoritative"] or status["mayMutateTaskState"]:
+                problems.append("the worker's own boundary claims changed")
+        finally:
+            service.close()
+    return {"ok": not problems, "failures": problems, "ran": 4}
+
+
+def _run_voice_slice() -> dict[str, Any]:
+    from companion.voice.vertical_slice import run_voice_slice
+
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-vslice-") as directory:
+        report = run_voice_slice(Path(directory)).to_json()
+    return {
+        "ok": report["passed"],
+        "failures": [item["name"] for item in report["failed"]],
+        "notRun": report["notRun"],
+        "ran": len(report["steps"]),
+        "detail": [item["detail"] for item in report["failed"]][:2],
+    }
+
+
 TARGETS = {
     "service": lambda order, seed: _run_modules(SERVICE_MODULES, order=order, seed=seed),
     "suite": lambda order, seed: _run_modules(SUITE_MODULES, order=order, seed=seed),
@@ -411,6 +638,8 @@ TARGETS = {
     ),
     "slice": lambda order, seed: _run_slice(),
     "integration-slice": lambda order, seed: _run_integration_slice(),
+    "voice": lambda order, seed: _run_voice_lifecycle(),
+    "voice-slice": lambda order, seed: _run_voice_slice(),
 }
 
 
