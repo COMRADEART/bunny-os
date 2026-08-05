@@ -39,7 +39,7 @@
   },
   "hardware": {
     "cpuCount": 22,
-    "memTotalBytes": 16561385472,
+    "memTotalBytes": 16561389568,
     "note": "Host capacity only. It bounds what a measurement can mean; it is not a Bunny OS target-hardware figure."
   },
   "hostname": "comrade",

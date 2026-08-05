@@ -5,7 +5,7 @@ Branch `fix/companion-pause-approval-consistency`.
 | | |
 | --- | --- |
 | **Starting commit** | `4f8ea552d54654a75f2c6b4014d1c1dfdfb8cca2` |
-| **Gate commit** | `951ae15b2139f0313c32048c4f5fb0bae05259ce` — all three gates |
+| **Gate commit** | `8c67193c7b5a0804f46f1d71ff8c97416ba9826d` — all three gates |
 | **Base branch** | `feature/companion-linux-validation` |
 
 The previous phase left four things open: service stress at 98/100, the 50-run
@@ -67,6 +67,46 @@ Two questions from one plan, disposed of by two mechanisms with two meanings.
 
 **Pre-existing, not introduced by the previous phase.** The same probe against
 base commit `f6c2c02` failed at iteration 137 of 200 with the same signature.
+
+### Three more, and Linux found all of them
+
+Windows passed 120/120 once the vocabulary was fixed. Linux — roughly ten times
+faster, and therefore reaching interleavings the development host almost never
+does — failed one run in three. Each failure exposed a different defect:
+
+**A transition event overwrote the accurate one.** `_fill_required` supplies
+defaults for events emitted *by a state transition*, and for
+`approval_resolved` it defaulted to `"denied"` whenever the target was
+`blocked`. The runtime had already emitted an accurate record by then, so this
+was a second event about the same fact carrying a worse value — and it was the
+one the projection folded last. It now reads the decision from the approval
+reference that was actually recorded.
+
+**A pause could be overwritten by the runner.** Withdrawing a task's questions
+is what makes the runner's next approval check raise, so the runner reaches its
+own verdict a moment after the user presses pause. `pause_task` wrote its state
+*protectively*, and a protective write declines when it sees a task somebody
+else has taken — so the user's pause was silently the loser. It is now
+authoritative, for the same reason `resume_task` already is for un-pausing:
+whoever the user asked wins. The exception handlers in `run_task` also refuse
+to block a task that has already been stopped, because blocking on a refusal
+caused *by* the stop records the consequence of the user's action as a fault of
+the task's own.
+
+Traced rather than guessed — the runner read `waiting_for_approval`, reached
+its verdict, and the pause did not end up persisted. The exact interleaving is
+not reconstructed and is not claimed; the rule is.
+
+**An approval could be answered twice.** Replay protection asked the durable
+store whether a decision existed — but that decision is written by the
+*worker*, after it wakes from the consent call. A second answer arriving before
+that found `pending` and was accepted, at about one run in thirty.
+`InteractiveConsent` now records the answer at the moment it takes it and
+returns `"replayed"` without consulting anything that has to catch up. This one
+is security-relevant: replay protection that depends on another thread's
+progress is not protection.
+
+Result: the Linux pause probe went from **1 failure in 3** to **250/250**.
 
 ## 3. Corrected event semantics
 
@@ -241,7 +281,7 @@ target device. The probe records `isGnomeSession: false` and
 
 ## 10. Gates
 
-All three ran against `951ae15b2139f0313c32048c4f5fb0bae05259ce`, recorded per
+All three ran against `8c67193c7b5a0804f46f1d71ff8c97416ba9826d`, recorded per
 iteration by the harness rather than once in a header — a header would not
 prove the tree stayed still underneath a run.
 
@@ -275,6 +315,30 @@ Kept separately, and neither substitutes for the other:
 - **Linux** validates the installed transport, `SO_PEERCRED` peer identity and
   systemd user-service integration, over a real Unix socket.
 
+**Neither host is the stricter one, and that is the argument for keeping both.**
+This phase is the case in point. Windows found the replacement defect and
+cannot find the lifecycle races; Linux found three defects Windows had passed
+over — and, because it is about ten times faster, found them at one run in
+three rather than one in a hundred and thirty-seven.
+
+Linux also found two defects in the *tests*, both of which had been passing for
+the wrong reason:
+
+- the store tests patched `os.name`, which reaches tempfile and pathlib as
+  well. On Windows the patch to `"nt"` was a no-op, so the tests passed without
+  ever exercising what they claimed to; on Linux they lied to the standard
+  library and six failed. `store._WINDOWS` is now the seam;
+- the character tests copied the *installed* package — mode 0444 and
+  root-owned, correctly — and then wrote to it. Twenty-three tests failed on
+  any machine with Bunny OS actually installed and passed everywhere else.
+
+Twenty-three tests failing on the machine most like the product, and passing on
+the developer host, is the direction that matters.
+
+Skip counts differ for a reason worth stating: **18 skipped on Windows, 1 on
+Linux**. The difference is `AF_UNIX` and `/proc` — the tests written for the
+shipped transport do not run on the host that has no shipped transport.
+
 ## 12. Known limitations
 
 1. **No physical hardware.** Every Linux result is from a WSL2 utility VM.
@@ -289,9 +353,22 @@ Kept separately, and neither substitutes for the other:
    store still shows the question settled, but the *reason* it was withdrawn is
    not carried across. A task is recovered rather than resumed mid-question, so
    nothing depends on it — but it is a gap, not a design.
-7. **A different-user peer rejection** is proved against a substituted kernel
+7. **The exact interleaving behind the pause-overwrite is not reconstructed.**
+   What was traced is that the runner read `waiting_for_approval`, reached its
+   verdict, and the pause did not end up persisted. The fix is a rule — the
+   pause is authoritative for its own state — and the regression test asserts
+   the rule rather than the interleaving, because reproducing the interleaving
+   needs two threads inside one lock. The rule is the thing that has to hold.
+8. **`InteractiveConsent`'s replay record is in memory and per-process.** A
+   second runtime over the same store would not see it. There is only ever one
+   runtime per endpoint — the protocol refuses a duplicate with exit 3 — so
+   nothing depends on it today.
+9. **The lifecycle lock is per-runtime, not cross-process.** It serialises
+   pause, resume, cancel and the runner's block against each other inside one
+   process. Two processes over one store are already refused at the socket.
+10. **A different-user peer rejection** is proved against a substituted kernel
    credential, not a second real user.
-8. **Frame-rate figures are development-machine figures.**
+11. **Frame-rate figures are development-machine figures.**
 
 ## 13. Reproducibility and build impact
 

@@ -267,11 +267,24 @@ def _commit() -> str:
     """
     if _COMMIT_CACHE:
         return _COMMIT_CACHE[0]
+    # An out-of-tree copy — the Linux validation checkout is one — has no
+    # repository to ask, and asking anyway is worse than not asking: an empty
+    # `.git` beside the copy made `git rev-parse` walk up and answer with an
+    # unrelated commit, which was then recorded against fifty iterations. The
+    # override is how a caller says which commit it copied, and "unknown" is
+    # what an unanswerable question produces.
+    declared = os.environ.get("BUNNY_STRESS_COMMIT")
+    if declared:
+        _COMMIT_CACHE.append(declared)
+        return declared
     value = "unknown"
     try:
         import subprocess
 
         root = Path(__file__).resolve().parents[1]
+        if not (root / ".git").exists():
+            _COMMIT_CACHE.append(value)
+            return value
         head = subprocess.run(
             ["git", "-C", str(root), "rev-parse", "HEAD"],
             capture_output=True, text=True, timeout=20, check=False,
