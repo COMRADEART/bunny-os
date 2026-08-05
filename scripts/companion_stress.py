@@ -630,6 +630,22 @@ def _run_voice_slice() -> dict[str, Any]:
     }
 
 
+def _run_voice_renderer_slice() -> dict[str, Any]:
+    from companion.character.voice_slice import run_voice_renderer_slice
+
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-vrslice-") as directory:
+        report = run_voice_renderer_slice(Path(directory)).to_json()
+    return {
+        "ok": report["passed"],
+        "failures": [item["name"] for item in report["steps"] if item["status"] == "FAIL"],
+        "notRun": report["notRunCount"],
+        "ran": report["stepCount"],
+        "detail": [
+            item["detail"] for item in report["steps"] if item["status"] == "FAIL"
+        ][:2],
+    }
+
+
 TARGETS = {
     "service": lambda order, seed: _run_modules(SERVICE_MODULES, order=order, seed=seed),
     "suite": lambda order, seed: _run_modules(SUITE_MODULES, order=order, seed=seed),
@@ -640,6 +656,7 @@ TARGETS = {
     "integration-slice": lambda order, seed: _run_integration_slice(),
     "voice": lambda order, seed: _run_voice_lifecycle(),
     "voice-slice": lambda order, seed: _run_voice_slice(),
+    "voice-renderer-slice": lambda order, seed: _run_voice_renderer_slice(),
 }
 
 

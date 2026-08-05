@@ -224,6 +224,15 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
     )
     voice_slice.add_argument("--slice-root", type=Path, default=None)
 
+    voice_renderer_slice = group.add_parser(
+        "run-voice-renderer-slice",
+        help=(
+            "RUNS the installed voice-to-renderer slice: voice-produced visemes driving a "
+            "real character presenter, with the widget recorded rather than drawn"
+        ),
+    )
+    voice_renderer_slice.add_argument("--slice-root", type=Path, default=None)
+
     voice_health = group.add_parser(
         "voice-health",
         help="report which local voices and audio backends this machine has (read-only)",
@@ -303,6 +312,8 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
         return _run_character_slice(args)
     if args.companion_command == "run-voice-slice":
         return _run_voice_slice(args)
+    if args.companion_command == "run-voice-renderer-slice":
+        return _run_voice_renderer_slice(args)
     if args.companion_command == "voice-health":
         return _voice_health(args)
     if args.companion_command == "character":
@@ -836,6 +847,26 @@ def _run_character_slice(args: argparse.Namespace) -> dict[str, Any]:
             f"RAN the installed character vertical slice in {root}: a companion service, a "
             "validated package, an approval, lip-sync, degradation and a renderer restart. "
             "No network, provider or credential was used."
+        ),
+        "root": str(root),
+        **report.to_json(),
+    }
+
+
+def _run_voice_renderer_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .character.voice_slice import run_voice_renderer_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-voice-renderer-slice-"))
+    report = run_voice_renderer_slice(root)
+    return {
+        "effect": (
+            f"RAN the installed voice-to-renderer slice in {root}: a canonical caption, a "
+            "local synthesiser, the worker's own viseme timeline, the lip-sync controller "
+            "and the mouth shapes a renderer would have been handed. The pixels need a "
+            "display and are proved separately by scripts/gtk_voice_viseme_probe.py; the "
+            "steps that need one are reported NOT_RUN here rather than omitted."
         ),
         "root": str(root),
         **report.to_json(),

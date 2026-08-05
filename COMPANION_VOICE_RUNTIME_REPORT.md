@@ -997,3 +997,25 @@ by this branch and is not re-validated by it.
 measured; what has not happened is a compositor drawing the mouth. That is the
 character renderer's own validated surface and is deliberately not re-claimed
 here.
+
+---
+
+## 30. Superseded by the closure
+
+Two claims in this report were superseded by `fix/companion-voice-closure`, and
+the rest stands. Nothing above this line has been edited; every byte of it is
+pinned by digest in `qualification/companion-voice-closure/preserved-evidence.json`.
+
+* **§3 build-input closure.** The "20 installed paths" counted by hand there is
+  superseded by a mechanically derived **22**. The analyser of the day did not
+  model `copy_python_package` and reported 2. See
+  `COMPANION_VOICE_CLOSURE_REPORT.md` §2 and §5.
+* **§25 NOT_RUN, "compositor mouth animation".** Run. Voice-produced visemes now
+  drive a real GTK character renderer on the WSLg compositor; see
+  `COMPANION_VOICE_CLOSURE_REPORT.md` §10-§12. Every other NOT_RUN item in §25
+  is still NOT_RUN and is carried forward unchanged.
+
+The §18a multi-call defect and the §18b stranded-worker defect are both still
+described as they were. Their fixes were not undone: §18a gained a declared
+player contract around it, and §18b gained an ordering that makes the stranded
+thread unreachable rather than only recoverable.
