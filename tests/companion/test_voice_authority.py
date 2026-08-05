@@ -15,6 +15,7 @@ import ast
 import json
 import os
 from pathlib import Path
+import stat
 import sys
 import tempfile
 import threading
@@ -362,9 +363,21 @@ class SweepTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "posix", "ownership is a POSIX arrangement")
     def test_something_that_is_not_ours_is_skipped_with_a_reason(self) -> None:
-        """A matching name is a convention; ownership is the proof."""
+        """A matching name is a convention; the mode and the owner are the proof.
+
+        ``chmod`` rather than ``mkdir(mode=...)``: the mode argument to ``mkdir``
+        is masked by the process umask, so on a host with the usual ``0o022``
+        the directory came out ``0o755`` and neither the writability check nor
+        the ownership check fired — the sweep removed it and the test's premise
+        had quietly evaporated. Linux found that; Windows had skipped the test.
+        """
         impostor = self.parent / f"{PrivateWorkspace.PREFIX}impostor"
-        impostor.mkdir(mode=0o777)
+        impostor.mkdir()
+        os.chmod(impostor, 0o777)
+        self.assertTrue(
+            impostor.stat().st_mode & (stat.S_IWGRP | stat.S_IWOTH),
+            "the fixture is not actually world-writable, so it proves nothing",
+        )
         old = time.time() - STALE_AFTER_SECONDS * 2
         os.utime(impostor, (old, old))
         removed, skipped, _files = sweep_workspaces(parent=self.parent)
