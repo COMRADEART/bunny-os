@@ -794,9 +794,26 @@ class CompanionGateway:
         # phase boundary, so the pause has to be on disk before the thing that
         # will look for it is woken. Released with no decision, so pausing a
         # task that was waiting for consent authorises nothing.
-        outstanding = self._outstanding_requests(taskId)
         task = self.runtime.pause_task(session_id, taskId)
-        released = self.consent.abandon(taskId, request_ids=outstanding)
+        # No pre-refusal here, deliberately, and this is not an oversight.
+        #
+        # Cancelling pre-refuses the questions a worker has not reached yet, so
+        # that it cannot park on one belonging to a task that has stopped. Doing
+        # the same when pausing was measurably wrong: a pre-refused question
+        # returns "nobody answered", the approval layer applies the safe default,
+        # and the record gains a *denial* — whereas pausing already withdraws its
+        # questions through ApprovalGate.invalidate_for_task, which records them
+        # as expired with "the task was paused; the question was withdrawn, not
+        # answered". Withdrawn and denied are different things to have said to a
+        # person, and only one of them is true.
+        #
+        # Measured: adding it here failed
+        # test_pausing_a_task_waiting_for_consent_actually_stops_it about once in
+        # fifty, with the task correctly `paused` and the projection reporting
+        # `blocked` because a denial outranks a pause. A paused task holds no
+        # worker anyway — the runner notices the pause at its next phase boundary
+        # and stops — so there is nothing here for a pre-refusal to save.
+        released = self.consent.abandon(taskId)
         return {
             "sessionId": session_id,
             "task": task.view(PRESENTATION_AUDIENCE),

@@ -1,0 +1,123 @@
+{
+  "character": {
+    "modelError": "",
+    "pictureFile": "/usr/share/bunny-shell/companion/default-bunny.svg",
+    "pictureWidget": "Picture",
+    "staticCharacterLoaded": true
+  },
+  "display": {
+    "available": true,
+    "display": null,
+    "isGnomeSession": false,
+    "kind": "wayland-wslg-remoted",
+    "note": "A real Wayland compositor, supplied by the WSLg system distribution and composited by the Windows host. Sufficient to execute and observe the GTK widget layer. NOT a GNOME session, NOT a session compositor, and NOT evidence about a Bunny OS desktop.",
+    "waylandDisplay": "wayland-0",
+    "xdgCurrentDesktop": null,
+    "xdgSessionType": "unspecified"
+  },
+  "gate": {
+    "failures": [],
+    "passed": true
+  },
+  "gtkVersion": "4.22.4",
+  "logs": {
+    "sample": [],
+    "serious": [],
+    "total": 0
+  },
+  "mainLoopIterations": 60,
+  "provenance": {
+    "gtkShell": "/usr/lib/bunny-os/python/companion/gtk_shell.py"
+  },
+  "schema": "bunny-os/gtk-execution-probe/1",
+  "widgetTree": {
+    "children": [
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "mapped": true,
+                "realized": true,
+                "type": "Box",
+                "visible": true
+              }
+            ],
+            "mapped": true,
+            "realized": true,
+            "type": "Viewport",
+            "visible": true
+          },
+          {
+            "children": [
+              {
+                "mapped": true,
+                "realized": true,
+                "type": "Range",
+                "visible": true
+              }
+            ],
+            "mapped": true,
+            "realized": true,
+            "type": "Scrollbar",
+            "visible": true
+          },
+          {
+            "children": [
+              {
+                "mapped": true,
+                "realized": true,
+                "type": "Range",
+                "visible": true
+              }
+            ],
+            "mapped": true,
+            "realized": true,
+            "type": "Scrollbar",
+            "visible": true
+          }
+        ],
+        "mapped": true,
+        "realized": true,
+        "type": "ScrolledWindow",
+        "visible": true
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "mapped": true,
+                "realized": true,
+                "type": "CenterBox",
+                "visible": true
+              }
+            ],
+            "mapped": true,
+            "realized": true,
+            "type": "WindowHandle",
+            "visible": true
+          }
+        ],
+        "mapped": true,
+        "realized": true,
+        "type": "HeaderBar",
+        "visible": true
+      }
+    ],
+    "mapped": true,
+    "realized": true,
+    "type": "ApplicationWindow",
+    "visible": true
+  },
+  "window": {
+    "constructed": true,
+    "mapped": true,
+    "realized": true,
+    "size": [
+      0,
+      0
+    ],
+    "title": "Bunny Companion"
+  }
+}

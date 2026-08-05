@@ -467,19 +467,34 @@ Containerfile agree.
 
 ## 25. Unverified assumptions
 
-- **That GTK 4 renders the frames correctly.** No compositor was available; the
-  widget code has never been executed.
+- ~~**That GTK 4 renders the frames correctly.** No compositor was available;
+  the widget code has never been executed.~~
+  **Partly retired 2026-08-05 UTC.** The widget layer has now been executed on
+  a real Wayland compositor (WSLg, GTK 4.22.4, `gtk_shell.py` imported from
+  `/usr/lib/bunny-os/python`): the `ApplicationWindow` and its whole tree are
+  realized and mapped, a `Gtk.Picture` holds the shipped
+  `default-bunny.svg`, and GLib logged zero records and zero criticals. That
+  is a real compositor and a real GTK client; it is **not** a GNOME session and
+  not a Bunny OS desktop.
 - **That `Gtk.Picture.set_filename` handles the shipped PNGs as expected**, and
   that switching filenames at up to 60 fps is a reasonable animation mechanism
   on a real compositor. It is validated as data and never as pixels here.
+  **Still unverified.** The compositor run above exercised the static SVG path;
+  it did not drive phase changes through the animated renderer, so frame
+  switching at rate remains unexecuted.
 - **That the frame-rate caps chosen under thermal, CPU and foreground pressure
   (15, 20, 12 fps) are the right numbers.** They are plausible, not measured.
 - **That 288 px is a sensible default character size** on a real display.
 - **That the decoded-memory estimates hold at the 64 MiB target.** The figure is
   computed correctly; whether it fits has not been tested on such a machine.
-- **That the installed paths are right.** `/usr/share/bunny-os/companion/characters`
+- ~~**That the installed paths are right.** `/usr/share/bunny-os/companion/characters`
   has never existed on a built image, because no image has been built from this
-  branch.
+  branch.~~
+  **Retired 2026-08-05 UTC.** An image was built and inspected:
+  `/usr/share/bunny-os/companion/characters/default-bunny/` exists with its
+  manifest, assets and licence, and the window's separate static asset is at
+  `/usr/share/bunny-shell/companion/default-bunny.svg`, mode `0444` and
+  root-owned. The two are different artifacts and both ship.
 - **That the three restarts-per-minute guard is the right bound.** Chosen.
 
 ## 26. Remaining work for 3D rendering
