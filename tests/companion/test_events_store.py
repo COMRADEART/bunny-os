@@ -553,60 +553,13 @@ class ReplayTests(CompanionTestCase):
         self.assertNotIn(task.original_request, audit)
 
 
-class AtomicReplaceRetryTests(unittest.TestCase):
-    """A rename over a file a reader has open must not lose the write.
-
-    On Windows ``os.replace`` is refused with EACCES when another handle has the
-    destination open, which happens constantly here: the protocol serves readers
-    from the same store a runtime worker is writing to. The reader already
-    retried; the writer did not, so the write raised, the service caught the
-    resulting :class:`StoreError` as an ordinary refusal, and the task froze in
-    a non-terminal state with no explanation recorded anywhere.
-
-    The failure is simulated rather than provoked, so the test means the same
-    thing on Linux — where a real collision cannot be made to happen — as it does
-    on the host where it was found.
-    """
-
-    def setUp(self) -> None:
-        self._directory = tempfile.TemporaryDirectory()
-        self.addCleanup(self._directory.cleanup)
-        self.root = Path(self._directory.name)
-
-    def test_a_transient_refusal_is_retried_and_the_write_lands(self) -> None:
-        from companion import store as store_module
-
-        target = self.root / "document.json"
-        real_replace = store_module.os.replace
-        refusals = {"left": 2}
-
-        def flaky(source, destination):
-            if refusals["left"] > 0:
-                refusals["left"] -= 1
-                raise PermissionError(13, "the process cannot access the file")
-            return real_replace(source, destination)
-
-        with unittest.mock.patch.object(store_module.os, "replace", flaky):
-            store_module._atomic_write_json(target, {"written": True})
-
-        self.assertEqual(refusals["left"], 0)
-        self.assertEqual(json.loads(target.read_text(encoding="utf-8")), {"written": True})
-
-    def test_a_persistent_refusal_is_still_reported(self) -> None:
-        """Retrying must not turn a real fault into silence."""
-        from companion import store as store_module
-
-        target = self.root / "document.json"
-
-        def always(source, destination):
-            raise PermissionError(13, "the process cannot access the file")
-
-        with unittest.mock.patch.object(store_module.os, "replace", always):
-            with self.assertRaises(StoreError):
-                store_module._atomic_write_json(target, {"written": True})
-        self.assertFalse(target.exists())
-        # The temporary file is not left behind for somebody to find later.
-        self.assertEqual(list(self.root.glob("*.tmp")), [])
+# The atomic-writer tests that lived here have moved to
+# tests/companion/test_store_durability.py, which covers what this pair could
+# not: which failures are retried and, more importantly, which are refused.
+# Retrying a full disk or a read-only filesystem would add a delay to an error
+# that was already correct, and the version here retried every OSError.
+#
+# They are moved rather than deleted; nothing they asserted was dropped.
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -58,6 +58,7 @@ from dataclasses import dataclass, field
 import json
 import os
 from pathlib import Path
+import stat
 import tempfile
 import time
 from typing import Any, Iterator, Mapping, Sequence
@@ -359,7 +360,19 @@ def _append_private(path: Path, text: str) -> None:
 
 
 def _atomic_write_json(path: Path, document: Mapping[str, Any]) -> None:
-    """Replace a file's contents, or leave them entirely unchanged."""
+    """Replace a file's contents, or leave them entirely unchanged.
+
+    The temporary is created in the *same directory* as the destination, which
+    is what makes the rename atomic — across filesystems it would be a copy,
+    and a copy has a moment where the destination is half written. It is also
+    what makes the retry in :func:`_replace_stable` safe: the directory has
+    already accepted a file, so a later refusal cannot be a permissions problem
+    with the directory.
+
+    Nothing reports success before the replacement lands. The caller learns the
+    write happened by this function returning, and it returns only after
+    ``os.replace`` has and the directory entry has been synchronised.
+    """
     _private_directory(path.parent)
     encoded = json.dumps(document, indent=2, sort_keys=True) + "\n"
     handle = tempfile.NamedTemporaryFile(
@@ -377,12 +390,25 @@ def _atomic_write_json(path: Path, document: Mapping[str, Any]) -> None:
             pass
         _replace_stable(temporary, path)
     except OSError as exc:
-        try:
-            temporary.unlink()
-        except OSError:
-            pass
+        _discard(temporary)
         raise StoreError(f"{path} could not be written: {exc}") from exc
+    except BaseException:
+        # KeyboardInterrupt and SystemExit reach here, and they arrive most
+        # easily during the backoff in `_replace_stable`. Without this the
+        # temporary survived the interruption, and a store interrupted often
+        # enough accumulated one orphan per attempt in the same directory it
+        # later scans.
+        _discard(temporary)
+        raise
     _fsync_directory(path.parent)
+
+
+def _discard(temporary: Path) -> None:
+    """Remove a temporary that will never become the real file."""
+    try:
+        temporary.unlink()
+    except OSError:
+        pass
 
 
 #: How many times a read will look again when it meets a file mid-replacement,
@@ -426,6 +452,61 @@ def _read_text_stable(path: Path) -> str:
     return _read_bytes_stable(path).decode("utf-8")
 
 
+#: Attempts and backoff for a replacement refused by a concurrent reader.
+#:
+#: Separate constants from the read side even though the numbers match, because
+#: they answer different questions and a future measurement will move one
+#: without moving the other. Five attempts at 10, 20, 30, 40 and 50 ms is 150 ms
+#: of patience: far longer than a reader holds a file open for a single read,
+#: and short enough that a permanent failure is still reported promptly.
+_REPLACE_ATTEMPTS = 5
+_REPLACE_BACKOFF_SECONDS = 0.01
+
+#: Windows error codes for "somebody else has this file open".
+#:
+#: 5 is ``ERROR_ACCESS_DENIED``, which is what a rename over a path another
+#: handle has open produces — this is the one that was measured, captured as
+#: ``[WinError 5]`` out of the worker's fault log. 32 is
+#: ``ERROR_SHARING_VIOLATION``, the same situation reported through a different
+#: code depending on how the other handle was opened.
+_SHARING_WINERRORS = frozenset({5, 32})
+
+
+def _is_transient_replacement_failure(error: OSError, path: Path) -> bool:
+    """Whether retrying this replacement could possibly help.
+
+    True for exactly one situation: on Windows, a rename refused because
+    another handle has the destination open. That is transient by construction
+    — the reader closes — and it is the failure this store actually meets,
+    because the protocol serves readers from the same files a worker writes.
+
+    False for everything else, and the cases worth naming:
+
+    * **POSIX.** A rename over an open file succeeds there. An ``EACCES`` on
+      POSIX therefore means what it says, and retrying it would turn a real
+      permissions problem into a slow real permissions problem.
+    * **A read-only destination.** Permanent. The mode does not change because
+      we waited.
+    * **A full disk, a read-only filesystem, a missing directory.** All
+      permanent for this attempt, all reported immediately.
+    """
+    if os.name != "nt":
+        return False
+    if not isinstance(error, PermissionError):
+        return False
+    if getattr(error, "winerror", None) not in _SHARING_WINERRORS:
+        return False
+    try:
+        status = path.stat()
+    except OSError:
+        # No destination to be holding open. Whatever this is, waiting will not
+        # change it.
+        return False
+    # A destination the process cannot write is refused for a reason that
+    # outlasts any backoff.
+    return bool(status.st_mode & stat.S_IWUSR)
+
+
 def _replace_stable(temporary: Path, path: Path) -> None:
     """Rename over a destination a reader may have open.
 
@@ -448,15 +529,28 @@ def _replace_stable(temporary: Path, path: Path) -> None:
     Bunny OS runs on Linux, where this loop retries nothing. It exists so that
     the development host stops manufacturing failures that the product does not
     have.
+
+    **Only the measured failure is retried.** Retrying every ``OSError`` here
+    would be worse than not retrying at all: a disk that is full, a filesystem
+    mounted read-only or a destination somebody has genuinely locked down are
+    all permanent, and looping over them adds a delay to an error that was
+    correct the first time — and, worse, invites a reader to believe the store
+    tried hard enough that the failure must be real when the opposite is true.
+    :func:`_is_transient_replacement_failure` is the discriminator, and the
+    original exception is re-raised unchanged once the attempts are spent.
     """
     last: OSError | None = None
-    for attempt in range(_READ_ATTEMPTS):
+    for attempt in range(_REPLACE_ATTEMPTS):
         try:
             os.replace(temporary, path)
             return
         except OSError as exc:
+            if not _is_transient_replacement_failure(exc, path):
+                # Permanent. Raise it now rather than after a second of
+                # pretending it might not be.
+                raise
             last = exc
-            time.sleep(_READ_BACKOFF_SECONDS * (attempt + 1))
+            time.sleep(_REPLACE_BACKOFF_SECONDS * (attempt + 1))
     raise last if last is not None else OSError(f"{path} could not be replaced")
 
 

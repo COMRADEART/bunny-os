@@ -42,6 +42,7 @@ from dataclasses import dataclass, field
 import os
 from pathlib import Path
 import queue
+import re
 import threading
 from typing import Any, Mapping, Sequence
 
@@ -89,6 +90,46 @@ DEFAULT_CONSENT_WAIT_SECONDS = 300.0
 # --------------------------------------------------------------------------- #
 # Consent
 # --------------------------------------------------------------------------- #
+
+
+#: The longest a fault message may be. A fault log is a diagnostic, and an
+#: exception carrying a megabyte of context is a way to put that context
+#: somewhere it was never reviewed for.
+MAX_FAULT_MESSAGE = 400
+
+#: Anything shaped like a secret or a private path is replaced rather than
+#: truncated, because truncation keeps the prefix and the prefix is the
+#: interesting part of a token.
+_FAULT_REDACTIONS: tuple[tuple["re.Pattern[str]", str], ...] = (
+    # Windows and POSIX user directories. The fault is identifiable from the
+    # basename; the path to somebody's home directory is not needed to fix it.
+    (re.compile(r"(?i)[a-z]:\\+users\\+[^\\\s]+"), "<user-path>"),
+    (re.compile(r"/(?:home|Users)/[^/\s]+"), "<user-path>"),
+    (re.compile(r"(?i)\b/tmp/[^\s]+"), "<temp-path>"),
+    # Anything self-describing as a secret, with its value.
+    (re.compile(r"(?i)\b(token|secret|password|passphrase|api[_-]?key|bearer)"
+                r"\s*[:=]?\s*\S+"), r"\1=<redacted>"),
+    # Long hex or base64-ish runs: request tokens, keys, digests of content.
+    (re.compile(r"\b[A-Fa-f0-9]{32,}\b"), "<hex>"),
+)
+
+
+def _sanitise_fault_message(error: BaseException) -> str:
+    """An exception's text, with what must not be logged taken out.
+
+    Applied to every swallowed fault. The exceptions raised here are written by
+    this project and do not deliberately carry secrets, but they do interpolate
+    paths and identifiers, and a third-party executor's exception carries
+    whatever that executor put in it. Redacting on the way *in* is the only
+    point at which that is still under this module's control.
+    """
+    message = f"{error}"
+    for pattern, replacement in _FAULT_REDACTIONS:
+        message = pattern.sub(replacement, message)
+    message = " ".join(message.split())
+    if len(message) > MAX_FAULT_MESSAGE:
+        message = message[: MAX_FAULT_MESSAGE - 1] + "…"
+    return message
 
 
 @dataclass
@@ -471,6 +512,7 @@ class CompanionGateway:
             with self._guard:
                 self._queued.discard(item)
                 self._running.add(item)
+            state_before = self._task_state(item)
             try:
                 session_id, task = self.runtime.find_task(item)
                 self.runtime.run_task(session_id, task.task_id)
@@ -479,18 +521,39 @@ class CompanionGateway:
                 # writes one before it raises. Swallowed here because a worker
                 # that died on a blocked task would take every later task with
                 # it, and the record already says what happened.
-                self._record_fault(item, exc, classified=True)
+                self._record_fault(item, exc, classified=True, state_before=state_before)
             except Exception as exc:  # noqa: BLE001 - the fault is data
                 # Third-party code — an executor, a reviewer, a tool — faulted
                 # in a way the runtime did not classify. The worker survives;
                 # the task's own record carries whatever the runtime managed to
                 # write before it unwound.
-                self._record_fault(item, exc, classified=False)
+                self._record_fault(item, exc, classified=False, state_before=state_before)
             finally:
                 with self._guard:
                     self._running.discard(item)
 
-    def _record_fault(self, task_id: str, error: BaseException, *, classified: bool) -> None:
+    def _task_state(self, task_id: str) -> str:
+        """The task's current state, or ``""`` if it cannot be read.
+
+        Read before the run so that a fault can say whether the run moved the
+        task anywhere. A fault that left the task exactly where it was needs a
+        human; one that moved it to ``blocked`` has already told the user
+        something.
+        """
+        try:
+            _session_id, task = self.runtime.find_task(task_id)
+        except Exception:  # noqa: BLE001 - reading state must never fault
+            return ""
+        return task.state
+
+    def _record_fault(
+        self,
+        task_id: str,
+        error: BaseException,
+        *,
+        classified: bool,
+        state_before: str = "",
+    ) -> None:
         """Keep what the worker swallowed, so that it can be asked about later.
 
         The worker must survive a task that faults, or one bad task would take
@@ -501,15 +564,41 @@ class CompanionGateway:
         diagnosis. Swallowing the exception and discarding the evidence are
         separable, and only the first one is necessary.
 
+        The record is structured rather than a sentence, because the questions
+        asked of it are structured: which fault, on which task, in which phase,
+        did anything change, does somebody need to do something. A message
+        alone answers none of those without being parsed.
+
+        **Nothing sensitive reaches it.** The message is sanitized, and the
+        fields are chosen so that the fault is identifiable without the task's
+        contents: no request text, no credentials, no tokens, no unrestricted
+        paths. A fault log is read by whoever is debugging, which is not
+        necessarily whoever owns the data.
+
         Bounded, because an unbounded fault log on a long-running service is a
         memory leak with a helpful name.
         """
+        state_after = self._task_state(task_id)
         with self._guard:
             self._faults.append({
+                "faultType": type(error).__name__,
                 "taskId": task_id,
-                "error": f"{type(error).__name__}: {error}",
-                "classified": classified,
+                "operation": "run_task",
+                "lifecyclePhase": state_before or "unknown",
                 "at": iso8601(self.clock.wall()),
+                "message": _sanitise_fault_message(error),
+                # The runtime does not retry a task; the store retries a
+                # replacement beneath it. Said explicitly so that a reader does
+                # not have to infer which layer gave up.
+                "retryAttempted": False,
+                "taskStateChanged": bool(state_after) and state_after != state_before,
+                "stateAfter": state_after or "unknown",
+                # An unclassified fault is third-party code failing in a way the
+                # runtime never described, and nothing has told the user.
+                "classified": classified,
+                "userVisibleRecoveryRequired": (
+                    not classified or state_after == state_before
+                ),
             })
 
     def recent_faults(self) -> list[dict[str, Any]]:
