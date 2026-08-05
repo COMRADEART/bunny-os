@@ -105,13 +105,61 @@ class ImportBoundaryTests(unittest.TestCase):
                 "the voice worker module can see a CompanionRuntime",
             )
 
-    def test_the_voice_package_never_touches_a_microphone(self) -> None:
-        """§16 and §15: this is an output subsystem."""
+    #: Programs and libraries that capture audio. §16 and §15: this is an output
+    #: subsystem, and none of these may be startable from it.
+    CAPTURE_NAMES = ("arecord", "parecord", "parec", "pamon", "pw-record", "sounddevice", "pyaudio")
+
+    def test_no_capture_program_is_reachable_from_the_voice_package(self) -> None:
+        """§16 and §15: this is an output subsystem, asserted structurally.
+
+        The allowlist is the whole of what ``resolve_executable`` will find, and
+        a name absent from it cannot be started by any code path in the package.
+        That is a stronger statement than "the string does not appear", and it
+        is the one that matters — the string test could be satisfied by building
+        the name at runtime, and would fail on a *refusal* list that names the
+        programs precisely so they can be rejected.
+        """
+        from companion.voice.execution import ALLOWED_EXECUTABLES
+
+        for name in self.CAPTURE_NAMES:
+            self.assertNotIn(
+                name, ALLOWED_EXECUTABLES,
+                f"{name} is in the voice runtime's executable allowlist",
+            )
+
+    def test_no_capture_program_is_named_as_something_to_run(self) -> None:
+        """Every capture name in the package is in a refusal list, not a run list.
+
+        ``companion.voice.audio`` names ``parec`` and ``parecord`` in
+        ``PlayerContract.multicall_siblings`` — the list of names that must
+        *not* be substituted for the requested player, because a multi-call
+        binary decides what it does from ``argv[0]``. Naming a recorder there is
+        how it is kept out, not a way in. So this asserts on the fields that
+        decide what gets executed rather than on the text of the file.
+        """
+        from companion.voice import audio, providers
+
+        runnable: list[str] = []
+        for backend in (
+            audio.PulseAudioBackend, audio.PipeWireBackend, audio.AlsaBackend,
+        ):
+            runnable.extend([backend.player, backend.inspector])
+            if backend.contract is not None:
+                runnable.append(backend.contract.program)
+        for provider in (providers.EspeakNgProvider, providers.SpeechDispatcherProvider):
+            runnable.append(provider.executable_name)
+            runnable.extend(provider.fallback_names)
+        for name in self.CAPTURE_NAMES:
+            self.assertNotIn(name, runnable, f"a voice component is configured to start {name}")
+
+    def test_capture_names_appear_only_in_refusal_lists(self) -> None:
+        """The text check, kept — with the one place a refusal may name them."""
+        allowed_holders = {"audio.py", "system.py"}
         for module in sorted(VOICE_PACKAGE.glob("*.py")):
-            if module.name == "system.py":
-                continue  # holds the microphone *boundary*, which refuses
+            if module.name in allowed_holders:
+                continue
             body = module.read_text(encoding="utf-8").lower()
-            for token in ("arecord", "parecord", "pw-record", "sounddevice", "pyaudio"):
+            for token in self.CAPTURE_NAMES:
                 self.assertNotIn(token, body, f"{module.name} references {token}")
 
     def test_no_voice_cloning_surface_exists_anywhere(self) -> None:

@@ -47,7 +47,7 @@ published to the machine.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import threading
 from typing import Any, Mapping, Sequence
@@ -96,6 +96,19 @@ MAX_INVENTORY = 512
 _SAFE_VOICE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,63}\Z")
 
 
+def _argument_present(required: str, arguments: Sequence[str]) -> bool:
+    """Whether a declared argument is in an argv, exactly as declared.
+
+    A trailing ``=`` means "this option, whatever its value" and matches by
+    prefix; anything else must match exactly. A prefix rule would let any long
+    option satisfy a requirement for a bare ``--``, which is the argument that
+    stops option parsing.
+    """
+    if required.endswith("="):
+        return any(item.startswith(required) for item in arguments)
+    return required in tuple(arguments)
+
+
 def _locale_from_tag(tag: str) -> tuple[str, str]:
     """``en-gb`` becomes ``("en", "en-GB")``; ``en`` becomes ``("en", "en")``.
 
@@ -128,6 +141,14 @@ class _CommandProvider:
 
     executable_name = ""
     fallback_names: tuple[str, ...] = ()
+    #: Names the same binary may answer to with different semantics. Declared
+    #: so a refusal can say what was substituted rather than only that the name
+    #: was wrong.
+    multicall_siblings: tuple[str, ...] = ()
+    #: Argument prefixes that carry the adapter's semantics. Checked before
+    #: every invocation, because an adapter invoked without them is not the
+    #: adapter that was measured.
+    required_arguments: tuple[str, ...] = ()
 
     def __init__(self, *, resolver=None) -> None:
         # Injected so a test can present a program that is missing, that is
@@ -137,6 +158,10 @@ class _CommandProvider:
 
         self._resolve = resolver or resolve_executable
         self._executable = ""
+        #: Which declared name was resolved. ``espeak-ng`` and ``espeak`` are
+        #: not the same program, and an utterance attributed to "the espeak
+        #: adapter" without saying which is an utterance nobody can reproduce.
+        self._program_name = ""
         self._trusted = True
         self._resolution_error = ""
         self._resolve_once()
@@ -162,6 +187,7 @@ class _CommandProvider:
                 problems.append(str(exc))
                 continue
             self._executable = path
+            self._program_name = name
             self._trusted = trusted
             return
         self._resolution_error = "; ".join(problems) or "no executable was configured"
@@ -250,12 +276,65 @@ class _CommandProvider:
 
     # ----------------------------------------------------------------- #
 
+    def program_name(self) -> str:
+        """Which of the declared names this adapter actually resolved.
+
+        ``espeak-ng`` and ``espeak`` are different programs with different
+        argument handling and a different exit-code bug, and an adapter that
+        recorded only "a synthesiser was found" could not say which one produced
+        an utterance. Recorded, reported in the health, and checked before every
+        invocation.
+        """
+        return self._program_name
+
+    def verify_invocation(self, spec: CommandSpec) -> str:
+        """Why this command must not be started, or ``""``.
+
+        Two checks, and neither infers anything from what the path resolved to.
+        The program must still be the one this adapter asked for — a multi-call
+        binary decides what it does from ``argv[0]``, so a substituted name is a
+        substituted program — and the arguments that carry the semantics must
+        still be there. An adapter invoked without them is not the adapter that
+        was measured.
+        """
+        name = PurePosixPath(spec.executable.replace("\\", "/")).name
+        if self._program_name and name != self._program_name:
+            sibling = " (a multi-call sibling that does something else under this name)" \
+                if name in self.multicall_siblings else ""
+            return (
+                f"{self.declaration.provider_id} resolved {self._program_name!r} and would "
+                f"start {name!r}{sibling}; the requested adapter was not preserved and the "
+                "invocation was refused"
+            )
+        missing = [
+            item for item in self.required_arguments
+            if not _argument_present(item, spec.arguments)
+        ]
+        if missing:
+            return (
+                f"{self.declaration.provider_id} would be invoked without "
+                f"{', '.join(missing)}; that is not the invocation this adapter declares"
+            )
+        return ""
+
     def _guarded(
         self,
         request: VoiceRequest,
         cancellation: CancellationSignal | None,
         spec: CommandSpec,
     ) -> CommandOutcome:
+        refusal = self.verify_invocation(spec)
+        if refusal:
+            # Returned as data with the shape ``run_command`` produces for a
+            # program that could not be started, so it travels the path every
+            # caller already handles rather than a new one.
+            return CommandOutcome(
+                executable=spec.executable,
+                redacted_argv=tuple(spec.redacted()),
+                exit_code=None,
+                duration_seconds=0.0,
+                start_error=refusal,
+            )
         signal = cancellation or CancellationSignal(name=request.request_id)
         self._register(request.request_id, signal)
         try:
@@ -284,6 +363,16 @@ class EspeakNgProvider(_CommandProvider):
 
     executable_name = "espeak-ng"
     fallback_names = ("espeak",)
+    #: ``speak-ng`` and ``speak`` are symlinks to these binaries on Fedora.
+    #: Declared not because their behaviour is known to differ but because
+    #: the check is on what was *requested*: a program's own idea of which
+    #: program it is decides what it does, and that identity is the thing
+    #: symlink resolution erases.
+    multicall_siblings = ("speak-ng", "speak", "espeak-ng-data")
+    #: ``--stdin`` is not a preference. Without it eSpeak NG takes the
+    #: utterance from argv, which publishes what the user is being told in
+    #: the process table for every process on the machine to read.
+    required_arguments = ("--stdin", "-v")
 
     #: eSpeak NG's own ranges, from its manual page. Values outside these are
     #: clamped and the clamping is *recorded*, because a rate the user asked for
@@ -674,6 +763,12 @@ class SpeechDispatcherProvider(_CommandProvider):
     """
 
     executable_name = "spd-say"
+    #: ``--pipe-mode`` keeps the utterance out of the process table and
+    #: ``--wait`` makes the client block for the length of the speech. Without
+    #: the second, ``spd-say`` returns as soon as the server has *accepted* the
+    #: message, and every duration this runtime measures would be the latency of
+    #: a socket write rather than the length of an utterance.
+    required_arguments = ("--pipe-mode", "--wait")
 
     #: §7's ladder onto Speech Dispatcher's own five priorities. ``important``
     #: is the one that interrupts, which is why only the top two map to it.

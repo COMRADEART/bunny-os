@@ -564,10 +564,18 @@ class Child:
     ``finally``.
     """
 
-    def __init__(self, spec: CommandSpec) -> None:
+    def __init__(self, spec: CommandSpec, *, refusal: str = "") -> None:
+        """``refusal`` names a reason the command must not run at all.
+
+        A refused child never reaches ``Popen``: no process, no group, no pipe,
+        no reader thread and nothing to reap. It reports itself as not started
+        with the reason as its ``start_error``, which is the same shape a caller
+        already handles for a program that could not be executed — so a refusal
+        travels the path that is already tested rather than a new one.
+        """
         self.spec = spec
         self.redacted_argv = tuple(spec.redacted())
-        self.start_error = ""
+        self.start_error = refusal
         self.terminated = False
         self.killed = False
         self.reaped = True
@@ -575,6 +583,8 @@ class Child:
         self._reader: threading.Thread | None = None
         self._paused = False
         self._process: subprocess.Popen[bytes] | None = None
+        if refusal:
+            return
 
         # The text must be where the spec said it is. A provider that built an
         # argv with the utterance in an undeclared slot would produce a

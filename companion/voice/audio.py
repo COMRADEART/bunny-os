@@ -36,7 +36,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import subprocess
 import threading
 import time
@@ -61,10 +61,13 @@ __all__ = [
     "BackendHealth",
     "DEGRADATION_KINDS",
     "DegradationRecord",
+    "PLAYBACK_COMPLETION_FLOOR",
     "PipeWireBackend",
     "PlaybackHandle",
     "PlaybackOutcome",
+    "PlayerContract",
     "PulseAudioBackend",
+    "RAW_PCM_DEFAULT_BYTES_PER_SECOND",
     "local_backends",
 ]
 
@@ -102,10 +105,126 @@ DEGRADATION_KINDS = (
 #: completely the wrong format — is off by a factor of four, not a few percent.
 PLAYBACK_COMPLETION_FLOOR = 0.6
 
+#: What a raw-PCM reader in the allowlist assumes when it is handed bytes with
+#: no container to read: signed 16-bit little-endian, 44100 Hz, stereo. Both
+#: ``pacat`` and ``pw-cat`` default to it.
+#:
+#: The number is here so that a short playback can be *identified* rather than
+#: only counted. The measured defect: eSpeak wrote 2.80 s at 22050 Hz mono
+#: 16-bit — 123 524 bytes with the header — and ``pacat`` played all of it,
+#: header included, at 176 400 bytes per second: 0.70 s expected, 0.73 s
+#: observed. A duration that lands there is not "short", it is this.
+RAW_PCM_DEFAULT_BYTES_PER_SECOND = 44100 * 2 * 2
+
 #: How much stdout a discovery command may produce before it is treated as
 #: hostile. ``pw-dump`` on a busy graph is genuinely large; a megabyte is well
 #: past anything real and well short of anything that matters.
 MAX_DISCOVERY_BYTES = 1024 * 1024
+
+
+def _argument_present(required: str, arguments: Sequence[str]) -> bool:
+    """Whether a declared argument is in an argv, exactly as declared.
+
+    A trailing ``=`` means "this option, whatever its value" and matches by
+    prefix; anything else must match exactly. The distinction is load-bearing:
+    a prefix rule would let ``--client-name=bunny-companion`` satisfy a
+    requirement for ``--``, which is the argument that stops option parsing
+    before a filename — so a player invoked on a file called ``--device`` would
+    have passed the check that exists to stop exactly that.
+    """
+    if required.endswith("="):
+        return any(item.startswith(required) for item in arguments)
+    return required in tuple(arguments)
+
+
+@dataclass(frozen=True)
+class PlayerContract:
+    """What a player *is*, as distinct from the file it happens to resolve to.
+
+    Two of the three players in the allowlist are symbolic links to multi-call
+    binaries that decide what they do from ``argv[0]``. ``/usr/bin/paplay``
+    points at ``pacat`` and ``/usr/bin/pw-play`` points at ``pw-cat``; under
+    their own names they parse a sound file, and under the target's name they
+    read **raw PCM**. The two behaviours share an executable, a version and an
+    exit status, and differ in what comes out of the speaker.
+
+    That difference cost 2.07 seconds of an utterance and produced no error:
+    resolving the link made the runtime exec ``pacat``, which played a RIFF
+    header and mono samples as stereo raw data — 0.73 s of noise where 2.80 s of
+    speech belonged, exit code 0.
+
+    So a backend declares what it requires of the program it starts, and
+    :meth:`_CommandBackend.verify_invocation` checks the command against the
+    declaration before anything is executed. The check is on the *requested*
+    program name, the arguments that carry the semantics, and the format the
+    input is expected to be in. None of it is inferred from the resolved
+    binary's basename, because the resolved basename is precisely the thing that
+    is wrong in the case this exists to catch.
+    """
+
+    #: The program name ``argv[0]`` must carry. Not the target of any symlink.
+    program: str
+    #: What the player will make of the file it is handed. ``sound-file`` means
+    #: it parses a container and honours the header; ``raw-pcm`` means it does
+    #: not, and this runtime hands out WAV, so a raw-pcm player is never correct
+    #: here.
+    input_format: str
+    #: Names the same binary answers to with *different* semantics. Present so
+    #: that the refusal can say what was substituted rather than only that
+    #: something was.
+    multicall_siblings: tuple[str, ...] = ()
+    #: Argument prefixes the invocation must contain. These are the arguments
+    #: that carry meaning rather than preference — the ``--`` that stops option
+    #: parsing before a filename, and the device selector where one was asked
+    #: for. An invocation missing one is not the invocation that was tested.
+    required_arguments: tuple[str, ...] = ("--",)
+    #: The fraction of the audio the player must actually spend before its zero
+    #: exit status is believed. Per-contract rather than global so a player with
+    #: genuinely different completion behaviour could carry its own number with
+    #: the measurement that justified it. All three carry the measured default.
+    completion_floor: float = PLAYBACK_COMPLETION_FLOOR
+
+    def refusal_for(self, executable: str, arguments: Sequence[str]) -> str:
+        """Why this command must not be run, or ``""``.
+
+        Both halves matter. A path whose basename is a known sibling is the
+        measured defect; a path whose basename is merely *not* the requested
+        program is the same class of substitution with an unknown target, and
+        refusing only the first would leave the general case open.
+        """
+        name = PurePosixPath(executable.replace("\\", "/")).name
+        if name != self.program:
+            if name in self.multicall_siblings:
+                return (
+                    f"the player resolved to {name!r}, a multi-call sibling of "
+                    f"{self.program!r} that reads its input as {self._sibling_format()} "
+                    f"rather than as a {self.input_format}. Under that name the WAV "
+                    "header is played as audio and the exit status is still zero"
+                )
+            return (
+                f"the player resolved to {name!r} and {self.program!r} was requested; "
+                "a program's own idea of which program it is decides what it does with "
+                "the file, and this substitution was refused"
+            )
+        missing = [item for item in self.required_arguments if not _argument_present(item, arguments)]
+        if missing:
+            return (
+                f"{self.program} was invoked without {', '.join(missing)}; that is not "
+                "the invocation this backend declares and was refused"
+            )
+        return ""
+
+    def _sibling_format(self) -> str:
+        return "raw PCM" if self.input_format == "sound-file" else "a sound file"
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "program": self.program,
+            "inputFormat": self.input_format,
+            "multicallSiblings": list(self.multicall_siblings),
+            "requiredArguments": list(self.required_arguments),
+            "completionFloor": self.completion_floor,
+        }
 
 
 @dataclass(frozen=True)
@@ -249,6 +368,12 @@ class PlaybackOutcome:
     #: audio. Kept as its own field rather than folded into ``detail`` so a gate
     #: can count it.
     truncated: bool = False
+    #: Which way the completion floor was missed: ``no-frames-accepted``,
+    #: ``container-read-as-raw-pcm`` or ``exited-before-minimum-duration``.
+    #: Empty when nothing was truncated. A named shape is what lets a gate
+    #: distinguish "a busy server dropped the tail" from "the runtime execed the
+    #: wrong half of a multi-call binary".
+    completion_shape: str = ""
     detail: str = ""
     outcome: CommandOutcome | None = None
 
@@ -268,6 +393,7 @@ class PlaybackOutcome:
             "audioSeconds": round(self.audio_seconds, 6),
             "requestedLatencyMs": self.requested_latency_ms,
             "truncated": self.truncated,
+            "completionShape": self.completion_shape,
             "detail": self.detail,
             "command": self.outcome.to_json() if self.outcome is not None else None,
         }
@@ -303,12 +429,23 @@ class PlaybackHandle:
         audio_seconds: float = 0.0,
         requested_latency_ms: int = 0,
         monotonic: Any = None,
+        completion_floor: float = PLAYBACK_COMPLETION_FLOOR,
+        raw_pcm_seconds: float = 0.0,
+        refusal: str = "",
     ) -> None:
         self.request_id = request_id
         self.backend_id = backend_id
         self.device_id = device_id
         self.audio_seconds = audio_seconds
         self.requested_latency_ms = requested_latency_ms
+        self.completion_floor = completion_floor
+        #: How long this file would take to play if a raw-PCM reader were handed
+        #: it — the whole byte size, header included, at the default rate such a
+        #: reader assumes. Carried so a short playback can be *named* as the
+        #: container-read-as-samples shape rather than only counted as short.
+        self.raw_pcm_seconds = raw_pcm_seconds
+        #: Which way the completion floor was missed, once it has been.
+        self.completion_shape = ""
         self._now = monotonic or time.monotonic
         self._spec = spec
         self._guard = threading.RLock()
@@ -316,7 +453,7 @@ class PlaybackHandle:
         self._paused_at = 0.0
         self._finished = False
         self._started_at = self._now()
-        self._child = Child(spec)
+        self._child = Child(spec, refusal=refusal)
         self._start_error = self._child.start_error
 
     @property
@@ -432,6 +569,7 @@ class PlaybackHandle:
         )
         succeeded = outcome.exit_code == 0 and not cancelled and not timed_out
         truncated = ""
+        self.completion_shape = ""
         if succeeded and self.audio_seconds:
             # A player that exited zero having played the wrong thing is not a
             # success, and exit status alone cannot tell the difference. Every
@@ -445,13 +583,39 @@ class PlaybackHandle:
             # stereo raw data — 0.73 s of noise where 2.80 s of speech belonged,
             # exit code 0. Nothing downstream could tell, and no test that only
             # checked "did it succeed" ever would.
+            #
+            # The refusal is one rule — the completion floor — and the shapes
+            # below only *name* which way it failed. A named shape is what turns
+            # "speech was short" into "the header was played as samples", and
+            # naming it is not the same as adding a second rule that could
+            # disagree with the first.
             played = self.elapsed_seconds - self.paused_seconds
-            if played < self.audio_seconds * PLAYBACK_COMPLETION_FLOOR:
+            if played < self.audio_seconds * self.completion_floor:
                 succeeded = False
-                truncated = (
-                    f"the player exited successfully after {played:.2f}s of "
-                    f"{self.audio_seconds:.2f}s of audio; it did not play what it was given"
-                )
+                if played <= max(0.05, self.audio_seconds * 0.02):
+                    self.completion_shape = "no-frames-accepted"
+                    truncated = (
+                        f"the player exited successfully after {played:.2f}s and accepted "
+                        f"none of the {self.audio_seconds:.2f}s it was given; no audio "
+                        "reached the device"
+                    )
+                elif (
+                    self.raw_pcm_seconds
+                    and abs(played - self.raw_pcm_seconds) <= max(0.25, self.raw_pcm_seconds * 0.35)
+                ):
+                    self.completion_shape = "container-read-as-raw-pcm"
+                    truncated = (
+                        f"the player exited successfully after {played:.2f}s, which is the "
+                        f"length this file would have if its RIFF header were played as "
+                        f"samples ({self.raw_pcm_seconds:.2f}s) rather than read as a "
+                        f"container; {self.audio_seconds:.2f}s of speech belonged here"
+                    )
+                else:
+                    self.completion_shape = "exited-before-minimum-duration"
+                    truncated = (
+                        f"the player exited successfully after {played:.2f}s of "
+                        f"{self.audio_seconds:.2f}s of audio; it did not play what it was given"
+                    )
         return PlaybackOutcome(
             request_id=self.request_id,
             backend_id=self.backend_id,
@@ -463,6 +627,7 @@ class PlaybackHandle:
             audio_seconds=self.audio_seconds,
             requested_latency_ms=self.requested_latency_ms,
             truncated=bool(truncated),
+            completion_shape=self.completion_shape,
             detail=(
                 "played" if succeeded
                 else truncated or outcome.stderr or (
@@ -523,6 +688,10 @@ class _CommandBackend:
     kind = ""
     player = ""
     inspector = ""
+    #: What this backend requires of the program it starts. Declared by every
+    #: concrete backend; the base class carries no default, so a backend added
+    #: without one refuses to play rather than playing something unchecked.
+    contract: PlayerContract | None = None
 
     #: A player asked for a latency it cannot honour is not an error, so this is
     #: a request rather than a contract. 60 ms is short enough that speech feels
@@ -713,7 +882,34 @@ class _CommandBackend:
             spec=spec,
             audio_seconds=seconds,
             requested_latency_ms=latency,
+            completion_floor=self.completion_floor,
+            raw_pcm_seconds=(
+                probe.byte_size / RAW_PCM_DEFAULT_BYTES_PER_SECOND if probe is not None else 0.0
+            ),
+            refusal=self.verify_invocation(spec),
         )
+
+    # ----------------------------------------------------------------- #
+
+    def verify_invocation(self, spec: CommandSpec) -> str:
+        """Why this command must not be started, or ``""``.
+
+        Runs before the child exists, so a refused invocation costs no process,
+        no audio device and no partial utterance. The reason travels as
+        ``PlaybackHandle.start_error``, which the worker already treats as a
+        backend failure: the degradation is typed, the caption is retained and
+        the task is untouched.
+        """
+        if self.contract is None:
+            return (
+                f"{self.backend_id} declares no player contract, so what it would start "
+                "cannot be checked; refusing rather than executing an unverified player"
+            )
+        return self.contract.refusal_for(spec.executable, spec.arguments)
+
+    @property
+    def completion_floor(self) -> float:
+        return self.contract.completion_floor if self.contract else PLAYBACK_COMPLETION_FLOOR
 
     def close(self) -> None:
         with self._guard:
@@ -755,6 +951,15 @@ class PulseAudioBackend(_CommandBackend):
     kind = "pulse-compatible"
     player = "paplay"
     inspector = "pactl"
+    #: ``/usr/bin/paplay`` is a symlink to ``pacat``. Under its own name pacat
+    #: reads raw PCM; under paplay's it parses a sound file. Same binary, same
+    #: exit status, different audio.
+    contract = PlayerContract(
+        program="paplay",
+        input_format="sound-file",
+        multicall_siblings=("pacat", "parec", "parecord", "pamon"),
+        required_arguments=("--client-name=", "--"),
+    )
 
     def discover(self) -> Sequence[AudioDevice]:
         if not self._inspector_path:
@@ -829,6 +1034,16 @@ class PipeWireBackend(_CommandBackend):
     kind = "pipewire"
     player = "pw-play"
     inspector = "pw-dump"
+    #: ``/usr/bin/pw-play`` is a symlink to ``pw-cat``, with the same argv[0]
+    #: split as paplay/pacat. Never observed to play on the reference target —
+    #: the graph has no sink — so this contract is declared and checked but the
+    #: playback it guards has not been exercised on a working PipeWire.
+    contract = PlayerContract(
+        program="pw-play",
+        input_format="sound-file",
+        multicall_siblings=("pw-cat", "pw-record", "pw-midiplay", "pw-midirecord"),
+        required_arguments=("--volume=", "--"),
+    )
 
     def discover(self) -> Sequence[AudioDevice]:
         if not self._inspector_path:
@@ -902,6 +1117,16 @@ class AlsaBackend(_CommandBackend):
     kind = "alsa"
     player = "aplay"
     inspector = "aplay"
+    #: ``aplay`` is not a symlink on the reference target, but it is one half of
+    #: an argv[0] pair with ``arecord`` on some builds and the contract is
+    #: declared for the same reason the other two are: the check is on what was
+    #: requested, not on what the filesystem turned out to contain.
+    contract = PlayerContract(
+        program="aplay",
+        input_format="sound-file",
+        multicall_siblings=("arecord",),
+        required_arguments=("-q", "--"),
+    )
 
     def discover(self) -> Sequence[AudioDevice]:
         if not self._player_path:
