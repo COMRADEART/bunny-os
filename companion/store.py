@@ -471,6 +471,17 @@ _REPLACE_BACKOFF_SECONDS = 0.01
 #: code depending on how the other handle was opened.
 _SHARING_WINERRORS = frozenset({5, 32})
 
+#: Whether this is the platform where a rename can be refused by a reader.
+#:
+#: A module constant rather than an ``os.name`` check inside the predicate, so
+#: that a test can simulate the platform by patching *this* and nothing else.
+#: Patching ``os.name`` itself reaches every consumer in the interpreter —
+#: ``tempfile`` and ``pathlib`` among them — and the tests that did it passed on
+#: Windows only because the patch was a no-op there, and failed the moment they
+#: ran on Linux. A narrow seam is the difference between simulating a platform
+#: and lying to the standard library.
+_WINDOWS = os.name == "nt"
+
 
 def _is_transient_replacement_failure(error: OSError, path: Path) -> bool:
     """Whether retrying this replacement could possibly help.
@@ -490,7 +501,7 @@ def _is_transient_replacement_failure(error: OSError, path: Path) -> bool:
     * **A full disk, a read-only filesystem, a missing directory.** All
       permanent for this attempt, all reported immediately.
     """
-    if os.name != "nt":
+    if not _WINDOWS:
         return False
     if not isinstance(error, PermissionError):
         return False

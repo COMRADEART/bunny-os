@@ -66,10 +66,12 @@ class TransientRetryTests(WriterBase):
     def setUp(self) -> None:
         super().setUp()
         # The discriminator only retries on Windows, so the platform is
-        # simulated where the test does not run on one. The code under test is
-        # the same either way; what is substituted is the answer to "which
-        # platform is this", which is not the thing being tested.
-        self._nt = unittest.mock.patch.object(store_module.os, "name", "nt")
+        # simulated where the test does not run on one. `store._WINDOWS` is the
+        # seam, and it is deliberately narrow: an earlier version patched
+        # `os.name` itself, which reaches tempfile and pathlib as well, passed
+        # on Windows only because the patch was a no-op there, and produced
+        # twenty-nine failures the first time it ran on Linux.
+        self._nt = unittest.mock.patch.object(store_module, "_WINDOWS", True)
         self._nt.start()
         self.addCleanup(self._nt.stop)
 
@@ -156,12 +158,12 @@ class PermanentFailureTests(WriterBase):
 
     def test_a_posix_permission_denial_is_not_retried(self) -> None:
         """On POSIX a rename over an open file succeeds, so EACCES means EACCES."""
-        with unittest.mock.patch.object(store_module.os, "name", "posix"):
+        with unittest.mock.patch.object(store_module, "_WINDOWS", False):
             self._assert_not_retried(sharing_violation())
 
     def test_a_windows_denial_with_no_destination_is_not_retried(self) -> None:
         """Nothing is holding a file that does not exist."""
-        with unittest.mock.patch.object(store_module.os, "name", "nt"):
+        with unittest.mock.patch.object(store_module, "_WINDOWS", True):
             self.assertFalse(self.target.exists())
             self._assert_not_retried(sharing_violation())
 
@@ -170,7 +172,7 @@ class PermanentFailureTests(WriterBase):
         self.target.write_text("{}\n", encoding="utf-8")
         self.target.chmod(stat.S_IRUSR)
         self.addCleanup(self.target.chmod, stat.S_IRUSR | stat.S_IWUSR)
-        with unittest.mock.patch.object(store_module.os, "name", "nt"):
+        with unittest.mock.patch.object(store_module, "_WINDOWS", True):
             self._assert_not_retried(sharing_violation())
 
     def test_a_read_only_directory_fails_before_any_replacement(self) -> None:
@@ -203,7 +205,7 @@ class InterruptionTests(WriterBase):
     """An interrupted write leaves nothing behind."""
 
     def test_an_interruption_during_the_backoff_cleans_up(self) -> None:
-        with unittest.mock.patch.object(store_module.os, "name", "nt"):
+        with unittest.mock.patch.object(store_module, "_WINDOWS", True):
             self.target.write_text("{}\n", encoding="utf-8")
 
             def refuse(source, destination):

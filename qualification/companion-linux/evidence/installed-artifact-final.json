@@ -1,0 +1,40 @@
+{
+  "counts": {
+    "directories": 7,
+    "entries": 119,
+    "files": 112,
+    "pythonModules": 98,
+    "symlinks": 0
+  },
+  "distinctMtimes": [
+    1785808191,
+    1785811816,
+    1785815601,
+    1785816413,
+    1785817094,
+    1785817349,
+    1785818165,
+    1785818190
+  ],
+  "gate": {
+    "failureCount": 0,
+    "passed": true
+  },
+  "refusals": {
+    "forbidden": [],
+    "missing": [],
+    "permissions": []
+  },
+  "requiredModules": {
+    "companion/character/animated_renderer.py": true,
+    "companion/character/package.py": true,
+    "companion/character/surface.py": true,
+    "companion/presentation.py": true,
+    "companion/protocol.py": true,
+    "companion/runtime.py": true,
+    "companion/service.py": true,
+    "companion/store.py": true
+  },
+  "root": "/usr/lib/bunny-os/python",
+  "schema": "bunny-os/installed-artifact-report/1"
+}

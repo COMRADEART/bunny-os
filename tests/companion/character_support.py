@@ -20,6 +20,18 @@ class CharacterPackageFixture:
         self.root = Path(self.temporary.name)
         self.package_root = self.root / "package"
         shutil.copytree(default_character_path(), self.package_root)
+        # The copy has to be writable, and the original deliberately is not.
+        #
+        # `default_character_path` prefers the *installed* package, and an
+        # installed package is mode 0444 and root-owned — which is right, since
+        # a character a user can rewrite is a character that renders whatever
+        # that user last wrote. `copytree` preserves those bits, so on any
+        # machine with Bunny OS actually installed every test that edits a
+        # manifest failed with EACCES. It passed on a developer checkout, where
+        # the fallback source is an ordinary file, and on Windows, where the
+        # read-only bit does not stop the owner writing.
+        for path in self.package_root.rglob("*"):
+            path.chmod(0o700 if path.is_dir() else 0o600)
 
     @property
     def manifest_path(self) -> Path:

@@ -1,0 +1,16 @@
+{
+ "provenance": {
+  "slice": "/usr/lib/bunny-os/python/companion/character/vertical_slice.py",
+  "presentation": "/usr/lib/bunny-os/python/companion/presentation.py",
+  "runtime": "/usr/lib/bunny-os/python/companion/runtime.py"
+ },
+ "runs": 20,
+ "passed": 20,
+ "failed": 0,
+ "longestConsecutivePass": 20,
+ "stepCount": 25,
+ "notRunSteps": [],
+ "secondsMin": 0.423,
+ "secondsMax": 0.441,
+ "failures": []
+}
