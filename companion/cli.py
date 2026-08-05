@@ -218,6 +218,18 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
     )
     character_slice.add_argument("--slice-root", type=Path, default=None)
 
+    voice_slice = group.add_parser(
+        "run-voice-slice",
+        help="RUNS the installed voice vertical slice against a real companion service",
+    )
+    voice_slice.add_argument("--slice-root", type=Path, default=None)
+
+    voice_health = group.add_parser(
+        "voice-health",
+        help="report which local voices and audio backends this machine has (read-only)",
+    )
+    voice_health.add_argument("--language", default="", help="only voices for this language")
+
     integration = group.add_parser(
         "run-integration-slice",
         help="RUNS the full service-plus-client vertical slice in a scratch directory",
@@ -289,6 +301,10 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
         return _run_integration_slice(args)
     if args.companion_command == "run-character-slice":
         return _run_character_slice(args)
+    if args.companion_command == "run-voice-slice":
+        return _run_voice_slice(args)
+    if args.companion_command == "voice-health":
+        return _voice_health(args)
     if args.companion_command == "character":
         return _character_command(args)
     if args.companion_command == "renderer":
@@ -824,6 +840,52 @@ def _run_character_slice(args: argparse.Namespace) -> dict[str, Any]:
         "root": str(root),
         **report.to_json(),
     }
+
+
+def _run_voice_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .voice.vertical_slice import run_voice_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-voice-slice-"))
+    report = run_voice_slice(root)
+    return {
+        "effect": (
+            f"RAN the installed voice vertical slice in {root}: a companion service, a task, "
+            "an approval, a local synthesiser, generic visemes, a cancellation, an audio loss "
+            "and a worker restart. No network, remote provider or credential was used, and "
+            "nothing about the task was changed by any of it."
+        ),
+        "root": str(root),
+        **report.to_json(),
+    }
+
+
+def _voice_health(args: argparse.Namespace) -> dict[str, Any]:
+    """What can speak here, and why anything that cannot, cannot.
+
+    Read-only and cheap: it builds a voice runtime with its worker stopped, asks
+    every provider and backend, and closes. A user whose companion has gone
+    quiet runs this, and the answer is a list of reasons rather than a silence.
+    """
+    import tempfile
+
+    from .voice.service import VoiceService, VoiceServiceOptions
+
+    service = VoiceService(VoiceServiceOptions(
+        runtime_directory=Path(tempfile.mkdtemp(prefix="bunny-voice-health-")),
+        start_worker=False,
+    ))
+    try:
+        health = service.voice_health()
+        voices = service.voice_list(language=args.language, limit=64)
+        return {
+            "effect": "REPORTED the local voice inventory and audio backends. Nothing was spoken.",
+            **health,
+            "voices": voices,
+        }
+    finally:
+        service.close()
 
 
 def _run_demo(args: argparse.Namespace) -> dict[str, Any]:
