@@ -67,6 +67,10 @@ __all__ = ["OpenAiCompatAdapter"]
 class OpenAiCompatAdapter:
     """One instance per service; connections are per-generation."""
 
+    #: ``response_format`` with a ``json_schema`` is part of the compatible
+    #: surface; local validation still runs afterwards regardless.
+    supports_structured_output = True
+
     def __init__(self, *, session: WireSession | None = None) -> None:
         self._session = session if session is not None else WireSession()
 

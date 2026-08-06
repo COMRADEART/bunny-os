@@ -48,6 +48,9 @@ _PROBE_MODELS_BOUND = 64
 class OllamaAdapter:
     """One instance per service; connections are per-generation."""
 
+    #: Ollama's ``format`` parameter constrains decoding to a JSON schema.
+    supports_structured_output = True
+
     def __init__(self, *, session: WireSession | None = None) -> None:
         self._session = session if session is not None else WireSession()
 

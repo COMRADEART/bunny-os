@@ -127,6 +127,11 @@ def _prompt_from(request: GenerationRequest) -> str:
 
 
 class LlamaCliAdapter:
+    #: An honest no. Raw ``llama-cli`` completion has no grammar hook this
+    #: build wants to claim, and the refusal is what routes structured work
+    #: to the server adapters instead of failing at the subprocess.
+    supports_structured_output = False
+
     def __init__(self) -> None:
         self._guard = threading.Lock()
         self._live: dict[str, tuple[subprocess.Popen[bytes], CancellationSignal]] = {}
@@ -158,6 +163,12 @@ class LlamaCliAdapter:
                     size = 0
                 models.append(ModelListing(model_id=entry.name, size_bytes=size))
         model_path, model_refusal = _resolve_model(configuration.model_id)
+        if model_path is None and models:
+            # Nothing configured, but the trusted directories hold models the
+            # registry will choose from — the same way a server adapter's
+            # ``/v1/models`` listing is chosen from. Reporting unavailable
+            # here would contradict the descriptor the registry then builds.
+            model_path, model_refusal = _resolve_model(models[0].model_id)
         if model_path is None:
             return ProbeResult(
                 adapter_id=self.adapter_id, available=False,

@@ -50,7 +50,21 @@ __all__ = [
 ]
 
 
-def task_request_for(task: CompanionTask, session: CompanionSession) -> TaskRequest:
+#: The requirement dimension the companion adds when it knows something the
+#: hardware probes cannot: that no configured executor can do this work here.
+#: It is deliberately a dimension nothing measures, so
+#: :func:`capability.router._local_feasible` fails it with ``when_unknown=False``
+#: and renders the honest sentence "local-executor is unmeasured against a
+#: required 1" into the routing reasons and the disclosure.
+LOCAL_EXECUTOR_DIMENSION = "local-executor"
+
+
+def task_request_for(
+    task: CompanionTask,
+    session: CompanionSession,
+    *,
+    local_executor_available: bool = True,
+) -> TaskRequest:
     """Translate a companion task into the router's vocabulary.
 
     Every narrowing is deliberate:
@@ -63,6 +77,16 @@ def task_request_for(task: CompanionTask, session: CompanionSession) -> TaskRequ
       :mod:`companion.approvals` against a specific plan and destination, and
       handing the router a pre-approved flag would let a routing decision be
       made against consent that had not been checked for this act.
+
+    ``local_executor_available=False`` states the one fact the router cannot
+    probe for: that nothing configured here can perform this task locally. The
+    router asks a *hardware* question, and a machine with ample memory and no
+    model installed answers it "local is fine" — which made every remote
+    destination unreachable, because permission for remote is only settled
+    after local is found impossible. Supplying the fact does not grant
+    anything: the router still refuses on locality, policy, network, provider
+    declaration and cost, and :mod:`companion.approvals` still has the last
+    word.
     """
     localities = ("device-only", "trusted-remote", "any")
     effective_locality = min(
@@ -83,7 +107,8 @@ def task_request_for(task: CompanionTask, session: CompanionSession) -> TaskRequ
         remote_allowed=session.privacy_policy.permits_remote(task.classification),
         user_approved=False,
         local_memory_bytes=None,
-        local_requirements={},
+        local_requirements={} if local_executor_available
+        else {LOCAL_EXECUTOR_DIMENSION: 1.0},
     )
 
 
@@ -193,6 +218,54 @@ class CapabilityDecision:
         }
 
 
+def _any_local_can_serve(
+    local_executors: Sequence[Executor],
+    task: CompanionTask,
+    session: CompanionSession,
+    decision: RouteDecision,
+) -> bool:
+    """Whether any local executor would take this task under the first routing.
+
+    Asked with the same predicate the eligibility loop uses, so "a local
+    executor is available" and "a local executor is eligible" cannot drift
+    into two different answers.
+    """
+    for executor in local_executors:
+        if _declaration_reasons(executor.declaration, task, session, decision):
+            continue
+        try:
+            if executor.health().ready:
+                return True
+        except Exception:  # noqa: BLE001 - a health fault is an unavailable executor
+            continue
+    return False
+
+
+def _remote_offered(decision: RouteDecision) -> bool:
+    """Whether the router put a remote destination on the table.
+
+    Two shapes mean yes, and conflating them was a real gap. ``target ==
+    "remote"`` is the router saying "go ahead"; ``requires_user_approval``
+    with a named provider is the router saying "this destination is
+    permissible *once somebody consents*" — which is the whole reason
+    :class:`~capability.router.RouteDecision` carries a ``disclosure`` of what
+    would leave the device. The companion never sets ``user_approved`` on the
+    request (:func:`task_request_for` says so, deliberately: consent belongs
+    to a specific plan and destination, which do not exist yet), so under the
+    shipped policy the router *always* returns the second shape — and reading
+    only the first made every configured remote provider permanently
+    unreachable, with "the router did not permit remote execution" as the
+    reason, which was true of the code and false of the policy.
+
+    Eligible-pending-approval is not permission. It puts the destination in
+    front of :mod:`companion.approvals`, whose gate asks, binds the answer to
+    the plan and the destination fingerprint, and refuses everything §8 lists.
+    """
+    if decision.target == "remote":
+        return True
+    return bool(decision.requires_user_approval and decision.provider_id)
+
+
 def _declaration_reasons(
     declaration: ExecutorDeclaration,
     task: CompanionTask,
@@ -220,7 +293,7 @@ def _declaration_reasons(
             f"may hold data up to {declaration.maximum_privacy_class}"
         )
     if not declaration.local:
-        if decision.target != "remote":
+        if not _remote_offered(decision):
             reasons.append(
                 f"{declaration.executor_id!r} is remote and the router did not permit remote execution "
                 f"for this task ({decision.target})"
@@ -244,17 +317,41 @@ def _declaration_reasons(
 def _blocked_reasons(
     decision: RouteDecision,
     eligibility: Sequence[ExecutorEligibility],
+    *,
+    local_executor_unavailable: bool = False,
 ) -> tuple[str, ...]:
     """Why nothing may take this task, in an order a person can act on.
 
-    The lead sentence separates the two ways this happens, because they call for
+    The lead sentence separates the ways this happens, because they call for
     opposite responses: the router refusing to place the task at all is a policy
     or privacy question, whereas the router permitting local execution while no
     local executor is eligible is a *configuration* question, and telling a user
     "local execution satisfies every requirement" while refusing to run locally
     would read as a contradiction.
+
+    ``local_executor_unavailable`` marks the third case, and it leads with the
+    executor's own reasons on purpose. When the companion has told the router
+    that nothing here can do the work, the router's answer is *downstream* of
+    that fact — "the task declares device-only data locality" is true and
+    useless, while "the synthesiser is not installed" is what the person can
+    act on. Putting the router first cost exactly that: a measured regression
+    where the actionable sentence fell past the three the error summary keeps.
     """
     reasons: list[str] = []
+    if local_executor_unavailable:
+        reasons.append(
+            "no configured executor can perform this task on this machine"
+        )
+        for item in eligibility:
+            reasons.extend(item.reasons)
+        if not eligibility:
+            reasons.append("no executor is configured")
+        reasons.append(
+            "and no remote destination was available either: "
+            + "; ".join(decision.reasons)
+            if decision.reasons else "and no remote destination was available either"
+        )
+        return tuple(reasons)
     if decision.target == "refused":
         reasons.append("the capability router refused to place this task")
         reasons.extend(decision.reasons)
@@ -288,12 +385,27 @@ def evaluate_task(
 
     Local executors are considered first and are preferred whenever one is
     eligible, whatever the router said about remote being available. Remote is
-    reached only when the router itself returned ``remote`` — which it does only
-    after settling permission — and even then the decision carries
-    ``requires_approval`` so that :mod:`companion.approvals` gets the last word.
+    reached only when the router itself offered the destination — either
+    outright or pending the user's consent, see :func:`_remote_offered` — and
+    even then the decision carries ``requires_approval`` so that
+    :mod:`companion.approvals` gets the last word.
     """
     request = task_request_for(task, session)
     decision = route(request, assessment.inventory, assessment.scores, assessment.budget, assessment.policy, providers)
+    local_executors = tuple(item for item in executors if item.declaration.local)
+    local_unavailable = not _any_local_can_serve(local_executors, task, session, decision)
+    if local_unavailable:
+        # The router said local because it was asked a hardware question and
+        # this machine has the hardware. It does not have an executor, which
+        # only the companion knows — so the question is asked again with that
+        # fact supplied, and the router settles remote permission properly
+        # instead of never being asked. A second route call, not a patched
+        # decision: every refusal in it is still the router's.
+        request = task_request_for(task, session, local_executor_available=False)
+        decision = route(
+            request, assessment.inventory, assessment.scores,
+            assessment.budget, assessment.policy, providers,
+        )
     signals = capability_signals(assessment)
     plan_id = assessment.plan.plan_id
     fingerprint = digest({
@@ -342,11 +454,13 @@ def evaluate_task(
         blocked: tuple[str, ...] = ()
     else:
         remote_choice = next(
-            (item for item in eligibility if item.eligible and decision.target == "remote"),
+            (item for item in eligibility if item.eligible and _remote_offered(decision)),
             None,
         )
         selected = remote_choice.executor_id if remote_choice is not None else ""
-        blocked = () if selected else _blocked_reasons(decision, eligibility)
+        blocked = () if selected else _blocked_reasons(
+            decision, eligibility, local_executor_unavailable=local_unavailable,
+        )
 
     return CapabilityDecision(
         task_id=task.task_id,

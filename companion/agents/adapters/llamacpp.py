@@ -45,6 +45,10 @@ __all__ = ["LlamaCppAdapter"]
 
 
 class LlamaCppAdapter:
+    #: ``response_format`` with a ``json_schema`` compiles to a grammar the
+    #: server enforces during decoding.
+    supports_structured_output = True
+
     def __init__(self, *, session: WireSession | None = None) -> None:
         self._session = session if session is not None else WireSession()
 

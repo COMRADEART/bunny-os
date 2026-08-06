@@ -120,11 +120,13 @@ class PlanThroughTheBroker(BridgeTestCase):
         # the one door: the broker's own ledger names the tool and the caller.
         called = [(item["toolId"], item["caller"]) for item in broker.invocations]
         self.assertIn(("text.count_words", "runtime"), called)
-        # The plan and the result were separate generations with separate
-        # purposes, and nothing else was asked of the provider.
-        self.assertEqual(
-            [p for p in adapter.purposes if p != "review"], ["plan", "result"],
-        )
+        # Planning and answering are separate generations with separate
+        # purposes. Planning happens more than once when the reviewer asks for
+        # a revision — §15's "may respond to reviewer observations" — so the
+        # property is the ordering and the vocabulary, not the count.
+        purposes = [p for p in adapter.purposes if p != "review"]
+        self.assertEqual(purposes[-1], "result")
+        self.assertEqual(set(purposes), {"plan", "result"})
         self.assertTrue(finished.outputs)
 
     def test_the_selection_explanation_is_recorded_for_the_task(self) -> None:
@@ -142,13 +144,18 @@ class PlanThroughTheBroker(BridgeTestCase):
     def test_an_invalid_plan_is_repaired_once_and_the_repair_is_a_new_purpose(self) -> None:
         @dataclass
         class HealingAdapter(PurposefulAdapter):
+            """Invalid JSON the first time it is asked to plan; valid when the
+            bounded repair asks again — §12's one round, exercised end to end."""
+
             calls: int = 0
 
             def generate(self, request, configuration, **kwargs):
-                if request.purpose == "plan":
+                if request.purpose in ("plan", "repair"):
                     self.calls += 1
-                    self.plan_script = (("structured", "{not json"),) if self.calls == 1 \
+                    self.plan_script = (
+                        (("structured", "{not json"),) if self.calls == 1
                         else (("structured", PLAN_WITHOUT_TOOLS),)
+                    )
                 return super().generate(request, configuration, **kwargs)
 
         adapter = HealingAdapter()
@@ -169,16 +176,31 @@ class PlanThroughTheBroker(BridgeTestCase):
         service = self.agent_service(adapter, configuration=configuration)
         runtime, _ = self.provider_runtime(service)
         session = runtime.create_session("bridge")
-        # SIMPLE_REQUEST classifies as compute; the provider declares question
-        # only, so selection refuses with the reason and the task blocks.
+        # SIMPLE_REQUEST classifies as compute; the only provider declares
+        # question, so the executor's own declaration — derived from the
+        # configured providers — does not cover the task. The refusal lands
+        # at the capability layer, before selection and before any dispatch,
+        # which is the earliest place it could and therefore the right one.
         task = runtime.submit_task(session.session_id, SIMPLE_REQUEST)
         finished = runtime.run_task(session.session_id, task.task_id)
         self.assertEqual(finished.state, "blocked")
         self.assertFalse(adapter.requests, "a generation was dispatched despite the drought")
-        events = runtime.events(session.session_id, task_id=task.task_id)
-        blocked = [e for e in events if e.event_type == "task_state_changed"
-                   and e.payload.get("to") == "blocked"]
-        self.assertTrue(blocked)
+        self.assertTrue(finished.errors)
+        # Every reason, from the event rather than the error summary: the
+        # summary carries the first three so a CLI line stays readable, and
+        # the complete list is what the record keeps.
+        reasons = " ".join(
+            str(event.payload.get("reasons", ()))
+            for event in runtime.events(session.session_id, task_id=task.task_id)
+            if event.event_type == "capability_checked"
+        )
+        self.assertIn("agents.local-provider", reasons)
+        self.assertIn("compute", reasons)
+        # §10, stated where it is decided: local incapability produced no
+        # remote destination, because none was configured to produce.
+        self.assertIn("device-only", reasons + " ".join(
+            item.summary for item in finished.errors
+        ))
 
 
 class CancellationMidGeneration(BridgeTestCase):
@@ -215,23 +237,61 @@ class RemoteApprovalBinding(BridgeTestCase):
         self.addCleanup(os.environ.pop, self.ENV, None)
 
     def remote_service(self, adapter: ScriptedAdapter) -> AgentProviderService:
+        from dataclasses import replace as _replace
+
+        base = remote_configuration(credential_locator=self.ENV)
+        # A destination the router may name: fully declared, so the router's
+        # own fail-closed rule is satisfied and the refusal under test is the
+        # approval, not the disclosure.
         configuration = AgentConfiguration(providers=(
-            remote_configuration(credential_locator=self.ENV),
+            _replace(base, retention="ephemeral", trains_on_input=False,
+                     jurisdiction="test"),
         ))
         return self.agent_service(
             adapter, configuration=configuration, adapter_id="scripted-remote",
         )
 
+    @staticmethod
+    def permitting_assessment():
+        """A policy that permits *this* provider by name.
+
+        Built from the real :class:`capability.policy.Policy`, like
+        ``remote_permissive_assessment``, so a pass here is a statement about
+        the shipped policy engine and not about a stub. ``permitted_providers``
+        names the configured id: an allowlist that named something else would
+        make the test pass for the wrong reason on the wrong refusal.
+        """
+        from capability.policy import Policy, RemoteExecutionPolicy
+        from capability.runtime import assess
+        from capability.simulate import simulate
+
+        return assess(simulate("laptop"), policy=Policy(
+            metered_network_allowed=True,
+            remote_execution=RemoteExecutionPolicy(
+                enabled=True,
+                require_user_approval=True,
+                allow_sensitive_data=False,
+                permitted_providers=("remote.scripted",),
+            ),
+        ))
+
     def remote_runtime(self, service: AgentProviderService, *, consent=None):
+        from companion.agents.capability import router_providers
+
         executor = RemoteProviderExecutor(service, "remote.scripted")
+        destinations = router_providers(
+            service.registry.configuration,
+            authenticated_ids=("remote.scripted",),
+        )
         return self.started(
             executors=(executor,),
-            assessment=remote_permissive_assessment(),
+            assessment=self.permitting_assessment(),
             consent=consent,
+            providers=destinations,
         )
 
     def _remote_task(self, runtime):
-        from companion.session import PrivacyPolicy
+        from companion.session import CostPolicy, PrivacyPolicy
 
         session = runtime.create_session(
             "remote bridge",
@@ -240,11 +300,16 @@ class RemoteApprovalBinding(BridgeTestCase):
                 maximum_remote_classification="internal",
                 allow_remote=True,
             ),
+            # A metered provider against a zero ceiling is refused by the
+            # router before anything else is considered — nothing may be
+            # spent is the default and it means what it says. A remote test
+            # therefore has to permit a spend, explicitly.
+            cost_policy=CostPolicy(task_limit_units=100, session_limit_units=100),
             locality_preference="any",
         )
         task = runtime.submit_task(
             session.session_id, SIMPLE_REQUEST, classification="internal",
-            data_locality="any",
+            data_locality="any", cost_limit_units=100,
         )
         return session, task
 

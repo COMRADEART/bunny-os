@@ -87,6 +87,16 @@ class ProviderConfiguration:
     estimated_units_per_kilotoken: int = 0
     pricing_reference: str = ""
     user_preferred: bool = False
+    #: What the operator states the service does with what it is sent, in the
+    #: capability router's own vocabulary: ``none``, ``ephemeral``, ``logged``
+    #: or ``unspecified``. Undeclared fails closed — the router refuses a
+    #: destination that will not say — so the default is the honest one and a
+    #: deployment that knows better says so in the configuration file.
+    retention: str = "unspecified"
+    #: ``True``/``False`` where the operator states it, ``None`` where nobody
+    #: has. ``None`` also fails the destination closed.
+    trains_on_input: bool | None = None
+    jurisdiction: str = "unspecified"
 
     def __post_init__(self) -> None:
         if self.cost_class not in COST_CLASSES:
@@ -100,6 +110,13 @@ class ProviderConfiguration:
             raise ProviderConfigurationError("context and output limits must be positive")
         if self.estimated_units_per_kilotoken < 0:
             raise ProviderConfigurationError("pricing must be non-negative")
+        if self.retention not in ("none", "ephemeral", "logged", "unspecified"):
+            raise ProviderConfigurationError(
+                f"retention {self.retention!r} is not one of "
+                "('none', 'ephemeral', 'logged', 'unspecified')"
+            )
+        if self.trains_on_input is not None and not isinstance(self.trains_on_input, bool):
+            raise ProviderConfigurationError("trainsOnInput is true, false or absent")
         # Locality coherence: the endpoint kind, the remote flag and the wire
         # target must tell one story.
         if self.remote:
@@ -177,6 +194,9 @@ class ProviderConfiguration:
             "estimatedUnitsPerKilotoken": self.estimated_units_per_kilotoken,
             "pricingReference": self.pricing_reference,
             "userPreferred": self.user_preferred,
+            "retention": self.retention,
+            "trainsOnInput": self.trains_on_input,
+            "jurisdiction": self.jurisdiction,
         }
 
 
@@ -288,7 +308,8 @@ def _provider_from_json(value: Mapping[str, Any], index: int) -> ProviderConfigu
         "enabled", "remote", "credential", "costClass", "maximumPrivacyClass",
         "contextLimitTokens", "maximumOutputTokens", "supportedTaskClasses",
         "supportedLanguages", "licenseReference", "estimatedUnitsPerKilotoken",
-        "pricingReference", "userPreferred",
+        "pricingReference", "userPreferred", "retention", "trainsOnInput",
+        "jurisdiction",
     }
     unknown = set(value) - known
     if unknown:
@@ -339,6 +360,12 @@ def _provider_from_json(value: Mapping[str, Any], index: int) -> ProviderConfigu
         estimated_units_per_kilotoken=int(value.get("estimatedUnitsPerKilotoken", 0)),
         pricing_reference=str(value.get("pricingReference", "")),
         user_preferred=bool(value.get("userPreferred", False)),
+        retention=str(value.get("retention", "unspecified")),
+        trains_on_input=(
+            None if value.get("trainsOnInput") is None
+            else bool(value.get("trainsOnInput"))
+        ),
+        jurisdiction=str(value.get("jurisdiction", "unspecified")),
     )
 
 

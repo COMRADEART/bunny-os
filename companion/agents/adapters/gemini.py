@@ -81,6 +81,10 @@ _MODEL_ID = re.compile(r"^[A-Za-z0-9._-]+$")
 class GeminiAdapter:
     """One instance per service; connections are per-generation."""
 
+    #: ``responseSchema`` constrains decoding, though to a weaker OpenAPI-style
+    #: subset than ours; local validation remains the real check.
+    supports_structured_output = True
+
     def __init__(self, *, session: WireSession | None = None) -> None:
         self._session = session if session is not None else WireSession()
 
