@@ -220,6 +220,33 @@ class Probe:
             record["payload"] = dict(event.payload)
         self.events.append(record)
 
+    def _routing_snapshot(self, label: str) -> None:
+        """The pulse server's own routing table, taken while the fault is live.
+
+        ``sink-inputs`` names which sink each playback stream feeds;
+        ``source-outputs`` names which source each record stream reads. The
+        one question this answers is the one no runtime record can: were the
+        two ends of the loopback attached to the same device.
+        """
+        import subprocess
+
+        snapshot: dict[str, str] = {"label": label}
+        for name, argv in (
+            ("sinks", ["pactl", "list", "short", "sinks"]),
+            ("sources", ["pactl", "list", "short", "sources"]),
+            ("sinkInputs", ["pactl", "list", "short", "sink-inputs"]),
+            ("sourceOutputs", ["pactl", "list", "short", "source-outputs"]),
+            ("defaultSink", ["pactl", "get-default-sink"]),
+        ):
+            try:
+                completed = subprocess.run(
+                    argv, capture_output=True, text=True, timeout=10,
+                )
+                snapshot[name] = completed.stdout.strip()[:2000]
+            except Exception as exc:  # noqa: BLE001
+                snapshot[name] = f"error: {type(exc).__name__}"
+        self.report.setdefault("routing", []).append(snapshot)
+
     def raw_loopback_control(self) -> dict[str, Any]:
         """A control experiment inside this exact process and environment.
 
@@ -463,7 +490,10 @@ class Probe:
         self.pump(seconds=8.0, until=lambda: self._event_ms("speech_detected", request_id) is not None)
         if (self._event_ms("speech_detected", request_id) is None
                 and self.speech.worker.active):
+            self._routing_snapshot("before-retry")
             self._speak_into_loopback(attempt=2)
+            self.pump(seconds=1.0)
+            self._routing_snapshot("during-retry")
         self.pump(seconds=45.0, until=lambda: not self.speech.worker.active)
         self.pump(seconds=1.0)
 
