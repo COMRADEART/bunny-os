@@ -356,6 +356,23 @@ class Probe:
             runtime_directory=Path(self.arguments.runtime_directory) / "voice",
         ))
         self.voice = voice
+        #: Everything the voice worker says about each injection: which
+        #: backend, which device, whether playback was provider-owned, and the
+        #: full playback outcome on settle. The first three probe failures
+        #: recorded only "played", which is a disposition, not a path.
+        self.voice_events: list[dict[str, Any]] = []
+
+        def _observe_voice(event: Any) -> None:
+            if event.kind in ("audio_started", "speech_finished", "speech_failed",
+                              "speech_degraded", "speech_started"):
+                self.voice_events.append({
+                    "kind": event.kind,
+                    "requestId": event.request_id,
+                    "atMs": self.now_ms(),
+                    "payload": dict(event.payload),
+                })
+
+        voice.worker.subscribe(_observe_voice)
         speech = SpeechInputService(SpeechInputServiceOptions(
             runtime_directory=Path(self.arguments.runtime_directory) / "speech",
             voice_worker=voice.worker,
@@ -466,6 +483,10 @@ class Probe:
                 # voice worker does not need it, but the capture-side events
                 # this probe watches arrive through it.
                 self.pump(seconds=0.1)
+            record["voiceEvents"] = [
+                item for item in self.voice_events
+                if item["requestId"] == request.request_id
+            ]
         self.report.setdefault("injections", []).append(record)
         return record
 
