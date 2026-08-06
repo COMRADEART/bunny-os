@@ -21,9 +21,9 @@ something was not run, it is listed as NOT_RUN with the reason, not omitted.
 | Base branch | `feature/companion-speech-input` |
 | Starting commit | `65472aa2f43c78e3db16cb4b9f7ff5d244b52e10` (verified head of the base branch) |
 | Working branch | `feature/companion-agent-providers` |
-| Gate commit | `0a48579e9fc5eb28e6c9a1f95c73d484ed2bffa0` (every gate iteration records it) |
-| Evidence commit | *(filled by the evidence commit)* |
-| Final SHA | *(filled at closure)* |
+| Gate commit | `3f07a6ea007dec7925c6ffb36e710025427f55bb` (all 170 gate iterations record it) |
+| Evidence commit | `8bd3c95d2c568ba300d54a9ffc8c5b78bbacdc47` |
+| Final SHA | the closure commit that follows, which edits only this section and adds §3's post-gate result — non-build-affecting by construction |
 
 Preflight, before the branch was created: the full SHA of `65472aa` was
 resolved and matched the branch head; the working tree was clean; the
@@ -37,13 +37,17 @@ modified. All prior runtime, renderer, voice and speech-input evidence trees
 (`qualification/companion-linux/`, `companion-voice/`, `companion-voice-closure/`,
 `companion-speech-input/`) are untouched by every commit on this branch.
 
-Two gate runs were started. The first, on `9a57a69`, reached 100/100 on gate 1
-and two iterations into gate 2 before it was stopped deliberately: the harness
-was not recording which backend each iteration exercised, and "a genuine local
-provider produced this result" is a claim the evidence has to carry rather than
-the prose. The harness change and the restart from one are commit `0a48579`;
-the discarded partial run is named here because a reader counting gate
-invocations should find the same number this report does.
+Three gate runs were started and two were discarded, deliberately. The first,
+on `9a57a69`, reached 100/100 on gate 1 and two iterations into gate 2 before
+it was stopped: the harness was not recording which backend each iteration
+exercised, and "a genuine local provider produced this result" is a claim the
+evidence has to carry rather than the prose. The second, on `0a48579`, reached
+100/100 and five suite iterations before it was stopped for the same class of
+reason: the evidence-preservation test had just been written, and a fifty-run
+suite gate that runs a suite missing one of its tests has measured something
+other than the suite. The third, on `3f07a6e`, is the one reported here. Both
+discarded runs are named because a reader counting gate invocations should
+arrive at the same number this report does.
 
 ---
 
@@ -92,6 +96,17 @@ package route's `PACKAGE_EXCLUDED`.
 The subsystem adds **no non-`.py` asset**, so no new `tree` route is needed. A
 provider configuration file is user state under the runtime root, not a shipped
 artifact: absent, `companion/agents/config.py` supplies local-only defaults.
+
+**Post-gate closure.** The analyzer over `3f07a6e..8bd3c95` — everything after
+the gate commit — reports **0 installed, 1 context-only, 12 unreachable**. The
+context-only path is `scripts/ops/agents-collect.py`, a development tool no
+route installs; the twelve unreachable ones are this report and the eleven
+evidence files. Nothing the gates measured differs from the gate commit by
+anything the build could see. The collector was corrected after the gates ran
+— it had presented the suite's one-time fixture settle as growth — and the
+correction re-derives the verdicts from the *raw* gate reports, which are
+unchanged: the JSON the harness wrote is the evidence, and the verdict file is
+a summary of it.
 
 Every commit changes the OCI configuration digest through the revision label
 and `/usr/lib/bunny-os/release.json`; an unchanged layer digest is not an
