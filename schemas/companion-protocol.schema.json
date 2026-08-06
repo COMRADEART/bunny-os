@@ -35,7 +35,15 @@
         "speech_input_stop",
         "speech_input_cancel",
         "speech_input_confirm",
-        "speech_input_retry"
+        "speech_input_retry",
+        "providers_list",
+        "providers_status",
+        "providers_explain",
+        "provider_models",
+        "provider_health",
+        "provider_test_local",
+        "task_provider_status",
+        "task_provider_cancel"
       ]
     },
     "request": {

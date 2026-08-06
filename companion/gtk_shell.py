@@ -144,6 +144,13 @@ class CompanionViewModel:
     speech_final: Mapping[str, Any] | None = None
     speech_error: str = ""
     speech_indicator: Mapping[str, Any] = field(default_factory=dict)
+    #: Agent providers, entirely through the protocol. The window holds two
+    #: read-back documents — the subsystem overview and the current task's
+    #: provider status — and everything it shows is built from them. Nothing
+    #: here can name an endpoint or carry a credential, because the protocol
+    #: responses cannot.
+    providers_overview: Mapping[str, Any] = field(default_factory=dict)
+    provider_status: Mapping[str, Any] = field(default_factory=dict)
 
     # -- connection --------------------------------------------------------
 
@@ -516,6 +523,91 @@ class CompanionViewModel:
         if self.speech_final is not None:
             return pango_escaped(str(self.speech_final.get("text", "")))
         return pango_escaped(self.speech_partial)
+
+    # -- agent providers ----------------------------------------------------
+
+    @property
+    def providers_available(self) -> bool:
+        return bool(self.health.get("agentProvidersAvailable", False))
+
+    def poll_providers(self) -> Mapping[str, Any]:
+        """Read the subsystem overview back: remote indicator, degradation."""
+        if not self.providers_available:
+            self.providers_overview = {}
+            return self.providers_overview
+        try:
+            answer = self.client.call("providers_status", {})
+        except (CompanionClientError, OSError) as exc:
+            self.last_error = str(exc)
+            return self.providers_overview
+        if isinstance(answer, Mapping) and answer.get("available"):
+            self.providers_overview = dict(answer)
+        return self.providers_overview
+
+    def poll_task_provider(self) -> Mapping[str, Any]:
+        """Read the current task's provider status back."""
+        if not (self.providers_available and self.task_id):
+            self.provider_status = {}
+            return self.provider_status
+        try:
+            answer = self.client.call("task_provider_status", {"taskId": self.task_id})
+        except (CompanionClientError, OSError) as exc:
+            self.last_error = str(exc)
+            return self.provider_status
+        if isinstance(answer, Mapping) and answer.get("available"):
+            self.provider_status = dict(answer)
+        return self.provider_status
+
+    def provider_line(self) -> str:
+        """§22's facts as one sentence: who is generating, where, at what cost.
+
+        Built from what the runtime reported, never invented. The remote
+        sentence exists at two strengths, and the stronger one — data is
+        leaving now — is driven by ``remoteActive``, which the service derives
+        from the worker's live state, not from this window's guess. The
+        approval question itself precedes both: a remote selection surfaces
+        here before anything is dispatched, because dispatch cannot happen
+        until the §8 approval resolves.
+        """
+        overview = self.providers_overview
+        status = self.provider_status
+        selected = str(status.get("selectedProviderId", ""))
+        if overview.get("remoteActive"):
+            return (
+                f"REMOTE generation via {selected or 'a remote provider'} — "
+                "data is leaving this machine under your approval"
+            )
+        if selected and not status.get("selectedLocal", True):
+            return (
+                f"Remote provider {selected} selected — nothing is sent before "
+                "your approval"
+            )
+        parts: list[str] = []
+        if selected:
+            verb = "generating" if status.get("streaming") else "provider"
+            parts.append(f"{verb} {selected} · local")
+            selection = status.get("selection")
+            if isinstance(selection, Mapping):
+                spent = status.get("spentUnits", 0)
+                if spent:
+                    parts.append(f"cost {spent} units")
+        degraded = self._degraded_providers()
+        if degraded:
+            parts.append("degraded: " + ", ".join(degraded))
+        return " · ".join(parts)
+
+    def _degraded_providers(self) -> tuple[str, ...]:
+        health = self.providers_overview.get("health")
+        if not isinstance(health, Mapping):
+            return ()
+        names: list[str] = []
+        for provider_id, report in health.items():
+            if not isinstance(report, Mapping):
+                continue
+            circuit = report.get("circuit")
+            if isinstance(circuit, Mapping) and circuit.get("state") != "closed":
+                names.append(str(provider_id))
+        return tuple(names)
 
     # -- rendering ---------------------------------------------------------
 
@@ -896,6 +988,7 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
         self.picture: Any = None
         self.mic_button: Any = None
         self.mic_indicator: Any = None
+        self.provider_label: Any = None
         self.transcript_box: Any = None
         self.partial_label: Any = None
         self.transcript_entry: Any = None
@@ -1016,6 +1109,19 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
             ["Microphone state: shown whenever audio is being captured"],
         )
         self.body.append(self.mic_indicator)
+
+        # §22's provider surface. One widget, fed only from the protocol's
+        # provider documents — selected provider, local or remote, streaming,
+        # cost, degradation. The remote sentence renders with its own CSS
+        # class so a theme can make "data is leaving this machine" impossible
+        # to mistake for a status line.
+        self.provider_label = self._label("", "bunny-provider")
+        self.provider_label.set_visible(False)
+        self.provider_label.update_property(
+            [self.Gtk.AccessibleProperty.DESCRIPTION],
+            ["Which model provider is working, whether it is local or remote, and its cost"],
+        )
+        self.body.append(self.provider_label)
 
         # The transcript review card: partial text while listening, the final
         # text in an editable entry while confirming, and the four §14 verbs.
@@ -1176,8 +1282,24 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
         if self.model.speech_phase != "idle":
             self.model.poll_speech()
             self._draw_speech()
+        self.model.poll_providers()
+        self.model.poll_task_provider()
+        self._draw_provider()
         self.model.speak_if_new()
         return self.GLib.SOURCE_CONTINUE
+
+    def _draw_provider(self) -> None:
+        line = self.model.provider_line()
+        self.provider_label.set_text(line)
+        self.provider_label.set_visible(bool(line))
+        remote = bool(self.model.providers_overview.get("remoteActive")) or (
+            bool(self.model.provider_status.get("selectedProviderId"))
+            and not self.model.provider_status.get("selectedLocal", True)
+        )
+        if remote:
+            self.provider_label.add_css_class("bunny-provider-remote")
+        else:
+            self.provider_label.remove_css_class("bunny-provider-remote")
 
     # -- drawing -----------------------------------------------------------
 

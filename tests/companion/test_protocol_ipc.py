@@ -183,12 +183,20 @@ class OperationTests(ServiceTestCase):
         health = self.client.health()
         self.assertTrue(health["ok"])
         self.assertEqual(health["protocolSchemaVersion"], PROTOCOL_SCHEMA_VERSION)
-        self.assertEqual(health["executors"], ["local.deterministic"])
+        # Both executors, deliberately: the deterministic one first in
+        # preference order, the provider-backed one behind it. A health list
+        # that hid the provider executor would hide the thing §22 asks the
+        # surface to show.
+        self.assertEqual(
+            sorted(health["executors"]),
+            ["agents.local-provider", "local.deterministic"],
+        )
         self.assertEqual(health["reviewers"], ["local.test-reviewer"])
         self.assertIn(health["endpoint"]["transport"], ("unix-socket", "loopback-tcp"))
         # §16: stated, not inferred from an absence.
         self.assertFalse(health["microphoneActive"])
         self.assertEqual(health["remoteProviders"], [])
+        self.assertTrue(health["agentProvidersAvailable"])
 
     def test_a_session_and_a_task_can_be_created_and_read_back(self) -> None:
         session_id = self._session()
@@ -420,6 +428,12 @@ class RefusalTests(ServiceTestCase):
             "speech_input_health", "speech_input_devices", "speech_input_start",
             "speech_input_status", "speech_input_stop", "speech_input_cancel",
             "speech_input_confirm", "speech_input_retry",
+            # §21's agent-provider operations, listed for the same reason.
+            # Note what is not in this list: nothing that mutates provider
+            # configuration, carries a credential, or names an endpoint.
+            "providers_list", "providers_status", "providers_explain",
+            "provider_models", "provider_health", "provider_test_local",
+            "task_provider_status", "task_provider_cancel",
         )))
 
     @unittest.skipIf(hasattr(socket, "AF_UNIX"), "the token guards the loopback fallback only")

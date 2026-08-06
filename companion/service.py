@@ -76,6 +76,7 @@ from .runtime import CompanionRuntime
 # so a build with no voice package still imports this module, and the dependency
 # runs one way: the companion knows about voice, voice knows nothing about the
 # companion's runtime.
+from .agents.config import AgentConfiguration
 from .voice.policy import VoicePreferences
 # The same arrangement for speech input, for the same reason: the service
 # reaches it through :meth:`CompanionService._build_speech`, and the dependency
@@ -507,6 +508,7 @@ class CompanionGateway:
         endpoint_description: Mapping[str, Any] | None = None,
         clock: Clock | None = None,
         voice: "VoiceService | None" = None,
+        agents: "AgentProviderService | None" = None,
     ) -> None:
         self.runtime = runtime
         self.consent = consent
@@ -525,6 +527,10 @@ class CompanionGateway:
         #: every ``speech_input_*`` operation answers "no speech-input
         #: runtime" and typed input is the whole of input.
         self.speech: "SpeechInputService | None" = None
+        #: Optional, same contract again: absent means every provider
+        #: operation answers "no agent-provider runtime" and the deterministic
+        #: executor carries every task.
+        self.agents = agents
         self._work: "queue.Queue[str | None]" = queue.Queue()
         self._running: set[str] = set()
         self._queued: set[str] = set()
@@ -730,10 +736,31 @@ class CompanionGateway:
             "microphoneActive": bool(self.speech is not None and self.speech.worker.active),
             "microphonePolicy": "explicit activation only; never at service start",
             "speechInputAvailable": self.speech is not None,
-            "remoteProviders": [],
-            "paidProviderConfigured": False,
+            # Read from the agent-provider configuration rather than constant:
+            # ids only, never endpoints or credentials. An empty list still
+            # means what it always meant — nothing is configured to leave.
+            "remoteProviders": self._remote_provider_ids(),
+            "paidProviderConfigured": self._paid_provider_configured(),
+            "agentProvidersAvailable": self.agents is not None,
             "accessibility": self.preferences.to_json(),
         }
+
+    def _remote_provider_ids(self) -> list[str]:
+        if self.agents is None:
+            return []
+        return [
+            item.provider_id
+            for item in self.agents.registry.configuration.providers
+            if item.remote and item.enabled
+        ]
+
+    def _paid_provider_configured(self) -> bool:
+        if self.agents is None:
+            return False
+        return any(
+            item.cost_class == "paid" and item.enabled
+            for item in self.agents.registry.configuration.providers
+        )
 
     def create_session(
         self,
@@ -1318,6 +1345,59 @@ class CompanionGateway:
             requestId=requestId, activationSource=activationSource,
         )}
 
+    # -- agent providers (§21) ----------------------------------------------
+
+    def _agents_unavailable(self, operation: str) -> dict[str, Any]:
+        return {
+            "available": False,
+            "operation": operation,
+            "reason": (
+                "this companion service is running without an agent-provider "
+                "runtime; the deterministic executor carries every task"
+            ),
+            "taskAffected": False,
+        }
+
+    def providers_list(self) -> dict[str, Any]:
+        if self.agents is None:
+            return self._agents_unavailable("providers_list")
+        return {"available": True, **self.agents.providers_list()}
+
+    def providers_status(self) -> dict[str, Any]:
+        if self.agents is None:
+            return self._agents_unavailable("providers_status")
+        return {"available": True, **self.agents.providers_status()}
+
+    def providers_explain(self, **params: Any) -> dict[str, Any]:
+        if self.agents is None:
+            return self._agents_unavailable("providers_explain")
+        return {"available": True, **self.agents.providers_explain(**params)}
+
+    def provider_models(self, *, providerId: str) -> dict[str, Any]:
+        if self.agents is None:
+            return self._agents_unavailable("provider_models")
+        return {"available": True, **self.agents.provider_models(providerId=providerId)}
+
+    def provider_health(self, *, providerId: str | None = None) -> dict[str, Any]:
+        if self.agents is None:
+            return self._agents_unavailable("provider_health")
+        return {"available": True, **self.agents.provider_health(providerId=providerId)}
+
+    def provider_test_local(self, *, providerId: str | None = None) -> dict[str, Any]:
+        if self.agents is None:
+            return self._agents_unavailable("provider_test_local")
+        return {"available": True, **self.agents.provider_test_local(providerId=providerId)}
+
+    def task_provider_status(self, *, taskId: str) -> dict[str, Any]:
+        if self.agents is None:
+            return self._agents_unavailable("task_provider_status")
+        return {"available": True, **self.agents.task_provider_status(taskId=taskId)}
+
+    def task_provider_cancel(self, *, taskId: str) -> dict[str, Any]:
+        if self.agents is None:
+            return self._agents_unavailable("task_provider_cancel")
+        return {"available": True, **self.agents.task_provider_cancel(taskId=taskId)}
+
     def _outstanding_requests(self, task_id: str) -> tuple[tuple[str, float], ...]:
         """Unanswered questions belonging to one task, whether or not asked yet.
 
@@ -1425,6 +1505,15 @@ class ServiceOptions:
     #: gates only whether the *objects* exist.
     speech_enabled: bool = True
     speech_preferences: "SpeechInputPreferences | None" = None
+    #: Build the agent-provider runtime inside this service. The same shape
+    #: again: turning it off leaves every ``providers_*`` and ``provider_*``
+    #: operation answering "no agent-provider runtime", the deterministic
+    #: executor untouched, and nothing else different. Construction starts no
+    #: thread — the worker starts at its own later step, after the refusals.
+    agents_enabled: bool = True
+    #: Injected configuration for tests and slices. ``None`` loads
+    #: ``<root>/agents/providers.json`` or the local-only defaults.
+    agent_configuration: "AgentConfiguration | None" = None
 
 
 #: The order a companion service comes up in, and the whole of it.
@@ -1445,9 +1534,16 @@ STARTUP_SEQUENCE: tuple[str, ...] = (
     "validate-configuration",
     "acquire-singleton",
     "bind-endpoint",
+    # Constructed before the durable state because the runtime built there
+    # wires provider-backed executors over this object. Construction owns a
+    # registry, a journal and a reconciled §19 report — no thread, no socket,
+    # no subprocess; the worker thread starts at its own step below, after
+    # everything that can refuse cheaply has refused.
+    "construct-agent-providers",
     "initialise-durable-state",
     "construct-voice-worker",
     "start-voice-worker",
+    "start-agent-worker",
     "construct-speech-input",
     "publish-readiness",
 )
@@ -1490,6 +1586,13 @@ RELEASE_ORDER: tuple[str, ...] = (
     # both point the same direction, and stopping capture first bounds the
     # shutdown by the recorder's termination escalation.
     "speech-input",
+    # Agent providers before the task worker, for the consent reason: a task
+    # blocked on a generation holds the worker until the generation ends, and
+    # stopping the agent worker cancels it — the stream closes under the
+    # reader and the executor returns immediately with a refusal. Before
+    # voice, so a task settling out of a cancelled generation still has its
+    # caption path while it records the interruption.
+    "agent-providers",
     "voice-runtime",
     "task-worker",
     "durable-state",
@@ -1545,6 +1648,7 @@ class CompanionService:
         self.runtime: CompanionRuntime | None = None
         self.voice: "VoiceService | None" = None
         self.speech: "SpeechInputService | None" = None
+        self.agents: "AgentProviderService | None" = None
         self.gateway: CompanionGateway | None = None
         self.server: CompanionServer | None = None
         self.singleton: RuntimeSingleton | None = None
@@ -1721,12 +1825,32 @@ class CompanionService:
             display_available=bool(self.display_available),
             clock=self.runtime.clock,
             voice=self.voice,
+            agents=self.agents,
         )
         self.gateway.endpoint_description = self.server.describe()
 
     def _step_start_voice_worker(self) -> None:
         if self.voice is not None:
             self.voice.worker.start()
+
+    def _step_construct_agent_providers(self) -> None:
+        """Constructed only — registry, journal, §19 reconcile; no thread.
+
+        Before the durable state, because :meth:`_build_runtime` wires
+        provider-backed executors over this object and the runtime's executor
+        table is fixed at construction. The worker thread starts at its own
+        step after the voice worker's, so a refusal anywhere between here and
+        there unwinds objects, not a running thread.
+        """
+        if not self.options.agents_enabled:
+            return
+        self.agents = self._build_agents()
+        if self.agents is not None:
+            self._unwind.append(("agent-providers", self.agents.close))
+
+    def _step_start_agent_worker(self) -> None:
+        if self.agents is not None:
+            self.agents.worker.start()
 
     def _step_construct_speech_input(self) -> None:
         """Constructed only — no thread, no device, no model, per §4.
@@ -1816,6 +1940,29 @@ class CompanionService:
         except Exception:  # noqa: BLE001 - speech input is never a reason not to start
             return None
 
+    def _build_agents(self) -> "AgentProviderService | None":
+        """Construct the agent-provider runtime, or carry on without one.
+
+        Swallowed on purpose, exactly as :meth:`_build_voice` is: a companion
+        whose service would not start because a provider configuration was
+        broken would have made generation load-bearing for the service itself.
+        The deterministic executor is unaffected and every provider operation
+        reports the absence.
+        """
+        from .agents.service import AgentProviderService, AgentServiceOptions
+
+        try:
+            return AgentProviderService(AgentServiceOptions(
+                root=self.root,
+                configuration=self.options.agent_configuration,
+                # Constructed here, started at its own step. Same split, same
+                # reason as voice: a failure between the two unwinds objects
+                # rather than chasing a running thread.
+                start_worker=False,
+            ))
+        except Exception:  # noqa: BLE001 - providers are never a reason not to start
+            return None
+
     def _build_runtime(self, consent: ConsentSource) -> CompanionRuntime:
         from capability.runtime import assess, assess_current_machine
         from capability.simulate import simulate
@@ -1833,12 +1980,45 @@ class CompanionService:
             if self.options.machine
             else assess_current_machine()
         )
+        broker = ToolBroker()
+        executors: tuple[Any, ...] = (DeterministicLocalExecutor(),)
+        reviewers: tuple[Any, ...] = (DeterministicLocalReviewer(),)
+        if self.agents is not None:
+            from .agent_bridge import (
+                ProviderBackedExecutor,
+                ProviderBackedReviewer,
+                RemoteProviderExecutor,
+            )
+            from .errors import ExecutorUnavailable
+
+            provider_executor = ProviderBackedExecutor(
+                self.agents, tool_declarations=broker.declarations(),
+            )
+            agent_configuration = self.agents.registry.configuration
+            # The tuple order is the preference order capability selection
+            # reads: first eligible local executor wins. The default keeps the
+            # deterministic executor first, so a machine with no model behaves
+            # exactly as it did before this subsystem existed.
+            if agent_configuration.executor_preference == "provider":
+                executors = (provider_executor, DeterministicLocalExecutor())
+            else:
+                executors = (DeterministicLocalExecutor(), provider_executor)
+            for provider in agent_configuration.providers:
+                if provider.remote and provider.enabled:
+                    try:
+                        executors += (RemoteProviderExecutor(self.agents, provider.provider_id),)
+                    except ExecutorUnavailable:
+                        continue
+            if agent_configuration.reviewer_provider_id:
+                reviewers += (ProviderBackedReviewer(
+                    self.agents, provider_id=agent_configuration.reviewer_provider_id,
+                ),)
         return CompanionRuntime(RuntimeOptions(
             store=CompanionStore(self.root / "store"),
             assessment=assessment,
-            executors=(DeterministicLocalExecutor(),),
-            reviewers=(DeterministicLocalReviewer(),),
-            broker=ToolBroker(),
+            executors=executors,
+            reviewers=reviewers,
+            broker=broker,
             approvals=CompanionApprovalStore.load(self.root / "approvals.json"),
             consent=consent,
             providers=(),

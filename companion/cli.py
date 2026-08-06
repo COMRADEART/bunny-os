@@ -253,6 +253,21 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
         help="report which capture devices and local recognisers this machine has (read-only)",
     )
 
+    agent_slice = group.add_parser(
+        "run-agent-slice",
+        help=(
+            "RUNS the installed agent-provider vertical slice against a real companion "
+            "service: local model discovery, one generated task with a mediated tool, "
+            "streaming, cancellation mid-stream, a worker restart, no remote dispatch"
+        ),
+    )
+    agent_slice.add_argument("--slice-root", type=Path, default=None)
+
+    agents_health = group.add_parser(
+        "agents-health",
+        help="report which model providers this machine has, with reasons (read-only)",
+    )
+
     integration = group.add_parser(
         "run-integration-slice",
         help="RUNS the full service-plus-client vertical slice in a scratch directory",
@@ -332,6 +347,10 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
         return _voice_health(args)
     if args.companion_command == "run-speech-slice":
         return _run_speech_slice(args)
+    if args.companion_command == "run-agent-slice":
+        return _run_agent_slice(args)
+    if args.companion_command == "agents-health":
+        return _agents_health(args)
     if args.companion_command == "speech-input-health":
         return _speech_input_health(args)
     if args.companion_command == "character":
@@ -909,6 +928,53 @@ def _run_speech_slice(args: argparse.Namespace) -> dict[str, Any]:
         ),
         "root": str(root),
         **report.to_json(),
+    }
+
+
+def _run_agent_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .agents.vertical_slice import run_agent_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-agent-slice-"))
+    report = run_agent_slice(root)
+    return {
+        "effect": (
+            f"RAN the installed agent-provider vertical slice in {root}: a companion "
+            "service, discovery of a real local model provider, one generated task with "
+            "a broker-mediated tool, protocol-visible streaming, the remote option "
+            "displayed without dispatching, a cancellation caught mid-stream and a "
+            "provider-worker restart. No remote provider was dispatched to, no paid "
+            "provider was required, and nothing interrupted was repeated."
+        ),
+        "root": str(root),
+        **report.to_json(),
+    }
+
+
+def _agents_health(args: argparse.Namespace) -> dict[str, Any]:
+    """What this machine could generate with. Dispatches nothing.
+
+    Read-only in the sense that matters: probes reach loopback endpoints and
+    the trusted model directories, never a remote host, and no generation is
+    started.
+    """
+    import tempfile
+
+    from .agents.service import AgentProviderService, AgentServiceOptions
+
+    root = Path(tempfile.mkdtemp(prefix="bunny-agents-health-"))
+    service = AgentProviderService(AgentServiceOptions(root=root, start_worker=False))
+    try:
+        status = service.providers_status()
+    finally:
+        service.close()
+    return {
+        "effect": (
+            "REPORTED the configured model providers, their standing ladders and "
+            "health; probed loopback endpoints only; started no generation"
+        ),
+        **status,
     }
 
 

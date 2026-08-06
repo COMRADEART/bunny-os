@@ -60,6 +60,7 @@ __all__ = [
     "MAX_RESPONSE_BYTES",
     "OPERATIONS",
     "PROTOCOL_SCHEMA_VERSION",
+    "PROVIDER_OPERATIONS",
     "SPEECH_OPERATIONS",
     "CompanionClient",
     "CompanionClientError",
@@ -461,6 +462,35 @@ OPERATIONS: Mapping[str, Operation] = {
             ),
             mutating=True,
         ),
+        # -- agent providers (§21). Note what is absent: no operation carries
+        # a credential, names an arbitrary endpoint, or mutates provider
+        # configuration. Configuration is a file the user edits; these
+        # operations only read, explain, test locally, and cancel.
+        Operation("providers_list"),
+        Operation("providers_status"),
+        Operation(
+            "providers_explain",
+            (
+                Parameter("taskClass", "string", required=True, maximum_length=32),
+                Parameter("classification", "string", maximum_length=32, default="internal"),
+                Parameter("locality", "string", maximum_length=32, default="device-only"),
+                Parameter("needsStructuredOutput", "boolean", default=False),
+                Parameter("needsToolProposals", "boolean", default=False),
+            ),
+        ),
+        Operation("provider_models", (Parameter("providerId", "identifier", required=True),)),
+        Operation("provider_health", (Parameter("providerId", "identifier", default=None),)),
+        Operation(
+            "provider_test_local",
+            (Parameter("providerId", "identifier", default=None),),
+            mutating=True,
+        ),
+        Operation("task_provider_status", (Parameter("taskId", "identifier", required=True),)),
+        Operation(
+            "task_provider_cancel",
+            (Parameter("taskId", "identifier", required=True),),
+            mutating=True,
+        ),
     )
 }
 
@@ -477,6 +507,13 @@ VOICE_OPERATIONS: Mapping[str, Operation] = {
 #: one table read twice.
 SPEECH_OPERATIONS: Mapping[str, Operation] = {
     name: item for name, item in OPERATIONS.items() if name.startswith("speech_input_")
+}
+
+#: The agent-provider subset, derived for the same reason:
+#: :mod:`companion.agents.service` validates against exactly these objects.
+PROVIDER_OPERATIONS: Mapping[str, Operation] = {
+    name: item for name, item in OPERATIONS.items()
+    if name.startswith(("providers_", "provider_", "task_provider_"))
 }
 
 
@@ -518,6 +555,14 @@ class RuntimeGateway(TypingProtocol):
     def speech_input_cancel(self, **params: Any) -> Mapping[str, Any]: ...
     def speech_input_confirm(self, **params: Any) -> Mapping[str, Any]: ...
     def speech_input_retry(self, **params: Any) -> Mapping[str, Any]: ...
+    def providers_list(self) -> Mapping[str, Any]: ...
+    def providers_status(self) -> Mapping[str, Any]: ...
+    def providers_explain(self, **params: Any) -> Mapping[str, Any]: ...
+    def provider_models(self, **params: Any) -> Mapping[str, Any]: ...
+    def provider_health(self, **params: Any) -> Mapping[str, Any]: ...
+    def provider_test_local(self, **params: Any) -> Mapping[str, Any]: ...
+    def task_provider_status(self, **params: Any) -> Mapping[str, Any]: ...
+    def task_provider_cancel(self, **params: Any) -> Mapping[str, Any]: ...
 
 
 class CompanionProtocol:

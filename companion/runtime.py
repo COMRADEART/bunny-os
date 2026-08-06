@@ -955,14 +955,29 @@ class CompanionRuntime:
     ) -> CompanionTask:
         """Ask about everything that needs asking, and act on nothing until answered."""
         selection = decision.selection()
+        # An executor that can describe its remote destination precisely gets
+        # to: the full declaration — provider, model, endpoint, data classes,
+        # context bucket, cost ceiling, tool set — feeds the destination
+        # fingerprint, so §8's "changed anything" cases all land as
+        # ApprovalMismatch. Duck-typed like the consent extras: an executor
+        # without the method falls back to the route's coarse identity.
+        declaration_source = getattr(executor, "destination_declaration", None)
+        if not executor.declaration.local and callable(declaration_source):
+            remote_declaration: Mapping[str, Any] | None = dict(declaration_source(task))
+        elif selection is not None and selection.destination != "local":
+            remote_declaration = {
+                "routeTarget": decision.route.target,
+                "providerId": decision.route.provider_id,
+            }
+        else:
+            remote_declaration = None
         requirements = requirements_for(
             task, session, plan,
             executor_is_local=executor.declaration.local,
             executor_provider_id=executor.declaration.provider_id if not executor.declaration.local else "",
             executor_cost_class=executor.declaration.cost_class,
             broker=self.broker,
-            provider_declaration={"routeTarget": decision.route.target, "providerId": decision.route.provider_id}
-            if selection is not None and selection.destination != "local" else None,
+            provider_declaration=remote_declaration,
         )
         if not requirements:
             return task

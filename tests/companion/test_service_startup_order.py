@@ -151,9 +151,15 @@ class StartupOrder(unittest.TestCase):
             "validate-configuration",
             "acquire-singleton",
             "bind-endpoint",
+            # Constructed only, before the durable state: the runtime built
+            # there wires provider-backed executors over this object, and a
+            # constructed agent service owns a registry and a journal but no
+            # thread — the worker starts at its own step below.
+            "construct-agent-providers",
             "initialise-durable-state",
             "construct-voice-worker",
             "start-voice-worker",
+            "start-agent-worker",
             # Constructed only: no thread, no device and no model exist until
             # a person performs an explicit activation. §4's "no microphone
             # initialisation during service startup" is why there is no

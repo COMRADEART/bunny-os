@@ -450,6 +450,92 @@ def speech_inventory() -> dict[str, Any]:
     }
 
 
+#: Mirrors ``companion.agents.adapters.llamacli.ALLOWED_PROGRAMS`` — the one
+#: subprocess site the agent-provider subsystem has.
+_AGENT_CHILDREN = frozenset({"llama-cli"})
+
+
+def agents_inventory() -> dict[str, Any]:
+    """§24's agent-provider counts: children, workers, connections, streams.
+
+    Children are read from ``/proc`` exactly as the voice players are. HTTP
+    connections are read from the wire sessions' own registries — a connection
+    that outlives its generation is the leak the per-request design forbids —
+    and the queue depth and active-stream count are absolutes: anything but
+    zero between iterations is wrong whatever the baseline held.
+    """
+    import gc as _gc
+
+    children: list[str] = []
+    proc = Path("/proc")
+    if proc.is_dir():
+        own = os.getpid()
+        for entry in proc.iterdir():
+            if not entry.name.isdigit():
+                continue
+            try:
+                status = (entry / "status").read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            parent = 0
+            name = ""
+            for line in status.splitlines():
+                if line.startswith("PPid:"):
+                    parent = int(line.split()[1])
+                elif line.startswith("Name:"):
+                    name = line.split(maxsplit=1)[1].strip() if len(line.split()) > 1 else ""
+                if parent and name:
+                    break
+            if parent == own and name in _AGENT_CHILDREN:
+                children.append(name)
+
+    workers = 0
+    running_workers = 0
+    services = 0
+    connections = 0
+    queue_depth = 0
+    active_streams = 0
+    proposals = 0
+    for item in _gc.get_objects():
+        try:
+            name = type(item).__name__
+        except Exception:  # pragma: no cover - exotic proxies
+            continue
+        if name == "AgentWorker":
+            workers += 1
+            try:
+                if item.running:
+                    running_workers += 1
+                status = item.status()
+                queue_depth += int(status.get("queueDepth", 0))
+                active_streams += int(status.get("trackedJobs", 0))
+            except Exception:
+                continue
+        elif name == "AgentProviderService":
+            services += 1
+        elif name == "WireSession":
+            try:
+                connections += int(item.live_connections)
+            except Exception:
+                continue
+        elif name == "StreamAssembler":
+            try:
+                proposals += len(getattr(item, "_proposals", ()))
+            except Exception:
+                continue
+    return {
+        "agentChildren": len(children),
+        "agentChildNames": sorted(set(children)),
+        "liveAgentWorkers": workers,
+        "runningAgentWorkers": running_workers,
+        "liveAgentServices": services,
+        "httpConnections": connections,
+        "providerQueueDepth": queue_depth,
+        "activeStreams": active_streams,
+        "toolProposalsHeld": proposals,
+    }
+
+
 def memory_inventory() -> dict[str, Any]:
     """RSS from /proc, or NOT_RUN. Never a substitute measurement."""
     try:
@@ -521,6 +607,7 @@ def snapshot(label: str) -> dict[str, Any]:
         "runtime": runtime_inventory(),
         "voice": voice_inventory(),
         "speech": speech_inventory(),
+        "agents": agents_inventory(),
         "memory": memory_inventory(),
         "tempDirectories": len(list(Path(tempfile.gettempdir()).glob("bunny-*"))),
     }
@@ -560,6 +647,11 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
         ("temporarySpeechWorkspaces", ("speech", "temporarySpeechWorkspaces")),
         ("liveCaptureWorkers", ("speech", "liveCaptureWorkers")),
         ("liveSpeechServices", ("speech", "liveSpeechServices")),
+        # §24's agent-provider columns.
+        ("agentChildren", ("agents", "agentChildren")),
+        ("liveAgentWorkers", ("agents", "liveAgentWorkers")),
+        ("liveAgentServices", ("agents", "liveAgentServices")),
+        ("httpConnections", ("agents", "httpConnections")),
     ):
         start, end = _get(before, *path), _get(after, *path)
         if isinstance(start, int) and isinstance(end, int):
@@ -578,6 +670,10 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
     ):
         result[name] = _get(after, "speech", name) or 0
     result["listeningIndicator"] = bool(_get(after, "speech", "listeningIndicator"))
+    # §24's absolutes: a queued generation or a live stream between
+    # iterations is wrong whatever the baseline held.
+    for name in ("providerQueueDepth", "activeStreams"):
+        result[name] = _get(after, "agents", name) or 0
     # Absolute rather than differenced. A lease, a waiter, a held answer, an
     # outstanding question or a held store lock should be *empty* between
     # iterations, not merely unchanged — a delta of zero against a baseline that
@@ -912,6 +1008,160 @@ def _run_speech_slice() -> dict[str, Any]:
     }
 
 
+def _run_agents_lifecycle() -> dict[str, Any]:
+    """One complete provider-worker lifetime. §24's first gate.
+
+    The sequence a leak would accumulate across: a bounded real generation
+    where this host has a local model runtime (labelled ``real``; the HTTP
+    connection and its stream are where a leak would live), a generation
+    cancelled mid-stream against the scripted adapter (deterministically in
+    flight, which a real model cannot promise), a structured failure against a
+    loopback port with nothing behind it, and a worker restart that repeats
+    nothing. Everything runs in one service so the counts the snapshot takes
+    afterwards describe one object graph.
+    """
+    import threading as _threading
+
+    from companion.agents.config import (
+        AgentConfiguration, ProviderConfiguration, default_configuration,
+    )
+    from companion.agents.descriptor import EndpointIdentity
+    from companion.agents.registry import SelectionRequirement
+    from companion.agents.request import GenerationMessage, GenerationRequest
+    from companion.agents.service import AgentProviderService, AgentServiceOptions
+    from companion.agents.wire import HttpTarget
+    from companion.agents.adapters import default_adapters
+    from tests.companion.agents_support import ScriptedAdapter, scripted_configuration
+
+    problems: list[str] = []
+    mode = "scripted"
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-agents-") as directory:
+        scripted = ScriptedAdapter()
+        held = ScriptedAdapter(adapter_identity="scripted-hold", hold=_threading.Event())
+        configuration = AgentConfiguration(
+            providers=default_configuration(Path(directory)).providers + (
+                scripted_configuration(),
+                ProviderConfiguration(
+                    provider_id="local.hold",
+                    adapter_id="scripted-hold",
+                    endpoint=EndpointIdentity(kind="subprocess", locator="scripted"),
+                    program="scripted",
+                    model_id="scripted-model",
+                ),
+                ProviderConfiguration(
+                    provider_id="local.absent",
+                    adapter_id="llamacpp",
+                    endpoint=EndpointIdentity(kind="loopback-http", locator="127.0.0.1:19"),
+                    http=HttpTarget(scheme="http", host="127.0.0.1", port=19),
+                    model_id="absent-model",
+                ),
+            ),
+        )
+        adapters = dict(default_adapters())
+        adapters["scripted"] = scripted
+        adapters["scripted-hold"] = held
+        service = AgentProviderService(AgentServiceOptions(
+            root=Path(directory),
+            configuration=configuration,
+            adapters=adapters,
+        ))
+        try:
+            def _request(number: int, provider_id: str, *, deadline: float = 30.0,
+                         output_tokens: int = 48) -> GenerationRequest:
+                return GenerationRequest(
+                    request_id=f"gen-stress-{number:04d}-{os.getpid()}",
+                    session_id="", task_id="", lifecycle_epoch=0, plan_id="",
+                    provider_id=provider_id,
+                    model_id=service.registry.descriptor(
+                        provider_id, monotonic=time.monotonic()
+                    ).model_id or "scripted-model",
+                    purpose="probe",
+                    messages=(GenerationMessage(role="user", content="Reply with: ready"),),
+                    system_policy_reference="bunny-agent-policy/1",
+                    maximum_input_tokens=1024,
+                    maximum_output_tokens=output_tokens,
+                    deadline_seconds=deadline,
+                    created_at="",
+                )
+
+            # 1. one bounded generation, real where the host has a runtime.
+            explanation = service.registry.select(
+                SelectionRequirement(task_class="question"),
+                monotonic=time.monotonic(),
+            )
+            chosen = explanation.selected
+            if chosen in ("local.ollama", "local.llamacpp", "local.llamacli"):
+                mode = "real"
+            elif not explanation.found:
+                problems.append("no provider was eligible, not even the scripted one")
+                chosen = "local.scripted"
+            first = service.worker.generate(_request(1, chosen))
+            if not first.ok:
+                problems.append(
+                    f"the bounded generation on {chosen!r} failed: "
+                    f"{first.failure_kind}: {first.detail}"
+                )
+
+            # 2. a generation cancelled deterministically mid-stream.
+            second_request = _request(2, "local.hold", deadline=20.0)
+            held.started.clear()
+            outcome_box: list[Any] = []
+            runner = _threading.Thread(
+                target=lambda: outcome_box.append(service.worker.generate(second_request)),
+                name="stress-agents-cancel", daemon=True,
+            )
+            runner.start()
+            if not held.started.wait(timeout=10.0):
+                problems.append("the held generation never started streaming")
+            service.worker.cancel(second_request.request_id, reason="stress cancellation")
+            runner.join(timeout=15.0)
+            if runner.is_alive():
+                problems.append("the cancelled generation did not settle")
+            elif not outcome_box or not outcome_box[0].cancelled:
+                problems.append(
+                    "the mid-stream cancellation did not produce a cancelled outcome"
+                )
+
+            # 3. a structured failure that costs nothing and breaks nothing.
+            third = service.worker.generate(_request(3, "local.absent", deadline=10.0))
+            if third.ok:
+                problems.append("a generation against nothing reported success")
+            elif third.failure_kind not in ("connection", "timeout", "model-unavailable"):
+                problems.append(f"the failure named {third.failure_kind!r}")
+            if not service.worker.running:
+                problems.append("the worker died of a provider failure")
+
+            # 4. restart; nothing resumes, nothing repeats.
+            service.restart_worker(timeout=15.0)
+            status = service.worker.status()
+            if not status["running"]:
+                problems.append("the worker did not come back from the restart")
+            if status["generationsServed"] != 0:
+                problems.append("the restarted worker had already served generations")
+            if status["queueDepth"] != 0 or status["trackedJobs"] != 0:
+                problems.append("work survived the restart")
+            boundaries = service.boundaries()
+            if any(boundaries.values()):
+                problems.append("a boundary claim changed")
+        finally:
+            service.close()
+    return {"ok": not problems, "failures": problems, "ran": 4, "mode": mode}
+
+
+def _run_agent_slice() -> dict[str, Any]:
+    from companion.agents.vertical_slice import run_agent_slice
+
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-aslice-") as directory:
+        report = run_agent_slice(Path(directory)).to_json()
+    return {
+        "ok": report["passed"],
+        "failures": [item["name"] for item in report["failed"]],
+        "notRun": report["notRun"],
+        "ran": report["stepCount"],
+        "detail": [item["detail"] for item in report["failed"]][:2],
+    }
+
+
 TARGETS = {
     "service": lambda order, seed: _run_modules(SERVICE_MODULES, order=order, seed=seed),
     "suite": lambda order, seed: _run_modules(SUITE_MODULES, order=order, seed=seed),
@@ -925,6 +1175,8 @@ TARGETS = {
     "voice-renderer-slice": lambda order, seed: _run_voice_renderer_slice(),
     "speech": lambda order, seed: _run_speech_lifecycle(),
     "speech-slice": lambda order, seed: _run_speech_slice(),
+    "agents": lambda order, seed: _run_agents_lifecycle(),
+    "agent-slice": lambda order, seed: _run_agent_slice(),
 }
 
 
