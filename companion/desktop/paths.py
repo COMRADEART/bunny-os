@@ -286,7 +286,12 @@ class PathContext:
                 "resolved before this check, so a link pointing outside is refused here"
             )
 
-        forbidden = FORBIDDEN_DIRECTORY_NAMES.intersection(PurePosixPath(str(real)).parts)
+        # ``real.parts``, not ``PurePosixPath(str(real)).parts``. The latter
+        # splits on ``/`` only, so on a development machine with backslash
+        # separators the whole path is one part and the check silently matches
+        # nothing. A check that quietly stops checking on one platform is worse
+        # than no check, because the test that covers it goes on passing.
+        forbidden = FORBIDDEN_DIRECTORY_NAMES.intersection(real.parts)
         if forbidden:
             raise DesktopRefused(
                 f"the path passes through {sorted(forbidden)[0]!r}, which holds credentials "

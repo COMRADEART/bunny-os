@@ -418,7 +418,11 @@ def normalise(
     """
     descriptor = descriptor_for(action_id)
     validate_parameters(action_id, parameters)
-    if not descriptor.accepts(classification):
+    # The class of what *this action* carries, which is not the task's class
+    # for the four actions nothing of the task's flows into. See
+    # :attr:`companion.desktop.catalogue.ActionDescriptor.carries_task_data`.
+    effective = descriptor.effective_classification(classification)
+    if not descriptor.accepts(effective):
         raise DesktopRefused(
             f"{action_id} may be given data classified up to {descriptor.privacy_ceiling} and "
             f"this task is {classification}"
@@ -427,7 +431,7 @@ def normalise(
     handler = _NORMALISERS[action_id]
     return handler(
         dict(parameters),
-        classification=classification,
+        classification=effective,
         path_context=path_context,
         application_name=application_name,
         observed=observed,

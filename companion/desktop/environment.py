@@ -297,26 +297,32 @@ def probe_environment(
     unavailable: dict[str, str] = {}
     for action_id in ACTION_IDS:
         answer = per_action[action_id]
-        if not graphical and action_id not in _HEADLESS_CANDIDATES:
-            # §17, said once per action rather than discovered at the moment of
-            # attempt. The sentence names the *action*, because "there is no
-            # graphical session" alone leaves a user wondering which part failed.
-            unavailable[action_id] = (
-                f"{DESCRIPTORS[action_id].summary.lower()} needs a graphical session and there "
-                "is none here"
-            )
-            continue
-        if action_id == "desktop.uri.open" and not graphical:
-            unavailable[action_id] = (
-                "opening a URI with no graphical session is disabled by default; it needs an "
-                "explicitly supported headless policy"
-                if not headless_uri_policy
-                else ""
-            )
-            if headless_uri_policy and answer.available:
-                available.append(action_id)
-                unavailable.pop(action_id, None)
-            continue
+        if not graphical:
+            # §17's three cases, in order. The URI one is checked *first*
+            # because it is the exception to the blanket refusal below, and an
+            # earlier version of this loop had it second — where the `continue`
+            # above it made the policy unreachable and the flag did nothing.
+            if action_id == "desktop.uri.open":
+                if headless_uri_policy and answer.available:
+                    available.append(action_id)
+                else:
+                    unavailable[action_id] = (
+                        "opening a URI with no graphical session is disabled by default; it "
+                        "needs an explicitly supported headless policy"
+                        if not headless_uri_policy
+                        else answer.detail or "the URI opener is unavailable"
+                    )
+                continue
+            if action_id not in _HEADLESS_CANDIDATES:
+                # Said once per action rather than discovered at the moment of
+                # attempt. The sentence names the *action*, because "there is no
+                # graphical session" alone leaves a user wondering which part
+                # failed.
+                unavailable[action_id] = (
+                    f"{DESCRIPTORS[action_id].summary.lower()} needs a graphical session and "
+                    "there is none here"
+                )
+                continue
         if answer.available:
             available.append(action_id)
         else:

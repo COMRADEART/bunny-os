@@ -1381,7 +1381,17 @@ class CompanionRuntime:
             else:
                 self._emit(
                     task.session_id, task.task_id, "operation_failed",
-                    {"operationKey": key, "name": operation.name, "error": outcome.detail},
+                    {
+                        "operationKey": key, "name": operation.name, "error": outcome.detail,
+                        # The tool's own structured answer, kept on the failure
+                        # path as well as the success one. A tool that refused
+                        # for a reason it can express — an action the desktop
+                        # cannot perform, with the state and the sentence
+                        # attached — used to have all of that flattened into
+                        # `error`, and the typed result §12 requires never
+                        # reached the stream.
+                        "value": outcome.value,
+                    },
                     classification=task.classification,
                 )
                 task = task.with_operation(OperationReference(

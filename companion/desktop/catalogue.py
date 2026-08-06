@@ -144,6 +144,22 @@ class ActionDescriptor:
     #: The most sensitive data this action may be given. A clipboard write can
     #: carry personal text; a settings page cannot carry anything at all.
     privacy_ceiling: str = "internal"
+    #: Whether any of the task's own material reaches this action.
+    #:
+    #: The distinction matters and getting it wrong is not a small error in
+    #: either direction. An action that carries task data must be refused when
+    #: the task is classified above its ceiling — that is what the ceiling is
+    #: for. An action that carries *none* must not be, because refusing it
+    #: would mean a task marked ``personal`` could not open the sound settings,
+    #: which discloses nothing about the task at all. The first version of this
+    #: catalogue had no such field and did exactly that: every action inherited
+    #: the task's classification, and a personal task could open no settings
+    #: page, raise no window and change no volume.
+    #:
+    #: ``True`` is the default because it is the conservative reading: an action
+    #: added without thought is treated as though the task's material flows
+    #: through it.
+    carries_task_data: bool = True
     reversibility: str = "irreversible"
     #: The action id that undoes this one, when one exists. Empty means undo is
     #: not offered, and §11 forbids inventing one — "silently kill the
@@ -195,6 +211,14 @@ class ActionDescriptor:
             raise DesktopSchemaError(
                 f"{self.action_id!r} is declared irreversible and names an undo action"
             )
+
+    def effective_classification(self, task_classification: str) -> str:
+        """The class of the data *this action* carries, given the task's.
+
+        ``public`` for an action nothing of the task's flows into. See
+        :attr:`carries_task_data`.
+        """
+        return task_classification if self.carries_task_data else "public"
 
     def accepts(self, classification: str) -> bool:
         """Whether data of this class may be given to this action."""
@@ -293,6 +317,9 @@ DESCRIPTORS: Mapping[str, ActionDescriptor] = {
             backend="application-present",
             approval_class="interrupt_user_work",
             privacy_ceiling="internal",
+            # An application identifier and, at most, an opaque window handle.
+            # Nothing of the task's travels.
+            carries_task_data=False,
             reversibility="irreversible",
             supports_cancellation=True,
             supports_verification=False,
@@ -318,6 +345,7 @@ DESCRIPTORS: Mapping[str, ActionDescriptor] = {
             # A page identifier from a closed list. There is nothing here that
             # could carry user material.
             privacy_ceiling="internal",
+            carries_task_data=False,
             reversibility="irreversible",
             supports_cancellation=True,
             supports_verification=False,
@@ -336,6 +364,8 @@ DESCRIPTORS: Mapping[str, ActionDescriptor] = {
             backend="audio-control",
             approval_class="change_device_state",
             privacy_ceiling="internal",
+            # A percentage and a sink name. Neither comes from the task.
+            carries_task_data=False,
             reversibility="reversible",
             undo_action_id="desktop.audio.set-volume",
             supports_cancellation=True,
@@ -358,6 +388,8 @@ DESCRIPTORS: Mapping[str, ActionDescriptor] = {
             backend="settings",
             approval_class="change_device_state",
             privacy_ceiling="internal",
+            # One boolean.
+            carries_task_data=False,
             reversibility="reversible",
             undo_action_id="desktop.notifications.set-do-not-disturb",
             supports_cancellation=True,

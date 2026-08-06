@@ -302,12 +302,20 @@ class DesktopActionBroker:
         current do-not-disturb value are fetched *here*, so the prompt can say
         "from 35% to 50%" and so the previous state that an undo would restore
         was observed before the change rather than reconstructed after it.
+
+        **Availability is recorded here and enforced at execution.** Preparing
+        an action the machine cannot perform is not an error: the schema check,
+        the classification ceiling, the URI allowlist and the path resolution
+        all still apply and still refuse what they refuse, and the request that
+        comes out is a complete, checkable description of an act that will
+        report ``unsupported``. Refusing at preparation instead was the first
+        version and it was worse in the direction that matters — it turned a
+        headless machine into a *planning* failure, so the run had no request to
+        bind, no prompt to render and no typed result to record, and the honest
+        sentence §17 asks for never reached the task's history.
         """
         descriptor = descriptor_for(action_id)
         report = self.environment()
-        if not report.permits(action_id):
-            raise DesktopUnavailable(report.reason(action_id))
-
         observed = self._observe_before(action_id, parameters)
         application_name = ""
         if action_id in ("desktop.application.launch", "desktop.application.present"):
@@ -341,7 +349,11 @@ class DesktopActionBroker:
             action=action,
             binding=request.binding,
             undo_preview=_undo_preview(descriptor, action),
-            availability_detail=_availability_detail(report, action_id),
+            availability_detail=(
+                _availability_detail(report, action_id)
+                if report.permits(action_id)
+                else report.reason(action_id)
+            ),
         )
 
     def _observe_before(self, action_id: str, parameters: Mapping[str, Any]) -> dict[str, Any]:
@@ -640,6 +652,13 @@ class DesktopActionBroker:
 
         checkpoint("before the backend was reached")
 
+        # §15 step 1, enforced here rather than at preparation. The environment
+        # report is what answers it — a probe of the service, not a look at the
+        # filesystem — and the sentence it returns is the one the user reads.
+        report = self.environment()
+        if not report.permits(action_id):
+            raise DesktopUnsupported(report.reason(action_id))
+
         if action_id == "desktop.notification.show":
             outcome = self.adapters.notification.show(
                 title=parameters["title"],
@@ -823,6 +842,12 @@ class DesktopActionBroker:
         }
         if request.action_id == "desktop.audio.set-volume":
             previous.setdefault("outputId", outcome.state.get("outputId", request.target))
+        # Normalised *before* the availability question, not after. An adapter
+        # reports ``previousPercent``; undo reads ``percent``. Asking about the
+        # raw form was the first version, and it answered "no undo" for every
+        # action that had one — the button was simply never offered, which is
+        # the failure mode a test only catches if it asserts on the offer.
+        previous = _normalise_previous(previous)
         undo_available, undo_reason = _undo_availability(request, previous)
         notes: list[str] = []
         if outcome.mechanism:
@@ -840,7 +865,7 @@ class DesktopActionBroker:
             target_kind=request.target_kind,
             undo_available=undo_available,
             undo_action_id=request.undo_action_id if undo_available else "",
-            previous_state=_normalise_previous(previous),
+            previous_state=previous,
             notes=tuple(notes[:8]),
         )
 

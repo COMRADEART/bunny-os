@@ -1610,6 +1610,13 @@ class ServiceOptions:
     #: deliberately a service option rather than a runtime one — it is a
     #: deployment's decision about a headless machine, not a task's.
     desktop_headless_uri_policy: bool = False
+    #: Executors to offer *before* the shipped ones. The vertical slices use it
+    #: to register an executor that proposes the operations under test; nothing
+    #: in production sets it. An executor here is a canonical executor with no
+    #: extra authority — it returns plans, the runtime decides what may run, and
+    #: the tool broker performs — so the slice exercises the same refusals an
+    #: ordinary task does rather than a path around them.
+    extra_executors: tuple[Any, ...] = ()
 
 
 #: The order a companion service comes up in, and the whole of it.
@@ -2159,6 +2166,11 @@ class CompanionService:
         # support registers no desktop tools, so a plan naming one fails at the
         # allowlist exactly as a plan naming `shell.run` does.
         desktop = self._build_desktop(broker)
+        if self.options.extra_executors:
+            # First in the tuple is first in capability selection's preference
+            # order, so a slice executor that handles the task class it was
+            # written for takes the task and the shipped ones stay behind it.
+            executors = (*self.options.extra_executors, *executors)
         return CompanionRuntime(RuntimeOptions(
             store=CompanionStore(self.root / "store"),
             assessment=assessment,

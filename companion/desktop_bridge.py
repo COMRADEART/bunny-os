@@ -165,7 +165,22 @@ def desktop_tool_declarations() -> tuple[ToolDeclaration, ...]:
             destructive=False,
             external_destination=False,
             interrupts_user=True,
-            maximum_classification=DESCRIPTORS[action_id].privacy_ceiling,
+            # The broker's ceiling is about *the data the tool is given*, and
+            # for the four actions nothing of the task's flows into — a settings
+            # page, a window activation, a volume, a do-not-disturb value —
+            # that is nothing at all. Declaring the descriptor's ceiling here
+            # instead made a task classified `personal` unable to open the sound
+            # settings, which is a refusal with no privacy behind it: the page
+            # name is a word from a closed enum and discloses nothing.
+            #
+            # The descriptor's ceiling still applies, in
+            # :func:`companion.desktop.parameters.normalise`, against the class
+            # of what the action actually carries. Two checks, two questions.
+            maximum_classification=(
+                DESCRIPTORS[action_id].privacy_ceiling
+                if DESCRIPTORS[action_id].carries_task_data
+                else "secret"
+            ),
             requires_context=True,
         )
         for action_id in ACTION_IDS
