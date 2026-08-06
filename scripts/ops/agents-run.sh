@@ -57,15 +57,15 @@ case "${1:-}" in
       echo "gates starting on commit $(git -C "$WORKTREE" rev-parse HEAD 2>/dev/null || echo "$BUNNY_STRESS_COMMIT") at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
       echo "=== gate 1: 100 provider-worker lifecycles ==="
       $PYTHON scripts/companion_stress.py --target agents --runs 100 \
-        --output "$EVIDENCE/gate-agents-100.json" --verbose
+        --output "$EVIDENCE/gate-agents-100.json"
       echo "gate 1 exit: $?"
       echo "=== gate 2: 50 complete companion suites ==="
       $PYTHON scripts/companion_stress.py --target suite --runs 50 \
-        --output "$EVIDENCE/gate-suite-50.json" --verbose
+        --output "$EVIDENCE/gate-suite-50.json"
       echo "gate 2 exit: $?"
       echo "=== gate 3: 20 installed local-provider slices ==="
       $PYTHON scripts/companion_stress.py --target agent-slice --runs 20 \
-        --output "$EVIDENCE/gate-agent-slice-20.json" --verbose
+        --output "$EVIDENCE/gate-agent-slice-20.json"
       echo "gate 3 exit: $?"
       echo "gates finished at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
     } 2>&1 | tee "$EVIDENCE/gates.log"

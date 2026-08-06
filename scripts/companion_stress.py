@@ -1214,6 +1214,14 @@ def run_in_process(target: str, runs: int, *, order: str, verbose: bool) -> dict
             "delta": _delta(before, after),
             "sinceBaseline": _delta(baseline, after),
         }
+        # Whether the iteration exercised a real backend or a scripted one.
+        # Carried per iteration rather than once per run: a host whose model
+        # server dies half way through would otherwise produce a report that
+        # claims "real" for all of it.
+        if outcome.get("mode"):
+            record["mode"] = outcome["mode"]
+        if outcome.get("notRun"):
+            record["notRun"] = outcome["notRun"]
         if not record["ok"]:
             record["detail"] = outcome.get("detail", [])
             record["order"] = outcome.get("order")
