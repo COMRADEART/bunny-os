@@ -180,14 +180,25 @@ def main() -> int:
             time.sleep(0.01)
         return not speech.worker.active
 
+    injections = {"count": 0}
+
     def _speak() -> None:
+        # A fresh task identity and revision per injection: §8's replay guard
+        # refuses to re-speak an unchanged caption, correctly — and it did,
+        # which is why eleven captures were silent while every announce
+        # "succeeded". The harness speaks a *new* caption each time, as a
+        # runtime with a new result would.
+        injections["count"] += 1
         state = PresentationState(
-            session_id="measure-session", task_id="measure-injection",
+            session_id="measure-session",
+            task_id=f"measure-injection-{injections['count']}",
             phase="presenting_result", base_phase="presenting_result",
-            result_summary=SPOKEN, revision=1,
+            result_summary=SPOKEN, revision=injections["count"],
         )
         voice.refresh()
-        voice.announce(state)
+        request, reason = voice.announce(state)
+        if request is None:
+            report["notes"].append(f"injection {injections['count']} refused: {reason}")
 
     open_latency: list[float] = []
     first_frame: list[float] = []
