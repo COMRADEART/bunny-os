@@ -307,22 +307,21 @@ def run_speech_slice(root: Path) -> SpeechSliceReport:
         )
 
         # 8 -- known speech, through the loopback ---------------------------
-        injection = {"announced": False, "reason": "", "disposition": ""}
-        if opened and voice is not None:
+        def _inject(attempt: int) -> dict[str, Any]:
             from ..presentation import PresentationState
 
             state = PresentationState(
                 session_id=report.session_id,
-                task_id="speech-slice-injection",
+                task_id=f"speech-slice-injection-{attempt}",
                 phase="presenting_result",
                 base_phase="presenting_result",
                 result_summary=SPEECH_SLICE_SENTENCE,
-                revision=1,
+                revision=attempt,
             )
             voice.refresh()
             request, reason = voice.announce(state)
-            injection["announced"] = request is not None
-            injection["reason"] = reason
+            record = {"attempt": attempt, "announced": request is not None,
+                      "reason": reason, "disposition": ""}
             if request is not None:
                 _wait_for(
                     lambda: any(
@@ -331,17 +330,31 @@ def run_speech_slice(root: Path) -> SpeechSliceReport:
                     ),
                     timeout=30.0,
                 )
-                injection["disposition"] = next(
+                record["disposition"] = next(
                     (item["disposition"] for item in voice.queue.ledger
                      if item["requestId"] == request.request_id), "",
                 )
-        detected = opened and _wait_for(
-            lambda: any(
+            return record
+
+        def _detected() -> bool:
+            return any(
                 item.kind == "speech_detected"
                 for item in _events_for(speech, report.capture_request_id)
-            ),
-            timeout=30.0,
-        )
+            )
+
+        injections: list[dict[str, Any]] = []
+        if opened and voice is not None:
+            injections.append(_inject(1))
+            _wait_for(_detected, timeout=8.0)
+            if not _detected() and speech.worker.active:
+                # One retry of the *stimulus* only — a person would simply
+                # speak again, and the WSLg sink's cold resume has been
+                # observed to swallow a first utterance whole.
+                injections.append(_inject(2))
+        detected = opened and _wait_for(_detected, timeout=30.0)
+        injection = injections[-1] if injections else {
+            "announced": False, "reason": "", "disposition": "",
+        }
         report.record(
             8, "speech is detected",
             passed=detected if capture_possible else None,
@@ -355,7 +368,7 @@ def run_speech_slice(root: Path) -> SpeechSliceReport:
                  f"disposition={injection['disposition']!r} "
                  f"reason={injection['reason']!r}")
             ),
-            injection=dict(injection),
+            injections=list(injections),
         )
 
         # 9 -- a partial transcript -----------------------------------------

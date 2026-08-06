@@ -344,16 +344,47 @@ class Probe:
                 return item["atMs"]
         return None
 
-    def _speak_into_loopback(self) -> None:
+    def _speak_into_loopback(self, *, attempt: int = 1) -> dict[str, Any]:
+        """Play the known sentence into the sink, and record what became of it.
+
+        Recorded rather than assumed, because the first observed failures of
+        this probe were exactly here and carried no evidence: the capture ran
+        its silence timeout and nothing said whether the injection had played,
+        degraded or never been announced.
+        """
         from companion.presentation import PresentationState
 
         state = PresentationState(
-            session_id="probe-session", task_id="probe-injection",
+            session_id="probe-session", task_id=f"probe-injection-{attempt}",
             phase="presenting_result", base_phase="presenting_result",
-            result_summary=SPOKEN, revision=1,
+            result_summary=SPOKEN, revision=attempt,
         )
         self.voice.refresh()
-        self.voice.announce(state)
+        request, reason = self.voice.announce(state)
+        record: dict[str, Any] = {
+            "attempt": attempt,
+            "announced": request is not None,
+            "reason": reason,
+            "disposition": "",
+            "detail": "",
+        }
+        if request is not None:
+            deadline = time.monotonic() + 30.0
+            while time.monotonic() < deadline:
+                entry = next(
+                    (item for item in self.voice.queue.ledger
+                     if item.get("requestId") == request.request_id), None,
+                )
+                if entry is not None:
+                    record["disposition"] = str(entry.get("disposition", ""))
+                    record["detail"] = str(entry.get("detail", ""))[:200]
+                    break
+                # Keep the main loop turning while the utterance plays: the
+                # voice worker does not need it, but the capture-side events
+                # this probe watches arrive through it.
+                self.pump(seconds=0.1)
+        self.report.setdefault("injections", []).append(record)
+        return record
 
     def check_full_capture(self, device: str) -> None:
         outcome = self.speech.speech_input_start(
@@ -369,7 +400,14 @@ class Probe:
             return
         request_id = outcome["requestId"]
         self.pump(seconds=10.0, until=lambda: self._event_ms("capture_started", request_id) is not None)
-        self._speak_into_loopback()
+        self._speak_into_loopback(attempt=1)
+        # One retry, and only of the *stimulus*: the injection is harness, not
+        # runtime — a person would simply speak again — and the WSLg sink's
+        # cold-resume has been observed to swallow a first utterance whole.
+        self.pump(seconds=8.0, until=lambda: self._event_ms("speech_detected", request_id) is not None)
+        if (self._event_ms("speech_detected", request_id) is None
+                and self.speech.worker.active):
+            self._speak_into_loopback(attempt=2)
         self.pump(seconds=45.0, until=lambda: not self.speech.worker.active)
         self.pump(seconds=1.0)
 
