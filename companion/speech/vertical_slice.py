@@ -147,6 +147,7 @@ class _LoopbackSink:
         self.module_id = ""
         self.monitor = ""
         self.sink = ""
+        self._keepalive = None
 
     def create(self) -> "_LoopbackSink":
         import subprocess
@@ -162,15 +163,38 @@ class _LoopbackSink:
                 self.module_id = loaded.stdout.strip()
                 self.sink = self.NAME
                 self.monitor = f"{self.NAME}.monitor"
+                # A silent stream that holds the sink RUNNING for the whole
+                # harness lifetime. Measured, not decoration: monitor streams
+                # do not inhibit module-suspend-on-idle, and a monitor client
+                # that lives through the sink's suspend→resume transition was
+                # observed to receive silence for the rest of its life —
+                # matrix case F against case E, same process, seconds apart.
+                # Holding one sink-input open means the transition never
+                # happens while capture is attached. ``pacat`` reading
+                # /dev/zero is infinite silence: it costs the mix nothing and
+                # the detector's calibration reads it as the quiet room it is.
+                self._keepalive = subprocess.Popen(
+                    ["pacat", "--playback", f"--device={self.NAME}", "--raw",
+                     "--rate=8000", "--channels=1", "--format=s16le",
+                     "--client-name=bunny-loop-keepalive", "/dev/zero"],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
         except Exception:  # noqa: BLE001 - absence is a fallback, not a failure
             pass
         return self
 
     def destroy(self) -> None:
-        if not self.module_id:
-            return
         import subprocess
 
+        if self._keepalive is not None:
+            try:
+                self._keepalive.terminate()
+                self._keepalive.wait(timeout=10)
+            except Exception:  # noqa: BLE001 - teardown never raises
+                pass
+            self._keepalive = None
+        if not self.module_id:
+            return
         try:
             subprocess.run(
                 ["pactl", "unload-module", self.module_id],
