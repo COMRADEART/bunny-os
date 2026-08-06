@@ -110,9 +110,23 @@ class RecognizerDeclaration:
         )
 
     def handles_language(self, language: str, locale: str = "") -> bool:
-        if language not in self.languages:
-            return False
-        return not (locale and self.locales and locale not in self.locales)
+        """The language is the requirement; the locale is a preference.
+
+        Deliberately looser than the voice provider's rule, because the
+        directions differ: a synthesiser with no en-GB voice would *speak* the
+        wrong accent, which the user hears every time, while a recogniser
+        trained on en-US still transcribes British English — less accurately,
+        which §13's confirmation step exists to catch. Refusing an en model
+        over the region would cost the user the entire capture (measured: the
+        installed slice's first Linux run refused every capture because the
+        only installed model declared ``en-US`` against a default preference
+        of ``en-GB``) to satisfy an accent. When more than one recogniser is
+        installed, selection order still prefers the earlier registration; a
+        locale-aware preference between eligible models is future work, noted
+        in the report.
+        """
+        del locale
+        return language in self.languages
 
     def serves(self, request: SpeechInputRequest) -> tuple[bool, tuple[str, ...]]:
         """Whether this recogniser may take this capture, and every reason not.
