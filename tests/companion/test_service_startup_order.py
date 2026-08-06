@@ -154,6 +154,11 @@ class StartupOrder(unittest.TestCase):
             "initialise-durable-state",
             "construct-voice-worker",
             "start-voice-worker",
+            # Constructed only: no thread, no device and no model exist until
+            # a person performs an explicit activation. §4's "no microphone
+            # initialisation during service startup" is why there is no
+            # start-speech-worker step to order against.
+            "construct-speech-input",
             "publish-readiness",
         ))
 

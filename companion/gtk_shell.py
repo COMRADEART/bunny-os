@@ -132,6 +132,18 @@ class CompanionViewModel:
     #: holds and can reach nothing else.
     character: Any = None
     character_update: Any = None
+    #: Speech input, entirely through the protocol. The window holds a request
+    #: id and a token — never a device, never audio — and everything it shows
+    #: is read back from ``speech_input_status``. ``speech_phase`` is the
+    #: window's own idea of where the flow is: ``idle``, ``listening``,
+    #: ``transcribing`` or ``confirming``.
+    speech_request_id: str = ""
+    speech_token: str = ""
+    speech_phase: str = "idle"
+    speech_partial: str = ""
+    speech_final: Mapping[str, Any] | None = None
+    speech_error: str = ""
+    speech_indicator: Mapping[str, Any] = field(default_factory=dict)
 
     # -- connection --------------------------------------------------------
 
@@ -219,6 +231,13 @@ class CompanionViewModel:
                 self.state,
                 accessibility=_character_preferences(self.preferences),
                 speaking=self.speaking,
+                # §18: the microphone drives posture, never the mouth. The
+                # mapper already models listening and transcribing as
+                # first-class character states with their own fallback chains;
+                # these flags are the whole of what speech input contributes,
+                # and no lip-sync method is reachable from here.
+                listening=self.speech_phase == "listening",
+                transcribing=self.speech_phase == "transcribing",
             )
         except Exception as exc:  # pragma: no cover - the renderer's own guard runs first
             self.character_update = None
@@ -292,6 +311,211 @@ class CompanionViewModel:
             return False
         self.refresh()
         return True
+
+    # -- speech input -------------------------------------------------------
+    #
+    # Every method here is one protocol operation and a fold of its answer.
+    # The window never sees audio, never names a device it did not enumerate,
+    # and cannot start a capture except by the user's own press — these are
+    # the client half of §4, and the runtime enforces all of it again.
+
+    def speech_available(self) -> bool:
+        return bool(self.health.get("speechInputAvailable", False))
+
+    def press_to_talk(self) -> bool:
+        """The explicit activation. Called from the button and nowhere else."""
+        try:
+            if not self.session_id:
+                created = self.client.create_session("Bunny Companion")
+                session = created.get("session")
+                self.session_id = str(session.get("sessionId", "")) if isinstance(session, Mapping) else ""
+            answer = self.client.call("speech_input_start", {
+                "sessionId": self.session_id,
+                "activationSource": "push-to-talk-button",
+                "presentationRevision": self.revision,
+            })
+        except (CompanionClientError, OSError) as exc:
+            self.speech_error = str(exc)
+            return False
+        if not answer.get("accepted"):
+            self.speech_error = str(answer.get("detail", "the capture was refused"))
+            return False
+        self.speech_request_id = str(answer.get("requestId", ""))
+        self.speech_token = str(answer.get("cancellationToken", ""))
+        self.speech_phase = "listening"
+        self.speech_partial = ""
+        self.speech_final = None
+        self.speech_error = ""
+        return True
+
+    def stop_talking(self) -> bool:
+        """§15: the person's stop, overriding every automatic one."""
+        if not self.speech_request_id:
+            return False
+        try:
+            answer = self.client.call("speech_input_stop", {"requestId": self.speech_request_id})
+        except (CompanionClientError, OSError) as exc:
+            self.speech_error = str(exc)
+            return False
+        if answer.get("stopped"):
+            self.speech_phase = "transcribing"
+        return bool(answer.get("stopped"))
+
+    def cancel_speech(self) -> bool:
+        """Abandon the capture or the waiting transcript. No task either way."""
+        if not self.speech_request_id:
+            return False
+        try:
+            answer = self.client.call("speech_input_cancel", {
+                "requestId": self.speech_request_id,
+                "cancellationToken": self.speech_token,
+            })
+        except (CompanionClientError, OSError) as exc:
+            self.speech_error = str(exc)
+            return False
+        self._clear_speech()
+        return bool(answer.get("cancelled"))
+
+    def poll_speech(self) -> str:
+        """Fold the runtime's answer into the window's speech state.
+
+        Reads ``speech_input_status`` and the event stream it carries; the
+        transcript text shown for editing comes from the ``final_transcript``
+        event, which is the recogniser's answer as the runtime recorded it.
+        """
+        if self.speech_phase == "idle" or not self.speech_request_id:
+            return self.speech_phase
+        try:
+            status = self.client.call("speech_input_status")
+        except (CompanionClientError, OSError) as exc:
+            self.speech_error = str(exc)
+            return self.speech_phase
+        indicator = status.get("indicator")
+        if isinstance(indicator, Mapping):
+            state = indicator.get("state")
+            self.speech_indicator = dict(state) if isinstance(state, Mapping) else {}
+        current = status.get("current")
+        mine = isinstance(current, Mapping) and \
+            str(current.get("requestId", "")) == self.speech_request_id
+        for document in status.get("recentEvents", ()):
+            if not isinstance(document, Mapping):
+                continue
+            if str(document.get("requestId", "")) != self.speech_request_id:
+                continue
+            kind = document.get("kind")
+            if kind == "final_transcript":
+                self.speech_final = dict(document)
+                self.speech_phase = "confirming"
+            elif kind in ("speech_input_cancelled", "recognition_failed", "device_lost"):
+                if self.speech_phase != "confirming":
+                    self.speech_error = str(document.get("detail", "")) or str(kind)
+                    self._clear_speech()
+                    return self.speech_phase
+        if mine and self.speech_phase == "listening" and isinstance(current, Mapping):
+            partial = current.get("partialText")
+            if isinstance(partial, str) and partial:
+                self.speech_partial = partial
+            if str(current.get("phase", "")) == "finalizing":
+                self.speech_phase = "transcribing"
+        elif not mine and self.speech_phase == "listening":
+            # The capture ended without a final transcript reaching the ring
+            # yet; the next poll settles it one way or the other.
+            self.speech_phase = "transcribing"
+        return self.speech_phase
+
+    def confirm_speech(self, text: str) -> bool:
+        """Submit what the user reviewed — and possibly corrected — as a task."""
+        if not self.speech_request_id or self.speech_final is None:
+            self.speech_error = "there is no transcript waiting for confirmation"
+            return False
+        original = str(self.speech_final.get("text", ""))
+        edited = text.strip()
+        try:
+            answer = self.client.call("speech_input_confirm", {
+                "requestId": self.speech_request_id,
+                "sessionId": self.session_id,
+                "text": edited if edited and edited != original else None,
+                "reviewedDigest": str(self.speech_final.get("textDigest", "")),
+                "cancellationToken": self.speech_token,
+            })
+        except (CompanionClientError, OSError) as exc:
+            self.speech_error = str(exc)
+            return False
+        if not answer.get("submitted"):
+            self.speech_error = str(answer.get("reason", "the confirmation was refused"))
+            return False
+        task = answer.get("task")
+        if isinstance(task, Mapping):
+            self.task_id = str(task.get("taskId", ""))
+        self._clear_speech()
+        self.refresh(full=True)
+        return True
+
+    def retry_speech(self) -> bool:
+        """Another take. Pressing retry is itself the explicit activation."""
+        if not self.speech_request_id:
+            return False
+        try:
+            answer = self.client.call("speech_input_retry", {
+                "requestId": self.speech_request_id,
+                "activationSource": "push-to-talk-button",
+            })
+        except (CompanionClientError, OSError) as exc:
+            self.speech_error = str(exc)
+            return False
+        if not answer.get("accepted"):
+            self.speech_error = str(answer.get("detail", "the retry was refused"))
+            return False
+        self.speech_request_id = str(answer.get("requestId", ""))
+        self.speech_token = str(answer.get("cancellationToken", ""))
+        self.speech_phase = "listening"
+        self.speech_partial = ""
+        self.speech_final = None
+        return True
+
+    def _clear_speech(self) -> None:
+        self.speech_request_id = ""
+        self.speech_token = ""
+        self.speech_phase = "idle"
+        self.speech_partial = ""
+        self.speech_final = None
+        self.speech_indicator = {}
+
+    def speech_indicator_line(self) -> str:
+        """§5's facts, as one sentence the persistent indicator shows.
+
+        Built from the indicator state the runtime reported, never invented:
+        listening, device, locality, provider, elapsed time, retention.
+        """
+        state = self.speech_indicator
+        if not state or not state.get("listening"):
+            if self.speech_phase == "transcribing":
+                return "Transcribing — the microphone is closed"
+            if self.speech_phase == "confirming":
+                return "Review the transcript — nothing is submitted until you confirm"
+            return ""
+        parts = [
+            "Listening — the microphone is ON",
+            f"device {state.get('deviceId') or 'default'}",
+            str(state.get("locality", "local")),
+        ]
+        if state.get("providerId"):
+            parts.append(f"recogniser {state.get('providerId')}")
+        parts.append(f"{float(state.get('elapsedSeconds', 0.0)):.1f}s")
+        parts.append(
+            "audio not retained" if not state.get("audioRetained") else "audio retained"
+        )
+        return " · ".join(parts)
+
+    def speech_transcript_markup(self) -> str:
+        """Transcript text as Pango markup may carry it. The only path to a
+        markup-capable widget, and it escapes — §22's injection test reads
+        this method."""
+        from .speech.transcript import pango_escaped
+
+        if self.speech_final is not None:
+            return pango_escaped(str(self.speech_final.get("text", "")))
+        return pango_escaped(self.speech_partial)
 
     # -- rendering ---------------------------------------------------------
 
@@ -670,6 +894,11 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
         self.entry: Any = None
         self.error_label: Any = None
         self.picture: Any = None
+        self.mic_button: Any = None
+        self.mic_indicator: Any = None
+        self.transcript_box: Any = None
+        self.partial_label: Any = None
+        self.transcript_entry: Any = None
         self._hidden = False
         self._drawn_revision = -1
         self._drawn_phase = ""
@@ -769,7 +998,54 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
         self.entry.connect("activate", self._submit)
         entry_row.append(self.entry)
         entry_row.append(self._button("Submit", self._submit, "suggested-action"))
+        self.mic_button = self._button("🎤 Talk", self._push_to_talk)
+        self.mic_button.update_property(
+            [self.Gtk.AccessibleProperty.LABEL],
+            ["Push to talk. The microphone opens only while a capture you started is running."],
+        )
+        entry_row.append(self.mic_button)
         self.body.append(entry_row)
+
+        # §5's persistent indicator. One widget, always in the layout, visible
+        # for the whole capture interval, fed only from the runtime's own
+        # indicator state — the window renders listening, it never decides it.
+        self.mic_indicator = self._label("", "bunny-mic-indicator")
+        self.mic_indicator.set_visible(False)
+        self.mic_indicator.update_property(
+            [self.Gtk.AccessibleProperty.DESCRIPTION],
+            ["Microphone state: shown whenever audio is being captured"],
+        )
+        self.body.append(self.mic_indicator)
+
+        # The transcript review card: partial text while listening, the final
+        # text in an editable entry while confirming, and the four §14 verbs.
+        # ``set_text`` throughout — a transcript never reaches ``set_markup``,
+        # which is how markup in dictated words stays words.
+        self.transcript_box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=6)
+        self.transcript_box.add_css_class("bunny-transcript")
+        self.transcript_box.set_visible(False)
+        self.partial_label = self._label("", "bunny-partial")
+        self.partial_label.update_property(
+            [self.Gtk.AccessibleProperty.DESCRIPTION],
+            ["Provisional transcript; it may still change"],
+        )
+        # Announced politely and only on settles: a screen reader reading
+        # every partial revision aloud would talk over the person dictating.
+        self.transcript_box.append(self.partial_label)
+        self.transcript_entry = self.Gtk.Entry()
+        self.transcript_entry.set_hexpand(True)
+        self.transcript_entry.update_property(
+            [self.Gtk.AccessibleProperty.LABEL],
+            ["The transcript. Correct it here before confirming."],
+        )
+        self.transcript_entry.connect("activate", self._confirm_speech)
+        self.transcript_box.append(self.transcript_entry)
+        transcript_actions = self.Gtk.Box(orientation=self.Gtk.Orientation.HORIZONTAL, spacing=8)
+        transcript_actions.append(self._button("Confirm", self._confirm_speech, "suggested-action"))
+        transcript_actions.append(self._button("Retry", self._retry_speech))
+        transcript_actions.append(self._button("Cancel", self._cancel_speech, "destructive-action"))
+        self.transcript_box.append(transcript_actions)
+        self.body.append(self.transcript_box)
 
         self.error_label = self._label("", "error")
         self.body.append(self.error_label)
@@ -798,6 +1074,9 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
             .bunny-bubble { background: alpha(@accent_bg_color, .12); border-radius: 16px; padding: 12px; }
             .bunny-privacy { background: alpha(@view_fg_color, .06); border-radius: 10px; padding: 10px; }
             .bunny-indicator { font-weight: 700; }
+            .bunny-mic-indicator { font-weight: 700; background: alpha(@error_bg_color, .18); border-radius: 10px; padding: 10px; }
+            .bunny-transcript { background: alpha(@accent_bg_color, .08); border-radius: 12px; padding: 10px; }
+            .bunny-partial { font-style: italic; opacity: .8; }
             .caption-heading { font-size: .82em; font-weight: 700; opacity: .75; }
             .approval-card { border: 2px solid @accent_bg_color; border-radius: 14px; padding: 14px; }
             .review-card { background: alpha(@view_fg_color, .05); border-radius: 10px; padding: 10px; }
@@ -815,6 +1094,57 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
         if self.model.submit(text):
             self.entry.set_text("")
         self._draw(force=True)
+
+    # -- speech input ------------------------------------------------------
+
+    def _push_to_talk(self, _widget: Any) -> None:
+        """One button, two meanings, by state: start listening, or stop."""
+        if self.model.speech_phase == "listening":
+            self.model.stop_talking()
+        else:
+            self.model.press_to_talk()
+        self._draw_speech()
+
+    def _confirm_speech(self, _widget: Any) -> None:
+        if self.model.confirm_speech(self.transcript_entry.get_text()):
+            self.transcript_entry.set_text("")
+        self._draw(force=True)
+        self._draw_speech()
+
+    def _retry_speech(self, _widget: Any) -> None:
+        self.model.retry_speech()
+        self._draw_speech()
+
+    def _cancel_speech(self, _widget: Any) -> None:
+        self.model.cancel_speech()
+        self._draw_speech()
+
+    def _draw_speech(self) -> None:
+        """The speech surfaces, drawn from the model's folded state."""
+        phase = self.model.speech_phase
+        line = self.model.speech_indicator_line()
+        self.mic_indicator.set_text(line)
+        self.mic_indicator.set_visible(bool(line))
+        self.mic_button.set_label(
+            "⏹ Stop" if phase == "listening" else "🎤 Talk"
+        )
+        self.mic_button.set_sensitive(phase in ("idle", "listening"))
+        confirming = phase == "confirming" and self.model.speech_final is not None
+        self.transcript_box.set_visible(phase in ("listening", "transcribing") or confirming)
+        # set_text, never set_markup: the §22 injection test depends on the
+        # transcript path having no markup-interpreting widget on it.
+        self.partial_label.set_text(
+            f"… {self.model.speech_partial}" if self.model.speech_partial else
+            ("Transcribing…" if phase == "transcribing" else "")
+        )
+        self.partial_label.set_visible(phase in ("listening", "transcribing"))
+        self.transcript_entry.set_visible(confirming)
+        if confirming and not self.transcript_entry.get_text():
+            self.transcript_entry.set_text(
+                str(self.model.speech_final.get("text", ""))
+            )
+        if self.model.speech_error:
+            self.error_label.set_text(self.model.speech_error)
 
     def _resolve(self, binding: Mapping[str, Any], decision: str) -> None:
         self.model.resolve(binding, decision)
@@ -843,6 +1173,9 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
     def _poll(self) -> Any:
         self.model.refresh()
         self._draw()
+        if self.model.speech_phase != "idle":
+            self.model.poll_speech()
+            self._draw_speech()
         self.model.speak_if_new()
         return self.GLib.SOURCE_CONTINUE
 

@@ -27,7 +27,15 @@
         "voice_cancel",
         "voice_pause",
         "voice_resume",
-        "voice_explain"
+        "voice_explain",
+        "speech_input_health",
+        "speech_input_devices",
+        "speech_input_start",
+        "speech_input_status",
+        "speech_input_stop",
+        "speech_input_cancel",
+        "speech_input_confirm",
+        "speech_input_retry"
       ]
     },
     "request": {

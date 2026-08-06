@@ -77,6 +77,11 @@ from .runtime import CompanionRuntime
 # runs one way: the companion knows about voice, voice knows nothing about the
 # companion's runtime.
 from .voice.policy import VoicePreferences
+# The same arrangement for speech input, for the same reason: the service
+# reaches it through :meth:`CompanionService._build_speech`, and the dependency
+# runs one way — the companion knows about speech input, speech input knows
+# nothing about the runtime, the store or the approvals.
+from .speech.policy import SpeechInputPreferences
 
 __all__ = [
     "STARTUP_SEQUENCE",
@@ -515,6 +520,11 @@ class CompanionGateway:
         #: asking a machine with speech disabled why it is not talking should be
         #: told, and §8 means the answer costs the task nothing either way.
         self.voice = voice
+        #: Attached by the service after the voice worker exists, through
+        #: :meth:`attach_speech`. Same contract as ``voice``: absent means
+        #: every ``speech_input_*`` operation answers "no speech-input
+        #: runtime" and typed input is the whole of input.
+        self.speech: "SpeechInputService | None" = None
         self._work: "queue.Queue[str | None]" = queue.Queue()
         self._running: set[str] = set()
         self._queued: set[str] = set()
@@ -712,11 +722,14 @@ class CompanionGateway:
             "recentWorkerFaults": self.recent_faults(),
             "audioOutputAvailable": self.audio_output_available,
             "displayAvailable": self.display_available,
-            # Stated rather than implied. A reader should not have to infer from
-            # an absence that no microphone is running and no provider is
-            # configured; §16 and §11 both turn on that being said out loud.
-            "microphoneActive": False,
+            # Stated rather than implied, and now *read* rather than constant:
+            # the speech-input runtime exists, so "is the microphone open" is a
+            # question with a live answer. At service start it is False by
+            # construction — nothing initialises capture during startup — and
+            # any other answer here is a capture the user explicitly began.
+            "microphoneActive": bool(self.speech is not None and self.speech.worker.active),
             "microphonePolicy": "explicit activation only; never at service start",
+            "speechInputAvailable": self.speech is not None,
             "remoteProviders": [],
             "paidProviderConfigured": False,
             "accessibility": self.preferences.to_json(),
@@ -1129,6 +1142,182 @@ class CompanionGateway:
             return self._voice_unavailable("voice_explain")
         return {"available": True, **self.voice.voice_explain(requestId=requestId)}
 
+    # -- speech input --------------------------------------------------------
+    #
+    # Eight methods, thin like voice's eight, with one deliberate exception:
+    # ``speech_input_confirm`` is where a confirmed transcript becomes a task,
+    # because this gateway is the only object that holds both the speech
+    # ledger's answer and the runtime. The speech service validates the
+    # confirmation and hands back text; the submission happens here, through
+    # exactly the same ``submit_task`` path a typed request takes — a dictated
+    # task is not a special task.
+
+    def attach_speech(self, speech: "SpeechInputService") -> None:
+        """Wire the speech-input runtime in, and give it its one way to submit.
+
+        The hook is how the immediate-submission preference reaches a task:
+        the speech service calls it with a confirmed submission and never sees
+        what it is a closure over.
+        """
+        self.speech = speech
+        speech.set_submission_hook(self._submit_confirmed_transcript)
+
+    def _submit_confirmed_transcript(self, submission: Any) -> str:
+        session_id = submission.transcript.session_id
+        task = self.runtime.submit_task(session_id, submission.text)
+        self._schedule(task.task_id)
+        return task.task_id
+
+    def _speech_unavailable(self, operation: str) -> dict[str, Any]:
+        return {
+            "available": False,
+            "operation": operation,
+            "reason": (
+                "this companion service is running without a speech-input runtime; "
+                "typed input is the whole of input and the task surface is unaffected"
+            ),
+            "typedInputPreserved": True,
+            "taskAffected": False,
+        }
+
+    def speech_input_health(self) -> dict[str, Any]:
+        if self.speech is None:
+            return self._speech_unavailable("speech_input_health")
+        return {"available": True, **self.speech.speech_input_health()}
+
+    def speech_input_devices(self) -> dict[str, Any]:
+        if self.speech is None:
+            return self._speech_unavailable("speech_input_devices")
+        return {"available": True, **self.speech.speech_input_devices()}
+
+    def speech_input_start(
+        self,
+        *,
+        sessionId: str,
+        activationSource: str,
+        language: str,
+        locale: str,
+        deviceId: str,
+        providerId: str,
+        maxCaptureMs: int,
+        initialSilenceMs: int,
+        endpointSilenceMs: int,
+        partialTranscripts: bool,
+        confirmationRequired: bool,
+        presentationRevision: int,
+    ) -> dict[str, Any]:
+        if self.speech is None:
+            return self._speech_unavailable("speech_input_start")
+        # The session must exist before a microphone opens for it: a capture
+        # against an invented session would produce a transcript nothing could
+        # ever submit, discovered only at confirmation.
+        self.runtime.session(sessionId)
+        return {"available": True, **self.speech.speech_input_start(
+            sessionId=sessionId,
+            activationSource=activationSource,
+            language=language,
+            locale=locale,
+            deviceId=deviceId,
+            providerId=providerId,
+            maxCaptureMs=maxCaptureMs,
+            initialSilenceMs=initialSilenceMs,
+            endpointSilenceMs=endpointSilenceMs,
+            partialTranscripts=partialTranscripts,
+            confirmationRequired=confirmationRequired,
+            presentationRevision=presentationRevision,
+        )}
+
+    def speech_input_status(self) -> dict[str, Any]:
+        if self.speech is None:
+            return self._speech_unavailable("speech_input_status")
+        return {"available": True, **self.speech.speech_input_status()}
+
+    def speech_input_stop(self, *, requestId: str) -> dict[str, Any]:
+        if self.speech is None:
+            return self._speech_unavailable("speech_input_stop")
+        return {"available": True, **self.speech.speech_input_stop(requestId=requestId)}
+
+    def speech_input_cancel(
+        self, *, requestId: str, cancellationToken: str
+    ) -> dict[str, Any]:
+        if self.speech is None:
+            return self._speech_unavailable("speech_input_cancel")
+        return {"available": True, **self.speech.speech_input_cancel(
+            requestId=requestId, cancellationToken=cancellationToken,
+        )}
+
+    def speech_input_confirm(
+        self,
+        *,
+        requestId: str,
+        sessionId: str,
+        text: str | None,
+        reviewedDigest: str,
+        cancellationToken: str,
+    ) -> dict[str, Any]:
+        if self.speech is None:
+            return self._speech_unavailable("speech_input_confirm")
+        submission, reason = self.speech.confirm_transcript(
+            requestId,
+            session_id=sessionId,
+            text=text,
+            reviewed_digest=reviewedDigest,
+            cancellation_token=cancellationToken,
+        )
+        if submission is None:
+            return {
+                "available": True,
+                "confirmed": False,
+                "submitted": False,
+                "reason": reason,
+                "taskCreated": False,
+                "typedInputPreserved": True,
+            }
+        try:
+            task = self.runtime.submit_task(sessionId, submission.text)
+        except CompanionError as exc:
+            # Confirmed and refused downstream — a transcript over the task
+            # bound, a session that lapsed. The record says both facts; the
+            # user's recourse is retry or typing, never a silent half-submit.
+            self.speech.worker.emit_external(
+                "transcript_rejected",
+                request_id=requestId,
+                session_id=sessionId,
+                payload={
+                    "detail": f"the runtime refused the submission: {exc}",
+                    "taskCreated": False,
+                },
+            )
+            return {
+                "available": True,
+                "confirmed": True,
+                "submitted": False,
+                "reason": str(exc),
+                "taskCreated": False,
+                "typedInputPreserved": True,
+            }
+        scheduled = self._schedule(task.task_id)
+        self.speech.record_submitted(requestId, sessionId, task.task_id)
+        return {
+            "available": True,
+            "confirmed": True,
+            "submitted": True,
+            "task": task.view(PRESENTATION_AUDIENCE),
+            "sessionId": sessionId,
+            "scheduled": scheduled,
+            "userEdited": submission.transcript.user_edited,
+            "taskCreated": True,
+        }
+
+    def speech_input_retry(
+        self, *, requestId: str, activationSource: str
+    ) -> dict[str, Any]:
+        if self.speech is None:
+            return self._speech_unavailable("speech_input_retry")
+        return {"available": True, **self.speech.speech_input_retry(
+            requestId=requestId, activationSource=activationSource,
+        )}
+
     def _outstanding_requests(self, task_id: str) -> tuple[tuple[str, float], ...]:
         """Unanswered questions belonging to one task, whether or not asked yet.
 
@@ -1228,6 +1417,14 @@ class ServiceOptions:
     #: as a configuration flag that a deployment can actually set.
     voice_enabled: bool = True
     voice_preferences: "VoicePreferences | None" = None
+    #: Build a speech-input runtime inside this service. The same shape as
+    #: voice: turning it off leaves every ``speech_input_*`` operation
+    #: answering "no speech-input runtime", typed input untouched, and nothing
+    #: else different. Construction opens no device and starts no thread — §4
+    #: forbids microphone initialisation at service startup, and the flag
+    #: gates only whether the *objects* exist.
+    speech_enabled: bool = True
+    speech_preferences: "SpeechInputPreferences | None" = None
 
 
 #: The order a companion service comes up in, and the whole of it.
@@ -1251,6 +1448,7 @@ STARTUP_SEQUENCE: tuple[str, ...] = (
     "initialise-durable-state",
     "construct-voice-worker",
     "start-voice-worker",
+    "construct-speech-input",
     "publish-readiness",
 )
 
@@ -1287,11 +1485,37 @@ STARTUP_SEQUENCE: tuple[str, ...] = (
 RELEASE_ORDER: tuple[str, ...] = (
     "endpoint",
     "consent",
+    # Speech input before voice: its capture child may hold the microphone,
+    # and its output coordinator holds a reference into the voice worker —
+    # both point the same direction, and stopping capture first bounds the
+    # shutdown by the recorder's termination escalation.
+    "speech-input",
     "voice-runtime",
     "task-worker",
     "durable-state",
     "singleton",
 )
+
+
+class _LiveVoiceWorker:
+    """The voice worker as it is *now*, not as it was when speech was built.
+
+    :meth:`VoiceService.restart_worker` replaces the worker object; a
+    coordinator holding the old one would pause a worker with no audio to
+    pause. This proxy resolves through the service on every access, so the
+    speech runtime coordinates with whichever voice worker is current — and
+    still holds no reference to the runtime, the store or anything else the
+    service owns.
+    """
+
+    def __init__(self, service: "CompanionService") -> None:
+        self._service = service
+
+    def __getattr__(self, name: str):
+        voice = self._service.voice
+        if voice is None:
+            raise AttributeError(name)
+        return getattr(voice.worker, name)
 
 
 class StartupFailed(RuntimeError):
@@ -1320,6 +1544,7 @@ class CompanionService:
         self.consent: InteractiveConsent | None = None
         self.runtime: CompanionRuntime | None = None
         self.voice: "VoiceService | None" = None
+        self.speech: "SpeechInputService | None" = None
         self.gateway: CompanionGateway | None = None
         self.server: CompanionServer | None = None
         self.singleton: RuntimeSingleton | None = None
@@ -1503,6 +1728,24 @@ class CompanionService:
         if self.voice is not None:
             self.voice.worker.start()
 
+    def _step_construct_speech_input(self) -> None:
+        """Constructed only — no thread, no device, no model, per §4.
+
+        After the voice worker exists and is running, because the speech
+        runtime's output coordinator quiesces *that* worker before any capture;
+        and before readiness, so a client that can reach the endpoint can never
+        observe a service whose speech operations are half-wired. The §21
+        recovery pass runs inside the constructor, while nothing could be
+        capturing.
+        """
+        if not self.options.speech_enabled:
+            return
+        self.speech = self._build_speech()
+        if self.speech is not None:
+            self._unwind.append(("speech-input", self.speech.close))
+            assert self.gateway is not None
+            self.gateway.attach_speech(self.speech)
+
     def _step_publish_readiness(self) -> None:
         """The recovery pass, the task worker and the serving loop.
 
@@ -1545,6 +1788,32 @@ class CompanionService:
                 start_worker=False,
             ))
         except Exception:  # noqa: BLE001 - speech is never a reason not to start
+            return None
+
+    def _build_speech(self) -> "SpeechInputService | None":
+        """Construct the speech-input runtime, or carry on without one.
+
+        Swallowed on purpose, exactly as :meth:`_build_voice` is and for the
+        same §8-shaped reason: a companion whose service would not start
+        because a recorder or a recogniser was misconfigured would have made
+        speech input load-bearing for tasks. Typed input is unaffected and
+        every ``speech_input_*`` operation reports the absence.
+        """
+        from .speech.service import SpeechInputService, SpeechInputServiceOptions
+
+        assert self.runtime is not None
+        try:
+            return SpeechInputService(SpeechInputServiceOptions(
+                runtime_directory=self.root / "speech",
+                preferences=self.options.speech_preferences or SpeechInputPreferences(),
+                clock=self.runtime.clock,
+                # A live proxy rather than the worker object: the voice
+                # service replaces its worker on restart, and a coordinator
+                # holding the old one would quiesce a worker that no longer
+                # owns the speakers.
+                voice_worker=_LiveVoiceWorker(self) if self.voice is not None else None,
+            ))
+        except Exception:  # noqa: BLE001 - speech input is never a reason not to start
             return None
 
     def _build_runtime(self, consent: ConsentSource) -> CompanionRuntime:
@@ -1629,6 +1898,10 @@ class CompanionService:
             "voice": self.voice.describe() if self.voice is not None else {
                 "workerRunning": False,
                 "reason": "voice is disabled for this service",
+            },
+            "speechInput": self.speech.describe() if self.speech is not None else {
+                "capturing": False,
+                "reason": "speech input is disabled for this service",
             },
         }
 

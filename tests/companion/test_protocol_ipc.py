@@ -416,6 +416,10 @@ class RefusalTests(ServiceTestCase):
             # the thing it is checking would notice nothing.
             "voice_health", "voice_list", "voice_status", "voice_speak",
             "voice_cancel", "voice_pause", "voice_resume", "voice_explain",
+            # §20's speech-input operations, listed for the same reason.
+            "speech_input_health", "speech_input_devices", "speech_input_start",
+            "speech_input_status", "speech_input_stop", "speech_input_cancel",
+            "speech_input_confirm", "speech_input_retry",
         )))
 
     @unittest.skipIf(hasattr(socket, "AF_UNIX"), "the token guards the loopback fallback only")

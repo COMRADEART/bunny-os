@@ -60,6 +60,7 @@ __all__ = [
     "MAX_RESPONSE_BYTES",
     "OPERATIONS",
     "PROTOCOL_SCHEMA_VERSION",
+    "SPEECH_OPERATIONS",
     "CompanionClient",
     "CompanionClientError",
     "CompanionProtocol",
@@ -390,6 +391,76 @@ OPERATIONS: Mapping[str, Operation] = {
             "voice_explain",
             (Parameter("requestId", "identifier", default=""),),
         ),
+        # -- speech input ------------------------------------------------
+        #
+        # §20's eight, and deliberately no ninth. Note what none of them
+        # takes: no executable, no model path, no recording destination, no
+        # raw-audio retrieval, no URL, no arbitrary device command.
+        # ``speech_input_start`` names an *activation source* from a closed
+        # set the request schema enforces, and every free string it accepts is
+        # bounded here and validated again, more narrowly, at construction of
+        # the request. A client cannot make the runtime record to a path,
+        # load a model, or open a microphone silently — the operations have
+        # nowhere to put any of those asks.
+        Operation("speech_input_health"),
+        Operation("speech_input_devices"),
+        Operation(
+            "speech_input_start",
+            (
+                Parameter("sessionId", "identifier", required=True),
+                Parameter("activationSource", "string", required=True, maximum_length=64),
+                Parameter("language", "string", maximum_length=8, default=""),
+                Parameter("locale", "string", maximum_length=16, default=""),
+                Parameter("deviceId", "string", maximum_length=128, default=""),
+                Parameter("providerId", "string", maximum_length=64, default=""),
+                Parameter("maxCaptureMs", "integer", default=30_000, minimum=1_000, maximum=300_000),
+                Parameter("initialSilenceMs", "integer", default=6_000, minimum=200, maximum=30_000),
+                Parameter("endpointSilenceMs", "integer", default=1_200, minimum=200, maximum=30_000),
+                Parameter("partialTranscripts", "boolean", default=True),
+                Parameter("confirmationRequired", "boolean", default=True),
+                Parameter("presentationRevision", "integer", default=0, maximum=1 << 40),
+            ),
+            mutating=True,
+        ),
+        Operation("speech_input_status"),
+        Operation(
+            "speech_input_stop",
+            (Parameter("requestId", "identifier", required=True),),
+            mutating=True,
+        ),
+        Operation(
+            "speech_input_cancel",
+            (
+                Parameter("requestId", "identifier", required=True),
+                Parameter("cancellationToken", "identifier", default=""),
+            ),
+            mutating=True,
+        ),
+        Operation(
+            "speech_input_confirm",
+            (
+                # The binding fields: the session the transcript belongs to and
+                # the digest of the text the user reviewed. The runtime checks
+                # both against what it holds; a confirmation about different
+                # words or a different session is refused rather than obeyed.
+                Parameter("requestId", "identifier", required=True),
+                Parameter("sessionId", "identifier", required=True),
+                # 4000, the transcript bound, not the 8192 request bound: an
+                # edited transcript is still a transcript.
+                Parameter("text", "string", maximum_length=4000, default=None),
+                Parameter("reviewedDigest", "string", maximum_length=128, default=""),
+                Parameter("cancellationToken", "identifier", default=""),
+            ),
+            mutating=True,
+        ),
+        Operation(
+            "speech_input_retry",
+            (
+                Parameter("requestId", "identifier", required=True),
+                Parameter("activationSource", "string", required=True, maximum_length=64),
+            ),
+            mutating=True,
+        ),
     )
 }
 
@@ -398,6 +469,14 @@ OPERATIONS: Mapping[str, Operation] = {
 #: at — :mod:`companion.voice.service` validates against exactly these objects.
 VOICE_OPERATIONS: Mapping[str, Operation] = {
     name: item for name, item in OPERATIONS.items() if name.startswith("voice_")
+}
+
+#: The speech-input subset, derived for the same reason:
+#: :mod:`companion.speech.service` validates against exactly these objects, so
+#: the schema a client is checked against and the schema the service serves are
+#: one table read twice.
+SPEECH_OPERATIONS: Mapping[str, Operation] = {
+    name: item for name, item in OPERATIONS.items() if name.startswith("speech_input_")
 }
 
 
@@ -431,6 +510,14 @@ class RuntimeGateway(TypingProtocol):
     def voice_pause(self, **params: Any) -> Mapping[str, Any]: ...
     def voice_resume(self, **params: Any) -> Mapping[str, Any]: ...
     def voice_explain(self, **params: Any) -> Mapping[str, Any]: ...
+    def speech_input_health(self, **params: Any) -> Mapping[str, Any]: ...
+    def speech_input_devices(self, **params: Any) -> Mapping[str, Any]: ...
+    def speech_input_start(self, **params: Any) -> Mapping[str, Any]: ...
+    def speech_input_status(self, **params: Any) -> Mapping[str, Any]: ...
+    def speech_input_stop(self, **params: Any) -> Mapping[str, Any]: ...
+    def speech_input_cancel(self, **params: Any) -> Mapping[str, Any]: ...
+    def speech_input_confirm(self, **params: Any) -> Mapping[str, Any]: ...
+    def speech_input_retry(self, **params: Any) -> Mapping[str, Any]: ...
 
 
 class CompanionProtocol:
