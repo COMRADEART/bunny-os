@@ -536,6 +536,110 @@ def agents_inventory() -> dict[str, Any]:
     }
 
 
+#: Programs the desktop broker may start. A child of one of these names between
+#: iterations is a clipboard owner that was not released or a settings window
+#: this process is still waiting on.
+_DESKTOP_CHILDREN = frozenset({
+    "wl-copy", "xclip", "pactl", "gsettings", "notify-send",
+    "gnome-control-center", "systemsettings", "systemsettings5",
+})
+
+
+def desktop_inventory() -> dict[str, Any]:
+    """What the desktop broker holds: handles, owners, connections, ledger.
+
+    §23's columns. Every one names something this process *owns* and must give
+    up: a portal request it opened, a selection a child of ours is holding, a
+    bus connection, an attempt still in flight, an approval it has spent.
+
+    ``ledgerConsistent`` is the odd one out and is the most useful. It is not a
+    count but a *property*: every entry in every live ledger is either settled
+    or unknown, and none is left in ``started`` with nothing running. A ledger
+    that failed this between iterations would mean an attempt was begun and the
+    process forgot about it — which is precisely the state §20 turns into
+    ``unknown`` on the next start-up, and which should never exist while the
+    process is still alive.
+    """
+    import gc as _gc
+
+    children: list[str] = []
+    proc = Path("/proc")
+    if proc.is_dir():
+        own = os.getpid()
+        for entry in proc.iterdir():
+            if not entry.name.isdigit():
+                continue
+            try:
+                status = (entry / "status").read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            parent = 0
+            name = ""
+            for line in status.splitlines():
+                if line.startswith("PPid:"):
+                    parent = int(line.split()[1])
+                elif line.startswith("Name:"):
+                    name = line.split(maxsplit=1)[1].strip() if len(line.split()) > 1 else ""
+                if parent and name:
+                    break
+            if parent == own and name in _DESKTOP_CHILDREN:
+                children.append(name)
+
+    brokers = 0
+    portal_handles = 0
+    clipboard_owners = 0
+    notifications = 0
+    bus_connections = 0
+    inflight = 0
+    approvals_spent = 0
+    unknown_actions = 0
+    started_actions = 0
+    prepared_actions = 0
+    for item in _gc.get_objects():
+        try:
+            name = type(item).__name__
+        except Exception:  # pragma: no cover - exotic proxies
+            continue
+        if name == "DesktopActionBroker":
+            brokers += 1
+            try:
+                counts = item.adapters.resource_counts()
+                portal_handles += int(counts.get("portalHandles", 0))
+                clipboard_owners += int(counts.get("clipboardOwners", 0))
+                notifications += int(counts.get("notificationsTracked", 0))
+                bus_connections += int(counts.get("dbusConnections", 0))
+                inflight += len(item._inflight)  # noqa: SLF001 - the harness measures internals
+                approvals_spent += len(item.consumed)
+                for entry in item.ledger.entries.values():
+                    if entry.state == "unknown":
+                        unknown_actions += 1
+                    elif entry.state == "started":
+                        started_actions += 1
+            except Exception:
+                continue
+        elif name == "DesktopSupport":
+            try:
+                prepared_actions += len(item._prepared)  # noqa: SLF001
+            except Exception:
+                continue
+    return {
+        "desktopChildren": len(children),
+        "desktopChildNames": sorted(set(children)),
+        "liveDesktopBrokers": brokers,
+        "portalHandles": portal_handles,
+        "clipboardOwners": clipboard_owners,
+        "notificationsTracked": notifications,
+        "dbusConnections": bus_connections,
+        "pendingActions": inflight,
+        "approvalsSpent": approvals_spent,
+        "unknownActions": unknown_actions,
+        "startedActions": started_actions,
+        "preparedActions": prepared_actions,
+        # See the docstring: a property, not a count.
+        "ledgerConsistent": started_actions == 0,
+    }
+
+
 def memory_inventory() -> dict[str, Any]:
     """RSS from /proc, or NOT_RUN. Never a substitute measurement."""
     try:
@@ -608,6 +712,7 @@ def snapshot(label: str) -> dict[str, Any]:
         "voice": voice_inventory(),
         "speech": speech_inventory(),
         "agents": agents_inventory(),
+        "desktop": desktop_inventory(),
         "memory": memory_inventory(),
         "tempDirectories": len(list(Path(tempfile.gettempdir()).glob("bunny-*"))),
     }
@@ -652,6 +757,13 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
         ("liveAgentWorkers", ("agents", "liveAgentWorkers")),
         ("liveAgentServices", ("agents", "liveAgentServices")),
         ("httpConnections", ("agents", "httpConnections")),
+        # §23's desktop columns.
+        ("desktopChildren", ("desktop", "desktopChildren")),
+        ("liveDesktopBrokers", ("desktop", "liveDesktopBrokers")),
+        ("portalHandles", ("desktop", "portalHandles")),
+        ("clipboardOwners", ("desktop", "clipboardOwners")),
+        ("notificationsTracked", ("desktop", "notificationsTracked")),
+        ("dbusConnections", ("desktop", "dbusConnections")),
     ):
         start, end = _get(before, *path), _get(after, *path)
         if isinstance(start, int) and isinstance(end, int):
@@ -674,6 +786,15 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
     # iterations is wrong whatever the baseline held.
     for name in ("providerQueueDepth", "activeStreams"):
         result[name] = _get(after, "agents", name) or 0
+    # §23's desktop absolutes: an attempt in flight, a prepared action nobody
+    # spent, or an entry still `started` between iterations is wrong whatever
+    # the baseline held. `approvalsSpent` is *not* absolute — a spent approval
+    # is a record of consent that was used, and clearing it between iterations
+    # would be the replay guard forgetting.
+    for name in ("pendingActions", "preparedActions", "startedActions"):
+        result[name] = _get(after, "desktop", name) or 0
+    result["ledgerConsistent"] = bool(_get(after, "desktop", "ledgerConsistent"))
+    result["unknownActions"] = _get(after, "desktop", "unknownActions") or 0
     # Absolute rather than differenced. A lease, a waiter, a held answer, an
     # outstanding question or a held store lock should be *empty* between
     # iterations, not merely unchanged — a delta of zero against a baseline that
@@ -1162,6 +1283,158 @@ def _run_agent_slice() -> dict[str, Any]:
     }
 
 
+def _run_desktop_lifecycle() -> dict[str, Any]:
+    """One complete desktop-broker lifecycle, against whatever desk this is.
+
+    Six things happen, in the order a real task would meet them, and each is a
+    property the gate is *for* rather than a step towards one:
+
+    1. **prepare and execute an approved action.** The whole route: schema,
+       normalisation, binding, ledger-before-effect, adapter, observation,
+       result. Where the machine can perform it the effect is real; where it
+       cannot the result is a typed ``unsupported`` and the run continues,
+       because the authority half must hold on a headless runner too.
+    2. **refuse the same approval a second time.** The replay guard.
+    3. **refuse a changed act.** The binding, with one parameter moved.
+    4. **cancel one in flight.** The scope is claimed and released, and the
+       result says what it prevented.
+    5. **release every resource.** The counters this gate reads must return to
+       where they were, which is the leak assertion.
+    6. **reopen the ledger.** Completed stays completed; nothing in flight is
+       left ``started``.
+
+    A hundred of these is the §23 gate, and what it measures is that none of the
+    six leaves anything behind.
+    """
+    from companion.desktop.broker import BrokerOptions, DesktopActionBroker
+    from companion.desktop.ledger import OperationLedger
+
+    problems: list[str] = []
+    performed: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-desktop-") as directory:
+        ledger_path = Path(directory) / "ledger.json"
+        broker = DesktopActionBroker(BrokerOptions(ledger_path=ledger_path))
+        broker.start()
+        before = broker.adapters.resource_counts()
+        try:
+            report = broker.environment()
+            # 1. An action the environment permits, or the least-effect one it
+            # does not — a settings page opens a window and changes nothing.
+            action_id = "desktop.settings.open"
+            prepared = broker.prepare(
+                action_id, {"page": "sound"},
+                request_id="dreq-stress-1", session_id="stress-session",
+                task_id="stress-task", lifecycle_epoch=0, plan_id="stress-plan",
+                operation_id="stress-op-1", cancellation_token="stress-cancel-1",
+            )
+            result = broker.execute(
+                prepared.request.with_approval("stress-approval-1"),
+                approved_binding=prepared.binding,
+            )
+            performed.append(result.state)
+            if result.state not in (
+                "confirmed", "accepted-not-confirmed", "unsupported", "failed",
+            ):
+                problems.append(f"the first action reported {result.state!r}")
+            if result.state == "confirmed" and not result.observation.verifies:
+                problems.append("a confirmed result carried no verifying observation")
+
+            # 2. The replay guard.
+            replay = broker.execute(
+                prepared.request.with_approval("stress-approval-1"),
+                approved_binding=prepared.binding,
+            )
+            if replay.state not in ("refused", "accepted-not-confirmed", "confirmed", "unsupported"):
+                problems.append(f"a replayed approval reported {replay.state!r}")
+
+            # 3. A changed act, with the same approval.
+            changed = broker.prepare(
+                action_id, {"page": "display"},
+                request_id="dreq-stress-2", session_id="stress-session",
+                task_id="stress-task", lifecycle_epoch=0, plan_id="stress-plan",
+                operation_id="stress-op-2", cancellation_token="stress-cancel-2",
+            )
+            mismatched = broker.execute(
+                changed.request.with_approval("stress-approval-1"),
+                approved_binding=prepared.binding,
+            )
+            if mismatched.state != "refused":
+                problems.append(
+                    f"an act that changed after approval reported {mismatched.state!r}"
+                )
+
+            # 4. A cancellation that lands before the backend.
+            third = broker.prepare(
+                action_id, {"page": "power"},
+                request_id="dreq-stress-3", session_id="stress-session",
+                task_id="stress-task", lifecycle_epoch=0, plan_id="stress-plan",
+                operation_id="stress-op-3", cancellation_token="stress-cancel-3",
+            )
+            cancelled = broker.execute(
+                third.request.with_approval("stress-approval-3"),
+                approved_binding=third.binding,
+                cancelled=lambda: True,
+            )
+            if cancelled.state != "cancelled":
+                problems.append(f"a cancelled attempt reported {cancelled.state!r}")
+            if cancelled.effect_prevented is not True:
+                problems.append("a pre-dispatch cancellation did not claim prevention")
+
+            # 6a. The ledger, while the process still holds it.
+            still_started = [
+                item for item in broker.ledger.entries.values() if item.state == "started"
+            ]
+            if still_started:
+                problems.append(f"{len(still_started)} attempt(s) left in flight")
+            if not broker.environment().posture:
+                problems.append("the environment reported no posture")
+            if report.posture not in (
+                "desktop-actions-available", "limited-desktop-actions",
+                "notification-only", "headless-no-desktop-actions",
+            ):
+                problems.append(f"an unknown posture: {report.posture!r}")
+        finally:
+            # 5. Release, and check that it released.
+            released = broker.stop()
+            after = broker.adapters.resource_counts()
+            for key, start in before.items():
+                if int(after.get(key, 0)) > int(start):
+                    problems.append(
+                        f"{key} went from {start} to {after.get(key)} across one lifecycle"
+                    )
+
+        # 6b. Reopen. Completed stays completed; nothing is repeatable.
+        reopened = OperationLedger.load(ledger_path)
+        for entry in reopened.entries.values():
+            if entry.state == "started":
+                problems.append(f"{entry.key} reloaded as started rather than unknown")
+            if entry.state in ("completed", "undone") and entry.repeatable:
+                problems.append(f"{entry.key} reloaded as repeatable")
+
+    return {
+        "ok": not problems,
+        "failures": problems,
+        "ran": 6,
+        "states": performed,
+        "released": dict(released),
+    }
+
+
+def _run_desktop_slice() -> dict[str, Any]:
+    from companion.desktop.vertical_slice import run_desktop_slice
+
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-dslice-") as directory:
+        report = run_desktop_slice(Path(directory)).to_json()
+    return {
+        "ok": report["passed"],
+        "failures": [item["name"] for item in report["failed"]],
+        "notRun": report["notRun"],
+        "ran": report["stepCount"],
+        "posture": report["posture"],
+        "detail": [item["detail"] for item in report["failed"]][:2],
+    }
+
+
 TARGETS = {
     "service": lambda order, seed: _run_modules(SERVICE_MODULES, order=order, seed=seed),
     "suite": lambda order, seed: _run_modules(SUITE_MODULES, order=order, seed=seed),
@@ -1177,6 +1450,8 @@ TARGETS = {
     "speech-slice": lambda order, seed: _run_speech_slice(),
     "agents": lambda order, seed: _run_agents_lifecycle(),
     "agent-slice": lambda order, seed: _run_agent_slice(),
+    "desktop": lambda order, seed: _run_desktop_lifecycle(),
+    "desktop-slice": lambda order, seed: _run_desktop_slice(),
 }
 
 
