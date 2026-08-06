@@ -20,8 +20,8 @@ something was not run, it is listed as NOT_RUN with the reason, not omitted.
 | Starting commit | `50b1d4d14ddeecb76eca517984fd8e0edbdb749b` (verified head of the base branch) |
 | Working branch | `feature/companion-speech-input` |
 | Gate commit | `db9e0b1d6cebfa1e9b741feb0ed76e6409857b7d` (every gate iteration records it) |
-| Evidence commit | `EVIDENCE_COMMIT_PLACEHOLDER` |
-| Final SHA | `EVIDENCE_COMMIT_PLACEHOLDER` — the evidence commit is the last substantive commit; the closure commit that follows edits only this report's SHA lines and the §3 post-gate verification, and is non-build-affecting by construction |
+| Evidence commit | `0a788065358bccc2e2f98614c02adf4ce978e744` |
+| Final SHA | `0a788065358bccc2e2f98614c02adf4ce978e744` — the evidence commit is the last substantive commit; the closure commit that follows edits only this report's SHA lines and the §3 post-gate verification, and is non-build-affecting by construction |
 
 Preflight, before the branch was created: the full SHA of `50b1d4d1` was
 resolved and matched the branch head; the working tree was clean; and the
@@ -30,6 +30,13 @@ non-build-affecting — 0 installed paths, 11 unreachable (the voice-closure
 report and its evidence). The completed voice-closure branch was not modified;
 its evidence tree (`qualification/companion-voice-closure/`) is untouched by
 every commit on this branch.
+
+Post-gate closure: the analyzer over `db9e0b1..0a78806` (everything after the
+gate commit) reports **0 installed, 0 context-only, 11 unreachable** — the
+evidence files and this report. Nothing the gates measured differs from the
+gate commit by anything the build could see. As always, every commit changes
+the OCI configuration digest through the revision label; an unchanged layer
+digest is not an unchanged image.
 
 ## 2. Branch lineage
 
