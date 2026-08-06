@@ -128,6 +128,59 @@ def _wait_for(predicate, timeout: float = _WAIT) -> bool:
     return predicate()
 
 
+class _LoopbackSink:
+    """A null sink of our own, so the loopback owes nothing to the host's.
+
+    The WSLg RDP sink's monitor was measured serving silence to some client
+    constellations and sound to others — same invocations, same server,
+    different processes — which makes it a fine fallback and a poor
+    foundation. A ``module-null-sink`` is pure software inside the same real
+    pulse server: the voice runtime genuinely plays into it, ``parec``
+    genuinely records its monitor, and nothing depends on an RDP transport
+    this phase makes no claims about anyway. Where ``pactl`` cannot load one,
+    the slice falls back to the first monitor the host presents.
+    """
+
+    NAME = "bunny-speech-loop"
+
+    def __init__(self) -> None:
+        self.module_id = ""
+        self.monitor = ""
+        self.sink = ""
+
+    def create(self) -> "_LoopbackSink":
+        import subprocess
+
+        try:
+            loaded = subprocess.run(
+                ["pactl", "load-module", "module-null-sink",
+                 f"sink_name={self.NAME}", "rate=44100",
+                 f"sink_properties=device.description={self.NAME}"],
+                capture_output=True, text=True, timeout=15,
+            )
+            if loaded.returncode == 0 and loaded.stdout.strip().isdigit():
+                self.module_id = loaded.stdout.strip()
+                self.sink = self.NAME
+                self.monitor = f"{self.NAME}.monitor"
+        except Exception:  # noqa: BLE001 - absence is a fallback, not a failure
+            pass
+        return self
+
+    def destroy(self) -> None:
+        if not self.module_id:
+            return
+        import subprocess
+
+        try:
+            subprocess.run(
+                ["pactl", "unload-module", self.module_id],
+                capture_output=True, timeout=15,
+            )
+        except Exception:  # noqa: BLE001 - teardown never raises
+            pass
+        self.module_id = ""
+
+
 class _RecordingSink:
     """An indicator sink for the slice: displays by recording that it displayed.
 
@@ -177,12 +230,17 @@ def _task_count(client: CompanionClient, session_id: str) -> int:
 def run_speech_slice(root: Path) -> SpeechSliceReport:
     """The twenty-eight steps, in order, against a real service."""
     report = SpeechSliceReport()
+    loop_sink = _LoopbackSink().create()
     options = ServiceOptions(
         root=Path(root),
         machine="laptop",
         audio_output_available=True,
         display_available=True,
-        voice_preferences=VoicePreferences(),
+        # Into our own sink where one could be made: the injection is then a
+        # deterministic software loopback rather than a hostage of the host's
+        # RDP audio path. The preference only narrows — §11's rule — and the
+        # report records which sink actually carried the audio.
+        voice_preferences=VoicePreferences(preferred_device=loop_sink.sink),
         speech_preferences=SpeechInputPreferences(),
     )
     service = CompanionService(options)
@@ -232,7 +290,10 @@ def run_speech_slice(root: Path) -> SpeechSliceReport:
         # -- what this host can actually do --------------------------------
         speech.refresh()
         decision = speech.policy.decision
-        device_id, no_monitor = _monitor_source(speech)
+        if loop_sink.monitor:
+            device_id, no_monitor = loop_sink.monitor, ""
+        else:
+            device_id, no_monitor = _monitor_source(speech)
         recognizer_ready = any(item.ready for item in speech.registry.health())
         capture_possible = bool(decision.may_capture and device_id and recognizer_ready)
         absence = (
@@ -666,10 +727,12 @@ def run_speech_slice(root: Path) -> SpeechSliceReport:
             f"{report.backend_id or 'no backend'} capturing {report.device_id or 'no device'}; "
             "the capture device was a sink monitor carrying synthesised speech — "
             "no physical microphone was validated"
+            + ("; the sink was a null sink created for the slice" if loop_sink.sink else "")
         )
         return report
     finally:
         service.close()
+        loop_sink.destroy()
 
 
 def _answer_every_approval(client: CompanionClient, session_id: str, task_id: str) -> list[str]:

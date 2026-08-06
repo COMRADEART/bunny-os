@@ -267,15 +267,19 @@ class Probe:
                 ["espeak-ng", "-w", str(wav), SPOKEN],
                 check=True, capture_output=True, timeout=30,
             )
+            monitor = self.loop_sink.monitor or "RDPSink.monitor"
             recorder = subprocess.Popen(
-                ["parec", "--device=RDPSink.monitor", "--format=s16le",
+                ["parec", f"--device={monitor}", "--format=s16le",
                  "--rate=16000", "--channels=1", "--latency-msec=60",
                  "--client-name=probe-control", "--raw"],
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
             )
             time.sleep(0.5)
+            play_argv = ["paplay", "--client-name=probe-control-play"]
+            if self.loop_sink.sink:
+                play_argv.append(f"--device={self.loop_sink.sink}")
             play = subprocess.run(
-                ["paplay", "--client-name=probe-control-play", "--", str(wav)],
+                [*play_argv, "--", str(wav)],
                 capture_output=True, timeout=30,
             )
             time.sleep(0.5)
@@ -352,8 +356,17 @@ class Probe:
             phase="idle", base_phase="idle", status_text="",
         )
 
+        from companion.speech.vertical_slice import _LoopbackSink
+        from companion.voice.policy import VoicePreferences
+
+        # Our own null sink, for the reason the slice documents: the WSLg RDP
+        # monitor was measured serving silence to some client constellations
+        # and sound to others, and a probe of the *runtime* must not gate on a
+        # host transport this phase claims nothing about.
+        self.loop_sink = _LoopbackSink().create()
         voice = VoiceService(VoiceServiceOptions(
             runtime_directory=Path(self.arguments.runtime_directory) / "voice",
+            preferences=VoicePreferences(preferred_device=self.loop_sink.sink),
         ))
         self.voice = voice
         #: Everything the voice worker says about each injection: which
@@ -385,19 +398,20 @@ class Probe:
         speech.worker.subscribe(self.observe)
         speech.refresh()
 
-        device = ""
-        for backend in speech.router.backends:
-            try:
-                if not backend.health(monotonic=time.monotonic()).ready:
+        device = self.loop_sink.monitor
+        if not device:
+            for backend in speech.router.backends:
+                try:
+                    if not backend.health(monotonic=time.monotonic()).ready:
+                        continue
+                    for item in backend.discover():
+                        if item.monitor:
+                            device = item.device_id
+                            break
+                except Exception:  # noqa: BLE001
                     continue
-                for item in backend.discover():
-                    if item.monitor:
-                        device = item.device_id
-                        break
-            except Exception:  # noqa: BLE001
-                continue
-            if device:
-                break
+                if device:
+                    break
         recognizer_ready = any(item.ready for item in speech.registry.health())
         self.report["environment"] = {
             "monitorSource": device,
@@ -648,6 +662,8 @@ class Probe:
         self.link.close()
         self.speech.close()
         self.voice.close()
+        if getattr(self, "loop_sink", None) is not None:
+            self.loop_sink.destroy()
         self.pump(seconds=1.0)
         survivors = sorted(self.idle_sources - self.retired)
         speech_threads = sum(

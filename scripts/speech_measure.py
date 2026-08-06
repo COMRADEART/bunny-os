@@ -113,8 +113,14 @@ def main() -> int:
     gc.collect()
     report["memory"]["processBaseline"] = _memory()
 
+    from companion.speech.vertical_slice import _LoopbackSink
+    from companion.voice.policy import VoicePreferences
+
+    loop_sink = _LoopbackSink().create()
+    report["loopbackSink"] = loop_sink.sink or "host monitor fallback"
     voice = VoiceService(VoiceServiceOptions(
         runtime_directory=arguments.runtime_directory / "voice",
+        preferences=VoicePreferences(preferred_device=loop_sink.sink),
     ))
     gc.collect()
     report["memory"]["withVoiceRuntime"] = _memory()
@@ -139,19 +145,20 @@ def main() -> int:
 
     speech.attach_indicator_sink(_Sink())
 
-    device = ""
-    for backend in speech.router.backends:
-        try:
-            if not backend.health(monotonic=time.monotonic()).ready:
+    device = loop_sink.monitor
+    if not device:
+        for backend in speech.router.backends:
+            try:
+                if not backend.health(monotonic=time.monotonic()).ready:
+                    continue
+                for item in backend.discover():
+                    if item.monitor:
+                        device = item.device_id
+                        break
+            except Exception:  # noqa: BLE001
                 continue
-            for item in backend.discover():
-                if item.monitor:
-                    device = item.device_id
-                    break
-        except Exception:  # noqa: BLE001
-            continue
-        if device:
-            break
+            if device:
+                break
     recognizer_ready = any(item.ready for item in speech.registry.health())
     if not device or not recognizer_ready or not speech.policy.decision.may_capture:
         report["result"] = "NOT_RUN"
@@ -162,6 +169,7 @@ def main() -> int:
         _write(report, arguments)
         speech.close()
         voice.close()
+        loop_sink.destroy()
         return 2
 
     def _wait_idle(timeout: float = 60.0) -> bool:
@@ -352,6 +360,7 @@ def main() -> int:
 
     speech.close()
     voice.close()
+    loop_sink.destroy()
     _write(report, arguments)
     return 0
 
