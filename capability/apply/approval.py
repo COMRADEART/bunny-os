@@ -58,6 +58,22 @@ SENSITIVE_ACTIONS = frozenset({
     "stop_essential_service",
     "override_pinned_implementation",
     "send_sensitive_data",
+
+    # Effects on the user's own desktop, from companion.desktop. They are here
+    # rather than in a list of their own because membership of *this* set is
+    # what makes silence mean denial, and a desktop effect is exactly the kind
+    # of act that must not happen because nobody was at the machine to object.
+    #
+    # Each is narrow, and narrowness is the point: one word covering "do
+    # something to the desktop" would put "open the sound settings" and "put
+    # this text on the clipboard" behind the same question, and a user who
+    # allowed one would have allowed the other.
+    "change_device_state",
+    "launch_application",
+    "open_external_uri",
+    "open_settings_surface",
+    "reveal_file",
+    "write_clipboard",
 })
 
 

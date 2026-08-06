@@ -434,6 +434,12 @@ class RefusalTests(ServiceTestCase):
             "providers_list", "providers_status", "providers_explain",
             "provider_models", "provider_health", "provider_test_local",
             "task_provider_status", "task_provider_cancel",
+            # The desktop-action operations, listed for the same reason. Note
+            # what is not in this list: anything that *performs* an action. A
+            # client lists, explains, inspects, stops and undoes; causing a
+            # desktop effect needs a task, a plan and an approval.
+            "desktop_actions_list", "desktop_actions_status", "desktop_action_explain",
+            "desktop_action_cancel", "desktop_action_undo", "desktop_action_history",
         )))
 
     @unittest.skipIf(hasattr(socket, "AF_UNIX"), "the token guards the loopback fallback only")

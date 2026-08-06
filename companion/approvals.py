@@ -41,7 +41,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
-from typing import Any, Mapping, Protocol, Sequence
+from typing import Any, Callable, Mapping, Protocol, Sequence
 
 from capability.apply.approval import (
     APPROVAL_DECISIONS,
@@ -220,6 +220,7 @@ def requirements_for(
     executor_cost_class: str = "free",
     broker: ToolBroker | None = None,
     provider_declaration: Mapping[str, Any] | None = None,
+    refine: Callable[[Any], "ApprovalRequirement | None"] | None = None,
 ) -> tuple[ApprovalRequirement, ...]:
     """Everything about this plan that needs a person to say yes.
 
@@ -227,6 +228,19 @@ def requirements_for(
     executor that set ``requires_approval=False`` on an operation whose tool
     declares itself destructive still produces a requirement here — §12 lists
     what must be asked about, and an executor is not a party to that decision.
+
+    ``refine`` lets a subsystem replace the generic requirements for one
+    operation with a *more specific* one. It exists for desktop actions, where
+    the generic sentence — "Operation 'copy' would interrupt what you are
+    doing" — is exactly the vague label the desktop brief forbids, and where the
+    binding has to cover the normalised parameters rather than a destination
+    string.
+
+    Two properties keep it from being a way to weaken consent. A refinement
+    **replaces** the generic requirements for its operation rather than
+    suppressing them — an operation that refines produces exactly one
+    requirement, never zero — and a refiner that returns ``None`` or raises
+    changes nothing, so the generic path is what a failure falls back to.
     """
     requirements: list[ApprovalRequirement] = []
 
@@ -274,6 +288,15 @@ def requirements_for(
             ))
 
     for operation in plan.operations:
+        if refine is not None:
+            refined = refine(operation)
+            if refined is not None:
+                # One requirement, and a stricter one: it names the exact target
+                # and binds the normalised parameters. The generic checks below
+                # would add a second question about the same act in vaguer
+                # words, which is worse for the person answering.
+                requirements.append(refined)
+                continue
         declaration = broker.declaration(operation.tool) if broker is not None else None
         external = operation.destination != "local" or (declaration is not None and declaration.external_destination)
         if declaration is not None and declaration.destructive:

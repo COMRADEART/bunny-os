@@ -531,6 +531,12 @@ class CompanionGateway:
         #: operation answers "no agent-provider runtime" and the deterministic
         #: executor carries every task.
         self.agents = agents
+        #: Attached by the service after the runtime exists, through
+        #: :meth:`attach_desktop`. Absent means every ``desktop_action*``
+        #: operation answers "no desktop action broker" — and, unlike the other
+        #: three, means the tools are not on the allowlist at all.
+        self.desktop: Any = None
+        self._desktop_service: Any = None
         self._work: "queue.Queue[str | None]" = queue.Queue()
         self._running: set[str] = set()
         self._queued: set[str] = set()
@@ -1189,6 +1195,18 @@ class CompanionGateway:
         self.speech = speech
         speech.set_submission_hook(self._submit_confirmed_transcript)
 
+    def attach_desktop(self, desktop: Any) -> None:
+        """Wire the desktop action broker's *read* surface in.
+
+        Only the read surface. The gateway gains six operations that list,
+        explain, inspect, stop and undo; it gains no way to perform an action,
+        because the way to perform one is a task, a plan and an approval. See
+        :mod:`companion.desktop.service` for why that is a design and not an
+        omission.
+        """
+        self.desktop = desktop
+        self._desktop_service = None
+
     def _submit_confirmed_transcript(self, submission: Any) -> str:
         session_id = submission.transcript.session_id
         task = self.runtime.submit_task(session_id, submission.text)
@@ -1344,6 +1362,72 @@ class CompanionGateway:
         return {"available": True, **self.speech.speech_input_retry(
             requestId=requestId, activationSource=activationSource,
         )}
+
+    # -- desktop actions (§21) ----------------------------------------------
+
+    def _desktop_unavailable(self, operation: str) -> dict[str, Any]:
+        return {
+            "available": False,
+            "operation": operation,
+            "reason": (
+                "this companion service is running without a desktop action broker; no "
+                "desktop action is registered as a tool, so a plan naming one is refused "
+                "at the allowlist"
+            ),
+            "taskAffected": False,
+        }
+
+    def _desktop(self, operation: str, params: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        """One desktop operation, or the absence, said the same way every time.
+
+        The service object is built lazily and cached on first use: it is a thin
+        view over the broker, and constructing one per call would be free but
+        would also make ``self.desktop_service`` a thing that might not exist,
+        which is one more state for the tests to cover.
+        """
+        if self.desktop is None:
+            return self._desktop_unavailable(operation)
+        service = getattr(self, "_desktop_service", None)
+        if service is None:
+            from .desktop.service import DesktopActionService
+
+            service = DesktopActionService(self.desktop.broker)
+            self._desktop_service = service
+        return {"available": True, **service.serve(operation, params or {})}
+
+    def desktop_actions_list(self) -> dict[str, Any]:
+        return self._desktop("desktop_actions_list")
+
+    def desktop_actions_status(self) -> dict[str, Any]:
+        return self._desktop("desktop_actions_status")
+
+    def desktop_action_explain(self, *, actionId: str) -> dict[str, Any]:
+        return self._desktop("desktop_action_explain", {"actionId": actionId})
+
+    def desktop_action_cancel(
+        self, *, requestId: str, cancellationToken: str = ""
+    ) -> dict[str, Any]:
+        return self._desktop(
+            "desktop_action_cancel",
+            {"requestId": requestId, "cancellationToken": cancellationToken},
+        )
+
+    def desktop_action_undo(
+        self, *, idempotencyKey: str, sessionId: str | None = None
+    ) -> dict[str, Any]:
+        return self._desktop(
+            "desktop_action_undo",
+            {"idempotencyKey": idempotencyKey, "sessionId": sessionId} if sessionId
+            else {"idempotencyKey": idempotencyKey},
+        )
+
+    def desktop_action_history(
+        self, *, taskId: str | None = None, limit: int = 25
+    ) -> dict[str, Any]:
+        params: dict[str, Any] = {"limit": limit}
+        if taskId:
+            params["taskId"] = taskId
+        return self._desktop("desktop_action_history", params)
 
     # -- agent providers (§21) ----------------------------------------------
 
@@ -1514,6 +1598,18 @@ class ServiceOptions:
     #: Injected configuration for tests and slices. ``None`` loads
     #: ``<root>/agents/providers.json`` or the local-only defaults.
     agent_configuration: "AgentConfiguration | None" = None
+    #: Register the desktop actions as tools. The same shape as the three
+    #: subsystems above, with one difference worth stating: turning this off
+    #: does not leave the operations answering "no desktop runtime" and the
+    #: tools present-but-refusing — it leaves the tools **absent from the
+    #: allowlist**, so a plan naming one fails exactly as a plan naming
+    #: ``shell.run`` does. A capability that can be removed entirely should be
+    #: removable entirely.
+    desktop_enabled: bool = True
+    #: §17: permit opening a URI with no graphical session. Off by default and
+    #: deliberately a service option rather than a runtime one — it is a
+    #: deployment's decision about a headless machine, not a task's.
+    desktop_headless_uri_policy: bool = False
 
 
 #: The order a companion service comes up in, and the whole of it.
@@ -1593,6 +1689,20 @@ RELEASE_ORDER: tuple[str, ...] = (
     # voice, so a task settling out of a cancelled generation still has its
     # caption path while it records the interruption.
     "agent-providers",
+    # The desktop broker before the task worker, and for a sharper version of
+    # the same reason. A task blocked inside a portal dialog holds the worker
+    # until the dialog is answered or the attempt's deadline runs out, and
+    # stopping the broker cancels the pending call so the worker returns. It
+    # also releases the two resources that outlive a process badly: a clipboard
+    # selection held by a child, and any portal request still open. Releasing
+    # those *after* the worker join would mean the join waited for the very
+    # thing the release would have unblocked.
+    #
+    # After agent providers rather than before: a task that is generating and
+    # about to propose a desktop action should have the generation cancelled
+    # first, so the proposal never arrives and the broker has nothing new to
+    # refuse on the way down.
+    "desktop",
     "voice-runtime",
     "task-worker",
     "durable-state",
@@ -1649,6 +1759,10 @@ class CompanionService:
         self.voice: "VoiceService | None" = None
         self.speech: "SpeechInputService | None" = None
         self.agents: "AgentProviderService | None" = None
+        #: The desktop action broker and its bridge, when this build has one.
+        #: Absent means no desktop tool is registered at all, so a plan naming
+        #: one fails at the allowlist rather than somewhere deeper.
+        self.desktop: Any = None
         self.gateway: CompanionGateway | None = None
         self.server: CompanionServer | None = None
         self.singleton: RuntimeSingleton | None = None
@@ -1827,6 +1941,12 @@ class CompanionService:
             voice=self.voice,
             agents=self.agents,
         )
+        # The desktop broker was built with the runtime, two steps ago, because
+        # registering its tools has to happen before the runtime holds the
+        # allowlist. The gateway gains only its read surface, and gains it here
+        # because this is where the gateway first exists.
+        if self.desktop is not None:
+            self.gateway.attach_desktop(self.desktop)
         self.gateway.endpoint_description = self.server.describe()
 
     def _step_start_voice_worker(self) -> None:
@@ -2028,6 +2148,17 @@ class CompanionService:
             router_destinations = router_providers(
                 agent_configuration, authenticated_ids=authenticated,
             )
+        # The desktop action broker, and the nine tools it registers. Built
+        # after the broker exists and before the runtime does, because
+        # registration mutates the allowlist and a runtime holding the old one
+        # would refuse every desktop action at the door.
+        #
+        # Swallowed like voice and speech are: a companion whose service would
+        # not start because a portal was unreachable would have made the desk
+        # load-bearing for the service itself. A build that gets no desktop
+        # support registers no desktop tools, so a plan naming one fails at the
+        # allowlist exactly as a plan naming `shell.run` does.
+        desktop = self._build_desktop(broker)
         return CompanionRuntime(RuntimeOptions(
             store=CompanionStore(self.root / "store"),
             assessment=assessment,
@@ -2040,7 +2171,34 @@ class CompanionService:
             policy=CoordinationPolicy(),
             clock=SystemClock(),
             ids=RandomIds(),
+            desktop=desktop,
         ))
+
+    def _build_desktop(self, broker: Any) -> Any:
+        """Construct the desktop broker and register its tools, or carry on.
+
+        The ledger lives beside the store rather than inside it: it is written
+        by the desktop broker and read at start-up before any task exists, and
+        putting it under the event store would make a subsystem that must be
+        readable on its own depend on one that is opened later.
+        """
+        if not self.options.desktop_enabled:
+            return None
+        from .desktop_bridge import DesktopSupport, register_desktop_tools
+
+        try:
+            support = DesktopSupport.create(
+                ledger_path=self.root / "desktop-ledger.json",
+                accessibility=self.options.preferences,
+                headless_uri_policy=self.options.desktop_headless_uri_policy,
+            )
+            support.start()
+        except Exception:  # noqa: BLE001 - the desk is never a reason not to start
+            return None
+        register_desktop_tools(broker, support)
+        self.desktop = support
+        self._unwind.append(("desktop", support.stop))
+        return support
 
     # -- lifecycle ---------------------------------------------------------
 

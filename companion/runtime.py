@@ -149,6 +149,14 @@ class RuntimeOptions:
     policy: CoordinationPolicy = field(default_factory=CoordinationPolicy)
     clock: Clock = field(default_factory=SystemClock)
     ids: IdSource = field(default_factory=RandomIds)
+    #: The desktop action broker, when this build has one.
+    #: :class:`companion.desktop_bridge.DesktopSupport`, duck-typed so the
+    #: runtime keeps no import of the desktop package — the seam is the bridge,
+    #: and the runtime knows only that something can refine a requirement and
+    #: build an invocation context. ``None`` means no desktop tools are
+    #: registered at all, so a plan naming one fails at the allowlist exactly as
+    #: a plan naming ``shell.run`` does.
+    desktop: Any = None
 
 
 class CompanionRuntime:
@@ -161,6 +169,7 @@ class CompanionRuntime:
         self.clock = options.clock
         self.ids = options.ids
         self.broker = options.broker
+        self.desktop = options.desktop
         self.leases = ExecutorLeases()
         self.approvals = options.approvals or CompanionApprovalStore()
         self.gate = ApprovalGate(self.approvals, consent=options.consent)
@@ -645,6 +654,33 @@ class CompanionRuntime:
             return persisted
         return None
 
+    def _cancellation_arrived(self, task: CompanionTask) -> bool:
+        """Whether a stop has landed, asked of the store rather than remembered.
+
+        The same read as :meth:`_stopped`, reduced to a boolean and given to a
+        tool that is *in the middle of* something. Everything else in this
+        runtime checks at phase boundaries, which is enough when an operation is
+        a pure function; it is not enough when an operation opens a portal
+        dialog a person may leave on screen for a minute. A desktop tool is
+        handed this callable and re-reads it at each of its own checkpoints, so
+        a cancel issued from another process reaches it before the effect rather
+        than after.
+        """
+        try:
+            persisted = self.store.load_task(task.session_id, task.task_id)
+        except CompanionError:
+            # A store that cannot be read is not a cancellation. Reporting one
+            # would stop work for a reason that is not true; the operation
+            # continues and the failure surfaces where store failures do.
+            return False
+        if persisted is None:
+            return False
+        return bool(
+            persisted.terminal
+            or persisted.cancellation_state != "none"
+            or persisted.state == "paused"
+        )
+
     def _save_running_task(self, task: CompanionTask) -> CompanionTask:
         """Write a task the runtime is driving, without erasing a cancellation.
 
@@ -917,6 +953,13 @@ class CompanionRuntime:
             # invalidates every approval granted against it — done explicitly
             # rather than left to expiry, so a superseded consent cannot be
             # spent inside its remaining time. The next revision asks again.
+            if self.desktop is not None:
+                # And the prepared desktop actions go with it. A preparation
+                # cached under the old plan's fingerprint would otherwise be
+                # found by the next revision's operation of the same name, and
+                # the act executed would be the one the *superseded* plan
+                # described.
+                self.desktop.forget_plan(task.task_id)
             withdrawn = self.gate.invalidate_for_task(
                 task,
                 detail=(
@@ -978,6 +1021,15 @@ class CompanionRuntime:
             executor_cost_class=executor.declaration.cost_class,
             broker=self.broker,
             provider_declaration=remote_declaration,
+            # Desktop actions ask their own, more specific question — the exact
+            # application, address, path or value, with the normalised
+            # parameters bound into the fingerprint the gate already compares.
+            # A build with no desktop support passes nothing and the generic
+            # path is unchanged.
+            refine=(
+                (lambda operation: self.desktop.requirement_for(task, plan, operation))
+                if self.desktop is not None else None
+            ),
         )
         if not requirements:
             return task
@@ -1292,6 +1344,22 @@ class CompanionRuntime:
             outcome = self.broker.invoke(
                 operation.tool, operation.arguments,
                 caller="runtime", classification=task.classification,
+                # The authority facts, built here and nowhere else. An executor
+                # returns plans; it has no channel to this parameter, which is
+                # what keeps a provider from naming the task, the epoch or the
+                # approval its own operation would run under. `cancelled` is a
+                # callable because a stop can arrive from another process while
+                # a backend call is in flight, and a flag captured at entry
+                # would not see it.
+                context=(
+                    self.desktop.context_for(
+                        task, plan, operation,
+                        cancelled=lambda: self._cancellation_arrived(task),
+                        audit_reference=plan.plan_id,
+                    )
+                    if self.desktop is not None and self.desktop.handles(operation.tool)
+                    else None
+                ),
             )
             self._emit(
                 task.session_id, task.task_id, "operation_progress",

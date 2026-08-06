@@ -60,6 +60,7 @@ __all__ = [
     "MAX_RESPONSE_BYTES",
     "OPERATIONS",
     "PROTOCOL_SCHEMA_VERSION",
+    "DESKTOP_OPERATIONS",
     "PROVIDER_OPERATIONS",
     "SPEECH_OPERATIONS",
     "CompanionClient",
@@ -491,6 +492,50 @@ OPERATIONS: Mapping[str, Operation] = {
             (Parameter("taskId", "identifier", required=True),),
             mutating=True,
         ),
+        # -- desktop actions (§21). Note the shape of what is absent. There is
+        # no operation here that performs an action: a client can list, explain,
+        # inspect, stop and undo, and the only way to *cause* a desktop effect
+        # is a task whose plan proposes one and a person who approves it. An
+        # operation that took an action id and parameters would be a generic
+        # tool invocation with a narrow name, and it would let a client bypass
+        # the whole of §2's pipeline.
+        #
+        # Nor is there a parameter anywhere below that names an application, a
+        # path, a URI, a command, a D-Bus destination or a backend. Every
+        # identifier here refers to something the runtime already holds.
+        Operation("desktop_actions_list"),
+        Operation("desktop_actions_status"),
+        Operation(
+            "desktop_action_explain",
+            (Parameter("actionId", "string", required=True, maximum_length=64),),
+        ),
+        Operation(
+            "desktop_action_cancel",
+            (
+                Parameter("requestId", "identifier", required=True),
+                Parameter("cancellationToken", "identifier", default=""),
+            ),
+            mutating=True,
+        ),
+        Operation(
+            "desktop_action_undo",
+            (
+                # The idempotency key of the action to undo. It names an entry
+                # in the ledger; it cannot name anything else, and an undo is
+                # derived from what that entry recorded rather than from
+                # anything the caller supplies.
+                Parameter("idempotencyKey", "string", required=True, maximum_length=64),
+                Parameter("sessionId", "identifier", default=None),
+            ),
+            mutating=True,
+        ),
+        Operation(
+            "desktop_action_history",
+            (
+                Parameter("taskId", "identifier", default=None),
+                Parameter("limit", "integer", default=25, minimum=1, maximum=200),
+            ),
+        ),
     )
 }
 
@@ -514,6 +559,15 @@ SPEECH_OPERATIONS: Mapping[str, Operation] = {
 PROVIDER_OPERATIONS: Mapping[str, Operation] = {
     name: item for name, item in OPERATIONS.items()
     if name.startswith(("providers_", "provider_", "task_provider_"))
+}
+
+#: The desktop-action subset, derived for the same reason:
+#: :mod:`companion.desktop.service` validates against exactly these objects, so
+#: the schema a client is checked against and the schema the service serves are
+#: one table read twice.
+DESKTOP_OPERATIONS: Mapping[str, Operation] = {
+    name: item for name, item in OPERATIONS.items()
+    if name.startswith(("desktop_actions_", "desktop_action_"))
 }
 
 
