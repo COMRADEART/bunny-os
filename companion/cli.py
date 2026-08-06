@@ -239,6 +239,20 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
     )
     voice_health.add_argument("--language", default="", help="only voices for this language")
 
+    speech_slice = group.add_parser(
+        "run-speech-slice",
+        help=(
+            "RUNS the installed speech-input vertical slice against a real companion "
+            "service: push-to-talk, indicator, capture, recognition, confirmation, one task"
+        ),
+    )
+    speech_slice.add_argument("--slice-root", type=Path, default=None)
+
+    speech_health = group.add_parser(
+        "speech-input-health",
+        help="report which capture devices and local recognisers this machine has (read-only)",
+    )
+
     integration = group.add_parser(
         "run-integration-slice",
         help="RUNS the full service-plus-client vertical slice in a scratch directory",
@@ -316,6 +330,10 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
         return _run_voice_renderer_slice(args)
     if args.companion_command == "voice-health":
         return _voice_health(args)
+    if args.companion_command == "run-speech-slice":
+        return _run_speech_slice(args)
+    if args.companion_command == "speech-input-health":
+        return _speech_input_health(args)
     if args.companion_command == "character":
         return _character_command(args)
     if args.companion_command == "renderer":
@@ -871,6 +889,51 @@ def _run_voice_renderer_slice(args: argparse.Namespace) -> dict[str, Any]:
         "root": str(root),
         **report.to_json(),
     }
+
+
+def _run_speech_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .speech.vertical_slice import run_speech_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-speech-slice-"))
+    report = run_speech_slice(root)
+    return {
+        "effect": (
+            f"RAN the installed speech-input vertical slice in {root}: a companion service, "
+            "push-to-talk over the protocol, the listening indicator, a real capture where "
+            "this host has one, recognition, an edited confirmation, exactly one task, a "
+            "cancelled second capture, a simulated device loss and a worker restart. No "
+            "network or remote provider was used, no audio was retained, and no capture "
+            "resumed on its own."
+        ),
+        "root": str(root),
+        **report.to_json(),
+    }
+
+
+def _speech_input_health(args: argparse.Namespace) -> dict[str, Any]:
+    """What this machine could listen with. Opens nothing.
+
+    Read-only in the §4 sense that matters: constructing the service opens no
+    device and loads no model, and this command asks for health and returns.
+    """
+    import tempfile
+
+    from .speech.service import SpeechInputService, SpeechInputServiceOptions
+
+    service = SpeechInputService(SpeechInputServiceOptions(
+        runtime_directory=Path(tempfile.mkdtemp(prefix="bunny-speech-health-")),
+    ))
+    try:
+        service.refresh()
+        return {
+            "effect": "read capture and recogniser health; no microphone was opened",
+            **service.speech_input_health(),
+            "devices": service.speech_input_devices(),
+        }
+    finally:
+        service.close()
 
 
 def _run_voice_slice(args: argparse.Namespace) -> dict[str, Any]:

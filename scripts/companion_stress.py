@@ -355,6 +355,101 @@ def _voice_object_inventory() -> dict[str, Any]:
     }
 
 
+#: Programs the speech-input runtime is allowed to start. Kept in step with
+#: :data:`companion.speech.execution.CAPTURE_EXECUTABLES` for the reason the
+#: voice list is: a mismatch either counts an impossible child or misses a leak.
+_CAPTURE_CHILDREN = frozenset({
+    "parec", "pw-record", "arecord", "pactl", "pw-dump",
+})
+
+
+def speech_inventory() -> dict[str, Any]:
+    """§23's speech-input counts: recorders, workspaces, captures, indicator.
+
+    Recorder children are read from ``/proc`` exactly as the voice players are,
+    and for the same reason: "an audio-input handle" here is "a recorder that
+    is still running", and between iterations there must be none. The object
+    counts come from the collector — live workers, active captures, recogniser
+    sessions still open, indicator state, buffered bytes — because those are
+    the leaks a process table cannot show.
+    """
+    import gc as _gc
+
+    recorders: list[str] = []
+    proc = Path("/proc")
+    if proc.is_dir():
+        own = os.getpid()
+        for entry in proc.iterdir():
+            if not entry.name.isdigit():
+                continue
+            try:
+                status = (entry / "status").read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            parent = 0
+            name = ""
+            for line in status.splitlines():
+                if line.startswith("PPid:"):
+                    parent = int(line.split()[1])
+                elif line.startswith("Name:"):
+                    name = line.split(maxsplit=1)[1].strip() if len(line.split()) > 1 else ""
+                if parent and name:
+                    break
+            if parent == own and name in _CAPTURE_CHILDREN:
+                recorders.append(name)
+
+    workers = 0
+    services = 0
+    active = 0
+    open_sessions = 0
+    listening = False
+    buffered = 0
+    pending_transcripts = 0
+    for item in _gc.get_objects():
+        try:
+            name = type(item).__name__
+        except Exception:  # pragma: no cover - exotic proxies
+            continue
+        if name == "CaptureWorker":
+            workers += 1
+            try:
+                current = getattr(item, "_current", None)
+                if current is not None:
+                    active += 1
+                    handle = getattr(current, "handle", None)
+                    if handle is not None:
+                        buffered += handle.buffer.buffered_bytes
+            except Exception:
+                continue
+        elif name == "SpeechInputService":
+            services += 1
+            try:
+                listening = listening or item.indicator.listening
+                pending_transcripts += item.ledger.describe()["pending"]
+            except Exception:
+                continue
+        elif name == "_VoskSession":
+            try:
+                if not getattr(item, "closed", False) and getattr(item, "_engine", None) is not None:
+                    open_sessions += 1
+            except Exception:
+                continue
+    workspaces = sorted(Path(tempfile.gettempdir()).glob("bunny-speech-*"))
+    return {
+        "captureChildren": len(recorders),
+        "captureNames": sorted(set(recorders)),
+        "audioInputHandles": len(recorders),
+        "temporarySpeechWorkspaces": len(workspaces),
+        "liveCaptureWorkers": workers,
+        "liveSpeechServices": services,
+        "activeCaptures": active,
+        "openRecognizerSessions": open_sessions,
+        "listeningIndicator": listening,
+        "bufferedBytes": buffered,
+        "pendingTranscripts": pending_transcripts,
+    }
+
+
 def memory_inventory() -> dict[str, Any]:
     """RSS from /proc, or NOT_RUN. Never a substitute measurement."""
     try:
@@ -425,6 +520,7 @@ def snapshot(label: str) -> dict[str, Any]:
         "sockets": socket_inventory(),
         "runtime": runtime_inventory(),
         "voice": voice_inventory(),
+        "speech": speech_inventory(),
         "memory": memory_inventory(),
         "tempDirectories": len(list(Path(tempfile.gettempdir()).glob("bunny-*"))),
     }
@@ -458,6 +554,12 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
         ("temporaryWorkspaces", ("voice", "temporaryWorkspaces")),
         ("liveVoiceWorkers", ("voice", "liveVoiceWorkers")),
         ("liveVoiceServices", ("voice", "liveVoiceServices")),
+        # §23's speech-input columns.
+        ("captureChildren", ("speech", "captureChildren")),
+        ("audioInputHandles", ("speech", "audioInputHandles")),
+        ("temporarySpeechWorkspaces", ("speech", "temporarySpeechWorkspaces")),
+        ("liveCaptureWorkers", ("speech", "liveCaptureWorkers")),
+        ("liveSpeechServices", ("speech", "liveSpeechServices")),
     ):
         start, end = _get(before, *path), _get(after, *path)
         if isinstance(start, int) and isinstance(end, int):
@@ -468,6 +570,14 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
     # read as clean.
     for name in ("queueDepth", "activeRequests"):
         result[name] = _get(after, "voice", name) or 0
+    # §23's absolutes: an open capture, an open recogniser session, a lit
+    # indicator or a byte still buffered between iterations is wrong whatever
+    # the baseline held.
+    for name in (
+        "activeCaptures", "openRecognizerSessions", "bufferedBytes",
+    ):
+        result[name] = _get(after, "speech", name) or 0
+    result["listeningIndicator"] = bool(_get(after, "speech", "listeningIndicator"))
     # Absolute rather than differenced. A lease, a waiter, a held answer, an
     # outstanding question or a held store lock should be *empty* between
     # iterations, not merely unchanged — a delta of zero against a baseline that
@@ -646,6 +756,162 @@ def _run_voice_renderer_slice() -> dict[str, Any]:
     }
 
 
+def _run_speech_lifecycle() -> dict[str, Any]:
+    """One complete capture-worker lifetime. §23's first gate.
+
+    The sequence a leak would accumulate across: a silence capture that opens
+    and closes a real recorder, a capture cancelled mid-stream, a device loss
+    with its policy descent, a worker restart, and a close. Against the real
+    backends where this host has one — the recorder child and its pipes are
+    where a leak would live, and a scripted device has neither — and against
+    the scripted device, labelled as such, where it does not, so the gate
+    still exercises ordering and release everywhere.
+
+    Deliberately not the recognition path: recognition against real audio is
+    gate 3's whole job, per slice, twenty times. This gate is the *capture
+    worker's* lifecycle, a hundred times, cheap enough to run that often.
+    """
+    from companion.speech.policy import SpeechInputPreferences
+    from companion.speech.service import SpeechInputService, SpeechInputServiceOptions
+
+    problems: list[str] = []
+    mode = "real"
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-speech-") as directory:
+        service = SpeechInputService(SpeechInputServiceOptions(
+            runtime_directory=Path(directory),
+            preferences=SpeechInputPreferences(),
+        ))
+        try:
+            from tests.companion.speech_support import (
+                FrameScript, RecordingSink, ScriptedCaptureBackend,
+                ScriptedRecognizer, silence_pcm, speech_pcm,
+            )
+
+            sink = RecordingSink()
+            service.attach_indicator_sink(sink)
+            service.refresh()
+            device_id = ""
+            for backend in service.router.backends:
+                try:
+                    health = backend.health(monotonic=time.monotonic())
+                    if health.ready:
+                        device_id = health.default_device
+                        break
+                except Exception:  # noqa: BLE001
+                    continue
+            recognizer_ready = any(item.ready for item in service.registry.health())
+            if not device_id or not recognizer_ready:
+                # The scripted fallback: same worker, same ordering, no child.
+                mode = "scripted"
+                script = FrameScript([silence_pcm(0.5)])
+                backend = ScriptedCaptureBackend(script=script)
+                service.router.backends.clear()
+                service.router.backends.append(backend)
+                service.registry.add(ScriptedRecognizer())
+                device_id = "scripted-mic"
+                service.set_preferences(service.options.preferences)
+            else:
+                service.set_preferences(service.options.preferences)
+            if not service.policy.decision.may_capture:
+                problems.append(
+                    f"the policy refused capture: {service.policy.decision.outcome}"
+                )
+
+            def _wait_idle(timeout: float = 30.0) -> bool:
+                deadline = time.monotonic() + timeout
+                while time.monotonic() < deadline:
+                    if not service.worker.active:
+                        return True
+                    time.sleep(0.02)
+                return not service.worker.active
+
+            # 1. a silence capture: open, hear nothing, end on the timeout.
+            first = service.speech_input_start(
+                sessionId="stress-session",
+                activationSource="explicit-protocol-request",
+                deviceId=device_id,
+                maxCaptureMs=6_000,
+                initialSilenceMs=1_000,
+            )
+            if not first.get("accepted"):
+                problems.append(f"the silence capture was refused: {first.get('detail')}")
+            elif not _wait_idle():
+                problems.append("the silence capture did not settle")
+
+            # 2. a capture cancelled mid-stream.
+            if mode == "scripted":
+                script = FrameScript()
+                script.hold.set()
+                service.router.backends[0].script = script
+            second = service.speech_input_start(
+                sessionId="stress-session",
+                activationSource="explicit-protocol-request",
+                deviceId=device_id,
+                maxCaptureMs=10_000,
+                initialSilenceMs=8_000,
+            )
+            if second.get("accepted"):
+                deadline = time.monotonic() + 10.0
+                while time.monotonic() < deadline and not service.worker.active:
+                    time.sleep(0.01)
+                cancelled = service.speech_input_cancel(
+                    requestId=second["requestId"],
+                    cancellationToken=second.get("cancellationToken", ""),
+                )
+                if not cancelled.get("cancelled") and cancelled.get("stage") == "none":
+                    problems.append("the mid-stream cancellation found nothing to cancel")
+                if not _wait_idle():
+                    problems.append("the cancelled capture did not settle")
+            else:
+                problems.append(f"the second capture was refused: {second.get('detail')}")
+
+            # 3. device loss and the policy descent, then restoration.
+            for backend in service.router.backends:
+                setter = getattr(backend, "set_reachable", None)
+                if setter is not None:
+                    setter(False)
+            service.refresh()
+            if service.policy.decision.may_capture:
+                problems.append("the policy still offered capture with every backend gone")
+            for backend in service.router.backends:
+                setter = getattr(backend, "set_reachable", None)
+                if setter is not None:
+                    setter(True)
+
+            # 4. restart the worker; nothing resumes.
+            report = service.restart_worker(timeout=15.0)
+            if service.worker.active:
+                problems.append("a capture was running after the restart")
+            if report.to_json()["captureResumed"]:
+                problems.append("the restart resumed a capture")
+
+            status = service.worker.status()
+            if status["capturing"]:
+                problems.append("a capture survived the lifecycle")
+            if service.indicator.listening:
+                problems.append("the indicator stayed lit")
+            boundaries = status["boundaries"]
+            if boundaries["mayCreateTask"] or boundaries["remoteTransmission"]:
+                problems.append("the worker's own boundary claims changed")
+        finally:
+            service.close()
+    return {"ok": not problems, "failures": problems, "ran": 4, "mode": mode}
+
+
+def _run_speech_slice() -> dict[str, Any]:
+    from companion.speech.vertical_slice import run_speech_slice
+
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-sslice-") as directory:
+        report = run_speech_slice(Path(directory)).to_json()
+    return {
+        "ok": report["passed"],
+        "failures": [item["name"] for item in report["failed"]],
+        "notRun": report["notRun"],
+        "ran": report["stepCount"],
+        "detail": [item["detail"] for item in report["failed"]][:2],
+    }
+
+
 TARGETS = {
     "service": lambda order, seed: _run_modules(SERVICE_MODULES, order=order, seed=seed),
     "suite": lambda order, seed: _run_modules(SUITE_MODULES, order=order, seed=seed),
@@ -657,6 +923,8 @@ TARGETS = {
     "voice": lambda order, seed: _run_voice_lifecycle(),
     "voice-slice": lambda order, seed: _run_voice_slice(),
     "voice-renderer-slice": lambda order, seed: _run_voice_renderer_slice(),
+    "speech": lambda order, seed: _run_speech_lifecycle(),
+    "speech-slice": lambda order, seed: _run_speech_slice(),
 }
 
 
