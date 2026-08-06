@@ -76,7 +76,9 @@ def _verdict(path: Path) -> dict[str, Any]:
     seconds = sorted(item.get("seconds", 0.0) for item in iterations)
     growth: dict[str, int] = {}
     cleanup: dict[str, int] = {}
+    settled: dict[str, int] = {}
     violations: dict[str, Any] = {}
+    settled_absolutes: dict[str, Any] = {}
     kernel_states: dict[str, int] = {}
     modes: set[str] = set()
     commits: set[str] = set()
@@ -84,30 +86,62 @@ def _verdict(path: Path) -> dict[str, Any]:
         commits.add(str(item.get("commit", "")))
         if item.get("mode"):
             modes.add(str(item["mode"]))
-        delta = item.get("delta") or {}
-        for name in _KERNEL_SOCKET_STATES:
-            value = (item.get("sinceBaseline") or {}).get(name)
-            if isinstance(value, int) and value > 0:
-                kernel_states[name] = max(kernel_states.get(name, 0), value)
+
+    # Growth is measured across the *run*, not within the first iteration.
+    #
+    # The distinction is the whole point of the gate and it was worth getting
+    # wrong once to see it: the suite target constructs a service inside a
+    # test module, and the snapshot after iteration one finds it still
+    # reachable, so that iteration's delta is +1 thread, +1 runtime, +1 worker.
+    # Iterations two through fifty each add nothing, and the since-baseline
+    # figure sits at exactly +1 for the rest of the run. Reporting the first
+    # iteration's settle as "growth" would fail a gate for the harness's own
+    # fixtures; ignoring the per-run difference would hide a real leak. So the
+    # question asked here is: *between the first completed iteration and the
+    # last, did anything increase?* That is zero for a clean run whatever the
+    # fixtures did, and it is exactly the number a leak moves.
+    if iterations:
+        first = iterations[0].get("sinceBaseline") or {}
+        last = iterations[-1].get("sinceBaseline") or {}
         for name in _TRACKED:
-            value = delta.get(name)
-            if not isinstance(value, int) or value == 0:
+            before, after = first.get(name), last.get(name)
+            if not isinstance(before, int) or not isinstance(after, int):
                 continue
-            if value > 0:
-                growth[name] = max(growth.get(name, 0), value)
-            else:
-                cleanup[name] = min(cleanup.get(name, 0), value)
+            movement = after - before
+            if movement > 0:
+                growth[name] = movement
+            elif movement < 0:
+                cleanup[name] = movement
+            if after and movement == 0:
+                settled[name] = after
+        for name in _KERNEL_SOCKET_STATES:
+            value = last.get(name)
+            if isinstance(value, int) and value > 0:
+                kernel_states[name] = value
+
+    # Absolutes are read the same way: a value present in the last iteration
+    # and identical in the first is a fixture the harness is still holding; a
+    # value that appeared or grew is a violation.
+    if iterations:
+        first_delta = iterations[0].get("delta") or {}
+        last_delta = iterations[-1].get("delta") or {}
         for name in _ABSOLUTE:
-            value = delta.get(name)
-            if isinstance(value, int) and value:
-                violations[name] = max(violations.get(name, 0), value)
+            before, after = first_delta.get(name) or 0, last_delta.get(name) or 0
+            if after and after > before:
+                violations[name] = after
+            elif after:
+                settled_absolutes[name] = after
         for name in _ABSOLUTE_LISTS:
-            value = delta.get(name)
-            if isinstance(value, list) and value:
-                violations[name] = value
+            before = last_delta.get(name)
+            if not isinstance(before, list) or not before:
+                continue
+            if before == (first_delta.get(name) or []):
+                settled_absolutes[name] = before
+            else:
+                violations[name] = before
     final = document.get("final") or {}
     baseline = document.get("baseline") or {}
-    settled: dict[str, int] = {}
+    final_versus_baseline: dict[str, int] = {}
     for section, keys in (
         ("threads", ("count",)),
         ("runtime", ("liveServices", "liveRuntimes")),
@@ -119,7 +153,9 @@ def _verdict(path: Path) -> dict[str, Any]:
             before = (baseline.get(section) or {}).get(key)
             after = (final.get(section) or {}).get(key)
             if isinstance(before, int) and isinstance(after, int) and after > before:
-                settled[f"{section}.{key}" if key == "count" else key] = after - before
+                final_versus_baseline[
+                    f"{section}.{key}" if key == "count" else key
+                ] = after - before
     rss_final = ((final.get("memory") or {}).get("rssBytes"))
     rss_base = ((baseline.get("memory") or {}).get("rssBytes"))
     return {
@@ -143,6 +179,8 @@ def _verdict(path: Path) -> dict[str, Any]:
         "kernelSocketStatesSinceBaseline": kernel_states,
         "absoluteViolations": violations,
         "settledFixtures": settled,
+        "settledAbsolutes": settled_absolutes,
+        "finalVersusBaseline": final_versus_baseline,
         "modesObserved": sorted(modes),
         "firstFailure": document.get("firstFailure"),
     }
@@ -201,7 +239,11 @@ def main() -> int:
     gates = {
         "schema": SCHEMA_GATES,
         "allGatesMet": all(
-            item.get("gateMet") and item.get("singleCommit") for item in verdicts.values()
+            item.get("gateMet")
+            and item.get("singleCommit")
+            and not item.get("resourceGrowth")
+            and not item.get("absoluteViolations")
+            for item in verdicts.values()
         ),
         "gateCommit": arguments.commit,
         "verdicts": verdicts,

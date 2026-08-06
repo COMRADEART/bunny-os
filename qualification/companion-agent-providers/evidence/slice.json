@@ -1,0 +1,173 @@
+{
+  "cancelledTaskId": "task-2e5381fc8fce43a49a739ec4be4bbdcc",
+  "commercialProviderRequired": false,
+  "effect": "RAN the installed agent-provider vertical slice in /tmp/bunny-agent-slice-8cd9ew9a: a companion service, discovery of a real local model provider, one generated task with a broker-mediated tool, protocol-visible streaming, the remote option displayed without dispatching, a cancellation caught mid-stream and a provider-worker restart. No remote provider was dispatched to, no paid provider was required, and nothing interrupted was repeated.",
+  "failed": [],
+  "measurements": [
+    {
+      "name": "task-1-wall-seconds",
+      "value": 51.98
+    }
+  ],
+  "modelId": "/home/bunny/.local/share/bunny-os/agent-models/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+  "networkRequired": false,
+  "notRun": [
+    "16. animate voice visemes: needs a compositor; scripts/gtk_speech_input_probe.py and the voice viseme probe cover the drawn mouth on this host",
+    "19. approve a controlled remote test: no intentionally configured test account (BUNNY_AGENTS_REMOTE_TEST unset); the mandatory slice must not require a paid provider"
+  ],
+  "notes": [],
+  "passed": true,
+  "passedCount": 22,
+  "providerId": "local.llamacpp",
+  "remoteDispatchOccurred": false,
+  "root": "/tmp/bunny-agent-slice-8cd9ew9a",
+  "sessionId": "ses-89b415d6f5d54f0ca43beb6ff4417282",
+  "stepCount": 24,
+  "steps": [
+    {
+      "detail": "started through the declared sequence",
+      "name": "start the canonical companion service",
+      "status": "PASS",
+      "step": 1
+    },
+    {
+      "detail": "the window's own client and protocol, without a compositor",
+      "name": "start the GTK client transport",
+      "status": "PASS",
+      "step": 2
+    },
+    {
+      "detail": "remoteActive=False remoteConfigured=True (configured is not active)",
+      "name": "confirm no remote provider is active",
+      "status": "PASS",
+      "step": 3
+    },
+    {
+      "detail": "local.llamacpp offering /home/bunny/.local/share/bunny-os/agent-models/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "name": "discover a real local model provider",
+      "status": "PASS",
+      "step": 4
+    },
+    {
+      "detail": "task task-729ae83ea7554660826946a3c25592be: 'count the words in this sentence please'",
+      "name": "submit a harmless confirmed request",
+      "status": "PASS",
+      "step": 5
+    },
+    {
+      "detail": "selected 'local.llamacpp'; decisive: local before remote, explicitly preferred by the request, configuration order breaks remaining ties",
+      "name": "select the local provider",
+      "status": "PASS",
+      "step": 6
+    },
+    {
+      "detail": "provisional tail seen over the protocol: ' has a count of 2, which is correct. The text \"text.validate'",
+      "name": "stream provisional output",
+      "status": "PASS",
+      "step": 7
+    },
+    {
+      "detail": "state completed; outputs 1",
+      "name": "finalize validated output",
+      "status": "PASS",
+      "step": 8
+    },
+    {
+      "detail": "proposed operations: ['text.checksum', 'text.count_words', 'text.validate_count']",
+      "name": "propose one harmless tool",
+      "status": "PASS",
+      "step": 9
+    },
+    {
+      "detail": "every executed operation went through the broker; 4 completed",
+      "name": "validate the proposal through the ToolBroker",
+      "status": "PASS",
+      "step": 10
+    },
+    {
+      "detail": "no sensitive operation was proposed, so nothing needed asking \u2014 the requirement derivation ran and found none",
+      "name": "request approval where required",
+      "status": "PASS",
+      "step": 11
+    },
+    {
+      "detail": "4 operation(s) completed with recorded outcomes",
+      "name": "execute the harmless operation",
+      "status": "PASS",
+      "step": 12
+    },
+    {
+      "detail": "reviewers ['local.test-reviewer']; observation-only is structural (the broker refuses reviewer callers)",
+      "name": "run an observation-only reviewer",
+      "status": "PASS",
+      "step": 13
+    },
+    {
+      "detail": "result: 'The sentence \"count the words in this sentence please\" contains 2 words. The tex'",
+      "name": "complete the task",
+      "status": "PASS",
+      "step": 14
+    },
+    {
+      "detail": "caption cap-fd2f197b2d5b44789935d0caf67cfd05: queued for speech",
+      "name": "speak the canonical result",
+      "status": "PASS",
+      "step": 15
+    },
+    {
+      "detail": "needs a compositor; scripts/gtk_speech_input_probe.py and the voice viseme probe cover the drawn mouth on this host",
+      "name": "animate voice visemes",
+      "status": "NOT_RUN",
+      "step": 16
+    },
+    {
+      "detail": "expressed as the provider requirement 'retrieve', which no local provider declares; remote candidates: ['remote.slice-test']",
+      "name": "submit a second task requiring an unavailable local capability",
+      "status": "PASS",
+      "step": 17
+    },
+    {
+      "detail": "the explanation names ['remote.slice-test'] with its reasons and approval requirement; generations served stayed 3",
+      "name": "display remote-provider option without dispatching",
+      "status": "PASS",
+      "step": 18
+    },
+    {
+      "detail": "no intentionally configured test account (BUNNY_AGENTS_REMOTE_TEST unset); the mandatory slice must not require a paid provider",
+      "name": "approve a controlled remote test",
+      "status": "NOT_RUN",
+      "step": 19
+    },
+    {
+      "detail": "attempt 1: cancelled while streaming; state cancelled",
+      "name": "cancel generation mid-stream",
+      "status": "PASS",
+      "step": 20
+    },
+    {
+      "detail": "0 operation(s) started after cancellation began",
+      "name": "confirm no tool runs after cancellation",
+      "status": "PASS",
+      "step": 21
+    },
+    {
+      "detail": "served 3 before; running=True served=0 after",
+      "name": "restart the provider worker",
+      "status": "PASS",
+      "step": 22
+    },
+    {
+      "detail": "same task id, same state, same output references",
+      "name": "confirm completed task identity and result are unchanged",
+      "status": "PASS",
+      "step": 23
+    },
+    {
+      "detail": "the restarted worker has served nothing on its own and the cancelled task stayed cancelled",
+      "name": "confirm interrupted generation is not automatically repeated",
+      "status": "PASS",
+      "step": 24
+    }
+  ],
+  "taskId": "task-729ae83ea7554660826946a3c25592be"
+}

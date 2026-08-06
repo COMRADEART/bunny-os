@@ -1,0 +1,46 @@
+{
+  "candidateCommit": "3f07a6ea007dec7925c6ffb36e710025427f55bb",
+  "files": {
+    "agent-measurements.json": {
+      "bytes": 2889,
+      "sha256": "695ffe8b685160429aebb8db81a46a29385fb5923953dda475778daa27252877"
+    },
+    "env.json": {
+      "bytes": 1062,
+      "sha256": "3c0a29dfdc255c52e4d32434699712476085264c4dce964673bf002d2a3d0e51"
+    },
+    "gate-agent-slice-20.json": {
+      "bytes": 67961,
+      "sha256": "5eef4c34609d5fefc166b0067d1c448fb111232f5f1897b690f3a427e74f6600"
+    },
+    "gate-agents-100.json": {
+      "bytes": 275085,
+      "sha256": "7c2493aaf344faafa3357b15592879e1ffd0229f1fc77b5bf1326198dfe0a17e"
+    },
+    "gate-suite-50.json": {
+      "bytes": 147932,
+      "sha256": "415a527f15565c558217ad50cc7ff746ada93403e4f297ec35cb6c94b16fffb4"
+    },
+    "gate-verdicts.json": {
+      "bytes": 3060,
+      "sha256": "ef334e1e1e4bf0926a615a386a1cf4e2281f5354aba5e06c801d240ca3ab4025"
+    },
+    "gates.log": {
+      "bytes": 8320,
+      "sha256": "54e90e36e2718f99d1d9381b72e7db33b2f38d183a263a3c2106c2285bb3d7aa"
+    },
+    "health.json": {
+      "bytes": 6704,
+      "sha256": "d2db9b4e53b3548a9ed01bb9096f9256c7c62d914d4dc0d0c165275a1b6c2174"
+    },
+    "linux-suite.log": {
+      "bytes": 113,
+      "sha256": "aa9f4ce725b3905d9260bb06683db8e0f917e5a0fdef4798a4ceb611e95af7c5"
+    },
+    "slice.json": {
+      "bytes": 6425,
+      "sha256": "990801695c115a4b2c9c793e6376295090343ab0509ebf62972e700fe5cdf3aa"
+    }
+  },
+  "schema": "bunny-os/agent-provider-evidence-manifest/1"
+}

@@ -1,0 +1,108 @@
+{
+  "allGatesMet": true,
+  "gateCommit": "3f07a6ea007dec7925c6ffb36e710025427f55bb",
+  "schema": "bunny-os/agent-provider-gates/1",
+  "verdicts": {
+    "gate-agent-slice-20.json": {
+      "absoluteViolations": {},
+      "cleanupOfPriorResidue": {},
+      "commit": "3f07a6ea007dec7925c6ffb36e710025427f55bb",
+      "failed": 0,
+      "file": "gate-agent-slice-20.json",
+      "finalVersusBaseline": {},
+      "firstFailure": null,
+      "gateMet": true,
+      "kernelSocketStatesSinceBaseline": {},
+      "longestConsecutivePass": 20,
+      "modesObserved": [],
+      "passed": 20,
+      "resourceGrowth": {},
+      "rssSinceBaselineFinalBytes": 37564416,
+      "runs": 20,
+      "secondsMax": 73.201,
+      "secondsMedian": 63.734,
+      "secondsTotal": 1285.9,
+      "settledAbsolutes": {},
+      "settledFixtures": {},
+      "singleCommit": true,
+      "target": "agent-slice"
+    },
+    "gate-agents-100.json": {
+      "absoluteViolations": {},
+      "cleanupOfPriorResidue": {},
+      "commit": "3f07a6ea007dec7925c6ffb36e710025427f55bb",
+      "failed": 0,
+      "file": "gate-agents-100.json",
+      "finalVersusBaseline": {},
+      "firstFailure": null,
+      "gateMet": true,
+      "kernelSocketStatesSinceBaseline": {
+        "tcpTimeWait": 387
+      },
+      "longestConsecutivePass": 100,
+      "modesObserved": [
+        "real"
+      ],
+      "passed": 100,
+      "resourceGrowth": {},
+      "rssSinceBaselineFinalBytes": 11251712,
+      "runs": 100,
+      "secondsMax": 0.236,
+      "secondsMedian": 0.169,
+      "secondsTotal": 16.9,
+      "settledAbsolutes": {},
+      "settledFixtures": {},
+      "singleCommit": true,
+      "target": "agents"
+    },
+    "gate-suite-50.json": {
+      "absoluteViolations": {},
+      "cleanupOfPriorResidue": {},
+      "commit": "3f07a6ea007dec7925c6ffb36e710025427f55bb",
+      "failed": 0,
+      "file": "gate-suite-50.json",
+      "finalVersusBaseline": {
+        "liveAgentServices": 1,
+        "liveAgentWorkers": 1,
+        "liveCaptureWorkers": 1,
+        "liveRuntimes": 1,
+        "liveServices": 1,
+        "liveSpeechServices": 1,
+        "liveVoiceServices": 1,
+        "liveVoiceWorkers": 1,
+        "threads.count": 1
+      },
+      "firstFailure": null,
+      "gateMet": true,
+      "kernelSocketStatesSinceBaseline": {},
+      "longestConsecutivePass": 50,
+      "modesObserved": [],
+      "passed": 50,
+      "resourceGrowth": {},
+      "rssSinceBaselineFinalBytes": 88117248,
+      "runs": 50,
+      "secondsMax": 56.45,
+      "secondsMedian": 45.459,
+      "secondsTotal": 2284.8,
+      "settledAbsolutes": {
+        "activeExecutors": [
+          "agents.local-provider",
+          "local.deterministic"
+        ]
+      },
+      "settledFixtures": {
+        "liveAgentServices": 1,
+        "liveAgentWorkers": 1,
+        "liveCaptureWorkers": 1,
+        "liveRuntimes": 1,
+        "liveServices": 1,
+        "liveSpeechServices": 1,
+        "liveVoiceServices": 1,
+        "liveVoiceWorkers": 1,
+        "threads": 1
+      },
+      "singleCommit": true,
+      "target": "suite"
+    }
+  }
+}

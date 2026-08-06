@@ -700,46 +700,351 @@ holding and a configured id always winning.
 
 ## 23. Stress-gate results
 
-*(filled from `qualification/companion-agent-providers/evidence/gate-verdicts.json`)*
+All three gates ran **sequentially in one `systemd-run --user` unit** on
+commit `3f07a6ea007dec7925c6ffb36e710025427f55bb`, so a dropped client, a WSL
+idle-stop or a host sleep could not truncate them. Every one of the 170
+iterations records that commit; `BUNNY_STRESS_COMMIT` supplied it explicitly
+because the Linux worktree is an rsync copy with no `.git` of its own, and
+without it the harness would have read whatever repository sits above the copy.
+
+Total wall time 61 minutes. Unit result `success`, `ExecMainStatus=0`.
+
+| Gate | Result | Consecutive | Per iteration | Resources |
+|---|---|---|---|---|
+| 100 provider-worker lifecycles (`--target agents`) | **100/100** | 100 | median 0.17 s, max 0.24 s, 16.9 s total | growth `{}`, absolutes `{}` |
+| 50 complete companion suites (`--target suite`) | **50/50** | 50 | median 45.5 s, max 56.5 s, 38.1 min total | growth `{}`, absolutes `{}` |
+| 20 installed local-provider slices (`--target agent-slice`) | **20/20** | 20 | median 63.7 s, max 73.2 s, 21.4 min total | growth `{}`, absolutes `{}` |
+
+**Gate 1 ran against a real model, and the evidence says so.** Every one of the
+hundred iterations records `mode: "real"` — a live `llama-server` on loopback,
+not the scripted fallback. This is the field the first gate run was discarded
+and restarted to obtain: without it "a genuine local provider produced this"
+would have been a sentence in a report rather than a property of the record.
+
+Tracked columns after each gate, per §24: thread delta, descriptor delta,
+child-process delta, HTTP connection delta, active stream count, provider queue
+depth, tool-proposal count, temporary-file delta, cost-accounting consistency,
+duration and exit status. Gate 1's final snapshot after a hundred real
+generations: **4 descriptors, 1 thread, 0 live agent workers, 0 live agent
+services, 0 HTTP connections, 0 active streams, 0 queued generations, 0 child
+processes.**
+
+Three honest notes, because each is a number a reader would otherwise have to
+guess at:
+
+**Kernel socket states are counted and reported separately.** Gate 1 leaves 387
+`TIME_WAIT` entries behind. A loopback connection this process *closed
+correctly* still occupies an entry in the kernel's table for 2×MSL — sixty
+seconds on Linux — with no descriptor attached to us, and the gate opens about
+four connections per iteration (three probe requests and one generation).
+Counting them as growth would fail a gate for closing its sockets; dropping
+them would hide a genuine socket leak. They are measured, named
+`kernelSocketStatesSinceBaseline`, and the columns beside them —
+`descriptors`, `socketDescriptors`, `httpConnections` — are the ones that would
+move if this process were really holding anything. All three are zero.
+
+**Growth is measured across the run, not within the first iteration**, and this
+was worth getting wrong once to see. The suite target constructs a service
+inside a test module, so the snapshot after iteration one finds it reachable
+and that iteration's delta is +1 thread, +1 runtime, +1 worker, +1 service for
+each subsystem. Iterations two through fifty add nothing: the since-baseline
+figure sits at exactly +1 for the rest of the run. The question the verdict
+asks is therefore *between the first completed iteration and the last, did
+anything increase* — zero for a clean run whatever the fixtures did, and
+exactly the number a leak moves. The one-time settle is recorded as
+`settledFixtures` (`threads`, `liveRuntimes`, `liveServices`,
+`liveAgentWorkers`, `liveAgentServices`, `liveVoiceWorkers`,
+`liveVoiceServices`, `liveCaptureWorkers`, `liveSpeechServices`, all 1) rather
+than subtracted silently.
+
+**One settled absolute.** The suite gate's final iteration reports
+`activeExecutors: ["agents.local-provider", "local.deterministic"]` — the two
+executors of the one runtime a test module still holds at snapshot time.
+Identical in the first and last iteration, so it is a fixture, not an
+accumulation; recorded as `settledAbsolutes` rather than as a violation.
+
+Resident memory rose 11 MiB over gate 1, 88 MiB over gate 2 and 37 MiB over
+gate 3 and did not track iteration count — allocator arenas, not objects, and
+the object inventories above are what the leak claim rests on.
 
 ---
 
 ## 24. Installed vertical-slice result
 
-*(filled from `qualification/companion-agent-providers/evidence/slice.json`)*
+`bunny-os companion run-agent-slice`, run on the Linux reference target against
+the service's own agent runtime and a real local model server.
+
+**22 of 24 steps PASS, 2 NOT_RUN, 0 FAIL.** Provider `local.llamacpp`, model
+`qwen2.5-0.5b-instruct-q4_k_m.gguf` (Apache-2.0, 469 MiB) served by
+`llama-server` on `127.0.0.1:8080`. `remoteDispatchOccurred: false`,
+`commercialProviderRequired: false`, `networkRequired: false`.
+
+What each numbered step observed, in the runtime's own words:
+
+1–2. The canonical service started through the declared eight-step sequence;
+the window's own client and protocol attached over the real socket.
+3. `remoteActive=false` with `remoteConfigured=true` — configured is not
+active, which is the distinction the whole remote surface rests on.
+4. Discovered `local.llamacpp` offering the model, through a real probe.
+5–6. A harmless confirmed request became one task; `local.llamacpp` was
+selected, with the decisive factors recorded: *local before remote, explicitly
+preferred by the request, configuration order breaks remaining ties.*
+7. Provisional output was seen **over the protocol** while the task ran —
+`task_provider_status` reported `streaming: true` with a live tail.
+8. Finalized validated output: state `completed`, one output reference.
+9–12. The model proposed operations — `text.count_words`,
+`text.validate_count`, `text.checksum` — every one of which executed through
+the ToolBroker; four operations completed with recorded outcomes; no sensitive
+operation was proposed, so the requirement derivation ran and found nothing to
+ask, which the step records rather than skipping.
+13. An observation-only reviewer ran; observation-only remains structural.
+14. The task completed with a canonical result derived from the tool outputs.
+15. The canonical caption was published and queued for speech.
+16. **NOT_RUN** — visemes need a compositor.
+17–18. A second task expressed a requirement no local provider declares
+(`retrieve`); the remote provider was named with its reasons and its approval
+requirement, and `generationsServed` did not move: **the option was displayed
+and nothing was dispatched**.
+19. **NOT_RUN** — no intentionally configured test account.
+20–21. A generation was cancelled **mid-stream** — the slice waits for the
+stream to be live before cancelling, so a cancel that lands early is a retry
+rather than a pass — and no operation started after cancellation began.
+22–24. The provider worker restarted without touching the task runtime; the
+completed task kept its id, state and output references; and the restarted
+worker had served nothing on its own while the cancelled task stayed cancelled.
+
+Under the 20-run gate the slice additionally records step 15 as NOT_RUN on
+iterations where the voice policy settles on captions-only — the caption is
+published either way, and the step says which happened rather than passing on
+the strength of the publish.
 
 ---
 
 ## 25. Measurements
 
-*(filled from `qualification/companion-agent-providers/evidence/agent-measurements.json`)*
+Reference target: Fedora Linux 44 (WSL2), kernel 6.18.33.2-microsoft-standard-WSL2,
+systemd 259, CPython 3.14.3, as user `bunny` from ext4 under `/home/bunny`.
+Model server `llama-server` (Fedora `llama-cpp` b6153-3.fc44) with
+Qwen2.5-0.5B-Instruct Q4_K_M, 4096-token context, 4 threads, CPU only.
+
+**Memory — and the model server's is not ours.**
+
+| | RSS | PSS |
+|---|---|---|
+| Companion process before the agent runtime exists | 26.2 MiB | — |
+| Companion process with the agent runtime idle | 27.6 MiB | 22.8 MiB |
+| Companion process after twelve generations | 28.5 MiB | — |
+| `llama-server` (separate process, separate memory) | 662.5 MiB | 656.9 MiB |
+
+The agent-provider runtime costs **+1.4 MiB idle** over the companion process
+without it, and **+2.3 MiB** after a dozen generations. The 662 MiB beside it
+is the model's, measured by pid and kept in its own row: "the companion uses
+660 MiB" would be false, and the kind of false that gets repeated.
+
+**Latency.** Twelve generations, six cancellations, twenty selections, twenty
+context builds, fifty validations and fifty assemblies.
+
+| Dimension | median | p95 | max | n |
+|---|---|---|---|---|
+| Provider selection | <0.1 ms | 0.1 ms | 2.7 ms | 20 |
+| Context construction | 0.1 ms | 0.2 ms | 0.2 ms | 20 |
+| Structured validation | <0.1 ms | <0.1 ms | 0.1 ms | 50 |
+| Stream assembly (64 deltas) | 0.2 ms | 0.2 ms | 0.6 ms | 50 |
+| Time to first token | 0.559 s | 0.666 s | 1.554 s | 12 |
+| Total generation | 0.559 s | 0.667 s | 1.554 s | 12 |
+| Output rate | 55.4 B/s | 55.7 B/s | 55.9 B/s | 12 |
+| Cancellation latency | 0.112 s | 1.252 s | 1.252 s | 6 |
+| Local model startup | **NOT_RUN** | | | 0 |
+
+Time to first token is taken from the worker's own stamps — the moment the
+adapter was handed the request against the first output delta the assembler
+accepted — not from a second clock running beside the runtime. It sits within
+a millisecond or two of total generation because a 0.5B model on four CPU
+threads spends nearly all of a short answer's wall time in prompt evaluation
+and then emits the remaining tokens faster than the measurement's resolution.
+That is a fact about this model on this host, not about the streaming path:
+the slice observed a live provisional tail mid-generation over the protocol,
+which is the property that matters.
+
+Every Bunny Companion dimension is sub-millisecond. Selection, context
+construction, validation and assembly together cost less than one part in a
+thousand of a generation on this host.
+
+Fallback latency and provider-selection-under-failure are not separately
+tabulated: with one eligible local provider on this host the ladder has one
+rung, and a measured number for a ladder that never descended would be an
+invented one. The failure path itself is exercised 100 times in gate 1 (a
+provider with nothing behind it, returning a structured failure) and its cost
+is inside that gate's 0.17 s median.
 
 ---
 
 ## 26. Complete test results
 
-*(filled)*
+| Host | Tests | Failures | Skips |
+|---|---|---|---|
+| Windows 11 (dev host) | 1,349 | 0 | 37 (POSIX-only semantics) |
+| Fedora 44 WSL2 (reference target) | 1,349 | 0 | 2 |
+| Capability suite (Windows) | 697 | 0 | 0 |
+
+New in this phase, 213 tests across eight modules:
+
+| Module | Covers |
+|---|---|
+| `test_agents_schemas.py` | descriptor, request and configuration schemas, and the four cross-module mirror-tuple agreements |
+| `test_agents_stream.py` | the §11 ordering contract and every way to break it |
+| `test_agents_structured.py` | §12 validation, refusal reasons, bounded repair |
+| `test_agents_credentials.py` | §5 sources and their four file refusals; the `Secret` channels |
+| `test_agents_health_usage.py` | circuit states and asymmetries, ledger ceilings, journal reconcile |
+| `test_agents_security.py` | all 21 §20 attack families, 44 tests |
+| `test_agents_authority.py` | the import graph, the object graph, the closed source set, the protocol surface |
+| `test_agent_bridge.py` | the pipeline through the real runtime, including the full remote approval path |
+| `test_agents_preservation.py` | the earlier phases' 47 evidence files and 8 reports, by digest |
 
 ---
 
 ## 27. Known limitations
 
-*(filled)*
+1. **The remote path is proved by scripted adapter, not by a paid account.**
+   `test_agent_bridge.RemoteApprovalBinding` drives the complete §8 sequence —
+   router permission, approval derivation, destination fingerprint, grant,
+   dispatch carrying the approval reference, and failure without fallback —
+   against a scripted remote adapter. No request has ever left this machine.
+   What is proved is the runtime's half; what is not proved is any real
+   provider's wire format against its real server.
+
+2. **One local model, one machine.** Every generation figure comes from
+   Qwen2.5-0.5B-Instruct on four CPU threads under WSL2. A larger model, a GPU,
+   or a different runtime would move every latency number and none of the
+   architectural ones.
+
+3. **Ollama is configured but was not exercised on the reference target.** The
+   adapter is genuine and was exercised on the Windows dev host against a real
+   Ollama daemon; on Linux the package was not installed, so `local.ollama`
+   sits at rung `authenticated` with its connection refusal recorded.
+
+4. **`llama-cli`'s adapter is exercised for probe and refusal, not generation.**
+   It reports healthy on the reference target and its resolution refusals are
+   tested; no gate drove a generation through it, because the server adapters
+   were selected ahead of it by configuration order.
+
+5. **Time to first token is not separable from prompt evaluation here.** See
+   §25. A model whose prompt evaluation is a small fraction of its output time
+   would separate them; this one does not.
+
+6. **The absolute `MAX_CONTEXT_BYTES` bound is unreachable through the
+   builder.** Eight items at the per-item bound cannot exceed it, so the
+   per-item and token-budget refusals are what fire. Redundancy that fails
+   closed, not a hole — recorded because a reader counting bounds should know
+   which one does the work.
+
+7. **A discovered model id is bounded in length but free in content.** When no
+   model is configured the registry adopts the first the endpoint offers, and a
+   hostile local endpoint could offer a strange name. The downstream walls hold
+   (GTK `set_text`, Gemini's identifier regex, llama-cli's separator refusal)
+   and a configured id always wins.
+
+8. **Reviewer providers are local-only by construction.** A deployment whose
+   only provider is remote gets no provider-backed review at all rather than a
+   review that transmits. That is the intended trade and it is a limitation.
+
+9. **The measured model server is long-lived and shared.** Startup time is
+   NOT_RUN (§28), and its 662 MiB is a figure for this model at this
+   quantisation, not a budget for the feature.
 
 ---
 
 ## 28. NOT_RUN items
 
-*(filled)*
+* **Slice step 16 — voice visemes.** Needs a compositor. The drawn mouth is
+  covered on this host by `scripts/gtk_voice_viseme_probe.py` and the
+  speech-input probe from earlier phases; this phase adds no renderer claim.
+* **Slice step 19 — controlled remote test.** No intentionally configured test
+  account. `BUNNY_AGENTS_REMOTE_TEST` was never set; the mandatory slice must
+  not require a paid provider, and it does not.
+* **Slice step 15 on some gate iterations — speaking the result.** Recorded
+  NOT_RUN where the voice policy settles on captions-only. The caption is
+  published either way.
+* **Local model startup time.** The server on this host was already running;
+  starting one would have measured a different act.
+* **Fallback latency as a separate figure.** One eligible local provider means
+  a one-rung ladder; see §25.
+* **GTK compositor probe for the provider surface.** No `gtk_agent_probe.py`
+  was written. The provider label's construction and its `set_text` path are
+  asserted in the security suite from source; that they are *drawn* on a
+  compositor is not claimed.
+* **Ollama on the reference target** and **generation through `llama-cli`**;
+  see §27.
 
 ---
 
 ## 29. Remaining desktop-action work
 
-*(filled)*
+This phase deliberately implements none of it, and the boundaries are stated as
+data the gates assert on (`AgentProviderService.boundaries()`: `executesTools`,
+`resolvesApprovals`, `createsTasks`, `readsArbitraryFiles`, `controlsDesktop`,
+`mutatesConfiguration`, `hiddenRemoteFallback`, `storesCredentials` — all
+false).
+
+What a desktop-action phase would have to add, and what this phase already
+gives it:
+
+* **Tools that touch the machine.** The four shipped tools are pure. A tool
+  that opens a file, launches an application or moves a window would declare
+  `destructive` or `interrupts_user`, which the existing derivation turns into
+  an approval without any change to this subsystem — a provider proposing one
+  reaches the same broker.
+* **A richer plan schema.** `agent-plan/1` admits a name, a tool and an
+  arguments object. Arguments are bounded but not typed per tool; a phase with
+  real tools would want per-tool argument schemas, validated the same way and
+  named the same way (never transported).
+* **Multi-round tool loops.** The limits exist (§14) but the executor plans
+  once per revision. An agent that observes a tool result and proposes the next
+  step needs a loop inside `_plan_and_execute`, bounded by the counters that
+  are already there.
+* **Screen and window context.** `CONTEXT_SOURCES` has no value for a screen
+  capture, deliberately. Adding one is a schema change with a privacy review,
+  which is the point of the set being closed.
+* **Remote providers with real accounts**, and the wire-format verification
+  §27.1 does not claim.
 
 ---
 
 ## 30. Reproducibility implications
 
-*(filled)*
+**No release or reproducibility qualification is claimed by this phase.**
+
+What changed for the image: 35 installed Python modules join
+`/usr/lib/bunny-os/python/companion/` through the existing `companion-package`
+route (§3). No new install route, no new asset, no new libexec entry, no
+systemd unit, and no change to any file the reproducibility work pins.
+
+What a reproducibility run would see: the new modules are `.py` files copied by
+the same `copy_python_package` helper the whole `companion/` tree already uses,
+with the same mode (0444) and the same clamped mtimes. They are deterministic
+inputs. The subsystem writes nothing into the image at build time, and its
+runtime state — the provider configuration, the journal — lives under the
+user's runtime root, not in the artifact.
+
+What it does **not** establish: this phase ran no build, no three-builder
+comparison and no cold-pull verification. The `THREE_BUILDER_REPRODUCIBILITY`
+result stands at its own commit and is untouched; nothing here is offered as
+evidence about it. The next reproducibility candidate will have to include
+these modules and be measured, not assumed — and, per the retention finding
+recorded in an earlier phase, a pinned base digest is not durable, so that
+measurement will need its own fresh inputs rather than these.
+
+The model itself is **not** an image input. It lives under the user's data
+directory, is not shipped, and is not reproducible in the build sense at all;
+the trusted-directory resolution in `llamacli.py` and the loopback pinning in
+`wire.py` are what bound what an installed system will talk to, and neither
+puts a model into the artifact.
+
+---
+
+*Evidence: `qualification/companion-agent-providers/evidence/` — eleven files,
+each pinned by size and sha256 in `manifest.json` against candidate commit
+`3f07a6ea007dec7925c6ffb36e710025427f55bb`; digests re-verified after the
+WSL→Windows copy. Prior phases' evidence is pinned unchanged in
+`qualification/companion-agent-providers/preserved-evidence.json` and asserted
+by `tests/companion/test_agents_preservation.py`.*
