@@ -316,6 +316,8 @@ class _Run:
         self.approved_at = 0.0
         self.asked_at = 0.0
         self.error = ""
+        self.settled_seconds = 0.0
+        self.final_state = ""
         self._thread: threading.Thread | None = None
 
     def start(self) -> "_Run":
@@ -373,14 +375,24 @@ class _Run:
             self.error = f"{type(exc).__name__}: {exc}"
 
     def settle(self, timeout: float = _WAIT) -> dict[str, Any]:
+        started = time.monotonic()
         if self._thread is not None:
             self._thread.join(timeout)
+
         def finished() -> Any:
             task = self.client.call(
                 "get_task", {"taskId": self.task_id, "sessionId": self.session_id},
             )["task"]
             return task if task["state"] in ("completed", "failed", "cancelled", "blocked") else None
-        return _wait_for(finished, timeout) or {}
+
+        task = _wait_for(finished, timeout) or {}
+        #: How long this run took from submission to a terminal state. Recorded
+        #: per run rather than only in total, because a slice whose total is a
+        #: minute and whose steps sum to a fifth of a second has one stall in it,
+        #: and a single total cannot say which run it is in.
+        self.settled_seconds = time.monotonic() - started
+        self.final_state = str(task.get("state", ""))
+        return task
 
     def events(self) -> list[dict[str, Any]]:
         return list(self.client.call(
@@ -540,6 +552,7 @@ def _slice_body(
 
     notify = _Run(client, session_id, f"{DESKTOP_SLICE_REQUEST} [notify]").start()
     task = notify.settle()
+    report.measure("run-notify", notify.settled_seconds, state=notify.final_state)
     prompt = notify.prompt.get("requirement") or {}
     report.record(5, "provider proposes showing a notification", passed=bool(notify.prompt),
                   detail=str(prompt.get("action", "")))
@@ -587,6 +600,7 @@ def _slice_body(
         executor.overrides["launch"] = {"applicationId": application, "focusExisting": True}
         launch = _Run(client, session_id, f"{DESKTOP_SLICE_REQUEST} [launch]").start()
         launch.settle()
+        report.measure("run-launch", launch.settled_seconds, state=launch.final_state)
         reason = str((launch.prompt.get("requirement") or {}).get("reason", ""))
         report.record(11, "provider proposes opening an installed application",
                       passed=bool(launch.prompt), detail=application)
@@ -637,6 +651,7 @@ def _slice_body(
         executor.overrides["volume"] = {"percent": target, "outputId": audio.output_id}
         volume = _Run(client, session_id, f"{DESKTOP_SLICE_REQUEST} [volume]").start()
         volume.settle()
+        report.measure("run-volume", volume.settled_seconds, state=volume.final_state)
         reason = str((volume.prompt.get("requirement") or {}).get("reason", ""))
         report.record(15, "provider proposes a volume change", passed=bool(volume.prompt),
                       detail=f"{audio.percent}% -> {target}%")
@@ -672,6 +687,7 @@ def _slice_body(
             executor.overrides["volume"] = dict(plan.parameters or {})
             undo = _Run(client, session_id, f"{DESKTOP_SLICE_REQUEST} [volume]").start()
             undo.settle()
+            report.measure("run-undo", undo.settled_seconds, state=undo.final_state)
             undone = undo.operation_value() or {}
             restored = desktop.broker.adapters.audio.read(audio.output_id)
             report.measure("undo", time.monotonic() - undo_at)
@@ -707,6 +723,7 @@ def _slice_body(
     if "desktop.clipboard.copy-text" in available:
         clip = _Run(client, session_id, f"{DESKTOP_SLICE_REQUEST} [clipboard]").start()
         clip.settle()
+        report.measure("run-clipboard", clip.settled_seconds, state=clip.final_state)
         report.record(21, "provider proposes copying bounded non-sensitive text",
                       passed=bool(clip.prompt),
                       detail=str((clip.prompt.get("requirement") or {}).get("reason", ""))[:160])
@@ -727,6 +744,7 @@ def _slice_body(
             cancel_before_approval=True,
         ).start()
         cancelled.settle()
+        report.measure("run-clipboard-cancelled", cancelled.settled_seconds, state=cancelled.final_state)
         owners_after_cancel = desktop.broker.adapters.clipboard.outstanding
         report.record(
             24, "cancel a second clipboard request", passed=bool(cancelled.prompt),
@@ -755,6 +773,7 @@ def _slice_body(
     # -- 26, 27: the hostile proposal --------------------------------------
     hostile = _Run(client, session_id, f"{DESKTOP_SLICE_REQUEST} [hostile]").start()
     hostile_task = hostile.settle()
+    report.measure("run-hostile", hostile.settled_seconds, state=hostile.final_state)
     hostile_events = hostile.events()
     refusals = [
         item for item in service.runtime.broker.refusals if item.get("toolId") == "shell.run"
