@@ -54,6 +54,7 @@ from ..executor import (
     TaskPlan,
     TaskResult,
 )
+from ..ids import operation_key
 from ..protocol import CompanionClient
 from ..service import CompanionService, ServiceOptions
 from .catalogue import DESCRIPTORS
@@ -166,21 +167,63 @@ class DesktopSliceExecutor:
             )
         tool, defaults = _PHASES[phase]
         arguments = {**defaults, **self.overrides.get(phase, {})}
+        operation = PlannedOperation(
+            name=f"{phase}-step",
+            tool=tool,
+            arguments=arguments,
+            # Stated, and not believed. The runtime derives the requirement from
+            # the descriptor whatever this says; the flag is here because an
+            # executor that knew consent was needed and did not say so would be
+            # worth noticing.
+            requires_approval=True,
+        )
+        # The step this executor exists to demonstrate, and the one the first
+        # version of it got wrong.
+        #
+        # A reviewer that asks for a revision sends the plan round again. An
+        # executor that re-proposes an operation the record already proves
+        # completed produces an identical plan — identical operations, so an
+        # identical fingerprint, so the *same* approval transition — and the
+        # replay guard in `companion.approvals.ApprovalGate.resolve` refuses it,
+        # correctly, because one approval cannot authorise two acts. The task
+        # then blocks after having done exactly what it was asked to do.
+        #
+        # `completed_operation_keys` and `operation_results` are what that
+        # context is for. An operation that has already been *attempted* — it
+        # completed, or it failed because this desktop cannot do it — is not
+        # proposed again: the first case is done and the second would fail the
+        # same way. Either way the second plan is genuinely different, no second
+        # question is asked about an act that already happened, and the task
+        # reaches `completed`.
+        #
+        # Nothing in the runtime needed changing for this. An executor that
+        # ignores what it is handed is an executor that loops, and the replay
+        # guard is what stops the loop having consequences.
+        key = operation_key(
+            task_id=str(context.task.get("taskId", "")),
+            name=operation.name,
+            tool=operation.tool,
+            arguments=operation.arguments,
+            destination=operation.destination,
+        )
+        attempted = (
+            key in context.completed_operation_keys
+            or key in context.unknown_operation_keys
+            or any(item.get("name") == operation.name for item in context.operation_results)
+        )
+        operations = () if attempted else (operation,)
         return TaskPlan(
             plan_id=plan_id,
             revision=revision,
-            summary=f"Perform one desktop action: {tool}",
-            operations=(
-                PlannedOperation(
-                    name=f"{phase}-step",
-                    tool=tool,
-                    arguments=arguments,
-                    # Stated, and not believed. The runtime derives the
-                    # requirement from the descriptor whatever this says; the
-                    # flag is here because an executor that knew consent was
-                    # needed and did not say so would be worth noticing.
-                    requires_approval=True,
-                ),
+            summary=(
+                f"Perform one desktop action: {tool}" if operations
+                else "The desktop action this task asked for has already been performed."
+            ),
+            operations=operations,
+            response_to_review=(
+                "" if operations
+                else "The operation the reviewer commented on has already been attempted, so "
+                     "this revision does not propose it again."
             ),
         )
 
@@ -330,6 +373,16 @@ class _Run:
         return self
 
     def _pending(self) -> dict[str, Any]:
+        """The question this run is waiting on, or nothing — but not forever.
+
+        A run that will never be asked anything — the arbitrary-command
+        proposal, refused at the allowlist before any requirement is derived —
+        used to wait the full sixty-second timeout for a question that could not
+        arrive, which put a minute of nothing into every gate iteration. So the
+        task's own state ends the wait: once it is terminal there is no question
+        coming, and an approval centre that kept a spinner up for a finished task
+        would be showing the same lie.
+        """
         events = self.client.call(
             "get_events", {"taskId": self.task_id, "sessionId": self.session_id},
         )["events"]
@@ -337,13 +390,25 @@ class _Run:
             payload = event.get("payload") or {}
             if event.get("eventType") == "approval_requested" and payload.get("request"):
                 return payload
+        task = self.client.call(
+            "get_task", {"taskId": self.task_id, "sessionId": self.session_id},
+        )["task"]
+        if task["state"] in ("completed", "failed", "cancelled", "blocked"):
+            return {"settledWithoutAsking": task["state"]}
         return {}
 
     def _answer(self) -> None:
         try:
             payload = _wait_for(self._pending)
             if not payload:
-                self.error = "no approval was requested"
+                self.error = "no approval was requested and the task did not settle"
+                return
+            if payload.get("settledWithoutAsking"):
+                # Nothing to answer. Recorded rather than treated as an error:
+                # step 27 *requires* this outcome, and calling it an error would
+                # make the refusal look like a failure of the harness.
+                self.error = ""
+                self.prompt = {}
                 return
             self.asked_at = time.monotonic()
             self.prompt = payload
@@ -578,10 +643,18 @@ def _slice_body(
                       detail=str(value.get("explanation", ""))[:200])
         report.record(
             10, "the result is recorded as accepted or confirmed accurately",
-            passed=value.get("state") == "accepted-not-confirmed",
+            # The task's own state matters here and not only the result's. An
+            # action that dispatched and then left its task blocked has not
+            # worked end to end, and reading only the operation value is how
+            # that went unnoticed for a whole run of this slice.
+            passed=(
+                value.get("state") == "accepted-not-confirmed"
+                and notify.final_state == "completed"
+            ),
             detail=(
-                f"state={value.get('state')} confidence={value.get('confidence')}; a daemon "
-                "returning an id proves acceptance and not display"
+                f"state={value.get('state')} confidence={value.get('confidence')} "
+                f"task={notify.final_state}; a daemon returning an id proves acceptance "
+                "and not display"
             ),
         )
     else:
@@ -625,8 +698,11 @@ def _slice_body(
         launched = launch.operation_value() or {}
         report.record(
             14, "the application is launched through the approved adapter",
-            passed=launched.get("state") in ("accepted-not-confirmed", "confirmed"),
-            detail=str(launched.get("explanation", ""))[:200],
+            passed=(
+                launched.get("state") in ("accepted-not-confirmed", "confirmed")
+                and launch.final_state == "completed"
+            ),
+            detail=f'task={launch.final_state}; {str(launched.get("explanation", ""))[:160]}',
         )
         if launch.approved_at:
             report.measure("application-launch", max(0.0, time.monotonic() - launch.approved_at))
@@ -664,8 +740,11 @@ def _slice_body(
         changed = volume.operation_value() or {}
         report.record(
             18, "the volume is changed and verified by read-back",
-            passed=changed.get("state") == "confirmed",
-            detail=f"state={changed.get('state')} confidence={changed.get('confidence')}",
+            passed=changed.get("state") == "confirmed" and volume.final_state == "completed",
+            detail=(
+                f"state={changed.get('state')} confidence={changed.get('confidence')} "
+                f"task={volume.final_state}"
+            ),
         )
         read_at = time.monotonic()
         now = desktop.broker.adapters.audio.read(audio.output_id)
@@ -731,8 +810,8 @@ def _slice_body(
         copied = clip.operation_value() or {}
         report.record(
             23, "clipboard ownership is established without reading old contents",
-            passed=copied.get("state") == "confirmed",
-            detail=str(copied.get("explanation", ""))[:200],
+            passed=copied.get("state") == "confirmed" and clip.final_state == "completed",
+            detail=f'task={clip.final_state}; {str(copied.get("explanation", ""))[:160]}',
         )
         owners_after_copy = desktop.broker.adapters.clipboard.outstanding
 
@@ -792,7 +871,7 @@ def _slice_body(
         passed=bool(refusals or failed),
         detail=(
             "the allowlist refused shell.run; no desktop module was entered and no adapter "
-            "was constructed"
+            f"was constructed (task {hostile_task.get('state', '?')})"
         ),
         taskState=str(hostile_task.get("state", "")),
     )
