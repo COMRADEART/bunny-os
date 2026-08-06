@@ -147,23 +147,60 @@ class CoordinationLimitExceeded(CompanionError):
 
 
 class ApprovalError(CompanionError):
-    """An approval could not be used for this act at this moment."""
+    """An approval could not be used for this act at this moment.
+
+    Every subclass names the terminal state it puts the approval into, and the
+    caller records *that* rather than a single word for all of them. Collapsing
+    them was a real defect: a question withdrawn because the user paused the
+    task was written into the record as ``denied``, which says the person
+    refused. They did not; they pressed pause. Only :class:`ApprovalDenied`
+    means somebody declined.
+    """
+
+    #: The value written to ``approval_resolved``'s ``decision`` field.
+    terminal_state = "invalidated"
 
 
 class ApprovalExpired(ApprovalError):
     """The approval's time ran out. Consent to act now is not consent later."""
 
+    terminal_state = "expired"
+
 
 class ApprovalReplayed(ApprovalError):
     """An already-resolved approval was presented a second time."""
+
+    terminal_state = "superseded"
 
 
 class ApprovalMismatch(ApprovalError):
     """The approval does not belong to this task, transition, plan or destination."""
 
+    terminal_state = "superseded"
+
 
 class ApprovalDenied(ApprovalError):
     """A person said no, or nobody answered and the safe default applied."""
+
+    terminal_state = "denied-by-user"
+
+
+class ApprovalInvalidated(ApprovalError):
+    """The question was withdrawn because the task stopped.
+
+    Raised where a pause or a cancellation has already recorded the withdrawal,
+    so that the worker which arrives afterwards records the same thing the
+    withdrawal did rather than the safe default for an unanswered question.
+
+    The terminal state is per-instance because the reasons differ and the
+    difference is user-visible: "the task was paused" and "the task was
+    cancelled" are not the same sentence to read next to a question you were
+    about to answer.
+    """
+
+    def __init__(self, message: str, *, terminal_state: str = "invalidated") -> None:
+        super().__init__(message)
+        self.terminal_state = terminal_state
 
 
 # -- cancellation and recovery ---------------------------------------------

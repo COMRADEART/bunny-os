@@ -1,0 +1,885 @@
+{
+  "baseline": {
+    "descriptors": {
+      "reason": "this platform has no /proc/self/fd",
+      "result": "NOT_RUN"
+    },
+    "label": "baseline",
+    "memory": {
+      "reason": "this platform has no /proc/self/status",
+      "result": "NOT_RUN"
+    },
+    "runtime": {
+      "consentWaiters": [],
+      "executorLeases": [],
+      "liveRuntimes": 0,
+      "liveServices": 0
+    },
+    "sockets": {
+      "tcp": "NOT_RUN: no /proc/net/tcp",
+      "unix": "NOT_RUN: no /proc/net/unix"
+    },
+    "tempDirectories": 26,
+    "threads": {
+      "count": 1,
+      "names": [
+        "MainThread"
+      ],
+      "nonDaemon": 1
+    }
+  },
+  "failed": 7,
+  "final": {
+    "descriptors": {
+      "reason": "this platform has no /proc/self/fd",
+      "result": "NOT_RUN"
+    },
+    "label": "final",
+    "memory": {
+      "reason": "this platform has no /proc/self/status",
+      "result": "NOT_RUN"
+    },
+    "runtime": {
+      "consentWaiters": [],
+      "executorLeases": [],
+      "liveRuntimes": 0,
+      "liveServices": 0
+    },
+    "sockets": {
+      "tcp": "NOT_RUN: no /proc/net/tcp",
+      "unix": "NOT_RUN: no /proc/net/unix"
+    },
+    "tempDirectories": 26,
+    "threads": {
+      "count": 1,
+      "names": [
+        "MainThread"
+      ],
+      "nonDaemon": 1
+    }
+  },
+  "finalConsecutivePass": 2,
+  "firstFailure": {
+    "delta": {
+      "consentWaiters": [],
+      "executorLeases": [],
+      "liveRuntimes": 0,
+      "liveServices": 0,
+      "nonDaemonThreads": 0,
+      "tempDirectories": -1,
+      "threads": 0
+    },
+    "detail": [
+      "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 200, in test_events_are_paged_and_the_pages_join_up\n    task_id = self._completed_task()\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 166, in _completed_task\n    self.fail(\n    ~~~~~~~~~^\n        f\"{task_id} did not finish within {_WAIT}s: state={task['state']!r}, \"\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        f\"progress={task.get('progress')}, running={health.get('runningTasks')}, \"\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        f\"queued={health.get('queuedTasks')}, awaiting={health.get('awaitingApproval')}\"\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\nAssertionError: task-4de8f70c21ec48659175e1abbbdcfe54 did not finish within 45.0s: state='waiting_for_executor', progress=0.0, running=[], queued=[], awaiting=[]\n"
+    ],
+    "errors": [],
+    "failures": [
+      "test_events_are_paged_and_the_pages_join_up (tests.companion.test_protocol_ipc.OperationTests.test_events_are_paged_and_the_pages_join_up)"
+    ],
+    "gcSeconds": 0.0066,
+    "iteration": 13,
+    "ok": false,
+    "order": [
+      "tests.companion.test_protocol_ipc",
+      "tests.companion.test_integration_slice",
+      "tests.companion.test_character_cli_vertical"
+    ],
+    "pid": 27940,
+    "ran": 63,
+    "seconds": 64.552,
+    "sinceBaseline": {
+      "consentWaiters": [],
+      "executorLeases": [],
+      "liveRuntimes": 0,
+      "liveServices": 0,
+      "nonDaemonThreads": 0,
+      "tempDirectories": 0,
+      "threads": 0
+    }
+  },
+  "iterations": [
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.008,
+      "iteration": 1,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.383,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0072,
+      "iteration": 2,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.457,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0072,
+      "iteration": 3,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.008,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0078,
+      "iteration": 4,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.077,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0093,
+      "iteration": 5,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 18.815,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0069,
+      "iteration": 6,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 18.987,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0071,
+      "iteration": 7,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 18.776,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0078,
+      "iteration": 8,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.46,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0076,
+      "iteration": 9,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.315,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0109,
+      "iteration": 10,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.202,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 1,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0084,
+      "iteration": 11,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.118,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 1,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.007,
+      "iteration": 12,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.517,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 1,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": -1,
+        "threads": 0
+      },
+      "detail": [
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 200, in test_events_are_paged_and_the_pages_join_up\n    task_id = self._completed_task()\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 166, in _completed_task\n    self.fail(\n    ~~~~~~~~~^\n        f\"{task_id} did not finish within {_WAIT}s: state={task['state']!r}, \"\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        f\"progress={task.get('progress')}, running={health.get('runningTasks')}, \"\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        f\"queued={health.get('queuedTasks')}, awaiting={health.get('awaitingApproval')}\"\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\nAssertionError: task-4de8f70c21ec48659175e1abbbdcfe54 did not finish within 45.0s: state='waiting_for_executor', progress=0.0, running=[], queued=[], awaiting=[]\n"
+      ],
+      "errors": [],
+      "failures": [
+        "test_events_are_paged_and_the_pages_join_up (tests.companion.test_protocol_ipc.OperationTests.test_events_are_paged_and_the_pages_join_up)"
+      ],
+      "gcSeconds": 0.0066,
+      "iteration": 13,
+      "ok": false,
+      "order": [
+        "tests.companion.test_protocol_ipc",
+        "tests.companion.test_integration_slice",
+        "tests.companion.test_character_cli_vertical"
+      ],
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 64.552,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0068,
+      "iteration": 14,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.264,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "detail": [
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 264, in test_an_approval_can_be_resolved_over_the_socket\n    self.assertGreaterEqual(len(answered), 2)\n    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\nAssertionError: 1 not greater than or equal to 2\n"
+      ],
+      "errors": [],
+      "failures": [
+        "test_an_approval_can_be_resolved_over_the_socket (tests.companion.test_protocol_ipc.OperationTests.test_an_approval_can_be_resolved_over_the_socket)"
+      ],
+      "gcSeconds": 0.0068,
+      "iteration": 15,
+      "ok": false,
+      "order": [
+        "tests.companion.test_protocol_ipc",
+        "tests.companion.test_integration_slice",
+        "tests.companion.test_character_cli_vertical"
+      ],
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 63.534,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0076,
+      "iteration": 16,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 18.907,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "detail": [
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 233, in test_a_task_can_be_cancelled_over_the_socket\n    self.assertTrue(outcome[\"releasedApprovals\"])\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [] is not true\n",
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_integration_slice.py\", line 45, in test_the_whole_provider_free_slice_passes\n    self.assertTrue(\n    ~~~~~~~~~~~~~~~^\n        document[\"passed\"],\n        ^^^^^^^^^^^^^^^^^^^\n    ...<3 lines>...\n        ),\n        ^^\n    )\n    ^\nAssertionError: False is not true : failed steps: 9 an approval was requested: {'step': 9, 'name': 'an approval was requested', 'ok': False, 'action': None, 'requestId': None}; 10 the Approval Centre displays it: {'step': 10, 'name': 'the Approval Centre displays it', 'ok': False, 'detail': 'no approval was raised'}\n"
+      ],
+      "errors": [
+        "test_the_slice_answers_more_than_one_question (tests.companion.test_integration_slice.VerticalSliceTests.test_the_slice_answers_more_than_one_question)",
+        "test_the_slice_proves_the_binding_check_by_failing_it_first (tests.companion.test_integration_slice.VerticalSliceTests.test_the_slice_proves_the_binding_check_by_failing_it_first)"
+      ],
+      "failures": [
+        "test_a_task_can_be_cancelled_over_the_socket (tests.companion.test_protocol_ipc.OperationTests.test_a_task_can_be_cancelled_over_the_socket)",
+        "test_the_whole_provider_free_slice_passes (tests.companion.test_integration_slice.VerticalSliceTests.test_the_whole_provider_free_slice_passes)"
+      ],
+      "gcSeconds": 0.0068,
+      "iteration": 17,
+      "ok": false,
+      "order": [
+        "tests.companion.test_protocol_ipc",
+        "tests.companion.test_integration_slice",
+        "tests.companion.test_character_cli_vertical"
+      ],
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 48.294,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "detail": [
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_character_cli_vertical.py\", line 161, in test_a_completed_task_maps_to_success_not_a_stale_review_warning\n    self.assertTrue(self.report.passed, self.report.failures)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: False is not true : ['step 9 (display a reviewer observation)', 'step 8 (display progress)', 'step 16 (enter the success state)', 'step 24 (verify the task never restarted or was cancelled)']\n",
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_character_cli_vertical.py\", line 168, in test_the_installed_slice_exercises_the_required_renderer_story\n    self.assertTrue(document[\"passed\"], document[\"failures\"])\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: False is not true : ['step 9 (display a reviewer observation)', 'step 8 (display progress)', 'step 16 (enter the success state)', 'step 24 (verify the task never restarted or was cancelled)']\n"
+      ],
+      "errors": [],
+      "failures": [
+        "test_a_completed_task_maps_to_success_not_a_stale_review_warning (tests.companion.test_character_cli_vertical.VerticalSliceAndPerformanceTests.test_a_completed_task_maps_to_success_not_a_stale_review_warning)",
+        "test_the_installed_slice_exercises_the_required_renderer_story (tests.companion.test_character_cli_vertical.VerticalSliceAndPerformanceTests.test_the_installed_slice_exercises_the_required_renderer_story)"
+      ],
+      "gcSeconds": 0.0073,
+      "iteration": 18,
+      "ok": false,
+      "order": [
+        "tests.companion.test_protocol_ipc",
+        "tests.companion.test_integration_slice",
+        "tests.companion.test_character_cli_vertical"
+      ],
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 108.16,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0069,
+      "iteration": 19,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 18.94,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "detail": [
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 233, in test_a_task_can_be_cancelled_over_the_socket\n    self.assertTrue(outcome[\"releasedApprovals\"])\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [] is not true\n"
+      ],
+      "errors": [],
+      "failures": [
+        "test_a_task_can_be_cancelled_over_the_socket (tests.companion.test_protocol_ipc.OperationTests.test_a_task_can_be_cancelled_over_the_socket)"
+      ],
+      "gcSeconds": 0.0068,
+      "iteration": 20,
+      "ok": false,
+      "order": [
+        "tests.companion.test_protocol_ipc",
+        "tests.companion.test_integration_slice",
+        "tests.companion.test_character_cli_vertical"
+      ],
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 18.808,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.007,
+      "iteration": 21,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 18.808,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "detail": [
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 233, in test_a_task_can_be_cancelled_over_the_socket\n    self.assertTrue(outcome[\"releasedApprovals\"])\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [] is not true\n"
+      ],
+      "errors": [],
+      "failures": [
+        "test_a_task_can_be_cancelled_over_the_socket (tests.companion.test_protocol_ipc.OperationTests.test_a_task_can_be_cancelled_over_the_socket)"
+      ],
+      "gcSeconds": 0.0068,
+      "iteration": 22,
+      "ok": false,
+      "order": [
+        "tests.companion.test_protocol_ipc",
+        "tests.companion.test_integration_slice",
+        "tests.companion.test_character_cli_vertical"
+      ],
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 18.89,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "detail": [
+        "Traceback (most recent call last):\n  File \"C:\\Users\\allam\\Documents\\new\\bunny-os\\tests\\companion\\test_protocol_ipc.py\", line 233, in test_a_task_can_be_cancelled_over_the_socket\n    self.assertTrue(outcome[\"releasedApprovals\"])\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [] is not true\n"
+      ],
+      "errors": [],
+      "failures": [
+        "test_a_task_can_be_cancelled_over_the_socket (tests.companion.test_protocol_ipc.OperationTests.test_a_task_can_be_cancelled_over_the_socket)"
+      ],
+      "gcSeconds": 0.0068,
+      "iteration": 23,
+      "ok": false,
+      "order": [
+        "tests.companion.test_protocol_ipc",
+        "tests.companion.test_integration_slice",
+        "tests.companion.test_character_cli_vertical"
+      ],
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.114,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0069,
+      "iteration": 24,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 19.079,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    },
+    {
+      "delta": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0079,
+      "iteration": 25,
+      "ok": true,
+      "pid": 27940,
+      "ran": 63,
+      "seconds": 18.731,
+      "sinceBaseline": {
+        "consentWaiters": [],
+        "executorLeases": [],
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "nonDaemonThreads": 0,
+        "tempDirectories": 0,
+        "threads": 0
+      }
+    }
+  ],
+  "longestConsecutivePass": 12,
+  "mode": "in-process",
+  "order": "declared",
+  "passed": 18,
+  "runs": 25,
+  "target": "service"
+}

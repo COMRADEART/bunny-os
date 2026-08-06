@@ -54,6 +54,11 @@
       "type": "string",
       "description": "The phase a pause interrupted, so resume returns to it rather than guessing. Empty whenever the task is not paused."
     },
+    "lifecycleEpoch": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Which attempt at running this task is the current one, incremented on every resume. A resume that produces an identical plan produces identical plan and transition identifiers — deliberately, so that an answer which still applies is kept — which means an approval outcome recorded against the previous attempt would match the current one on every other field. This is the field that cannot match, and the presentation fold uses it to ignore outcomes belonging to an earlier attempt. Absent in tasks written before epochs existed; zero is the correct reading of a task that never had a second attempt."
+    },
     "progress": { "type": "number", "minimum": 0, "maximum": 1 },
     "planRevision": { "type": "integer", "minimum": 0 },
     "reviewRounds": { "type": "integer", "minimum": 0 },

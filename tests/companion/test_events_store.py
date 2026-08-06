@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import unittest.mock
 
 from companion import EVENT_SCHEMA_VERSION
 from companion.errors import IntegrityError, PayloadTooLarge, SchemaError, StoreError, UnknownEventType
@@ -550,6 +551,15 @@ class ReplayTests(CompanionTestCase):
         # The audit audience is equally bounded.
         audit = json.dumps(runtime.store.export(session.session_id, audience="audit"))
         self.assertNotIn(task.original_request, audit)
+
+
+# The atomic-writer tests that lived here have moved to
+# tests/companion/test_store_durability.py, which covers what this pair could
+# not: which failures are retried and, more importantly, which are refused.
+# Retrying a full disk or a read-only filesystem would add a delay to an error
+# that was already correct, and the version here retried every OSError.
+#
+# They are moved rather than deleted; nothing they asserted was dropped.
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -1,0 +1,200 @@
+{
+  "backendId": "pulse",
+  "commercialProviderRequired": false,
+  "effect": "RAN the installed voice vertical slice in /tmp/bunny-voice-slice-e1s_twfc: a companion service, a task, an approval, a local synthesiser, generic visemes, a cancellation, an audio loss and a worker restart. No network, remote provider or credential was used, and nothing about the task was changed by any of it.",
+  "failed": [],
+  "measurements": [
+    {
+      "captionFinalisationMs": null,
+      "captionId": "cap-870070bc181d447baca148b98fddeed5",
+      "captionToAudioMs": 32,
+      "neutralResetMs": 1,
+      "requestId": "speech-d4715726fd0b47479b01f0fa0a15f3a8",
+      "synthesisLatencyMs": 22,
+      "timeToFirstAudioMs": 32,
+      "tolerances": {
+        "captionFinalisationMaximumMs": 1000,
+        "captionLeadMaximumMs": 2000,
+        "captionLeadMinimumMs": 0,
+        "environment": "development; audio via the WSLg bridge, no physical speaker validated",
+        "neutralResetMaximumMs": 250,
+        "visemeOffsetMaximumMs": 120
+      },
+      "violations": [],
+      "visemeSource": "amplitude",
+      "visemeToAudioMs": 0,
+      "withinTolerance": true
+    }
+  ],
+  "networkRequired": false,
+  "notRun": [
+    "14. animate the character mouth: the viseme timeline drives companion.character.lipsync, which the character slice exercises against the renderer; no compositor runs here"
+  ],
+  "notes": [
+    "no network was used and no commercial provider was contacted; the speech path was espeak-ng through pulse"
+  ],
+  "passed": true,
+  "passedCount": 24,
+  "providerId": "espeak-ng",
+  "root": "/tmp/bunny-voice-slice-e1s_twfc",
+  "sessionId": "ses-4f7ed1accf8e4d91bc50adebb8ea8874",
+  "stepCount": 25,
+  "steps": [
+    {
+      "detail": "store at /tmp/bunny-voice-slice-e1s_twfc",
+      "name": "start the canonical companion runtime",
+      "status": "PASS",
+      "step": 1
+    },
+    {
+      "detail": "the protocol client is exercised over the real socket; the GTK widget layer needs a compositor and is covered by the character slice",
+      "name": "start the GTK client transport",
+      "status": "PASS",
+      "step": 2
+    },
+    {
+      "detail": "org.bunny-os.default-bunny (animated-2d) validated from /usr/share/bunny-os/companion/characters/default-bunny",
+      "name": "load the validated character package",
+      "status": "PASS",
+      "step": 3
+    },
+    {
+      "detail": "task-eaeab4a5fffe4fdc956a975abaa55602",
+      "name": "submit a harmless task",
+      "status": "PASS",
+      "step": 4
+    },
+    {
+      "detail": "starting -> waiting_for_approval",
+      "name": "display planning and working states",
+      "status": "PASS",
+      "step": 5
+    },
+    {
+      "detail": "2 approval(s) granted: approval:task-eaeab4a5fffe4fdc956a975abaa55602:4c4d7757e99c9e6abeedf0fa81b7b7fd:0:interrupt_user_work, approval:task-eaeab4a5fffe4fdc956a975abaa55602:9726fcf4efb64f0d39f9c4a1121f1dcc:0:interrupt_user_work",
+      "name": "request and resolve approval",
+      "status": "PASS",
+      "step": 6
+    },
+    {
+      "detail": "phase success",
+      "name": "complete the task",
+      "status": "PASS",
+      "step": 7
+    },
+    {
+      "detail": "cap-870070bc181d447baca148b98fddeed5 (31 characters)",
+      "name": "produce canonical caption text",
+      "status": "PASS",
+      "step": 8
+    },
+    {
+      "detail": "speech-d4715726fd0b47479b01f0fa0a15f3a8",
+      "name": "submit a local speech request",
+      "status": "PASS",
+      "step": 9
+    },
+    {
+      "detail": "espeak-ng selected",
+      "name": "select a real available local provider",
+      "providers": [
+        "espeak-ng",
+        "speech-dispatcher"
+      ],
+      "status": "PASS",
+      "step": 10
+    },
+    {
+      "detail": "the caption was marked shown before the request was built",
+      "name": "start captions before speech",
+      "status": "PASS",
+      "step": 11
+    },
+    {
+      "detail": "pulse",
+      "name": "start audio",
+      "status": "PASS",
+      "step": 12
+    },
+    {
+      "detail": "source amplitude at confidence 0.6",
+      "name": "emit generic visemes",
+      "status": "PASS",
+      "step": 13
+    },
+    {
+      "detail": "the viseme timeline drives companion.character.lipsync, which the character slice exercises against the renderer; no compositor runs here",
+      "name": "animate the character mouth",
+      "status": "NOT_RUN",
+      "step": 14
+    },
+    {
+      "detail": "played",
+      "name": "complete playback",
+      "status": "PASS",
+      "step": 15
+    },
+    {
+      "detail": "speech ended; the mouth returned to neutral",
+      "name": "return the mouth to neutral",
+      "status": "PASS",
+      "step": 16
+    },
+    {
+      "detail": "cancelled",
+      "name": "cancel a second utterance mid-playback",
+      "status": "PASS",
+      "step": 17
+    },
+    {
+      "detail": "the caption survives its utterance being cancelled",
+      "name": "preserve captions through the cancellation",
+      "status": "PASS",
+      "step": 18
+    },
+    {
+      "detail": "pipewire, pulse, alsa",
+      "name": "remove the audio device or simulate backend loss",
+      "status": "PASS",
+      "step": 19
+    },
+    {
+      "detail": "local-neural-or-system-voice -> captions-only",
+      "name": "degrade to captions only",
+      "status": "PASS",
+      "step": 20
+    },
+    {
+      "detail": "captions-only -> local-neural-or-system-voice after 4 readings; the first 2 held at captions-only",
+      "name": "restore the backend with hysteresis",
+      "status": "PASS",
+      "step": 21
+    },
+    {
+      "detail": "0 in-flight utterance(s) recorded interrupted",
+      "name": "restart the voice worker",
+      "status": "PASS",
+      "step": 22
+    },
+    {
+      "detail": "task-eaeab4a5fffe4fdc956a975abaa55602 in state completed",
+      "name": "confirm task identity and result are unchanged",
+      "status": "PASS",
+      "step": 23
+    },
+    {
+      "detail": "phase success at revision 38",
+      "name": "restart the client and replay the presentation",
+      "status": "PASS",
+      "step": 24
+    },
+    {
+      "detail": "0 new utterance(s) after the replay; 1 caption(s) remain marked spoken",
+      "name": "confirm completed speech is not automatically replayed",
+      "status": "PASS",
+      "step": 25
+    }
+  ],
+  "taskId": "task-eaeab4a5fffe4fdc956a975abaa55602",
+  "voiceOutcome": "local-neural-or-system-voice"
+}

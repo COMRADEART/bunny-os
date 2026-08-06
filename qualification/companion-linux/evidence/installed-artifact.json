@@ -1,0 +1,1069 @@
+{
+  "counts": {
+    "directories": 6,
+    "entries": 104,
+    "files": 98,
+    "pythonModules": 98,
+    "symlinks": 0
+  },
+  "distinctMtimes": [
+    1785899772
+  ],
+  "gate": {
+    "failureCount": 0,
+    "passed": true
+  },
+  "inventory": [
+    {
+      "gid": 0,
+      "mode": "0o755",
+      "mtime": 1785899772,
+      "path": "bunny_os",
+      "size": 4096,
+      "type": "directory",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o755",
+      "mtime": 1785899772,
+      "path": "capability",
+      "size": 4096,
+      "type": "directory",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o755",
+      "mtime": 1785899772,
+      "path": "companion",
+      "size": 4096,
+      "type": "directory",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o644",
+      "mtime": 1785899772,
+      "path": "bunny_os/__init__.py",
+      "sha256": "e04da994e2c1f2a4db6ba16dcb866466778a606ec72971c008e59d3b32f2ebe7",
+      "size": 75,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o644",
+      "mtime": 1785899772,
+      "path": "bunny_os/capability_cli.py",
+      "sha256": "5c14c6dd55dba82fedd8eec2134f60e605f16d4c54a76fec5c5716bf8606a313",
+      "size": 30007,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o644",
+      "mtime": 1785899772,
+      "path": "bunny_os/cli.py",
+      "sha256": "d93f0b6d66db0b0ccda1a5a4aed0f0dab50647667c7d975834e5eb35676bec92",
+      "size": 8210,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o644",
+      "mtime": 1785899772,
+      "path": "bunny_os/client.py",
+      "sha256": "a92925b6c8c97e277554a478536c36e83e0232c8ed548e943891cb5abaa70c4e",
+      "size": 3265,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o644",
+      "mtime": 1785899772,
+      "path": "bunny_os/companion_cli.py",
+      "sha256": "90f2b647cde7ac2035d0a4143f3f2bea0a19191820f413851571e2516d8484ad",
+      "size": 1493,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o644",
+      "mtime": 1785899772,
+      "path": "bunny_os/info.py",
+      "sha256": "6d9a63770cee0a7f41831a324599348ed2880568e7d9e97a61402cf3d5b00e21",
+      "size": 13875,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o644",
+      "mtime": 1785899772,
+      "path": "bunny_os/qualification.py",
+      "sha256": "b47d595fb4f7f7ae5fe21b8339d18d30c761b362da00e0de010839a0f4096cfe",
+      "size": 18009,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o755",
+      "mtime": 1785899772,
+      "path": "capability/apply",
+      "size": 4096,
+      "type": "directory",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o755",
+      "mtime": 1785899772,
+      "path": "capability/discovery",
+      "size": 4096,
+      "type": "directory",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/__init__.py",
+      "sha256": "b1fd7fb81bd214b722eca01577a97613b1c060dc3ee02cd57273ea165ebb892f",
+      "size": 2631,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/budget.py",
+      "sha256": "398b011de06d8488f96ab2fbac5fd7b8b3c33e980cf6c4215fdb24edc32f718a",
+      "size": 21013,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/engine.py",
+      "sha256": "4261a668118041659b9ee63540b70142062a724d9e44f64f62c517625e039545",
+      "size": 25035,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/explain.py",
+      "sha256": "42abb00a5a2154edd86c952153a6ca0449b7fdd80be9bb2a6114bb53aea4672b",
+      "size": 14300,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/manifest.py",
+      "sha256": "246fb335a922a486166f4e997bdd7bc28870506128eb7951ee94caff1888fb4a",
+      "size": 28866,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/model.py",
+      "sha256": "80ff54743f49c2f9096218e517845f7a02804121a1df7c6d5d0419e71a6a1265",
+      "size": 29582,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/plan.py",
+      "sha256": "a99ba4e048e8eb80081935bf3fcfc9a2a295bd8aad93c5f49bbffb57eab7452c",
+      "size": 9256,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/policy.py",
+      "sha256": "65a86e8f8b0c68544d39387b3c30ca1ab8ec88efef485bea83d9e0e407c3bff2",
+      "size": 17444,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/registry.py",
+      "sha256": "3c167b490f8147c5f9b47614ac8a3b98c58cab31f366f06040d8c05f1028aa77",
+      "size": 9208,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/router.py",
+      "sha256": "18847dd00f77ad29588edbbf03034921774c1c5ac724d8279d73ce4ace88af32",
+      "size": 13524,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/runtime.py",
+      "sha256": "1039fc0eda78266a4773563492662d4a0ba90460c6aff099b5eae7e86a4ed812",
+      "size": 3459,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/scores.py",
+      "sha256": "7abb8560942de8caec77c9416904cd715c4c7b7a648ddf9b754522b0d954f06f",
+      "size": 33194,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/simulate.py",
+      "sha256": "a085103b6775abc92807fe614bc3836c26ed0ab33c644532242b4f8a34314c38",
+      "size": 18428,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/__init__.py",
+      "sha256": "a6c75d918b215891381e6dbca5a700c30c394517b325c4558763d5ff8227d593",
+      "size": 3412,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/adaptation.py",
+      "sha256": "d99a159a2b8d440cf5280cc6d6455c899dc4d6b414f9d30b30247281a3999d3f",
+      "size": 8684,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/applicator.py",
+      "sha256": "560b312ca95d6cdd22affb565b825a18312d16c55e8c1261ced1929b969ce63f",
+      "size": 45382,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/approval.py",
+      "sha256": "d0bf01f224443e162f437ed33591634392fb3a7aae01ea9cce3d99f1ab820b02",
+      "size": 13106,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/audit.py",
+      "sha256": "0f01df5aadbbeb6231b4e426ba0185b8ae0500378b2807069b62ba9ee8a2c69d",
+      "size": 9848,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/backends.py",
+      "sha256": "25233fba863a8ad0e94d53b9ed50d9e0263e882a45d7339e4e2d6e136a5e2793",
+      "size": 26585,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/cgroup.py",
+      "sha256": "0e02fa238599151f822ca17c067663bd7e43bf7d8c91c542636cd5464b40f5a2",
+      "size": 21735,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/explain.py",
+      "sha256": "2fca80bf13aa72bd5e1fd58ba6a5ce7b6c3fd0629503da3d201fbcc6a87a3dac",
+      "size": 15047,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/failures.py",
+      "sha256": "ecc9084dbe25b98332c797331d7c54552cdc930db6ed0660ccde846f8c1a60b5",
+      "size": 19554,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/identity.py",
+      "sha256": "ba28ea07828b60cdd6fb800b994c4df72d113313f68169f12cc47901f289f9d4",
+      "size": 17201,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/ledger.py",
+      "sha256": "ee8ee0be36f17a42143ea8f43aca0dde9a5c66b433c610aae7f276f78ab104cc",
+      "size": 23744,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/monitor.py",
+      "sha256": "11ce394c08490fec7303ea954aadb2f6a88c341c3e9f0328dbfc5ed2485c880a",
+      "size": 24218,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/reconcile.py",
+      "sha256": "609cc094181aee2110431595905ccb25b13deb8d0d76d89cfe581aa6929a3eff",
+      "size": 27616,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/remote.py",
+      "sha256": "13da31cb2cb47437b84d3ce924ba9b854e0c71757c16e7ec5f8c2353b5ff3182",
+      "size": 18924,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/revalidate.py",
+      "sha256": "297c26b80eaa6212de767c4d2d6789dc98f74bb16a4ebbbd22a9afb5b454845f",
+      "size": 11785,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/state.py",
+      "sha256": "0141dbfae6cdc87b5b941639f42d3b5b607f3d39347eb51eddc2c921a8f62787",
+      "size": 18667,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/apply/systemd.py",
+      "sha256": "d0678b6c6a1e2717552e5c85df07d08e0da59640c3f17ccb60f0f4f6d1297cbf",
+      "size": 24824,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/discovery/__init__.py",
+      "sha256": "e1f1341a577fbd061a96ee75b4323b836986fa1fd96271f0276d25aa76d73dda",
+      "size": 5620,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/discovery/cpu.py",
+      "sha256": "1c211c8e7b972192c2b736a6267fe55aa6c4bb002075966fc16ef1ae6736154c",
+      "size": 8705,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/discovery/gpu.py",
+      "sha256": "760b7889540be3d82f5fd2c4b5b5d3e8d0eae7463210c58f34a2496e26ed97af",
+      "size": 11961,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/discovery/interaction.py",
+      "sha256": "39c1fc02d852aae89e54e5a55b95c757f352b8a2d779b8066136b64a2262d71b",
+      "size": 8072,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/discovery/memory.py",
+      "sha256": "4c20b339f36f8e74560de80d2002c7d62af506e0a73aeac944c06a0a94a4ec52",
+      "size": 7265,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/discovery/network.py",
+      "sha256": "313b83d919f65723d070ded02705a2bb4212bb37bd9e835fd84d3cf2a008e67d",
+      "size": 8324,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/discovery/power.py",
+      "sha256": "8a545e85c179770b4c2b7e475a9baa0f92f445c05240a8407f762eac8bfbec87",
+      "size": 6051,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/discovery/sources.py",
+      "sha256": "b338e1730039daec74383733089017290d8635036bb9e4ce9f603c91bea30657",
+      "size": 8181,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/discovery/storage.py",
+      "sha256": "97f1dc04187f39541b1a702e3b5ac8b3b11a83bb0f0c8533949f067d3a2ccbea",
+      "size": 4893,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "capability/discovery/system.py",
+      "sha256": "b8b5a2e3fa9d471d7892a886b12f654a0294f5b8eefa4c8f91fa25700e5c3daa",
+      "size": 3942,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o755",
+      "mtime": 1785899772,
+      "path": "companion/character",
+      "size": 4096,
+      "type": "directory",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/__init__.py",
+      "sha256": "c4bc2bd846b1b73c6c248c40b79c06975c00f8ebb1152999a14f176a0c5fdd7f",
+      "size": 3722,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/approvals.py",
+      "sha256": "154e4d0d40109ec489f43bc5d60080e1e41c5c92ed7ad6b6836505f629e2fa5a",
+      "size": 36479,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/cancellation.py",
+      "sha256": "6cfcbe776748109ce9e45164486981f64df3f4a685ab6337f2a31ec96f4e7b98",
+      "size": 8746,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/capability_bridge.py",
+      "sha256": "85eaf972ded77ea364b77a87b8c41cd722431a43029dd73a52d449c7953ef92b",
+      "size": 15195,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/characters.py",
+      "sha256": "d1acdf9fdf3c36182b318124511f038f7817c377c4d61f7b09602abbd1803ea7",
+      "size": 8499,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/cli.py",
+      "sha256": "441cdd137a9b3dc3459585977879c6537776e8d4156eaa85e48f81ae22a2db58",
+      "size": 37717,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/clock.py",
+      "sha256": "76da12acdf28566f623e68443d3056a8f5f1b534a28ccaae004b16c82282057d",
+      "size": 3696,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/coordination.py",
+      "sha256": "f7dbbd06ac62bf0dda3e75fec4b4a1ae0a79178f5e31039fb89330c85efc2992",
+      "size": 14266,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/demo.py",
+      "sha256": "430200d13f0587bd95019338805ba66e2e707407dc199975703994266e754826",
+      "size": 12352,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/errors.py",
+      "sha256": "e4b224dcae83ce66bd8576c93cff514a3eafbccfb2d1fa270a206c9fbcc4d6bf",
+      "size": 5443,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/events.py",
+      "sha256": "141403d1e6f4870d7e48a2f643916ca3f22f8cda460ff7369a040d1d29ab1ef0",
+      "size": 25340,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/executor.py",
+      "sha256": "cb4b11778dee8669212705331be645d75eea8bc187c0f428cf537980451c5235",
+      "size": 24429,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/gtk_shell.py",
+      "sha256": "f5f17cb613e33cda9c81b9a4da63983f84a4d2635ec4d5696861dd1bc97628ef",
+      "size": 44041,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/ids.py",
+      "sha256": "d230739319812cc29a57dab32d73ec0128ef8b67ba77fd7b5aa2507cd483487f",
+      "size": 5768,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/migration.py",
+      "sha256": "9039c84d0ed03afc8a6ecc958a435826cb70e0e8783540ddeaebf067bbd55f49",
+      "size": 17948,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/presentation.py",
+      "sha256": "d8104be325bfe4b1751931126c1a9f0914417ec5c19fb84327f79636f139ac0d",
+      "size": 57119,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/privacy.py",
+      "sha256": "49e38d5043975eada34518907fb580969a5347afd92cfa65f1839893b4640601",
+      "size": 17527,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/protocol.py",
+      "sha256": "00365490d49c7ce8d200832099ac8afba81e06ed5707217d3daf8dfeb6a48a31",
+      "size": 40418,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/recovery.py",
+      "sha256": "45334728f6eb72cc5ba3502b524d542496d3f9a086a673378409c450941d8348",
+      "size": 15916,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/reviewer.py",
+      "sha256": "d4629b754ba764789115fe754d2c63670fadcdd6a76534ea900d5c9e4add4e0d",
+      "size": 11266,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/runtime.py",
+      "sha256": "32044bc2c623eac405a682b522a4d92d64f4db105ba9c1beb9ca4773b0752f29",
+      "size": 66140,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/service.py",
+      "sha256": "e167f5b61fe6497a925166fdc74a478701abb30148f765dca661db1f6c9db188",
+      "size": 45583,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/session.py",
+      "sha256": "56aa8ffc8745aa737ce8c543e858ff3215b43dc03373e7560a9e855177529dfc",
+      "size": 14772,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/states.py",
+      "sha256": "b16c17377b0a19b2456956874af1f4fac5c2b2892bc1f7e872ee41b8a4582815",
+      "size": 10057,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/store.py",
+      "sha256": "42937eedc5fbea94146f5d94eb921a9d67eab2d6000c104e8cdbf9422ebc544d",
+      "size": 50484,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/task.py",
+      "sha256": "c30c384e66d1a49423cd727512ffa8a9e08f8c1c63e67eead54db1360969250a",
+      "size": 24538,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/tools.py",
+      "sha256": "99728f83dd1c8c16dda9b135cf688ed42c724a74e5aa0268d030256c716d5138",
+      "size": 10728,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/vertical_slice.py",
+      "sha256": "a63b0d3ef3ef3aeae167efd7125b6228e1cb82318554e6788688dfc4a45d92de",
+      "size": 19580,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/voice.py",
+      "sha256": "14a81466770740e7aa1e11288c712c6ff7caace37074622a4e4098efcbd45fca",
+      "size": 16051,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/__init__.py",
+      "sha256": "1cf50add84447929f74a3bbf81e54aa318aba5847d55c8fca9b6100bcfced361",
+      "size": 589,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/adaptation.py",
+      "sha256": "94e0ca43d9e1ac8f9b9cf5612e77ca357df23c19e91b96569bfce5c1ae57621a",
+      "size": 12644,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/animated_renderer.py",
+      "sha256": "c929097c110bac3e7533c4064ea5c6cb22f22a67049df977783fc880a802ae82",
+      "size": 8082,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/bubble.py",
+      "sha256": "b04f5e7357f354b39651edeef44e62e34080f7ded5c794fd727255671544b21a",
+      "size": 7320,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/controller.py",
+      "sha256": "a85385cd6ff31f86ef0bf72632b106f327f270b3c8379db578df78271fe68610",
+      "size": 11894,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/defaults.py",
+      "sha256": "75988a617a13877e1f987b5f702fa6afae8467567e55b7c5e09ac38fdc248a7b",
+      "size": 652,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/demo.py",
+      "sha256": "a7f17742cb2b36c784ca540de643a9ade425d3c6671db843800bf113ba37d065",
+      "size": 10941,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/diagnostics.py",
+      "sha256": "b71b299746cb48f6fa66b5f2cfe64af656e6184e9ac486f7a6035778f6d07831",
+      "size": 8047,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/errors.py",
+      "sha256": "4bed8c719e44f81122e72a9eb3837847bd4f8676a26f768940d3f76eb6307341",
+      "size": 1041,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/image.py",
+      "sha256": "3ee8ce2c6c8ff80b5c39e47ed7cbc0e6f1a5f1e4bb795a04f600cbaa97225be2",
+      "size": 9991,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/importer.py",
+      "sha256": "27d3922d9a46c48e8fd6170fa63e2af9051a9a9e2a541641b2b658cc174fa094",
+      "size": 21233,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/integration.py",
+      "sha256": "c8ad61ed75b6b912f0f76447dceb4c93558a70e824912794c77ed84db2bafa2c",
+      "size": 9159,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/lipsync.py",
+      "sha256": "203a7a08f180f339f215d789d05378f550381e372101782c0cf515330ed8448b",
+      "size": 5387,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/mapper.py",
+      "sha256": "d113d03f52c80b2ed5a813a070ff0504d9d16acab937e7edc6953c80f1ea8dbb",
+      "size": 20571,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/package.py",
+      "sha256": "e7950596132056bae6a97e1e6264331e28c272d5681e54bca7ebb8b8c72f6f2d",
+      "size": 11725,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/performance.py",
+      "sha256": "84313bcab4ec565e197916a76ff6ca429f0544a71c5e0b1e1cc9e6c65c1534c9",
+      "size": 7317,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/positioning.py",
+      "sha256": "ad2a1409d7c25558096cd49c8c644d2424c2878aa76eb7acb996f4e77181ecf1",
+      "size": 9429,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/renderer.py",
+      "sha256": "1f9fc0e01f39b243a89014c451396a15049eceb9585fafb939bf51d5f0282059",
+      "size": 9649,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/schema.py",
+      "sha256": "fd22c0b2bc1472200d390e63574dcbbc75c32ecd96c21c343f69a181d3e273c6",
+      "size": 28838,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/static_renderer.py",
+      "sha256": "47ce8c9afa6abe09e99303af6aa32ca1a3476533fd44983f9b675d9fc3a04470",
+      "size": 3371,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/surface.py",
+      "sha256": "f9e7b2bc63e28dee72af967d37d9ad22f5ba627c6a7cb2770e0a481913d559cd",
+      "size": 18828,
+      "type": "file",
+      "uid": 0
+    },
+    {
+      "gid": 0,
+      "mode": "0o444",
+      "mtime": 1785899772,
+      "path": "companion/character/vertical_slice.py",
+      "sha256": "1d2d48214cc8fd80bf7935edae2063fb9d0035c3270e4ae730bcef871a697653",
+      "size": 21317,
+      "type": "file",
+      "uid": 0
+    }
+  ],
+  "refusals": {
+    "forbidden": [],
+    "missing": [],
+    "permissions": []
+  },
+  "requiredModules": {
+    "companion/character/animated_renderer.py": true,
+    "companion/character/package.py": true,
+    "companion/character/surface.py": true,
+    "companion/presentation.py": true,
+    "companion/protocol.py": true,
+    "companion/runtime.py": true,
+    "companion/service.py": true,
+    "companion/store.py": true
+  },
+  "root": "/usr/lib/bunny-os/python",
+  "schema": "bunny-os/installed-artifact-report/1"
+}

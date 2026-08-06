@@ -1,0 +1,67 @@
+{
+  "allProfilesIdentical": true,
+  "baseCommitInstaller": "b825dd4aa181c30e1f2eceb878c261ec2201b247:build/scripts/install-root.py",
+  "declaredRoutes": 67,
+  "phase": "companion-voice-closure",
+  "profiles": {
+    "beta": {
+      "differingSourceOrMode": [],
+      "identicalToBaseCommitInstaller": true,
+      "installedPaths": 617,
+      "onlyInBaseCommitInstaller": [],
+      "onlyInRouteTable": []
+    },
+    "desktop": {
+      "differingSourceOrMode": [],
+      "identicalToBaseCommitInstaller": true,
+      "installedPaths": 610,
+      "onlyInBaseCommitInstaller": [],
+      "onlyInRouteTable": []
+    },
+    "developer": {
+      "differingSourceOrMode": [],
+      "identicalToBaseCommitInstaller": true,
+      "installedPaths": 610,
+      "onlyInBaseCommitInstaller": [],
+      "onlyInRouteTable": []
+    },
+    "live": {
+      "differingSourceOrMode": [],
+      "identicalToBaseCommitInstaller": true,
+      "installedPaths": 623,
+      "onlyInBaseCommitInstaller": [],
+      "onlyInRouteTable": []
+    },
+    "minimal": {
+      "differingSourceOrMode": [],
+      "identicalToBaseCommitInstaller": true,
+      "installedPaths": 530,
+      "onlyInBaseCommitInstaller": [],
+      "onlyInRouteTable": []
+    },
+    "recovery": {
+      "differingSourceOrMode": [],
+      "identicalToBaseCommitInstaller": true,
+      "installedPaths": 530,
+      "onlyInBaseCommitInstaller": [],
+      "onlyInRouteTable": []
+    },
+    "shell": {
+      "differingSourceOrMode": [],
+      "identicalToBaseCommitInstaller": true,
+      "installedPaths": 610,
+      "onlyInBaseCommitInstaller": [],
+      "onlyInRouteTable": []
+    },
+    "shell-test": {
+      "differingSourceOrMode": [],
+      "identicalToBaseCommitInstaller": true,
+      "installedPaths": 610,
+      "onlyInBaseCommitInstaller": [],
+      "onlyInRouteTable": []
+    }
+  },
+  "schemaVersion": 1,
+  "what": "The install set produced by the shared route table, compared against the install set b825dd4's install-root.py would produce, for every profile. The b825dd4 logic is transcribed as pure enumeration - no container, no copying - and both sides are (destination -> repository source, mode).",
+  "why": "The analyser repair required rewriting install-root.py to be driven by the declaration. A rewrite of the installer is a change to the image unless it is shown not to be, and 'it looks equivalent' is not a showing."
+}

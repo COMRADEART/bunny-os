@@ -360,7 +360,12 @@ class VerticalSliceTests(unittest.TestCase):
         report = run_demo(Path(directory.name), grant_approval=False)
         self.assertTrue(report.passed, f"failed steps: {report.failures}")
         steps = {item["step"]: item for item in report.steps}
-        self.assertIn("denied", steps[9]["decisions"])
+        # `denied-by-user`, not `denied`. The vocabulary now distinguishes a
+        # person refusing from the system withdrawing a question, and this slice
+        # runs with a refusing consent source — so it is the one case that
+        # genuinely is a refusal.
+        self.assertIn("denied-by-user", steps[9]["decisions"])
+        self.assertNotIn("invalidated", steps[9]["decisions"])
         self.assertFalse(steps[10]["noticePublished"])
         self.assertEqual(steps[10]["state"], "blocked")
 

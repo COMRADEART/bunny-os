@@ -32,7 +32,13 @@ from typing import Any
 from capability.runtime import Assessment, assess
 from capability.simulate import simulate
 
-from .approvals import CompanionApprovalStore, ConsentSource, RefusingConsent, ScriptedConsent
+from .approvals import (
+    USER_REFUSAL_STATES,
+    CompanionApprovalStore,
+    ConsentSource,
+    RefusingConsent,
+    ScriptedConsent,
+)
 from .clock import FrozenClock
 from .coordination import CoordinationPolicy
 from .events import verify_chain
@@ -184,9 +190,16 @@ def run_demo(
     )
     resolved = by_type.get("approval_resolved", [])
     decisions = [event.payload.get("decision") for event in resolved]
+    # Checked against the terminal-state vocabulary rather than two string
+    # literals. "denied" used to mean everything that was not a grant, so this
+    # passed for a question that had merely been withdrawn; only
+    # `denied-by-user` means somebody refused, and that is what a refusing
+    # consent source produces.
+    approved = any(item in ("approved", "granted") for item in decisions)
+    refused = any(item in USER_REFUSAL_STATES for item in decisions)
     report.record(
         9, "resolve the approval",
-        ("granted" in decisions) if grant_approval else ("denied" in decisions),
+        approved if grant_approval else refused,
         decisions=decisions,
     )
 

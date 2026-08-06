@@ -58,6 +58,7 @@ from dataclasses import dataclass, field
 import json
 import os
 from pathlib import Path
+import stat
 import tempfile
 import time
 from typing import Any, Iterator, Mapping, Sequence
@@ -359,7 +360,19 @@ def _append_private(path: Path, text: str) -> None:
 
 
 def _atomic_write_json(path: Path, document: Mapping[str, Any]) -> None:
-    """Replace a file's contents, or leave them entirely unchanged."""
+    """Replace a file's contents, or leave them entirely unchanged.
+
+    The temporary is created in the *same directory* as the destination, which
+    is what makes the rename atomic — across filesystems it would be a copy,
+    and a copy has a moment where the destination is half written. It is also
+    what makes the retry in :func:`_replace_stable` safe: the directory has
+    already accepted a file, so a later refusal cannot be a permissions problem
+    with the directory.
+
+    Nothing reports success before the replacement lands. The caller learns the
+    write happened by this function returning, and it returns only after
+    ``os.replace`` has and the directory entry has been synchronised.
+    """
     _private_directory(path.parent)
     encoded = json.dumps(document, indent=2, sort_keys=True) + "\n"
     handle = tempfile.NamedTemporaryFile(
@@ -375,14 +388,181 @@ def _atomic_write_json(path: Path, document: Mapping[str, Any]) -> None:
             os.chmod(temporary, 0o600)
         except OSError:
             pass
-        os.replace(temporary, path)
+        _replace_stable(temporary, path)
     except OSError as exc:
-        try:
-            temporary.unlink()
-        except OSError:
-            pass
+        _discard(temporary)
         raise StoreError(f"{path} could not be written: {exc}") from exc
+    except BaseException:
+        # KeyboardInterrupt and SystemExit reach here, and they arrive most
+        # easily during the backoff in `_replace_stable`. Without this the
+        # temporary survived the interruption, and a store interrupted often
+        # enough accumulated one orphan per attempt in the same directory it
+        # later scans.
+        _discard(temporary)
+        raise
     _fsync_directory(path.parent)
+
+
+def _discard(temporary: Path) -> None:
+    """Remove a temporary that will never become the real file."""
+    try:
+        temporary.unlink()
+    except OSError:
+        pass
+
+
+#: How many times a read will look again when it meets a file mid-replacement,
+#: and how long it waits between attempts. Small: this is a window of
+#: microseconds, and a fault that survives fifty milliseconds of retrying is a
+#: real fault rather than a race.
+_READ_ATTEMPTS = 5
+_READ_BACKOFF_SECONDS = 0.01
+
+
+def _read_bytes_stable(path: Path) -> bytes:
+    """Read a file another writer may be atomically replacing underneath.
+
+    ``os.replace`` is atomic *for the filesystem*: a reader sees the old
+    contents or the new ones, never a mixture. On POSIX it is also atomic for
+    *readers*, and this is a plain read that succeeds first time. On Windows the
+    replacement is implemented as a rename over an existing name, and a reader
+    that opens the path in the instant between can be refused with EACCES —
+    which is not a damaged file, not a permissions problem, and not something to
+    report as either.
+
+    The companion meets this constantly now that a runtime worker writes task
+    projections while the protocol serves readers from the same store. It cost
+    a run of the suite to find, and reporting it as "the task document is not
+    readable" is exactly the wrong diagnosis to hand somebody.
+
+    Bounded, and the last failure is re-raised rather than swallowed: a store
+    that genuinely cannot be read must still say so.
+    """
+    last: OSError | None = None
+    for attempt in range(_READ_ATTEMPTS):
+        try:
+            return path.read_bytes()
+        except OSError as exc:
+            last = exc
+            time.sleep(_READ_BACKOFF_SECONDS * (attempt + 1))
+    raise last if last is not None else OSError(f"{path} could not be read")
+
+
+def _read_text_stable(path: Path) -> str:
+    return _read_bytes_stable(path).decode("utf-8")
+
+
+#: Attempts and backoff for a replacement refused by a concurrent reader.
+#:
+#: Separate constants from the read side even though the numbers match, because
+#: they answer different questions and a future measurement will move one
+#: without moving the other. Five attempts at 10, 20, 30, 40 and 50 ms is 150 ms
+#: of patience: far longer than a reader holds a file open for a single read,
+#: and short enough that a permanent failure is still reported promptly.
+_REPLACE_ATTEMPTS = 5
+_REPLACE_BACKOFF_SECONDS = 0.01
+
+#: Windows error codes for "somebody else has this file open".
+#:
+#: 5 is ``ERROR_ACCESS_DENIED``, which is what a rename over a path another
+#: handle has open produces — this is the one that was measured, captured as
+#: ``[WinError 5]`` out of the worker's fault log. 32 is
+#: ``ERROR_SHARING_VIOLATION``, the same situation reported through a different
+#: code depending on how the other handle was opened.
+_SHARING_WINERRORS = frozenset({5, 32})
+
+#: Whether this is the platform where a rename can be refused by a reader.
+#:
+#: A module constant rather than an ``os.name`` check inside the predicate, so
+#: that a test can simulate the platform by patching *this* and nothing else.
+#: Patching ``os.name`` itself reaches every consumer in the interpreter —
+#: ``tempfile`` and ``pathlib`` among them — and the tests that did it passed on
+#: Windows only because the patch was a no-op there, and failed the moment they
+#: ran on Linux. A narrow seam is the difference between simulating a platform
+#: and lying to the standard library.
+_WINDOWS = os.name == "nt"
+
+
+def _is_transient_replacement_failure(error: OSError, path: Path) -> bool:
+    """Whether retrying this replacement could possibly help.
+
+    True for exactly one situation: on Windows, a rename refused because
+    another handle has the destination open. That is transient by construction
+    — the reader closes — and it is the failure this store actually meets,
+    because the protocol serves readers from the same files a worker writes.
+
+    False for everything else, and the cases worth naming:
+
+    * **POSIX.** A rename over an open file succeeds there. An ``EACCES`` on
+      POSIX therefore means what it says, and retrying it would turn a real
+      permissions problem into a slow real permissions problem.
+    * **A read-only destination.** Permanent. The mode does not change because
+      we waited.
+    * **A full disk, a read-only filesystem, a missing directory.** All
+      permanent for this attempt, all reported immediately.
+    """
+    if not _WINDOWS:
+        return False
+    if not isinstance(error, PermissionError):
+        return False
+    if getattr(error, "winerror", None) not in _SHARING_WINERRORS:
+        return False
+    try:
+        status = path.stat()
+    except OSError:
+        # No destination to be holding open. Whatever this is, waiting will not
+        # change it.
+        return False
+    # A destination the process cannot write is refused for a reason that
+    # outlasts any backoff.
+    return bool(status.st_mode & stat.S_IWUSR)
+
+
+def _replace_stable(temporary: Path, path: Path) -> None:
+    """Rename over a destination a reader may have open.
+
+    The mirror image of :func:`_read_bytes_stable`, and it was missing. That
+    function documents the Windows behaviour precisely — a rename over an
+    existing name meets a reader that has the path open and is refused with
+    EACCES — but it only defended the *reader*. The writer met the same window
+    from the other side and had no retry at all.
+
+    The consequence was not a bad read; it was a frozen task. ``os.replace``
+    raised, the store turned it into a :class:`StoreError`, and
+    ``CompanionService._serve_work`` caught it as an ordinary refusal and moved
+    on, leaving the task in whatever state it had last persisted — most often
+    ``waiting_for_executor``, with nothing running, nothing queued and no
+    explanation anywhere. That is the intermittent suite failure, and it is
+    Windows-only: on POSIX a rename over an open file simply succeeds, which is
+    why 52 consecutive Linux runs never reproduced it while one Windows run in
+    three did.
+
+    Bunny OS runs on Linux, where this loop retries nothing. It exists so that
+    the development host stops manufacturing failures that the product does not
+    have.
+
+    **Only the measured failure is retried.** Retrying every ``OSError`` here
+    would be worse than not retrying at all: a disk that is full, a filesystem
+    mounted read-only or a destination somebody has genuinely locked down are
+    all permanent, and looping over them adds a delay to an error that was
+    correct the first time — and, worse, invites a reader to believe the store
+    tried hard enough that the failure must be real when the opposite is true.
+    :func:`_is_transient_replacement_failure` is the discriminator, and the
+    original exception is re-raised unchanged once the attempts are spent.
+    """
+    last: OSError | None = None
+    for attempt in range(_REPLACE_ATTEMPTS):
+        try:
+            os.replace(temporary, path)
+            return
+        except OSError as exc:
+            if not _is_transient_replacement_failure(exc, path):
+                # Permanent. Raise it now rather than after a second of
+                # pretending it might not be.
+                raise
+            last = exc
+            time.sleep(_REPLACE_BACKOFF_SECONDS * (attempt + 1))
+    raise last if last is not None else OSError(f"{path} could not be replaced")
 
 
 def _fsync_directory(directory: Path) -> None:
@@ -456,7 +636,7 @@ class CompanionStore:
 
     def metadata(self) -> dict[str, Any]:
         try:
-            document = json.loads(self.metadata_path.read_text(encoding="utf-8"))
+            document = json.loads(_read_text_stable(self.metadata_path))
         except FileNotFoundError:
             raise StoreError(f"{self.root} is not an initialised companion store") from None
         except (OSError, json.JSONDecodeError) as exc:
@@ -490,7 +670,7 @@ class CompanionStore:
                 "migrations": [],
             }
         try:
-            document = json.loads(path.read_text(encoding="utf-8"))
+            document = json.loads(_read_text_stable(path))
         except (OSError, json.JSONDecodeError) as exc:
             raise StoreError(f"{path} is not readable: {exc}") from exc
         if not isinstance(document, Mapping):
@@ -514,7 +694,7 @@ class CompanionStore:
             return StreamRead(anchor_hash=anchor_hash, anchor_sequence=anchor_sequence)
 
         try:
-            raw = path.read_bytes()
+            raw = _read_bytes_stable(path)
         except OSError as exc:
             raise StoreError(f"{path} is not readable: {exc}") from exc
 
@@ -697,7 +877,7 @@ class CompanionStore:
         if not path.is_file():
             return None
         try:
-            document = json.loads(path.read_text(encoding="utf-8"))
+            document = json.loads(_read_text_stable(path))
         except (OSError, json.JSONDecodeError) as exc:
             raise StoreError(f"{path} is not readable: {exc}") from exc
         return CompanionSession.from_json(document)
@@ -710,7 +890,7 @@ class CompanionStore:
         if not path.is_file():
             return None
         try:
-            document = json.loads(path.read_text(encoding="utf-8"))
+            document = json.loads(_read_text_stable(path))
         except (OSError, json.JSONDecodeError) as exc:
             raise StoreError(f"{path} is not readable: {exc}") from exc
         return CompanionTask.from_json(document)
@@ -807,7 +987,7 @@ class CompanionStore:
             anchor_hash = str(stream.get("anchorHash", GENESIS_HASH))
             anchor_sequence = int(stream.get("anchorSequence", 0) or 0)
 
-            raw = path.read_text(encoding="utf-8")
+            raw = _read_text_stable(path)
             documents = [json.loads(line) for line in raw.split("\n") if line.strip()]
             versions = sorted({int(item.get("schemaVersion", 0) or 0) for item in documents})
             if not versions or versions == [EVENT_SCHEMA_VERSION]:

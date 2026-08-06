@@ -1,0 +1,139 @@
+{
+  "cpu": {
+    "captureAndRecognitionCpuSeconds": {
+      "count": 12,
+      "max": 1.16,
+      "median": 0.87,
+      "min": 0.81,
+      "p95": 0.9
+    },
+    "note": "process CPU (utime+stime) across each whole capture including recognition; the recogniser runs in-process so the two are not separable without a second process, and no separate number is invented"
+  },
+  "fullSystemMemoryClaimed": false,
+  "latency": {
+    "cancellationSeconds": {
+      "count": 6,
+      "max": 0.050686,
+      "median": 0.040482,
+      "min": 0.040417,
+      "p95": 0.050686
+    },
+    "capturesMeasured": 12,
+    "deviceCloseSeconds": {
+      "count": 12,
+      "max": 0.000259,
+      "median": 5.6e-05,
+      "min": 3.3e-05,
+      "p95": 7.7e-05
+    },
+    "deviceLossShutdownSeconds": {
+      "count": 1,
+      "max": 0.040426,
+      "median": 0.040426,
+      "min": 0.040426,
+      "p95": 0.040426
+    },
+    "finalTranscriptSeconds": {
+      "count": 12,
+      "max": 0.032806,
+      "median": 0.012911,
+      "min": 0.005583,
+      "p95": 0.030617
+    },
+    "firstFrameSeconds": {
+      "count": 12,
+      "max": 2.117641,
+      "median": 2.106825,
+      "min": 1.696814,
+      "p95": 2.113928
+    },
+    "firstPartialSeconds": {
+      "count": 12,
+      "max": 0.576908,
+      "median": 0.567564,
+      "min": 0.445741,
+      "p95": 0.576736
+    },
+    "indicatorOrderingHeld": 12,
+    "indicatorRaiseSeconds": {
+      "count": 12,
+      "max": 0.282496,
+      "median": 0.037059,
+      "min": 0.035102,
+      "p95": 0.038407
+    },
+    "microphoneOpenSeconds": {
+      "count": 12,
+      "max": 0.289265,
+      "median": 0.054541,
+      "min": 0.051574,
+      "p95": 0.056751
+    },
+    "serviceRestartSeconds": {
+      "count": 5,
+      "max": 0.002657,
+      "median": 2e-05,
+      "min": 1.3e-05,
+      "p95": 0.002657
+    },
+    "speechDetectSeconds": {
+      "count": 12,
+      "max": 0.377154,
+      "median": 0.37684,
+      "min": 0.25065,
+      "p95": 0.377122
+    }
+  },
+  "loopbackSink": "bunny-speech-loop",
+  "memory": {
+    "afterFirstRecognition": {
+      "pssBytes": 178316288,
+      "rssBytes": 183218176
+    },
+    "combinedEnd": {
+      "pssBytes": 179617792,
+      "rssBytes": 184520704
+    },
+    "note": "processBaseline is this interpreter; withVoiceRuntime adds the voice service; speechInputIdle adds the constructed speech subsystem with no model loaded; afterFirstRecognition includes the loaded recognition model. Differences between stages attribute cost; none of these is a full-system figure.",
+    "processBaseline": {
+      "pssBytes": 25673728,
+      "rssBytes": 30134272
+    },
+    "speechInputIdle": {
+      "pssBytes": 44121088,
+      "rssBytes": 50016256
+    },
+    "withVoiceRuntime": {
+      "pssBytes": 32200704,
+      "rssBytes": 36790272
+    }
+  },
+  "notes": [
+    "device loss produced by terminating 1 recorder process(es); everything downstream \u2014 detection, closure, indicator \u2014 is real"
+  ],
+  "path": "voice runtime -> sink -> sink monitor -> parec -> energy gate -> local recogniser; no physical microphone validated",
+  "schema": "bunny-os/speech-input-measurements/1",
+  "spokenSentence": "count the words in this note please",
+  "storage": {
+    "peakBufferedBytes": {
+      "count": 12,
+      "max": 0,
+      "median": 0,
+      "min": 0,
+      "p95": 0
+    },
+    "temporaryStorageBytes": {
+      "count": 1,
+      "max": 6002,
+      "median": 6002,
+      "min": 6002,
+      "p95": 6002
+    }
+  },
+  "transcripts": [
+    "come to that where did this out please",
+    "come to that where did this out please",
+    "come to that where did this out please",
+    "come to that where did this out please"
+  ]
+}

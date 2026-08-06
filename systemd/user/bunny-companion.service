@@ -1,0 +1,70 @@
+[Unit]
+# The long-lived half of the companion. It owns the sessions, the tasks and the
+# event stream; the window is a client of it and closing the window must not
+# stop a task. That is why this is a service at all rather than something the
+# GTK application starts for itself.
+Description=Bunny Companion runtime
+Documentation=file:///usr/share/doc/bunny-os/COMPANION_INTEGRATION.md
+PartOf=graphical-session.target
+After=graphical-session-pre.target
+# The companion imports the capability runtime to decide where a task may run.
+# Without it there is no capability authority and the service must not start and
+# improvise one; the condition names the missing dependency in the journal
+# rather than producing an ImportError on every restart attempt.
+ConditionPathExists=/usr/lib/bunny-os/python/capability
+StartLimitIntervalSec=60s
+StartLimitBurst=4
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/bunny-companion-service
+# Bounded, not unlimited. A runtime that respawned for ever would hide a store
+# it cannot read behind a restart loop; four attempts in a minute and then a
+# failed unit is a state somebody notices.
+Restart=on-failure
+RestartSec=3s
+# Long enough for an append under the session lock to finish. A companion killed
+# mid-append leaves an incomplete final record, which the store is built to
+# survive — but surviving it is the fallback, not the plan.
+TimeoutStopSec=15s
+
+# The socket lives here, 0700, and goes away with the session.
+RuntimeDirectory=bunny-companion
+RuntimeDirectoryMode=0700
+# The store lives here. Per-user under the session, never system-wide: a
+# companion session is one person's conversation and /var would make it readable
+# by every account on a shared machine.
+StateDirectory=bunny-companion
+StateDirectoryMode=0700
+UMask=0077
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+# AF_UNIX only. The companion has no remote provider, makes no outbound
+# connection and needs no address family that could carry one — so the kernel
+# is told, and a provider adapter added later has to change this file, in a
+# review, rather than simply starting to work.
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+# Sized for the runtime alone; the window is a separate process with its own
+# budget. Measured idle usage is recorded in COMPANION_INTEGRATION_REPORT.md.
+MemoryMax=128M
+TasksMax=64
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target

@@ -51,6 +51,15 @@ from .session import CostPolicy, LOCALITY_PREFERENCES, PrivacyPolicy
 from .store import CompanionStore
 from .task import CANCELLATION_CAUSES
 from .tools import ToolBroker
+from .character.diagnostics import (
+    registry_for as character_registry_for,
+    renderer_projection,
+    run_diagnostic_demo,
+)
+from .character.errors import CharacterError
+from .character.importer import CharacterPackageImporter
+from .character.package import validate_package_directory
+from .character.schema import PackageTrustState
 
 __all__ = ["add_arguments", "default_root", "dispatch"]
 
@@ -136,6 +145,137 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
     demo.add_argument("--demo-root", type=Path, default=None, help="where the demo store is written")
     demo.add_argument("--refuse-approval", action="store_true", help="run with nobody answering the approval")
 
+    # -- the integrated half ------------------------------------------------
+
+    health = group.add_parser("health", help="report the runtime's health (read-only)")
+    health.add_argument("--endpoint", type=Path, default=None,
+                        help="ask a running companion service over its socket instead")
+
+    presentation = group.add_parser(
+        "presentation", help="project one task's events into presentation state (read-only)"
+    )
+    presentation.add_argument("task_id", nargs="?", default=None)
+    presentation.add_argument("--session", dest="session_id", default=None)
+    presentation.add_argument("--endpoint", type=Path, default=None,
+                              help="ask a running companion service over its socket instead")
+
+    serve = group.add_parser("serve", help="RUNS the canonical companion service in the foreground")
+    serve.add_argument("--endpoint", type=Path, default=None, help="socket path to bind")
+    serve.add_argument("--no-recover", action="store_true", help="skip the start-up recovery pass")
+    serve.add_argument("--once", action="store_true",
+                       help="bind, report, and stop; for checking the endpoint without holding it")
+
+    shell = group.add_parser("shell", help="RUNS the GTK client against a companion service")
+    shell.add_argument("--endpoint", type=Path, default=None, help="socket path to connect to")
+    shell.add_argument("--text-only", action="store_true", help="prefer the text-only presentation")
+
+    migrate = group.add_parser(
+        "migrate-ux-store", help="inspect, IMPORT or roll back a UX-prototype SQLite store"
+    )
+    migrate.add_argument("--source", type=Path, default=None, help="path to companion.sqlite3")
+    migrate.add_argument("--apply", action="store_true",
+                         help="PERFORMS the archive import; without it this is a dry run")
+    migrate.add_argument("--rollback", action="store_true", help="REMOVES a previous archive import")
+    migrate.add_argument("--name", default="ux-shell-sqlite", help="archive directory name")
+
+    character = group.add_parser("character", help="character package diagnostics and selection")
+    character_group = character.add_subparsers(dest="character_command", required=True)
+    character_group.add_parser("list", help="list built-in and imported packages (read-only)")
+    character_inspect = character_group.add_parser("inspect", help="inspect every installed version of a package")
+    character_inspect.add_argument("package_id")
+    character_validate = character_group.add_parser("validate", help="validate a package directory (read-only)")
+    character_validate.add_argument("path", type=Path)
+    character_import = character_group.add_parser("import", help="IMPORTS a package directory or .zip archive")
+    character_import.add_argument("path", type=Path)
+    character_select = character_group.add_parser("select", help="SELECTS an installed character package")
+    character_select.add_argument("package_id")
+    character_select.add_argument("--digest", default=None, help="select one exact installed package digest")
+    character_trust = character_group.add_parser(
+        "trust", help="SETS a package's trust state (disable or quarantine a package)"
+    )
+    character_trust.add_argument("package_digest")
+    character_trust.add_argument("state", choices=[
+        # Only the states a person may assert. `built-in` is a property of
+        # where a package came from and `verified-integrity` is a property of
+        # its bytes; neither is somebody's opinion, so neither is settable here.
+        PackageTrustState.DISABLED.value,
+        PackageTrustState.QUARANTINED.value,
+        PackageTrustState.IMPORTED_UNVERIFIED.value,
+    ])
+
+    renderer = group.add_parser("renderer", help="character renderer diagnostics")
+    renderer_group = renderer.add_subparsers(dest="renderer_command", required=True)
+    renderer_group.add_parser("status", help="show effective renderer status (read-only)")
+    renderer_group.add_parser("explain", help="explain package, plan and fallback selection (read-only)")
+    renderer_demo = renderer_group.add_parser("demo", help="RUNS the provider-free renderer demonstration")
+    renderer_demo.add_argument("--demo-root", type=Path, default=None)
+    renderer_demo.add_argument("--performance", action="store_true",
+                               help="include development-host microbenchmarks")
+
+    character_slice = group.add_parser(
+        "run-character-slice",
+        help="RUNS the installed character vertical slice against a real companion service",
+    )
+    character_slice.add_argument("--slice-root", type=Path, default=None)
+
+    voice_slice = group.add_parser(
+        "run-voice-slice",
+        help="RUNS the installed voice vertical slice against a real companion service",
+    )
+    voice_slice.add_argument("--slice-root", type=Path, default=None)
+
+    voice_renderer_slice = group.add_parser(
+        "run-voice-renderer-slice",
+        help=(
+            "RUNS the installed voice-to-renderer slice: voice-produced visemes driving a "
+            "real character presenter, with the widget recorded rather than drawn"
+        ),
+    )
+    voice_renderer_slice.add_argument("--slice-root", type=Path, default=None)
+
+    voice_health = group.add_parser(
+        "voice-health",
+        help="report which local voices and audio backends this machine has (read-only)",
+    )
+    voice_health.add_argument("--language", default="", help="only voices for this language")
+
+    speech_slice = group.add_parser(
+        "run-speech-slice",
+        help=(
+            "RUNS the installed speech-input vertical slice against a real companion "
+            "service: push-to-talk, indicator, capture, recognition, confirmation, one task"
+        ),
+    )
+    speech_slice.add_argument("--slice-root", type=Path, default=None)
+
+    speech_health = group.add_parser(
+        "speech-input-health",
+        help="report which capture devices and local recognisers this machine has (read-only)",
+    )
+
+    agent_slice = group.add_parser(
+        "run-agent-slice",
+        help=(
+            "RUNS the installed agent-provider vertical slice against a real companion "
+            "service: local model discovery, one generated task with a mediated tool, "
+            "streaming, cancellation mid-stream, a worker restart, no remote dispatch"
+        ),
+    )
+    agent_slice.add_argument("--slice-root", type=Path, default=None)
+
+    agents_health = group.add_parser(
+        "agents-health",
+        help="report which model providers this machine has, with reasons (read-only)",
+    )
+
+    integration = group.add_parser(
+        "run-integration-slice",
+        help="RUNS the full service-plus-client vertical slice in a scratch directory",
+    )
+    integration.add_argument("--slice-root", type=Path, default=None)
+    integration.add_argument("--no-speech", action="store_true",
+                             help="do not attempt the local system voice")
+
 
 def _assessment(args: argparse.Namespace) -> tuple[Assessment, str]:
     """Build the capability assessment the runtime decides against."""
@@ -195,6 +335,43 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
     """Run one companion command and return its document."""
     if args.companion_command == "run-demo":
         return _run_demo(args)
+    if args.companion_command == "run-integration-slice":
+        return _run_integration_slice(args)
+    if args.companion_command == "run-character-slice":
+        return _run_character_slice(args)
+    if args.companion_command == "run-voice-slice":
+        return _run_voice_slice(args)
+    if args.companion_command == "run-voice-renderer-slice":
+        return _run_voice_renderer_slice(args)
+    if args.companion_command == "voice-health":
+        return _voice_health(args)
+    if args.companion_command == "run-speech-slice":
+        return _run_speech_slice(args)
+    if args.companion_command == "run-agent-slice":
+        return _run_agent_slice(args)
+    if args.companion_command == "agents-health":
+        return _agents_health(args)
+    if args.companion_command == "speech-input-health":
+        return _speech_input_health(args)
+    if args.companion_command == "character":
+        return _character_command(args)
+    if args.companion_command == "renderer":
+        return _renderer_command(args)
+    if args.companion_command == "serve":
+        return _serve(args)
+    if args.companion_command == "shell":
+        return _shell(args)
+    if args.companion_command == "migrate-ux-store":
+        return _migrate(args)
+    # `health` and `presentation` can be answered either by a running service —
+    # which is the authority while it holds the store — or by reading the store
+    # directly. The socket is preferred when one was named or is present: asking
+    # the process that is running is always a better answer than asking the
+    # files underneath it.
+    if args.companion_command in ("health", "presentation"):
+        served = _via_socket(args)
+        if served is not None:
+            return served
 
     runtime, banner = build_runtime(args)
     try:
@@ -223,6 +400,12 @@ def _dispatch_with_runtime(runtime: CompanionRuntime, args: argparse.Namespace) 
 
     if command == "approvals":
         return _approvals_command(runtime, args)
+
+    if command == "health":
+        return _health(runtime)
+
+    if command == "presentation":
+        return _presentation(runtime, args)
 
     if command == "recover":
         if args.dry_run:
@@ -374,6 +557,495 @@ def _plan_for(runtime: CompanionRuntime, request_id: str) -> str:
     if request is None:
         raise CompanionError(f"no approval request with id {request_id!r} was raised")
     return request.plan_id
+
+
+def _health(runtime: CompanionRuntime) -> dict[str, Any]:
+    """The runtime's own account of itself, read straight from the store.
+
+    Used when no service is running. It reports the same shape the socket's
+    ``health`` returns so a caller does not have to know which answered, with
+    ``servedBy`` naming which did — because "the service says it is healthy" and
+    "the files look healthy" are different claims.
+    """
+    from .characters import CharacterError, load_static_character
+    from .protocol import PROTOCOL_SCHEMA_VERSION
+    from .voice import SystemVoice
+
+    reports = []
+    for session_id in runtime.store.session_ids():
+        reports.append(runtime.store.validate(session_id).to_json())
+    voice = SystemVoice()
+    try:
+        character = load_static_character()
+        character_detail = character.to_json() if character is not None else None
+        character_problem = ""
+    except CharacterError as exc:
+        character_detail = None
+        character_problem = str(exc)
+    return {
+        "effect": "read-only",
+        "servedBy": "store",
+        "ok": all(item["consistent"] for item in reports),
+        "protocolSchemaVersion": PROTOCOL_SCHEMA_VERSION,
+        "storeRoot": str(runtime.store.root),
+        "sessions": len(reports),
+        "storeReports": reports,
+        "executors": sorted(runtime._executors),
+        "reviewers": list(runtime.reviewer_ids()),
+        "approvalWarnings": list(runtime.approvals.warnings),
+        "pendingApprovals": [item.request_id for item in runtime.approvals.pending()],
+        "voice": voice.describe(),
+        "character": character_detail,
+        "characterProblem": character_problem,
+        "microphoneActive": False,
+        "microphonePolicy": "explicit activation only; never at start-up",
+        "remoteProviders": [],
+    }
+
+
+def _presentation(runtime: CompanionRuntime, args: argparse.Namespace) -> dict[str, Any]:
+    """Fold a task's events into the state a surface would draw."""
+    from .presentation import project_presentation
+
+    task_id = getattr(args, "task_id", None)
+    session_id = getattr(args, "session_id", None)
+    if task_id:
+        session_id, task = runtime.find_task(task_id)
+        events = runtime.events(session_id, task_id=task.task_id)
+    elif session_id:
+        events = runtime.events(session_id)
+    else:
+        identifiers = runtime.store.session_ids()
+        if not identifiers:
+            return {"effect": "read-only", "servedBy": "store", "state": None,
+                    "detail": "this store holds no sessions"}
+        session_id = identifiers[-1]
+        events = runtime.events(session_id)
+    state = project_presentation(events)
+    return {
+        "effect": "read-only",
+        "servedBy": "store",
+        "sessionId": session_id,
+        "taskId": task_id or state.task_id,
+        "state": state.to_json(),
+        "events": len(events),
+    }
+
+
+def _via_socket(args: argparse.Namespace) -> dict[str, Any] | None:
+    """Ask a running service, or return ``None`` if there is not one.
+
+    A named endpoint that cannot be reached is an error rather than a silent
+    fall-through to the store: the caller asked a specific service a question
+    and deserves to be told it was not there.
+    """
+    from .protocol import CompanionClient, CompanionClientError, default_endpoint_path
+
+    named = getattr(args, "endpoint", None)
+    endpoint = Path(named) if named else default_endpoint_path()
+    if named is None and not endpoint.exists():
+        return None
+    client = CompanionClient(endpoint, timeout=10.0)
+    try:
+        if args.companion_command == "health":
+            return {"effect": "read-only", "servedBy": "service", **dict(client.health())}
+        answer = client.get_presentation_state(
+            getattr(args, "task_id", None) or None,
+            session_id=getattr(args, "session_id", None) or None,
+        )
+        return {"effect": "read-only", "servedBy": "service", **dict(answer)}
+    except (CompanionClientError, OSError) as exc:
+        if named is None:
+            # An endpoint file left behind by a service that died. Fall back to
+            # reading the store, which is what the user wanted anyway.
+            return None
+        raise CompanionError(f"the companion service at {endpoint} could not be reached: {exc}") from exc
+
+
+def _serve(args: argparse.Namespace) -> dict[str, Any]:
+    """Run the canonical service. Blocks until stopped, unless ``--once``."""
+    from .service import CompanionService, ServiceOptions
+
+    root = args.root or default_root()
+    service = CompanionService(ServiceOptions(
+        root=root,
+        endpoint=args.endpoint,
+        machine=getattr(args, "simulate", None),
+        recover_on_start=not args.no_recover,
+    )).start()
+    document = {
+        "effect": (
+            f"STARTED the canonical companion service on {service.server.describe()['endpoint']}. "
+            "It owns the sessions, the tasks and the event stream; clients are views onto it."
+        ),
+        **service.describe(),
+    }
+    if args.once:
+        service.close()
+        document["effect"] += " The endpoint was released immediately because --once was given."
+        return document
+    try:
+        service.serve_forever()
+    finally:
+        service.close()
+    return document
+
+
+def _shell(args: argparse.Namespace) -> dict[str, Any]:
+    """Launch the GTK client. Never a runtime — always a client of one."""
+    from .gtk_shell import run as run_shell
+    from .presentation import AccessibilityPreferences
+
+    preferences = AccessibilityPreferences(prefer_text_only=bool(args.text_only))
+    try:
+        code = run_shell(args.endpoint)
+    except RuntimeError as exc:
+        raise CompanionError(str(exc)) from exc
+    return {
+        "effect": "RAN the Bunny Companion window; the runtime it connected to is unaffected by its exit",
+        "exitCode": code,
+        "preferences": preferences.to_json(),
+    }
+
+
+def _migrate(args: argparse.Namespace) -> dict[str, Any]:
+    """Inspect, archive or roll back a UX-prototype SQLite store."""
+    from .migration import (
+        default_donor_paths,
+        import_donor_store,
+        inspect_donor_store,
+        rollback_donor_import,
+    )
+
+    root = args.root or default_root()
+    if args.rollback:
+        outcome = rollback_donor_import(root, name=args.name)
+        return {
+            "effect": (
+                f"REMOVED the donor archive at {outcome['destination']}"
+                if outcome["removed"] else "read-only"
+            ),
+            **outcome,
+        }
+    source = args.source
+    if source is None:
+        source = next((item for item in default_donor_paths() if item.is_file()), None)
+    if source is None:
+        return {
+            "effect": "read-only",
+            "found": False,
+            "searched": [str(item) for item in default_donor_paths()],
+            "detail": "no UX-prototype SQLite store was found; there is nothing to migrate",
+        }
+    inspection = inspect_donor_store(Path(source))
+    report = import_donor_store(Path(source), root, name=args.name, dry_run=not args.apply)
+    return {
+        "effect": (
+            f"ARCHIVED {source} under {report.destination}; the canonical event store was not written"
+            if report.performed else "read-only (dry run; pass --apply to perform the archive)"
+        ),
+        "inspection": inspection,
+        "report": report.to_json(),
+    }
+
+
+def _run_integration_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .vertical_slice import SLICE_REQUEST, run_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-companion-slice-"))
+    report = run_slice(root, speak=not args.no_speech)
+    return {
+        "effect": (
+            f"RAN the integrated vertical slice in {root}: a service, a socket, a client, an "
+            "approval, two restarts and a replay. No network, provider or credential was used."
+        ),
+        "root": str(root),
+        "request": SLICE_REQUEST,
+        **report.to_json(),
+    }
+
+
+def _character_command(args: argparse.Namespace) -> dict[str, Any]:
+    """Package diagnostics and selection. Reads unless it says otherwise."""
+    root = args.root or default_root()
+    registry = character_registry_for(root)
+    command = args.character_command
+    if command == "list":
+        selected = registry.selected()
+        return {
+            "effect": "read-only",
+            "selectedDigest": selected.package_digest if selected else None,
+            "packages": [item.to_json() for item in registry.list()],
+        }
+    if command == "inspect":
+        selected = registry.selected()
+        packages = []
+        for record in registry.inspect(args.package_id):
+            trust = (
+                PackageTrustState.BUILT_IN
+                if record.trust_state is PackageTrustState.BUILT_IN
+                else PackageTrustState.VERIFIED_INTEGRITY
+            )
+            value = record.to_json()
+            try:
+                validated = validate_package_directory(record.path, trust_state=trust)
+                value["validation"] = validated.to_json()
+                value["validationError"] = None
+            except CharacterError as exc:
+                # Reported, not raised: inspecting a set of packages must not
+                # stop at the first damaged one, which is precisely the one the
+                # user is inspecting them to find.
+                value["validation"] = None
+                value["validationError"] = {"type": type(exc).__name__, "message": str(exc)}
+            value["selected"] = selected is not None and selected.package_digest == record.package_digest
+            packages.append(value)
+        return {"effect": "read-only", "packageId": args.package_id, "packages": packages}
+    if command == "validate":
+        package = validate_package_directory(
+            args.path, trust_state=PackageTrustState.IMPORTED_UNVERIFIED
+        )
+        return {
+            "effect": "read-only",
+            "validation": package.to_json(),
+            "manifest": package.manifest.to_json(),
+            # Said on every path that reports a successful validation. §4:
+            # integrity does not establish creator trust, and the one place a
+            # user is most likely to conclude otherwise is the moment they are
+            # told the package is valid.
+            "warning": "Integrity verification does not establish creator trust.",
+        }
+    if command == "import":
+        record = CharacterPackageImporter(registry).import_package(args.path)
+        return {
+            "effect": f"IMPORTED character package {record.package_id} without activating it",
+            "package": record.to_json(),
+            "warning": "The bytes match the manifest; the creator remains untrusted.",
+        }
+    if command == "select":
+        record = registry.select(args.package_id, package_digest=args.digest)
+        return {
+            "effect": f"SELECTED character package {record.package_id}",
+            "package": record.to_json(),
+        }
+    if command == "trust":
+        record = registry.set_trust_state(args.package_digest, PackageTrustState(args.state))
+        return {
+            "effect": f"SET the trust state of {record.package_digest[:16]} to {args.state}",
+            "package": record.to_json(),
+        }
+    raise CompanionError(f"unknown character command: {command!r}")
+
+
+def _renderer_command(args: argparse.Namespace) -> dict[str, Any]:
+    if args.renderer_command == "demo":
+        value = run_diagnostic_demo(args.demo_root, performance=bool(args.performance))
+        return {
+            "effect": (
+                f"RAN the provider-free character renderer demonstration in {value['root']}; "
+                "no task record was created and no runtime was started"
+            ),
+            **value,
+        }
+    assessment, banner = _assessment(args)
+    value = renderer_projection(args.root or default_root(), assessment)
+    result: dict[str, Any] = {"effect": "read-only", **value}
+    if args.renderer_command == "explain":
+        mapped = value.get("mappedState") or {}
+        result["explanation"] = {
+            "characterState": mapped.get("characterState"),
+            "resolvedPackageState": mapped.get("resolvedPackageState"),
+            "fallbackChain": mapped.get("fallbackChain", []),
+            "priorityReason": mapped.get("priorityReason"),
+            "degradationExplanation": mapped.get("degradationExplanation"),
+            "trustState": value.get("selectedPackage", {}).get("trustState"),
+            "creatorTrusted": value.get("selectedPackage", {}).get("creatorTrusted"),
+            "integrityVerified": value.get("selectedPackage", {}).get("integrityVerified"),
+            "note": (
+                "Integrity verification does not establish creator trust, and an eligible "
+                "presentation above animated-2d is not implemented in this build."
+            ),
+        }
+    if banner:
+        result["simulationBanner"] = banner
+    return result
+
+
+def _run_character_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .character.vertical_slice import run_character_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-character-slice-"))
+    report = run_character_slice(root)
+    return {
+        "effect": (
+            f"RAN the installed character vertical slice in {root}: a companion service, a "
+            "validated package, an approval, lip-sync, degradation and a renderer restart. "
+            "No network, provider or credential was used."
+        ),
+        "root": str(root),
+        **report.to_json(),
+    }
+
+
+def _run_voice_renderer_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .character.voice_slice import run_voice_renderer_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-voice-renderer-slice-"))
+    report = run_voice_renderer_slice(root)
+    return {
+        "effect": (
+            f"RAN the installed voice-to-renderer slice in {root}: a canonical caption, a "
+            "local synthesiser, the worker's own viseme timeline, the lip-sync controller "
+            "and the mouth shapes a renderer would have been handed. The pixels need a "
+            "display and are proved separately by scripts/gtk_voice_viseme_probe.py; the "
+            "steps that need one are reported NOT_RUN here rather than omitted."
+        ),
+        "root": str(root),
+        **report.to_json(),
+    }
+
+
+def _run_speech_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .speech.vertical_slice import run_speech_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-speech-slice-"))
+    report = run_speech_slice(root)
+    return {
+        "effect": (
+            f"RAN the installed speech-input vertical slice in {root}: a companion service, "
+            "push-to-talk over the protocol, the listening indicator, a real capture where "
+            "this host has one, recognition, an edited confirmation, exactly one task, a "
+            "cancelled second capture, a simulated device loss and a worker restart. No "
+            "network or remote provider was used, no audio was retained, and no capture "
+            "resumed on its own."
+        ),
+        "root": str(root),
+        **report.to_json(),
+    }
+
+
+def _run_agent_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .agents.vertical_slice import run_agent_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-agent-slice-"))
+    report = run_agent_slice(root)
+    return {
+        "effect": (
+            f"RAN the installed agent-provider vertical slice in {root}: a companion "
+            "service, discovery of a real local model provider, one generated task with "
+            "a broker-mediated tool, protocol-visible streaming, the remote option "
+            "displayed without dispatching, a cancellation caught mid-stream and a "
+            "provider-worker restart. No remote provider was dispatched to, no paid "
+            "provider was required, and nothing interrupted was repeated."
+        ),
+        "root": str(root),
+        **report.to_json(),
+    }
+
+
+def _agents_health(args: argparse.Namespace) -> dict[str, Any]:
+    """What this machine could generate with. Dispatches nothing.
+
+    Read-only in the sense that matters: probes reach loopback endpoints and
+    the trusted model directories, never a remote host, and no generation is
+    started.
+    """
+    import tempfile
+
+    from .agents.service import AgentProviderService, AgentServiceOptions
+
+    root = Path(tempfile.mkdtemp(prefix="bunny-agents-health-"))
+    service = AgentProviderService(AgentServiceOptions(root=root, start_worker=False))
+    try:
+        status = service.providers_status()
+    finally:
+        service.close()
+    return {
+        "effect": (
+            "REPORTED the configured model providers, their standing ladders and "
+            "health; probed loopback endpoints only; started no generation"
+        ),
+        **status,
+    }
+
+
+def _speech_input_health(args: argparse.Namespace) -> dict[str, Any]:
+    """What this machine could listen with. Opens nothing.
+
+    Read-only in the §4 sense that matters: constructing the service opens no
+    device and loads no model, and this command asks for health and returns.
+    """
+    import tempfile
+
+    from .speech.service import SpeechInputService, SpeechInputServiceOptions
+
+    service = SpeechInputService(SpeechInputServiceOptions(
+        runtime_directory=Path(tempfile.mkdtemp(prefix="bunny-speech-health-")),
+    ))
+    try:
+        service.refresh()
+        return {
+            "effect": "read capture and recogniser health; no microphone was opened",
+            **service.speech_input_health(),
+            "devices": service.speech_input_devices(),
+        }
+    finally:
+        service.close()
+
+
+def _run_voice_slice(args: argparse.Namespace) -> dict[str, Any]:
+    import tempfile
+
+    from .voice.vertical_slice import run_voice_slice
+
+    root = args.slice_root or Path(tempfile.mkdtemp(prefix="bunny-voice-slice-"))
+    report = run_voice_slice(root)
+    return {
+        "effect": (
+            f"RAN the installed voice vertical slice in {root}: a companion service, a task, "
+            "an approval, a local synthesiser, generic visemes, a cancellation, an audio loss "
+            "and a worker restart. No network, remote provider or credential was used, and "
+            "nothing about the task was changed by any of it."
+        ),
+        "root": str(root),
+        **report.to_json(),
+    }
+
+
+def _voice_health(args: argparse.Namespace) -> dict[str, Any]:
+    """What can speak here, and why anything that cannot, cannot.
+
+    Read-only and cheap: it builds a voice runtime with its worker stopped, asks
+    every provider and backend, and closes. A user whose companion has gone
+    quiet runs this, and the answer is a list of reasons rather than a silence.
+    """
+    import tempfile
+
+    from .voice.service import VoiceService, VoiceServiceOptions
+
+    service = VoiceService(VoiceServiceOptions(
+        runtime_directory=Path(tempfile.mkdtemp(prefix="bunny-voice-health-")),
+        start_worker=False,
+    ))
+    try:
+        health = service.voice_health()
+        voices = service.voice_list(language=args.language, limit=64)
+        return {
+            "effect": "REPORTED the local voice inventory and audio backends. Nothing was spoken.",
+            **health,
+            "voices": voices,
+        }
+    finally:
+        service.close()
 
 
 def _run_demo(args: argparse.Namespace) -> dict[str, Any]:

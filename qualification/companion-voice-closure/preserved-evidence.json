@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "phase": "companion-voice-closure",
+  "baseCommit": "b825dd4aa181c30e1f2eceb878c261ec2201b247",
+  "priorGateCommit": "0cf81a135b24619f74bbecfcdd48d3a69f33c2fd",
+  "why": [
+    "This closure supersedes some claims of the voice-runtime phase and leaves the",
+    "rest standing. A superseding phase that rewrote the earlier record would make",
+    "the earlier record unavailable for audit, and 'we fixed it' would then be",
+    "indistinguishable from 'we changed what we said we measured'.",
+    "So every prior artefact is pinned here by digest before anything is edited,",
+    "and tests/companion/test_voice_closure_evidence.py fails if any of them",
+    "moves. New results are written beside the old ones, never over them."
+  ],
+  "preserved": {
+    "COMPANION_VOICE_RUNTIME_REPORT.md": {
+      "bytes": 50553,
+      "note": "the voice-runtime phase report as it stood at b825dd4; the closure appends sections 30+ and rewrites nothing above them",
+      "sha256": "36a29b77187bef450d213b742934f57ede7aa3820bcceb7e424d68f1cffade26"
+    },
+    "qualification/companion-voice/evidence/gate-suite-50.json": {
+      "bytes": 89048,
+      "note": "gate 2: 50/50 consecutive complete companion-suite runs on 0cf81a13",
+      "sha256": "be10c7fd1bd163984559284db79d34b423e4ee9128e8265e9a4568a3bf17370e"
+    },
+    "qualification/companion-voice/evidence/gate-voice-100.json": {
+      "bytes": 175139,
+      "note": "gate 1: 100/100 consecutive voice-worker lifecycle runs on 0cf81a13",
+      "sha256": "7b7d5100246aacedc3f7da54b0b0a42656c6883866a48c7e0808b77a3035531e"
+    },
+    "qualification/companion-voice/evidence/gate-voice-slice-20.json": {
+      "bytes": 36924,
+      "note": "gate 3: 20/20 consecutive installed voice vertical slices on 0cf81a13",
+      "sha256": "eeeef493c6cc779fc1401b4ac34b56ba8483c51d1e130b62d2142538ef4caefe"
+    },
+    "qualification/companion-voice/evidence/gates.log": {
+      "bytes": 6697,
+      "note": "the gate run's own transcript",
+      "sha256": "78239d87ab07c97d5ed8f37c85b7b7f59de35de587f6a7f340705262efdcdb3a"
+    },
+    "qualification/companion-voice/evidence/manifest.json": {
+      "bytes": 9156,
+      "note": "the voice-runtime evidence manifest, including its own NOT_RUN entries (slice.json, suite.json, env.json present:false)",
+      "sha256": "8ff86390956d1c5259fceb93e9b9a201db6d5d5a8f4ae5edb0c995af2c4c4090"
+    },
+    "qualification/companion-voice/evidence/voice-measurements.json": {
+      "bytes": 5761,
+      "note": "section 21/22 memory, latency and CPU figures",
+      "sha256": "a3bfdb78eeba64d5b44f95a22831ca4323309710e951db784a62d19188e75883"
+    }
+  },
+  "preservedDefects": [
+    {
+      "id": "multi-call-executable",
+      "commitDiscarded": "ecc0afe",
+      "fixedAt": "af0025b",
+      "reportSection": "18a",
+      "summary": "/usr/bin/paplay is a symlink to pacat, a multi-call binary that reads raw PCM under its own name and a sound file under paplay's. Resolving the symlink played 0.73s of noise where 2.80s of speech belonged, exit code 0.",
+      "guardedBy": [
+        "companion/voice/execution.py:resolve_executable returns the requested path, never the symlink target",
+        "companion/voice/audio.py:PLAYBACK_COMPLETION_FLOOR refuses a zero exit whose measured duration is implausibly short"
+      ],
+      "supersededBy": "no. The closure adds tests around this behaviour and changes none of it."
+    },
+    {
+      "id": "stranded-voice-worker",
+      "commitDiscarded": "af0025b",
+      "fixedAt": "0cf81a1",
+      "reportSection": "18b",
+      "summary": "CompanionService started the voice worker before the endpoint bind that raises DuplicateRuntime, so a refused service construction stranded a worker thread nobody held. Fifty suite runs accumulated +101 threads and +100 live voice workers with every test passing.",
+      "guardedBy": [
+        "companion/service.py: the ordered startup sequence and its unwind stack",
+        "tests/companion/test_voice_authority.py: the refused-construction regression"
+      ],
+      "supersededBy": "companion/service.py section 4 of this closure. The 0cf81a1 fix rolled the worker back after the failure; the closure moves the worker behind the singleton and the bind so there is nothing to roll back at that boundary, and keeps the rollback for every other boundary. The 0cf81a1 evidence stands as the record of the defect and of the first fix."
+    }
+  ],
+  "notRunAtBase": [
+    "compositor mouth animation driven by voice-produced visemes",
+    "a physical speaker, anywhere",
+    "PipeWire and ALSA playback (no sink, no card on the reference target)",
+    "Speech Dispatcher as the selected provider",
+    "phoneme-accurate or provider-native viseme timing"
+  ],
+  "notRunPolicy": "An entry here may be moved to a superseding record only by a run that actually happened. It is never edited into a pass."
+}

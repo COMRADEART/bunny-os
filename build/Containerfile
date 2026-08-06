@@ -18,6 +18,17 @@ LABEL org.opencontainers.image.title="Bunny OS" \
       containers.bootc="1"
 
 COPY build /tmp/bunny-os/build
+# assets, capability and companion reach the build context here.
+#
+# install-root.py copied capability/ and companion/ before these lines existed,
+# and `Path.rglob` on a directory that is not in the context simply yields
+# nothing — so the build succeeded and installed two *empty* package
+# directories. The companion user unit's ConditionPathExists was satisfied by
+# the empty directory, the service started, and it failed on import at every
+# restart. A missing COPY is not a build error; it is a silently empty install.
+COPY assets /tmp/bunny-os/assets
+COPY capability /tmp/bunny-os/capability
+COPY companion /tmp/bunny-os/companion
 COPY config /tmp/bunny-os/config
 COPY desktop-integration /tmp/bunny-os/desktop-integration
 COPY docs /tmp/bunny-os/docs
