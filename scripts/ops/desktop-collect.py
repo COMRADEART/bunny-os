@@ -67,8 +67,22 @@ _ABSOLUTE_LISTS = (
 
 
 def _verdict(path: Path) -> dict[str, Any]:
+    """One gate's answer: did anything grow, and did anything fail.
+
+    **The first iteration is measured and does not fail the gate**, and the
+    reason is a measured one rather than a convenience. A broker's first run
+    opens a session-bus connection and maps the GObject typelib; the second run
+    reuses both. So iteration 1 shows a few descriptors and a few megabytes, and
+    every iteration after it shows zero. That is a warm-up, not a leak.
+
+    A leak looks different and is what the remaining ninety-nine iterations are
+    for: it grows *per iteration*, so it accumulates. Summing from iteration 2
+    means a real leak of one descriptor per run still totals ninety-nine and
+    still fails, while a one-off cost is reported under its own name instead of
+    being counted ninety-nine times or, worse, quietly subtracted.
+    """
     document = json.loads(path.read_text(encoding="utf-8"))
-    iterations = document.get("iterations", ())
+    iterations = list(document.get("iterations", ()))
     seconds = sorted(item.get("seconds", 0.0) for item in iterations)
     growth: dict[str, int] = {}
     cleanup: dict[str, int] = {}
@@ -77,7 +91,13 @@ def _verdict(path: Path) -> dict[str, Any]:
     ledger_inconsistent: list[int] = []
     postures: dict[str, int] = {}
 
-    for item in iterations:
+    warm_up = {
+        name: value
+        for name, value in (iterations[0].get("delta", {}) if iterations else {}).items()
+        if name in _TRACKED and isinstance(value, int) and value
+    }
+
+    for position, item in enumerate(iterations):
         delta = item.get("delta", {})
         outcome = item.get("outcome", {}) or {}
         if not outcome.get("ok", True):
@@ -88,14 +108,15 @@ def _verdict(path: Path) -> dict[str, Any]:
         posture = outcome.get("posture") or ""
         if posture:
             postures[posture] = postures.get(posture, 0) + 1
-        for name in _TRACKED:
-            value = delta.get(name)
-            if not isinstance(value, int):
-                continue
-            if value > 0:
-                growth[name] = growth.get(name, 0) + value
-            elif value < 0:
-                cleanup[name] = cleanup.get(name, 0) + value
+        if position:  # see the docstring: iteration 1 is the warm-up
+            for name in _TRACKED:
+                value = delta.get(name)
+                if not isinstance(value, int):
+                    continue
+                if value > 0:
+                    growth[name] = growth.get(name, 0) + value
+                elif value < 0:
+                    cleanup[name] = cleanup.get(name, 0) + value
         for name in _ABSOLUTE:
             value = delta.get(name)
             if isinstance(value, int) and value:
@@ -120,6 +141,10 @@ def _verdict(path: Path) -> dict[str, Any]:
         "passed": (
             not growth and not violations and not failures and not ledger_inconsistent
         ),
+        # Iteration 1's own deltas, reported and not failed on. A bus connection
+        # and a typelib, once.
+        "firstIterationWarmUp": dict(sorted(warm_up.items())),
+        # Summed from iteration 2. This is what fails a gate.
         "resourceGrowth": dict(sorted(growth.items())),
         "cleanupOfPriorResidue": dict(sorted(cleanup.items())),
         "absoluteViolations": violations,
