@@ -209,12 +209,68 @@ class Probe:
         self.postures.append(record)
 
     def observe(self, event: Any) -> None:
-        self.events.append({
+        record = {
             "kind": event.kind,
             "requestId": event.request_id,
             "sequence": event.sequence,
             "atMs": self.now_ms(),
-        })
+        }
+        if event.kind in ("microphone_opened", "capture_stopped", "device_lost",
+                          "speech_input_degraded"):
+            record["payload"] = dict(event.payload)
+        self.events.append(record)
+
+    def raw_loopback_control(self) -> dict[str, Any]:
+        """A control experiment inside this exact process and environment.
+
+        Run only when the runtime heard nothing: raw ``parec`` records the
+        monitor while raw ``paplay`` plays an espeak WAV, no runtime involved.
+        Real audio here means the server was delivering and the runtime path
+        lost it; zeros here mean the server itself was serving silence to this
+        process, which is a fact about the host and not about this phase.
+        """
+        import subprocess
+        import struct
+        import tempfile as _tempfile
+
+        result: dict[str, Any] = {}
+        try:
+            wav = Path(_tempfile.mkdtemp(prefix="probe-control-")) / "control.wav"
+            subprocess.run(
+                ["espeak-ng", "-w", str(wav), SPOKEN],
+                check=True, capture_output=True, timeout=30,
+            )
+            recorder = subprocess.Popen(
+                ["parec", "--device=RDPSink.monitor", "--format=s16le",
+                 "--rate=16000", "--channels=1", "--latency-msec=60",
+                 "--client-name=probe-control", "--raw"],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            )
+            time.sleep(0.5)
+            play = subprocess.run(
+                ["paplay", "--client-name=probe-control-play", "--", str(wav)],
+                capture_output=True, timeout=30,
+            )
+            time.sleep(0.5)
+            recorder.terminate()
+            data, _ = recorder.communicate(timeout=10)
+            count = len(data) // 2
+            total = 0
+            peak = 0
+            for index in range(0, count * 2, 2):
+                sample = struct.unpack_from("<h", data, index)[0]
+                total += sample * sample
+                peak = max(peak, abs(sample))
+            result = {
+                "paplayExit": play.returncode,
+                "bytes": len(data),
+                "rms": round((total / count) ** 0.5, 1) if count else 0.0,
+                "peak": peak,
+            }
+        except Exception as exc:  # noqa: BLE001 - the control reports, never raises
+            result = {"error": f"{type(exc).__name__}: {exc}"}
+        self.report["rawLoopbackControl"] = result
+        return result
 
     # -- the run -----------------------------------------------------------
 
@@ -410,6 +466,9 @@ class Probe:
             self._speak_into_loopback(attempt=2)
         self.pump(seconds=45.0, until=lambda: not self.speech.worker.active)
         self.pump(seconds=1.0)
+
+        if self._event_ms("speech_detected", request_id) is None:
+            self.raw_loopback_control()
 
         opened = self._event_ms("microphone_opened", request_id)
         raised = self._event_ms("microphone_indicator_raised", request_id)
