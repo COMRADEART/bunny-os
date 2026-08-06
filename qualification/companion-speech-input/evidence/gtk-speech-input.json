@@ -1,0 +1,282 @@
+{
+  "checks": {
+    "cancellation": {
+      "clearedAfterClose": true,
+      "endedNeutral": true,
+      "requestId": "speechreq-3124bc88b5f74a018eae901eec837916",
+      "transcriptHeld": false
+    },
+    "fullCapture": {
+      "clearedAfterClose": true,
+      "finalTranscript": "come to that where did this out please",
+      "indicatorBeforeOpen": true,
+      "indicatorShownOnWidget": true,
+      "lipSyncDriven": false,
+      "listeningDrawn": true,
+      "posturesDrawnOnWidget": 3,
+      "posturesWalked": [
+        "listening",
+        "transcribing",
+        "waiting-for-user"
+      ],
+      "requestId": "speechreq-21c0fc26f6df4ecdba1b7b251b12e178"
+    },
+    "rendererRestart": {
+      "captureSurvived": true,
+      "decision": "reset-to-neutral",
+      "lastPosture": "transcribing"
+    },
+    "teardown": {
+      "idleSourcesCreated": 15,
+      "idleSourcesSurviving": 0,
+      "indicatorVisible": false,
+      "speechThreadsRemaining": 0
+    }
+  },
+  "display": {
+    "available": true,
+    "display": ":0",
+    "isGnomeSession": false,
+    "isPhysicalHardware": false,
+    "kind": "wayland-wslg-remoted",
+    "note": "A real Wayland compositor supplied by the WSLg system distribution. NOT a GNOME session, NOT physical hardware; no physical microphone was validated \u2014 capture is the sink monitor carrying synthesised speech.",
+    "physicalMicrophoneValidated": false,
+    "waylandDisplay": "wayland-0"
+  },
+  "environment": {
+    "decision": {
+      "eligible": "local-streaming-recognition",
+      "limitedByImplementation": false,
+      "mayCapture": true,
+      "outcome": "local-streaming-recognition",
+      "partialTranscriptsPermitted": true,
+      "planFingerprint": "81da45766c1b17c8c76d7d642914a43c",
+      "planId": "",
+      "reasons": [],
+      "remotePermitted": false,
+      "streaming": true
+    },
+    "monitorSource": "bunny-speech-loop.monitor",
+    "recognizerReady": true
+  },
+  "gate": {
+    "failures": [],
+    "passed": true
+  },
+  "glib": {
+    "criticals": 0,
+    "examples": [],
+    "records": 0
+  },
+  "gtkVersion": "4.22.4",
+  "injections": [
+    {
+      "announced": true,
+      "attempt": 1,
+      "detail": "played",
+      "disposition": "played",
+      "reason": "",
+      "voiceEvents": [
+        {
+          "atMs": 7548.079,
+          "kind": "speech_started",
+          "payload": {
+            "outcome": "local-neural-or-system-voice",
+            "priority": "task_result"
+          },
+          "requestId": "speech-c71786690ee1437bb97b1444b48f3dbc"
+        },
+        {
+          "atMs": 7576.866,
+          "kind": "audio_started",
+          "payload": {
+            "audioSeconds": 2.1682,
+            "backendId": "pulse",
+            "deviceId": "bunny-speech-loop",
+            "visemeConfidence": 0.6,
+            "visemeSource": "amplitude"
+          },
+          "requestId": "speech-c71786690ee1437bb97b1444b48f3dbc"
+        },
+        {
+          "atMs": 11382.908,
+          "kind": "speech_finished",
+          "payload": {
+            "captionsRetained": true,
+            "detail": "played",
+            "disposition": "played",
+            "playback": {
+              "audioSeconds": 2.168209,
+              "backendId": "pulse",
+              "cancelled": false,
+              "command": {
+                "argv": [
+                  "/usr/bin/paplay",
+                  "--device=bunny-speech-loop",
+                  "--volume=65536",
+                  "--latency-msec=60",
+                  "--client-name=bunny-companion",
+                  "--",
+                  "/tmp/bunny-voice-rg_bvzp4/speech-c71786690ee1437bb97b1444b48f3dbc-espeak.wav"
+                ],
+                "cancelled": false,
+                "durationSeconds": 3.80612,
+                "executable": "/usr/bin/paplay",
+                "exitCode": 0,
+                "killed": false,
+                "reaped": true,
+                "startError": "",
+                "stderr": "",
+                "stderrTruncated": false,
+                "succeeded": true,
+                "terminated": false,
+                "timedOut": false
+              },
+              "completionShape": "",
+              "detail": "played",
+              "deviceId": "bunny-speech-loop",
+              "elapsedSeconds": 3.806159,
+              "pausedSeconds": 0.0,
+              "requestId": "speech-c71786690ee1437bb97b1444b48f3dbc",
+              "requestedLatencyMs": 60,
+              "succeeded": true,
+              "truncated": false
+            },
+            "providerId": "espeak-ng",
+            "synchronisation": {
+              "captionFinalisationMs": null,
+              "captionId": "cap-f0a0705207394d29b914b18a2a7acbc5",
+              "captionToAudioMs": 29,
+              "neutralResetMs": null,
+              "requestId": "speech-c71786690ee1437bb97b1444b48f3dbc",
+              "synthesisLatencyMs": 21,
+              "timeToFirstAudioMs": 29,
+              "tolerances": {
+                "captionFinalisationMaximumMs": 1000,
+                "captionLeadMaximumMs": 2000,
+                "captionLeadMinimumMs": 0,
+                "environment": "development; audio via the WSLg bridge, no physical speaker validated",
+                "neutralResetMaximumMs": 250,
+                "visemeOffsetMaximumMs": 120
+              },
+              "violations": [],
+              "visemeSource": "amplitude",
+              "visemeToAudioMs": 0,
+              "withinTolerance": true
+            },
+            "synthesis": {
+              "audioFormat": "wav-pcm-s16le",
+              "channels": 1,
+              "command": {
+                "argv": [
+                  "/usr/bin/espeak-ng",
+                  "--stdin",
+                  "-v",
+                  "en-gb",
+                  "-s",
+                  "175",
+                  "-a",
+                  "100",
+                  "-w",
+                  "/tmp/bunny-voice-rg_bvzp4/speech-c71786690ee1437bb97b1444b48f3dbc-espeak.wav"
+                ],
+                "cancelled": false,
+                "durationSeconds": 0.020784,
+                "executable": "/usr/bin/espeak-ng",
+                "exitCode": 0,
+                "killed": false,
+                "reaped": true,
+                "startError": "",
+                "stderr": "",
+                "stderrTruncated": false,
+                "succeeded": true,
+                "terminated": false,
+                "timedOut": false
+              },
+              "degradations": [],
+              "detail": "synthesised locally",
+              "durationSeconds": 2.168209,
+              "frameCount": 47809,
+              "implementationId": "espeak-ng/espeak-ng",
+              "providerId": "espeak-ng",
+              "requestId": "speech-c71786690ee1437bb97b1444b48f3dbc",
+              "sampleRate": 22050,
+              "succeeded": true,
+              "synthesisSeconds": 0.020784,
+              "voiceId": "en-gb"
+            },
+            "taskAffected": false,
+            "visemes": {
+              "confidence": 0.6,
+              "derivation": "root-mean-square level of 55 windows of 40 ms at 22050 Hz",
+              "endsNeutral": true,
+              "eventCount": 26,
+              "requestId": "speech-c71786690ee1437bb97b1444b48f3dbc",
+              "sourceMethod": "amplitude",
+              "totalMs": 2168,
+              "truncated": false
+            }
+          },
+          "requestId": "speech-c71786690ee1437bb97b1444b48f3dbc"
+        }
+      ]
+    }
+  ],
+  "limitations": [],
+  "link": {
+    "closed": true,
+    "drivesLipSync": false,
+    "lastPosture": {
+      "atMonotonic": 2731.40925643,
+      "listening": false,
+      "posture": "transcribing",
+      "requestId": "speechreq-1ca26ab144414628853c763c7e90ab8c",
+      "sequence": 6,
+      "transcribing": true,
+      "waitingForUser": false
+    },
+    "posture": "neutral",
+    "rendererAttached": false,
+    "rendererFailureStopsCapture": false,
+    "report": {
+      "applied": 8,
+      "held": 13,
+      "lipSyncDriven": false,
+      "neutralReturns": 1,
+      "posturesSeen": [
+        "listening",
+        "neutral",
+        "transcribing",
+        "waiting-for-user"
+      ],
+      "rejected": {},
+      "rejectedTotal": 0,
+      "rendererFailures": 0
+    },
+    "requestId": "speechreq-1ca26ab144414628853c763c7e90ab8c",
+    "textIndicatorAuthoritative": true
+  },
+  "measurements": {
+    "cancellation": {
+      "cancelRequestedAtMs": 13738.762,
+      "cancelToClearedMs": 50.721,
+      "indicatorClearedAtMs": 13789.483
+    },
+    "fullCapture": {
+      "closedToClearedMs": 0.088,
+      "finalTranscriptAtMs": 12669.008,
+      "indicatorClearedAtMs": 12649.442,
+      "indicatorRaisedAtMs": 7501.595,
+      "microphoneClosedAtMs": 12649.354,
+      "microphoneOpenedAtMs": 7510.038,
+      "raisedToOpenMs": 8.443
+    }
+  },
+  "rawLoopbackControl": {
+    "bytes": 87950,
+    "paplayExit": 0,
+    "peak": 27179,
+    "rms": 2499.7
+  },
+  "schema": "bunny-os/gtk-speech-input-probe/1"
+}

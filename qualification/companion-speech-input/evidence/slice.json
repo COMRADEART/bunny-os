@@ -1,0 +1,218 @@
+{
+  "backendId": "pulse",
+  "captureRequestId": "speechreq-f104db6ab6304842b2cc26d3c5e6be31",
+  "commercialProviderRequired": false,
+  "deviceId": "bunny-speech-loop.monitor",
+  "effect": "RAN the installed speech-input vertical slice in /tmp/bunny-speech-slice-czaoytqi: a companion service, push-to-talk over the protocol, the listening indicator, a real capture where this host has one, recognition, an edited confirmation, exactly one task, a cancelled second capture, a simulated device loss and a worker restart. No network or remote provider was used, no audio was retained, and no capture resumed on its own.",
+  "failed": [],
+  "measurements": [
+    {
+      "bytesCaptured": 120670,
+      "cancellationLatencySeconds": null,
+      "deviceCloseLatencySeconds": 0.00013,
+      "finalTranscriptLatencySeconds": 0.021869,
+      "firstFrameLatencySeconds": 1.665471,
+      "firstPartialLatencySeconds": 0.466681,
+      "indicatorBeforeOpen": true,
+      "indicatorClearedAfterClose": true,
+      "indicatorLatencySeconds": 0.251443,
+      "microphoneOpenLatencySeconds": 0.260567,
+      "peakBufferedBytes": 0,
+      "requestId": "speechreq-f104db6ab6304842b2cc26d3c5e6be31",
+      "speechDetectLatencySeconds": 0.377032
+    }
+  ],
+  "networkRequired": false,
+  "notRun": [
+    "20. the renderer animates voice visemes: the viseme stream drives the GTK renderer through VisemeLink; the compositor probe (gtk_speech_input_probe) exercises it \u2014 no compositor runs inside this slice"
+  ],
+  "notes": [
+    "no network was used and no commercial provider was contacted; the recognition path was vosk over pulse capturing bunny-speech-loop.monitor; the capture device was a sink monitor carrying synthesised speech \u2014 no physical microphone was validated; the sink was a null sink created for the slice"
+  ],
+  "passed": true,
+  "passedCount": 27,
+  "physicalMicrophoneValidated": false,
+  "providerId": "vosk",
+  "root": "/tmp/bunny-speech-slice-czaoytqi",
+  "sessionId": "ses-00d2943765b9434085b767e97dd14f44",
+  "stepCount": 28,
+  "steps": [
+    {
+      "detail": "store at /tmp/bunny-speech-slice-czaoytqi",
+      "name": "start the canonical companion service",
+      "status": "PASS",
+      "step": 1
+    },
+    {
+      "detail": "the protocol client is exercised over the real socket; the widget layer needs a compositor and is covered by the GTK probe",
+      "name": "start the GTK client transport",
+      "status": "PASS",
+      "step": 2
+    },
+    {
+      "detail": "health.microphoneActive is false and no capture session exists",
+      "name": "verify the microphone is closed at startup",
+      "status": "PASS",
+      "step": 3
+    },
+    {
+      "detail": "capture speechreq-f104db6ab6304842b2cc26d3c5e6be31 accepted from push-to-talk-button",
+      "name": "the user explicitly presses push-to-talk",
+      "status": "PASS",
+      "step": 4
+    },
+    {
+      "detail": "indicator raised at event 1, microphone opened at event 2",
+      "name": "the listening indicator appears before the microphone opens",
+      "status": "PASS",
+      "step": 5
+    },
+    {
+      "detail": "pulse opened bunny-speech-loop.monitor",
+      "name": "the microphone opens",
+      "status": "PASS",
+      "step": 6
+    },
+    {
+      "detail": "capture_started was emitted",
+      "name": "capture begins",
+      "status": "PASS",
+      "step": 7
+    },
+    {
+      "detail": "the voice runtime spoke a known sentence into the sink and the monitor capture detected it",
+      "injections": [
+        {
+          "announced": true,
+          "attempt": 1,
+          "disposition": "played",
+          "reason": ""
+        }
+      ],
+      "name": "speech is detected",
+      "status": "PASS",
+      "step": 8
+    },
+    {
+      "detail": "a provisional reading was available while capture ran",
+      "name": "a partial transcript appears",
+      "status": "PASS",
+      "step": 9
+    },
+    {
+      "detail": "endpoint-silence",
+      "name": "the capture ends on silence or stop",
+      "status": "PASS",
+      "step": 10
+    },
+    {
+      "detail": "microphone_closed at 7, indicator_cleared at 8",
+      "name": "the microphone closes, then the indicator clears",
+      "status": "PASS",
+      "step": 11
+    },
+    {
+      "detail": "recognition_finalizing was emitted",
+      "name": "recognition finalizes",
+      "status": "PASS",
+      "step": 12
+    },
+    {
+      "detail": "vosk heard 38 characters: 'come to that where did this out please'",
+      "name": "a final transcript appears",
+      "status": "PASS",
+      "step": 13
+    },
+    {
+      "detail": "the transcript was corrected to 'count the words in this short note please' and marked user-edited",
+      "name": "the user edits one word",
+      "status": "PASS",
+      "step": 14
+    },
+    {
+      "detail": "confirmed and submitted",
+      "name": "the user confirms",
+      "status": "PASS",
+      "step": 15
+    },
+    {
+      "detail": "0 task(s) before, 1 after; task task-239d3738065a463289dd162ca830e695",
+      "name": "the canonical runtime creates exactly one task",
+      "status": "PASS",
+      "step": 16
+    },
+    {
+      "detail": "state completed",
+      "name": "the task runs through capability and approval flow",
+      "status": "PASS",
+      "step": 17
+    },
+    {
+      "detail": "",
+      "name": "the task completes",
+      "status": "PASS",
+      "step": 18
+    },
+    {
+      "detail": "the result caption was spoken and recorded played",
+      "name": "the voice runtime speaks the canonical result",
+      "status": "PASS",
+      "step": 19
+    },
+    {
+      "detail": "the viseme stream drives the GTK renderer through VisemeLink; the compositor probe (gtk_speech_input_probe) exercises it \u2014 no compositor runs inside this slice",
+      "name": "the renderer animates voice visemes",
+      "status": "NOT_RUN",
+      "step": 20
+    },
+    {
+      "detail": "cancelled while capturing",
+      "name": "a second capture is cancelled mid-stream",
+      "status": "PASS",
+      "step": 21
+    },
+    {
+      "detail": "1 task(s) before and after the cancellation",
+      "name": "no task is created from the cancelled capture",
+      "status": "PASS",
+      "step": 22
+    },
+    {
+      "detail": "simulated loss on pipewire, pulse, alsa; everything downstream is real",
+      "name": "the input device is removed or loss is simulated",
+      "status": "PASS",
+      "step": 23
+    },
+    {
+      "detail": "policy outcome typed-input-only: no capture device is reachable; typing remains available",
+      "name": "the system degrades to typed input",
+      "status": "PASS",
+      "step": 24
+    },
+    {
+      "detail": "worker restarted (0 capture(s) recorded cancelled-uncertain); a fresh client connected",
+      "name": "the speech runtime and a new client restart",
+      "status": "PASS",
+      "step": 25
+    },
+    {
+      "detail": "health.microphoneActive is false and no capture session exists",
+      "name": "the microphone remains closed after restart",
+      "status": "PASS",
+      "step": 26
+    },
+    {
+      "detail": "task-239d3738065a463289dd162ca830e695 in state completed",
+      "name": "the confirmed task and result are unchanged",
+      "status": "PASS",
+      "step": 27
+    },
+    {
+      "detail": "no capture is running and the recovery report records captureResumed=false; a new capture requires a new explicit action",
+      "name": "no completed or cancelled capture restarts automatically",
+      "status": "PASS",
+      "step": 28
+    }
+  ],
+  "taskId": "task-239d3738065a463289dd162ca830e695"
+}

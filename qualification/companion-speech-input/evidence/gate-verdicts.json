@@ -1,0 +1,71 @@
+{
+  "allGatesMet": true,
+  "compositorProbe": {
+    "criticals": 0,
+    "passed": true,
+    "transcript": "come to that where did this out please"
+  },
+  "schema": "bunny-os/speech-input-gates/1",
+  "verdicts": {
+    "gate-speech-100.json": {
+      "absoluteViolations": {},
+      "cleanupOfPriorResidue": {},
+      "commit": "db9e0b1d6cebfa1e9b741feb0ed76e6409857b7d",
+      "failed": 0,
+      "file": "gate-speech-100.json",
+      "gateMet": true,
+      "listeningIndicatorLitBetweenIterations": 0,
+      "longestConsecutivePass": 100,
+      "passed": 100,
+      "resourceGrowth": {},
+      "rssSinceBaselineFinalBytes": 195604480,
+      "runs": 100,
+      "secondsMax": 2.582,
+      "secondsMedian": 1.28,
+      "settledFixtures": {},
+      "target": "speech"
+    },
+    "gate-speech-slice-20.json": {
+      "absoluteViolations": {},
+      "cleanupOfPriorResidue": {},
+      "commit": "db9e0b1d6cebfa1e9b741feb0ed76e6409857b7d",
+      "failed": 0,
+      "file": "gate-speech-slice-20.json",
+      "gateMet": true,
+      "listeningIndicatorLitBetweenIterations": 0,
+      "longestConsecutivePass": 20,
+      "passed": 20,
+      "resourceGrowth": {},
+      "rssSinceBaselineFinalBytes": 241500160,
+      "runs": 20,
+      "secondsMax": 11.883,
+      "secondsMedian": 11.636,
+      "settledFixtures": {},
+      "target": "speech-slice"
+    },
+    "gate-suite-50.json": {
+      "absoluteViolations": {},
+      "cleanupOfPriorResidue": {
+        "temporarySpeechWorkspaces": -1
+      },
+      "commit": "db9e0b1d6cebfa1e9b741feb0ed76e6409857b7d",
+      "failed": 0,
+      "file": "gate-suite-50.json",
+      "gateMet": true,
+      "listeningIndicatorLitBetweenIterations": 0,
+      "longestConsecutivePass": 50,
+      "passed": 50,
+      "resourceGrowth": {},
+      "rssSinceBaselineFinalBytes": 79310848,
+      "runs": 50,
+      "secondsMax": 41.331,
+      "secondsMedian": 40.735,
+      "settledFixtures": {
+        "liveCaptureWorkers": 1,
+        "liveSpeechServices": 1,
+        "threads": 1
+      },
+      "target": "suite"
+    }
+  }
+}

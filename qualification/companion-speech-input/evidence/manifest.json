@@ -1,0 +1,46 @@
+{
+  "candidateCommit": "db9e0b1d6cebfa1e9b741feb0ed76e6409857b7d",
+  "files": {
+    "env.json": {
+      "bytes": 1054,
+      "sha256": "8400231a8b53375e753146a36adc6c6d5739ec5db42e1a9a3d9731bd2f024845"
+    },
+    "gate-speech-100.json": {
+      "bytes": 236123,
+      "sha256": "b09ebf9a7a1fbe6847f0c4d84b0d838cab554d87ef5007a2b3051b55e0e03eda"
+    },
+    "gate-speech-slice-20.json": {
+      "bytes": 49924,
+      "sha256": "9319814df00b9b9f45adb748303e2e85cecdf613b71c7c8f060baaa635295941"
+    },
+    "gate-suite-50.json": {
+      "bytes": 124202,
+      "sha256": "9df0dfad5380bc17d54698fb5088beabd1f8aa47f11cb2d06d75aed02c31d8d8"
+    },
+    "gate-verdicts.json": {
+      "bytes": 2040,
+      "sha256": "9c955feaa3cf81a7ed964210eb663a8a4f3eaa9442764b3f15fee4aa113fc822"
+    },
+    "gates.log": {
+      "bytes": 8441,
+      "sha256": "3cc7081d1451c2e70b0fcf17be00976b251fadf02fcf215f8c394bc521284d35"
+    },
+    "gtk-speech-input.json": {
+      "bytes": 8946,
+      "sha256": "0002969901f81e757b1fcfcaf42117e6391806645539101fbdefbf7d3f041e22"
+    },
+    "gtk-speech-input.stdout": {
+      "bytes": 17589,
+      "sha256": "ad7dc89b320c75102f5fb624e24b0693ce0b294eacb95225e0af69bf0e60c82a"
+    },
+    "slice.json": {
+      "bytes": 7552,
+      "sha256": "830263ffa4c210a37d759db369fb7d330f97b85f2fda22ba19c3364ccd74f247"
+    },
+    "speech-measurements.json": {
+      "bytes": 3667,
+      "sha256": "0dd56e7c8fde55552f206fb8fd6fb82db031087325590b15c0ed5fad5ecc55af"
+    }
+  },
+  "schema": "bunny-os/speech-input-evidence-manifest/1"
+}
