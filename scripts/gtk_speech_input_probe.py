@@ -413,6 +413,14 @@ class Probe:
 
         try:
             if not self.failures:
+                # Prime the loopback before anything is measured, and record
+                # what the prime heard. Diagnostic first, warm-up second: a
+                # cold WSLg RDP sink has been observed to serve a silent
+                # monitor to the first client constellation of a process, and
+                # the prime makes the probe measure the runtime rather than
+                # the host's cold path. The control's own numbers stay in the
+                # report either way.
+                self.raw_loopback_control()
                 self.check_full_capture(device)
                 self.check_cancellation(device)
                 self.check_renderer_restart(device)
