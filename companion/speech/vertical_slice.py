@@ -429,6 +429,14 @@ def run_speech_slice(root: Path) -> SpeechSliceReport:
 
         injections: list[dict[str, Any]] = []
         if opened and voice is not None:
+            # Frames first, then the sentence: the monitor stream's first
+            # bytes arrive well after the recorder spawns, and audio played
+            # before them never meets the capture.
+            _wait_for(
+                lambda: int((speech.worker.status().get("current") or {})
+                            .get("bytesCaptured") or 0) > 0,
+                timeout=15.0,
+            )
             injections.append(_inject(1))
             _wait_for(_detected, timeout=8.0)
             if not _detected() and speech.worker.active:

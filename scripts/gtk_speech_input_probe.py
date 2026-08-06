@@ -526,6 +526,11 @@ class Probe:
             return
         request_id = outcome["requestId"]
         self.pump(seconds=10.0, until=lambda: self._event_ms("capture_started", request_id) is not None)
+        # Frames first, then the sentence — the same gate the slice and the
+        # measurement harness apply, for the same measured reason.
+        self.pump(seconds=15.0, until=lambda: int(
+            (self.speech.worker.status().get("current") or {}).get("bytesCaptured") or 0
+        ) > 0)
         self._speak_into_loopback(attempt=1)
         # One retry, and only of the *stimulus*: the injection is harness, not
         # runtime — a person would simply speak again — and the WSLg sink's

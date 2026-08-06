@@ -217,12 +217,14 @@ def main() -> int:
             report["notes"].append(f"capture {index} refused: {outcome.get('detail')}")
             continue
         request_id = outcome["requestId"]
-        # Give capture a moment to open, then inject the sentence.
-        deadline = time.monotonic() + 10.0
+        # Inject only once frames are actually flowing: the monitor stream's
+        # first bytes arrive a couple of seconds after the recorder spawns,
+        # and a sentence played before them is a sentence the capture never
+        # met — measured as eleven of twelve captures hearing nothing.
+        deadline = time.monotonic() + 15.0
         while time.monotonic() < deadline:
-            status = speech.worker.status()
-            current = status.get("current") or {}
-            if current.get("phase") == "capturing":
+            current = speech.worker.status().get("current") or {}
+            if int(current.get("bytesCaptured") or 0) > 0:
                 break
             time.sleep(0.02)
         _speak()
