@@ -116,15 +116,37 @@ class SettingsAdapter:
                 False, mechanism="", service="settings",
                 detail="there is no graphical session, so no settings window could appear",
             )
-        if self._desktop == "GNOME" and have("gnome-control-center"):
+        # Two different absences, said differently. "This build does not know
+        # your desktop" and "your desktop's settings program is not installed"
+        # lead a reader to two different places, and an earlier version of this
+        # returned the first message for both — so a Fedora session with the
+        # GNOME mapping and no `gnome-control-center` was told the mapping did
+        # not exist, which sent the next person looking in the wrong file.
+        if self._desktop == "GNOME":
+            if have("gnome-control-center"):
+                return Availability(
+                    True, mechanism="gnome-control-center", service="gnome-control-center",
+                    detail="GNOME Settings is installed",
+                )
             return Availability(
-                True, mechanism="gnome-control-center", service="gnome-control-center",
-                detail="GNOME Settings is installed",
+                False, mechanism="gnome-control-center", service="gnome-control-center",
+                detail=(
+                    "this is a GNOME session and gnome-control-center is not installed, so "
+                    "there is no settings window to open"
+                ),
             )
-        if self._desktop == "KDE" and (have("systemsettings") or have("systemsettings5")):
+        if self._desktop == "KDE":
+            if have("systemsettings") or have("systemsettings5"):
+                return Availability(
+                    True, mechanism="systemsettings", service="systemsettings",
+                    detail="KDE System Settings is installed",
+                )
             return Availability(
-                True, mechanism="systemsettings", service="systemsettings",
-                detail="KDE System Settings is installed",
+                False, mechanism="systemsettings", service="systemsettings",
+                detail=(
+                    "this is a KDE session and System Settings is not installed, so there is "
+                    "no settings window to open"
+                ),
             )
         return Availability(
             False, mechanism="", service="settings",

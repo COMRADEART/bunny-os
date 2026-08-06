@@ -403,28 +403,52 @@ class _Run:
         return None
 
 
+#: Applications the slice is willing to start, in order of preference.
+#:
+#: The order is about harmlessness rather than about likelihood: a calculator, a
+#: text editor, a GTK demo, a settings window. The slice starts a real program on
+#: a real desk twenty times under the gate, so the program it starts should be
+#: one nobody minds seeing.
+#:
+#: No terminal is on this list and none ever should be. ``xterm`` and ``foot``
+#: resolve cleanly on many of these hosts and starting one would put a shell on
+#: the user's screen — which is the capability this entire phase is built not to
+#: have, arriving through the back door of a test fixture.
+_SLICE_APPLICATIONS = (
+    "org.gnome.Calculator", "gnome-calculator", "kcalc",
+    "org.gnome.TextEditor", "org.gnome.gedit", "gedit",
+    "org.gnome.Characters", "org.gnome.Weather", "org.gnome.clocks",
+    "org.gtk.WidgetFactory4", "org.gtk.Demo4",
+    "org.gnome.Settings",
+)
+
+
 def _installed_application() -> str:
     """An installed application this host can be asked to launch.
 
-    Preferred in order, and the order is about harmlessness rather than about
-    likelihood: a calculator, a text editor, a terminal-free utility. The slice
-    starts a real program on a real desk twenty times under the gate, so the
-    program it starts should be one nobody minds seeing.
+    Among the candidates that resolve, one that declares ``DBusActivatable``
+    wins. Not for tidiness: an activatable application is *activated* rather
+    than started again when it is already running, so twenty gate iterations
+    leave one window rather than twenty — and the launch adapter's
+    already-running branch, which is the one §9 calls reconcilable, is the branch
+    that actually runs.
     """
     from .entries import resolve_application
     from .errors import DesktopActionError
 
-    for candidate in (
-        "org.gnome.Calculator", "gnome-calculator", "kcalc",
-        "org.gnome.TextEditor", "org.gnome.gedit", "gedit",
-        "org.gnome.Characters", "org.gnome.Weather", "org.gnome.clocks",
-    ):
+    found: list[tuple[str, bool]] = []
+    for candidate in _SLICE_APPLICATIONS:
         try:
-            resolve_application(candidate)
+            entry = resolve_application(candidate)
         except DesktopActionError:
             continue
-        return candidate
-    return ""
+        found.append((candidate, entry.dbus_activatable))
+    if not found:
+        return ""
+    for name, activatable in found:
+        if activatable:
+            return name
+    return found[0][0]
 
 
 def run_desktop_slice(root: Path, *, endpoint: Path | None = None) -> DesktopSliceReport:
