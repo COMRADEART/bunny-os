@@ -140,6 +140,13 @@ class EndToEnd(unittest.TestCase):
         params = {
             "sessionId": self.session_id,
             "activationSource": "push-to-talk-button",
+            # Named, not assumed: on a host where a real recogniser is
+            # installed and ready, selection would otherwise prefer it and
+            # feed it PCM sine waves it rightly hears as nothing. The
+            # preference is the user-visible mechanism, so the test exercises
+            # it rather than working around it. Found on Linux; Windows
+            # passed for the wrong reason (no real recogniser to collide with).
+            "providerId": "scripted-recognizer",
             "maxCaptureMs": 8_000,
             "initialSilenceMs": 2_000,
             "endpointSilenceMs": 400,
@@ -273,6 +280,7 @@ class WorkerRestart(unittest.TestCase):
         started = client.call("speech_input_start", {
             "sessionId": session_id,
             "activationSource": "push-to-talk-button",
+            "providerId": "scripted-recognizer",
         })
         self.assertTrue(started["accepted"], started.get("detail"))
         wait_for(lambda: service.speech.worker.active)
@@ -284,9 +292,12 @@ class WorkerRestart(unittest.TestCase):
         outcome = client.call("speech_input_start", {
             "sessionId": session_id,
             "activationSource": "push-to-talk-button",
+            "providerId": "scripted-recognizer",
         })
         self.assertTrue(outcome["accepted"], outcome.get("detail"))
-        service.speech.worker.cancel(outcome["requestId"], token="")
+        service.speech.worker.cancel(
+            outcome["requestId"], token=outcome.get("cancellationToken", ""),
+        )
         wait_for(lambda: not service.speech.worker.active)
 
 

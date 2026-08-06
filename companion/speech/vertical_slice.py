@@ -307,7 +307,7 @@ def run_speech_slice(root: Path) -> SpeechSliceReport:
         )
 
         # 8 -- known speech, through the loopback ---------------------------
-        spoke = False
+        injection = {"announced": False, "reason": "", "disposition": ""}
         if opened and voice is not None:
             from ..presentation import PresentationState
 
@@ -321,13 +321,19 @@ def run_speech_slice(root: Path) -> SpeechSliceReport:
             )
             voice.refresh()
             request, reason = voice.announce(state)
+            injection["announced"] = request is not None
+            injection["reason"] = reason
             if request is not None:
-                spoke = _wait_for(
+                _wait_for(
                     lambda: any(
                         item["requestId"] == request.request_id
                         for item in voice.queue.ledger
                     ),
                     timeout=30.0,
+                )
+                injection["disposition"] = next(
+                    (item["disposition"] for item in voice.queue.ledger
+                     if item["requestId"] == request.request_id), "",
                 )
         detected = opened and _wait_for(
             lambda: any(
@@ -343,8 +349,13 @@ def run_speech_slice(root: Path) -> SpeechSliceReport:
                 "the voice runtime spoke a known sentence into the sink and the "
                 "monitor capture detected it"
                 if detected else
-                (absence or "no speech energy was detected; was the loopback silent?")
+                (absence or
+                 f"no speech energy was detected; the injection was "
+                 f"announced={injection['announced']} "
+                 f"disposition={injection['disposition']!r} "
+                 f"reason={injection['reason']!r}")
             ),
+            injection=dict(injection),
         )
 
         # 9 -- a partial transcript -----------------------------------------
