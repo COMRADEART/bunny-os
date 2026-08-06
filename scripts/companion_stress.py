@@ -40,9 +40,31 @@ import time
 import unittest
 from typing import Any
 
-for _candidate in (Path("/usr/lib/bunny-os/python"), Path(__file__).resolve().parents[1]):
-    if _candidate.is_dir() and str(_candidate) not in sys.path:
-        sys.path.insert(0, str(_candidate))
+# Where the code under test comes from, and the order is the whole of it.
+#
+# The checkout this script lives in wins, always. The installed tree is a
+# fallback for running the harness on a machine that has no checkout.
+#
+# The obvious version of this loop was wrong in a way that produced a *silent
+# wrong answer* rather than an error. It inserted each candidate at the front
+# only if it was not already in ``sys.path`` — so with ``PYTHONPATH`` pointing at
+# the checkout, the checkout was skipped as already-present and the installed
+# tree went in ahead of it. Every gate then measured
+# ``/usr/lib/bunny-os/python``: a build from some earlier phase, without the
+# package under test in it. A hundred iterations reported
+# ``ModuleNotFoundError`` and, had the module happened to exist there, would
+# have reported a hundred clean passes for code nobody had changed.
+#
+# So the checkout is *moved* to the front rather than conditionally inserted.
+_REPOSITORY = Path(__file__).resolve().parents[1]
+_INSTALLED = Path("/usr/lib/bunny-os/python")
+for _candidate in (_INSTALLED, _REPOSITORY):
+    if not _candidate.is_dir():
+        continue
+    name = str(_candidate)
+    while name in sys.path:
+        sys.path.remove(name)
+    sys.path.insert(0, name)
 
 #: The service-driven subset — every module that starts a real runtime, binds a
 #: socket or drives a slice. These are the tests the flake lives in; the other
@@ -1431,6 +1453,11 @@ def _run_desktop_slice() -> dict[str, Any]:
         "notRun": report["notRun"],
         "ran": report["stepCount"],
         "posture": report["posture"],
+        # §24's latencies, per iteration. Carried out of the slice rather than
+        # measured separately: a figure taken once says what one run did, and
+        # twenty of them say what the thing does.
+        "measurements": report["measurements"],
+        "resourceDelta": report["resourceDelta"],
         "detail": [item["detail"] for item in report["failed"]][:2],
     }
 
@@ -1542,7 +1569,7 @@ def run_isolated(target: str, runs: int, *, order: str) -> dict[str, Any]:
         completed = subprocess.run(
             [sys.executable, __file__, "--target", target, "--runs", "1",
              "--order", order, "--json"],
-            capture_output=True, text=True,
+            capture_output=True, text=True, cwd=str(_REPOSITORY),
         )
         ok = completed.returncode == 0
         iterations.append({
