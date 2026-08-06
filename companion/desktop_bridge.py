@@ -289,6 +289,10 @@ class DesktopSupport:
             data_affected=prepared.request.classification,
             alternatives=_alternatives(operation.tool),
             operation_name=operation.name,
+            # Nothing here leaves the machine. Stated rather than inferred: the
+            # destination is an application id, a settings page, an address or a
+            # file, and none of those is the literal word "local".
+            off_device=False,
             # The whole §8 binding, feeding the destination fingerprint the
             # canonical gate already compares. This is the integration: a
             # changed target, URI, path, clipboard digest, volume, parameter,

@@ -178,6 +178,15 @@ class ApprovalRequirement:
     #: task-level approvals such as dispatching the whole task remotely.
     operation_name: str = ""
     destination_declaration: Mapping[str, Any] | None = None
+    #: Whether this destination is off the device.
+    #:
+    #: ``None`` infers it from ``destination != "local"``, which is right for a
+    #: provider — where the destination string *is* a provider id — and wrong
+    #: for a desktop action, whose destination is an application, a settings
+    #: page, an address or a file on this machine. The inference put the word
+    #: "remote" in front of a user for opening their own sound settings, which
+    #: is the opposite of what the field is there to tell them.
+    off_device: bool | None = None
 
     def __post_init__(self) -> None:
         if self.action not in SENSITIVE_ACTIONS:
@@ -188,6 +197,11 @@ class ApprovalRequirement:
             raise ApprovalMismatch(
                 f"{self.action!r} must state what the user gets if they decline"
             )
+
+    @property
+    def leaves_device(self) -> bool:
+        """Whether granting this would send something off the machine."""
+        return (self.destination != "local") if self.off_device is None else bool(self.off_device)
 
     @property
     def fingerprint(self) -> str:
@@ -201,6 +215,7 @@ class ApprovalRequirement:
             "action": self.action,
             "reason": self.reason,
             "destination": self.destination,
+            "leavesDevice": self.leaves_device,
             "providerId": self.provider_id,
             "estimatedCostUnits": self.estimated_cost_units,
             "dataAffected": self.data_affected,
@@ -710,7 +725,12 @@ class ApprovalGate:
             action=requirement.action,
             reason=requirement.reason,
             data_affected=requirement.data_affected,
-            destination="remote" if requirement.destination != "local" else "local",
+            # The coarse word the Approval Centre renders. Read from the
+            # requirement rather than inferred from its destination string: a
+            # desktop action's destination is an application on this machine,
+            # and inferring "remote" from "not the literal word local" told a
+            # user their own sound settings were somewhere else.
+            destination="remote" if requirement.leaves_device else "local",
             provider_id=requirement.provider_id,
             estimated_cost_units=requirement.estimated_cost_units,
             resource_impact={"planRevision": plan.revision, "planFingerprint": plan.fingerprint},

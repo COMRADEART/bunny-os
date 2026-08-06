@@ -590,9 +590,23 @@ def _slice_body(
         reason = str((launch.prompt.get("requirement") or {}).get("reason", ""))
         report.record(11, "provider proposes opening an installed application",
                       passed=bool(launch.prompt), detail=application)
-        report.record(12, "the exact application id is displayed",
-                      passed=application in str((launch.prompt.get("request") or {}).get("destination", "")),
-                      detail=str((launch.prompt.get("request") or {}).get("destination", "")))
+        requirement = launch.prompt.get("requirement") or {}
+        request = launch.prompt.get("request") or {}
+        # Both halves. The requirement carries the exact application id, which
+        # is what §18 requires be shown; the request carries the coarse
+        # locality, which must say this is happening on the user's own machine.
+        report.record(
+            12, "the exact application id is displayed",
+            passed=(
+                application in str(requirement.get("destination", ""))
+                and str(request.get("destination", "")) == "local"
+                and requirement.get("leavesDevice") is False
+            ),
+            detail=(
+                f"requirement destination={requirement.get('destination')!r}, "
+                f"request locality={request.get('destination')!r}"
+            ),
+        )
         report.record(13, "the user approves", passed=bool(launch.approved_at), detail=launch.error)
         launched = launch.operation_value() or {}
         report.record(

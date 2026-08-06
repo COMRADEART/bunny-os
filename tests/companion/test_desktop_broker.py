@@ -480,6 +480,43 @@ class RuntimeIntegration(unittest.TestCase):
         self.assertIn("Open the sound settings page", requirement["reason"])
         self.assertEqual(requirement["destination"], "sound")
 
+    def test_a_desktop_action_is_never_presented_as_leaving_the_device(self) -> None:
+        """§18: the coarse locality a surface renders must say "here".
+
+        The requirement's ``destination`` is the exact target — an application
+        id, an address, a path — and the request's is the two-word locality the
+        Approval Centre shows. Inferring the second from the first put the word
+        "remote" in front of a user for opening their own sound settings.
+        """
+        runtime, support, adapters = self._runtime(grant=True)
+        session = runtime.create_session("Desktop")
+        task = runtime.submit_task(session.session_id, "please [settings] for me")
+        runtime.run_task(session.session_id, task.task_id)
+        asked = [
+            item for item in runtime.events(session.session_id, task_id=task.task_id)
+            if item.event_type == "approval_requested" and item.payload.get("requirement")
+        ]
+        self.assertTrue(asked)
+        payload = asked[0].payload
+        self.assertEqual(payload["requirement"]["destination"], "sound")
+        self.assertIs(payload["requirement"]["leavesDevice"], False)
+        self.assertEqual(payload["request"]["destination"], "local")
+
+    def test_a_remote_destination_still_reads_as_remote(self) -> None:
+        """The other direction, so the fix cannot have loosened the general case."""
+        from companion.approvals import ApprovalRequirement
+
+        remote = ApprovalRequirement(
+            action="remote_dispatch", reason="somewhere else",
+            destination="provider.example", alternatives=("Stay local.",),
+        )
+        self.assertTrue(remote.leaves_device)
+        local = ApprovalRequirement(
+            action="interrupt_user_work", reason="here", destination="local",
+            alternatives=("Later.",),
+        )
+        self.assertFalse(local.leaves_device)
+
     def test_a_provider_naming_an_undeclared_tool_never_reaches_the_desktop(self) -> None:
         runtime, support, adapters = self._runtime(grant=True)
         session = runtime.create_session("Desktop")
