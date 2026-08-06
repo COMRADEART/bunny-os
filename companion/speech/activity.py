@@ -192,7 +192,16 @@ class SpeechActivityDetector:
                 # exists to name.
                 candidate = max(self.configured_floor, measured * 1.5)
                 self._saturated = candidate > ceiling
-                self._floor = min(candidate, ceiling)
+                # A saturated calibration keeps the *configured* floor rather
+                # than adopting the ceiling. Measured: a capture whose first
+                # frames already contained speech — push-to-talk pressed
+                # mid-sentence, or a loopback whose stream starts with the
+                # audio — calibrated the speech itself into the floor, and no
+                # real frame ever crossed a threshold set from the loudest
+                # thing in the room. What saturation actually means is "this
+                # window was not a quiet room", and the honest response to an
+                # unusable measurement is to not use it.
+                self._floor = self.configured_floor if self._saturated else candidate
                 self._calibrated = True
             return
 

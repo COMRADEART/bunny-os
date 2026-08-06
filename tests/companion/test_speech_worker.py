@@ -199,8 +199,14 @@ class Endings(unittest.TestCase):
     """The non-happy settlements, each with its cleanup asserted."""
 
     def test_pure_silence_settles_as_no_speech_with_no_transcript(self) -> None:
+        # The recogniser scripts "heard nothing", which is what a real one
+        # returns for silence — the energy gate bounds the capture's length,
+        # and the recogniser's empty answer is what settles it as no-speech.
         script = FrameScript([silence_pcm(3.0)])
-        harness = build_worker(backend=ScriptedCaptureBackend(script=script))
+        harness = build_worker(
+            backend=ScriptedCaptureBackend(script=script),
+            recognizer=ScriptedRecognizer(final_text=""),
+        )
         self.addCleanup(harness.close)
         request = make_request(initial_silence_seconds=1.0)
         _run_capture(harness, request)
@@ -208,6 +214,24 @@ class Endings(unittest.TestCase):
         status = harness.worker.status()
         dispositions = [item["disposition"] for item in status["recentDispositions"]]
         self.assertIn("no-speech", dispositions)
+
+    def test_speech_the_gate_missed_is_still_the_users_words(self) -> None:
+        """The loopback defect as a regression test: the capture ends on the
+        initial-silence bound while the recogniser holds a real sentence, and
+        the sentence is offered rather than discarded."""
+        # Uniform quiet-block audio: enough energy for vosk-like fixtures to
+        # "hear", below the gate's speech threshold when the floor saturates.
+        script = FrameScript([speech_pcm(0.3), silence_pcm(2.0)])
+        harness = build_worker(
+            backend=ScriptedCaptureBackend(script=script),
+            recognizer=ScriptedRecognizer(final_text="the gate missed this"),
+        )
+        self.addCleanup(harness.close)
+        request = make_request(initial_silence_seconds=1.0)
+        _run_capture(harness, request)
+        entry = harness.ledger.get(request.request_id)
+        self.assertIsNotNone(entry, "the recogniser's answer was discarded")
+        self.assertEqual(entry.transcript.text, "the gate missed this")
 
     def test_device_loss_preserves_an_incomplete_transcript_and_no_task(self) -> None:
         """§17, end to end: stop, close, clear after close, preserve marked."""

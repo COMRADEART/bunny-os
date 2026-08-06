@@ -244,15 +244,27 @@ class Activity(unittest.TestCase):
         self.assertEqual(first.to_json(), second.to_json())
 
     def test_calibration_only_raises_the_floor_and_saturates_honestly(self) -> None:
+        # Speech in the calibration window saturates it, and a saturated
+        # calibration keeps the configured floor rather than adopting the
+        # ceiling — otherwise the speech itself becomes the threshold and is
+        # never detected (measured on the loopback, where the stream starts
+        # with the audio).
         detector = self._detector()
-        # A loud room during calibration raises the floor…
         detector.feed(speech_pcm(0.3))
         state = detector.state()
-        self.assertGreaterEqual(state.noise_floor, detector.configured_floor)
-        # …and can never lower it below the configured one.
+        self.assertTrue(state.calibration_saturated)
+        self.assertEqual(state.noise_floor, detector.configured_floor)
+        # A quiet room cannot lower the floor below the configured one.
         quiet = self._detector()
         quiet.feed(silence_pcm(0.3))
         self.assertEqual(quiet.state().noise_floor, quiet.configured_floor)
+        self.assertFalse(quiet.state().calibration_saturated)
+
+    def test_speech_that_begins_inside_the_calibration_window_is_detected(self) -> None:
+        """The defect, as a regression test: push-to-talk pressed mid-sentence."""
+        detector = self._detector()
+        state = detector.feed(speech_pcm(1.0))
+        self.assertTrue(state.speech_detected)
 
     def test_the_detector_disclaims_biometrics(self) -> None:
         described = self._detector().describe()

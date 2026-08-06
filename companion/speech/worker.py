@@ -536,9 +536,17 @@ class CaptureWorker:
             if ending == "device-lost":
                 self._finish_device_lost(session, streaming=streaming)
                 return
-            if ending == "initial-silence":
-                self._settle(session, "no-speech", "the capture ended before any speech was detected")
-                return
+            # Every other ending — endpoint silence, initial silence, the
+            # duration or byte ceilings, a manual stop — goes through
+            # finalisation, and the *recogniser* decides whether speech
+            # occurred. The energy gate bounds how long the microphone stays
+            # open (§15); it is a heuristic, and it was measured wrong in
+            # exactly the way that matters: a capture whose speech began in
+            # the calibration window ran to its initial-silence timeout with
+            # the recogniser holding the whole correct sentence, and a
+            # discard here threw the user's words away because a heuristic
+            # had not noticed them. An empty final transcript still settles
+            # as no-speech, in one place, in ``_finalize``.
             self._finalize(session, streaming=streaming, ending=ending)
         except Exception as exc:  # noqa: BLE001 - a fault must not skip release
             # A fault in the speech runtime must not reach a task and must not
