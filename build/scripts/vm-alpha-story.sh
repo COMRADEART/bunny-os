@@ -111,8 +111,36 @@ if [[ ${status} -ne 0 && ${status} -ne 124 ]]; then
 fi
 
 echo "--- extracting ---"
+# The disk first. A serial console is a best-effort channel shared with the
+# kernel: `offline-001` lost chunk 51 of 217 to interleaving even with the
+# chunk framing, and a lost chunk is a lost story. The probe also writes its
+# record into the guest's own /var, and pulling that back out of the image has
+# no channel to lose anything on.
+probe_json="${work}/alpha-probe.json"
+rm -f "${probe_json}"
+deployment="$(guestfish --ro -a "${disk}" run : mount "${BUNNY_ALPHA_ROOT_PARTITION:-/dev/sda4}" / \
+  : glob-expand "/ostree/deploy/*/deploy/*.0/" 2>/dev/null | head -1)"
+if [[ -n "${deployment}" ]]; then
+  stateroot="$(dirname "$(dirname "${deployment%/}")")"
+  for candidate in "${stateroot}/var/log/bunny-alpha-record.json" \
+                   "${stateroot}/var/tmp/bunny-alpha-record.json"; do
+    if guestfish --ro -a "${disk}" run : mount "${BUNNY_ALPHA_ROOT_PARTITION:-/dev/sda4}" / \
+         : download "${candidate}" "${probe_json}" 2>/dev/null; then
+      echo "record read from the guest filesystem: ${candidate}"
+      break
+    fi
+  done
+fi
+
+record_args=(--serial "${log}")
+if [[ -s "${probe_json}" ]]; then
+  record_args+=(--probe-json "${probe_json}")
+else
+  echo "no record on the guest filesystem; falling back to the serial console"
+fi
+
 python3 build/scripts/alpha-record.py \
-  --serial "${log}" --output "${record}" \
+  "${record_args[@]}" --output "${record}" \
   --label "${label}" \
   --profile "${profile}" \
   --source-image "${source_image}" \

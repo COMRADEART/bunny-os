@@ -456,6 +456,29 @@ def main() -> int:
             record["sections"][name] = function()
         except Exception as error:  # pragma: no cover - a probe never takes the record with it
             record["sections"][name] = {"error": f"{type(error).__name__}: {error}"}
+    # The disk first, because the disk is authoritative.
+    #
+    # A serial console is a best-effort channel shared with the kernel, and on
+    # the offline boots it demonstrably loses a line: `offline-001` lost chunk
+    # 51 of 217 to interleaving even with the framing below. Writing the record
+    # into the guest's own /var and reading it back out of the image afterwards
+    # has no such channel — the harness mounts the disk and downloads a file.
+    #
+    # The console output is kept as the fallback, because it is the only channel
+    # that works when the guest never finishes shutting down cleanly, and
+    # because it is what makes a run watchable while it happens.
+    serialised = json.dumps(record, sort_keys=True)
+    for destination in ("/var/log/bunny-alpha-record.json", "/tmp/bunny-alpha-record.json"):
+        try:
+            path = Path(destination)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(serialised, encoding="utf-8")
+            os.chmod(destination, 0o644)
+            print(f"bunny-alpha-probe: wrote {destination}", flush=True)
+            break
+        except OSError as error:
+            print(f"bunny-alpha-probe: {destination}: {error}", flush=True)
+
     # Base64, in numbered chunks, because a serial console interleaves.
     #
     # The first version printed the JSON as one line. It survives most boots and
@@ -469,9 +492,7 @@ def main() -> int:
     # which piece it lost instead of decoding something short and calling it
     # JSON. Base64 rather than raw, so the payload cannot contain a space, a
     # newline or a bracket that the framing depends on.
-    payload = base64.b64encode(
-        json.dumps(record, sort_keys=True).encode("utf-8"),
-    ).decode("ascii")
+    payload = base64.b64encode(serialised.encode("utf-8")).decode("ascii")
     chunks = [payload[at:at + CHUNK] for at in range(0, len(payload), CHUNK)]
     print(BEGIN, flush=True)
     print(f"BUNNYB64-COUNT {len(chunks)}", flush=True)

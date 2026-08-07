@@ -348,6 +348,10 @@ def assertions(record: Mapping[str, Any], *, offline: bool) -> list[dict[str, An
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="alpha-record")
     parser.add_argument("--serial", required=True, type=Path)
+    parser.add_argument(
+        "--probe-json", type=Path, default=None,
+        help="the record read off the guest filesystem; preferred over the console",
+    )
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--label", default="alpha-story")
     parser.add_argument("--profile", default="beta")
@@ -356,7 +360,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--commit", default="")
     arguments = parser.parse_args(argv)
 
-    probe, failure = extract(arguments.serial)
+    # The guest filesystem is the authoritative channel; the console is the
+    # fallback. Both are attempted and the record says which one answered, so a
+    # story that only survived on the console is visible as such rather than
+    # indistinguishable from one that did not need it.
+    probe, failure, channel = None, "", ""
+    if arguments.probe_json is not None:
+        try:
+            probe = json.loads(arguments.probe_json.read_text(encoding="utf-8"))
+            channel = "guest-filesystem"
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+            failure = f"the record from the guest filesystem did not parse: {error}"
+    if probe is None:
+        probe, console_failure = extract(arguments.serial)
+        if probe is not None:
+            channel = "serial-console"
+        else:
+            failure = "; ".join(part for part in (failure, console_failure) if part)
     offline = arguments.offline == "1"
     document: dict[str, Any] = {
         "schemaVersion": 1,
@@ -366,6 +386,7 @@ def main(argv: list[str] | None = None) -> int:
         "sourceImage": arguments.source_image,
         "offline": offline,
         "probeExtracted": probe is not None,
+        "extractionChannel": channel,
         "extractionFailure": failure,
     }
     if probe is None:
