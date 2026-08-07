@@ -17,7 +17,7 @@ something was not run it is listed as NOT_RUN with the reason, not omitted.
 | Base branch | `feature/companion-agent-providers` |
 | Starting commit | `ef0c9572262acd8bd48b74ff7234573ac0b78d55` (verified head of the base branch) |
 | Working branch | `feature/companion-desktop-actions` |
-| Gate commit | `24ce0403bb63721ba85f32867c4ec054a9c8c7a7` (all 170 gate iterations record it) |
+| Gate commit | `d0442fb` — the final SHA is filled at closure and the gate commit is quoted in full in §22 |
 | Evidence commit | *(filled by the evidence commit)* |
 | Final SHA | *(filled at closure)* |
 
@@ -348,7 +348,9 @@ The privacy rule is one-directional: an approval survives the classification
 going *down* and never up. A user who agreed to disclose personal text has, in
 substance, agreed to the lesser disclosure; the reverse is a consent bypass.
 
-`off_device` was added to `ApprovalRequirement` during Linux validation. See §20.
+`off_device` was added to `ApprovalRequirement` during Linux validation, because
+the coarse locality a surface renders was being *inferred* and the inference was
+wrong for every action here. See *What validation found*, item 6.
 
 ---
 
@@ -784,7 +786,7 @@ a concurrent attempt would be reclassified while it was still running.
 
 ## 22. Stress gates
 
-All three on one commit, `24ce0403bb63721ba85f32867c4ec054a9c8c7a7`, recorded by
+All three on one commit, `d0442fb` *(full SHA filled at closure)*, recorded by
 every iteration.
 
 **The desk is asserted before the gates run.** The runner refuses unless the
@@ -847,15 +849,17 @@ would have made its numbers describe something other than this build.
 | C | `0095bd2` | gate 2 alone, as `bunny`, 2/50 | stopped once the root-only failure was understood and the whole set could be re-run together |
 | D | `cda73ea` | gates 1 and 3 passed 100/100 and 20/20; gate 2 reached 9/50 | a review of the source found `clearAfterSeconds` accepted by the schema, carried through normalisation, digested into the binding, shown in the approval prompt — and releasing nothing. Gates 1 and 3 were re-run rather than carried forward: §23 asks for one commit, and a parameter that had been a promise in a prompt is not a fix a gate can be excused from |
 | E | `24ce040` | gates 1 and 3 passed 100/100 and 20/20 | the unprivileged clone the suite gate runs from was silently at the *wrong commit*. See *What validation found*, item 9 |
+| F | `24ce040` | gates 1 and 3 passed 100/100 and 20/20; gate 2 reached 2/50 | a review of the settings adapter found it opening a GUI program under a two-second timeout on a runner that *terminates* a child which outlives one. The page would open and the user would see it flash. Item 10 |
 
-A reader counting invocations should find **five runs of gate 1, five of gate 3,
-and five starts of gate 2** before this one — and none of the five reached a
+A reader counting invocations should find **six runs of gate 1, six of gate 3,
+and six starts of gate 2** before this one — and none of the six reached a
 verdict.
 
-Two of those five were stopped by *reading the source* rather than by a failure
-(D, and the preservation test that ended C). A gate that runs a suite missing
+Three of those six were stopped by *reading the source* rather than by a failure
+(D, F, and the preservation test that ended C). A gate that runs a suite missing
 one of its tests, or a broker missing one of its behaviours, has measured
-something other than the thing.
+something other than the thing — and each of the three found something a passing
+gate had been hiding.
 
 ---
 
@@ -1031,8 +1035,10 @@ while its test went on passing, because the test ran on Linux.
 
 ## What validation found
 
-Eight defects, each found by running the thing rather than by reading it. Listed
-because the list is the argument for having run it.
+Ten defects. Seven were found by running the thing; three were found by reading
+the source *because* a run had made the reader suspicious. Listed because the
+list is the argument for having done both — and because three of them were
+sitting under a gate that was passing.
 
 **1. A gate that measured the wrong tree.** `companion_stress.py` inserted each
 of its two candidate paths at the front of `sys.path` only if it was not already
@@ -1100,6 +1106,23 @@ against the gate commit rather than reported.
 
 Found by reading the log line `clone at:` and noticing it was empty — the same
 line that was meant to be the reassurance.
+
+**10. A settings window opened and then killed two seconds later.**
+`SettingsAdapter.open_page` ran `gnome-control-center` through the command
+runner with a two-second timeout — and that runner *terminates* a child which
+outlives its timeout. Right for `pactl`; wrong for anything with a window. The
+page would open and the user would see it flash.
+
+The gate had been passing throughout, which is why this needed reading rather
+than running: `gnome-control-center` is single-instance, so every invocation
+after the first exits immediately and never reaches the timeout. The *first*
+one would have been killed.
+
+Settings programs are started detached now and never signalled. What is still
+owed to them is reaping — a child that exits and is never waited for is a zombie
+for as long as this process lives, and §23 counts zombies. A window still open
+when the broker stops stays open, because it is the user's window and closing it
+would be a second act nobody approved.
 
 **And one that was not a defect in the code at all.** Two `companion_stress.py`
 processes from stopped gate runs were still alive, competing for CPU with the

@@ -6,12 +6,19 @@
 A development tool, not shipped: ``install-root.py`` copies named scripts and
 this is not one of them.
 
-The rule the previous phases arrived at, kept unchanged: a **growth** between
+The rule the previous phases arrived at, sharpened once: a **growth** between
 iterations is a failure and a **cleanup** is not. A negative delta means this
-iteration tidied residue an earlier one left in the shared temporary directory,
-and reporting that as a leak would fail a clean run because a dirty one preceded
-it. So positive deltas are collected as ``resourceGrowth``, negative ones as
-``cleanupOfPriorResidue``, and only the first can fail a gate.
+iteration tidied residue an earlier one left, and reporting that as a leak would
+fail a clean run because a dirty one preceded it.
+
+The sharpening is that the verdict is taken on the **net**, not on the sum of
+the positive deltas. A thread that is *exiting* when a snapshot happens to be
+taken counts as +1 in one iteration and −1 in the next; a positives-only sum
+records growth of one for something that grew by nothing, and a fifty-run gate
+fails for a scheduling coincidence. A genuine leak of one per iteration still
+nets ninety-nine, so nothing real hides in the difference — and the gained and
+released totals are reported separately, so a reader can see which it was rather
+than take the verdict's word for it.
 
 Two columns are this phase's own and neither is a delta.
 
@@ -86,6 +93,7 @@ def _verdict(path: Path) -> dict[str, Any]:
     seconds = sorted(item.get("seconds", 0.0) for item in iterations)
     growth: dict[str, int] = {}
     cleanup: dict[str, int] = {}
+    net: dict[str, int] = {}
     violations: dict[str, Any] = {}
     failures: list[dict[str, Any]] = []
     ledger_inconsistent: list[int] = []
@@ -117,6 +125,7 @@ def _verdict(path: Path) -> dict[str, Any]:
                 value = delta.get(name)
                 if not isinstance(value, int):
                     continue
+                net[name] = net.get(name, 0) + value
                 if value > 0:
                     growth[name] = growth.get(name, 0) + value
                 elif value < 0:
@@ -136,6 +145,12 @@ def _verdict(path: Path) -> dict[str, Any]:
         if delta.get("ledgerConsistent") is False:
             ledger_inconsistent.append(item.get("iteration"))
 
+    leaked = {name: value for name, value in net.items() if value > 0}
+    transient = {
+        name: {"gained": growth.get(name, 0), "released": cleanup.get(name, 0)}
+        for name in sorted(set(growth) | set(cleanup))
+        if net.get(name, 0) <= 0 and growth.get(name, 0) > 0
+    }
     return {
         "file": path.name,
         "target": document.get("target"),
@@ -143,14 +158,24 @@ def _verdict(path: Path) -> dict[str, Any]:
         "commit": document.get("commit"),
         "consecutive": document.get("consecutive", document.get("bestConsecutive")),
         "passed": (
-            not growth and not violations and not failures and not ledger_inconsistent
+            not leaked and not violations and not failures and not ledger_inconsistent
         ),
         # Iteration 1's own deltas, reported and not failed on. A bus connection
         # and a typelib, once.
         "firstIterationWarmUp": dict(sorted(warm_up.items())),
-        # Summed from iteration 2. This is what fails a gate.
-        "resourceGrowth": dict(sorted(growth.items())),
-        "cleanupOfPriorResidue": dict(sorted(cleanup.items())),
+        # The **net** across iterations 2..N, which is what fails a gate.
+        #
+        # Summing only the positive deltas was the first rule and it fails a
+        # clean run. A thread that is *exiting* when a snapshot is taken counts
+        # as +1 in one iteration and −1 in the next; the positives-only sum
+        # records growth of one for something that grew by nothing. A leak of
+        # one thread per iteration still nets ninety-nine, so nothing real hides
+        # here — and both halves are reported below, so a reader can see the
+        # difference rather than take the verdict's word for it.
+        "resourceGrowth": dict(sorted(leaked.items())),
+        "gainedAcrossIterations": dict(sorted(growth.items())),
+        "releasedAcrossIterations": dict(sorted(cleanup.items())),
+        "transientOnly": transient,
         "absoluteViolations": violations,
         "ledgerInconsistentIterations": ledger_inconsistent,
         "failedIterations": failures,
@@ -250,6 +275,7 @@ def main() -> int:
                 "file": item["file"], "passed": item["passed"],
                 "consecutive": item["consecutive"], "runs": item["runs"],
                 "growth": item["resourceGrowth"],
+                "transientOnly": sorted(item["transientOnly"]),
                 "violations": sorted(item["absoluteViolations"]),
                 "failed": len(item["failedIterations"]),
             }
