@@ -57,6 +57,26 @@ def _digest(path: Path) -> tuple[int, str]:
     return len(raw), hashlib.sha256(raw).hexdigest()
 
 
+def _is_residue(name: str) -> bool:
+    return any(part in _RESIDUE for part in name.split("/"))
+
+
+def _tracked_qualification_files() -> set[str] | None:
+    """Every committed path under ``qualification/``, or ``None`` without git."""
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(_ROOT), "ls-files", "-z", "--", "qualification"],
+            capture_output=True, text=True, timeout=60, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    return {name for name in result.stdout.split("\0") if name}
+
+
 class PreservedEvidence(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -72,6 +92,8 @@ class PreservedEvidence(unittest.TestCase):
         mismatched: list[str] = []
         missing: list[str] = []
         for name, expected in sorted(self.record["preservedEvidence"].items()):
+            if _is_residue(name):
+                continue
             path = _ROOT / name
             if not path.is_file():
                 missing.append(name)
@@ -83,14 +105,30 @@ class PreservedEvidence(unittest.TestCase):
         self.assertEqual(mismatched, [], "prior evidence files changed")
 
     def test_no_file_was_added_to_an_earlier_phase_tree(self) -> None:
+        """Added means *committed*, so the question is asked of git.
+
+        It used to be asked of the filesystem, and the filesystem answers a
+        different question: it reports every file that is *present*, including
+        the ones no commit ever contained. On a builder where an earlier phase
+        has actually run, that is twenty untracked VM working files —
+        ``OVMF_VARS.qcow2`` and friends under
+        ``qualification/installed-system/evidence/*/work/`` — plus whatever
+        bytecode the last suite wrote. None of them was added to the evidence
+        tree; they were left in a directory beside it.
+
+        The distinction matters because the property being defended is about
+        the *repository*: an earlier phase's evidence is immutable, so no commit
+        may add to it. A scratch file in a working directory is not a commit.
+        """
+        tracked = _tracked_qualification_files()
+        if tracked is None:
+            self.skipTest("git is not available, so 'added' cannot be distinguished from 'present'")
         recorded = set(self.record["preservedEvidence"])
         added = [
-            path.relative_to(_ROOT).as_posix()
-            for path in sorted((_ROOT / "qualification").rglob("*"))
-            if path.is_file()
-            and path.relative_to(_ROOT).as_posix() not in recorded
-            and not path.relative_to(_ROOT).as_posix().startswith(_OWN_PHASE)
-            and not any(part in _RESIDUE for part in path.relative_to(_ROOT).parts)
+            name for name in sorted(tracked)
+            if name not in recorded
+            and not name.startswith(_OWN_PHASE)
+            and not _is_residue(name)
         ]
         self.assertEqual(added, [], "a file was added to an earlier phase's evidence tree")
 
