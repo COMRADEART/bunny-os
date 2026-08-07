@@ -99,13 +99,17 @@ def _verdict(path: Path) -> dict[str, Any]:
 
     for position, item in enumerate(iterations):
         delta = item.get("delta", {})
-        outcome = item.get("outcome", {}) or {}
-        if not outcome.get("ok", True):
+        # The iteration record is flat: `companion_stress.py` lifts the target's
+        # outcome fields onto it rather than nesting them. Read them where they
+        # are; an earlier version of this collector looked for a nested
+        # ``outcome`` key, found none, and reported every iteration as passing.
+        if not item.get("ok", True):
             failures.append({
                 "iteration": item.get("iteration"),
-                "failures": outcome.get("failures", []),
+                "failures": item.get("failures", []),
+                "detail": item.get("detail", []),
             })
-        posture = outcome.get("posture") or ""
+        posture = item.get("posture") or ""
         if posture:
             postures[posture] = postures.get(posture, 0) + 1
         if position:  # see the docstring: iteration 1 is the warm-up
@@ -181,7 +185,7 @@ def _measurements(path: Path) -> dict[str, Any]:
     document = json.loads(path.read_text(encoding="utf-8"))
     gathered: dict[str, list[float]] = {}
     for item in document.get("iterations", ()):
-        for entry in (item.get("outcome", {}) or {}).get("measurements", ()) or ():
+        for entry in item.get("measurements") or ():
             gathered.setdefault(str(entry.get("name")), []).append(float(entry.get("seconds", 0.0)))
     return {name: _figures(values) for name, values in sorted(gathered.items())}
 

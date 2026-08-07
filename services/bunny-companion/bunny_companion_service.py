@@ -19,12 +19,27 @@ from __future__ import annotations
 from pathlib import Path
 import os
 import signal
+import importlib.util
 import sys
 
 # Installed layout first, then the source tree, matching bin/bunny-os.
-for _candidate in (Path("/usr/lib/bunny-os/python"), Path(__file__).resolve().parents[2]):
-    if _candidate.is_dir() and str(_candidate) not in sys.path:
-        sys.path.insert(0, str(_candidate))
+# Only when the package is not importable yet.
+#
+# For a standalone invocation nothing is importable, so this behaves exactly as
+# it always has: the installed tree first, the checkout as a fallback.
+#
+# The guard is for the other case. In a process that already works — a test
+# run, another tool that imported this one — the checkout is already on
+# ``sys.path``, so the loop skipped it as already-present and inserted the
+# *installed* tree in front of it. Every import after that came from whatever
+# build happened to be installed, which on a qualification host is a build from
+# an earlier phase. It fails loudly when that build is missing a module and
+# silently when it is not, and the silent case is a whole test suite passing
+# against code nobody changed.
+if importlib.util.find_spec("companion") is None:
+    for _candidate in (Path("/usr/lib/bunny-os/python"), Path(__file__).resolve().parents[2]):
+        if _candidate.is_dir() and str(_candidate) not in sys.path:
+            sys.path.insert(0, str(_candidate))
 
 from companion.protocol import DuplicateRuntime  # noqa: E402
 from companion.service import CompanionService, ServiceOptions, StartupFailed  # noqa: E402

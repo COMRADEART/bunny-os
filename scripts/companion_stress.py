@@ -1524,6 +1524,17 @@ def run_in_process(target: str, runs: int, *, order: str, verbose: bool) -> dict
             record["mode"] = outcome["mode"]
         if outcome.get("notRun"):
             record["notRun"] = outcome["notRun"]
+        # Anything else the target measured, kept rather than dropped.
+        #
+        # An earlier version copied only the fields listed above, so a target
+        # that reported its posture and its latencies had both silently
+        # discarded — and the collector, reading the gate file afterwards, saw
+        # twenty iterations with no posture and no figures. A harness that
+        # decides which of a target's measurements are interesting is a harness
+        # that will one day discard the interesting one.
+        for name in ("posture", "measurements", "resourceDelta", "states", "released"):
+            if outcome.get(name) is not None:
+                record[name] = outcome[name]
         if not record["ok"]:
             record["detail"] = outcome.get("detail", [])
             record["order"] = outcome.get("order")
