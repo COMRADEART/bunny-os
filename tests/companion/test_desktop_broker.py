@@ -263,6 +263,70 @@ class Undo(unittest.TestCase):
         self.assertTrue(outcome["compensated"])
         self.assertEqual(self.adapters.clipboard.outstanding, 0)
 
+    def test_a_clear_after_policy_releases_the_selection_and_leaves_no_thread(self) -> None:
+        """§4.7's clear-after, which has to be a timer rather than a note.
+
+        The parameter reaches the approval prompt, where a person reads
+        "released again after N seconds" and decides on that basis. A schema
+        that is closed so nothing can appear to take effect and not, and then
+        carries a parameter that does not, has closed the wrong thing.
+        """
+        import threading
+        import time as _time
+
+        before = threading.active_count()
+        prepared = _prepare(
+            self.broker, "desktop.clipboard.copy-text",
+            {"text": "briefly on the clipboard", "clearAfterSeconds": 1},
+        )
+        self.assertIn("released again after 1 seconds", prepared.request.presentation)
+        result = _run(self.broker, prepared)
+        self.assertEqual(result.state, "confirmed")
+        self.assertEqual(self.adapters.clipboard.outstanding, 1)
+        self.assertEqual(
+            self.adapters.called("clipboard.copy")[0]["clearAfterSeconds"], 1.0
+        )
+
+        deadline = _time.monotonic() + 10.0
+        while _time.monotonic() < deadline and self.adapters.clipboard.outstanding:
+            _time.sleep(0.05)
+        self.assertEqual(
+            self.adapters.clipboard.outstanding, 0,
+            "the clear-after policy did not release the selection",
+        )
+        # And the timer thread is gone, which is what §23's thread counter
+        # would otherwise catch a hundred iterations later.
+        deadline = _time.monotonic() + 5.0
+        while _time.monotonic() < deadline and threading.active_count() > before:
+            _time.sleep(0.05)
+        self.assertLessEqual(threading.active_count(), before)
+
+    def test_releasing_early_cancels_the_clear_after_timer(self) -> None:
+        import threading
+
+        before = threading.active_count()
+        prepared = _prepare(
+            self.broker, "desktop.clipboard.copy-text",
+            {"text": "held briefly", "clearAfterSeconds": 3600},
+        )
+        _run(self.broker, prepared)
+        self.assertEqual(threading.active_count(), before + 1, "no timer was started")
+        self.broker.compensate(prepared.request.idempotency_key)
+        self.assertEqual(self.adapters.clipboard.outstanding, 0)
+        # `Timer.cancel` wakes the thread; the thread then has to be scheduled
+        # before it leaves the count. Bounded, because the point is that it goes
+        # *soon*, not that it goes synchronously — an hour-long timer that
+        # survived would still be there at the end of this loop.
+        import time as _time
+
+        deadline = _time.monotonic() + 5.0
+        while _time.monotonic() < deadline and threading.active_count() > before:
+            _time.sleep(0.02)
+        self.assertEqual(
+            threading.active_count(), before,
+            "an hour-long timer outlived the selection it was for",
+        )
+
     def test_an_uncertain_action_is_not_undone(self) -> None:
         entry = LedgerEntry(
             key="k", action_id="desktop.audio.set-volume", task_id="t", session_id="s",

@@ -216,15 +216,39 @@ class _FakeAudio(_Recorder):
 
 
 class _FakeHold:
-    def __init__(self, state) -> None:
+    """A stand-in selection, with the real clear-after timer.
+
+    The *timer* is real on purpose. It is the part of the clear-after policy
+    that can leave a thread behind, and a fixture that faked it would test
+    nothing about the thing §23's thread counter exists to catch.
+    """
+
+    def __init__(self, state, clear_after_seconds: float = 0.0) -> None:
+        import threading
+
         self.state = state
         self._held = True
+        self.clear_after_seconds = max(0.0, float(clear_after_seconds))
+        self.cleared_by_policy = False
+        self._timer = None
+        if self.clear_after_seconds > 0:
+            self._timer = threading.Timer(self.clear_after_seconds, self._expire)
+            self._timer.name = "bunny-clipboard-expiry"
+            self._timer.daemon = True
+            self._timer.start()
+
+    def _expire(self) -> None:
+        if self.release("the clear-after policy expired"):
+            self.cleared_by_policy = True
 
     @property
     def held(self) -> bool:
         return self._held
 
     def release(self, reason="released") -> bool:
+        timer, self._timer = self._timer, None
+        if timer is not None:
+            timer.cancel()
         if not self._held:
             return False
         self._held = False
@@ -243,16 +267,16 @@ class _FakeClipboard(_Recorder):
     def probe(self) -> Availability:
         return Availability(self.state["clipboard"], mechanism="fake", service="selection")
 
-    def copy(self, text, *, cancellable=None):
+    def copy(self, text, *, cancellable=None, clear_after_seconds=0.0):
         # The digest, never the text: the fixture obeys §13 too, so a test that
         # accidentally asserted on the content would have to reach for it.
         import hashlib
 
         self.note("copy", digest=hashlib.sha256(text.encode("utf-8")).hexdigest()[:16],
-                  length=len(text))
+                  length=len(text), clearAfterSeconds=clear_after_seconds)
         if not self.state["clipboard"]:
             return unsupported_outcome("fake", "no clipboard"), None
-        hold = _FakeHold(self.state)
+        hold = _FakeHold(self.state, clear_after_seconds)
         self._holds.append(hold)
         self.state["clipboardOwners"] += 1
         return verified(

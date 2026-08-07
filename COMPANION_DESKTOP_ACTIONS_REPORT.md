@@ -17,7 +17,7 @@ something was not run it is listed as NOT_RUN with the reason, not omitted.
 | Base branch | `feature/companion-agent-providers` |
 | Starting commit | `ef0c9572262acd8bd48b74ff7234573ac0b78d55` (verified head of the base branch) |
 | Working branch | `feature/companion-desktop-actions` |
-| Gate commit | *(filled at the gate run)* |
+| Gate commit | `cda73eaa9216593c4c98713d11842a039fb26a33` (all 170 gate iterations record it) |
 | Evidence commit | *(filled by the evidence commit)* |
 | Final SHA | *(filled at closure)* |
 
@@ -750,34 +750,231 @@ a concurrent attempt would be reclassified while it was still running.
 
 ## 22. Stress gates
 
-*(Filled at the gate run.)*
+All three on one commit, `cda73eaa9216593c4c98713d11842a039fb26a33`, recorded by
+every iteration.
+
+**The desk is asserted before the gates run.** The runner refuses unless the
+posture is `desktop-actions-available` with all nine actions, because a gate
+that measured the refusal path while the report claimed a desk would be worse
+than one that did not run: the numbers would look like evidence.
+
+| gate | runs | result | longest consecutive |
+|---|---|---|---|
+| desktop-broker lifecycles | 100 | **100/100** | 100 |
+| complete companion suites | 50 | *(filled)* | *(filled)* |
+| installed desktop-action slices | 20 | **20/20** | 20 |
+
+Recorded per iteration, §23's list:
+
+| column | gate 1 | gate 3 |
+|---|---|---|
+| thread delta | 0 | 0 |
+| file-descriptor delta | +3 on iteration 1, then 0 | +7 on iteration 1, then 0 |
+| portal-handle delta | 0 | 0 |
+| D-Bus connection delta | 0 | 0 |
+| clipboard-owner delta | 0 | 0 |
+| pending-action count | 0 every iteration | 0 every iteration |
+| approval count | reported, never failed on | reported, never failed on |
+| operation-ledger consistency | true every iteration | true every iteration |
+| temporary-file delta | 0 | +1 on iteration 1, then 0 |
+| duration (min / median / p95 / max) | 0.077 / 0.100 / 0.104 / 0.211 s | 0.991 / 1.038 / 1.078 / 1.280 s |
+| exit status | 0 | 0 |
+
+**Iteration 1 is measured and does not fail a gate.** A broker's first run opens
+a session-bus connection and maps the GObject typelib; the second reuses both.
+Summing all hundred would count a one-off cost a hundred times and fail a clean
+gate; subtracting it silently would hide a real leak of the same size. So it is
+reported under `firstIterationWarmUp` and the growth that fails is summed from
+iteration 2 — where a genuine leak of one descriptor per run still totals
+ninety-nine.
+
+RSS since baseline is flat: 23.9 MB after a hundred lifecycles, 60.9 MB after
+twenty slices, both reached in the first iteration.
+
+**Which user each gate ran as, and why.** Gates 1 and 3 ran as root, because
+that is the user WSLg gives the session to — the compositor socket, the session
+bus, the notification daemon, the portal and the mixer all belong to it. Gate 2
+ran as `bunny`, because root ignores the permission bits a read-only directory
+carries and
+`test_store_durability.PermanentFailureTests.test_a_read_only_directory_fails_before_any_replacement`
+asserts an `OSError` that cannot occur as root. Excluding it would have meant
+the gate was not running the *complete* suite, which is what §23 asks for. The
+suite needs no desk, so nothing is lost. The same test passes as `bunny` and the
+whole companion suite passes there.
+
+**Discarded runs, named so the count matches.** Three gate runs were started and
+discarded before the one reported here:
+
+1. on `256a1da`, stopped after gate 1 reported 0/100 with
+   `ModuleNotFoundError`. The stress harness had been importing
+   `/usr/lib/bunny-os/python` — an installed build from an earlier phase —
+   rather than the checkout. See *What validation found*, below;
+2. on `0095bd2`, which fixed that: gates 1 and 3 passed 100/100 and 20/20, and
+   were discarded because the unit had no compositor variables, so gate 3
+   measured `limited-desktop-actions` and the volume steps — the reversible
+   action §26 requires be *verified and undone* — recorded NOT_RUN. The desk
+   assertion above exists because of this run;
+3. a partial gate 2 on `0095bd2` as root, stopped at iteration 1 after the
+   root-only failure above was diagnosed.
+
+A fourth was stopped deliberately rather than discarded: gate 2 was running on
+`0095bd2` when the evidence-preservation test was written, and a fifty-run suite
+gate that runs a suite missing one of its tests has measured something other than
+the suite. It was restarted on `cda73ea` with all three gates together.
 
 ---
 
 ## 23. Installed vertical-slice result
 
-*(Filled at the gate run.)*
+Thirty steps against a real `CompanionService` over its socket, on a real
+Wayland desk, twenty consecutive times under gate 3.
+
+**29 PASS, 1 NOT_RUN, 0 FAIL** on every one of the twenty iterations, with
+posture `desktop-actions-available` throughout.
+
+Genuine effects, on a real desktop:
+
+* a **notification** dispatched through `org.freedesktop.Notifications` and
+  reported `accepted-not-confirmed` — the daemon returned an id, which proves
+  acceptance and not display;
+* **GNOME Settings launched** through `Gio.DesktopAppInfo`, the exact
+  application id displayed in the approval, and the coarse locality shown as
+  `local`;
+* the **output volume changed from 100% to 50% and verified by read-back**,
+  reported `confirmed`;
+* the **volume undone** — a *new* action with its own approval, its own key and
+  its own ledger entry — back to 100%, verified, reported `confirmed`, and the
+  original entry moved to `undone`;
+* the **clipboard taken** by a `wl-copy --foreground` child this build owns and
+  can release, reported `confirmed` on ownership, with nothing read;
+* a **second clipboard request cancelled** before it was answered, and no second
+  selection taken;
+* an **arbitrary-command proposal refused at the allowlist** before any desktop
+  module was entered;
+* the **broker restarted** and five completed actions found still completed, with
+  none repeatable.
+
+The one NOT_RUN is step 3: no local agent provider is installed on this host. The
+proposals come from a canonical local executor instead, which exercises the
+identical pipeline. §22's requirement is that no paid provider or network
+connection is needed, and none is.
+
+Every task in the slice reaches `completed`. That is asserted per step, and it
+had to be: an earlier run had every desktop task reaching `blocked` after doing
+exactly what it was asked to do, and reading only the operation value made it
+look like a pass. See *What validation found*, below.
 
 ---
 
 ## 24. Measurements
 
-*(Filled at the gate run.)*
+### Memory
+
+Each figure taken in a **fresh interpreter**, median of three, because a
+measurement made after something else has imported is a measurement of the
+import order.
+
+| | RSS | PSS |
+|---|---|---|
+| interpreter baseline | 11.09 MB | 6.26 MB |
+| **desktop broker, idle, nine adapters probed** | **40.86 MB** | **26.11 MB** |
+| the broker's own cost over baseline | 29.77 MB | 19.85 MB |
+| companion stack **with** the desktop broker | 49.81 MB | 34.40 MB |
+| companion stack **without** it | 35.59 MB | 26.12 MB |
+| **the desktop broker's share of the stack** | **14.22 MB** | **8.28 MB** |
+
+The broker's cost measured alone (29.77 MB) is larger than its share of the
+stack (14.22 MB) because the stack has already paid for most of what it imports.
+Both are reported; neither on its own is the answer.
+
+Per adapter, constructed and probed alone, median of two:
+
+| adapter | RSS | PSS |
+|---|---|---|
+| `NotificationAdapter` | 39.25 MB | 24.60 MB |
+| `FileRevealAdapter` | 34.68 MB | 20.51 MB |
+| `UriOpenAdapter` | 32.13 MB | 19.23 MB |
+| `PortalAdapter` | 32.00 MB | 19.19 MB |
+| `ApplicationLaunchAdapter` | 31.85 MB | 19.45 MB |
+| `ApplicationPresentAdapter` | 31.79 MB | 19.46 MB |
+| `AudioControlAdapter` | 25.37 MB | 16.79 MB |
+| `ClipboardAdapter` | 25.09 MB | 16.70 MB |
+| `SettingsAdapter` | 25.08 MB | 16.69 MB |
+
+**These are not additive.** The six above 30 MB are the ones that touch
+PyGObject; the three below it do not. The sum of the nine is far larger than the
+set of nine, because they share a session-bus connection and the GObject typelib.
+
+**A launched application's memory is not counted anywhere here.** GNOME Settings
+is a separate process this build started and does not own; counting it against
+the broker would make the broker look like it costs what GNOME Settings costs.
+
+### Latency
+
+From the twenty gate-3 slice iterations, in seconds:
+
+| measurement | min | median | p95 | max | n |
+|---|---|---|---|---|---|
+| approval-to-dispatch | 0.0006 | 0.0009 | 0.0014 | 0.0022 | 20 |
+| volume read-back | 0.0043 | 0.0055 | 0.0059 | 0.0082 | 20 |
+| application launch | 0.0251 | 0.0475 | 0.0497 | 0.0498 | 20 |
+| undo (volume, end to end) | 0.1481 | 0.1542 | 0.1585 | 0.1601 | 20 |
+| broker restart (ledger reopened) | 0.0001 | 0.0001 | 0.0003 | 0.0003 | 20 |
+| whole slice | 0.9904 | 1.0375 | 1.0773 | 1.1685 | 20 |
+
+Per task, submission to a terminal state, in seconds:
+
+| task | min | median | p95 | max |
+|---|---|---|---|---|
+| notification | 0.0474 | 0.0708 | 0.0749 | 0.0925 |
+| application launch | 0.0504 | 0.0727 | 0.0769 | 0.0770 |
+| volume change | 0.0955 | 0.1213 | 0.1273 | 0.1278 |
+| volume undo | 0.1381 | 0.1422 | 0.1459 | 0.1461 |
+| clipboard copy | 0.2220 | 0.2272 | 0.2314 | 0.2360 |
+| clipboard, cancelled | 0.0362 | 0.0480 | 0.0611 | 0.0618 |
+| arbitrary-command proposal, refused | 0.0614 | 0.0685 | 0.0967 | 0.0974 |
+
+The clipboard is the slowest and it is supposed to be: 150 ms of it is the
+settle window `BackgroundChild` waits before deciding the compositor has taken
+the offer. Shortening it would trade a real observation for a faster number.
+
+*(Per-action dispatch latencies from `desktop-latency.py` are filled at closure.)*
 
 ---
 
 ## 25. Complete test results
 
-*(Counts filled at closure.)*
+| run | result |
+|---|---|
+| whole repository, Linux, as `bunny` | **4035 tests, OK**, 8 skipped |
+| whole repository, Linux, as root | 4035 tests, **1 failure**, 5 skipped |
+| whole repository, Windows | 4011 tests, **2 failures**, 77 skipped |
+| companion suite, Linux, as `bunny` | **1500 tests, OK**, 2 skipped |
+| companion suite, Windows | **1500 tests, OK**, 41 skipped |
+| desktop files alone, Windows | **156 tests, OK**, 4 skipped |
 
-New in this phase, 151 tests in four files:
+The three failures outside the clean run are all environmental and all verified
+as such:
+
+* **as root**,
+  `test_store_durability.PermanentFailureTests.test_a_read_only_directory_fails_before_any_replacement`
+  asserts an `OSError` from writing into a read-only directory. Root ignores the
+  permission bits, so the error cannot occur. It passes as `bunny` on the same
+  host, same commit;
+* **on Windows**, `test_evidence_gate` needs symlink privileges and
+  `test_repository_validation` needs a shell validator. Both fail identically at
+  the base commit `ef0c957`, verified against a worktree at that commit. Both
+  pass on Linux.
+
+New in this phase, 156 tests in five files:
 
 | file | tests | what it asserts |
 |---|---|---|
 | `test_desktop_authority.py` | 25 | §1 and §14's boundaries, from the import graph and the dataclass fields |
 | `test_desktop_schema.py` | 36 | §3, §4, §5, §6, §9 and §12 — the tables, and that they agree |
 | `test_desktop_security.py` | 57 | §19's list, one class per group |
-| `test_desktop_broker.py` | 33 | §10, §11, §12, §16, §17, §20 and §15, including four through a real runtime |
+| `test_desktop_broker.py` | 33 | §10, §11, §12, §16, §17, §20 and §15, including six through a real runtime |
+| `test_desktop_preservation.py` | 5 | the five prior phases' evidence, byte for byte |
 
 Existing suites touched:
 
@@ -794,6 +991,71 @@ way round: `Path.parts` versus `PurePosixPath(str(path)).parts` in the
 forbidden-directory check. The latter splits on `/` only, so on a backslash
 platform the whole path is one part and the check silently matched nothing —
 while its test went on passing, because the test ran on Linux.
+
+---
+
+## What validation found
+
+Eight defects, each found by running the thing rather than by reading it. Listed
+because the list is the argument for having run it.
+
+**1. A gate that measured the wrong tree.** `companion_stress.py` inserted each
+of its two candidate paths at the front of `sys.path` only if it was not already
+there. With `PYTHONPATH` pointing at the checkout, the checkout was skipped as
+already-present and the installed tree went in ahead of it. A hundred iterations
+reported `ModuleNotFoundError` — which is the *lucky* outcome. Had the installed
+tree contained the module, the gate would have reported a hundred clean passes
+for code nobody had changed.
+
+**2. The same idiom in eleven more files.** Two measurement scripts, four GTK
+probes, the companion service, and the two CLI modules all carry it, and any of
+them being imported by a test process rearranged that process's import path.
+The full Linux suite reported thirty-one loader errors for modules the installed
+tree — a build from an earlier phase — has never heard of. The block now runs
+only when the package it exists to make importable is not importable yet, so a
+standalone invocation is unchanged and a process that already works is left
+alone.
+
+**3. A whole run of tasks that blocked after succeeding.** Every desktop task in
+the slice reached `blocked`, and the recorded reason named the approval: *has
+already authorised this step of this plan*. The replay guard was right. The
+executor was not — the reviewer asked for a revision and the slice executor
+re-proposed the operation it had just performed, producing identical operations,
+an identical fingerprint and therefore the same approval transition. `TaskContext`
+hands an executor `completed_operation_keys`, `unknown_operation_keys` and the
+previous round's `operation_results` precisely so that cannot happen, and the
+first version of that executor read none of them. **Nothing in the runtime
+changed.**
+
+**4. Steps that asserted an action worked without asserting its task finished.**
+Which is how (3) went unnoticed for a whole run. Four steps now check both.
+
+**5. A sixty-second stall in every slice iteration.** The run that proposes
+`shell.run` waited the full approval timeout for a question the allowlist had
+already made impossible. The wait now ends when the task settles, which is what
+an approval centre does with a finished task. An iteration went from 61 seconds
+to under one.
+
+**6. A settings page presented as somewhere else.** `ApprovalGate.build`
+inferred the coarse locality a surface renders from whether the requirement's
+destination was the literal word `local`. That is right for a provider, whose
+destination string *is* a provider id, and wrong for every desktop action:
+opening the sound settings was shown to the user as **remote**. The requirement
+now states it.
+
+**7. A message that misattributed a cause.** The settings probe told a GNOME
+session with no `gnome-control-center` that this build has no mapping for GNOME.
+It has one; the program was missing. Two absences with two remedies had one
+sentence, and the sentence sent a reader to the wrong file.
+
+**8. A check that silently stopped checking on one platform.** The
+forbidden-directory test used `PurePosixPath(str(path)).parts`, which splits on
+`/` only — so on a backslash platform the whole path was one component and
+`.ssh` matched nothing. Its test went on passing, because the test ran on Linux.
+
+Two more were design decisions the run forced rather than defects:
+availability moved from preparation to execution (§17), and `carries_task_data`
+was separated from the privacy ceiling (§6).
 
 ---
 

@@ -653,8 +653,15 @@ def _clipboard(parameters: dict[str, Any], *, classification: str, descriptor, *
             f"{descriptor.privacy_ceiling} ceiling"
         )
     canonical = {"text": raw, "classification": declared}
-    if "clearAfterSeconds" in parameters:
-        canonical["clearAfterSeconds"] = parameters["clearAfterSeconds"]
+    clear_after = parameters.get("clearAfterSeconds")
+    if clear_after is not None:
+        canonical["clearAfterSeconds"] = clear_after
+    # Said in the sentence, because it is part of what the person is agreeing
+    # to. A clear-after policy that appeared only in the parameter list would be
+    # a promise made in small print.
+    clearing = (
+        f", released again after {clear_after} seconds" if clear_after else ""
+    )
     return NormalisedAction(
         action_id="desktop.clipboard.copy-text",
         parameters=canonical,
@@ -665,7 +672,10 @@ def _clipboard(parameters: dict[str, Any], *, classification: str, descriptor, *
         target_kind="clipboard-text",
         classification=declared,
         disclosure=f"{_plural(len(raw), 'character')} of {declared} text",
-        presentation=f"Copy {_plural(len(raw), 'character')} of {declared} text to the clipboard",
+        presentation=(
+            f"Copy {_plural(len(raw), 'character')} of {declared} text to the clipboard"
+            + clearing
+        ),
         expected_effect=descriptor.expected_visibility,
     )
 

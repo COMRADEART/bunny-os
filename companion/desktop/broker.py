@@ -696,7 +696,12 @@ class DesktopActionBroker:
 
         if action_id == "desktop.clipboard.copy-text":
             outcome, hold = self.adapters.clipboard.copy(
-                parameters["text"], cancellable=scope.cancellable
+                parameters["text"],
+                cancellable=scope.cancellable,
+                # §4.7's clear-after policy. Passed through rather than
+                # recorded: a parameter that reaches the approval prompt and is
+                # not acted on is a promise the schema made and nothing kept.
+                clear_after_seconds=float(parameters.get("clearAfterSeconds", 0) or 0),
             )
             scope.clipboard_hold = hold
             if hold is not None and cancelled is not None and cancelled():

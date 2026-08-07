@@ -52,12 +52,43 @@ _MIME_TYPE = "text/plain;charset=utf-8"
 
 
 class ClipboardHold:
-    """One clipboard ownership this build holds, and the way to give it up."""
+    """One clipboard ownership this build holds, and the way to give it up.
 
-    def __init__(self, child: BackgroundChild, *, mechanism: str, taken_at: float) -> None:
+    ``clear_after_seconds`` is §4.7's clear-after policy, and it is a real timer
+    rather than a recorded intention. A parameter that reaches an approval
+    prompt — where a person reads "cleared after 30 seconds" and decides on that
+    basis — and is then not acted on is worse than a parameter that does not
+    exist: the schema is closed precisely so that nothing can appear to take
+    effect and not.
+
+    The timer is a daemon thread and is **cancelled on release**, so a hold that
+    is given up early leaves nothing behind. §23 counts threads across a hundred
+    iterations, which is what would catch a timer that outlived its hold.
+    """
+
+    def __init__(
+        self,
+        child: BackgroundChild,
+        *,
+        mechanism: str,
+        taken_at: float,
+        clear_after_seconds: float = 0.0,
+    ) -> None:
         self._child = child
         self.mechanism = mechanism
         self.taken_at = taken_at
+        self.clear_after_seconds = max(0.0, float(clear_after_seconds))
+        self._timer: threading.Timer | None = None
+        self.cleared_by_policy = False
+        if self.clear_after_seconds > 0:
+            self._timer = threading.Timer(self.clear_after_seconds, self._expire)
+            self._timer.name = "bunny-clipboard-expiry"
+            self._timer.daemon = True
+            self._timer.start()
+
+    def _expire(self) -> None:
+        if self._child.release("the clear-after policy expired"):
+            self.cleared_by_policy = True
 
     @property
     def held(self) -> bool:
@@ -68,11 +99,24 @@ class ClipboardHold:
         return self._child.pid
 
     def release(self, reason: str = "released") -> bool:
-        """Drop the selection. Returns whether this call was the one that did."""
+        """Drop the selection. Returns whether this call was the one that did.
+
+        The timer is cancelled first. A timer left running after the selection
+        has been given up is a thread the process holds for no reason, and the
+        gate that counts threads would see it.
+        """
+        timer, self._timer = self._timer, None
+        if timer is not None:
+            timer.cancel()
         return self._child.release(reason)
 
     def to_json(self) -> dict[str, Any]:
-        return {"mechanism": self.mechanism, "held": self.held}
+        return {
+            "mechanism": self.mechanism,
+            "held": self.held,
+            "clearAfterSeconds": self.clear_after_seconds,
+            "clearedByPolicy": self.cleared_by_policy,
+        }
 
 
 class ClipboardAdapter:
@@ -114,7 +158,13 @@ class ClipboardAdapter:
 
     # -- taking ------------------------------------------------------------
 
-    def copy(self, text: str, *, cancellable: Any = None) -> tuple[AdapterOutcome, ClipboardHold | None]:
+    def copy(
+        self,
+        text: str,
+        *,
+        cancellable: Any = None,
+        clear_after_seconds: float = 0.0,
+    ) -> tuple[AdapterOutcome, ClipboardHold | None]:
         """Take the clipboard with ``text``. Returns the outcome and the hold.
 
         The hold is returned separately rather than put inside the outcome
@@ -152,7 +202,14 @@ class ClipboardAdapter:
             return failure(availability.mechanism, str(exc)), None
 
         holding = child.holding()
-        hold = ClipboardHold(child, mechanism=availability.mechanism, taken_at=time.monotonic())
+        hold = ClipboardHold(
+            child,
+            mechanism=availability.mechanism,
+            taken_at=time.monotonic(),
+            # Started only once the selection is actually held; a timer over a
+            # child that never took it would fire on nothing.
+            clear_after_seconds=clear_after_seconds if holding else 0.0,
+        )
         if not holding:
             detail = child.stderr_text() or "the clipboard helper exited immediately"
             child.release("did not take the selection")
@@ -170,6 +227,10 @@ class ClipboardAdapter:
                 "the clipboard selection is held by a process this build started and can "
                 "release; the previous contents were not read and the new contents were not "
                 "read back"
+                + (
+                    f"; it will be released after {int(hold.clear_after_seconds)} seconds"
+                    if hold.clear_after_seconds else ""
+                )
             ),
             matched=True,
             observed_value=None,
