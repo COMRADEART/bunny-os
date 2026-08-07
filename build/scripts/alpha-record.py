@@ -145,22 +145,25 @@ def assertions(record: Mapping[str, Any], *, offline: bool) -> list[dict[str, An
         and the first version of this reported three of each on a system where
         neither unit was enabled.
 
-        The runtime is one process. The window is one process *plus whatever
-        GTK and Mesa start for it*, which on a session with a compositor is
-        several threads in one task group and can legitimately be more than
-        one task; the bound is there to catch a second *window*, so it is
-        generous rather than exact.
+        ``TasksCurrent`` was the second wrong answer: it counts *threads*, and
+        8 for the runtime and 22 for a GTK window are normal and say nothing
+        about duplication. The count here is processes in the unit's
+        ``cgroup.procs``, which is exactly what systemd started for it.
+
+        One each. The window may briefly be two while a helper is reaped, so
+        the bound is two rather than one; anything above that is a second
+        window, which is the thing §11 forbids.
         """
         counts = _at(record, "sections", "session", "processCounts") or {}
         if "runtime" not in counts or "window" not in counts:
-            return False, "the per-unit task counts were not collected"
+            return False, "the per-unit process counts were not collected"
         runtime = counts["runtime"]
         window = counts["window"]
         ok = (
             runtime.isdigit() and int(runtime) <= 2
-            and window.isdigit() and int(window) <= 8
+            and window.isdigit() and int(window) <= 2
         )
-        return ok, f"runtime tasks={runtime}, window tasks={window}"
+        return ok, f"runtime processes={runtime}, window processes={window}"
 
     add("session.no-duplicate-process", "session", one_runtime_one_window)
 

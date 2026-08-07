@@ -275,8 +275,14 @@ def install_activation(profile: str) -> None:
         "bunny-companion.service", "bunny-companion-window.service",
         "bunny-first-run.service",
     ], check=True)
+    # Masked, not disabled. `--global disable` writes into /etc/systemd/user and
+    # can remove a symlink it put there; gnome-software.service is wanted from
+    # /usr/lib/systemd/user, which disable cannot reach. Measured: after
+    # `--global disable`, the unit still started and still made the connection.
+    # A mask is /etc/systemd/user/gnome-software.service -> /dev/null, which
+    # overrides the vendor path.
     subprocess.run([
-        "/usr/bin/systemctl", "--global", "disable", "gnome-software.service",
+        "/usr/bin/systemctl", "--global", "mask", "gnome-software.service",
     ], check=False)
     if profile == "recovery":
         subprocess.run(["/usr/bin/systemctl", "set-default", "bunny-recovery.target"], check=True)

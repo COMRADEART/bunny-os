@@ -240,16 +240,22 @@ def section_session() -> dict:
         "loginctl": run(["/usr/bin/loginctl", "list-sessions", "--no-legend"]).get("stdout", ""),
         "seat": run(["/usr/bin/loginctl", "show-seat", "seat0", "--property=ActiveSession"]).get("stdout", ""),
     }
-    # Counted from the units' own cgroups rather than with pgrep.
+    # Counted as *processes in the unit's cgroup*, which is the question §11
+    # asks: is there one runtime and one window, or two of either.
     #
-    # `pgrep -f bunny-companion-window` matches its own command line, and the
-    # shell that invoked it, and the runuser that invoked that: the first run of
-    # this probe reported three window processes on a system where the unit was
-    # not even enabled. A cgroup holds exactly the processes systemd started for
-    # that unit, which is the question being asked.
+    # Two wrong answers were measured before this one. ``pgrep -f
+    # bunny-companion-window`` matches its own command line, the shell that
+    # invoked it and the runuser that invoked that — three of each, on a system
+    # where neither unit was enabled. ``TasksCurrent`` counts *threads*: 8 for
+    # the runtime and 22 for a GTK window are normal and say nothing about
+    # duplication.
+    #
+    # ``cgroup.procs`` holds exactly the processes systemd started for the unit.
     record["processCounts"] = _parse_properties(user_shell(
-        "count() { systemctl --user show \"$1\" --property=TasksCurrent 2>/dev/null "
-        "| cut -d= -f2 | grep -E '^[0-9]+$' || echo 0; }; "
+        "count() { "
+        "  p=$(systemctl --user show \"$1\" --property=ControlGroup --value 2>/dev/null); "
+        "  f=/sys/fs/cgroup${p}/cgroup.procs; "
+        "  if [ -n \"$p\" ] && [ -r \"$f\" ]; then wc -l <\"$f\"; else echo 0; fi; }; "
         "printf 'runtime=%s\\nwindow=%s\\nterminals=%s\\n' "
         "\"$(count bunny-companion.service)\" "
         "\"$(count bunny-companion-window.service)\" "
