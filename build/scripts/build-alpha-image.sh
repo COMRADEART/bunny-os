@@ -43,16 +43,21 @@ python3 build/scripts/write-media-manifest.py \
 # §39: the image filename carries the identity. Derived from the same fields the
 # running system reports through `bunny-os companion identity`, so a downloaded
 # file and the machine it becomes cannot disagree about what they are.
+#
+# image-builder writes into a per-type subdirectory
+# (bootc-fedora-44-qcow2-x86_64/…), so this walks rather than globs the top
+# level. A glob was the first version and it renamed nothing at all, silently:
+# the loop simply had no iterations and the artifacts kept image-builder's
+# generic names.
 name="bunny-os-${version}-alpha-${build_id}-${architecture}"
-shopt -s nullglob
-for artifact in "${output}"/*.qcow2 "${output}"/*.raw "${output}"/*.iso; do
+while IFS= read -r artifact; do
   extension="${artifact##*.}"
-  target="${output}/${name}.${extension}"
+  target="$(dirname "${artifact}")/${name}.${extension}"
   [[ "${artifact}" == "${target}" ]] && continue
   mv -- "${artifact}" "${target}"
   echo "  artifact     ${target}"
-done
-shopt -u nullglob
+done < <(find "${output}" -type f \( -name '*.qcow2' -o -name '*.raw' -o -name '*.iso' \) \
+           -not -path '*/alpha-story/*' | sort)
 
 echo
 echo "This is an Alpha build. It is not a release candidate and this branch makes"

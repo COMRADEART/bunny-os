@@ -1745,8 +1745,126 @@ def _run_renderer3d_slice() -> dict[str, Any]:
     }
 
 
+def _run_alpha_lifecycle() -> dict[str, Any]:
+    """One complete Public Alpha session-surface lifecycle.
+
+    Seven things, in the order a login meets them, each chosen because it is a
+    property the gate is *for* rather than a step towards one:
+
+    1. **the default-character policy decides and acts.** The first-boot case:
+       nothing selected, a rung chosen, a package selected, a claim recorded.
+    2. **it declines to act a second time.** The idempotence that stops a
+       machine re-selecting on every login.
+    3. **it preserves a user selection.** The one rule §3 exists for, exercised
+       rather than asserted about — the policy is asked again, with a
+       user-selected package in place, and must not move it.
+    4. **safe mode arms, is consumed, and clears.** Including the launcher's
+       three-failure counter, which is §34's crash-loop breaker.
+    5. **settings persist across a read.** Written, re-read, projected into the
+       three preference types the subsystems take.
+    6. **the recovery report answers.** On a machine with no session, no
+       runtime and no desk, because that is when it is wanted.
+    7. **a diagnostics bundle is written and holds no credential.**
+
+    A hundred of these is the §42 companion-lifecycle gate. What it measures is
+    that none of the seven leaves a thread, a descriptor or a temporary file
+    behind — the surfaces added by this phase open sockets to probe providers
+    and start helper processes to enumerate audio, and both are things that
+    accumulate silently.
+    """
+    from companion.character.defaults import default_character_paths
+    from companion.character.importer import PackageRegistry
+    from companion.character.policy import apply_default_character_policy, read_policy_state
+    from companion.settings import load_settings, update_settings
+    from companion.support.diagnose import diagnose
+    from companion.support.export import build_bundle
+    from companion.support.safemode import (
+        FAILURE_THRESHOLD, clear_safe_mode, consume_safe_mode, read_safe_mode,
+        record_launch_outcome, request_safe_mode, safe_mode_environment,
+    )
+
+    problems: list[str] = []
+    performed: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-alpha-") as directory:
+        root = Path(directory)
+        registry = PackageRegistry(root / "characters", built_in_paths=default_character_paths())
+
+        # 1 and 2: decide, act, then decline.
+        first = apply_default_character_policy(registry, eligible="full-3d")
+        if not first.package_id:
+            problems.append("the character policy chose no package at the full-3d rung")
+        performed.append(f"policy:{first.rung}:{first.package_id or 'none'}")
+        second = apply_default_character_policy(registry, eligible="full-3d")
+        if second.applied:
+            problems.append("the character policy acted twice for one machine")
+
+        # 3: a user selection outranks it.
+        chosen = registry.built_ins()[0].package_id
+        registry.select(chosen)
+        third = apply_default_character_policy(registry, eligible="full-3d")
+        if third.applied or not third.preserved_user_choice:
+            problems.append(f"the character policy overrode a user selection of {chosen}")
+        if registry.selected().package_id != chosen:
+            problems.append("the selected package changed under a policy that should not act")
+        performed.append("policy:preserved-user-choice")
+
+        # 4: safe mode, including the crash-loop breaker.
+        request_safe_mode(reason="stress", origin="cli", root=root)
+        if not consume_safe_mode(root).enabled:
+            problems.append("a one-shot safe-mode request was not seen by the launch that spends it")
+        if read_safe_mode(root).enabled:
+            problems.append("a one-shot safe-mode request survived the launch that spends it")
+        for _ in range(FAILURE_THRESHOLD):
+            record_launch_outcome(succeeded=False, root=root)
+        armed = read_safe_mode(root)
+        if not (armed.enabled and armed.automatic):
+            problems.append(f"{FAILURE_THRESHOLD} failed launches did not arm safe mode")
+        if not safe_mode_environment(root=root):
+            problems.append("armed safe mode produced no environment")
+        clear_safe_mode(root)
+        if read_safe_mode(root).enabled:
+            problems.append("safe mode survived being cleared")
+        performed.append("safe-mode:armed-and-cleared")
+
+        # 5: settings persist.
+        update_settings(root, "voice", {"enabled": False, "volume": 0.5})
+        reloaded = load_settings(root)
+        if reloaded.voice.enabled or abs(reloaded.voice.volume - 0.5) > 1e-6:
+            problems.append("a written setting did not survive a re-read")
+        if reloaded.voice_preferences().enabled:
+            problems.append("the voice projection disagreed with the setting")
+        performed.append("settings:persisted")
+
+        # 6 and 7: the recovery report, and a bundle with nothing secret in it.
+        report = diagnose(root=root, include_failures=False)
+        if not report.sections:
+            problems.append("the recovery report produced no sections")
+        performed.append(f"diagnose:{len(report.sections)}-sections")
+        bundle = build_bundle(root=root, report=report, generated_at="stress")
+        if bundle.get("uploaded") is not False:
+            problems.append("the diagnostics bundle did not declare that it uploaded nothing")
+        from companion.settings import _refuse_secrets
+
+        try:
+            _refuse_secrets(bundle)
+        except Exception as error:
+            problems.append(f"the diagnostics bundle held something credential-shaped: {error}")
+        performed.append("export:clean")
+
+        if read_policy_state(registry).user_package_id != chosen:
+            problems.append("the policy did not record the user's selection for recovery")
+
+    return {
+        "ok": not problems,
+        "failures": problems,
+        "ran": len(performed),
+        "measurements": {"performed": performed},
+    }
+
+
 TARGETS = {
     "service": lambda order, seed: _run_modules(SERVICE_MODULES, order=order, seed=seed),
+    "alpha": lambda order, seed: _run_alpha_lifecycle(),
     "suite": lambda order, seed: _run_modules(SUITE_MODULES, order=order, seed=seed),
     "protocol": lambda order, seed: _run_modules(
         ("tests.companion.test_protocol_ipc",), order=order, seed=seed
