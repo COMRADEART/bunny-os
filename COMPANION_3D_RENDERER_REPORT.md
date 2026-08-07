@@ -7,8 +7,8 @@
 | Base branch | `feature/companion-desktop-actions` |
 | Starting commit | `fa49380dadf0aa90690c4f2be5b483b16a56c0db` (verified head of the base branch; working tree clean) |
 | Branch | `feature/companion-3d-renderer` |
-| Source commit | `8bd18d7a62831b553b1505f0967ceaa2dfe0d991` — "A ladder that had two rungs nobody had built" |
-| Gate commit | *(§32 below records the commit every gate iteration was run against)* |
+| First source commit | `8bd18d7a62831b553b1505f0967ceaa2dfe0d991` — "A ladder that had two rungs nobody had built" |
+| Gate commit | `9fd10b89deb8fee4aefaee87a84752889f4a7e3c` — every gate iteration records it |
 | Evidence commit | *(the commit that adds `qualification/companion-3d-renderer/evidence/` and this report)* |
 | Final SHA | *(the closure commit that follows, which edits only this table and §3's post-gate paragraph)* |
 
@@ -53,9 +53,9 @@ earlier claim.
 
 ## 3. Build-input impact
 
-The analyser over `fa49380..8bd18d7` reports **52 installed, 5 context-only,
-13 unreachable**. Profiles affected: `beta`, `desktop`, `developer`, `live`,
-`minimal`, `recovery`, `shell`, `shell-test`.
+The analyser over `fa49380..9fd10b8` — the base to the gate commit — reports
+**52 installed, 6 context-only, 14 unreachable**. Profiles affected: `beta`,
+`desktop`, `developer`, `live`, `minimal`, `recovery`, `shell`, `shell-test`.
 
 | Group | Paths | Route | Destination |
 |---|---|---|---|
@@ -73,10 +73,11 @@ about fifty OpenGL entry points with `ctypes` rather than adding
 `python3-pyopengl` (and, for most of its array paths, NumPy) to every installed
 machine.
 
-The five context-only paths are development tools the Containerfile can see and
+The six context-only paths are development tools the Containerfile can see and
 no route installs: `scripts/build_default_character_3d.py`,
 `scripts/gtk_3d_probe.py`, `scripts/companion_stress.py`,
-`scripts/ops/renderer3d-collect.py`, `scripts/ops/renderer3d-gates.sh`.
+`scripts/ops/renderer3d-collect.py`, `scripts/ops/renderer3d-gates.sh`,
+`scripts/ops/renderer3d-memory.py`.
 
 **Post-gate range:** *(recorded in §32 after the gates)*
 

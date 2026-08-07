@@ -134,8 +134,8 @@
       "required": ["implementation", "eligible", "limitedByImplementation", "placement", "captions"],
       "properties": {
         "implementation": {
-          "enum": ["animated-2d", "static-image", "audio-only", "text-only"],
-          "description": "What will actually be drawn. Restricted to what this build implements. animated-2d is here because companion.character.animated_renderer exists; 3D is not, because no 3D renderer does. A value only joins this list when a renderer is behind it."
+          "enum": ["full-3d", "lightweight-3d", "animated-2d", "static-image", "audio-only", "text-only"],
+          "description": "What will actually be drawn. Restricted to what this build implements. animated-2d joined when companion.character.animated_renderer existed; full-3d and lightweight-3d joined when companion.character.three_d.renderer existed and a test drew a frame with it and read the pixels back. A value only joins this list when a renderer is behind it, which is why it was shorter than eligiblePresentation for two phases."
         },
         "eligible": {
           "enum": ["full-3d", "lightweight-3d", "animated-2d", "static-image", "audio-only", "text-only"],

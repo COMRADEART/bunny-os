@@ -212,18 +212,69 @@ class IntegrityAndFilesystemTests(CharacterPackageFixture, unittest.TestCase):
 
 
 class SchemaDocumentTests(CharacterPackageFixture, unittest.TestCase):
+    def _schema(self) -> dict:
+        return json.loads(
+            Path("schemas/companion-character-package-v1.schema.json").read_text(encoding="utf-8")
+        )
+
     def test_schema_document_is_strict_and_names_only_implemented_presentations(self) -> None:
-        schema = json.loads(Path("schemas/companion-character-package-v1.schema.json").read_text(encoding="utf-8"))
+        """The published contract and the implementation must name the same rungs.
+
+        This asserted ``["static-image", "animated-2d"]`` until the 3D renderer
+        landed. The property it is really testing is that the two lists *agree*
+        — a published schema that refused a package the validator accepts is a
+        contract nobody downstream can rely on — so it now compares them rather
+        than repeating one of them.
+        """
+        from companion.character.schema import IMPLEMENTED_PRESENTATIONS, RESERVED_PRESENTATIONS
+
+        schema = self._schema()
         self.assertFalse(schema["additionalProperties"])
-        self.assertEqual(schema["properties"]["presentationType"]["enum"], ["static-image", "animated-2d"])
+        self.assertEqual(
+            sorted(schema["properties"]["presentationType"]["enum"]),
+            sorted(IMPLEMENTED_PRESENTATIONS),
+        )
+        for reserved in RESERVED_PRESENTATIONS:
+            self.assertNotIn(reserved, schema["properties"]["presentationType"]["enum"])
+
+    def test_the_schema_describes_the_3d_section(self) -> None:
+        from companion.character.three_d.package3d import _SECTION_FIELDS
+
+        schema = self._schema()
+        section = schema["$defs"]["threeDimensional"]
+        self.assertFalse(section["additionalProperties"])
+        self.assertEqual(sorted(section["properties"]), sorted(_SECTION_FIELDS))
+        self.assertEqual(
+            schema["properties"]["threeDimensional"], {"$ref": "#/$defs/threeDimensional"}
+        )
+
+    def test_the_schema_permits_the_model_asset_the_validator_permits(self) -> None:
+        schema = self._schema()
+        asset = schema["$defs"]["asset"]["properties"]
+        self.assertIn("model/gltf-binary", asset["mediaType"]["enum"])
+        self.assertIn("model", asset["purpose"]["enum"])
 
     def test_default_manifest_conforms_when_jsonschema_is_available(self) -> None:
         try:
             import jsonschema
         except ImportError:
             self.skipTest("jsonschema is not installed; strict manual validation still ran")
-        schema = json.loads(Path("schemas/companion-character-package-v1.schema.json").read_text(encoding="utf-8"))
-        jsonschema.validate(self.manifest(), schema)
+        jsonschema.validate(self.manifest(), self._schema())
+
+    def test_the_built_in_3d_manifest_conforms_when_jsonschema_is_available(self) -> None:
+        """§5's section, checked against the published document rather than only
+        against the parser that reads it."""
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed; strict manual validation still ran")
+        from companion.character.defaults import default_3d_character_path
+
+        root = default_3d_character_path()
+        if not root.is_dir():
+            self.skipTest("the built-in 3D package is not installed here")
+        manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        jsonschema.validate(manifest, self._schema())
 
 
 if __name__ == "__main__":

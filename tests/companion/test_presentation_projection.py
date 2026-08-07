@@ -484,6 +484,24 @@ class SchemaConformanceTests(CompanionTestCase):
         for count in range(1, len(events) + 1):
             jsonschema.validate(project_presentation(events[:count]).to_json(), schema)
 
+    def test_the_schema_names_exactly_what_this_build_implements(self) -> None:
+        """The published contract and ``IMPLEMENTED_PRESENTATIONS`` must agree.
+
+        The schema's ``effectivePresentation`` enum was shorter than its
+        ``eligiblePresentation`` enum for two phases, on purpose: the first is
+        what this build draws and the second is what a machine could support.
+        Now that every rung is implemented they are the same list, and this test
+        is what stops them drifting apart in either direction.
+        """
+        schema = json.loads(
+            (SCHEMAS / "companion-presentation-state.schema.json").read_text(encoding="utf-8")
+        )
+        properties = schema["properties"]["recommendation"]["properties"]
+        self.assertEqual(
+            sorted(properties["implementation"]["enum"]), sorted(IMPLEMENTED_PRESENTATIONS)
+        )
+        self.assertEqual(properties["eligible"]["enum"], list(PRESENTATION_KINDS))
+
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
