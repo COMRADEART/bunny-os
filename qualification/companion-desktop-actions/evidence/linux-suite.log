@@ -1,0 +1,51 @@
+......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................s................................................................................................................................................/usr/lib64/python3.14/site-packages/gi/overrides/__init__.py:159: PyGIDeprecationWarning: GLib.unix_signal_add_full is deprecated; use GLibUnix.signal_add_full instead
+  value = getattr(proxy, attr)
+........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................s................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................bunny-config-dir: /tmp/tmprgeu35rz/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.sbunny-config-dir: /tmp/tmp40eod7n5/.config/bunny-os: is a symbolic link to '/tmp/tmp40eod7n5/elsewhere'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmpk6ak6_40/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+bunny-config-dir: /tmp/tmpk6ak6_40/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmpey8h7440/.config/bunny-os: is a symbolic link to '/tmp/tmpey8h7440/nowhere-at-all'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.sbunny-config-dir: /tmp/tmp_u2w0pp2/.config/bunny-os: parent directory is not accessible ([Errno 13] Permission denied: '/tmp/tmp_u2w0pp2/.config/bunny-os')
+bunny-config-dir: /tmp/tmp_u2w0pp2/.config/systemd/user: parent directory is not accessible ([Errno 13] Permission denied: '/tmp/tmp_u2w0pp2/.config/systemd/user')
+.bunny-config-dir: /tmp/tmpjhmcl3_f/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmpo_if3f_o/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmp_23qtqpl/.config/bunny-os: is a symbolic link to '/tmp/tmp722lj4yh'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmp4tjghp1x/.config/bunny-os: is a symbolic link to '/tmp/tmp4tjghp1x/elsewhere'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+........................................................................................................................................................................................................................................................................................................BLOCKED: capture /tmp/tmp1n8ufb3g/guest.pcap does not exist. A capture that never started is not evidence of silence.
+.BLOCKED: file is 10 bytes; a pcap global header is 24
+......BLOCKED: /tmp/tmpjz0f9c0m/expected.json entry 0 must be {kind: dns|tcp|udp, pattern: <glob>, reason: <non-empty>}
+............................................................................................................................................s..s................................................................................................................................................................................................s.................................................................................................................................................................................s.........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 4037 tests in 92.993s
+
+OK (skipped=8)
+bunny-config-dir: /tmp/tmpccr48coe/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpccr48coe/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpt12w4_fd/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpt12w4_fd/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp5_qobxok/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp5_qobxok/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpkku4k3ba/.config/bunny-os: mode 0777 -> 0700
+bunny-config-dir: /tmp/tmpkku4k3ba/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpezeqa74v/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpezeqa74v/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpezeqa74v/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpezeqa74v/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmprgeu35rz/.config/systemd/user: created
+bunny-config-dir: /tmp/tmprgeu35rz/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmprgeu35rz/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmp40eod7n5/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp40eod7n5/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmp40eod7n5/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpk6ak6_40/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpk6ak6_40/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpey8h7440/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpjhmcl3_f/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpo_if3f_o/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp_23qtqpl/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp4tjghp1x/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp3twf32z2/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp3twf32z2/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpga8u7ckh/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpga8u7ckh/.config/systemd/user: created
+Verified explicit non-functional Bunny placeholder

@@ -1,0 +1,22 @@
+stress: target=desktop-slice runs=20 order=declared mode=in-process pid=590636
+     1 ok    1.26s threads+0 fd+7 rss+59676K
+     2 ok    1.07s threads+0 fd+0 rss+62840K
+     3 ok    1.06s threads+0 fd+0 rss+62896K
+     4 ok    1.06s threads+0 fd+0 rss+63340K
+     5 ok    1.06s threads+0 fd+0 rss+62744K
+     6 ok    1.03s threads+0 fd+0 rss+63316K
+     7 ok    1.06s threads+0 fd+0 rss+63400K
+     8 ok    1.08s threads+0 fd+0 rss+62836K
+     9 ok    1.04s threads+0 fd+0 rss+62856K
+    10 ok    1.08s threads+0 fd+0 rss+63540K
+    11 ok    1.09s threads+0 fd+0 rss+63460K
+    12 ok    1.07s threads+0 fd+0 rss+62784K
+    13 ok    1.05s threads+0 fd+0 rss+63520K
+    14 ok    1.10s threads+0 fd+0 rss+63624K
+    15 ok    1.04s threads+0 fd+0 rss+62996K
+    16 ok    1.06s threads+0 fd+0 rss+63724K
+    17 ok    1.05s threads+0 fd+0 rss+62932K
+    18 ok    1.00s threads+0 fd+0 rss+62932K
+    19 ok    1.03s threads+0 fd+0 rss+62932K
+    20 ok    1.08s threads+0 fd+0 rss+62940K
+stress: 20/20 passed, longest consecutive 20

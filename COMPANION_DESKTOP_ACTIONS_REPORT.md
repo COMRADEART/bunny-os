@@ -123,6 +123,20 @@ otherwise.** The analyser is run and quoted rather than the question being
 settled by inspection, which is the discipline
 `build/scripts/build-input-closure.py`'s own docstring exists to enforce.
 
+**Post-gate closure.** The analyser over `d0442fb..HEAD` — everything after the
+gate commit — reports **0 installed, 1 context-only, 1 unreachable**. The
+context-only path is `scripts/ops/desktop-collect.py`, the verdict collector,
+which no route installs; the unreachable one is this report. Nothing the gates
+measured differs from the gate commit by anything the build could see.
+
+The collector was corrected twice after the gates ran, and it is worth saying
+exactly what that does and does not mean. Both corrections re-derive the
+verdicts from the **raw gate reports, which are unchanged**: the first took the
+verdict on the net rather than on the sum of positive deltas, and the second
+moved `activeExecutors` out of the authority absolutes. The JSON the harness
+wrote is the evidence; `gate-verdicts.json` summarises it, and both files are
+in the evidence tree so a reader can re-derive one from the other.
+
 ---
 
 ## 4. Broker architecture
@@ -805,11 +819,14 @@ posture is `desktop-actions-available` with all nine actions, because a gate
 that measured the refusal path while the report claimed a desk would be worse
 than one that did not run: the numbers would look like evidence.
 
-| gate | runs | result | longest consecutive |
-|---|---|---|---|
-| desktop-broker lifecycles | 100 | **100/100** | 100 |
-| complete companion suites | 50 | *(filled)* | *(filled)* |
-| installed desktop-action slices | 20 | **20/20** | 20 |
+| gate | runs | result | longest consecutive | verdict |
+|---|---|---|---|---|
+| desktop-broker lifecycles | 100 | **100/100** | 100 | **passed** |
+| complete companion suites | 50 | **50/50** | 50 | **passed** |
+| installed desktop-action slices | 20 | **20/20** | 20 | **passed** |
+
+`gate-verdicts.json` reports `allPassed: true`, and every gate's `commit` is read
+out of an iteration rather than a header.
 
 Recorded per iteration, §23's list. "net" means summed across iterations 2..N,
 positives and negatives together.
@@ -830,6 +847,13 @@ positives and negatives together.
 | temporary-file delta | net 0 | net 0 |
 | duration (min / median / p95 / max) | 0.219 / 0.222 / 0.224 / 0.531 s | 1.000 / 1.061 / 1.100 / 1.257 s |
 | exit status | 0 | 0 |
+
+Gate 2, the fifty complete companion suites: net 0 on every tracked counter,
+no absolute violation, no failed iteration, duration
+50.105 / 50.790 / 51.417 / 51.676 s. Its warm-up is one thread, three
+descriptors and one each of `liveServices`, `liveRuntimes` and
+`liveDesktopBrokers` — the fixtures the module that ran last still holds, flat
+from iteration 2 through 50.
 
 The three gained-and-released triples in gate 1 are the same event seen three
 times: a settings program that had exited but not yet been reaped when a
@@ -999,7 +1023,50 @@ The clipboard is the slowest and it is supposed to be: 150 ms of it is the
 settle window `BackgroundChild` waits before deciding the compositor has taken
 the offer. Shortening it would trade a real observation for a faster number.
 
-*(Per-action dispatch latencies from `desktop-latency.py` are filled at closure.)*
+### Per-action dispatch latency
+
+Ten samples each, on the same desk and commit, measured through the broker with
+the binding its own `prepare` produced. These are *dispatch* latencies —
+normalisation, ledger write, adapter call, observation — not the time a person
+takes to answer. In seconds:
+
+| action | min | median | p95 | max | result |
+|---|---|---|---|---|---|
+| notification dispatch | 0.0038 | 0.0064 | 0.0222 | 0.0222 | 10× `accepted-not-confirmed` |
+| volume set | 0.0397 | 0.0415 | 0.0440 | 0.0440 | 10× **`confirmed`** |
+| volume read-back alone | 0.0043 | 0.0049 | 0.0055 | 0.0055 | — |
+| do-not-disturb set | 0.0346 | 0.0551 | 0.0562 | 0.0562 | 10× **`confirmed`** |
+| file reveal | 0.0735 | 0.0801 | 0.1256 | 0.1256 | 10× `failed` — see below |
+| clipboard ownership | 0.1510 | 0.1522 | 0.1533 | 0.1533 | 10× **`confirmed`** |
+| clipboard release | 0.0012 | 0.0013 | 0.0016 | 0.0016 | — |
+| settings open | 0.2011 | 0.2012 | 0.2018 | 0.2018 | 10× `accepted-not-confirmed` |
+
+The clipboard's 151 ms and the settings page's 201 ms are both *settle windows*
+rather than work: 150 ms waiting for the compositor to take the selection, and
+200 ms watching a spawned program to see whether it exits immediately with an
+error. Both buy an observation.
+
+Everything the harness changed it restored, in the same run: the volume returned
+to 100% on `RDPSink`, do-not-disturb returned to off, and no clipboard owner was
+left behind.
+
+**`file reveal` failed all ten times, and the reason is a limitation of the
+probe rather than of the reveal.** `org.freedesktop.FileManager1` is registered
+for D-Bus activation on this host and its unit fails to start under WSLg, so the
+call returns `NameHasNoOwner`. The environment probe had reported the action
+*available* on the strength of the `.service` file — which is the "inferred from
+an installed file" reasoning §16 warns about, applied to a service registration
+rather than a binary. It is recorded as a known limitation rather than papered
+over; the result carries the exact D-Bus error, and nothing was claimed to have
+happened.
+
+Three §24 figures are NOT_RUN with the reason recorded in the evidence:
+`uri-open` (no handler is installed for any allowlisted scheme, so the portal
+would raise a chooser dialog and the figure would be the time to show something
+somebody then has to dismiss), `application-present` (UNSUPPORTED for every
+entry that does not declare `DBusActivatable`; activation of one that does is
+the launch path already measured), and `proposal-to-approval` (dominated by how
+long a person takes to answer, which is not a property of this build).
 
 ---
 
@@ -1203,9 +1270,21 @@ Ordered by how likely each is to matter.
 11. **Per-adapter memory figures are not additive.** The adapters share a
     session-bus connection and the GObject typelib.
 12. **The measurements are from one host.** A WSLg session on Fedora 44 is a
-    real Wayland compositor with a real notification daemon, a real portal, a
-    real file manager and a real mixer — and it is one machine. The latency
-    figures are what this desk does.
+    real Wayland compositor with a real notification daemon, a real portal and
+    a real mixer — and it is one machine. The latency figures are what this desk
+    does.
+13. **The availability probe trusts a D-Bus service registration.** Where a name
+    is not owned, `FileRevealAdapter.probe` falls back to reading
+    `/usr/share/dbus-1/services/*.service` and reports the action available
+    because the desktop says it can be activated. On this host that claim is
+    false — `org.freedesktop.FileManager1` is registered and its unit fails to
+    start under WSLg — so the probe reports available and every reveal returns
+    `failed` with `NameHasNoOwner` quoted. It is the "inferred from an installed
+    file" reasoning §16 warns about, applied to a service registration rather
+    than a binary, and the only way to test the claim honestly is to activate a
+    file manager, which is the effect the probe is deciding whether to permit.
+    The consequence is a person asked to approve something that will not work —
+    wasted attention, not an unapproved effect.
 
 ---
 
@@ -1220,6 +1299,9 @@ Ordered by how likely each is to matter.
 | **X11** clipboard path (`xclip`) | this host's session is Wayland, so `wl-copy` is the path taken. `xclip` is installed and the branch is unexercised |
 | `desktop.application.present` **succeeding** | exercised only in its `UNSUPPORTED` direction against a non-activatable entry, and through activation of an activatable one. Whether a compositor *raised* a window is not observable from here in either case |
 | **PSS** figures where `/proc/self/smaps_rollup` is unavailable | recorded as `NOT_RUN` per figure rather than substituted with RSS |
+| `desktop.file.reveal` **succeeding** | exercised ten times and refused ten times: `org.freedesktop.FileManager1` is registered for activation on this host and its unit fails to start. The refusal path is measured; the success path is not |
+| `desktop.uri.open` **latency**, and the action end to end | no handler is installed for any allowlisted scheme, so opening one raises an application-chooser dialog. The action is available and approval-bindable; the *effect* is unexercised on this host |
+| `desktop.notifications.set-do-not-disturb` **in the slice** | exercised by the latency harness (ten times, all `confirmed`, restored) and not by the thirty-step slice, whose §22 script does not include it |
 | the two repository-wide tests that need **symlink privileges** and a **shell validator** | fail on the Windows development machine at the base commit `ef0c957` as well; verified against a worktree at that commit. They pass on Linux |
 
 ---
