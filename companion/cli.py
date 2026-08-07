@@ -296,6 +296,58 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
     integration.add_argument("--no-speech", action="store_true",
                              help="do not attempt the local system voice")
 
+    # -- the Public Alpha surfaces ------------------------------------------
+    #
+    # Every one of these has a graphical equivalent — the diagnostics window,
+    # the first-run wizard, the settings page — because §1 says the normal path
+    # needs no terminal. They are here as well because a machine that cannot
+    # open a window is exactly when somebody needs them, and because a surface
+    # with a command form is a surface a gate can measure.
+    group.add_parser("identity", help="the build identity of this system (read-only)")
+    group.add_parser(
+        "capability-record",
+        help="hardware facts and, measured separately, what actually works (read-only)",
+    )
+    group.add_parser("diagnose", help="the recovery report: what is wrong and what may be pressed")
+
+    export = group.add_parser("export-diagnostics", help="WRITES a diagnostics file. Nothing is uploaded")
+    export.add_argument("path", type=Path, nargs="?", default=None,
+                        help="where to write; defaults to your Downloads directory")
+
+    safe = group.add_parser("safe-mode", help="inspect or change Bunny Safe Mode")
+    safe_group = safe.add_subparsers(dest="safe_command", required=True)
+    safe_group.add_parser("status", help="whether the next start is reduced (read-only)")
+    safe_on = safe_group.add_parser("on", help="ENABLES safe mode for the next start")
+    safe_on.add_argument("--sticky", action="store_true", help="stay in safe mode until turned off")
+    safe_on.add_argument("--reason", default="requested from the command line")
+    safe_group.add_parser("off", help="DISABLES safe mode, including a sticky one")
+
+    onboarding = group.add_parser(
+        "onboarding", help="what the first-run wizard would show on this machine (read-only)",
+    )
+    onboarding.add_argument("--step", default="", help="one step id, or all of them")
+
+    settings = group.add_parser("settings", help="the user settings surface")
+    settings_group = settings.add_subparsers(dest="settings_command", required=True)
+    settings_group.add_parser("show", help="print every setting (read-only, never a credential)")
+    settings_set = settings_group.add_parser("set", help="CHANGES one setting and persists it")
+    settings_set.add_argument("section", choices=(
+        "character", "voice", "speechInput", "ai", "privacy", "accessibility",
+    ))
+    settings_set.add_argument("field")
+    settings_set.add_argument("value")
+
+    character_policy = group.add_parser(
+        "character-policy",
+        help="the default-character decision for this machine; APPLIES it without --dry-run",
+    )
+    character_policy.add_argument("--dry-run", action="store_true",
+                                  help="decide and print, changing nothing")
+    character_policy.add_argument("--eligible", default="",
+                                  help="override the presentation the machine permits")
+    character_policy.add_argument("--restore", action="store_true",
+                                  help="RESTORES the package the user chose, when capability permits")
+
 
 def _assessment(args: argparse.Namespace) -> tuple[Assessment, str]:
     """Build the capability assessment the runtime decides against."""
@@ -385,6 +437,8 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
         return _shell(args)
     if args.companion_command == "migrate-ux-store":
         return _migrate(args)
+    if args.companion_command in _ALPHA_COMMANDS:
+        return _ALPHA_COMMANDS[args.companion_command](args)
     # `health` and `presentation` can be answered either by a running service —
     # which is the authority while it holds the store — or by reading the store
     # directly. The socket is preferred when one was named or is present: asking
@@ -718,9 +772,9 @@ def _shell(args: argparse.Namespace) -> dict[str, Any]:
     from .gtk_shell import run as run_shell
     from .presentation import AccessibilityPreferences
 
-    preferences = AccessibilityPreferences(prefer_text_only=bool(args.text_only))
+    preferences = accessibility_from_environment(prefer_text_only=bool(args.text_only))
     try:
-        code = run_shell(args.endpoint)
+        code = run_shell(args.endpoint, preferences=preferences)
     except RuntimeError as exc:
         raise CompanionError(str(exc)) from exc
     return {
@@ -728,6 +782,208 @@ def _shell(args: argparse.Namespace) -> dict[str, Any]:
         "exitCode": code,
         "preferences": preferences.to_json(),
     }
+
+
+def _identity(_args: argparse.Namespace) -> dict[str, Any]:
+    from .identity import build_identity
+
+    identity = build_identity()
+    return {
+        "effect": "READ the build identity of this system",
+        "identity": identity.to_json(),
+        "lines": list(identity.lines()),
+    }
+
+
+def _capability_record(_args: argparse.Namespace) -> dict[str, Any]:
+    from .hardware import capability_record
+
+    return {
+        "effect": "MEASURED this machine's hardware and, separately, what works on it",
+        **capability_record(),
+    }
+
+
+def _diagnose(args: argparse.Namespace) -> dict[str, Any]:
+    from .support.diagnose import diagnose
+
+    report = diagnose(root=args.root or default_root())
+    return {
+        "effect": "READ the recovery report; nothing was changed and nothing was uploaded",
+        "report": report.to_json(),
+        "lines": list(report.lines()),
+    }
+
+
+def _export_diagnostics(args: argparse.Namespace) -> dict[str, Any]:
+    from .support.export import default_destination, export_diagnostics
+
+    root = args.root or default_root()
+    destination = args.path or default_destination(root)
+    try:
+        written = export_diagnostics(destination, root=root)
+    except OSError as exc:
+        raise CompanionError(f"the diagnostics file could not be written: {exc}") from exc
+    return {
+        "effect": "WROTE a diagnostics file. It has not been sent anywhere; read it before you share it",
+        "path": str(written),
+        "uploaded": False,
+    }
+
+
+def _safe_mode(args: argparse.Namespace) -> dict[str, Any]:
+    from .support.safemode import clear_safe_mode, read_safe_mode, request_safe_mode
+
+    root = args.root or default_root()
+    if args.safe_command == "status":
+        state = read_safe_mode(root)
+        return {
+            "effect": "READ the safe-mode state",
+            "safeMode": state.to_json(),
+            "lines": list(state.lines()),
+        }
+    if args.safe_command == "on":
+        state = request_safe_mode(
+            reason=args.reason, origin="cli", sticky=bool(args.sticky), root=root,
+        )
+        return {
+            "effect": "ENABLED Bunny Safe Mode. It applies to the next start of the companion",
+            "safeMode": state.to_json(),
+            "lines": list(state.lines()),
+        }
+    state = clear_safe_mode(root)
+    return {
+        "effect": "DISABLED Bunny Safe Mode. The next start is a normal one",
+        "safeMode": state.to_json(),
+    }
+
+
+def _onboarding(args: argparse.Namespace) -> dict[str, Any]:
+    """What the first-run wizard would show, without opening it.
+
+    The gate reads this: a wizard that only exists as a window can only be
+    tested by a human looking at one.
+    """
+    import sys as _sys
+
+    installed = Path("/usr/lib/bunny-installer")
+    for candidate in (installed, Path(__file__).resolve().parents[1]):
+        if candidate.is_dir() and str(candidate) not in _sys.path:
+            _sys.path.append(str(candidate))
+    from installer.first_run.alpha import build_model  # noqa: PLC0415
+
+    model = build_model(root=args.root or default_root())
+    views = []
+    for step in model.steps:
+        if args.step and step.step_id != args.step:
+            continue
+        model.go_to(step.step_id)
+        views.append(model.view().to_json())
+    if args.step and not views:
+        raise CompanionError(f"unknown onboarding step {args.step!r}")
+    return {
+        "effect": "READ what the first-run experience would show on this machine",
+        "steps": views,
+        "offlineCompletable": all(
+            not view["step"]["required"] or not view["step"]["survey"] for view in views
+        ),
+    }
+
+
+def _settings(args: argparse.Namespace) -> dict[str, Any]:
+    from .settings import SettingsError, load_settings, update_settings
+
+    root = args.root or default_root()
+    if args.settings_command == "show":
+        return {
+            "effect": "READ the user settings. A setting is never a credential",
+            "settings": load_settings(root).to_json(),
+        }
+    raw = args.value
+    value: Any
+    if raw.lower() in ("true", "false"):
+        value = raw.lower() == "true"
+    else:
+        try:
+            value = int(raw) if raw.lstrip("-").isdigit() else float(raw)
+        except ValueError:
+            value = raw
+    try:
+        settings = update_settings(root, args.section, {args.field: value})
+    except SettingsError as exc:
+        raise CompanionError(str(exc)) from exc
+    return {
+        "effect": f"CHANGED {args.section}.{args.field} and wrote it to disk",
+        "settings": settings.to_json(),
+    }
+
+
+def _character_policy(args: argparse.Namespace) -> dict[str, Any]:
+    from .character.defaults import default_character_paths
+    from .character.importer import PackageRegistry
+    from .character.policy import apply_default_character_policy, restore_selected_package
+
+    root = args.root or default_root()
+    registry = PackageRegistry(root / "characters", built_in_paths=default_character_paths())
+    eligible = args.eligible
+    if not eligible:
+        assessment, _banner = _assessment(args)
+        eligible = _eligible_from_assessment(assessment)
+    if args.restore:
+        decision = restore_selected_package(registry, eligible=eligible)
+        effect = (
+            "RESTORED the character package the user chose"
+            if decision.applied else "READ the restore decision; nothing was changed"
+        )
+    else:
+        decision = apply_default_character_policy(
+            registry, eligible=eligible, dry_run=bool(args.dry_run),
+        )
+        effect = (
+            "SELECTED the default character package for this machine"
+            if decision.applied and not args.dry_run
+            else "READ the default-character decision; nothing was changed"
+        )
+    return {"effect": effect, "eligible": eligible, "decision": decision.to_json()}
+
+
+def _eligible_from_assessment(assessment: Any) -> str:
+    """The presentation the machine permits, from the capability assessment.
+
+    Falls back to measuring the graphics environment when the assessment does
+    not carry a companion decision — a machine with no capability plan still has
+    a graphics stack, and refusing to choose a character because a plan was
+    missing would leave it on whatever the tuple order gave it.
+    """
+    from .presentation import AccessibilityPreferences, PresentationSignals, select_presentation
+
+    try:
+        from .character.three_d.diagnostics import three_d_environment
+
+        environment = three_d_environment()
+    except Exception:
+        environment = {"windowedThreeDAvailable": False, "graphicalSession": False}
+    signals = PresentationSignals(
+        gpu_available=bool(environment.get("windowedThreeDAvailable")),
+        display_available=bool(environment.get("graphicalSession")),
+        headless=not environment.get("graphicalSession"),
+    )
+    return select_presentation(signals, AccessibilityPreferences()).eligible
+
+
+#: The Alpha surfaces, dispatched by name. A table rather than another run of
+#: ``if`` statements: this dispatcher already had twenty branches and a
+#: twenty-first would have been the point at which nobody could see the shape.
+_ALPHA_COMMANDS: dict[str, Any] = {
+    "identity": _identity,
+    "capability-record": _capability_record,
+    "diagnose": _diagnose,
+    "export-diagnostics": _export_diagnostics,
+    "safe-mode": _safe_mode,
+    "onboarding": _onboarding,
+    "settings": _settings,
+    "character-policy": _character_policy,
+}
 
 
 def _migrate(args: argparse.Namespace) -> dict[str, Any]:

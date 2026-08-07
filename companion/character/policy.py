@@ -168,8 +168,14 @@ class DefaultCharacterDecision:
     #: The rung the ladder *stopped* at, which differs from ``rung`` when a
     #: package failed to validate and the ladder had to descend past it.
     eligible_rung: str = "text-only"
-    #: ``True`` when the policy changed the recorded selection.
+    #: ``True`` when the policy **changed** the recorded selection. Never true
+    #: for a dry run: a caller asking "what would you do" and being told
+    #: ``applied: true`` would reasonably conclude something had happened.
     applied: bool = False
+    #: ``True`` when the policy would change the selection if allowed to act.
+    #: Equal to :attr:`applied` outside a dry run, and the field a preview
+    #: surface reads.
+    would_apply: bool = False
     #: ``True`` when a selection existed that the policy did not make. The
     #: single most important output: it means the policy deliberately did
     #: nothing.
@@ -200,6 +206,7 @@ class DefaultCharacterDecision:
             "rung": self.rung,
             "eligibleRung": self.eligible_rung,
             "applied": self.applied,
+            "wouldApply": self.would_apply,
             "preservedUserChoice": self.preserved_user_choice,
             "selectedPackageId": self.selected_package_id,
             "summary": self.summary,
@@ -397,7 +404,7 @@ def default_character_decision(
         )
     return DefaultCharacterDecision(
         package_id=chosen_id, rung=chosen_rung.value, eligible_rung=eligible_rung.value,
-        applied=True, selected_package_id=current_id, reasons=tuple(reasons),
+        applied=False, would_apply=True, selected_package_id=current_id, reasons=tuple(reasons),
     )
 
 
@@ -456,7 +463,7 @@ def apply_default_character_policy(
             ))
     if dry_run or not decision.package_id:
         return decision
-    if not decision.applied:
+    if not decision.would_apply:
         # The registry already names the package the ladder chose — because it
         # is the first built-in, not because anyone selected it. Claim it, so
         # the *next* run knows which rung this policy settled on and can refuse
@@ -496,7 +503,8 @@ def apply_default_character_policy(
     ))
     return DefaultCharacterDecision(
         package_id=decision.package_id, rung=decision.rung, eligible_rung=decision.eligible_rung,
-        applied=True, selected_package_id=decision.package_id, reasons=decision.reasons,
+        applied=True, would_apply=True, selected_package_id=decision.package_id,
+        reasons=decision.reasons,
     )
 
 
@@ -554,7 +562,7 @@ def restore_selected_package(registry: Any, *, eligible: str = "full-3d") -> Def
             package_id=state.user_package_id,
             rung=(declared or eligible_rung).value,
             eligible_rung=eligible_rung.value,
-            applied=True, preserved_user_choice=True,
+            applied=True, would_apply=True, preserved_user_choice=True,
             selected_package_id=state.user_package_id, reasons=tuple(reasons),
         )
     return DefaultCharacterDecision(

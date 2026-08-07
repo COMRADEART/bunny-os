@@ -8,6 +8,18 @@ case "${profile}" in
   *) echo "usage: $0 developer|recovery|shell|shell-test|beta" >&2; exit 2 ;;
 esac
 
+# One of the two channels in docs/PUBLIC_ALPHA_SCOPE.md §40. It is a label on
+# the build, not a profile: the Public Alpha ships the `beta` profile — the
+# installed desktop payload — with the channel set to `alpha`, because the
+# profile names a package set and the channel names a promise. Validated here
+# rather than passed through, so a typo produces a refusal instead of an image
+# labelled with a channel nothing defines.
+release_channel="${BUNNY_RELEASE_CHANNEL:-development}"
+case "${release_channel}" in
+  development|alpha) ;;
+  *) echo "BUNNY_RELEASE_CHANNEL must be 'development' or 'alpha', not '${release_channel}'" >&2; exit 2 ;;
+esac
+
 # BUNNY_ARCHIVE_ONLY=1 stops after the normalised OCI archive and skips the
 # disk-image stage.
 #
@@ -308,6 +320,7 @@ bunny_podman build \
   --build-arg "BUNNY_SOURCE_COMMIT=${source_commit}" \
   --build-arg "SOURCE_DATE_EPOCH=${source_epoch}" \
   --build-arg "BUNNY_RELEASE_BUILD=${BUNNY_RELEASE_BUILD:-0}" \
+  --build-arg "BUNNY_RELEASE_CHANNEL=${release_channel}" \
   "${hermetic_args[@]+"${hermetic_args[@]}"}" \
   . 2>&1 | tee "${output}/oci-build.log"
 

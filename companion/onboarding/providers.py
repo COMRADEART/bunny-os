@@ -131,8 +131,10 @@ class ModelSummary:
             "resourceKnown": self.resource_known,
             "estimatedResidentBytes": self.estimated_resident_bytes,
             "estimateBasis": (
-                f"reported size x {_RESIDENT_FACTOR} for weights plus a small KV cache"
-                if self.resource_known else "the provider reported no size"
+                f"an estimate: the reported size x {_RESIDENT_FACTOR}, for weights plus a "
+                "small KV cache. Not a measurement of this model running here"
+                if self.resource_known
+                else "no estimate: the provider reported no size for this model"
             ),
         }
 

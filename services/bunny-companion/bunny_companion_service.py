@@ -59,9 +59,65 @@ def _state_root() -> Path:
     return base / "bunny-os" / "companion"
 
 
+def _options() -> ServiceOptions:
+    """How this runtime is built, which safe mode is allowed to reduce.
+
+    The safe-mode file is read here rather than inherited from an environment,
+    because systemd starts this process and there is no parent to inherit from.
+    It lives inside the ``StateDirectory`` the unit already creates, so it is
+    readable under ``ProtectSystem=strict`` without a new ``ReadWritePaths``.
+
+    Safe mode composes flags that already existed — ``speech_enabled``,
+    ``desktop_enabled``, ``voice_enabled`` — rather than introducing a reduced
+    code path of its own. A mode with its own path would need its own tests to
+    prove it still worked; a mode that is a combination of specified flags
+    inherits theirs.
+    """
+    root = _state_root()
+    options = ServiceOptions(root=root)
+    try:
+        from companion.support.safemode import (
+            local_only_configuration, read_safe_mode, service_overrides,
+        )
+
+        state = read_safe_mode(root)
+        overrides = service_overrides(state, root)
+    except Exception as exc:  # pragma: no cover - safe mode must never block a start
+        print(f"bunny-companion-service: safe mode not consulted: {exc}", file=sys.stderr)
+        return options
+    if not overrides:
+        return options
+    import dataclasses
+
+    options = dataclasses.replace(options, **overrides)
+    try:
+        from companion.agents.config import default_configuration, load_agent_configuration
+
+        try:
+            configuration = load_agent_configuration(root)
+        except Exception:
+            configuration = default_configuration(root)
+        options = dataclasses.replace(
+            options, agent_configuration=local_only_configuration(configuration),
+        )
+    except Exception as exc:  # pragma: no cover
+        print(
+            f"bunny-companion-service: safe mode could not filter providers ({exc}); "
+            "the agent runtime is disabled instead",
+            file=sys.stderr,
+        )
+        options = dataclasses.replace(options, agents_enabled=False)
+    print(
+        "bunny-companion-service: SAFE MODE — no microphone, no desktop actions, "
+        "no spoken output, no remote provider",
+        file=sys.stderr,
+    )
+    return options
+
+
 def main() -> int:
     try:
-        service = CompanionService(ServiceOptions(root=_state_root())).start()
+        service = CompanionService(_options()).start()
     except DuplicateRuntime as exc:
         print(f"bunny-companion-service: {exc}", file=sys.stderr)
         return 3

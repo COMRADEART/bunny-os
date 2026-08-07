@@ -279,3 +279,85 @@ def safe_mode_environment(state: SafeModeState | None = None, root: Path | None 
     environment = {variable: "1" for _, variable, _ in SAFE_MODE_RESTRICTIONS}
     environment["BUNNY_COMPANION_SAFE_MODE"] = "1"
     return environment
+
+
+def _enabled(name: str) -> bool:
+    return os.environ.get(name, "").strip() not in ("", "0", "false", "no")
+
+
+def accessibility_from_environment(*, prefer_text_only: bool = False) -> Any:
+    """Safe mode's variables as an :class:`AccessibilityPreferences`.
+
+    The translation exists because safe mode's channel to the window is an
+    *environment* — the window is a child process — while the window's language
+    for "draw less" is the accessibility preferences it already honours. Making
+    safe mode speak that language means it needs no renderer code of its own,
+    which is the difference between one degradation path and two.
+
+    ``BUNNY_COMPANION_DISABLE_3D`` maps to ``no_animation`` rather than to a 3D
+    flag, because the ladder in :mod:`companion.presentation` has no "no 3D"
+    input: the motion preferences degrade to ``static-image``, which is below
+    both 3D rungs and below animated 2D. That is stronger than asked for and it
+    is the right direction for a mode whose job is to start at all.
+    """
+    from ..presentation import AccessibilityPreferences
+
+    disable_3d = _enabled("BUNNY_COMPANION_DISABLE_3D")
+    minimal = _enabled("BUNNY_COMPANION_MINIMAL_ANIMATION")
+    return AccessibilityPreferences(
+        reduced_motion=minimal or disable_3d,
+        no_animation=disable_3d,
+        prefer_text_only=prefer_text_only or _enabled("BUNNY_COMPANION_TEXT_ONLY"),
+    )
+
+
+def service_overrides(state: SafeModeState | None = None, root: Path | None = None) -> dict[str, Any]:
+    """What a reduced runtime is built with, as ``ServiceOptions`` keywords.
+
+    The runtime reads the safe-mode *file* rather than the environment. It is
+    started by systemd, not by the launcher, so there is no parent to inherit
+    from; and the file is inside its own ``StateDirectory``, which is the one
+    place it is guaranteed to be able to read.
+
+    Every flag named here already existed as a supported way to build the
+    service. Safe mode is a *combination* of them, not a new mechanism — which
+    is why it can be trusted to leave a working runtime behind: each flag's
+    off-state is already specified and already tested.
+    """
+    state = read_safe_mode(root) if state is None else state
+    if not state.enabled:
+        return {}
+    return {
+        # No microphone: the speech runtime is not built, so no device is opened
+        # and push-to-talk answers "no speech-input runtime".
+        "speech_enabled": False,
+        # No desktop actions: the tools are absent from the allowlist, so a plan
+        # naming one fails the way a plan naming shell.run does.
+        "desktop_enabled": False,
+        # No spoken output. Captions are produced regardless.
+        "voice_enabled": False,
+        # Providers stay built — §19 keeps "local provider only when explicitly
+        # selected" — and the remote refusal is the configuration's job, below.
+        "agents_enabled": True,
+    }
+
+
+def local_only_configuration(configuration: Any) -> Any:
+    """The same configuration with every remote provider removed.
+
+    Removed rather than disabled. A disabled remote provider is one flag away
+    from being contacted and appears in the provider list as something that
+    could be turned on; a machine in safe mode should have no remote provider to
+    turn on. §19: *no remote AI*, which is a statement about what exists rather
+    than about what is preferred.
+    """
+    providers = tuple(
+        provider for provider in getattr(configuration, "providers", ())
+        if not getattr(provider, "remote", False)
+    )
+    if len(providers) == len(getattr(configuration, "providers", ())):
+        return configuration
+    from dataclasses import replace
+
+    return replace(configuration, providers=providers)
+

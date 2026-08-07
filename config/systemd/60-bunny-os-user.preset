@@ -8,3 +8,9 @@ disable bunny-shell.target
 # *client*, and a client that had to start the runtime would mean closing the
 # last window stopped whatever it was doing.
 enable bunny-companion.service
+# And the window, which nothing started before the Public Alpha branch. A
+# freshly installed machine ran a companion that was invisible, and the only way
+# to see it was `bunny-os companion shell` in a terminal — the one thing §1 says
+# the normal path must not need. The unit carries a graphical-session condition,
+# so enabling it on a profile with no desktop costs a "condition failed" line.
+enable bunny-companion-window.service

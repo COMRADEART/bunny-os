@@ -107,6 +107,18 @@ SYSTEM_SCRIPTS: tuple[str, ...] = (
     "bunny-recovery",
     "bunny-safe-graphics",
     "bunny-live-session",
+    # The Public Alpha session programs. The window launcher is what makes
+    # "Bunny appears when you log in" true — the runtime has been a unit since
+    # the integration branch and nothing started the *window* — and the
+    # diagnostics program is deliberately outside the companion, because the
+    # moment it is wanted is the moment the companion is not there to offer it.
+    #
+    # Installed on every profile rather than only the desktop ones: the units
+    # that run them carry their own conditions, and a profile that has no
+    # graphical session simply never starts them. A profile that had the unit
+    # and not the program would be a unit that fails at every login.
+    "bunny-companion-window",
+    "bunny-companion-recovery",
 )
 
 #: The one system script that is a systemd generator rather than a libexec
@@ -314,6 +326,21 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "desktop-entry", "desktop-integration/art.comrade.Bunny.desktop",
         "/usr/share/applications/art.comrade.Bunny.desktop", 0o644,
     ),
+    # Two entries the Public Alpha adds, both on the desktop profiles only
+    # because an applications list is a thing a desktop has. The companion
+    # entry re-opens a window the user closed; the diagnostics entry is the
+    # §18 surface, reachable when there is no companion window to reach it from.
+    _file_route(
+        "companion-desktop-entry", "desktop-integration/art.comrade.BunnyCompanion.desktop",
+        "/usr/share/applications/art.comrade.BunnyCompanion.desktop", 0o644,
+        profiles=DESKTOP_PROFILES,
+    ),
+    _file_route(
+        "companion-diagnostics-desktop-entry",
+        "desktop-integration/art.comrade.BunnyDiagnostics.desktop",
+        "/usr/share/applications/art.comrade.BunnyDiagnostics.desktop", 0o644,
+        profiles=DESKTOP_PROFILES,
+    ),
     _file_route(
         "desktop-launcher", "desktop-integration/bunny-desktop-launch.py",
         "/usr/libexec/bunny-desktop-launch", 0o555,
@@ -504,6 +531,20 @@ GENERATED_ROUTES: tuple[Mapping[str, Any], ...] = (
         "note": "changes on every commit",
     },
     {
+        "destination": "/usr/lib/os-release",
+        "derivedFrom": (
+            "the base image's own os-release, plus the version, channel, build id, "
+            "commit and profile of this build"
+        ),
+        "producer": "install-root.py:write_os_release",
+        "note": (
+            "extended, not rewritten. ID, VERSION_ID, PLATFORM_ID and CPE_NAME are kept "
+            "exactly as the base image wrote them because dnf, SELinux and bootc key off "
+            "them; NAME, PRETTY_NAME and VARIANT are display strings and are replaced. "
+            "Changes on every commit, like release.json"
+        ),
+    },
+    {
         "destination": "/usr/lib/bunny-os/packages.txt",
         "derivedFrom": "rpm -qa inside the container",
         "producer": "install-root.py:write_package_inventory",
@@ -586,6 +627,7 @@ INSTALL_STAGES: frozenset[str] = frozenset({
 GENERATOR_FUNCTIONS: frozenset[str] = frozenset({
     "write_release_metadata",
     "write_package_inventory",
+    "write_os_release",
 })
 
 #: Everything the installer is permitted to do that puts bytes in the image.

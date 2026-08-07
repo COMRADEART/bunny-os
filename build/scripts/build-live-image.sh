@@ -16,6 +16,22 @@ if [[ "${BUNNY_RELEASE_BUILD:-0}" == "1" && ! "${base_image}" =~ @sha256:[a-f0-9
   exit 4
 fi
 
+# The channel labels the medium as well as the payload. An installer ISO that
+# called itself beta while writing an alpha system to the disk would be the one
+# artifact a user reads the name of before anything else is true about it.
+release_channel="${BUNNY_RELEASE_CHANNEL:-development}"
+case "${release_channel}" in
+  development|alpha) ;;
+  *) echo "BUNNY_RELEASE_CHANNEL must be 'development' or 'alpha', not '${release_channel}'" >&2; exit 2 ;;
+esac
+if [[ "${release_channel}" == "alpha" ]]; then
+  live_os_version="${BUNNY_ALPHA_VERSION:-0.1.0}"
+  live_image_version="${live_os_version}-alpha-live.${source_commit:0:12}"
+else
+  live_os_version="0.3.0-beta"
+  live_image_version="0.3.0-live.${source_commit:0:12}"
+fi
+
 payload_tag="localhost/bunny-os-beta:${source_commit:0:12}"
 installer_tag="localhost/bunny-os-live:${source_commit:0:12}"
 output="${repository_root}/build/out/live"
@@ -35,11 +51,12 @@ sudo podman build \
   --tag "${installer_tag}" \
   --build-arg "BASE_IMAGE=${base_image}" \
   --build-arg "BUNNY_PROFILE=live" \
-  --build-arg "BUNNY_OS_VERSION=0.3.0-beta" \
-  --build-arg "BUNNY_IMAGE_VERSION=0.3.0-live.${source_commit:0:12}" \
+  --build-arg "BUNNY_OS_VERSION=${live_os_version}" \
+  --build-arg "BUNNY_IMAGE_VERSION=${live_image_version}" \
   --build-arg "BUNNY_SOURCE_COMMIT=${source_commit}" \
   --build-arg "SOURCE_DATE_EPOCH=${source_epoch}" \
   --build-arg "BUNNY_RELEASE_BUILD=${BUNNY_RELEASE_BUILD:-0}" \
+  --build-arg "BUNNY_RELEASE_CHANNEL=${release_channel}" \
   . 2>&1 | tee "${output}/oci-build.log"
 
 (

@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import platform
 import shutil
 import subprocess
 import sys
@@ -102,10 +103,29 @@ def write_release_metadata(arguments, artifact_manifest: dict, *, root: Path = P
         .isoformat().replace("+00:00", "Z")
         if arguments.source_date_epoch else "unspecified"
     )
+    # §39: one build identity, and the two fields that make it one.
+    #
+    # ``buildId`` is derived from the commit and SOURCE_DATE_EPOCH rather than
+    # counted, so two builds of one tree at one epoch carry the same id. A
+    # counter would make every rebuild a different build even when nothing about
+    # it differed, which is the opposite of what the qualification phase needs.
+    #
+    # ``releaseChannel`` is one of the two §40 names. It comes from the build
+    # argument and is validated here rather than trusted: an image labelled with
+    # a channel this build does not define is an image nobody can reason about,
+    # and "development" is the honest fallback because it promises least.
+    channel = getattr(arguments, "release_channel", "development") or "development"
+    if channel not in ("development", "alpha"):
+        channel = "development"
+    commit = arguments.source_commit if arguments.source_commit != "unknown" else ""
+    build_id = f"{commit[:12]}.{int(arguments.source_date_epoch or 0)}" if commit else "unknown"
     metadata = {
         "schemaVersion": 1,
         "osVersion": arguments.os_version,
         "imageVersion": arguments.image_version,
+        "releaseChannel": channel,
+        "buildId": build_id,
+        "architecture": platform.machine(),
         "profile": arguments.profile,
         "contractVersion": "1.0.0",
         "brokerVersion": "0.1.0",
@@ -125,7 +145,68 @@ def write_release_metadata(arguments, artifact_manifest: dict, *, root: Path = P
     release.parent.mkdir(parents=True, exist_ok=True)
     release.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     os.chmod(release, 0o444)
+    write_os_release(metadata, root=root)
     return metadata
+
+
+def write_os_release(metadata: dict, *, root: Path = Path("/")) -> None:
+    """Put the Bunny identity where the operating system's own tools look.
+
+    §39 asks for the identity in ``/etc/os-release`` or appropriate release
+    metadata. ``release.json`` is the appropriate metadata and it is written
+    above; this is the other half, because "appropriate metadata" is not what
+    GNOME's About screen, ``hostnamectl`` or a bug reporter reads. A machine
+    that calls itself "Fedora Linux 44" in every system surface is a machine
+    whose bug reports go to Fedora.
+
+    Appended rather than rewritten. The base fields — ``ID``, ``VERSION_ID``,
+    ``PLATFORM_ID``, ``CPE_NAME`` — are what the package manager, SELinux policy
+    and bootc all key off, and a downstream that rewrote them would break
+    updates in order to change a string. So Fedora's file keeps every field it
+    had, and the Bunny ones are added: ``NAME`` and ``PRETTY_NAME`` are replaced
+    because they are display strings and nothing keys off them, and
+    ``VARIANT``/``VARIANT_ID`` are the documented place for exactly this.
+
+    Written to ``/usr/lib/os-release``. ``/etc/os-release`` is a symlink to it on
+    every bootc image, and ``/usr`` is the half that belongs to the image.
+    """
+    path = root / "usr/lib/os-release"
+    try:
+        original = path.read_text(encoding="utf-8")
+    except OSError:
+        # No base file to extend. Refusing is wrong — the image would then have
+        # no Bunny identity at all — and inventing ID/VERSION_ID would be worse,
+        # so only the fields that are ours get written.
+        original = ""
+    display = (
+        f"Bunny OS Alpha {'.'.join(str(metadata['osVersion']).split('.')[:2])}"
+        if metadata.get("releaseChannel") == "alpha"
+        else f"Bunny OS {metadata['osVersion']} ({metadata.get('releaseChannel', 'development')})"
+    )
+    replaced = {"NAME", "PRETTY_NAME", "VARIANT", "VARIANT_ID", "HOME_URL",
+                "BUG_REPORT_URL", "SUPPORT_URL", "DOCUMENTATION_URL"}
+    kept = [
+        line for line in original.splitlines()
+        if not any(line.startswith(f"{key}=") for key in replaced)
+    ]
+    added = [
+        'NAME="Bunny OS"',
+        f'PRETTY_NAME="{display}"',
+        f'VARIANT="{display}"',
+        f'VARIANT_ID={metadata.get("releaseChannel", "development")}',
+        'HOME_URL="https://bunny-os.org/"',
+        'DOCUMENTATION_URL="file:///usr/share/doc/bunny-os/README.md"',
+        'SUPPORT_URL="file:///usr/share/doc/bunny-os/TROUBLESHOOTING.md"',
+        'BUG_REPORT_URL="file:///usr/share/doc/bunny-os/REPORTING_BUGS.md"',
+        f'BUNNY_OS_VERSION={metadata["osVersion"]}',
+        f'BUNNY_OS_CHANNEL={metadata.get("releaseChannel", "development")}',
+        f'BUNNY_OS_BUILD_ID={metadata.get("buildId", "unknown")}',
+        f'BUNNY_OS_COMMIT={metadata["sourceCommit"]}',
+        f'BUNNY_OS_PROFILE={metadata["profile"]}',
+    ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join([*kept, *added]) + "\n", encoding="utf-8")
+    os.chmod(path, 0o444)
 
 
 def write_package_inventory(*, root: Path = Path("/")) -> None:
@@ -277,6 +358,11 @@ def main() -> int:
     parser.add_argument("--source-commit", required=True)
     parser.add_argument("--source-date-epoch", required=True, type=int)
     parser.add_argument("--base-image", required=True)
+    # §40's two channels. Defaulted rather than required, so every existing
+    # caller keeps working and produces a development image — which is what an
+    # unlabelled build is.
+    parser.add_argument("--release-channel", default="development",
+                        choices=("development", "alpha"))
     args = parser.parse_args()
     source = args.source
 
