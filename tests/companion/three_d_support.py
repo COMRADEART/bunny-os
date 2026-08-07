@@ -256,6 +256,34 @@ def valid_glb(**arguments: Any) -> bytes:
     return builder.pack(document)
 
 
+def glb_with_weight_animation(
+    *, morph_targets: Sequence[str] = ("mouth_open_medium", "smile"), keyframes: int = 3
+) -> bytes:
+    """A model whose first clip animates morph weights rather than a rotation.
+
+    The shape the first validator refused: a ``weights`` sampler's output is
+    SCALAR with one value *per target per keyframe*, so three keyframes over two
+    targets is six values — not three. Every real character with a morph
+    animation looks like this, and none of them could be loaded.
+    """
+    document, builder = build_document(morph_targets=morph_targets)
+    mesh_node = len(document["nodes"]) - 1
+    times = builder.floats(
+        [index / max(1, keyframes - 1) for index in range(keyframes)], "SCALAR", bounds=True
+    )
+    weights: list[float] = []
+    for index in range(keyframes):
+        for target in range(len(morph_targets)):
+            weights.append(round((index + target) % 2 * 0.75, 4))
+    output = builder.floats(weights, "SCALAR")
+    document["animations"][0] = {
+        "name": document["animations"][0]["name"],
+        "samplers": [{"input": times, "output": output, "interpolation": "LINEAR"}],
+        "channels": [{"sampler": 0, "target": {"node": mesh_node, "path": "weights"}}],
+    }
+    return builder.pack(document)
+
+
 def mutated_glb(change: Callable[[dict[str, Any], GlbBuilder], None], **arguments: Any) -> bytes:
     """A valid model with exactly one thing changed by ``change``."""
     document, builder = build_document(**arguments)
@@ -267,6 +295,7 @@ __all__ = [
     "GlbBuilder",
     "assemble",
     "build_document",
+    "glb_with_weight_animation",
     "mutated_glb",
     "tiny_png",
     "valid_glb",

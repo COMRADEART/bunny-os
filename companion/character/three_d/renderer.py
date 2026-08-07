@@ -298,23 +298,60 @@ class ThreeDRenderer(CharacterRenderer):
         width, height = self.surface_size
         return max(0.2, min(8.0, width / max(1, height)))
 
+    @staticmethod
+    def _halve(rgba: bytes, width: int, height: int) -> tuple[bytes, int, int]:
+        """One box-filter halving of an RGBA8 image. §21's lower texture resolution.
+
+        Done on the CPU before upload rather than by asking the driver for a
+        smaller mip: the point of the lightweight rung is to hold *less* texture
+        memory, and uploading the full image and then sampling a smaller level
+        would hold more.
+        """
+        new_width = max(1, width // 2)
+        new_height = max(1, height // 2)
+        output = bytearray(new_width * new_height * 4)
+        for y in range(new_height):
+            top = (y * 2) * width * 4
+            bottom = min(y * 2 + 1, height - 1) * width * 4
+            for x in range(new_width):
+                left = x * 2 * 4
+                right = min(x * 2 + 1, width - 1) * 4
+                base = (y * new_width + x) * 4
+                for channel in range(4):
+                    output[base + channel] = (
+                        rgba[top + left + channel] + rgba[top + right + channel]
+                        + rgba[bottom + left + channel] + rgba[bottom + right + channel]
+                    ) // 4
+        return bytes(output), new_width, new_height
+
     def _upload_textures(self, gl: GL, model: ValidatedModel, maximum: int) -> dict[int, int]:
         assert self.resources is not None
         result: dict[int, int] = {}
+        scale = float(QUALITY_LEVELS[self.quality]["textureScale"])
         for texture in model.textures:
             if texture.width > maximum or texture.height > maximum:
                 raise RendererCapabilityError(
                     f"texture {texture.index} is {texture.width}x{texture.height} and the driver "
                     f"limit is {maximum}"
                 )
+            rgba, width, height = texture.rgba, texture.width, texture.height
+            # Halve until the rung's scale is met. A rung that declares a texture
+            # scale and does not apply it is a policy table with a decorative
+            # entry, and §21 names lower texture resolution as one of the four
+            # things the lightweight rung changes.
+            target = max(1.0 / 64, scale)
+            while target < 1.0 and width > 1 and height > 1 and (width * height) > (
+                texture.width * texture.height * target * target
+            ):
+                rgba, width, height = self._halve(rgba, width, height)
             name = self.resources.textures(
                 1, owner=self._model_owner, created_by="glGenTextures(base-colour)",
-                estimated_bytes=texture.decoded_bytes,
+                estimated_bytes=len(rgba),
             )[0]
             gl.glBindTexture(GL_TEXTURE_2D, name)
-            payload = (ctypes.c_ubyte * len(texture.rgba)).from_buffer_copy(texture.rgba)
+            payload = (ctypes.c_ubyte * len(rgba)).from_buffer_copy(rgba)
             gl.glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_RGBA8, texture.width, texture.height, 0,
+                GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
                 GL_RGBA, GL_UNSIGNED_BYTE, ctypes.cast(payload, ctypes.c_void_p),
             )
             gl.check("uploading a base-colour texture")
@@ -597,8 +634,13 @@ class ThreeDRenderer(CharacterRenderer):
         self.quality = quality
         self.renderer_name = quality
         self.lighting = DEFAULT_LIGHTING if quality == FULL_3D else LIGHTWEIGHT_LIGHTING
-        cap = QUALITY_LEVELS[quality]["targetFps"]
-        self.frame_rate_cap = min(self.frame_rate_cap, int(cap)) or int(cap)
+        # The rung's own target, not the minimum of it and whatever the cap was.
+        # ``min`` was ratcheting: full-3d → lightweight-3d took the cap to 30 and
+        # lightweight-3d → full-3d left it there, so a renderer that recovered
+        # drew at half its rung's rate for ever. Any *stricter* cap — thermal,
+        # accessibility — is re-applied by the controller on the next evaluation,
+        # which is where those decisions are made and where they belong.
+        self.frame_rate_cap = int(QUALITY_LEVELS[quality]["targetFps"])
 
     def set_reduced_motion(self, enabled: bool) -> None:
         super().set_reduced_motion(enabled)

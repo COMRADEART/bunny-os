@@ -232,6 +232,50 @@ class BlendingTests(unittest.TestCase):
         self.assertEqual(decision.animation_state, "idle")
 
 
+class WeightAnimationTests(unittest.TestCase):
+    """A morph-weight clip: the shape the validator refused for one commit."""
+
+    def test_a_weight_animation_validates(self) -> None:
+        from tests.companion.three_d_support import glb_with_weight_animation
+
+        model = validate_glb(glb_with_weight_animation())
+        clip = model.clips[0]
+        channel = clip.channels[0]
+        self.assertEqual(channel.path, "weights")
+        sampler = clip.samplers[channel.sampler]
+        # The stride is the morph-target count, not the accessor's element size.
+        self.assertEqual(sampler.stride, len(model.morph_target_names))
+        self.assertEqual(len(sampler.output), len(sampler.input_times) * sampler.stride)
+
+    def test_a_weight_animation_samples_one_value_per_target(self) -> None:
+        from companion.character.three_d.animation import ClipSampler
+        from tests.companion.three_d_support import glb_with_weight_animation
+
+        model = validate_glb(glb_with_weight_animation())
+        sampler = ClipSampler(model.clips[0], morph_target_count=len(model.morph_target_names))
+        pose = sampler.sample(0.0)
+        self.assertEqual(sorted(pose.weights), list(range(len(model.morph_target_names))))
+        for index in pose.weights:
+            self.assertLess(index, len(model.morph_target_names))
+
+    def test_a_weight_sampler_with_the_wrong_length_is_refused(self) -> None:
+        from companion.character.three_d.errors import ModelSchemaError
+        from tests.companion.three_d_support import build_document
+
+        document, builder = build_document(morph_targets=("a", "b"))
+        mesh_node = len(document["nodes"]) - 1
+        times = builder.floats([0.0, 0.5, 1.0], "SCALAR", bounds=True)
+        # Three values for three keyframes over *two* targets: six are needed.
+        output = builder.floats([0.0, 0.5, 1.0], "SCALAR")
+        document["animations"][0] = {
+            "name": "idle",
+            "samplers": [{"input": times, "output": output, "interpolation": "LINEAR"}],
+            "channels": [{"sampler": 0, "target": {"node": mesh_node, "path": "weights"}}],
+        }
+        with self.assertRaisesRegex(ModelSchemaError, "needs 6"):
+            validate_glb(builder.pack(document))
+
+
 class FaceTests(unittest.TestCase):
     def test_expressions_resolve_to_morph_targets_where_they_exist(self) -> None:
         model = validate_glb(valid_glb(morph_targets=("smile", "brow_lower")))

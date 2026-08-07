@@ -210,6 +210,34 @@ class RenderTests(unittest.TestCase):
             QUALITY_LEVELS["lightweight-3d"]["targetFps"],
         )
 
+    def test_the_lightweight_rung_uploads_less_texture(self) -> None:
+        """§21's "lower texture resolution", as bytes rather than as a policy field."""
+        full = self._renderer(quality="full-3d")
+        light = self._renderer(quality="lightweight-3d")
+        full_textures = sum(
+            resource.estimated_bytes
+            for resource in full.resources._live.values()
+            if resource.kind == "texture"
+        )
+        light_textures = sum(
+            resource.estimated_bytes
+            for resource in light.resources._live.values()
+            if resource.kind == "texture"
+        )
+        self.assertGreater(full_textures, 0)
+        self.assertLess(light_textures, full_textures)
+
+    def test_changing_quality_back_up_restores_the_frame_rate_target(self) -> None:
+        renderer = self._renderer(quality="full-3d")
+        self.assertEqual(renderer.frame_rate_cap, QUALITY_LEVELS["full-3d"]["targetFps"])
+        renderer.set_quality("lightweight-3d")
+        self.assertEqual(renderer.frame_rate_cap, QUALITY_LEVELS["lightweight-3d"]["targetFps"])
+        renderer.set_quality("full-3d")
+        self.assertEqual(
+            renderer.frame_rate_cap, QUALITY_LEVELS["full-3d"]["targetFps"],
+            "a renderer that recovered kept the degraded rung's frame cap",
+        )
+
 
 class ResourceTests(unittest.TestCase):
     @classmethod

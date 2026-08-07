@@ -38,7 +38,7 @@ should play, or whether a GPU exists.
 from __future__ import annotations
 
 import array
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import hashlib
 import json
 import math
@@ -1208,6 +1208,9 @@ def validate_glb(
     # -- animations -------------------------------------------------------
     animation_entries = _list(document.get("animations"), "animations", limits.maximum_animations)
     clips: list[AnimationClipData] = []
+    #: ``(animation, sampler) -> values per keyframe``, decided by the channel
+    #: that uses the sampler rather than by the accessor's element type.
+    sampler_components: dict[tuple[int, int], int] = {}
     total_keyframes = 0
     total_channels = 0
     total_samplers = 0
@@ -1258,11 +1261,17 @@ def validate_glb(
             output, output_components, output_count = reader.floats(
                 sampler.get("output"), f"animations[{index}].samplers[{sampler_index}].output"
             )
-            expected = time_count * (3 if interpolation == "CUBICSPLINE" else 1)
-            if output_count != expected:
-                raise ModelSchemaError(
-                    f"animations[{index}] sampler output has {output_count} elements; {expected} expected"
-                )
+            # The output length is *not* checkable here, and the first version of
+            # this validator checked it anyway and was wrong about morph targets.
+            #
+            # A rotation sampler's output is VEC4, so its element count equals
+            # its keyframe count. A ``weights`` sampler's output is SCALAR with
+            # one element *per morph target per keyframe* — so a twelve-target
+            # face with five keyframes has sixty elements, and a check of
+            # "output count equals keyframe count" refuses every legitimate
+            # morph animation there is. Which components a sampler carries is
+            # decided by the *channel* that uses it, so the check moved below,
+            # where the channels are known.
             total_keyframes += time_count
             if total_keyframes > limits.maximum_keyframes:
                 raise ModelLimitError(
@@ -1296,17 +1305,43 @@ def validate_glb(
                 raise ModelSchemaError(f"animations[{index}] rotation sampler is not VEC4")
             if path in {"translation", "scale"} and sampler.stride != 3:
                 raise ModelSchemaError(f"animations[{index}] {path} sampler is not VEC3")
+            components = {"rotation": 4, "translation": 3, "scale": 3}.get(str(path), 0)
             if path == "weights":
                 mesh_index = nodes[node_index].mesh
                 if mesh_index is None:
                     raise ModelSchemaError(f"animations[{index}] animates weights on a node with no mesh")
-                target_count = len(primitives[0].morph_targets) if primitives else 0
+                target_count = 0
                 for candidate in primitives:
                     if candidate.mesh_index == mesh_index:
                         target_count = len(candidate.morph_targets)
                         break
                 if target_count == 0:
                     raise ModelSchemaError(f"animations[{index}] animates weights on a mesh with no morph targets")
+                if sampler.stride != 1:
+                    raise ModelSchemaError(f"animations[{index}] weights sampler must be SCALAR")
+                components = target_count
+            # The output-length check, now that the channel says what a keyframe
+            # of this sampler contains. A sampler shared between channels that
+            # disagree about that is refused rather than read two ways.
+            keyframes = len(sampler.input_times)
+            expected = keyframes * components * (3 if sampler.interpolation == "CUBICSPLINE" else 1)
+            if len(sampler.output) != expected:
+                raise ModelSchemaError(
+                    f"animations[{index}] sampler {sampler_index} carries {len(sampler.output)} "
+                    f"values; a {path} channel over {keyframes} keyframes needs {expected}"
+                )
+            previous_components = sampler_components.get((index, sampler_index))
+            if previous_components is not None and previous_components != components:
+                raise ModelSchemaError(
+                    f"animations[{index}] sampler {sampler_index} is shared by channels that "
+                    "disagree about how many values a keyframe holds"
+                )
+            sampler_components[(index, sampler_index)] = components
+            if components != sampler.stride:
+                # ``stride`` is what the sampler reader will step by, and for a
+                # weights sampler that is the morph-target count rather than the
+                # accessor's own element size.
+                samplers_out[sampler_index] = replace(sampler, stride=components)
             channels_out.append(AnimationChannelData(node=node_index, path=str(path), sampler=sampler_index))
         if not channels_out:
             raise ModelSchemaError(f"animations[{index}] has no channels")

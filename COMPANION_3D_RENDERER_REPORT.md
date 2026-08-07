@@ -783,11 +783,104 @@ configuration attempting to *raise* a hard ceiling.
 
 ## 30. GTK and Wayland results
 
-*(filled in from `scripts/gtk_3d_probe.py`)*
+**The compositor was WSLg.** WSLg is WSLg: a Weston-based Wayland compositor
+bridged to Windows. It is not native GNOME on Wayland, no result below should be
+read as one, and `scripts/gtk_3d_probe.py` records that sentence in its own
+output rather than leaving a reader to infer it.
+
+| | |
+|---|---|
+| Kernel | `6.18.33.2-microsoft-standard-WSL2` |
+| Session type | `wayland`, `WAYLAND_DISPLAY=wayland-0` |
+| GL renderer | `llvmpipe (LLVM 22.1.8, 256 bits)` |
+| GL version | `4.6 (Core Profile) Mesa 26.1.5` |
+| GTK | 4.22.4, python3-gobject 3.56.3 |
+
+Evidence: `qualification/companion-3d-renderer/evidence/gtk-wayland.json`.
+
+| §32 item | Result |
+|---|---|
+| surface creation | **pass** — `Gtk.GLArea` realized, desktop-GL context created |
+| transparent presentation | **requested and reported supported** — `alphaSupported: true`; whether the desktop composited it that way was not photographed |
+| character visibility | **pass** — frames rendered with the character drawn |
+| 3D frame drawing | **pass** — 134 frames in an 8-second window |
+| animation playback | **pass** — nine canonical states driven through the widget |
+| resize | **pass** — 2 resizes handled, surface size and camera aspect updated |
+| scale change | **pass** — 1 scale change |
+| dock mode | **pass** — `docked` → `compact`, camera mode followed |
+| speech-bubble anchor | **partial** — the anchor is computed and reported; the bubble widget itself is the 2D client's and was not drawn beside the GLArea in this probe |
+| lip sync | **pass** — a mouth shape set through the widget reached the geometry |
+| reduced motion | **pass** — toggled on and off through the widget |
+| renderer restart | **pass** — 1 restart inside the same GTK context, character restored |
+| GTK restart | **pass** — the probe's own application start/stop is a GTK lifecycle; the widget unrealizes and releases |
+| runtime restart | **NOT_RUN in this probe** — covered by the §31 slice, which restarts the renderer against a live service |
+| compositor disconnect | **NOT_RUN** — WSLg's compositor cannot be restarted underneath a client here |
+
+Zero GLib criticals, zero errors, zero context losses.
+
+Frame timing under the compositor's own clock: first frame **7.0 ms**, mean
+**1.14 ms**, p95 **1.71 ms** over 134 frames, on a software rasteriser.
+
+One environmental note recorded because it explains the warnings in the log: the
+host exposes a `dzn` (D3D12-on-Vulkan) ICD and a PowerVR ICD, and Mesa refuses
+both — "Zink requires the nullDescriptor feature", "dzn is not a conformant
+Vulkan implementation" — and falls back to `llvmpipe`. There is no `/dev/dri`.
+That is why every figure here is a software-rasteriser figure.
 
 ## 31. Integrated vertical slice
 
-*(filled in from the slice gate)*
+`companion/character/three_d_slice.py`, run 20 consecutive times as §34's third
+gate. **36 steps: 31 ran and passed, 5 NOT_RUN with reasons.**
+
+| Step | Result |
+|---|---|
+| 1 start the canonical companion service | pass |
+| 2 start the companion client | pass |
+| 3 confirm 3D renderer eligibility | pass — `llvmpipe`, GL 4.6 core, `accelerated: false` recorded |
+| 4 validate and load the default 3D character | pass — 2,452 triangles, 23 joints, 22 clips, 11 morph targets |
+| 5 draw the idle character | pass — pixels read back, coverage asserted |
+| 6 submit a typed task | pass |
+| 7 character enters understanding | pass |
+| 8 character enters planning | pass |
+| 9 local agent provider runs | pass |
+| 10 character enters working | pass |
+| 11 provider proposes a harmless desktop action | pass — `desktop.settings.open` |
+| 12 Approval Centre appears | pass |
+| 13 character enters waiting-for-approval | pass — frame read back at that state |
+| 14 user approves | pass |
+| 15 desktop action executes | pass |
+| 16 character returns to working | pass |
+| 17 task completes | pass |
+| 18 character enters success | pass |
+| 19 voice speaks the result | pass — see §35 on what "voice" means here |
+| 20 voice-produced visemes animate the 3D mouth | pass — 7 distinct shapes drawn, neutral at the end |
+| 21 start push-to-talk | **NOT_RUN** — no capture device and no local recogniser |
+| 22 character enters listening | **NOT_RUN** — same |
+| 23 speech recognition finalizes | **NOT_RUN** — same |
+| 24 character enters waiting-for-user | **NOT_RUN** — same |
+| 25 confirm the transcript | **NOT_RUN** — same |
+| 26 a new task begins | pass — a second task id, distinct from the first |
+| 27 trigger controlled degradation | pass — full-3d while healthy |
+| 28 full 3D → lightweight 3D | pass — on sustained frame time |
+| 29 the lightweight rung still draws | pass — pixels read back |
+| 30 lightweight 3D → animated 2D | pass |
+| 31 task identity unchanged across degradation | pass — id, state and summary compared against the record taken before |
+| 32 removing the pressure permits recovery | pass |
+| 33 recovery used hysteresis | pass — `stable-recovery` event present |
+| 34 restart the 3D renderer | pass |
+| 35 restore the character and canonical presentation | pass — pixels read back |
+| 36 no task repeated or cancelled | pass — same id, same lifecycle epoch, not cancelled or failed |
+
+The steps that read pixels do so from a real offscreen framebuffer through
+`glReadPixels`, so "the character appeared" is a measurement rather than an
+assumption. The degradation steps drive the same `AdaptiveRendererSelector` a
+desktop uses, through the same signal type.
+
+The slice substitutes one thing and names it: the capability *signals* a machine
+with a display and a GPU would produce, confined to a single named dictionary,
+because a host with no monitor is correctly told `text-only` and every visual
+step would be unreachable. Everything else — the task, the approval, the events,
+the result, the graphics context, the pixels — is real.
 
 ## 32. Stress gates
 
@@ -795,7 +888,94 @@ configuration attempting to *raise* a hard ceiling.
 
 ## 33. Performance measurements
 
-*(filled in after the gates)*
+**Read every figure below as a software-rasteriser figure.** The reference host
+has no `/dev/dri`; Mesa reports `llvmpipe`, `Accelerated: no`. That makes these
+numbers a *floor* rather than an estimate of what a GPU does, which is a useful
+thing to know and is not the same thing as knowing what a GPU does.
+
+### Memory, one component at a time
+
+`scripts/ops/renderer3d-memory.py` runs each stage in its own interpreter and
+reports its own RSS and PSS, because §35 asks for these to be separated and the
+only honest way to separate them is not to have the others in the process. **No
+figure below includes GTK, and none includes a local language-model server:
+neither was in any of these processes.**
+
+| Stage | RSS | PSS | Above a bare interpreter (RSS) |
+|---|---|---|---|
+| bare interpreter | 10.9 MB | 6.1 MB | — |
+| + `companion.runtime`, `service`, `presentation` | 32.8 MB | 24.2 MB | 22.0 MB |
+| + the 3D subsystem imported (no context) | 24.0 MB | 15.5 MB | 13.1 MB |
+| + the 3D package validated (GLB, textures, skeleton, clips) | 22.2 MB | 14.2 MB | 11.4 MB |
+| + an EGL/llvmpipe context created | 76.3 MB | 48.7 MB | 65.3 MB |
+| renderer idle (context + package, nothing uploaded) | 83.3 MB | 53.7 MB | 72.3 MB |
+| character loaded (model uploaded to the GPU) | 96.0 MB | 64.9 MB | 85.0 MB |
+| character drawn (241 frames offscreen at 288×360) | 191.7 MB | 151.4 MB | 181.0 MB |
+
+What that table says, in order of size:
+
+* **The 3D code is small.** Importing the whole subsystem costs 13.1 MB and
+  validating the character costs 11.4 MB — both less than importing the
+  companion runtime.
+* **The graphics stack is the cost.** Creating a context takes RSS from 22 MB to
+  76 MB. That is Mesa mapping `llvmpipe`, and it is mostly *shared*, which is
+  what the PSS column is for: 48.7 MB against 76.3 MB.
+* **Uploading the character costs 12.6 MB** on top of the context, against a
+  model whose declared GPU footprint is 269,264 bytes and whose ledger reports
+  283,504 bytes. The difference is the driver's own copies of the buffers, which
+  on a software rasteriser live in system memory.
+* **Drawing costs the most, and it is llvmpipe's.** 241 frames take RSS from 96 MB
+  to 192 MB — the rasteriser's per-thread tile and scratch allocations, which
+  scale with surface size and core count. On hardware this line would look
+  completely different, and it is the single strongest reason §38 asks for a GPU.
+
+GPU-side, from the model descriptor and the resource ledger: estimated
+**269,264 bytes**, ledger-observed **283,504 bytes**, decoded texture memory
+**16,384 bytes** (one 64×64 RGBA), model decoded size **303,984 bytes** on disk.
+
+### Timing
+
+From the 20-iteration slice gate (`renderer3d-measurements.json`), 20 samples:
+
+| Measurement | min | median | p95 | max |
+|---|---|---|---|---|
+| model validation | 14.8 ms | **16.0 ms** | 17.8 ms | 25.7 ms |
+| model load (upload to GPU) | 7.6 ms | **8.1 ms** | 9.7 ms | 9.8 ms |
+| first frame | 4.6 ms | **5.0 ms** | 6.1 ms | 7.1 ms |
+| frame time, mean over a slice | 0.70 ms | **0.74 ms** | 0.82 ms | 1.03 ms |
+| frame time, p95 over a slice | 1.32 ms | **2.02 ms** | 2.53 ms | 2.79 ms |
+| renderer restart | 11.7 ms | **18.0 ms** | 21.0 ms | 22.0 ms |
+| dropped frames | 0 | **0** | 0 | 0 |
+| live GPU resources at the end of a slice | 32 | **32** | 32 | 32 |
+
+From a 241-frame offscreen run at 288×360: first frame **7.4 ms**, mean
+**1.17 ms**, p95 **3.09 ms**, max **10.2 ms**, **0 dropped**.
+
+From the GTK probe under WSLg, on the compositor's own clock: first frame
+**7.0 ms**, mean **1.14 ms**, p95 **1.71 ms** over 134 frames.
+
+The first frame is the expensive one everywhere, and it is where three shader
+programs are compiled and linked. It is measured separately for that reason,
+and it is why `FrameHealth` ignores samples taken before twenty frames exist —
+otherwise every machine that ever started a renderer would degrade itself on its
+own first frame.
+
+Renderer lifecycle (gate 1: create a context, validate, upload, draw nine
+states, move the mouth, change rung, restart, release): min **55 ms**, median
+**59 ms**, max **166 ms**.
+
+Degradation and fallback latency are not separately timed. The rung change is a
+pure function evaluated inside a frame — `AdaptiveRendererSelector.evaluate` on
+already-gathered signals — and the *observable* latency is the renderer swap that
+follows it, which is the "renderer restart" row above (median 18 ms) for a 3D→3D
+change and a `StaticImageRenderer` construction for 3D→2D. Recovery latency is
+governed by hysteresis rather than by work: three healthy samples and a 2-second
+delay by policy, 20 seconds by the default budget's `recovery_hold_seconds`.
+Reporting a millisecond figure for something a policy decides would be dressing a
+constant up as a measurement.
+
+Lip-sync latency is not separately timed either: a mouth shape is applied inside
+the frame that draws it, so its latency is the frame time.
 
 ## 34. Complete test results
 
