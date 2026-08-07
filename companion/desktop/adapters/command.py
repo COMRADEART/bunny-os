@@ -335,11 +335,18 @@ class BackgroundChild:
         # The text goes down stdin and the pipe is closed, which is how
         # `wl-copy` knows the value is complete. Never an argument: an argv is
         # world-readable in /proc, and this is the one place user text travels.
+        #
+        # Checked rather than asserted: `python -O` removes an assert, and the
+        # AttributeError that would follow is not in the except clause below —
+        # so the one line that moves the user's text would raise a different
+        # exception under a flag nobody sets deliberately.
+        stream = process.stdin
+        if stream is None:
+            return
         try:
-            assert process.stdin is not None
-            process.stdin.write(self._stdin_text.encode("utf-8"))
-            process.stdin.flush()
-            process.stdin.close()
+            stream.write(self._stdin_text.encode("utf-8"))
+            stream.flush()
+            stream.close()
         except (BrokenPipeError, OSError, ValueError):
             # The child died before it read anything. `holding` will report it.
             pass
