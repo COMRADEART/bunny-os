@@ -84,8 +84,28 @@ echo "== gate 2: 100 consecutive Alpha session-surface lifecycles =="
 python3 scripts/companion_stress.py --target alpha --runs 100 \
   --output "$EVIDENCE/gate-alpha-100.json" 2>&1 | tee "$EVIDENCE/gate-alpha-100.log"
 
+# The suite gate runs as an unprivileged user, and that is a correctness
+# requirement rather than a hardening preference.
+#
+# tests/companion/test_store_durability.py asserts that a store in a read-only
+# directory fails *before* it replaces anything. Root ignores the permission
+# bits, the write succeeds, and the assertion that it should have raised fails —
+# on every iteration, for a reason that has nothing to do with the code under
+# test. Measured on this host at the base commit: the module fails as root and
+# the whole suite passes as `bunny`.
+#
+# The other two gates stay as root: they exercise the service lifecycle and the
+# session surfaces, neither of which asserts anything about being refused.
+suite_runner=()
+if [[ "$(id -u)" == "0" ]] && id -u bunny >/dev/null 2>&1; then
+  echo "   (as bunny: a suite run as root cannot observe a read-only refusal)"
+  chmod -R a+rX "$ROOT" 2>/dev/null || true
+  chmod 0777 "$EVIDENCE" 2>/dev/null || true
+  suite_runner=(runuser -u bunny -- env "BUNNY_STRESS_COMMIT=$COMMIT" "PYTHONPATH=$ROOT" "HOME=/tmp")
+fi
+
 echo "== gate 3: 50 consecutive complete companion suites =="
-python3 scripts/companion_stress.py --target suite --runs 50 \
+"${suite_runner[@]}" python3 scripts/companion_stress.py --target suite --runs 50 \
   --output "$EVIDENCE/gate-suite-50.json" 2>&1 | tee "$EVIDENCE/gate-suite-50.log"
 
 if [[ "$VM_RUNS" -gt 0 ]]; then
