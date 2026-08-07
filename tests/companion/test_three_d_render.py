@@ -368,6 +368,32 @@ class PresenterPathTests(unittest.TestCase):
         self.addCleanup(presenter.controller.unload_package)
         return presenter
 
+    #: Every signal these tests depend on, stated rather than inherited.
+    #:
+    #: The first version overrode only display, graphics, GPU and memory and
+    #: took the rest from ``assess_current_machine()``. That passed in isolation
+    #: and failed inside the fifty-run suite gate, where the machine is under
+    #: memory pressure by iteration three and the ladder correctly degraded to
+    #: ``static-image``. A test that asserts a rung must pin every signal that
+    #: can move it, or it is asserting something about the machine it ran on.
+    _SIGNALS = {
+        "display_available": True,
+        "graphics_ready": True,
+        "gpu_available": True,
+        "available_memory_bytes": 8 * 1024 ** 3,
+        "three_d_available": True,
+        "memory_pressure": False,
+        "cpu_pressure": False,
+        "thermal_pressure": False,
+        "on_battery": False,
+        "battery_percent": None,
+        "foreground_workload_high": False,
+        "reduced_motion": False,
+        "no_animation": False,
+        "renderer_healthy": True,
+        "static_renderer_healthy": True,
+    }
+
     def _state(self, phase: str):
         from companion.presentation import PresentationRecommendation, PresentationState
 
@@ -388,10 +414,7 @@ class PresenterPathTests(unittest.TestCase):
         )
         update = presenter.update(
             self._state("working"), now=1.0, now_ms=1000,
-            signal_overrides={
-                "display_available": True, "graphics_ready": True, "gpu_available": True,
-                "available_memory_bytes": 8 * 1024 ** 3, "three_d_available": True,
-            },
+            signal_overrides=dict(self._SIGNALS),
         )
         self.assertEqual(update.effective_presentation, "full-3d")
         self.assertEqual(presenter.controller.renderer.renderer_name, "full-3d")
@@ -408,10 +431,7 @@ class PresenterPathTests(unittest.TestCase):
         presenter = self._presenter()
         update = presenter.update(
             self._state("working"), now=1.0, now_ms=1000,
-            signal_overrides={
-                "display_available": True, "graphics_ready": True, "gpu_available": True,
-                "available_memory_bytes": 8 * 1024 ** 3, "three_d_available": False,
-            },
+            signal_overrides={**self._SIGNALS, "three_d_available": False},
         )
         self.assertEqual(update.effective_presentation, "animated-2d")
         self.assertEqual(presenter.controller.renderer.renderer_name, "animated-2d")
