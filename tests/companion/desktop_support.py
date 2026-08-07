@@ -151,7 +151,17 @@ class _FakeSettings(_Recorder):
         self.note("open_page", page=page)
         if not self.state["settings"]:
             return unsupported_outcome("fake", "no settings mapping")
+        self.state["settingsWindows"] += 1
         return acknowledged("fake", detail=f"opened {page}", page=page)
+
+    def reap(self) -> int:
+        """A settings window that has since closed. Never signalled."""
+        reaped, self.state["settingsWindows"] = self.state["settingsWindows"], 0
+        return reaped
+
+    @property
+    def open_windows(self) -> int:
+        return self.state["settingsWindows"]
 
     def read_do_not_disturb(self) -> bool | None:
         return self.state["dndValue"] if self.state["dnd"] else None
@@ -397,6 +407,7 @@ class FakeAdapters:
             "reveal": True,
             "notifications": [],
             "clipboardOwners": 0,
+            "settingsWindows": 0,
             "opened": [],
             "revealed": [],
         }
@@ -424,6 +435,7 @@ class FakeAdapters:
         return {
             "portalHandles": 0,
             "clipboardOwners": self.clipboard.release_all(reason),
+            "settingsWindowsReaped": self.settings.reap(),
         }
 
     def close(self) -> None:

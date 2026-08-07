@@ -17,7 +17,7 @@ something was not run it is listed as NOT_RUN with the reason, not omitted.
 | Base branch | `feature/companion-agent-providers` |
 | Starting commit | `ef0c9572262acd8bd48b74ff7234573ac0b78d55` (verified head of the base branch) |
 | Working branch | `feature/companion-desktop-actions` |
-| Gate commit | `cda73eaa9216593c4c98713d11842a039fb26a33` (all 170 gate iterations record it) |
+| Gate commit | `24ce0403bb63721ba85f32867c4ec054a9c8c7a7` (all 170 gate iterations record it) |
 | Evidence commit | *(filled by the evidence commit)* |
 | Final SHA | *(filled at closure)* |
 
@@ -69,7 +69,33 @@ inspection rather than by the analyser.
 so every module added here lands under
 `/usr/lib/bunny-os/python/companion/desktop/`.
 
-*(The analyser's figures over the whole branch are filled at closure.)*
+The analyser over `ef0c957..24ce040` — the whole branch up to the gate commit:
+
+```
+examined 64 path(s): 41 installed, 13 context-only, 10 unreachable
+BUILD-AFFECTING: YES
+profiles affected: beta, desktop, developer, live, minimal, recovery, shell, shell-test
+```
+
+By route:
+
+| route | paths |
+|---|---|
+| `companion-package` | 36 |
+| `bunny-os-python` | 2 |
+| `capability-package` | 1 |
+| `companion-service-executable` | 1 |
+| `schemas` | 1 |
+
+Thirteen context-only: the four `scripts/ops/` collectors written for this phase
+and nine development scripts whose `sys.path` idiom was corrected (§*What
+validation found*). None is installed by any route; the Containerfile deletes
+`/tmp/bunny-os` before committing, so they are *probably* absent from the
+artifact — and "probably" is not the standard, which is why they are reported
+as context-only rather than as unreachable.
+
+Ten unreachable: this report, the preserved-evidence record and the eight test
+files.
 
 The non-obvious entries:
 
@@ -83,11 +109,19 @@ The non-obvious entries:
 * `companion/tools.py`, `companion/approvals.py`, `companion/runtime.py`,
   `companion/service.py`, `companion/cancellation.py`, `companion/protocol.py` —
   the integration points, all installed;
-* eleven scripts and tools carrying the `sys.path` idiom fixed in §21. Three of
-  them (`bunny_companion_service.py`, `companion_cli.py`, `capability_cli.py`)
-  are installed; the eight measurement scripts are not.
+* eleven scripts and tools carrying the corrected `sys.path` idiom. Three of
+  them are installed — `services/bunny-companion/bunny_companion_service.py` by
+  `companion-service-executable`, and the two `bunny_os` CLI modules by
+  `bunny-os-python` — and the eight measurement scripts are not.
 
-No non-`.py` asset is added to `companion/`, so no new `tree` route is needed.
+No non-`.py` asset is added to `companion/`, so no new `tree` route is needed,
+no route table entry changed, and no generated file was introduced. The
+*shape* of the install set is unchanged; what changed is its contents.
+
+**This branch is build-affecting and this report does not attempt to argue
+otherwise.** The analyser is run and quoted rather than the question being
+settled by inspection, which is the discipline
+`build/scripts/build-input-closure.py`'s own docstring exists to enforce.
 
 ---
 
@@ -750,7 +784,7 @@ a concurrent attempt would be reclassified while it was still running.
 
 ## 22. Stress gates
 
-All three on one commit, `cda73eaa9216593c4c98713d11842a039fb26a33`, recorded by
+All three on one commit, `24ce0403bb63721ba85f32867c4ec054a9c8c7a7`, recorded by
 every iteration.
 
 **The desk is asserted before the gates run.** The runner refuses unless the
@@ -802,25 +836,26 @@ the gate was not running the *complete* suite, which is what §23 asks for. The
 suite needs no desk, so nothing is lost. The same test passes as `bunny` and the
 whole companion suite passes there.
 
-**Discarded runs, named so the count matches.** Three gate runs were started and
-discarded before the one reported here:
+**Discarded runs, named so the count matches.** Five gate runs were started
+before the one reported here. Every one of them was stopped for a reason that
+would have made its numbers describe something other than this build.
 
-1. on `256a1da`, stopped after gate 1 reported 0/100 with
-   `ModuleNotFoundError`. The stress harness had been importing
-   `/usr/lib/bunny-os/python` — an installed build from an earlier phase —
-   rather than the checkout. See *What validation found*, below;
-2. on `0095bd2`, which fixed that: gates 1 and 3 passed 100/100 and 20/20, and
-   were discarded because the unit had no compositor variables, so gate 3
-   measured `limited-desktop-actions` and the volume steps — the reversible
-   action §26 requires be *verified and undone* — recorded NOT_RUN. The desk
-   assertion above exists because of this run;
-3. a partial gate 2 on `0095bd2` as root, stopped at iteration 1 after the
-   root-only failure above was diagnosed.
+| # | commit | what it reached | why it was discarded |
+|---|---|---|---|
+| A | `256a1da` | gate 1 reported **0/100** | the stress harness was importing `/usr/lib/bunny-os/python` — an installed build from an earlier phase — rather than the checkout |
+| B | `0095bd2` | gates 1 and 3 passed 100/100 and 20/20; gate 2 failed at iteration 1 | the unit had no compositor or audio variables, so gate 3 measured `limited-desktop-actions` and the volume steps — the reversible action the completion standard requires be *verified and undone* — recorded NOT_RUN. Gate 2 failed on a root-only assertion. **The desk assertion in this runner exists because of this run** |
+| C | `0095bd2` | gate 2 alone, as `bunny`, 2/50 | stopped once the root-only failure was understood and the whole set could be re-run together |
+| D | `cda73ea` | gates 1 and 3 passed 100/100 and 20/20; gate 2 reached 9/50 | a review of the source found `clearAfterSeconds` accepted by the schema, carried through normalisation, digested into the binding, shown in the approval prompt — and releasing nothing. Gates 1 and 3 were re-run rather than carried forward: §23 asks for one commit, and a parameter that had been a promise in a prompt is not a fix a gate can be excused from |
+| E | `24ce040` | gates 1 and 3 passed 100/100 and 20/20 | the unprivileged clone the suite gate runs from was silently at the *wrong commit*. See *What validation found*, item 9 |
 
-A fourth was stopped deliberately rather than discarded: gate 2 was running on
-`0095bd2` when the evidence-preservation test was written, and a fifty-run suite
-gate that runs a suite missing one of its tests has measured something other than
-the suite. It was restarted on `cda73ea` with all three gates together.
+A reader counting invocations should find **five runs of gate 1, five of gate 3,
+and five starts of gate 2** before this one — and none of the five reached a
+verdict.
+
+Two of those five were stopped by *reading the source* rather than by a failure
+(D, and the preservation test that ended C). A gate that runs a suite missing
+one of its tests, or a broker missing one of its behaviours, has measured
+something other than the thing.
 
 ---
 
@@ -1053,6 +1088,26 @@ forbidden-directory test used `PurePosixPath(str(path)).parts`, which splits on
 `/` only — so on a backslash platform the whole path was one component and
 `.ssh` matched nothing. Its test went on passing, because the test ran on Linux.
 
+**9. The unprivileged gate ran a tree from another phase.** Gate 2 runs from a
+clone owned by `bunny`, made with `git clone` followed by
+`checkout --detach <sha>`. The commit lives on a *remote-tracking* ref in the
+source repository, and `git clone` copies `refs/heads/*` only — so the clone
+never had the object, the checkout printed an error that `--quiet` swallowed,
+and the clone stayed at whatever HEAD the source repository happened to be on.
+A fifty-run suite gate was measuring a commit from an earlier phase. It is now a
+named branch, a single-branch clone of it, and the clone's HEAD **asserted**
+against the gate commit rather than reported.
+
+Found by reading the log line `clone at:` and noticing it was empty — the same
+line that was meant to be the reassurance.
+
+**And one that was not a defect in the code at all.** Two `companion_stress.py`
+processes from stopped gate runs were still alive, competing for CPU with the
+run being measured. `su` starts a new session, so a child of it escapes the
+unit's cgroup when the unit is stopped. Every timing figure taken while they ran
+is discarded; the ones in §22 and §24 are from a run started after the machine
+was confirmed idle.
+
 Two more were design decisions the run forced rather than defects:
 availability moved from preparation to execution (§17), and `carries_task_data`
 was separated from the privacy ceiling (§6).
@@ -1210,5 +1265,29 @@ A candidate for this phase would need the full three-builder run at a single
 commit, and §25 of the brief explicitly defers it until functionality, Linux
 validation, stress gates and measurements are complete — which is what this
 report is.
+
+---
+
+## Completion standard
+
+The brief's fifteen, and what each rests on.
+
+| | criterion | evidence |
+|---|---|---|
+| 1 | providers can only propose typed operations | §14; `test_desktop_authority.py::ImportGraph` |
+| 2 | ToolBroker remains the sole execution gateway | §15; slice steps 26–27, twenty times |
+| 3 | desktop adapters expose no generic execution surface | §7; `AdapterSurface`, `DbusSurface`, `CommandSurface` |
+| 4 | exact targets and data disclosure are approval-bound | §8; the requirement's declaration *is* the binding material |
+| 5 | changed actions are rejected after approval | §8, §20; ten conditions, two of them checked twice |
+| 6 | no arbitrary shell, D-Bus, keyboard or mouse control exists | §7, §13; asserted as an absence of code, not of permission |
+| 7 | at least three genuine desktop actions execute successfully | §23; **four action types, five executions** — notification, application launch, volume (set and again to undo), clipboard |
+| 8 | at least one reversible action is verified and undone | §23; volume 100% → 50% → 100%, both `confirmed` by read-back |
+| 9 | cancellation prevents or accurately records side effects | §10; and a cancellation that could not prevent records `unknown` |
+| 10 | incomplete actions are not repeated automatically | §21; `unknown` is refused, and a new decision is required |
+| 11 | headless systems fail safely | §17; the whole Windows slice run is one |
+| 12 | the 100/50/20 gates pass on one commit | §22 |
+| 13 | Linux memory and latency are measured | §24 |
+| 14 | the installed provider-driven slice passes | §23; 29/30 with one honest NOT_RUN |
+| 15 | no release or reproducibility qualification is claimed | §30; stated, not implied |
 
 ---

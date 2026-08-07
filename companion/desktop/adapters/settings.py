@@ -41,7 +41,7 @@ from .base import (
     unsupported_outcome,
     verified,
 )
-from .command import capture_command, have, run_command
+from .command import DetachedChildren, capture_command, have, run_command
 
 __all__ = ["DESKTOP_ENVIRONMENTS", "SettingsAdapter", "current_desktop"]
 
@@ -103,6 +103,9 @@ class SettingsAdapter:
 
     def __init__(self, desktop: str = "") -> None:
         self._desktop = desktop or current_desktop()
+        #: Settings windows this build opened. Started to outlive the call and
+        #: never killed; see :class:`~companion.desktop.adapters.command.DetachedChildren`.
+        self._windows = DetachedChildren()
 
     @property
     def desktop(self) -> str:
@@ -207,26 +210,40 @@ class SettingsAdapter:
             program = "systemsettings" if have("systemsettings") else "systemsettings5"
             arguments = [module]
 
-        # The settings program keeps running once opened, so this is started and
-        # not waited for: a short timeout that reaps it would close the window
-        # the user was just shown. `run_command`'s timeout is the *start*
-        # window, and the program is expected to outlive it.
-        outcome = run_command(program, arguments, timeout_seconds=2.0)
-        if outcome.start_error:
-            return failure(program, outcome.start_error)
-        if outcome.exit_code not in (None, 0) and not outcome.timed_out:
-            return failure(program, outcome.stderr or f"{program} exited {outcome.exit_code}")
+        # Started and let go, not run and waited for.
+        #
+        # `run_command` terminates a child that outlives its timeout, which is
+        # right for `pactl` and wrong for anything with a window: it would open
+        # the settings page and kill it two seconds later, and the user would
+        # see it flash. A settings program is expected to outlive this call, so
+        # it is spawned detached and reaped rather than waited for.
+        ok, detail = self._windows.spawn(program, arguments)
+        if not ok:
+            return failure(program, detail)
         return _timed(
             acknowledged(
                 program,
                 detail=(
-                    f"{program} was started for the {page} page; whether it drew a window is "
-                    "not observable from here"
+                    f"{program} was started for the {page} page and left running; "
+                    f"{detail}. Whether it drew a window is not observable from here"
                 ),
                 page=page,
             ),
             started,
         )
+
+    def reap(self) -> int:
+        """Wait for settings windows that have since closed. Signals nothing.
+
+        A window still open when the broker stops stays open: it is the user's,
+        and closing it would be a second act nobody approved. What this releases
+        is the process-table entry of one that has already gone.
+        """
+        return self._windows.reap()
+
+    @property
+    def open_windows(self) -> int:
+        return self._windows.outstanding
 
     # -- do-not-disturb ----------------------------------------------------
 

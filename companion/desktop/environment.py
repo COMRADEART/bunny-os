@@ -217,6 +217,10 @@ class DesktopAdapters:
             released = {
                 "portalHandles": len(self.portal.release_all(reason)),
                 "clipboardOwners": self.clipboard.release_all(reason),
+                # Settings windows are *reaped*, never signalled. One still open
+                # is the user's window; one that has closed is a process-table
+                # entry this build owes the machine.
+                "settingsWindowsReaped": self.settings.reap(),
             }
             # Notifications already delivered stay delivered. §10 requires
             # completed effects to be preserved honestly, so this drops the

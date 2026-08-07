@@ -59,6 +59,7 @@ __all__ = [
     "ALLOWED_EXECUTABLES",
     "BackgroundChild",
     "CommandUnavailable",
+    "DetachedChildren",
     "capture_command",
     "desktop_environment",
     "have",
@@ -264,6 +265,105 @@ def capture_command(
     if completed.returncode != 0:
         return None
     return completed.stdout[:MAX_CAPTURED_BYTES].decode("utf-8", errors="replace")
+
+
+class DetachedChildren:
+    """Programs started to outlive the call, and the only thing owed to them.
+
+    A settings window is not a command. :func:`run_command` waits for a child
+    and, on timeout, terminates it — which is right for ``pactl`` and wrong for
+    anything with a window, because it would open the page and then kill it two
+    seconds later. The user would see it flash.
+
+    So these are started and let go. What is still owed is **reaping**: a child
+    that exits and is never waited for is a zombie for as long as this process
+    lives, and §23 counts zombies across a hundred iterations. :meth:`reap` polls
+    and drops the finished ones; it is called on every spawn and at shutdown,
+    and it never signals anything. A program still running when the broker stops
+    stays running, because it is the user's window and not ours to close.
+    """
+
+    #: How long to watch a new child before deciding it started. Long enough to
+    #: catch "the program exited immediately with an error", short enough not to
+    #: sit in the latency figure for a window that opens fine.
+    SETTLE_SECONDS = 0.2
+
+    def __init__(self) -> None:
+        self._guard = threading.RLock()
+        self._children: list[Any] = []
+
+    def spawn(self, name: str, arguments: Sequence[str]) -> tuple[bool, str]:
+        """Start one allowlisted program and let it live. Returns (ok, detail)."""
+        if name not in ALLOWED_EXECUTABLES:
+            raise CommandUnavailable(
+                f"{name!r} is not in the desktop broker's executable allowlist"
+            )
+        for item in arguments:
+            if not isinstance(item, str) or "\x00" in item:
+                raise CommandUnavailable(f"an argument to {name} is not a usable string")
+        try:
+            executable, _trusted = resolve_executable(name, allowlist=ALLOWED_EXECUTABLES)
+        except ExecutableRefused as exc:
+            raise CommandUnavailable(str(exc)) from None
+
+        self.reap()
+        keywords: dict[str, Any] = {}
+        if os.name == "posix":
+            keywords["start_new_session"] = True
+        try:
+            process = subprocess.Popen(  # noqa: S603 - argv array, allowlisted, built environment
+                [executable, *arguments],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                env=desktop_environment(),
+                close_fds=True,
+                **keywords,
+            )
+        except OSError as exc:
+            return False, f"{name} could not be started: {exc}"
+        with self._guard:
+            self._children.append(process)
+
+        time.sleep(self.SETTLE_SECONDS)
+        code = process.poll()
+        if code is not None and code != 0:
+            detail = ""
+            if process.stderr is not None:
+                try:
+                    detail = (process.stderr.read(2048) or b"").decode("utf-8", "replace").strip()
+                except (OSError, ValueError):
+                    detail = ""
+            return False, detail or f"{name} exited {code} immediately"
+        return True, (
+            f"{name} exited cleanly, having handed the request to the running instance"
+            if code == 0 else f"{name} is running"
+        )
+
+    def reap(self) -> int:
+        """Wait for the ones that have exited. Signals nothing. Returns how many."""
+        reaped = 0
+        with self._guard:
+            remaining = []
+            for process in self._children:
+                if process.poll() is None:
+                    remaining.append(process)
+                    continue
+                reaped += 1
+                for stream in (process.stdout, process.stderr, process.stdin):
+                    if stream is not None:
+                        try:
+                            stream.close()
+                        except (OSError, ValueError):
+                            pass
+            self._children = remaining
+        return reaped
+
+    @property
+    def outstanding(self) -> int:
+        """Children still running. Not a leak: they are windows a user opened."""
+        with self._guard:
+            return sum(1 for item in self._children if item.poll() is None)
 
 
 @dataclass
