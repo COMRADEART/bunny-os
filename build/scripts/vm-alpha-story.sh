@@ -42,12 +42,20 @@ user="${BUNNY_ALPHA_USER:-bunny}"
 
 bunny_require_commands qemu-system-x86_64 virt-customize git python3 || exit 3
 
-# -not -path '*/alpha-story/*' matters: this harness copies the disk it is about
-# to boot into a work directory under the same tree, so a later run would
-# otherwise find a previous run's mutated copy and boot that. The evidence would
-# be of a system somebody had already customised.
-source_image="$(find "build/out/${profile}" -type f -name '*.qcow2' \
-  -not -path '*/alpha-story/*' -print -quit 2>/dev/null)"
+# BUNNY_ALPHA_IMAGE names the disk explicitly. It exists so the harness can run
+# from a worktree while the image lives in the tree that built it — a build takes
+# tens of minutes and resetting the checkout underneath one to pick up a harness
+# change is how a build gets corrupted.
+#
+# -not -path '*/alpha-story/*' matters for the search: this harness copies the
+# disk it is about to boot into a work directory under the same tree, so a later
+# run would otherwise find a previous run's mutated copy and boot that. The
+# evidence would be of a system somebody had already customised.
+source_image="${BUNNY_ALPHA_IMAGE:-}"
+if [[ -z "${source_image}" ]]; then
+  source_image="$(find "build/out/${profile}" -type f -name '*.qcow2' \
+    -not -path '*/alpha-story/*' -print -quit 2>/dev/null)"
+fi
 if [[ -z "${source_image}" ]]; then
   echo "no qcow2 under build/out/${profile}; run make build-alpha-image first" >&2
   exit 2
