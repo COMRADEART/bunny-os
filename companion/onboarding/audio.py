@@ -171,34 +171,37 @@ def survey_audio(
     monotonic: float = 0.0,
 ) -> AudioSurvey:
     """Enumerate output and input devices and find a voice. Never raises."""
-    if output_backends is None:
-        try:
-            from ..voice.audio import local_backends
-
-            output_backends = local_backends()
-        except Exception as error:
-            output_backends = ()
-            outputs, output_backend, output_detail = (), "", f"audio backends unavailable: {error}"
-    if output_backends is not None:
-        outputs, output_backend, output_detail = _enumerate(output_backends)
-
-    if input_backends is None:
-        try:
-            from ..speech.capture import local_capture_backends
-
-            input_backends = local_capture_backends()
-        except Exception as error:
-            input_backends = ()
-            inputs, input_backend, input_detail = (), "", f"capture backends unavailable: {error}"
-    if input_backends is not None:
-        inputs, input_backend, input_detail = _enumerate(input_backends)
-
+    outputs, output_backend, output_detail = _side(output_backends, "voice.audio")
+    inputs, input_backend, input_detail = _side(input_backends, "speech.capture")
     voice_available, voice_id, voice_detail = _voice(voice_providers, monotonic=monotonic)
     return AudioSurvey(
         outputs=outputs, output_backend=output_backend, output_detail=output_detail,
         inputs=inputs, input_backend=input_backend, input_detail=input_detail,
         voice_available=voice_available, voice_id=voice_id, voice_detail=voice_detail,
     )
+
+
+def _side(backends: Sequence[Any] | None, module: str) -> tuple[tuple[AudioDeviceFinding, ...], str, str]:
+    """One direction — playback or capture — discovered and enumerated.
+
+    Both directions used to be written out inline, and both had the same bug:
+    the ``except`` branch set a detail naming the import failure and then fell
+    into the enumeration, which overwrote it with "no audio backend answered".
+    A machine whose audio package was missing entirely reported the same
+    sentence as a machine whose sound server was down, and the two need
+    different remedies.
+    """
+    if backends is None:
+        try:
+            if module == "voice.audio":
+                from ..voice.audio import local_backends as discover
+            else:
+                from ..speech.capture import local_capture_backends as discover
+
+            backends = discover()
+        except Exception as error:
+            return (), "", f"the {module} backends could not be built: {error}"
+    return _enumerate(backends)
 
 
 def _voice(providers: Any, *, monotonic: float) -> tuple[bool, str, str]:
