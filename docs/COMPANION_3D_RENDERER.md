@@ -72,6 +72,8 @@ stamp on a machine without graphics.
 
 | Module | What it owns |
 |---|---|
+| `three_d/__init__.py` | the schema and renderer API versions, and the two rung names |
+| `three_d/errors.py` | the typed refusals, all descended from `CharacterError` |
 | `three_d/limits.py` | every validator bound, as data, clamped to a hard ceiling |
 | `three_d/glb.py` | the GLB container and glTF safe-subset validator |
 | `three_d/skeleton.py` | the Bunny humanoid profile and its alias resolution |

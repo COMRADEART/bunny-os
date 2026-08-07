@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import tempfile
 import unittest
 
 from companion.character.defaults import default_3d_character_path
@@ -312,6 +313,95 @@ class ResourceTests(unittest.TestCase):
         self.assertGreater(renderer.observed_memory_bytes, 0)
         renderer.release()
         self.assertEqual(renderer.observed_memory_bytes, 0)
+
+
+class PresenterPathTests(unittest.TestCase):
+    """The production path: a projection in, a 3D frame out, through the ladder.
+
+    Every other test in this file drives ``ThreeDRenderer`` directly, which is
+    the right way to test a renderer and the wrong way to test that the renderer
+    is *reachable*. This one starts at
+    :class:`companion.character.surface.CharacterPresenter` — the thing the GTK
+    client actually holds — hands it a canonical
+    :class:`companion.presentation.PresentationState`, and asserts that a 3D
+    renderer was selected by the ladder and drew the frame.
+    """
+
+    def setUp(self) -> None:
+        self.context = _context_or_skip()
+        self.addCleanup(self.context.release)
+        _package_or_skip()
+        self.temporary = tempfile.TemporaryDirectory(prefix="bunny-3d-presenter-")
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+
+    def _presenter(self):
+        from capability.runtime import assess_current_machine
+        from companion.character.diagnostics import registry_for
+        from companion.character.surface import CharacterPresenter
+
+        registry = registry_for(self.root)
+        built_in = [item for item in registry.built_ins() if item.package_id == "bunny-default-3d"]
+        if not built_in:
+            self.skipTest("the built-in 3D package is not registered here")
+        registry.select("bunny-default-3d", package_digest=built_in[0].package_digest)
+        presenter = CharacterPresenter(
+            self.root,
+            assessment=assess_current_machine(),
+            three_d_context=lambda: self.context,
+            three_d_seed=0x11,
+        )
+        self.addCleanup(presenter.controller.unload_package)
+        return presenter
+
+    def _state(self, phase: str):
+        from companion.presentation import PresentationRecommendation, PresentationState
+
+        return PresentationState(
+            phase=phase,
+            status_text="Bunny is here.",
+            recommendation=PresentationRecommendation(
+                implementation="full-3d", eligible="full-3d",
+                limited_by_implementation=False, placement="docked", captions=True,
+                plan_id="plan-presenter-test",
+            ),
+        )
+
+    def test_the_presenter_selects_the_3d_renderer_and_draws(self) -> None:
+        presenter = self._presenter()
+        self.assertIsNotNone(
+            presenter.package.model, "the selected package carries no validated model"
+        )
+        update = presenter.update(
+            self._state("working"), now=1.0, now_ms=1000,
+            signal_overrides={
+                "display_available": True, "graphics_ready": True, "gpu_available": True,
+                "available_memory_bytes": 8 * 1024 ** 3, "three_d_available": True,
+            },
+        )
+        self.assertEqual(update.effective_presentation, "full-3d")
+        self.assertEqual(presenter.controller.renderer.renderer_name, "full-3d")
+        self.assertIsNotNone(update.frame)
+        self.assertEqual(
+            update.snapshot.mapped_state.character_state.value, "working",
+            "the canonical phase did not reach the character",
+        )
+        described = presenter.describe()["threeDimensionalRenderer"]
+        self.assertEqual(described["renderer"], "full-3d")
+        self.assertIsNotNone(described["model"])
+
+    def test_the_presenter_degrades_to_2d_without_a_gpu(self) -> None:
+        presenter = self._presenter()
+        update = presenter.update(
+            self._state("working"), now=1.0, now_ms=1000,
+            signal_overrides={
+                "display_available": True, "graphics_ready": True, "gpu_available": True,
+                "available_memory_bytes": 8 * 1024 ** 3, "three_d_available": False,
+            },
+        )
+        self.assertEqual(update.effective_presentation, "animated-2d")
+        self.assertEqual(presenter.controller.renderer.renderer_name, "animated-2d")
+        self.assertIsNotNone(update.frame)
 
 
 class ContextLossTests(unittest.TestCase):

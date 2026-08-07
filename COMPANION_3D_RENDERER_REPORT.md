@@ -8,7 +8,7 @@
 | Starting commit | `fa49380dadf0aa90690c4f2be5b483b16a56c0db` (verified head of the base branch; working tree clean) |
 | Branch | `feature/companion-3d-renderer` |
 | First source commit | `8bd18d7a62831b553b1505f0967ceaa2dfe0d991` — "A ladder that had two rungs nobody had built" |
-| Gate commit | `9fd10b89deb8fee4aefaee87a84752889f4a7e3c` — every gate iteration records it |
+| Gate commit | `ceda691871bd2470219a2ba78a945cdb5efb5735` — every gate iteration records it |
 | Evidence commit | *(the commit that adds `qualification/companion-3d-renderer/evidence/` and this report)* |
 | Final SHA | *(the closure commit that follows, which edits only this table and §3's post-gate paragraph)* |
 
@@ -53,14 +53,15 @@ earlier claim.
 
 ## 3. Build-input impact
 
-The analyser over `fa49380..9fd10b8` — the base to the gate commit — reports
-**52 installed, 6 context-only, 14 unreachable**. Profiles affected: `beta`,
+The analyser over `fa49380..ceda691` — the base to the gate commit — reports
+**54 installed, 6 context-only, 14 unreachable**. Profiles affected: `beta`,
 `desktop`, `developer`, `live`, `minimal`, `recovery`, `shell`, `shell-test`.
 
 | Group | Paths | Route | Destination |
 |---|---|---|---|
 | the built-in 3D character package | 19 | `character-packages`, tree | `/usr/share/bunny-os/companion/characters/default-bunny-3d/` |
 | the companion Python package | 33 | `companion-package`, package | `/usr/lib/bunny-os/python/companion/` |
+| the two published JSON schemas | 2 | `schemas`, tree | `/usr/share/bunny-os/schemas/` |
 
 **No new install route and no new destination.** The 3D subsystem lands under
 the existing `companion` package route and the character package under the
@@ -79,7 +80,15 @@ no route installs: `scripts/build_default_character_3d.py`,
 `scripts/ops/renderer3d-collect.py`, `scripts/ops/renderer3d-gates.sh`,
 `scripts/ops/renderer3d-memory.py`.
 
-**Post-gate range:** *(recorded in §32 after the gates)*
+**No image was built and nothing was installed.** The routes above are what the
+analyser resolved from `build/scripts/install_routes.py` — the same declaration
+`install-root.py` is driven by, which is the point of that file existing — and
+`install_routes.audit_installer` passed, so the analyser made a claim rather than
+refusing to. Whether the bytes land correctly in a built image is a question
+only a build answers, and building one is a reproducibility candidate this phase
+was told not to create. §39 says so again.
+
+**Post-gate range:** *(recorded below after the evidence commit)*
 
 **Every commit changes the OCI configuration digest** through the revision label
 and `/usr/lib/bunny-os/release.json`. An unchanged layer digest is not an
@@ -130,7 +139,7 @@ CharacterRendererController        companion/character/controller.py
 ThreeDRenderer                     companion/character/three_d/renderer.py
 ```
 
-Seventeen modules under `companion/character/three_d/`, listed with what each
+Nineteen modules under `companion/character/three_d/`, listed with what each
 owns in `docs/COMPANION_3D_RENDERER.md`. The renderer implements the existing
 `companion.character.renderer.CharacterRenderer` contract, so the controller
 drives it exactly as it drives the static and animated-2D renderers — same
@@ -678,8 +687,8 @@ It also fails on `socket`, `http`, `urllib`, `requests`, `ssl`, `subprocess`,
 `sounddevice` or `AudioCapture` in the source.
 
 What may cross is enumerated as `PERMITTED_COMPANION_IMPORTS` — the presentation
-contract and the validated-package contract, eleven modules — so adding a
-twelfth is a decision recorded in that test file rather than a line in a diff.
+contract and the validated-package contract, twelve modules — so adding a
+thirteenth is a decision recorded in that test file rather than a line in a diff.
 
 **The §33 slice lives outside the boundary**, at
 `companion/character/three_d_slice.py`. It was inside for about an hour, and
@@ -804,7 +813,7 @@ Evidence: `qualification/companion-3d-renderer/evidence/gtk-wayland.json`.
 | surface creation | **pass** — `Gtk.GLArea` realized, desktop-GL context created |
 | transparent presentation | **requested and reported supported** — `alphaSupported: true`; whether the desktop composited it that way was not photographed |
 | character visibility | **pass** — frames rendered with the character drawn |
-| 3D frame drawing | **pass** — 134 frames in an 8-second window |
+| 3D frame drawing | **pass** — 292 frames in an 8-second window |
 | animation playback | **pass** — nine canonical states driven through the widget |
 | resize | **pass** — 2 resizes handled, surface size and camera aspect updated |
 | scale change | **pass** — 1 scale change |
@@ -819,8 +828,8 @@ Evidence: `qualification/companion-3d-renderer/evidence/gtk-wayland.json`.
 
 Zero GLib criticals, zero errors, zero context losses.
 
-Frame timing under the compositor's own clock: first frame **7.0 ms**, mean
-**1.14 ms**, p95 **1.71 ms** over 134 frames, on a software rasteriser.
+Frame timing under the compositor's own clock: mean **1.11 ms**, p95 **1.74 ms**
+over 292 frames, on a software rasteriser.
 
 One environmental note recorded because it explains the warnings in the log: the
 host exposes a `dzn` (D3D12-on-Vulkan) ICD and a PowerVR ICD, and Mesa refuses
@@ -885,7 +894,59 @@ the result, the graphics context, the pixels — is real.
 
 ## 32. Stress gates
 
-*(filled in after the gates)*
+**All three gates ran on one exact commit: `ceda691871bd2470219a2ba78a945cdb5efb5735`.**
+Every iteration of every gate records that commit in its own record — per
+iteration rather than once per run, so a tree that moved underneath a gate could
+not be hidden by a header.
+
+Host: Fedora Linux 44 on WSL2 (kernel `6.18.33.2-microsoft-standard-WSL2`),
+Python 3.14.3, Mesa 26.1.5 (`llvmpipe`), GTK 4.22.4. The trees are ext4 copies,
+never `/mnt/c` — a package under DrvFs presents every file as 0777 and the
+character validator correctly refuses an executable file in a package.
+
+| Gate | Required | Result |
+|---|---|---|
+| 3D-renderer lifecycles | 100 consecutive | *(filled in)* |
+| complete companion suites | 50 consecutive | *(filled in)* |
+| installed 3D vertical slices | 20 consecutive | *(filled in)* |
+
+**Which user each gate runs as.** Gates 1 and 3 run as `root`: WSLg gives root
+the graphical session and the EGL device. Gate 2 runs as `bunny`, because root
+ignores read-only-directory permission bits and
+`test_store_durability…test_a_read_only_directory_fails_before_any_replacement`
+therefore cannot pass as root — and excluding it would mean not running the
+complete suite. That single failure is reproduced and recorded in
+`linux-suite-root.log` so the difference is visible rather than asserted.
+
+Per-iteration tracking, from `scripts/companion_stress.py`'s inventories:
+
+thread delta, non-daemon thread delta, file-descriptor delta, socket-descriptor
+delta, unix companion sockets, live services, live runtimes, temporary
+directories, child processes, zombies, **GPU contexts**, **live GPU contexts**,
+**renderers**, **active models**, **GL objects**, **textures**, **buffers**,
+**vertex arrays**, **shader programs**, **framebuffers**, **animation timers**,
+**GTK GL areas**, **renderer workers**, RSS, plus the absolutes (queue depth,
+active requests, executor leases, consent waiters, held answers, pending
+approvals, locked stores), the ledger's own `leakSuspicions`, task identity,
+exit status and duration.
+
+**The verdict rule**, unchanged from the earlier phases: a *growth* between
+iterations is a failure and a *cleanup* is not, the verdict is taken on the
+**net** rather than on the sum of positives, and **iteration 1 is measured and
+does not fail the gate** — a renderer's first run compiles three shader
+programs, maps the driver and decodes a texture, and every run after it does
+none of that. Summing from iteration 2 means a real leak of one object per run
+still totals ninety-nine and still fails.
+
+Two columns are this phase's own and neither is a delta. `glTableLoadedAtEnd` is
+§30 in counter form: whether `companion.character.three_d.gl._LOADED` is set at
+the end of a run. It is *correct* for the 3D gates and would be *wrong* for a
+suite gate that never selected a 3D presentation, so the collector reports the
+value rather than a verdict. `leakSuspicions` is the resource ledger's own record
+of a driver call that raised during release; it is failed on, because unlike a
+counter it names the object that could not be given back.
+
+Evidence: `qualification/companion-3d-renderer/evidence/`.
 
 ## 33. Performance measurements
 
@@ -952,8 +1013,8 @@ From the 20-iteration slice gate (`renderer3d-measurements.json`), 20 samples:
 From a 241-frame offscreen run at 288×360: first frame **7.4 ms**, mean
 **1.17 ms**, p95 **3.09 ms**, max **10.2 ms**, **0 dropped**.
 
-From the GTK probe under WSLg, on the compositor's own clock: first frame
-**7.0 ms**, mean **1.14 ms**, p95 **1.71 ms** over 134 frames.
+From the GTK probe under WSLg, on the compositor's own clock: mean **1.11 ms**,
+p95 **1.74 ms** over 292 frames.
 
 The first frame is the expensive one everywhere, and it is where three shader
 programs are compiled and linked. It is measured separately for that reason,
@@ -980,7 +1041,62 @@ the frame that draws it, so its latency is the frame time.
 
 ## 34. Complete test results
 
-*(filled in after the gates)*
+### The 3D suites
+
+**227 tests, all passing, zero failures.** On Linux every one runs; on Windows
+the graphics ones skip rather than pass.
+
+| Module | Tests | Linux | Windows |
+|---|---|---|---|
+| `test_three_d_security.py` | 69 | 69 pass | 69 pass |
+| `test_three_d_animation.py` | 50 | 50 pass | 50 pass |
+| `test_three_d_package.py` | 38 | 38 pass | 38 pass |
+| `test_three_d_ladder.py` | 27 | 27 pass | 27 pass |
+| `test_three_d_diagnostics.py` | 16 | 16 pass | 8 pass, 8 skip (no graphics) |
+| `test_three_d_render.py` | 17 | 17 pass | skipped (no graphics) |
+| `test_three_d_isolation.py` | 11 | 11 pass | 11 pass |
+| `test_three_d_preservation.py` | 4 | 4 pass | 4 pass |
+
+`test_three_d_render.py` is the file the ladder's claim stands on: it creates a
+real OpenGL context, uploads the shipped model, draws frames and reads the
+pixels back. It **skips rather than passes** where no context can be made, so it
+cannot become a rubber stamp on a machine without graphics.
+
+### The companion suite
+
+| Where | Tests | Result |
+|---|---|---|
+| Windows 11, Python 3.14.3 | 1,731 | OK, 52 skipped |
+| Fedora 44 WSL2, as `root` | 1,746 | 1 failure, 2 skipped — the read-only-directory test, which cannot pass as root |
+| Fedora 44 WSL2, as `bunny` | 1,746 | *(filled in from the gate run)* |
+| `tests/image` (build-input closure) | 50 | OK |
+
+The Linux runs execute fifteen more tests and skip fifty fewer than Windows,
+because the graphics tests run there.
+
+### Changed tests, and why
+
+Four existing tests asserted that 3D was *not* implemented. Each was the line
+holding the claim out, so each was changed to say what let it in rather than
+deleted:
+
+* `test_only_implemented_presentations_can_be_selected` now asserts the 3D rungs
+  are present **and** that `tests/companion/test_three_d_render.py` exists —
+  a rung may be claimed only if the file that draws with it does.
+* `test_a_capable_machine_is_given_animation_but_never_3d` became
+  `test_a_capable_machine_is_now_given_the_3d_rung_it_was_always_eligible_for`,
+  and two new tests were added beside it: a machine with no GPU is still not
+  eligible, and a mid-memory machine gets the lightweight rung.
+* `test_unsupported_presentation_type_is_rejected` used `full-3d` as its example
+  of a reserved name. It now uses `skeletal-2d`, which is still reserved, and a
+  second test asserts a 2D package cannot claim a 3D presentation.
+* `test_renderer_explain_shows_state_fallback_and_trust` asserted the diagnostic
+  note named `animated-2d` as the top of what the build implements. There is no
+  longer a rung above what is implemented, so it asserts what the note is *for*.
+
+Two schema tests were rewritten to compare the published JSON schema against
+`IMPLEMENTED_PRESENTATIONS` rather than repeating a literal list, so the contract
+and the implementation cannot drift apart in either direction.
 
 ## 35. Known limitations
 
