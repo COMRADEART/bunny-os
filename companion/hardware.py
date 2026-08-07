@@ -452,15 +452,33 @@ def operational_probes(
         )
 
     # -- portal, file manager, URI handler -----------------------------------
+    #
+    # ``probe_environment`` takes the adapter set it is to ask. Calling it with
+    # none raised ``missing 1 required positional argument``, the exception was
+    # caught, and all three capabilities were reported unavailable with the
+    # TypeError as their reason — on a machine where the portal was running.
+    # Found on the first booted image, where the record said "the desktop
+    # environment probe did not run" three times and read like a finding.
+    adapters = None
     if desktop_report is None:
         try:
-            from .desktop.environment import probe_environment
+            from .desktop.environment import DesktopAdapters, probe_environment
 
-            desktop_report = probe_environment()
+            adapters = DesktopAdapters()
+            desktop_report = probe_environment(adapters)
         except Exception as error:
             desktop_report = None
             for capability in ("portal", "file-manager", "uri-handler"):
                 add(capability, False, f"the desktop environment probe did not run: {error}")
+        finally:
+            # Released here. The probe opens bus connections, and a capability
+            # record that leaked one per call would show up in the §42 resource
+            # deltas as a leak in whatever ran it.
+            if adapters is not None:
+                try:
+                    adapters.close()
+                except Exception:
+                    pass
     if desktop_report is not None:
         for capability, action_id in (
             ("portal", "desktop.open_uri"),

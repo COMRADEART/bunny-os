@@ -440,6 +440,25 @@ class HardwareRecordTests(unittest.TestCase):
                 f"{probe.capability} does not say which hardware fact it refuses to infer from",
             )
 
+    def test_the_desktop_probe_is_given_its_adapters(self) -> None:
+        """``probe_environment`` takes the adapter set it is to ask.
+
+        Calling it with none raises ``missing 1 required positional argument``,
+        the exception is caught, and all three desktop capabilities are reported
+        unavailable with the TypeError as their reason — on a machine where the
+        portal is running. The first booted image's capability record said "the
+        desktop environment probe did not run" three times and read like a
+        finding about the machine.
+        """
+        probes = operational_probes(
+            provider_survey=LocalProviderSurvey(), speech_survey=SpeechSurvey(),
+            audio_survey=_StubAudio(), three_d=(False, "stubbed"),
+        )
+        for probe in probes:
+            if probe.capability in ("portal", "file-manager", "uri-handler"):
+                self.assertNotIn("missing 1 required positional argument", probe.detail)
+                self.assertNotIn("did not run", probe.detail)
+
     def test_the_record_states_the_rule(self) -> None:
         record = capability_record(
             provider_survey=LocalProviderSurvey(), speech_survey=SpeechSurvey(),
