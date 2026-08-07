@@ -534,11 +534,78 @@ def combine(*rotations: tuple[float, float, float, float]) -> tuple[float, float
 
 
 def rotate(**parts: float) -> tuple[float, float, float, float]:
-    """``rotate(x=10, z=-4)`` — degrees, applied X then Y then Z."""
+    """``rotate(x=10, z=-4)`` — degrees, applied Z, then Y, then X."""
     return combine(*(quaternion(axis, parts[axis]) for axis in ("x", "y", "z") if axis in parts))
 
 
+def aim(axis: tuple[float, float, float], target: Sequence[float]) -> tuple[float, float, float, float]:
+    """The shortest rotation taking a bone's rest ``axis`` to point at ``target``.
+
+    Euler angles are how the first version of this table was written and they
+    were wrong in a way that only a rendered picture showed: an arm along +X
+    rotated about X spins about its own length and does nothing visible, so
+    every "reach forward" pose in the table reached sideways instead. The
+    working, typing and researching clips all read as a shrug.
+
+    Aiming is not open to that mistake. ``aim(LEFT_ARM, FORWARD_DOWN)`` says
+    where the arm ends up, and the arithmetic finds the rotation — so a reader
+    of this table can see the pose without simulating quaternion composition in
+    their head, and a pose that is wrong is wrong in a way the words show.
+    """
+    source = normalise(axis)
+    destination = normalise(target)
+    dot = sum(a * b for a, b in zip(source, destination))
+    if dot > 0.999999:
+        return (0.0, 0.0, 0.0, 1.0)
+    if dot < -0.999999:
+        # Opposite directions: any perpendicular axis, half a turn.
+        perpendicular = (0.0, 0.0, 1.0) if abs(source[2]) < 0.9 else (1.0, 0.0, 0.0)
+        cross_axis = normalise((
+            source[1] * perpendicular[2] - source[2] * perpendicular[1],
+            source[2] * perpendicular[0] - source[0] * perpendicular[2],
+            source[0] * perpendicular[1] - source[1] * perpendicular[0],
+        ))
+        return (cross_axis[0], cross_axis[1], cross_axis[2], 0.0)
+    cross_axis = (
+        source[1] * destination[2] - source[2] * destination[1],
+        source[2] * destination[0] - source[0] * destination[2],
+        source[0] * destination[1] - source[1] * destination[0],
+    )
+    scalar = math.sqrt((1.0 + dot) * 2.0)
+    inverse = 1.0 / scalar
+    return (
+        cross_axis[0] * inverse, cross_axis[1] * inverse, cross_axis[2] * inverse, scalar * 0.5,
+    )
+
+
+#: Rest directions, from BIND: each bone points at its child.
+LEFT_ARM = (1.0, 0.0, 0.0)
+RIGHT_ARM = (-1.0, 0.0, 0.0)
+
+
+def left(x: float, y: float, z: float) -> tuple[float, float, float, float]:
+    """Aim the left upper arm. ``+x`` is out, ``+y`` is up, ``+z`` is forward."""
+    return aim(LEFT_ARM, (x, y, z))
+
+
+def right(x: float, y: float, z: float) -> tuple[float, float, float, float]:
+    """Aim the right upper arm, mirrored: ``+x`` is still *out* from the body."""
+    return aim(RIGHT_ARM, (-x, y, z))
+
+
 REST = (0.0, 0.0, 0.0, 1.0)
+
+#: Named arm directions, so a clip reads as a pose rather than as arithmetic.
+DOWN = (0.22, -0.97, 0.0)
+DOWN_RELAXED = (0.30, -0.95, 0.05)
+FORWARD_LOW = (0.34, -0.55, 0.76)
+FORWARD = (0.30, -0.28, 0.91)
+FORWARD_WIDE = (0.62, -0.35, 0.70)
+OUT = (0.94, -0.20, 0.28)
+UP = (0.42, 0.90, 0.10)
+UP_HIGH = (0.24, 0.96, 0.12)
+TO_CHIN = (0.30, 0.42, 0.85)
+ACROSS = (-0.20, -0.30, 0.93)
 
 #: Every clip: name -> (duration, loop, {bone: [(time, rotation), ...]}).
 #:
@@ -547,49 +614,49 @@ REST = (0.0, 0.0, 0.0, 1.0)
 CLIPS: dict[str, tuple[float, bool, dict[str, list[tuple[float, tuple[float, float, float, float]]]]]] = {
     "idle": (4.0, True, {
         "spine": [(0.0, REST), (2.0, rotate(z=1.2)), (4.0, REST)],
-        "left_upper_arm": [(0.0, rotate(z=-72.0)), (2.0, rotate(z=-70.0)), (4.0, rotate(z=-72.0))],
-        "right_upper_arm": [(0.0, rotate(z=72.0)), (2.0, rotate(z=70.0)), (4.0, rotate(z=72.0))],
+        "left_upper_arm": [(0.0, left(*DOWN)), (2.0, left(0.26, -0.96, 0.04)), (4.0, left(*DOWN))],
+        "right_upper_arm": [(0.0, right(*DOWN)), (2.0, right(0.26, -0.96, 0.04)), (4.0, right(*DOWN))],
         "left_lower_arm": [(0.0, rotate(y=-8.0)), (4.0, rotate(y=-8.0))],
         "right_lower_arm": [(0.0, rotate(y=8.0)), (4.0, rotate(y=8.0))],
         "head": [(0.0, REST), (2.0, rotate(x=1.5)), (4.0, REST)],
     }),
     "greeting": (2.0, False, {
         "right_upper_arm": [
-            (0.0, rotate(z=72.0)), (0.4, rotate(z=140.0)), (0.9, rotate(z=150.0)),
-            (1.4, rotate(z=140.0)), (2.0, rotate(z=72.0)),
+            (0.0, right(*DOWN)), (0.4, right(*UP)), (0.9, right(*UP_HIGH)),
+            (1.4, right(*UP)), (2.0, right(*DOWN)),
         ],
         "right_lower_arm": [(0.0, REST), (0.6, rotate(y=22.0)), (1.2, rotate(y=-14.0)), (2.0, REST)],
-        "left_upper_arm": [(0.0, rotate(z=-72.0)), (2.0, rotate(z=-72.0))],
+        "left_upper_arm": [(0.0, left(*DOWN)), (2.0, left(*DOWN))],
         "head": [(0.0, REST), (0.8, rotate(x=-4.0, y=-6.0)), (2.0, REST)],
     }),
     "listening": (3.0, True, {
         "head": [(0.0, rotate(x=-5.0, z=6.0)), (1.5, rotate(x=-6.5, z=8.0)), (3.0, rotate(x=-5.0, z=6.0))],
         "neck": [(0.0, rotate(x=-3.0)), (1.5, rotate(x=-4.0)), (3.0, rotate(x=-3.0))],
         "spine": [(0.0, rotate(x=-2.5)), (3.0, rotate(x=-2.5))],
-        "left_upper_arm": [(0.0, rotate(z=-70.0)), (3.0, rotate(z=-70.0))],
-        "right_upper_arm": [(0.0, rotate(z=70.0)), (3.0, rotate(z=70.0))],
+        "left_upper_arm": [(0.0, left(*DOWN_RELAXED)), (3.0, left(*DOWN_RELAXED))],
+        "right_upper_arm": [(0.0, right(*DOWN_RELAXED)), (3.0, right(*DOWN_RELAXED))],
     }),
     "transcribing": (2.4, True, {
         "head": [(0.0, rotate(x=-3.0)), (0.6, rotate(x=-6.0)), (1.2, rotate(x=-3.0)), (1.8, rotate(x=-6.0)), (2.4, rotate(x=-3.0))],
-        "left_upper_arm": [(0.0, rotate(z=-70.0)), (2.4, rotate(z=-70.0))],
-        "right_upper_arm": [(0.0, rotate(z=70.0)), (2.4, rotate(z=70.0))],
+        "left_upper_arm": [(0.0, left(*DOWN_RELAXED)), (2.4, left(*DOWN_RELAXED))],
+        "right_upper_arm": [(0.0, right(*DOWN_RELAXED)), (2.4, right(*DOWN_RELAXED))],
     }),
     "understanding": (3.0, True, {
         "head": [(0.0, rotate(z=8.0, x=2.0)), (1.5, rotate(z=11.0, x=3.0)), (3.0, rotate(z=8.0, x=2.0))],
-        "right_upper_arm": [(0.0, rotate(z=28.0, x=-40.0)), (3.0, rotate(z=28.0, x=-40.0))],
+        "right_upper_arm": [(0.0, right(*TO_CHIN)), (3.0, right(*TO_CHIN))],
         "right_lower_arm": [(0.0, rotate(y=95.0)), (3.0, rotate(y=95.0))],
-        "left_upper_arm": [(0.0, rotate(z=-66.0)), (3.0, rotate(z=-66.0))],
+        "left_upper_arm": [(0.0, left(*DOWN)), (3.0, left(*DOWN))],
     }),
     "planning": (3.6, True, {
         "head": [(0.0, rotate(z=6.0)), (1.2, rotate(z=6.0, y=-8.0)), (2.4, rotate(z=6.0, y=8.0)), (3.6, rotate(z=6.0))],
-        "right_upper_arm": [(0.0, rotate(z=30.0, x=-38.0)), (3.6, rotate(z=30.0, x=-38.0))],
+        "right_upper_arm": [(0.0, right(*TO_CHIN)), (3.6, right(*TO_CHIN))],
         "right_lower_arm": [(0.0, rotate(y=90.0)), (3.6, rotate(y=90.0))],
-        "left_upper_arm": [(0.0, rotate(z=-40.0, x=-20.0)), (3.6, rotate(z=-40.0, x=-20.0))],
+        "left_upper_arm": [(0.0, left(*FORWARD_LOW)), (3.6, left(*FORWARD_LOW))],
         "left_lower_arm": [(0.0, rotate(y=-70.0)), (3.6, rotate(y=-70.0))],
     }),
     "working": (2.0, True, {
-        "left_upper_arm": [(0.0, rotate(z=-46.0, x=-52.0)), (1.0, rotate(z=-44.0, x=-58.0)), (2.0, rotate(z=-46.0, x=-52.0))],
-        "right_upper_arm": [(0.0, rotate(z=46.0, x=-52.0)), (1.0, rotate(z=44.0, x=-58.0)), (2.0, rotate(z=46.0, x=-52.0))],
+        "left_upper_arm": [(0.0, left(*FORWARD)), (1.0, left(0.28, -0.34, 0.90)), (2.0, left(*FORWARD))],
+        "right_upper_arm": [(0.0, right(*FORWARD)), (1.0, right(0.28, -0.34, 0.90)), (2.0, right(*FORWARD))],
         "left_lower_arm": [(0.0, rotate(y=-42.0)), (1.0, rotate(y=-52.0)), (2.0, rotate(y=-42.0))],
         "right_lower_arm": [(0.0, rotate(y=42.0)), (1.0, rotate(y=52.0)), (2.0, rotate(y=42.0))],
         "head": [(0.0, rotate(x=8.0)), (2.0, rotate(x=8.0))],
@@ -597,97 +664,98 @@ CLIPS: dict[str, tuple[float, bool, dict[str, list[tuple[float, tuple[float, flo
     }),
     "researching": (4.0, True, {
         "head": [(0.0, rotate(y=-16.0, x=5.0)), (2.0, rotate(y=16.0, x=5.0)), (4.0, rotate(y=-16.0, x=5.0))],
-        "left_upper_arm": [(0.0, rotate(z=-40.0, x=-46.0)), (4.0, rotate(z=-40.0, x=-46.0))],
+        "left_upper_arm": [(0.0, left(*FORWARD_WIDE)), (4.0, left(*FORWARD_WIDE))],
         "left_lower_arm": [(0.0, rotate(y=-46.0)), (4.0, rotate(y=-46.0))],
-        "right_upper_arm": [(0.0, rotate(z=40.0, x=-46.0)), (4.0, rotate(z=40.0, x=-46.0))],
+        "right_upper_arm": [(0.0, right(*FORWARD_WIDE)), (4.0, right(*FORWARD_WIDE))],
         "right_lower_arm": [(0.0, rotate(y=46.0)), (4.0, rotate(y=46.0))],
         "spine": [(0.0, rotate(x=5.0)), (4.0, rotate(x=5.0))],
     }),
     "typing": (1.2, True, {
-        "left_upper_arm": [(0.0, rotate(z=-40.0, x=-62.0)), (1.2, rotate(z=-40.0, x=-62.0))],
-        "right_upper_arm": [(0.0, rotate(z=40.0, x=-62.0)), (1.2, rotate(z=40.0, x=-62.0))],
+        "left_upper_arm": [(0.0, left(*FORWARD_LOW)), (1.2, left(*FORWARD_LOW))],
+        "right_upper_arm": [(0.0, right(*FORWARD_LOW)), (1.2, right(*FORWARD_LOW))],
         "left_lower_arm": [(0.0, rotate(y=-52.0)), (0.3, rotate(y=-58.0)), (0.6, rotate(y=-52.0)), (0.9, rotate(y=-58.0)), (1.2, rotate(y=-52.0))],
         "right_lower_arm": [(0.0, rotate(y=58.0)), (0.3, rotate(y=52.0)), (0.6, rotate(y=58.0)), (0.9, rotate(y=52.0)), (1.2, rotate(y=58.0))],
         "head": [(0.0, rotate(x=12.0)), (1.2, rotate(x=12.0))],
     }),
     "reviewing": (3.2, True, {
-        "left_upper_arm": [(0.0, rotate(z=-34.0, x=-58.0)), (3.2, rotate(z=-34.0, x=-58.0))],
+        "left_upper_arm": [(0.0, left(*TO_CHIN)), (3.2, left(*TO_CHIN))],
         "left_lower_arm": [(0.0, rotate(y=-64.0)), (3.2, rotate(y=-64.0))],
-        "right_upper_arm": [(0.0, rotate(z=64.0)), (3.2, rotate(z=64.0))],
+        "right_upper_arm": [(0.0, right(*DOWN)), (3.2, right(*DOWN))],
         "head": [(0.0, rotate(x=15.0, y=-6.0)), (1.6, rotate(x=15.0, y=6.0)), (3.2, rotate(x=15.0, y=-6.0))],
     }),
     "waiting-for-user": (3.4, True, {
         "hips": [(0.0, rotate(z=1.5)), (1.7, rotate(z=-1.5)), (3.4, rotate(z=1.5))],
         "head": [(0.0, rotate(y=4.0)), (1.7, rotate(y=-4.0)), (3.4, rotate(y=4.0))],
-        "left_upper_arm": [(0.0, rotate(z=-70.0)), (3.4, rotate(z=-70.0))],
-        "right_upper_arm": [(0.0, rotate(z=70.0)), (3.4, rotate(z=70.0))],
+        "left_upper_arm": [(0.0, left(*DOWN_RELAXED)), (3.4, left(*DOWN_RELAXED))],
+        "right_upper_arm": [(0.0, right(*DOWN_RELAXED)), (3.4, right(*DOWN_RELAXED))],
     }),
     "waiting-for-approval": (2.2, True, {
-        "left_upper_arm": [(0.0, rotate(z=-52.0, x=-30.0)), (2.2, rotate(z=-52.0, x=-30.0))],
-        "right_upper_arm": [(0.0, rotate(z=52.0, x=-30.0)), (2.2, rotate(z=52.0, x=-30.0))],
+        "left_upper_arm": [(0.0, left(*FORWARD_WIDE)), (2.2, left(*FORWARD_WIDE))],
+        "right_upper_arm": [(0.0, right(*FORWARD_WIDE)), (2.2, right(*FORWARD_WIDE))],
         "left_lower_arm": [(0.0, rotate(y=-24.0)), (2.2, rotate(y=-24.0))],
         "right_lower_arm": [(0.0, rotate(y=24.0)), (2.2, rotate(y=24.0))],
         "head": [(0.0, rotate(x=-3.0)), (2.2, rotate(x=-3.0))],
     }),
     "speaking": (2.6, True, {
-        "right_upper_arm": [(0.0, rotate(z=58.0, x=-24.0)), (0.9, rotate(z=50.0, x=-34.0)), (1.8, rotate(z=60.0, x=-20.0)), (2.6, rotate(z=58.0, x=-24.0))],
+        "right_upper_arm": [(0.0, right(*FORWARD_LOW)), (0.9, right(0.46, -0.42, 0.78)), (1.8, right(0.28, -0.58, 0.76)), (2.6, right(*FORWARD_LOW))],
         "right_lower_arm": [(0.0, rotate(y=34.0)), (1.3, rotate(y=48.0)), (2.6, rotate(y=34.0))],
-        "left_upper_arm": [(0.0, rotate(z=-68.0)), (2.6, rotate(z=-68.0))],
+        "left_upper_arm": [(0.0, left(*DOWN)), (2.6, left(*DOWN))],
         "head": [(0.0, REST), (1.3, rotate(x=-2.0, y=3.0)), (2.6, REST)],
     }),
     "presenting-result": (2.2, False, {
-        "left_upper_arm": [(0.0, rotate(z=-70.0)), (0.7, rotate(z=-40.0, x=-30.0)), (2.2, rotate(z=-44.0, x=-26.0))],
-        "right_upper_arm": [(0.0, rotate(z=70.0)), (0.7, rotate(z=40.0, x=-30.0)), (2.2, rotate(z=44.0, x=-26.0))],
+        "left_upper_arm": [(0.0, left(*DOWN)), (0.7, left(*FORWARD_WIDE)), (2.2, left(0.58, -0.30, 0.76))],
+        "right_upper_arm": [(0.0, right(*DOWN)), (0.7, right(*FORWARD_WIDE)), (2.2, right(0.58, -0.30, 0.76))],
         "head": [(0.0, REST), (0.7, rotate(x=-6.0)), (2.2, rotate(x=-4.0))],
         "spine": [(0.0, REST), (0.7, rotate(x=-4.0)), (2.2, rotate(x=-3.0))],
     }),
     "success": (1.6, False, {
-        "right_upper_arm": [(0.0, rotate(z=72.0)), (0.45, rotate(z=155.0)), (1.0, rotate(z=148.0)), (1.6, rotate(z=150.0))],
-        "left_upper_arm": [(0.0, rotate(z=-72.0)), (0.45, rotate(z=-62.0)), (1.6, rotate(z=-66.0))],
+        "right_upper_arm": [(0.0, right(*DOWN)), (0.45, right(*UP_HIGH)), (1.0, right(*UP)), (1.6, right(0.30, 0.94, 0.14))],
+        "left_upper_arm": [(0.0, left(*DOWN)), (0.45, left(0.42, -0.90, 0.12)), (1.6, left(0.36, -0.93, 0.08))],
         "head": [(0.0, REST), (0.45, rotate(x=-9.0)), (1.6, rotate(x=-6.0))],
         "spine": [(0.0, REST), (0.45, rotate(x=-5.0)), (1.6, rotate(x=-3.0))],
     }),
     "warning": (1.8, False, {
-        "right_upper_arm": [(0.0, rotate(z=72.0)), (0.5, rotate(z=126.0, x=-16.0)), (1.8, rotate(z=120.0, x=-14.0))],
-        "right_lower_arm": [(0.0, REST), (0.5, rotate(y=34.0)), (1.8, rotate(y=30.0))],
+        "right_upper_arm": [(0.0, right(*DOWN)), (0.5, right(0.34, 0.86, 0.38)), (1.8, right(0.30, 0.88, 0.36))],
+        "right_lower_arm": [(0.0, REST), (0.5, rotate(y=20.0)), (1.8, rotate(y=18.0))],
+        "left_upper_arm": [(0.0, left(*DOWN)), (1.8, left(*DOWN))],
         "head": [(0.0, REST), (0.5, rotate(x=-4.0)), (1.8, rotate(x=-3.0))],
         "spine": [(0.0, REST), (0.5, rotate(x=-3.5)), (1.8, rotate(x=-3.0))],
     }),
     "blocked": (2.0, True, {
-        "left_upper_arm": [(0.0, rotate(z=-28.0, x=-64.0)), (2.0, rotate(z=-28.0, x=-64.0))],
-        "right_upper_arm": [(0.0, rotate(z=28.0, x=-64.0)), (2.0, rotate(z=28.0, x=-64.0))],
-        "left_lower_arm": [(0.0, rotate(y=-92.0)), (2.0, rotate(y=-92.0))],
-        "right_lower_arm": [(0.0, rotate(y=92.0)), (2.0, rotate(y=92.0))],
+        "left_upper_arm": [(0.0, left(*ACROSS)), (2.0, left(*ACROSS))],
+        "right_upper_arm": [(0.0, right(*ACROSS)), (2.0, right(*ACROSS))],
+        "left_lower_arm": [(0.0, rotate(y=-88.0)), (2.0, rotate(y=-88.0))],
+        "right_lower_arm": [(0.0, rotate(y=88.0)), (2.0, rotate(y=88.0))],
         "head": [(0.0, rotate(x=3.0)), (2.0, rotate(x=3.0))],
     }),
     "error": (1.5, False, {
         "spine": [(0.0, REST), (0.5, rotate(x=8.0)), (1.5, rotate(x=7.0))],
         "head": [(0.0, REST), (0.5, rotate(x=16.0)), (1.5, rotate(x=14.0))],
-        "left_upper_arm": [(0.0, rotate(z=-72.0)), (0.5, rotate(z=-82.0)), (1.5, rotate(z=-80.0))],
-        "right_upper_arm": [(0.0, rotate(z=72.0)), (0.5, rotate(z=82.0)), (1.5, rotate(z=80.0))],
+        "left_upper_arm": [(0.0, left(*DOWN)), (0.5, left(0.16, -0.99, -0.02)), (1.5, left(0.18, -0.98, -0.02))],
+        "right_upper_arm": [(0.0, right(*DOWN)), (0.5, right(0.16, -0.99, -0.02)), (1.5, right(0.18, -0.98, -0.02))],
     }),
     "paused": (3.0, True, {
         "spine": [(0.0, REST), (1.5, rotate(x=1.0)), (3.0, REST)],
-        "left_upper_arm": [(0.0, rotate(z=-74.0)), (3.0, rotate(z=-74.0))],
-        "right_upper_arm": [(0.0, rotate(z=74.0)), (3.0, rotate(z=74.0))],
+        "left_upper_arm": [(0.0, left(*DOWN)), (3.0, left(*DOWN))],
+        "right_upper_arm": [(0.0, right(*DOWN)), (3.0, right(*DOWN))],
         "head": [(0.0, rotate(x=2.0)), (3.0, rotate(x=2.0))],
     }),
     "cancelled": (1.3, False, {
-        "left_upper_arm": [(0.0, rotate(z=-60.0)), (0.5, rotate(z=-78.0)), (1.3, rotate(z=-76.0))],
-        "right_upper_arm": [(0.0, rotate(z=60.0)), (0.5, rotate(z=78.0)), (1.3, rotate(z=76.0))],
+        "left_upper_arm": [(0.0, left(*FORWARD_LOW)), (0.5, left(*DOWN)), (1.3, left(0.20, -0.98, 0.02))],
+        "right_upper_arm": [(0.0, right(*FORWARD_LOW)), (0.5, right(*DOWN)), (1.3, right(0.20, -0.98, 0.02))],
         "head": [(0.0, REST), (0.5, rotate(x=10.0, y=6.0)), (1.3, rotate(x=8.0, y=5.0))],
     }),
     "sleeping": (5.0, True, {
         "head": [(0.0, rotate(x=22.0, z=6.0)), (2.5, rotate(x=25.0, z=7.0)), (5.0, rotate(x=22.0, z=6.0))],
         "spine": [(0.0, rotate(x=5.0)), (2.5, rotate(x=7.0)), (5.0, rotate(x=5.0))],
-        "left_upper_arm": [(0.0, rotate(z=-78.0)), (5.0, rotate(z=-78.0))],
-        "right_upper_arm": [(0.0, rotate(z=78.0)), (5.0, rotate(z=78.0))],
+        "left_upper_arm": [(0.0, left(0.16, -0.99, 0.0)), (5.0, left(0.16, -0.99, 0.0))],
+        "right_upper_arm": [(0.0, right(0.16, -0.99, 0.0)), (5.0, right(0.16, -0.99, 0.0))],
     }),
     "repositioning": (1.6, True, {
         "hips": [(0.0, rotate(z=3.0)), (0.8, rotate(z=-3.0)), (1.6, rotate(z=3.0))],
         "spine": [(0.0, rotate(x=3.0)), (1.6, rotate(x=3.0))],
-        "left_upper_arm": [(0.0, rotate(z=-62.0)), (1.6, rotate(z=-62.0))],
-        "right_upper_arm": [(0.0, rotate(z=62.0)), (1.6, rotate(z=62.0))],
+        "left_upper_arm": [(0.0, left(0.48, -0.86, 0.18)), (1.6, left(0.48, -0.86, 0.18))],
+        "right_upper_arm": [(0.0, right(0.48, -0.86, 0.18)), (1.6, right(0.48, -0.86, 0.18))],
         "head": [(0.0, rotate(x=-2.0)), (0.8, rotate(x=-4.0)), (1.6, rotate(x=-2.0))],
     }),
 }

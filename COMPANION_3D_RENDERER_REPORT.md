@@ -574,11 +574,28 @@ of adding a renderer. §35 lists this as a limitation.
 | Morph targets | 11 |
 | Materials | 3 (skin, cloth, eye) |
 | Textures | 1, 64×64 PNG, generated |
-| GLB size | 303,984 bytes |
-| GLB SHA-256 | `778228cdac72a38ea0c5f1690cc25081475390c789d7fa360a0d47811d177914` |
+| GLB size | 304,380 bytes |
+| GLB SHA-256 | `88e9364fc2b3335713cc2fb5e6e2cc557ab7fcaa2f6d9b2ee9b9d459b98c20de` |
 | Estimated GPU bytes | 269,264 |
 | Height | 1.690 m |
 | Package files | 19 |
+
+**The poses were looked at, and three of them were wrong.** The clip table was
+first written in Euler angles, and an arm lying along +X rotated about X spins
+about its own length and does nothing visible — so every "reach forward" pose
+reached sideways instead, and `working`, `typing` and `researching` all read as a
+shrug. `success` and `greeting` raised the wrong way for the same reason. None of
+it was visible in any test: coverage was fine, the frames differed between
+states, and the numbers were all correct.
+
+It was found by rendering all twenty-two clips to a contact sheet and looking at
+it. The table now uses `aim(bone_axis, direction)` — the shortest rotation taking
+a bone's rest direction to a named direction like `FORWARD`, `UP_HIGH` or
+`ACROSS` — so a pose is written as where the limb ends up rather than as
+arithmetic, and a wrong pose is wrong in a way the words show. All twenty-two
+were re-rendered and checked: folded arms for `blocked`, a raised arm for
+`greeting`, `success` and `warning`, forearms forward for `working` and `typing`,
+hand to chin for `planning`, `understanding` and `reviewing`.
 
 Human silhouette, fully rigged, neutral materials, repository-owned. Clips for
 idle, greeting, listening, transcribing, understanding, planning, working,
@@ -1241,13 +1258,13 @@ What this phase does to the build:
   `fedora-bootc:44` base is rebuilt daily and old digests vanish.
 * **The new package's determinism is a property of the generator, not of the
   build.** `scripts/build_default_character_3d.py` produces a byte-identical GLB
-  on Linux and Windows (`778228cd…`, 303,984 bytes, verified on both), which
+  on Linux and Windows (`88e9364f…`, 304,380 bytes, verified on both), which
   means a future rebuild of the *asset* is reproducible. Getting there required
   a portable deflate encoder and float quantisation, both recorded in §23 and in
   the script.
 * **`assets/companion/characters/** -text`** already covered the new package, so
   its files round-trip git byte-exactly on a Windows checkout — verified:
-  `git cat-file` returns 303,984 bytes and so does the working tree. Without
+  `git cat-file` returns the same byte count as the working tree. Without
   that attribute the manifest digest would fail on one of the two platforms,
   which is the failure the 2D character phase had and fixed.
 * **Every commit changes the OCI configuration digest** through the revision
@@ -1259,3 +1276,30 @@ GLB and its PNGs land in the image with the bytes recorded here, and that adding
 a 300 KB binary asset to `/usr/share` does not perturb layer ordering — neither
 of which this phase measured, because measuring them means building an image and
 that is a candidate.
+
+## Completion standard
+
+The twenty conditions, each answered by the section that measured it.
+
+| # | Condition | Where | Result |
+|---|---|---|---|
+| 1 | one validated original 3D character renders | §23, §30, §31 | **met** — pixels read back from a real context, and drawn under a compositor |
+| 2 | the character uses canonical `PresentationState` | §5, §34 | **met** — the presenter-path tests start at `CharacterPresenter` with a projection |
+| 3 | no second runtime or projection exists | §26 | **met** — the import graph is read, not asserted |
+| 4 | skeletal animation works | §31, §34 | **met** — two times in one clip draw different pictures |
+| 5 | animation transitions work | §9, §10 | **met** — crossfade weight 0→1, priority holds, return-to-idle |
+| 6 | facial expressions work | §11, §34 | **met** — neutral and happy draw differently |
+| 7 | voice visemes animate the 3D mouth | §12, §31 | **met** — through the canonical `VisemeLink`; see §35 on the producer |
+| 8 | listening and transcribing states render | §30, §31 | **met** |
+| 9 | approval and error states override decorative animation | §9 | **met** — the less urgent state is *held*, not merely ranked lower |
+| 10 | character packages cannot execute code | §7, §29 | **met** — no executable asset type, no script field, no active content |
+| 11 | packages cannot supply arbitrary shaders | §17, §29 | **met** — asserted from the AST |
+| 12 | GPU and context loss degrade safely | §21, §34 | **met** — including a context destroyed underneath a live renderer |
+| 13 | full 3D → lightweight 3D → animated 2D works | §20, §31 | **met** |
+| 14 | task identity and result unchanged across degradation | §31 step 31, step 36 | **met** |
+| 15 | reduced-motion mode works | §20, §34 | **met** — the rung is kept and the motion is removed |
+| 16 | headless fallback works | §27 | **met** — and no GPU library is opened to find out |
+| 17 | the 100/50/20 gates pass on one commit | §32 | *(filled in)* |
+| 18 | Linux compositor rendering is measured | §30 | **met** — on WSLg, recorded as WSLg |
+| 19 | memory and frame-time metrics are reported honestly | §33, §35 | **met** — separated per component, and labelled software-rasteriser throughout |
+| 20 | no release or reproducibility qualification is claimed | §39 | **met** — no image was built and no candidate created |

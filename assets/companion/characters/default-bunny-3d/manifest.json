@@ -21,8 +21,8 @@
       "assetId": "bunny-3d-model",
       "path": "assets/bunny-3d.glb",
       "mediaType": "model/gltf-binary",
-      "sha256": "778228cdac72a38ea0c5f1690cc25081475390c789d7fa360a0d47811d177914",
-      "sizeBytes": 303984,
+      "sha256": "88e9364fc2b3335713cc2fb5e6e2cc557ab7fcaa2f6d9b2ee9b9d459b98c20de",
+      "sizeBytes": 304380,
       "purpose": "model"
     },
     {
@@ -437,8 +437,8 @@
     "schemaVersion": 1,
     "rendererApiVersion": "1.0",
     "modelFile": "assets/bunny-3d.glb",
-    "modelDigest": "778228cdac72a38ea0c5f1690cc25081475390c789d7fa360a0d47811d177914",
-    "modelSizeBytes": 303984,
+    "modelDigest": "88e9364fc2b3335713cc2fb5e6e2cc557ab7fcaa2f6d9b2ee9b9d459b98c20de",
+    "modelSizeBytes": 304380,
     "gltfVersion": "2.0",
     "skeletonProfile": "bunny-humanoid-1",
     "boneMap": {
