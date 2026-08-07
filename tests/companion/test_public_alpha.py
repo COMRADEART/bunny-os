@@ -678,6 +678,42 @@ class BuildIntegrationTests(unittest.TestCase):
         preset = (REPOSITORY / "config/systemd/60-bunny-os-user.preset").read_text(encoding="utf-8")
         self.assertIn("enable bunny-companion-window.service", preset)
 
+    def test_every_enabled_user_preset_unit_is_actually_enabled_by_the_build(self) -> None:
+        """A preset file is not an enablement, and the two had drifted.
+
+        ``/usr/lib/systemd/user-preset/60-bunny-os.preset`` has named
+        ``bunny-companion.service`` since the integration branch, with a comment
+        saying it is enabled rather than left to the desktop entry. It was not:
+        nothing runs ``systemctl --global preset-all`` and the user manager does
+        not apply presets by itself, so no image ever built had the symlink.
+        Measured on the first booted Alpha image — ``systemctl --user is-enabled``
+        answered ``disabled`` for both companion units in a live graphical
+        session, and the runtime was ``inactive``.
+
+        This asserts the two lists against each other, which is the check that
+        would have caught it: every unit the preset says to enable must appear
+        in ``install_activation``'s ``--global enable`` call.
+        """
+        preset = (REPOSITORY / "config/systemd/60-bunny-os-user.preset").read_text(encoding="utf-8")
+        enabled = {
+            line.split()[1] for line in preset.splitlines()
+            if line.startswith("enable ") and len(line.split()) == 2
+        }
+        installer = (REPOSITORY / "build/scripts/install-root.py").read_text(encoding="utf-8")
+        start = installer.index('"/usr/bin/systemctl", "--global", "enable"')
+        finish = installer.index("], check=True)", start)
+        activated = {
+            token.strip().strip('",')
+            for token in installer[start:finish].split()
+            if token.strip().strip('",').endswith((".service", ".target", ".socket"))
+        }
+        missing = sorted(enabled - activated)
+        self.assertEqual(
+            missing, [],
+            "these units are enabled in the user preset and never enabled by the build; "
+            "systemd applies no preset by itself, so they would never start",
+        )
+
     def test_the_window_unit_does_not_deny_write_execute(self) -> None:
         """Mesa's shader compiler and llvmpipe's JIT map executable pages. A GTK
         client with MemoryDenyWriteExecute is killed the moment it draws in 3D."""

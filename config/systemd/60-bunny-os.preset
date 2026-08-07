@@ -5,6 +5,25 @@ enable bunny-health-check.service
 enable bunny-brlapi-key.service
 enable greenboot-healthcheck.service
 disable bunny-update-agent.timer
+
+# Nothing reaches the network on a timer.
+#
+# §27 says updates check only through the defined update mechanism, and §28
+# says the default configuration has no unexplained outbound traffic. The base
+# image ships five timers that each contact a server on their own schedule, and
+# none of them is the defined mechanism — that is bunny-update-agent.timer,
+# disabled above until an update channel exists to point it at.
+#
+# bootc-fetch-apply-updates is the one worth naming: it does not only check, it
+# *applies*. A Bunny OS machine that swapped its own deployment overnight would
+# be a machine whose build identity changed while nobody was looking, which is
+# the opposite of what §39 is for.
+disable bootc-fetch-apply-updates.timer
+disable dnf-makecache.timer
+disable dnf5-makecache.timer
+disable fwupd-refresh.timer
+disable malcontent-webd-update.timer
+
 disable sshd.service
 # sshd.socket as well as sshd.service. Measured on the first booted Alpha image:
 # sshd was LISTENING on 0.0.0.0:22 despite the line above, because Fedora ships

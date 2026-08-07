@@ -138,11 +138,29 @@ def assertions(record: Mapping[str, Any], *, offline: bool) -> list[dict[str, An
     add("session.both-units-enabled", "units", enabled_by_preset)
 
     def one_runtime_one_window() -> tuple[bool, str]:
+        """One process per unit, counted from the unit's own cgroup.
+
+        Not from ``pgrep``: a pattern that matches ``bunny-companion-window``
+        also matches the shell running the pgrep and the runuser running that,
+        and the first version of this reported three of each on a system where
+        neither unit was enabled.
+
+        The runtime is one process. The window is one process *plus whatever
+        GTK and Mesa start for it*, which on a session with a compositor is
+        several threads in one task group and can legitimately be more than
+        one task; the bound is there to catch a second *window*, so it is
+        generous rather than exact.
+        """
         counts = _at(record, "sections", "session", "processCounts") or {}
-        runtime = counts.get("runtime", "?")
-        window = counts.get("window", "?")
-        ok = runtime in ("0", "1") and window in ("0", "1")
-        return ok, f"runtime processes={runtime}, window processes={window}"
+        if "runtime" not in counts or "window" not in counts:
+            return False, "the per-unit task counts were not collected"
+        runtime = counts["runtime"]
+        window = counts["window"]
+        ok = (
+            runtime.isdigit() and int(runtime) <= 2
+            and window.isdigit() and int(window) <= 8
+        )
+        return ok, f"runtime tasks={runtime}, window tasks={window}"
 
     add("session.no-duplicate-process", "session", one_runtime_one_window)
 

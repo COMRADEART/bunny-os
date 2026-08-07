@@ -240,12 +240,25 @@ def section_session() -> dict:
         "loginctl": run(["/usr/bin/loginctl", "list-sessions", "--no-legend"]).get("stdout", ""),
         "seat": run(["/usr/bin/loginctl", "show-seat", "seat0", "--property=ActiveSession"]).get("stdout", ""),
     }
+    # Counted from the units' own cgroups rather than with pgrep.
+    #
+    # `pgrep -f bunny-companion-window` matches its own command line, and the
+    # shell that invoked it, and the runuser that invoked that: the first run of
+    # this probe reported three window processes on a system where the unit was
+    # not even enabled. A cgroup holds exactly the processes systemd started for
+    # that unit, which is the question being asked.
     record["processCounts"] = _parse_properties(user_shell(
+        "count() { systemctl --user show \"$1\" --property=TasksCurrent 2>/dev/null "
+        "| cut -d= -f2 | grep -E '^[0-9]+$' || echo 0; }; "
         "printf 'runtime=%s\\nwindow=%s\\nterminals=%s\\n' "
-        "\"$(pgrep -c -f bunny-companion-service || true)\" "
-        "\"$(pgrep -c -f bunny-companion-window || true)\" "
-        "\"$(pgrep -c -x gnome-terminal-server || true)\"",
+        "\"$(count bunny-companion.service)\" "
+        "\"$(count bunny-companion-window.service)\" "
+        "\"$(pgrep -c -x gnome-terminal-server 2>/dev/null || echo 0)\"",
     ).get("stdout", ""))
+    record["mainPids"] = user_shell(
+        "systemctl --user show bunny-companion.service bunny-companion-window.service "
+        "--property=Id --property=MainPID --property=NRestarts | cat",
+    ).get("stdout", "")
     record["timeline"] = user_shell(
         "cat ${XDG_STATE_HOME:-$HOME/.local/state}/bunny-companion/session-timeline.json "
         "2>/dev/null || cat /var/lib/systemd/linger 2>/dev/null || true",

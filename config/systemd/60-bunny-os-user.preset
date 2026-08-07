@@ -3,6 +3,13 @@ enable bunny-first-boot.service
 enable bunny-first-run.service
 disable bunny-desktop.service
 disable bunny-shell.target
+# GNOME Software refreshes its metadata from the moment the session starts, and
+# the `download-updates=false` dconf key does not stop it: that key governs
+# downloading *updates*, and the connection measured on the first booted Alpha
+# image was the metadata refresh. Disabling the unit stops the background
+# process; opening the application still works, and then it does what the person
+# who opened it asked for.
+disable gnome-software.service
 # The companion runtime starts with the graphical session and outlives every
 # window in it. Enabled rather than left to the desktop entry: the entry opens a
 # *client*, and a client that had to start the runtime would mean closing the

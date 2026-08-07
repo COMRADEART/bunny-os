@@ -254,10 +254,30 @@ def install_activation(profile: str) -> None:
         "bunny-health-check.service", "bunny-brlapi-key.service",
     ], check=True)
     subprocess.run(["/usr/bin/systemctl", "enable", "bunny-recovery-shell.service"], check=True)
+    # The user units, enabled globally so every account gets them.
+    #
+    # A preset file is not an enablement. `/usr/lib/systemd/user-preset/60-bunny-os.preset`
+    # has named bunny-companion.service since the integration branch, and the
+    # comment beside it says "enabled rather than left to the desktop entry" —
+    # and it was not enabled, on any image ever built, because nothing runs
+    # `systemctl --global preset-all` and the user manager does not apply presets
+    # by itself. Measured on the first booted Alpha image: `systemctl --user
+    # is-enabled bunny-companion.service bunny-companion-window.service` answered
+    # `disabled` twice, and the runtime was `inactive` in a live graphical
+    # session. The companion has never started at login on a built image.
+    #
+    # This is the same failure shape as bunny-brlapi-key.service, for the same
+    # reason, and it is caught the same way: by asserting the symlink below
+    # rather than by trusting the command above.
     subprocess.run([
         "/usr/bin/systemctl", "--global", "enable",
         "bunny-first-boot.service", "bunny-config-dir.service",
+        "bunny-companion.service", "bunny-companion-window.service",
+        "bunny-first-run.service",
     ], check=True)
+    subprocess.run([
+        "/usr/bin/systemctl", "--global", "disable", "gnome-software.service",
+    ], check=False)
     if profile == "recovery":
         subprocess.run(["/usr/bin/systemctl", "set-default", "bunny-recovery.target"], check=True)
     elif profile in {"developer", "desktop", "shell", "shell-test", "live", "beta"}:
@@ -294,6 +314,18 @@ def install_activation(profile: str) -> None:
         ),
         "bunny-first-boot.service": Path(
             "/etc/systemd/user/graphical-session.target.wants/bunny-first-boot.service"
+        ),
+        # The Public Alpha's whole success path begins here. Without these two
+        # symlinks a person logs into a freshly installed machine and no
+        # companion appears — which is what every image before this one did.
+        "bunny-companion.service": Path(
+            "/etc/systemd/user/graphical-session.target.wants/bunny-companion.service"
+        ),
+        "bunny-companion-window.service": Path(
+            "/etc/systemd/user/graphical-session.target.wants/bunny-companion-window.service"
+        ),
+        "bunny-first-run.service": Path(
+            "/etc/systemd/user/graphical-session.target.wants/bunny-first-run.service"
         ),
     }
     missing_activation = inert_rule + [
