@@ -3,3 +3,28 @@ enabled-extensions=['bunny-shell@bunny-os.org']
 
 [org/gnome/desktop/interface]
 enable-animations=true
+
+# Nothing reaches the network without being asked to.
+#
+# Measured on the first booted Alpha image, from inside the guest with `ss -tnp
+# state established`: exactly one outbound connection existed on a freshly
+# installed system that nobody had touched —
+#
+#   10.0.2.15:59080 -> 109.230.233.153:443  gnome-software (pid 1531)
+#
+# GNOME Software refreshes its metadata and downloads updates on a timer, from
+# the moment the session starts. §28 says the default offline/local
+# configuration should have no unexplained outbound traffic, and §27 says
+# updates check only through the defined update mechanism — which for Bunny OS
+# is bootc, driven by bunny-update-agent.timer, which the system preset leaves
+# disabled.
+#
+# These keys turn off the refresh, the download and the notification. They do
+# not turn off GNOME Software: a user who opens it and presses refresh gets
+# exactly what they asked for, which is the distinction the whole privacy
+# posture rests on.
+[org/gnome/software]
+download-updates=false
+download-updates-notify=false
+first-run=false
+show-ratings=false

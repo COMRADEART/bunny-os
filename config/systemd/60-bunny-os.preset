@@ -6,4 +6,17 @@ enable bunny-brlapi-key.service
 enable greenboot-healthcheck.service
 disable bunny-update-agent.timer
 disable sshd.service
+# sshd.socket as well as sshd.service. Measured on the first booted Alpha image:
+# sshd was LISTENING on 0.0.0.0:22 despite the line above, because Fedora ships
+# socket activation and disabling the service says nothing about the socket that
+# starts it. A desktop image that listens for remote logins by default is an
+# authority nobody granted.
+disable sshd.socket
+# Passim is fwupd's local metadata cache. It listens on 0.0.0.0:27500 and
+# advertises itself over mDNS, so a Bunny OS laptop on a café network offers a
+# service to that network. Measured on the same boot. fwupd works without it;
+# what is lost is peer-to-peer sharing of firmware metadata, which is not a
+# feature this release claims.
+disable passim.service
+disable passim.socket
 

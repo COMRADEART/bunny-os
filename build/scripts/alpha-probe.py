@@ -88,18 +88,44 @@ def run(argv: list[str], *, timeout: float = 60.0, user: str = "") -> dict:
     }
 
 
+def _user_id() -> str:
+    result = run(["/usr/bin/id", "-u", TARGET_USER], timeout=15)
+    value = (result.get("stdout") or "").strip()
+    return value if value.isdigit() else "1000"
+
+
 def user_shell(command: str, *, timeout: float = 120.0) -> dict:
     """Run a shell command as the desktop user, inside their session bus.
 
-    ``machinectl shell`` rather than ``su``: the companion's user units live in
-    a session manager, and ``su`` gives a process with no ``XDG_RUNTIME_DIR``
-    and no bus — which is the environment in which every user-unit query
-    silently answers "unknown".
+    The environment is what makes this work, and getting it wrong is silent:
+    ``systemctl --user`` with no ``XDG_RUNTIME_DIR`` and no
+    ``DBUS_SESSION_BUS_ADDRESS`` does not fail, it answers ``unknown`` for
+    every property. A whole section of this record read as "the companion did
+    not start" for that reason on the first run.
+
+    ``machinectl shell`` would set it for us and is the obvious tool. It is not
+    installed: ``systemd-container`` is not part of a bootc desktop image, and
+    the first run of this probe reported ``/usr/bin/machinectl: No such file or
+    directory`` for every user query. So the environment is set by hand, which
+    needs no package that the image does not already have.
     """
-    return run([
-        "/usr/bin/machinectl", "shell", "--quiet", f"{TARGET_USER}@",
-        "/bin/bash", "-lc", command,
-    ], timeout=timeout)
+    uid = _user_id()
+    runner = "/usr/sbin/runuser" if Path("/usr/sbin/runuser").exists() else "/usr/bin/runuser"
+    if not Path(runner).exists():
+        runner = "/usr/bin/su"
+        argv = [runner, "-", TARGET_USER, "-c"]
+    else:
+        argv = [runner, "-u", TARGET_USER, "--"]
+    environment = (
+        f"XDG_RUNTIME_DIR=/run/user/{uid} "
+        f"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{uid}/bus "
+        f"XDG_STATE_HOME=/var/home/{TARGET_USER}/.local/state "
+        f"HOME=/var/home/{TARGET_USER} "
+        "PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin "
+    )
+    if argv[-1] == "-c":
+        return run([*argv, f"env {environment} bash -lc {command!r}"], timeout=timeout)
+    return run([*argv, "env", *environment.split(), "bash", "-lc", command], timeout=timeout)
 
 
 def section_identity() -> dict:
@@ -243,42 +269,47 @@ def section_provenance() -> dict:
     record of a different program.
     """
     script = (
-        "import hashlib,json,sys,os\n"
-        "root='/usr/lib/bunny-os/python'\n"
-        "sys.path.insert(0,root) if root not in sys.path else None\n"
-        "out={'sysPath':sys.path,'modules':{},'rejections':[]}\n"
-        f"pairs={list(SUBSYSTEMS)!r}\n"
-        "for label,name in pairs:\n"
+        "import hashlib, json, os, site, sys\n"
+        "root = '/usr/lib/bunny-os/python'\n"
+        "if root not in sys.path:\n"
+        "    sys.path.insert(0, root)\n"
+        "out = {'sysPath': sys.path, 'modules': {}, 'rejections': []}\n"
+        f"pairs = {list(SUBSYSTEMS)!r}\n"
+        "for label, name in pairs:\n"
         "    try:\n"
-        "        m=__import__(name,fromlist=['*'])\n"
-        "        f=getattr(m,'__file__','')\n"
-        "        d=''\n"
+        "        module = __import__(name, fromlist=['*'])\n"
+        "        path = getattr(module, '__file__', '') or ''\n"
         "        try:\n"
-        "            d=hashlib.sha256(open(f,'rb').read()).hexdigest()\n"
-        "        except Exception as e:\n"
-        "            d='error: %s'%e\n"
-        "        out['modules'][label]={'module':name,'file':f,'sha256':d,\n"
-        "            'installed':bool(f) and f.startswith(root)}\n"
-        "        if f and not f.startswith(root):\n"
-        "            out['rejections'].append('%s imported from %s'%(label,f))\n"
-        "    except Exception as e:\n"
-        "        out['modules'][label]={'module':name,'error':str(e),'installed':False}\n"
-        "        out['rejections'].append('%s did not import: %s'%(label,e))\n"
-        "out['pythonpath']=os.environ.get('PYTHONPATH','')\n"
+        "            digest = hashlib.sha256(open(path, 'rb').read()).hexdigest()\n"
+        "        except Exception as error:\n"
+        "            digest = 'error: %s' % error\n"
+        "        out['modules'][label] = {'module': name, 'file': path, 'sha256': digest,\n"
+        "                                 'installed': bool(path) and path.startswith(root)}\n"
+        "        if path and not path.startswith(root):\n"
+        "            out['rejections'].append('%s imported from %s' % (label, path))\n"
+        "    except Exception as error:\n"
+        "        out['modules'][label] = {'module': name, 'error': str(error), 'installed': False}\n"
+        "        out['rejections'].append('%s did not import: %s' % (label, error))\n"
+        "out['pythonpath'] = os.environ.get('PYTHONPATH', '')\n"
         "if out['pythonpath']:\n"
-        "    out['rejections'].append('PYTHONPATH is set: %s'%out['pythonpath'])\n"
-        "import site\n"
-        "out['userSite']=site.getusersitepackages() if hasattr(site,'getusersitepackages') else ''\n"
-        "out['userSiteExists']=os.path.isdir(out['userSite']) if out['userSite'] else False\n"
+        "    out['rejections'].append('PYTHONPATH is set: %s' % out['pythonpath'])\n"
+        "out['userSite'] = site.getusersitepackages() if hasattr(site, 'getusersitepackages') else ''\n"
+        "out['userSiteExists'] = os.path.isdir(out['userSite']) if out['userSite'] else False\n"
         "if out['userSiteExists']:\n"
-        "    out['rejections'].append('a user site-packages directory exists: %s'%out['userSite'])\n"
+        "    out['rejections'].append('a user site-packages directory exists: %s' % out['userSite'])\n"
         "print(json.dumps(out))\n"
     )
-    encoded = script.encode("utf-8").hex()
-    result = user_shell(
-        f"python3 -c \"import binascii,sys;exec(binascii.unhexlify('{encoded}').decode())\"",
-        timeout=180,
-    )
+    # Written to a file rather than passed through the shell. The first version
+    # hex-encoded it into a -c argument to avoid quoting, which worked and made
+    # the failure unreadable: when the user shell itself was broken, what came
+    # back was four kilobytes of hex in the error record.
+    source = Path("/tmp/bunny-alpha-provenance.py")
+    try:
+        source.write_text(script, encoding="utf-8")
+        source.chmod(0o644)
+    except OSError as error:
+        return {"error": f"the provenance script could not be written: {error}"}
+    result = user_shell(f"python3 {source}", timeout=180)
     try:
         record = json.loads(result.get("stdout", "").strip().splitlines()[-1])
     except Exception as error:
