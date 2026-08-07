@@ -53,6 +53,7 @@ from .cancellation import cancel_task
 from .clock import Clock, SystemClock, iso8601
 from .errors import CompanionError, StoreError
 from .events import TaskEvent
+from .privacy import DIAGNOSTIC_REDACTIONS, redact_diagnostic_text
 from .presentation import (
     AccessibilityPreferences,
     PresentationProjector,
@@ -122,18 +123,12 @@ MAX_FAULT_MESSAGE = 400
 #: Anything shaped like a secret or a private path is replaced rather than
 #: truncated, because truncation keeps the prefix and the prefix is the
 #: interesting part of a token.
-_FAULT_REDACTIONS: tuple[tuple["re.Pattern[str]", str], ...] = (
-    # Windows and POSIX user directories. The fault is identifiable from the
-    # basename; the path to somebody's home directory is not needed to fix it.
-    (re.compile(r"(?i)[a-z]:\\+users\\+[^\\\s]+"), "<user-path>"),
-    (re.compile(r"/(?:home|Users)/[^/\s]+"), "<user-path>"),
-    (re.compile(r"(?i)\b/tmp/[^\s]+"), "<temp-path>"),
-    # Anything self-describing as a secret, with its value.
-    (re.compile(r"(?i)\b(token|secret|password|passphrase|api[_-]?key|bearer)"
-                r"\s*[:=]?\s*\S+"), r"\1=<redacted>"),
-    # Long hex or base64-ish runs: request tokens, keys, digests of content.
-    (re.compile(r"\b[A-Fa-f0-9]{32,}\b"), "<hex>"),
-)
+#:
+#: The patterns themselves live in :data:`companion.privacy.DIAGNOSTIC_REDACTIONS`
+#: because the diagnostics export needs exactly the same list, and a second copy
+#: is a second thing to keep current. This alias is kept for readers who come
+#: looking for it here.
+_FAULT_REDACTIONS = DIAGNOSTIC_REDACTIONS
 
 
 def _sanitise_fault_message(error: BaseException) -> str:
@@ -145,13 +140,7 @@ def _sanitise_fault_message(error: BaseException) -> str:
     whatever that executor put in it. Redacting on the way *in* is the only
     point at which that is still under this module's control.
     """
-    message = f"{error}"
-    for pattern, replacement in _FAULT_REDACTIONS:
-        message = pattern.sub(replacement, message)
-    message = " ".join(message.split())
-    if len(message) > MAX_FAULT_MESSAGE:
-        message = message[: MAX_FAULT_MESSAGE - 1] + "…"
-    return message
+    return redact_diagnostic_text(f"{error}", limit=MAX_FAULT_MESSAGE)
 
 
 @dataclass
