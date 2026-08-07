@@ -1803,7 +1803,15 @@ def run_in_process(target: str, runs: int, *, order: str, verbose: bool) -> dict
         # twenty iterations with no posture and no figures. A harness that
         # decides which of a target's measurements are interesting is a harness
         # that will one day discard the interesting one.
-        for name in ("posture", "measurements", "resourceDelta", "states", "released"):
+        for name in (
+            "posture", "measurements", "resourceDelta", "states", "released",
+            # The 3D targets' own: how much of the surface the character
+            # covered, and what graphics stack drew it. Added when the 3D gates
+            # landed, for exactly the reason the paragraph above gives — the
+            # first run of the 3D lifecycle gate reported a null coverage for
+            # all hundred iterations because this list did not name it.
+            "coverage", "environment",
+        ):
             if outcome.get(name) is not None:
                 record[name] = outcome[name]
         if not record["ok"]:

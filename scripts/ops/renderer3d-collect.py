@@ -70,6 +70,17 @@ _REPORTED_LISTS = ("activeExecutors",)
 
 
 def _verdict(path: Path) -> dict[str, Any]:
+    """One gate's answer, read from the harness's own iteration schema.
+
+    That schema is ``{iteration, ok, seconds, delta, sinceBaseline, ...}`` with
+    the target's own result fields flattened alongside — there is no ``before``
+    or ``after`` snapshot per iteration, only the two deltas and the run's
+    ``baseline`` and ``final``. The first version of this collector read
+    ``iteration["after"]["renderer3d"]`` and would have reported an empty
+    ``leakSuspicions`` list and no ``glTable`` state for every gate, silently,
+    in the direction that looks clean. It reads ``final`` for both now, which is
+    where the end-of-run inventory actually lives.
+    """
     document = json.loads(path.read_text(encoding="utf-8"))
     iterations = list(document.get("iterations", ()))
     seconds = sorted(item.get("seconds", 0.0) for item in iterations)
@@ -78,32 +89,33 @@ def _verdict(path: Path) -> dict[str, Any]:
     net: dict[str, int] = {}
     violations: dict[str, Any] = {}
     failures: list[dict[str, Any]] = []
-    leak_suspicions: list[str] = []
-    gl_table_states: set[bool] = set()
     coverages: list[float] = []
+
+    final = document.get("final", {})
+    renderer_final = final.get("renderer3d", {}) if isinstance(final, dict) else {}
+    leak_suspicions = list(renderer_final.get("leakSuspicions", ()))
+    gl_table_loaded = bool(renderer_final.get("glTable", False))
+    residual = {
+        name: value for name, value in renderer_final.items()
+        if isinstance(value, int) and not isinstance(value, bool) and value
+    }
 
     warm_up = {
         name: value
         for name, value in (iterations[0].get("delta", {}) if iterations else {}).items()
-        if isinstance(value, int) and value
+        if isinstance(value, int) and not isinstance(value, bool) and value
     }
 
     for index, iteration in enumerate(iterations):
         if not iteration.get("ok", False):
             failures.append({
                 "iteration": iteration.get("iteration", index + 1),
-                "failures": iteration.get("outcome", {}).get("failures", []),
-                "notRun": iteration.get("outcome", {}).get("notRun", []),
+                "failures": iteration.get("failures", []),
+                "notRun": iteration.get("notRun", []),
+                "errors": iteration.get("errors", []),
             })
-        outcome = iteration.get("outcome", {})
-        if isinstance(outcome.get("coverage"), (int, float)):
-            coverages.append(float(outcome["coverage"]))
-        after = iteration.get("after", {})
-        renderer = after.get("renderer3d", {}) if isinstance(after, dict) else {}
-        if isinstance(renderer, dict):
-            leak_suspicions.extend(renderer.get("leakSuspicions", ()))
-            if "glTable" in renderer:
-                gl_table_states.add(bool(renderer["glTable"]))
+        if isinstance(iteration.get("coverage"), (int, float)):
+            coverages.append(float(iteration["coverage"]))
         if index == 0:
             # Measured, and not counted. See the module docstring.
             continue
@@ -129,14 +141,23 @@ def _verdict(path: Path) -> dict[str, Any]:
                 violations[name] = sorted(set(violations[name]) | set(value))
 
     grew = {name: value for name, value in net.items() if value > 0}
+    runs = int(document.get("runs", 0) or 0)
+    passed = int(document.get("passed", 0) or 0)
+    baseline_rss = (document.get("baseline", {}) or {}).get("memory", {}).get("rssBytes")
+    final_rss = (final or {}).get("memory", {}).get("rssBytes")
     return {
         "target": document.get("target"),
-        "runs": document.get("runs"),
-        "commit": document.get("commit"),
-        "consecutive": document.get("consecutive"),
-        "longestConsecutive": document.get("longestConsecutive"),
-        "allPassed": bool(document.get("allPassed"))
-        and not grew and not violations and not failures and not leak_suspicions,
+        "runs": runs,
+        "passed": passed,
+        "commit": (iterations[0].get("commit") if iterations else document.get("commit")),
+        "longestConsecutive": document.get("longestConsecutivePass"),
+        "finalConsecutive": document.get("finalConsecutivePass"),
+        "allPassed": (
+            runs > 0 and passed == runs
+            and int(document.get("longestConsecutivePass", 0) or 0) == runs
+            and not grew and not violations and not failures and not leak_suspicions
+            and not residual
+        ),
         "iterationsMeasured": len(iterations),
         "warmUp": warm_up,
         "netGrowth": grew,
@@ -144,8 +165,21 @@ def _verdict(path: Path) -> dict[str, Any]:
         "releasedTotals": cleanup,
         "absoluteViolations": violations,
         "leakSuspicions": sorted(set(leak_suspicions)),
-        "glTableStates": sorted(gl_table_states),
+        # §30 in counter form. ``true`` is correct for a gate that drew in 3D
+        # and wrong for one that never selected a 3D presentation; the reader
+        # needs the value rather than a verdict, because which is right depends
+        # on the gate.
+        "glTableLoadedAtEnd": gl_table_loaded,
+        "residualThreeDObjects": residual,
         "failedIterations": failures,
+        "rss": {
+            "baselineBytes": baseline_rss,
+            "finalBytes": final_rss,
+            "growthBytes": (
+                final_rss - baseline_rss
+                if isinstance(final_rss, int) and isinstance(baseline_rss, int) else None
+            ),
+        },
         "coverage": {
             "minimum": min(coverages) if coverages else None,
             "maximum": max(coverages) if coverages else None,
@@ -165,7 +199,7 @@ def _measurements(path: Path) -> dict[str, Any]:
     document = json.loads(path.read_text(encoding="utf-8"))
     columns: dict[str, list[float]] = {}
     for iteration in document.get("iterations", ()):
-        for name, value in (iteration.get("outcome", {}).get("measurements", {}) or {}).items():
+        for name, value in (iteration.get("measurements", {}) or {}).items():
             if isinstance(value, (int, float)) and not isinstance(value, bool):
                 columns.setdefault(name, []).append(float(value))
     summary: dict[str, Any] = {}
