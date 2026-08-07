@@ -9,8 +9,8 @@
 | Branch | `feature/companion-3d-renderer` |
 | First source commit | `8bd18d7a62831b553b1505f0967ceaa2dfe0d991` — "A ladder that had two rungs nobody had built" |
 | Gate commit | `75bc033b015cddc568ee6b09477327f8c6708498` — every gate iteration records it |
-| Evidence commit | *(the commit that adds `qualification/companion-3d-renderer/evidence/` and this report)* |
-| Final SHA | *(the closure commit that follows, which edits only this table and §3's post-gate paragraph)* |
+| Evidence commit | `b6eae5b5d4ef34d21102e0161423fddd33163d05` — the fourteen evidence files and this report |
+| Final SHA | the closure commit — this table and §3's post-gate paragraph, and nothing else. A commit cannot contain its own hash, so it is named by `git log -1 feature/companion-3d-renderer` rather than written here; it is unreachable from the build by construction, so nothing depends on knowing it in advance |
 
 ### Pre-branch checks
 
@@ -88,7 +88,17 @@ refusing to. Whether the bytes land correctly in a built image is a question
 only a build answers, and building one is a reproducibility candidate this phase
 was told not to create. §39 says so again.
 
-**Post-gate range:** *(recorded below after the evidence commit)*
+**Post-gate range: 0 installed.** The analyser over `75bc033..HEAD` — everything
+after the gate commit — reports **0 installed, 0 context-only, 16 unreachable**.
+The sixteen are this report, the fourteen evidence files and
+`preserved-evidence.json`; none is a Containerfile COPY root. Nothing after the
+gate commit differs from it by anything the build can see.
+
+Getting that required restoring one file: two table rows added to
+`docs/COMPANION_3D_RENDERER.md` after the gates had run put a changed file into
+`/usr/share/doc/bunny-os/`, because `docs/` **is** a COPY root. The rows were
+cosmetic and the property is not; the doc was restored to its gate-commit
+content and the two files it does not tabulate are named in §5 instead.
 
 **Every commit changes the OCI configuration digest** through the revision label
 and `/usr/lib/bunny-os/release.json`. An unchanged layer digest is not an
