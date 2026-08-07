@@ -28,6 +28,7 @@ What it answers, section by section:
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 from pathlib import Path
@@ -36,6 +37,11 @@ import sys
 
 BEGIN = "---BUNNY-ALPHA-JSON-BEGIN---"
 END = "---BUNNY-ALPHA-JSON-END---"
+
+#: Characters of base64 per console line. Short enough that a torn line loses
+#: one chunk rather than a large fraction of the record, long enough that a
+#: 130 kB record is a few hundred lines rather than a few thousand.
+CHUNK = 512
 
 INSTALLED_ROOT = Path("/usr/lib/bunny-os/python")
 
@@ -450,8 +456,27 @@ def main() -> int:
             record["sections"][name] = function()
         except Exception as error:  # pragma: no cover - a probe never takes the record with it
             record["sections"][name] = {"error": f"{type(error).__name__}: {error}"}
+    # Base64, in numbered chunks, because a serial console interleaves.
+    #
+    # The first version printed the JSON as one line. It survives most boots and
+    # it did not survive `offline-001`: a kernel message landed inside the
+    # object at character 48312 and the record was lost — one story in five,
+    # reported as a product failure when it was an instrument failure.
+    #
+    # A chunk line is `BUNNYB64 <index> <data>`. Anything the kernel writes
+    # between two of them fails to match and is dropped; a chunk that is torn in
+    # half fails to match and its *index* is missing, so the reassembly can say
+    # which piece it lost instead of decoding something short and calling it
+    # JSON. Base64 rather than raw, so the payload cannot contain a space, a
+    # newline or a bracket that the framing depends on.
+    payload = base64.b64encode(
+        json.dumps(record, sort_keys=True).encode("utf-8"),
+    ).decode("ascii")
+    chunks = [payload[at:at + CHUNK] for at in range(0, len(payload), CHUNK)]
     print(BEGIN, flush=True)
-    print(json.dumps(record, sort_keys=True), flush=True)
+    print(f"BUNNYB64-COUNT {len(chunks)}", flush=True)
+    for index, chunk in enumerate(chunks):
+        print(f"BUNNYB64 {index} {chunk}", flush=True)
     print(END, flush=True)
     return 0
 

@@ -20,6 +20,7 @@ record to judge.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 from pathlib import Path
 import re
@@ -29,10 +30,20 @@ from typing import Any, Callable, Mapping
 BEGIN = "---BUNNY-ALPHA-JSON-BEGIN---"
 END = "---BUNNY-ALPHA-JSON-END---"
 
-#: Serial consoles interleave. The probe's own output is one line of JSON, but
-#: the kernel may have written a line of its own into the middle of it, so the
-#: extraction takes everything between the markers and then finds the JSON.
+#: Serial consoles interleave, and the probe frames its payload so that they
+#: may. A control-character strip first, because the console carries colour.
 _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+#: The probe's chunk framing. Anchored to the end of the line so a kernel
+#: message appended to a chunk cannot be mistaken for part of it.
+_CHUNK = re.compile(r"BUNNYB64 (\d+) ([A-Za-z0-9+/=]+)\s*$")
+_COUNT = re.compile(r"BUNNYB64-COUNT (\d+)\s*$")
+
+#: Must equal ``CHUNK`` in alpha-probe.py. The two are separate programs and
+#: one runs inside the guest, so the width cannot be shared as an import; it
+#: is only used to notice a torn line, and a mismatch degrades to "cut short"
+#: rather than to a wrong record.
+_CHUNK_WIDTH = 512
 
 
 def extract(serial: Path) -> tuple[dict[str, Any] | None, str]:
@@ -49,6 +60,54 @@ def extract(serial: Path) -> tuple[dict[str, Any] | None, str]:
     if END not in body:
         return None, "the probe started and did not finish: no end marker"
     body = body.split(END, 1)[0]
+
+    # Numbered base64 chunks first. The probe prints them because a serial
+    # console interleaves: a kernel message landed inside a 130 kB JSON object
+    # at character 48312 on one offline boot and the whole record was lost.
+    # Anything the kernel writes between two chunks fails to match; a chunk torn
+    # in half fails to match too, and its *index* is then missing, so this can
+    # name the piece it lost rather than decoding something short and calling it
+    # a record.
+    chunks: dict[int, str] = {}
+    declared = -1
+    for line in body.splitlines():
+        cleaned = _CONTROL.sub("", line)
+        count = _COUNT.search(cleaned)
+        if count:
+            declared = int(count.group(1))
+            continue
+        found = _CHUNK.search(cleaned)
+        if found:
+            chunks[int(found.group(1))] = found.group(2)
+    if chunks:
+        expected = declared if declared >= 0 else max(chunks) + 1
+        missing = [index for index in range(expected) if index not in chunks]
+        if missing:
+            return None, (
+                f"the probe's output lost {len(missing)} of {expected} chunk(s) to console "
+                f"interleaving: {missing[:8]}"
+            )
+        # A chunk cut short still matches the pattern — the remaining base64 is
+        # valid base64 — so length is checked too. Without this a torn line
+        # reaches the decoder and the failure is reported as "did not decode",
+        # which says nothing about where it happened.
+        short = [
+            index for index in range(expected - 1)
+            if len(chunks[index]) != _CHUNK_WIDTH
+        ]
+        if short:
+            return None, (
+                f"{len(short)} chunk(s) arrived cut short, so a console line was torn: "
+                f"{short[:8]}"
+            )
+        joined = "".join(chunks[index] for index in range(expected))
+        try:
+            return json.loads(base64.b64decode(joined).decode("utf-8")), ""
+        except Exception as error:
+            return None, f"the reassembled payload did not decode: {error}"
+
+    # A probe from before the chunk framing. Kept so an older serial log can
+    # still be read.
     for line in body.splitlines():
         candidate = _CONTROL.sub("", line).strip()
         if candidate.startswith("{") and candidate.endswith("}"):
