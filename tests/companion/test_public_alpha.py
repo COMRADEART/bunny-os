@@ -549,11 +549,27 @@ class DiagnosticsTests(TemporaryRootTests):
         bundle = build_bundle(root=self.root, report=diagnose(root=self.root, include_failures=False))
         _refuse_secrets(bundle)
 
-    def test_the_bundle_is_reproducible_for_one_report(self) -> None:
+    def test_the_bundle_carries_no_clock_of_its_own(self) -> None:
+        """The timestamp is the caller's, so two bundles agree about when.
+
+        The *whole* bundle is deliberately not asserted identical: it re-reads
+        the machine, and ``MemAvailable`` moves between two calls a millisecond
+        apart. An earlier version of this test compared the two documents and
+        failed on Linux for exactly that reason — which is the correct
+        behaviour being caught by an incorrect assertion, so the assertion
+        narrowed to the part that is a promise.
+        """
         report = diagnose(root=self.root, include_failures=False)
-        first = build_bundle(root=self.root, report=report, generated_at="2026-08-07T00:00:00Z")
-        second = build_bundle(root=self.root, report=report, generated_at="2026-08-07T00:00:00Z")
-        self.assertEqual(json.dumps(first, sort_keys=True), json.dumps(second, sort_keys=True))
+        stamp = "2026-08-07T00:00:00Z"
+        first = build_bundle(root=self.root, report=report, generated_at=stamp)
+        second = build_bundle(root=self.root, report=report, generated_at=stamp)
+        for key in ("generatedAt", "identity", "diagnostics", "contents", "excluded",
+                    "uploaded", "componentVersions", "buildInputs", "schemaVersion"):
+            self.assertEqual(
+                json.dumps(first[key], sort_keys=True),
+                json.dumps(second[key], sort_keys=True),
+                f"{key} differs between two bundles built from one report",
+            )
 
 
 class RedactionTests(unittest.TestCase):

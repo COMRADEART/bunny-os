@@ -35,6 +35,22 @@ _RECORD = _ROOT / "qualification" / "companion-3d-renderer" / "preserved-evidenc
 #: a gate ran, which is the opposite of an immutable one.
 _OWN_PHASE = "qualification/companion-3d-renderer/"
 
+#: Build residue, which is not evidence and is not in the repository.
+#:
+#: ``qualification/display-stack/scripts/`` holds importable helpers, so running
+#: the suite once writes ``__pycache__`` beside them — twenty-three ``.pyc``
+#: files that are ignored by ``.gitignore`` and invisible to every other check
+#: in this project. The walk below asks the *filesystem* rather than git, so it
+#: counted them as files added to an earlier phase's evidence tree and the test
+#: failed on every run after the first. Found on the Public Alpha branch, where
+#: the gates run the suite repeatedly against one checkout.
+#:
+#: Excluded by directory name, matching ``TREE_EXCLUDED`` and ``PACKAGE_EXCLUDED``
+#: in ``build/scripts/install_routes.py``, which drop the same directory for the
+#: same reason: bytecode embeds the source path and the mtime of the machine
+#: that produced it, so it is never content anybody meant to keep.
+_RESIDUE = ("__pycache__",)
+
 
 def _digest(path: Path) -> tuple[int, str]:
     raw = path.read_bytes()
@@ -74,6 +90,7 @@ class PreservedEvidence(unittest.TestCase):
             if path.is_file()
             and path.relative_to(_ROOT).as_posix() not in recorded
             and not path.relative_to(_ROOT).as_posix().startswith(_OWN_PHASE)
+            and not any(part in _RESIDUE for part in path.relative_to(_ROOT).parts)
         ]
         self.assertEqual(added, [], "a file was added to an earlier phase's evidence tree")
 
