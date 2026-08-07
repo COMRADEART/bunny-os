@@ -2,6 +2,69 @@
 
 This root report mirrors the maintained detail in `docs/KNOWN_LIMITATIONS.md`.
 
+## Added by the Public Alpha integration pass — 2026-08-07
+
+Full detail in `PUBLIC_ALPHA_INTEGRATION_REPORT.md`.
+
+### The installation medium cannot be built
+
+`make build-alpha-iso` fails in `image-builder`'s `bootc-generic-iso` pipeline
+with `FileNotFoundError: /boot/efi/EFI/fedora/shimx64.efi`.
+`quay.io/fedora/fedora-bootc:44` ships an **empty `/boot`**: `shim-x64` is
+installed and its file list names those paths, but they are not materialised in
+the container and `dnf reinstall shim-x64` does not repopulate them. The
+disk-image path works because bootc regenerates `/boot` at deployment; the ISO
+path needs the files in the container.
+
+Measured with `image-builder 76.0.0` and `osbuild 185`. Upstream, and not
+introduced by any Bunny OS change — the live ISO has been recorded NOT PRODUCED
+since 2026-08-01 and this is the first run that established why.
+
+Consequence: **there is no supported installation path for Alpha 0.1**, and
+exit criteria 2, 3 and 28 cannot be met until it is resolved. The payload image
+boots, installs nothing, and is the artifact every other measurement in that
+report was taken from.
+
+### The window was never seen
+
+Every statement about the companion window in the Alpha report is a statement
+about units, processes and files. The harness boots headless and reads a serial
+console, so:
+
+* GTK-visible and first-character-frame timestamps are NOT_RUN;
+* "the character appears" is NOT_RUN — the *decision* is measured, the drawing
+  is not;
+* the approval dialog, the transcript and the speech bubble are NOT_RUN.
+
+§21's rule applies to more than GPUs. A headless boot proves a window process
+started; it does not prove anything appeared in it.
+
+### Neither half of the AI path exists on the shipped image
+
+No local provider is installed, and `vosk` is not in the Fedora repositories so
+speech recognition has no library. Both are reported correctly — the provider
+survey says plainly that nothing is installed and that typed input works, and
+the speech survey names the missing layer — and both are §9's and §32's
+supported branches. But it means the provider and speech halves of the success
+path are **structurally unexercised** on the artifact, not merely untested.
+
+### The Speech Dispatcher log bound is not re-measured
+
+An unbounded `speech-dispatcher.log` reached 1,656,115,200 bytes in
+`/run/user/$UID`, which is RAM, and filled the tmpfs. It is bounded by a
+drop-in setting `LogLevel 1`. The fix has not been re-measured on a machine
+that has run the voice runtime for a day, which is what would confirm the bound
+holds rather than merely being configured.
+
+### mDNS and LLMNR remain
+
+`avahi-daemon` on 5353 and `systemd-resolved` on 5355 still listen on all
+interfaces after this pass. They are pre-existing, they are not update or
+telemetry paths, and disabling them is a change to name resolution that belongs
+in its own review rather than in a network-posture fix. Recorded so that a
+network audit reading "no unexplained outbound traffic" is not read as "nothing
+listens".
+
 ## Added by the first-login correction pass — 2026-08-02
 
 ### The archive digest is a function of the commit built
