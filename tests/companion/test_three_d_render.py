@@ -77,6 +77,13 @@ class RenderTests(unittest.TestCase):
         context = getattr(cls, "context", None)
         if context is not None:
             context.release()
+        # Drop the class's own reference too. Releasing tells the driver to
+        # destroy the context; it does not make the Python object unreachable,
+        # and unittest keeps test classes alive for the life of the process —
+        # so a fifty-run suite gate counted two context objects at the end and
+        # called them leaked. They were released fixtures.
+        cls.context = None
+        cls.package = None
 
     def _renderer(self, quality: str = "full-3d", motion: str = "full") -> ThreeDRenderer:
         renderer = ThreeDRenderer(
@@ -252,6 +259,13 @@ class ResourceTests(unittest.TestCase):
         context = getattr(cls, "context", None)
         if context is not None:
             context.release()
+        # Drop the class's own reference too. Releasing tells the driver to
+        # destroy the context; it does not make the Python object unreachable,
+        # and unittest keeps test classes alive for the life of the process —
+        # so a fifty-run suite gate counted two context objects at the end and
+        # called them leaked. They were released fixtures.
+        cls.context = None
+        cls.package = None
 
     def _upload(self, renderer: ThreeDRenderer) -> None:
         renderer.load_package(self.package)

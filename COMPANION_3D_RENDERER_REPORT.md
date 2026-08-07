@@ -8,7 +8,7 @@
 | Starting commit | `fa49380dadf0aa90690c4f2be5b483b16a56c0db` (verified head of the base branch; working tree clean) |
 | Branch | `feature/companion-3d-renderer` |
 | First source commit | `8bd18d7a62831b553b1505f0967ceaa2dfe0d991` — "A ladder that had two rungs nobody had built" |
-| Gate commit | `ceda691871bd2470219a2ba78a945cdb5efb5735` — every gate iteration records it |
+| Gate commit | `dd79cece42b4382c3ea6cc1ed018d3a2836cd96d` — every gate iteration records it |
 | Evidence commit | *(the commit that adds `qualification/companion-3d-renderer/evidence/` and this report)* |
 | Final SHA | *(the closure commit that follows, which edits only this table and §3's post-gate paragraph)* |
 
@@ -53,7 +53,7 @@ earlier claim.
 
 ## 3. Build-input impact
 
-The analyser over `fa49380..ceda691` — the base to the gate commit — reports
+The analyser over `fa49380..dd79cec` — the base to the gate commit — reports
 **54 installed, 6 context-only, 14 unreachable**. Profiles affected: `beta`,
 `desktop`, `developer`, `live`, `minimal`, `recovery`, `shell`, `shell-test`.
 
@@ -914,7 +914,7 @@ the result, the graphics context, the pixels — is real.
 
 ## 32. Stress gates
 
-**All three gates ran on one exact commit: `ceda691871bd2470219a2ba78a945cdb5efb5735`.**
+**All three gates ran on one exact commit: `dd79cece42b4382c3ea6cc1ed018d3a2836cd96d`.**
 Every iteration of every gate records that commit in its own record — per
 iteration rather than once per run, so a tree that moved underneath a gate could
 not be hidden by a header.

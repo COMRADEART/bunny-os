@@ -702,7 +702,21 @@ def renderer3d_inventory() -> dict[str, Any]:
         if name in {"SurfacelessContext", "AdoptedContext"}:
             contexts += 1
             try:
-                if not item.lost:
+                # Whether it still *holds* a driver context, not whether the
+                # Python object exists. A released context has had
+                # ``eglDestroyContext`` and ``eglTerminate`` called on it and
+                # holds nothing; the object survives only because whoever made
+                # it still has a reference — a unittest class attribute, in the
+                # case that found this. Counting those as live GPU contexts
+                # made a fifty-run suite gate report two leaked contexts when
+                # the leak was a fixture and the driver had been told twice.
+                #
+                # ``lost`` is not the same question and must not be reused for
+                # it: §23 gives that word a specific meaning (the compositor or
+                # the driver took the context away) and a released context is
+                # not a lost one.
+                held = getattr(item, "_context", None) or getattr(item, "_gl", None)
+                if held is not None and not item.lost:
                     live_contexts += 1
             except Exception:
                 pass

@@ -95,9 +95,30 @@ def _verdict(path: Path) -> dict[str, Any]:
     renderer_final = final.get("renderer3d", {}) if isinstance(final, dict) else {}
     leak_suspicions = list(renderer_final.get("leakSuspicions", ()))
     gl_table_loaded = bool(renderer_final.get("glTable", False))
+    # Counters that name a *resource* the process still holds. Deliberately not
+    # every counter: ``gpuContexts``, ``renderers`` and ``animationTimers`` count
+    # live Python objects, and a unittest class that made its fixture in
+    # ``setUpClass`` legitimately still references one at the end of a run even
+    # though the driver was told to destroy it. Failing on those made a
+    # fifty-run suite gate report two leaked GPU contexts where there were none:
+    # both had been released, and what remained was a class attribute.
+    #
+    # The per-iteration *deltas* still track the object counts, which is the
+    # right place for them — an object count that grows every iteration is a
+    # leak whatever it points at, and a constant two is a fixture.
+    _HELD = (
+        "liveGpuContexts", "activeModels", "glObjects", "textures", "buffers",
+        "vertexArrays", "shaderPrograms", "framebuffers", "gtkGlAreas",
+    )
     residual = {
-        name: value for name, value in renderer_final.items()
-        if isinstance(value, int) and not isinstance(value, bool) and value
+        name: renderer_final[name] for name in _HELD
+        if isinstance(renderer_final.get(name), int)
+        and not isinstance(renderer_final.get(name), bool)
+        and renderer_final[name]
+    }
+    retained_objects = {
+        name: renderer_final[name] for name in ("gpuContexts", "renderers", "animationTimers")
+        if isinstance(renderer_final.get(name), int) and renderer_final[name]
     }
 
     warm_up = {
@@ -170,7 +191,9 @@ def _verdict(path: Path) -> dict[str, Any]:
         # needs the value rather than a verdict, because which is right depends
         # on the gate.
         "glTableLoadedAtEnd": gl_table_loaded,
-        "residualThreeDObjects": residual,
+        "residualHeldResources": residual,
+        # Reported and never failed on. See the note beside ``_HELD``.
+        "retainedPythonObjects": retained_objects,
         "failedIterations": failures,
         "rss": {
             "baselineBytes": baseline_rss,
