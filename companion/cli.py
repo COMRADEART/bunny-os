@@ -209,6 +209,26 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
     renderer_group.add_parser("explain", help="explain package, plan and fallback selection (read-only)")
     renderer_demo = renderer_group.add_parser("demo", help="RUNS the provider-free renderer demonstration")
     renderer_demo.add_argument("--demo-root", type=Path, default=None)
+    # §31's six operations, and no seventh. The name of each subcommand is the
+    # operation name with underscores turned into a word, so the CLI cannot
+    # reach an operation the table does not carry.
+    renderer_3d = group.add_parser(
+        "renderer-3d",
+        help="3D renderer diagnostics (read-only; six named operations)",
+    )
+    renderer_3d_group = renderer_3d.add_subparsers(dest="renderer_3d_command", required=True)
+    for _name, _help in (
+        ("health", "report whether this machine can create a 3D context (read-only)"),
+        ("status", "describe a renderer built from the selected package (read-only)"),
+        ("model", "describe the validated model descriptor (read-only)"),
+        ("metrics", "draw a bounded number of offscreen frames and time them"),
+        ("explain", "explain what this machine would draw, and why (read-only)"),
+        ("reload", "re-validate and re-upload the selected package"),
+    ):
+        _parser = renderer_3d_group.add_parser(_name, help=_help)
+        _parser.add_argument("--package-id", default=None, help="an installed package id")
+        if _name == "metrics":
+            _parser.add_argument("--frames", type=int, default=120)
     renderer_demo.add_argument("--performance", action="store_true",
                                help="include development-host microbenchmarks")
 
@@ -357,6 +377,8 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
         return _character_command(args)
     if args.companion_command == "renderer":
         return _renderer_command(args)
+    if args.companion_command == "renderer-3d":
+        return _renderer_3d_command(args)
     if args.companion_command == "serve":
         return _serve(args)
     if args.companion_command == "shell":
@@ -863,13 +885,37 @@ def _renderer_command(args: argparse.Namespace) -> dict[str, Any]:
             "creatorTrusted": value.get("selectedPackage", {}).get("creatorTrusted"),
             "integrityVerified": value.get("selectedPackage", {}).get("integrityVerified"),
             "note": (
-                "Integrity verification does not establish creator trust, and an eligible "
-                "presentation above animated-2d is not implemented in this build."
+                "Integrity verification does not establish creator trust. Every rung of "
+                "the presentation ladder is implemented in this build; which one is drawn "
+                "is decided by the capability projection and the selected package."
             ),
         }
     if banner:
         result["simulationBanner"] = banner
     return result
+
+
+def _renderer_3d_command(args: argparse.Namespace) -> dict[str, Any]:
+    """Dispatch one §31 operation. The name is built, never taken from input."""
+    from .character.three_d.diagnostics import run_operation
+
+    name = f"renderer_3d_{args.renderer_3d_command}"
+    frames = getattr(args, "frames", None)
+    value = run_operation(
+        name,
+        root=args.root or default_root(),
+        package_id=getattr(args, "package_id", None),
+        frames=frames,
+    )
+    mutating = name == "renderer_3d_reload"
+    return {
+        "effect": (
+            "RELOADED the selected 3D character into a fresh graphics context; "
+            "no package on disk was changed"
+            if mutating else "read-only"
+        ),
+        **value,
+    }
 
 
 def _run_character_slice(args: argparse.Namespace) -> dict[str, Any]:

@@ -70,22 +70,32 @@ class MappingTests(unittest.TestCase):
         """A rung joins this ladder only when a renderer is behind it.
 
         ``animated-2d`` was absent until :mod:`companion.character.animated_renderer`
-        existed; it is here now because that renderer does. 3D is still absent
-        because no 3D renderer exists, and a test that let it in would be the
-        one line between "not implemented" and "claimed".
+        existed. The two 3D rungs were absent for the same reason until
+        :mod:`companion.character.three_d.renderer` existed, and this test was
+        the line that held them out — so it is the line that now has to say what
+        let them in, rather than simply be deleted.
+
+        What let them in is a renderer module *and* a test that draws with it:
+        ``tests/companion/test_three_d_render.py`` creates a real GL context,
+        uploads the built-in model, draws a frame and reads the pixels back. The
+        assertion below is that the module exists; the assertion that it works
+        is that file, and it skips rather than passes where no context can be
+        made, so it cannot become a rubber stamp on a machine without graphics.
         """
         self.assertTrue(IMPLEMENTED_PRESENTATIONS <= set(PRESENTATION_KINDS))
         self.assertIn("animated-2d", IMPLEMENTED_PRESENTATIONS)
-        self.assertNotIn("lightweight-3d", IMPLEMENTED_PRESENTATIONS)
-        self.assertNotIn("full-3d", IMPLEMENTED_PRESENTATIONS)
+        self.assertIn("lightweight-3d", IMPLEMENTED_PRESENTATIONS)
+        self.assertIn("full-3d", IMPLEMENTED_PRESENTATIONS)
         from pathlib import Path as _Path
 
-        renderers = {
-            path.name for path in
-            (_Path(__file__).resolve().parents[2] / "companion" / "character").glob("*renderer*.py")
-        }
+        character = _Path(__file__).resolve().parents[2] / "companion" / "character"
+        renderers = {path.name for path in character.glob("*renderer*.py")}
         self.assertIn("animated_renderer.py", renderers)
-        self.assertFalse(any("3d" in name for name in renderers))
+        self.assertTrue((character / "three_d" / "renderer.py").is_file())
+        self.assertTrue(
+            (_Path(__file__).resolve().parent / "test_three_d_render.py").is_file(),
+            "the rung is claimed; the test that draws with it must exist",
+        )
 
 
 class PriorityTests(unittest.TestCase):
@@ -345,7 +355,15 @@ class MarkupTests(unittest.TestCase):
 class PresentationSelectionTests(unittest.TestCase):
     """§11: only implementations that exist may be selected."""
 
-    def test_a_capable_machine_is_given_animation_but_never_3d(self) -> None:
+    def test_a_capable_machine_is_now_given_the_3d_rung_it_was_always_eligible_for(self) -> None:
+        """The same machine, the same signals, and the gap has closed.
+
+        This test asserted ``animated-2d`` for two phases while ``eligible``
+        said ``full-3d`` — the honest form of "this build has no renderer for
+        what your machine could run". Now that the renderer exists the two are
+        equal and ``limitedByImplementation`` is false, which is the same
+        property stated the other way round.
+        """
         decision = select_presentation(
             PresentationSignals(
                 available_memory_bytes=8 * 1024 ** 3, gpu_available=True,
@@ -353,11 +371,31 @@ class PresentationSelectionTests(unittest.TestCase):
             )
         )
         self.assertIn(decision.implementation, IMPLEMENTED_PRESENTATIONS)
-        self.assertEqual(decision.implementation, "animated-2d")
-        # The machine would permit 3D. This build says so and draws 2D.
+        self.assertEqual(decision.implementation, "full-3d")
         self.assertEqual(decision.eligible, "full-3d")
-        self.assertTrue(decision.limited_by_implementation)
-        self.assertTrue(any("this build implements" in reason for reason in decision.reasons))
+        self.assertFalse(decision.limited_by_implementation)
+        self.assertFalse(any("this build implements" in reason for reason in decision.reasons))
+
+    def test_a_machine_with_no_gpu_is_still_not_eligible_for_3d(self) -> None:
+        """The renderer existing does not make a software rasteriser a GPU."""
+        decision = select_presentation(
+            PresentationSignals(
+                available_memory_bytes=8 * 1024 ** 3, gpu_available=False,
+                display_available=True, audio_output_available=True,
+            )
+        )
+        self.assertEqual(decision.eligible, "animated-2d")
+        self.assertEqual(decision.implementation, "animated-2d")
+        self.assertTrue(any("3D is not eligible" in reason for reason in decision.reasons))
+
+    def test_a_mid_memory_machine_gets_the_lightweight_rung(self) -> None:
+        decision = select_presentation(
+            PresentationSignals(
+                available_memory_bytes=int(2.5 * 1024 ** 3), gpu_available=True,
+                display_available=True, audio_output_available=True,
+            )
+        )
+        self.assertEqual(decision.implementation, "lightweight-3d")
 
     def test_a_tiny_machine_gets_text_only(self) -> None:
         decision = select_presentation(PresentationSignals(available_memory_bytes=48 * 1024 * 1024))

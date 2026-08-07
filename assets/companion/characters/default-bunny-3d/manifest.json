@@ -1,0 +1,648 @@
+{
+  "schemaVersion": 1,
+  "packageId": "bunny-default-3d",
+  "characterId": "bunny",
+  "characterName": "Bunny (3D reference)",
+  "packageVersion": "1.0.0",
+  "creator": "ComradeArt",
+  "license": "GPL-3.0-or-later",
+  "copyright": "Copyright 2026 ComradeArt",
+  "licenseAsset": "licence",
+  "supportedRendererVersions": {
+    "full-3d": "1.0",
+    "lightweight-3d": "1.0",
+    "animated-2d": "1.0",
+    "static-image": "1.0"
+  },
+  "minimumBunnyOsVersion": "0.1.0",
+  "presentationType": "full-3d",
+  "assetInventory": [
+    {
+      "assetId": "bunny-3d-model",
+      "path": "assets/bunny-3d.glb",
+      "mediaType": "model/gltf-binary",
+      "sha256": "778228cdac72a38ea0c5f1690cc25081475390c789d7fa360a0d47811d177914",
+      "sizeBytes": 303984,
+      "purpose": "model"
+    },
+    {
+      "assetId": "idle-1",
+      "path": "assets/idle-1.png",
+      "mediaType": "image/png",
+      "sha256": "15e5dabb426c9fc1e501d04e3e6cde7b06e199c3e884949fef7ad3b73d348af3",
+      "sizeBytes": 6701,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "idle-2",
+      "path": "assets/idle-2.png",
+      "mediaType": "image/png",
+      "sha256": "e82ba54ba976913d023084a47390bdccd16f1cf8daac58b8716239bb7016fb34",
+      "sizeBytes": 6738,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "listening",
+      "path": "assets/listening.png",
+      "mediaType": "image/png",
+      "sha256": "98104b07b4eb9c71fd3bf09e22514e3bd5dbf21aedc217a88bb64986c1b0fa52",
+      "sizeBytes": 6940,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "thinking",
+      "path": "assets/thinking.png",
+      "mediaType": "image/png",
+      "sha256": "f962036b274a11f1d1a231513b735ddabce3f2d6f590c298b4254621d5316fcb",
+      "sizeBytes": 7016,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "working-1",
+      "path": "assets/working-1.png",
+      "mediaType": "image/png",
+      "sha256": "9b579531d34ceea317b6abc5c571adb9c1ce86a45ab7c829c86693e5d1634702",
+      "sizeBytes": 7157,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "working-2",
+      "path": "assets/working-2.png",
+      "mediaType": "image/png",
+      "sha256": "bd42b8e0438536fd4658be9d58773051cfafd4443dfc0eb7041b73b9c2985fb9",
+      "sizeBytes": 7213,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "reviewing",
+      "path": "assets/reviewing.png",
+      "mediaType": "image/png",
+      "sha256": "dcf85691957a417f5525a1c4b6710f43d9e6c7c6c12fb1c7cb50ddb28c2bf42e",
+      "sizeBytes": 7123,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "speaking-closed",
+      "path": "assets/speaking-closed.png",
+      "mediaType": "image/png",
+      "sha256": "6bc289c146161851a8ae50ad5d277038766b1491aa472b997995544a3cdaad03",
+      "sizeBytes": 6763,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "speaking-open",
+      "path": "assets/speaking-open.png",
+      "mediaType": "image/png",
+      "sha256": "1c1de2b1a0c3b65f260f4e0d46ab87b42eb28172ff5462920e4dbd7334424e6f",
+      "sizeBytes": 6830,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "success",
+      "path": "assets/success.png",
+      "mediaType": "image/png",
+      "sha256": "2790f10ea8a986786a49063de52d9975c944928a5ea111f9bbb2ff236730a226",
+      "sizeBytes": 7024,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "warning",
+      "path": "assets/warning.png",
+      "mediaType": "image/png",
+      "sha256": "573aea332a5f54b5314cbc25533e9e56ca6b8db0bf975832ccf9e9f3707d28de",
+      "sizeBytes": 7464,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "error",
+      "path": "assets/error.png",
+      "mediaType": "image/png",
+      "sha256": "ee4da8d38e153109da4479b8957fcb6e48bfc5b189fd3d102fe2cdf2c56ec27f",
+      "sizeBytes": 6915,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "sleeping",
+      "path": "assets/sleeping.png",
+      "mediaType": "image/png",
+      "sha256": "a813659dd8618ee631143d57e4f0264782d50c647ff5d5d5796fea81e9510cdb",
+      "sizeBytes": 6848,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "moving",
+      "path": "assets/moving.png",
+      "mediaType": "image/png",
+      "sha256": "9069c94f8914c0f42caf94ef0f9aa6aef9db8b9b845dd04e9e0006cfce0fb738",
+      "sizeBytes": 6714,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "preview-3d",
+      "path": "assets/preview-3d.png",
+      "mediaType": "image/png",
+      "sha256": "a31575ac8c86ea6b9d5c4c0cd547dbececfac4e030168a97aee0ad5571f2bc80",
+      "sizeBytes": 6693,
+      "width": 96,
+      "height": 96,
+      "purpose": "thumbnail"
+    },
+    {
+      "assetId": "licence",
+      "path": "LICENSE.txt",
+      "mediaType": "text/plain",
+      "sha256": "328721756abe18765308a20162e519290750cf133b4e8cbb3a5de3a3f29e2de4",
+      "sizeBytes": 732,
+      "purpose": "license"
+    },
+    {
+      "assetId": "provenance",
+      "path": "PROVENANCE.json",
+      "mediaType": "application/json",
+      "sha256": "e3ba3e5dc876494ffeb841c43112e62e6a9dcae46c8177203a8354efd91d3dfa",
+      "sizeBytes": 1402,
+      "purpose": "provenance"
+    }
+  ],
+  "fallbackAsset": "idle-1",
+  "thumbnailAsset": "preview-3d",
+  "declaredDimensions": {
+    "width": 96,
+    "height": 96
+  },
+  "declaredFrameRate": 30.0,
+  "declaredMemoryEstimateBytes": 8388608,
+  "animations": {
+    "idle": {
+      "kind": "frame-sequence",
+      "loop": true,
+      "transition": "crossfade",
+      "playbackSpeed": 1.0,
+      "frames": [
+        {
+          "assetId": "idle-1",
+          "durationMs": 900
+        },
+        {
+          "assetId": "idle-2",
+          "durationMs": 900
+        }
+      ]
+    },
+    "working": {
+      "kind": "frame-sequence",
+      "loop": true,
+      "transition": "crossfade",
+      "playbackSpeed": 1.0,
+      "frames": [
+        {
+          "assetId": "working-1",
+          "durationMs": 400
+        },
+        {
+          "assetId": "working-2",
+          "durationMs": 400
+        }
+      ]
+    },
+    "speaking": {
+      "kind": "frame-sequence",
+      "loop": true,
+      "transition": "interruptible",
+      "playbackSpeed": 1.0,
+      "frames": [
+        {
+          "assetId": "speaking-closed",
+          "durationMs": 160
+        },
+        {
+          "assetId": "speaking-open",
+          "durationMs": 160
+        }
+      ]
+    },
+    "listening": {
+      "kind": "static",
+      "loop": false,
+      "transition": "immediate",
+      "frames": [
+        {
+          "assetId": "listening",
+          "durationMs": 1000
+        }
+      ]
+    },
+    "thinking": {
+      "kind": "static",
+      "loop": false,
+      "transition": "immediate",
+      "frames": [
+        {
+          "assetId": "thinking",
+          "durationMs": 1000
+        }
+      ]
+    },
+    "reviewing": {
+      "kind": "static",
+      "loop": false,
+      "transition": "immediate",
+      "frames": [
+        {
+          "assetId": "reviewing",
+          "durationMs": 1000
+        }
+      ]
+    },
+    "success": {
+      "kind": "static",
+      "loop": false,
+      "transition": "return-to-idle",
+      "frames": [
+        {
+          "assetId": "success",
+          "durationMs": 1400
+        }
+      ]
+    },
+    "warning": {
+      "kind": "static",
+      "loop": false,
+      "transition": "immediate",
+      "frames": [
+        {
+          "assetId": "warning",
+          "durationMs": 1000
+        }
+      ]
+    },
+    "error": {
+      "kind": "static",
+      "loop": false,
+      "transition": "immediate",
+      "frames": [
+        {
+          "assetId": "error",
+          "durationMs": 1000
+        }
+      ]
+    },
+    "sleeping": {
+      "kind": "static",
+      "loop": false,
+      "transition": "immediate",
+      "frames": [
+        {
+          "assetId": "sleeping",
+          "durationMs": 1000
+        }
+      ]
+    },
+    "moving": {
+      "kind": "static",
+      "loop": false,
+      "transition": "immediate",
+      "frames": [
+        {
+          "assetId": "moving",
+          "durationMs": 1000
+        }
+      ]
+    },
+    "mouth-closed": {
+      "kind": "static",
+      "loop": false,
+      "transition": "immediate",
+      "frames": [
+        {
+          "assetId": "speaking-closed",
+          "durationMs": 120
+        }
+      ]
+    },
+    "mouth-open": {
+      "kind": "static",
+      "loop": false,
+      "transition": "immediate",
+      "frames": [
+        {
+          "assetId": "speaking-open",
+          "durationMs": 120
+        }
+      ]
+    }
+  },
+  "stateMap": {
+    "idle": "idle",
+    "starting": "idle",
+    "greeting": "idle",
+    "listening": "listening",
+    "transcribing": "listening",
+    "understanding": "thinking",
+    "planning": "thinking",
+    "thinking": "thinking",
+    "researching": "thinking",
+    "reviewing": "reviewing",
+    "working": "working",
+    "typing": "working",
+    "waiting_for_user": "listening",
+    "waiting_for_approval": "warning",
+    "speaking": "speaking",
+    "presenting_result": "speaking",
+    "success": "success",
+    "warning": "warning",
+    "blocked": "warning",
+    "degraded": "warning",
+    "error": "error",
+    "paused": "idle",
+    "cancelled": "idle",
+    "disconnected": "sleeping",
+    "unavailable": "sleeping",
+    "sleeping": "sleeping",
+    "moving": "moving",
+    "repositioning": "moving",
+    "static_fallback": "idle"
+  },
+  "expressionMap": {
+    "idle": "idle",
+    "happy": "success",
+    "focused": "working",
+    "thinking": "thinking",
+    "concerned": "warning",
+    "error": "error",
+    "neutral": "idle",
+    "sleepy": "sleeping"
+  },
+  "mouthShapeMap": {
+    "closed": "mouth-closed",
+    "neutral": "mouth-closed",
+    "open-small": "mouth-open",
+    "open-medium": "mouth-open",
+    "open-wide": "mouth-open",
+    "rounded": "mouth-open",
+    "smile": "mouth-open"
+  },
+  "bubbleAnchor": {
+    "x": 0.72,
+    "y": 0.18,
+    "preferredSide": "auto"
+  },
+  "boundingBox": {
+    "x": 0.12,
+    "y": 0.02,
+    "width": 0.76,
+    "height": 0.96
+  },
+  "safeMargins": {
+    "top": 0.02,
+    "right": 0.04,
+    "bottom": 0.02,
+    "left": 0.04
+  },
+  "generationProvenance": {
+    "generated": true,
+    "tool": "scripts/build_default_character_3d.py",
+    "creator": "ComradeArt",
+    "derivedFrom": "nothing"
+  },
+  "threeDimensional": {
+    "schemaVersion": 1,
+    "rendererApiVersion": "1.0",
+    "modelFile": "assets/bunny-3d.glb",
+    "modelDigest": "778228cdac72a38ea0c5f1690cc25081475390c789d7fa360a0d47811d177914",
+    "modelSizeBytes": 303984,
+    "gltfVersion": "2.0",
+    "skeletonProfile": "bunny-humanoid-1",
+    "boneMap": {
+      "root": "root",
+      "hips": "hips",
+      "spine": "spine",
+      "chest": "chest",
+      "neck": "neck",
+      "head": "head",
+      "jaw": "jaw",
+      "left_eye": "left_eye",
+      "right_eye": "right_eye",
+      "left_shoulder": "left_shoulder",
+      "left_upper_arm": "left_upper_arm",
+      "left_lower_arm": "left_lower_arm",
+      "left_hand": "left_hand",
+      "right_shoulder": "right_shoulder",
+      "right_upper_arm": "right_upper_arm",
+      "right_lower_arm": "right_lower_arm",
+      "right_hand": "right_hand",
+      "left_upper_leg": "left_upper_leg",
+      "left_lower_leg": "left_lower_leg",
+      "left_foot": "left_foot",
+      "right_upper_leg": "right_upper_leg",
+      "right_lower_leg": "right_lower_leg",
+      "right_foot": "right_foot"
+    },
+    "rootBone": "root",
+    "headBone": "head",
+    "neckBone": "neck",
+    "eyeBones": [
+      "left_eye",
+      "right_eye"
+    ],
+    "handBones": [
+      "left_hand",
+      "right_hand"
+    ],
+    "animationMap": {
+      "idle": "idle",
+      "greeting": "greeting",
+      "listening": "listening",
+      "transcribing": "transcribing",
+      "understanding": "understanding",
+      "planning": "planning",
+      "working": "working",
+      "researching": "researching",
+      "typing": "typing",
+      "reviewing": "reviewing",
+      "waiting-for-user": "waiting-for-user",
+      "waiting-for-approval": "waiting-for-approval",
+      "speaking": "speaking",
+      "presenting-result": "presenting-result",
+      "success": "success",
+      "warning": "warning",
+      "blocked": "blocked",
+      "error": "error",
+      "paused": "paused",
+      "cancelled": "cancelled",
+      "sleeping": "sleeping",
+      "repositioning": "repositioning"
+    },
+    "expressionMap": {
+      "neutral": {},
+      "happy": {
+        "smile": 0.85,
+        "brow_raise": 0.2
+      },
+      "focused": {
+        "brow_lower": 0.5
+      },
+      "thinking": {
+        "brow_lower": 0.35,
+        "eye_narrow": 0.3
+      },
+      "concerned": {
+        "brow_lower": 0.6,
+        "frown": 0.4
+      },
+      "warning": {
+        "brow_raise": 0.5,
+        "frown": 0.5
+      },
+      "error": {
+        "frown": 0.9,
+        "brow_lower": 0.4
+      },
+      "surprised": {
+        "brow_raise": 1.0,
+        "mouth_open_medium": 0.5
+      },
+      "sleepy": {
+        "eye_narrow": 0.8,
+        "brow_lower": 0.2
+      }
+    },
+    "visemeMap": {
+      "neutral": {},
+      "closed": {},
+      "open-small": {
+        "mouth_open_small": 1.0
+      },
+      "open-medium": {
+        "mouth_open_medium": 1.0
+      },
+      "open-wide": {
+        "mouth_open_wide": 1.0
+      },
+      "rounded": {
+        "mouth_rounded": 1.0
+      },
+      "smile": {
+        "mouth_smile": 1.0
+      }
+    },
+    "morphTargets": [
+      "mouth_open_small",
+      "mouth_open_medium",
+      "mouth_open_wide",
+      "mouth_rounded",
+      "mouth_smile",
+      "brow_raise",
+      "brow_lower",
+      "smile",
+      "frown",
+      "eye_narrow",
+      "cheek_puff"
+    ],
+    "textureInventory": [
+      {
+        "name": "bunny-skin",
+        "width": 64,
+        "height": 64,
+        "mediaType": "image/png"
+      }
+    ],
+    "materialInventory": [
+      "bunny-skin",
+      "bunny-cloth",
+      "bunny-eye"
+    ],
+    "modelBounds": {
+      "min": [
+        -0.758,
+        -0.001,
+        -0.152
+      ],
+      "max": [
+        0.758,
+        1.68948,
+        0.152
+      ]
+    },
+    "nativeScale": 1.0,
+    "floorOffset": 0.0,
+    "bubbleAnchor": [
+      0.24,
+      1.4538,
+      0.1
+    ],
+    "cameraAnchor": [
+      0.0,
+      0.9298,
+      0.0
+    ],
+    "maximumTriangles": 8000,
+    "maximumVertices": 6000,
+    "maximumJoints": 32,
+    "maximumMorphTargets": 16,
+    "maximumTextures": 4,
+    "maximumTextureDimensions": 256,
+    "declaredGpuBytes": 4194304,
+    "declaredDecodedBytes": 1048576,
+    "requiredRendererFeatures": [
+      "skeletal-animation",
+      "morph-targets",
+      "base-colour-texture"
+    ],
+    "staticFallbackAsset": "idle-1",
+    "animatedFallbackState": "idle",
+    "previewAsset": "preview-3d",
+    "accessibilityStates": {
+      "idle": "Bunny is standing still and ready.",
+      "greeting": "Bunny raises a hand in greeting.",
+      "listening": "Bunny leans in slightly and turns its head to listen.",
+      "transcribing": "Bunny nods while the words are written down.",
+      "understanding": "Bunny tilts its head, thinking about the request.",
+      "planning": "Bunny looks from side to side while planning.",
+      "working": "Bunny works with both hands in front of it.",
+      "researching": "Bunny looks left and right, reading.",
+      "typing": "Bunny's hands move quickly in front of it.",
+      "reviewing": "Bunny holds something up and looks down at it.",
+      "waiting-for-user": "Bunny shifts its weight, waiting for you.",
+      "waiting-for-approval": "Bunny holds both hands open and waits for your decision.",
+      "speaking": "Bunny gestures while speaking.",
+      "presenting-result": "Bunny opens both arms to present the result.",
+      "success": "Bunny raises one arm; the task finished successfully.",
+      "warning": "Bunny raises a hand; something needs attention.",
+      "blocked": "Bunny folds its arms; the task has not continued.",
+      "error": "Bunny's shoulders drop and it looks down; something went wrong.",
+      "paused": "Bunny stands still; the task is paused.",
+      "cancelled": "Bunny lowers its arms and looks away; the task was cancelled.",
+      "sleeping": "Bunny's head is lowered and it breathes slowly.",
+      "repositioning": "Bunny shifts as it is moved to a new place."
+    }
+  }
+}

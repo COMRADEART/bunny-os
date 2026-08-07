@@ -73,6 +73,27 @@ def selected_package(registry: PackageRegistry):
     raise failure
 
 
+def three_d_signals(package: Any = None) -> dict[str, Any]:
+    """The 3D fields of :class:`RendererSignals`, read once at start-up.
+
+    Separate from :func:`signals_from_assessment` because they come from a
+    different place: the capability assessment describes the *machine*, and
+    whether a graphics context can be made and whether the selected package
+    carries a model are properties of this process's environment and its
+    chosen character. Merging them would put a package lookup inside a function
+    whose whole contract is that it only reads the inventory.
+    """
+    from .three_d.diagnostics import three_d_environment
+
+    environment = three_d_environment()
+    model = getattr(package, "model", None)
+    return {
+        "three_d_available": bool(environment["threeDAvailable"]),
+        "package_supports_3d": model is not None,
+        "model_gpu_bytes": None if model is None else int(model.estimated_gpu_bytes),
+    }
+
+
 def signals_from_assessment(assessment: Assessment) -> RendererSignals:
     """Read the capability assessment; never probe or recompute it here.
 

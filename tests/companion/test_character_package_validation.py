@@ -91,9 +91,23 @@ class InvalidManifestTests(CharacterPackageFixture, unittest.TestCase):
         with self.assertRaisesRegex(CharacterSchemaError, "repeats"):
             validate_package_directory(self.package_root)
 
-    def test_unsupported_presentation_type_is_rejected(self) -> None:
-        self.mutate(lambda value: value.__setitem__("presentationType", "full-3d"))
+    def test_a_reserved_presentation_type_is_rejected(self) -> None:
+        """``skeletal-2d`` is reserved and unimplemented, and says so.
+
+        This test named ``full-3d`` until the 3D renderer landed, at which point
+        ``full-3d`` stopped being a reserved name and became a rung. The
+        property under test is not "3D is refused" — it is that a *reserved*
+        name is refused with a message that says it is reserved rather than
+        unknown, so a package author can tell "not yet" from "never".
+        """
+        self.mutate(lambda value: value.__setitem__("presentationType", "skeletal-2d"))
         with self.assertRaisesRegex(CharacterSchemaError, "reserved but not implemented"):
+            validate_package_directory(self.package_root)
+
+    def test_a_3d_presentation_without_a_3d_section_is_rejected(self) -> None:
+        """A rung that exists is not a rung a 2D package may claim."""
+        self.mutate(lambda value: value.__setitem__("presentationType", "full-3d"))
+        with self.assertRaisesRegex(CharacterSchemaError, "renderer version|threeDimensional"):
             validate_package_directory(self.package_root)
 
     def test_external_runtime_asset_url_is_rejected(self) -> None:

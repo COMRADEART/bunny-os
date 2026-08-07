@@ -23,11 +23,18 @@ REQUIRED_CHARACTER_STATES = (
 GENERIC_MOUTH_SHAPES = (
     "closed", "open-small", "open-medium", "open-wide", "rounded", "smile", "neutral",
 )
-IMPLEMENTED_PRESENTATIONS = ("static-image", "animated-2d")
+#: ``full-3d`` and ``lightweight-3d`` joined this tuple in the 3D renderer
+#: phase, and not before — the same rule the animated-2D rung was held to. A
+#: presentation type is implemented when there is a renderer behind it that has
+#: drawn a frame in a test, which is what
+#: ``tests/companion/test_three_d_render.py`` asserts against real pixels.
+IMPLEMENTED_PRESENTATIONS = ("static-image", "animated-2d", "lightweight-3d", "full-3d")
 RESERVED_PRESENTATIONS = (
-    "sprite-sheet", "vector-animation", "skeletal-2d", "lightweight-3d",
-    "full-3d", "remote-rendered",
+    "sprite-sheet", "vector-animation", "skeletal-2d", "remote-rendered",
 )
+#: Presentation types whose package must additionally carry a validated
+#: ``threeDimensional`` section.
+THREE_D_PRESENTATIONS = ("lightweight-3d", "full-3d")
 TRANSITION_TYPES = (
     "immediate", "crossfade", "complete-current", "interruptible",
     "non-interruptible", "queue-next", "return-to-idle",
@@ -55,6 +62,7 @@ _MANIFEST_FIELDS = frozenset({
     "thumbnailAsset", "declaredDimensions", "declaredFrameRate", "declaredMemoryEstimateBytes",
     "animations", "stateMap", "expressionMap", "mouthShapeMap", "bubbleAnchor",
     "boundingBox", "safeMargins", "generationProvenance", "sourcePromptMetadata",
+    "threeDimensional",
 })
 _ASSET_FIELDS = frozenset({
     "assetId", "path", "mediaType", "sha256", "sizeBytes", "width", "height", "purpose",
@@ -66,6 +74,8 @@ _FRAME_FIELDS = frozenset({"assetId", "durationMs"})
 class PackagePresentation(str, Enum):
     STATIC_IMAGE = "static-image"
     ANIMATED_2D = "animated-2d"
+    LIGHTWEIGHT_3D = "lightweight-3d"
+    FULL_3D = "full-3d"
 
 
 class PackageTrustState(str, Enum):
@@ -130,7 +140,12 @@ def safe_package_path(value: Any, name: str = "asset path") -> str:
     }
     if suffix in executable:
         raise CharacterSecurityError(f"executable or active asset type is forbidden: {suffix}")
-    if suffix not in {".png", ".webp", ".txt", ".md", ".json"}:
+    # ``.glb`` joined this set with the 3D renderer. It is a *container* rather
+    # than a script, and the whole of what may be inside it is decided by
+    # ``companion.character.three_d.glb.validate_glb`` — which refuses external
+    # references, unknown required extensions and every decompressor this build
+    # does not own — before a byte of it reaches a driver.
+    if suffix not in {".png", ".webp", ".txt", ".md", ".json", ".glb"}:
         raise CharacterSecurityError(f"unsupported data asset type: {suffix or '[none]'}")
     return path.as_posix()
 
@@ -177,7 +192,11 @@ class AssetRecord:
         path = safe_package_path(item.get("path"))
         media_type = _text(item.get("mediaType"), "asset mediaType", maximum=128)
         suffix = PurePosixPath(path).suffix.casefold()
-        expected = {".png": "image/png", ".webp": "image/webp", ".txt": "text/plain", ".md": "text/markdown", ".json": "application/json"}[suffix]
+        expected = {
+            ".png": "image/png", ".webp": "image/webp", ".txt": "text/plain",
+            ".md": "text/markdown", ".json": "application/json",
+            ".glb": "model/gltf-binary",
+        }[suffix]
         if media_type != expected:
             raise CharacterSchemaError(f"asset {asset_id!r} mediaType does not match {suffix}")
         digest = _text(item.get("sha256"), "asset sha256", maximum=64)
@@ -197,10 +216,14 @@ class AssetRecord:
         if not media_type.startswith("image/") and (width or height):
             raise CharacterSchemaError("metadata assets cannot declare image dimensions")
         purpose = _text(item.get("purpose", "render"), "asset purpose", maximum=64)
-        if purpose not in {"render", "thumbnail", "license", "metadata"}:
+        if purpose not in {"render", "thumbnail", "license", "metadata", "model", "provenance"}:
             raise CharacterSchemaError("asset purpose is unsupported")
         if purpose == "render" and not media_type.startswith("image/"):
             raise CharacterSchemaError("render assets must be raster images")
+        if purpose == "model" and media_type != "model/gltf-binary":
+            raise CharacterSchemaError("model assets must be glTF-Binary")
+        if media_type == "model/gltf-binary" and purpose != "model":
+            raise CharacterSchemaError("a .glb asset must declare purpose 'model'")
         return cls(asset_id, path, media_type, digest, size, width, height, purpose)
 
     def to_json(self) -> dict[str, Any]:
@@ -382,12 +405,23 @@ class CharacterManifest:
     safe_margins: SafeMargins
     generation_provenance: Mapping[str, Any] | None = None
     source_prompt_metadata: Mapping[str, Any] | None = None
+    #: A :class:`companion.character.three_d.package3d.ThreeDSection`, or
+    #: ``None`` for the 2D packages that were here first. Typed as ``Any`` so
+    #: this module does not import the 3D package: ``package3d`` imports *this*
+    #: one, and a cycle between a schema and its own extension is the sort of
+    #: import order that works until somebody imports them in the other order.
+    three_dimensional: Any = None
+
+    @property
+    def is_three_dimensional(self) -> bool:
+        return self.three_dimensional is not None
 
     @classmethod
     def from_json(cls, value: Any) -> "CharacterManifest":
         item = _object(value, "character manifest", _MANIFEST_FIELDS)
         required = _MANIFEST_FIELDS.difference({
             "minimumBunnyOsVersion", "generationProvenance", "sourcePromptMetadata",
+            "threeDimensional",
         })
         missing = sorted(required.difference(map(str, item)))
         if missing:
@@ -441,6 +475,17 @@ class CharacterManifest:
                     raise CharacterSchemaError("animation frames must reference raster images")
         if presentation is PackagePresentation.STATIC_IMAGE and any(animation.kind != "static" for animation in animations.values()):
             raise CharacterSchemaError("static-image packages cannot contain frame-sequence animations")
+        if presentation.value in THREE_D_PRESENTATIONS and not any(
+            animation.kind == "frame-sequence" for animation in animations.values()
+        ):
+            # §5: a 3D package retains an animated-2D fallback where one is
+            # available, and for a package that declares 3D "available" is the
+            # standard — the machine that has to fall back is by definition the
+            # machine that cannot draw the 3D one, and finding out then that
+            # there is nothing below is too late.
+            raise CharacterSchemaError(
+                "a 3D package must carry frame-sequence animations as its animated-2D fallback"
+            )
 
         state_raw = _object(item.get("stateMap"), "stateMap")
         if "idle" not in state_raw:
@@ -507,6 +552,39 @@ class CharacterManifest:
         if prompt is not None:
             prompt = dict(_object(prompt, "sourcePromptMetadata"))
             _bounded_metadata(prompt, "sourcePromptMetadata")
+
+        three_dimensional = None
+        raw_three_d = item.get("threeDimensional")
+        if raw_three_d is not None:
+            from .three_d.package3d import ThreeDSection
+
+            three_dimensional = ThreeDSection.from_json(raw_three_d)
+            model_assets = [asset for asset in assets if asset.path == three_dimensional.model_file]
+            if not model_assets:
+                raise CharacterSchemaError("threeDimensional.modelFile is not in the asset inventory")
+            model_asset = model_assets[0]
+            if model_asset.purpose != "model" or model_asset.media_type != "model/gltf-binary":
+                raise CharacterSchemaError("threeDimensional.modelFile is not declared as a model asset")
+            if model_asset.sha256 != three_dimensional.model_digest:
+                raise CharacterSchemaError("threeDimensional.modelDigest disagrees with the asset inventory")
+            if model_asset.size_bytes != three_dimensional.model_size_bytes:
+                raise CharacterSchemaError("threeDimensional.modelSizeBytes disagrees with the asset inventory")
+            for reference, name in (
+                (three_dimensional.static_fallback_asset, "staticFallbackAsset"),
+                (three_dimensional.preview_asset, "previewAsset"),
+            ):
+                if reference not in by_id:
+                    raise CharacterSchemaError(f"threeDimensional.{name} references an undeclared asset")
+                if not by_id[reference].media_type.startswith("image/"):
+                    raise CharacterSchemaError(f"threeDimensional.{name} must be a raster image")
+            if three_dimensional.animated_fallback_state not in state_map:
+                raise CharacterSchemaError(
+                    "threeDimensional.animatedFallbackState names a state the 2D stateMap does not define"
+                )
+        elif presentation.value in THREE_D_PRESENTATIONS:
+            raise CharacterSchemaError(
+                f"presentationType {presentation.value} requires a threeDimensional section"
+            )
         return cls(
             package_id=package_id,
             character_id=character_id,
@@ -535,6 +613,7 @@ class CharacterManifest:
             safe_margins=SafeMargins.from_json(item.get("safeMargins")),
             generation_provenance=generation,
             source_prompt_metadata=prompt,
+            three_dimensional=three_dimensional,
         )
 
     def asset(self, asset_id: str) -> AssetRecord:
@@ -582,4 +661,6 @@ class CharacterManifest:
             value["generationProvenance"] = dict(self.generation_provenance)
         if self.source_prompt_metadata is not None:
             value["sourcePromptMetadata"] = dict(self.source_prompt_metadata)
+        if self.three_dimensional is not None:
+            value["threeDimensional"] = self.three_dimensional.to_json()
         return value

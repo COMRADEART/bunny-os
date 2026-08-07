@@ -51,8 +51,22 @@ class CharacterRendererSnapshot:
 class CharacterRendererController:
     """Own renderer health only.  The companion task remains in runtime-core."""
 
-    def __init__(self, *, selector: AdaptiveRendererSelector | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        selector: AdaptiveRendererSelector | None = None,
+        three_d_context: Any = None,
+        three_d_seed: int | None = None,
+    ) -> None:
         self.selector = selector or AdaptiveRendererSelector()
+        #: A zero-argument callable returning a
+        #: :class:`companion.character.three_d.context.GraphicsContext`, or
+        #: ``None``. Injected rather than constructed here so this module — which
+        #: every 2D client imports — never reaches a graphics library. With
+        #: ``None`` the 3D rungs are simply unreachable, which is what a
+        #: headless or text-only client should get and §30 requires.
+        self.three_d_context = three_d_context
+        self.three_d_seed = three_d_seed
         self.package: ValidatedPackage | None = None
         self.renderer: CharacterRenderer | None = None
         self.mapped_state: MappedCharacterState | None = None
@@ -97,7 +111,7 @@ class CharacterRendererController:
     def _renderer_for(self, presentation: Presentation, signals: RendererSignals) -> CharacterRenderer | None:
         if presentation is Presentation.TEXT_ONLY:
             return None
-        expected = "animated-2d" if presentation is Presentation.ANIMATED_2D else "static-image"
+        expected = presentation.value
         if self.renderer is not None and self.renderer.renderer_name == expected:
             self.renderer.display_available = signals.display_available
             return self.renderer
@@ -105,22 +119,69 @@ class CharacterRendererController:
         if package is None:
             raise RuntimeError("renderer controller has no validated package")
         previous = self.renderer
-        renderer: CharacterRenderer = (
-            Animated2DRenderer(display_available=signals.display_available)
-            if presentation is Presentation.ANIMATED_2D
-            else StaticImageRenderer(display_available=signals.display_available)
-        )
-        renderer.load_package(package)
+        if presentation in (Presentation.FULL_3D, Presentation.LIGHTWEIGHT_3D):
+            renderer = self._three_d_renderer(presentation, signals, package)
+        elif presentation is Presentation.ANIMATED_2D:
+            renderer = Animated2DRenderer(display_available=signals.display_available)
+            renderer.load_package(package)
+        else:
+            renderer = StaticImageRenderer(display_available=signals.display_available)
+            renderer.load_package(package)
         if previous is not None:
             renderer.set_scale(previous.scale)
             renderer.set_opacity(previous.opacity)
             renderer.set_visibility(previous.visible)
+            # A 3D renderer being replaced must give its GPU objects back before
+            # the replacement draws. ``unload_package`` releases them; calling
+            # it here rather than leaving it to garbage collection is what makes
+            # §34's GL-object delta zero across a hundred rung changes.
             previous.unload_package()
         if self.position is not None:
             renderer.set_position(self.position)
         if self.bubble_state is not None and self.bubble_layout is not None:
             renderer.attach_speech_bubble(self.bubble_state, self.bubble_layout)
         self.renderer = renderer
+        return renderer
+
+    def _three_d_renderer(
+        self, presentation: Presentation, signals: RendererSignals, package: ValidatedPackage
+    ) -> CharacterRenderer:
+        """Build and populate a 3D renderer, or refuse in a way the ladder reads.
+
+        Every failure below raises, and every caller of ``_renderer_for`` is
+        inside the presenter's ``try``: a refusal here becomes a typed
+        degradation and the next evaluation lands on animated-2D. That is why
+        this method does not itself fall back — one fallback path, in the place
+        that already had one.
+        """
+        from .three_d.renderer import ThreeDRenderer
+
+        if self.three_d_context is None:
+            raise RuntimeError("no graphics context provider is configured for 3D presentation")
+        model = package.model
+        section = package.manifest.three_dimensional
+        if model is None or section is None:
+            raise RuntimeError("the selected package carries no validated 3D model")
+        context = self.three_d_context() if callable(self.three_d_context) else self.three_d_context
+        renderer = ThreeDRenderer(
+            context=context,
+            display_available=signals.display_available,
+            quality=presentation.value,
+            motion="reduced" if (signals.reduced_motion or signals.no_animation) else "full",
+            seed=self.three_d_seed,
+        )
+        renderer.load_package(package)
+        renderer.model_path = package.asset_path(
+            next(asset.asset_id for asset in package.manifest.assets if asset.purpose == "model")
+        )
+        renderer.upload(
+            model,
+            animation_map=section.animation_map,
+            expression_map=section.expression_map,
+            viseme_map=section.viseme_map,
+            native_scale=section.native_scale,
+            floor_offset=section.floor_offset,
+        )
         return renderer
 
     def apply(
@@ -229,7 +290,10 @@ class CharacterRendererController:
         old = self.renderer
         if old is None:
             return self.snapshot()
-        presentation = Presentation.ANIMATED_2D if old.renderer_name == "animated-2d" else Presentation.STATIC_IMAGE
+        try:
+            presentation = Presentation(old.renderer_name)
+        except ValueError:
+            presentation = Presentation.STATIC_IMAGE
         package = self.package
         if package is None:
             raise RuntimeError("renderer restart has no package")
@@ -269,9 +333,15 @@ class CharacterRendererController:
         return self.snapshot(frame=frame)
 
     def tick(self, *, now_ms: int) -> RenderedFrame | None:
-        if isinstance(self.renderer, Animated2DRenderer):
-            return self.renderer.tick(now_ms=now_ms)
-        return self.renderer.frame if self.renderer else None
+        renderer = self.renderer
+        if isinstance(renderer, Animated2DRenderer):
+            return renderer.tick(now_ms=now_ms)
+        if renderer is not None and renderer.renderer_name in {"full-3d", "lightweight-3d"}:
+            # A skeletal renderer has no frame list to advance through: every
+            # tick is a new pose sampled at a new time, so a tick *is* a draw.
+            # ``draw`` is bounded by the frame-rate cap the selector set.
+            return renderer.draw(now_ms=now_ms)
+        return renderer.frame if renderer else None
 
     def snapshot(self, *, frame: RenderedFrame | None = None) -> CharacterRendererSnapshot:
         if self.decision is None:

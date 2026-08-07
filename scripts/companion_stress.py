@@ -662,6 +662,105 @@ def desktop_inventory() -> dict[str, Any]:
     }
 
 
+def renderer3d_inventory() -> dict[str, Any]:
+    """§34's 3D counters: contexts, GL objects, models, timers, workers.
+
+    Read from live Python objects rather than from the driver, because OpenGL
+    has no way to enumerate what a process owns — which is exactly why
+    :class:`companion.character.three_d.gpu.GpuResources` exists. Every GL name
+    this build creates passes through that ledger, so counting the ledgers is
+    counting the objects, and a name created outside one would be invisible
+    here *and* would never be released, which is what the leak columns are for.
+
+    ``glTable`` is a property rather than a count and is the §30 assertion in
+    counter form: a suite that never selected a 3D presentation must leave the
+    entry-point table unloaded, and a run where it is loaded when it should not
+    be is a run that opened ``libGL`` for nothing.
+    """
+    import gc as _gc
+
+    contexts = 0
+    live_contexts = 0
+    renderers = 0
+    models = 0
+    gl_objects = 0
+    textures = 0
+    buffers = 0
+    vertex_arrays = 0
+    programs = 0
+    framebuffers = 0
+    estimated_bytes = 0
+    behaviours = 0
+    state_machines = 0
+    gtk_areas = 0
+    leak_suspicions: list[str] = []
+    for item in _gc.get_objects():
+        try:
+            name = type(item).__name__
+        except Exception:  # pragma: no cover - exotic proxies
+            continue
+        if name in {"SurfacelessContext", "AdoptedContext"}:
+            contexts += 1
+            try:
+                if not item.lost:
+                    live_contexts += 1
+            except Exception:
+                pass
+        elif name == "ThreeDRenderer":
+            renderers += 1
+            try:
+                if item.model is not None:
+                    models += 1
+            except Exception:
+                pass
+        elif name == "GpuResources":
+            try:
+                payload = item.to_json()
+            except Exception:
+                continue
+            gl_objects += int(payload.get("live", 0))
+            textures += int(payload.get("textures", 0))
+            buffers += int(payload.get("buffers", 0))
+            vertex_arrays += int(payload.get("vertexArrays", 0))
+            programs += int(payload.get("programs", 0))
+            framebuffers += int(payload.get("framebuffers", 0))
+            estimated_bytes += int(payload.get("estimatedBytes", 0))
+            leak_suspicions.extend(payload.get("leakSuspicions", ()))
+        elif name == "ProceduralBehaviour":
+            behaviours += 1
+        elif name == "AnimationStateMachine":
+            state_machines += 1
+        elif name == "ThreeDCharacterArea":
+            gtk_areas += 1
+
+    table_loaded = False
+    module = sys.modules.get("companion.character.three_d.gl")
+    if module is not None:
+        table_loaded = getattr(module, "_LOADED", None) is not None
+    workers = sum(
+        1 for thread in threading.enumerate()
+        if any(marker in thread.name.casefold() for marker in ("renderer", "gl-", "three-d"))
+    )
+    return {
+        "gpuContexts": contexts,
+        "liveGpuContexts": live_contexts,
+        "renderers": renderers,
+        "activeModels": models,
+        "glObjects": gl_objects,
+        "textures": textures,
+        "buffers": buffers,
+        "vertexArrays": vertex_arrays,
+        "shaderPrograms": programs,
+        "framebuffers": framebuffers,
+        "estimatedGpuBytes": estimated_bytes,
+        "animationTimers": behaviours + state_machines,
+        "gtkGlAreas": gtk_areas,
+        "rendererWorkers": workers,
+        "glTable": table_loaded,
+        "leakSuspicions": sorted(set(leak_suspicions)),
+    }
+
+
 def memory_inventory() -> dict[str, Any]:
     """RSS from /proc, or NOT_RUN. Never a substitute measurement."""
     try:
@@ -735,6 +834,7 @@ def snapshot(label: str) -> dict[str, Any]:
         "speech": speech_inventory(),
         "agents": agents_inventory(),
         "desktop": desktop_inventory(),
+        "renderer3d": renderer3d_inventory(),
         "memory": memory_inventory(),
         "tempDirectories": len(list(Path(tempfile.gettempdir()).glob("bunny-*"))),
     }
@@ -786,6 +886,22 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
         ("clipboardOwners", ("desktop", "clipboardOwners")),
         ("notificationsTracked", ("desktop", "notificationsTracked")),
         ("dbusConnections", ("desktop", "dbusConnections")),
+        # §34's 3D columns. Each names something the renderer *holds*: a GPU
+        # context, a driver object, an uploaded model, a behaviour with a timer,
+        # a widget with a tick callback.
+        ("gpuContexts", ("renderer3d", "gpuContexts")),
+        ("liveGpuContexts", ("renderer3d", "liveGpuContexts")),
+        ("renderers", ("renderer3d", "renderers")),
+        ("activeModels", ("renderer3d", "activeModels")),
+        ("glObjects", ("renderer3d", "glObjects")),
+        ("textures", ("renderer3d", "textures")),
+        ("buffers", ("renderer3d", "buffers")),
+        ("vertexArrays", ("renderer3d", "vertexArrays")),
+        ("shaderPrograms", ("renderer3d", "shaderPrograms")),
+        ("framebuffers", ("renderer3d", "framebuffers")),
+        ("animationTimers", ("renderer3d", "animationTimers")),
+        ("gtkGlAreas", ("renderer3d", "gtkGlAreas")),
+        ("rendererWorkers", ("renderer3d", "rendererWorkers")),
     ):
         start, end = _get(before, *path), _get(after, *path)
         if isinstance(start, int) and isinstance(end, int):
@@ -1462,6 +1578,159 @@ def _run_desktop_slice() -> dict[str, Any]:
     }
 
 
+def _run_renderer3d_lifecycle() -> dict[str, Any]:
+    """One complete 3D renderer lifecycle. §34's first gate, one iteration.
+
+    Eight things happen, in the order a session meets them, and each is a
+    property the gate is *for* rather than a step towards one:
+
+    1. **create a context.** The one operation that can fail for reasons that
+       have nothing to do with this code — no libEGL, no driver, no display —
+       and the one the report must therefore not confuse with a leak.
+    2. **validate a package.** The whole model validator, on the shipped
+       character, every iteration. A validator that grew a cache would show up
+       as a memory trend rather than a correctness failure, so it is run rather
+       than skipped after the first time.
+    3. **upload it.** Buffers, textures, the morph texture, three programs.
+    4. **draw every canonical state.** Each one through the mapper, so the
+       animation state machine, the face rig and the procedural behaviour all
+       run; and offscreen, so the pixels can be *read* rather than assumed.
+    5. **move the mouth.** The viseme path to the geometry.
+    6. **degrade and recover.** The rung change, including the renderer being
+       rebuilt at the lightweight quality.
+    7. **restart.** Release everything and build it again inside the same
+       context, which is the operation §23 requires after a fault.
+    8. **release.** The ledger must reach zero, and the counters this gate
+       reads must return to where they started.
+
+    A hundred of these is the gate, and what it measures is that none of the
+    eight leaves anything behind.
+    """
+    from companion.character.defaults import default_3d_character_path
+    from companion.character.mapper import (
+        CharacterState,
+        StateMapperInput,
+        map_character_state,
+    )
+    from companion.character.package import validate_package_directory
+    from companion.character.schema import PackageTrustState
+    from companion.character.three_d.context import SurfacelessContext, offscreen_available
+    from companion.character.three_d.renderer import ThreeDRenderer
+
+    problems: list[str] = []
+    available, reason = offscreen_available()
+    root = default_3d_character_path()
+    if not available or not root.is_dir():
+        return {
+            "ok": False, "ran": 0,
+            "failures": [
+                "no offscreen graphics context: " + reason if not available
+                else "the built-in 3D package is not installed"
+            ],
+            "notRun": ["the 3D renderer lifecycle needs a graphics stack and the 3D package"],
+        }
+
+    context = SurfacelessContext()
+    renderer = None
+    coverage = 0.0
+    states: list[str] = []
+    try:
+        package = validate_package_directory(root, trust_state=PackageTrustState.BUILT_IN)
+        if package.model is None:
+            problems.append("the built-in package carried no validated model")
+            return {"ok": False, "ran": 2, "failures": problems}
+        section = package.manifest.three_dimensional
+
+        def build(quality: str) -> Any:
+            item = ThreeDRenderer(context=context, quality=quality, seed=0x9E)
+            item.load_package(package)
+            item.upload(
+                package.model,
+                animation_map=section.animation_map,
+                expression_map=section.expression_map,
+                viseme_map=section.viseme_map,
+                native_scale=section.native_scale,
+                floor_offset=section.floor_offset,
+                now=0.0,
+            )
+            item.begin_offscreen(160, 200)
+            return item
+
+        renderer = build("full-3d")
+        before = renderer.resources.to_json()["live"]
+
+        for index, phase in enumerate((
+            "idle", "understanding", "planning", "working", "reviewing",
+            "waiting_for_approval", "speaking", "success", "error",
+        )):
+            mapped = map_character_state(
+                package.manifest,
+                StateMapperInput(presentation_phase=phase, status_text="Bunny is here."),
+            )
+            renderer.display_state(mapped, now_ms=index * 400)
+            states.append(mapped.character_state.value)
+        _width, _height, pixels = renderer.read_pixels()
+        opaque = sum(1 for index in range(3, len(pixels), 4) if pixels[index] > 12)
+        coverage = opaque / max(1, len(pixels) // 4)
+        if coverage <= 0.01:
+            problems.append(f"the character covered {coverage:.3%} of the surface")
+
+        for shape in ("open-small", "open-wide", "rounded", "neutral"):
+            renderer.set_mouth_shape(shape)
+            renderer.draw(now_ms=4000)
+        if renderer.face is not None and renderer.face.mouth_shape != "neutral":
+            problems.append("the mouth did not return to neutral")
+
+        renderer.set_quality("lightweight-3d")
+        renderer.draw(now_ms=4500)
+        if renderer.renderer_name != "lightweight-3d":
+            problems.append("the lightweight rung did not take effect")
+        renderer.set_quality("full-3d")
+
+        renderer.release()
+        if renderer.resources.to_json()["live"]:
+            problems.append("a released renderer still held GPU objects")
+        renderer = build("full-3d")
+        after = renderer.resources.to_json()["live"]
+        if after != before:
+            problems.append(f"a restart changed the live object count from {before} to {after}")
+    except Exception as exc:  # noqa: BLE001 - a fault is data
+        problems.append(f"{type(exc).__name__}: {exc}")
+    finally:
+        if renderer is not None:
+            try:
+                renderer.release()
+                if renderer.resources.to_json()["live"]:
+                    problems.append("the final release left GPU objects live")
+                problems.extend(renderer.resources.leak_suspicions)
+            except Exception as exc:  # noqa: BLE001
+                problems.append(f"release failed: {type(exc).__name__}: {exc}")
+        context.release()
+
+    return {
+        "ok": not problems,
+        "failures": problems,
+        "ran": 8,
+        "states": states,
+        "coverage": round(coverage, 5),
+    }
+
+
+def _run_renderer3d_slice() -> dict[str, Any]:
+    from companion.character.three_d_slice import run_three_d_slice
+
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-3dslice-") as directory:
+        report = run_three_d_slice(Path(directory)).to_json()
+    return {
+        "ok": report["passed"],
+        "failures": report["failures"],
+        "notRun": report["notRun"],
+        "ran": report["ran"],
+        "measurements": report["measurements"],
+        "environment": report["environment"],
+    }
+
+
 TARGETS = {
     "service": lambda order, seed: _run_modules(SERVICE_MODULES, order=order, seed=seed),
     "suite": lambda order, seed: _run_modules(SUITE_MODULES, order=order, seed=seed),
@@ -1479,6 +1748,8 @@ TARGETS = {
     "agent-slice": lambda order, seed: _run_agent_slice(),
     "desktop": lambda order, seed: _run_desktop_lifecycle(),
     "desktop-slice": lambda order, seed: _run_desktop_slice(),
+    "renderer3d": lambda order, seed: _run_renderer3d_lifecycle(),
+    "renderer3d-slice": lambda order, seed: _run_renderer3d_slice(),
 }
 
 

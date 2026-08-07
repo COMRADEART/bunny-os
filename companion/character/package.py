@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import stat
+import time
 from typing import Any, Iterable
 
 from capability.apply.identity import canonical_json
@@ -63,6 +64,19 @@ class ValidatedPackage:
     image_info: dict[str, ImageInfo]
     total_bytes: int
     file_count: int
+    #: A ``companion.character.three_d.glb.ValidatedModel`` when the manifest
+    #: carries a 3D section, otherwise ``None``. Typed loosely for the same
+    #: reason the manifest field is: this module must stay importable by a build
+    #: that never touches 3D.
+    model: Any = None
+    #: How long the GLB validator took, in milliseconds. Reported rather than
+    #: assumed: §35 asks for model-validation time and the honest place to
+    #: measure it is where it happens.
+    model_validation_ms: float = 0.0
+
+    @property
+    def has_model(self) -> bool:
+        return self.model is not None
 
     def asset_path(self, asset_id: str) -> Path:
         asset = self.manifest.asset(asset_id)
@@ -93,6 +107,16 @@ class ValidatedPackage:
             "totalBytes": self.total_bytes,
             "declaredMemoryEstimateBytes": self.manifest.memory_estimate_bytes,
             "declaredStates": sorted(declared_states),
+            "threeDimensional": None if self.model is None else {
+                "modelDigest": self.model.digest,
+                "validationMs": round(self.model_validation_ms, 4),
+                "triangles": self.model.triangle_count,
+                "vertices": self.model.vertex_count,
+                "joints": len(self.model.joints),
+                "clips": list(self.model.clip_names),
+                "morphTargets": list(self.model.morph_target_names),
+                "estimatedGpuBytes": self.model.estimated_gpu_bytes,
+            },
         }
 
 
@@ -182,8 +206,21 @@ def validate_package_directory(
     trust_state: PackageTrustState = PackageTrustState.IMPORTED_UNVERIFIED,
     bunny_os_version: str = MINIMUM_BUNNY_OS_VERSION,
     limits: ValidationLimits | None = None,
+    validate_model: bool = True,
 ) -> ValidatedPackage:
-    """Validate every byte and reference in a data-only package directory."""
+    """Validate every byte and reference in a data-only package directory.
+
+    ``validate_model`` exists for the registry listing, which enumerates every
+    installed package to show a chooser and does not need each one's geometry
+    proved to draw its name. It defaults to **on** everywhere else, and the
+    renderer refuses a package whose model was not validated — so the flag can
+    make a listing cheaper and cannot make a draw unsafe.
+
+    There is no built-in bypass. §25 is explicit and the reason is that the
+    default character is the one package guaranteed to be present on every
+    machine: if the validator is ever wrong about it, that is the case worth
+    finding, and a bypass would be exactly the arrangement that hides it.
+    """
     limits = limits or ValidationLimits()
     root = Path(root)
     try:
@@ -244,12 +281,59 @@ def validate_package_directory(
             if (observed_image.width, observed_image.height) != (asset.width, asset.height):
                 raise CharacterIntegrityError(f"asset {asset.asset_id!r} dimensions do not match")
             image_info[asset.asset_id] = observed_image
+        elif asset.media_type == "model/gltf-binary":
+            # Not text and not a raster: a GLB has its own validator, which runs
+            # below once the manifest's 3D section has said what limits apply.
+            # Running the text checks over it here would refuse every model for
+            # containing binary content, which it is required to contain.
+            continue
         else:
             _validate_metadata_asset(path, asset.media_type)
 
     license_path = files[manifest.asset(manifest.license_asset).path][0]
     if not license_path.read_text(encoding="utf-8").strip():
         raise CharacterSchemaError("the declared license file is empty")
+
+    model = None
+    model_ms = 0.0
+    section = manifest.three_dimensional
+    if section is not None and validate_model:
+        from .three_d.glb import validate_glb
+
+        model_path = files[section.model_file][0]
+        started = time.monotonic()
+        model = validate_glb(
+            model_path.read_bytes(),
+            limits=section.limits(),
+            bone_map=section.bone_map,
+            expected_digest=section.model_digest,
+            skeleton_profile_id=section.skeleton_profile,
+        )
+        model_ms = (time.monotonic() - started) * 1000.0
+        declared_clips = set(section.animation_map.values())
+        missing_clips = sorted(declared_clips.difference(model.clip_names))
+        if missing_clips:
+            raise CharacterIntegrityError(
+                "animationMap names clips the model does not carry: " + ", ".join(missing_clips)
+            )
+        declared_morphs = set(section.morph_targets)
+        observed_morphs = set(model.morph_target_names)
+        if declared_morphs.difference(observed_morphs):
+            raise CharacterIntegrityError(
+                "morphTargets names targets the model does not carry: "
+                + ", ".join(sorted(declared_morphs.difference(observed_morphs)))
+            )
+        if len(model.textures) > section.maximum_textures:
+            raise CharacterIntegrityError("the model carries more textures than the manifest declares")
+        if model.estimated_gpu_bytes > section.declared_gpu_bytes:
+            raise CharacterIntegrityError(
+                f"the model needs about {model.estimated_gpu_bytes} GPU bytes and the manifest "
+                f"declares {section.declared_gpu_bytes}"
+            )
+        if "morph-targets" in section.required_renderer_features and not model.morph_target_names:
+            raise CharacterIntegrityError("the manifest requires morph targets and the model has none")
+        if "skeletal-animation" in section.required_renderer_features and not model.joints:
+            raise CharacterIntegrityError("the manifest requires skeletal animation and the model has no joints")
     digest_material = {
         "manifest": manifest.to_json(),
         "assets": [
@@ -266,4 +350,6 @@ def validate_package_directory(
         image_info=image_info,
         total_bytes=total,
         file_count=len(observed),
+        model=model,
+        model_validation_ms=model_ms,
     )
