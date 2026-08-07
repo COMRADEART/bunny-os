@@ -446,44 +446,58 @@ def apply_default_character_policy(
     """
     state = read_policy_state(registry)
     decision = default_character_decision(eligible=eligible, registry=registry, state=state, validator=validator)
-    if decision.preserved_user_choice and not state.user_digest:
-        # First sight of a user selection: remember it, so recovery has
-        # something to restore to.
+
+    # A dry run writes nothing. This block used to sit above the ``dry_run``
+    # return, so asking the policy what it *would* do — which is exactly what
+    # the first-run wizard's character page does through ``survey_character`` —
+    # persisted state as a side effect.
+    if dry_run:
+        return decision
+
+    if decision.preserved_user_choice:
+        # Remember what the user chose, so recovery has something to restore to.
+        #
+        # Recorded whenever it *differs* from what is on file, not only the
+        # first time. The first version had ``and not state.user_digest``, which
+        # froze the record at the first selection ever seen: a user who chose a
+        # third character would have recovery restore their first.
         try:
             current = registry.selected()
         except Exception:
             current = None
-        if current is not None:
-            _write_policy_state(registry, PolicyState(
+        digest = str(getattr(current, "package_digest", "") or "") if current is not None else ""
+        if digest and digest != state.user_digest:
+            state = PolicyState(
                 applied_digest=state.applied_digest,
                 applied_package_id=state.applied_package_id,
                 applied_rung=state.applied_rung,
-                user_digest=str(getattr(current, "package_digest", "") or ""),
+                user_digest=digest,
                 user_package_id=str(getattr(current, "package_id", "") or ""),
-            ))
-    if dry_run or not decision.package_id:
+            )
+            _write_policy_state(registry, state)
+    if not decision.package_id:
         return decision
     if not decision.would_apply:
         # The registry already names the package the ladder chose — because it
-        # is the first built-in, not because anyone selected it. Claim it, so
-        # the *next* run knows which rung this policy settled on and can refuse
-        # to lower it. Without this the claim only exists when the ladder had to
-        # change something, and a machine whose fallback happens to match the
-        # policy would have no record at all.
-        if not decision.preserved_user_choice and not state.applied_digest:
-            try:
-                current = registry.selected()
-            except Exception:
-                current = None
-            digest = str(getattr(current, "package_digest", "") or "")
-            if digest and str(getattr(current, "package_id", "")) == decision.package_id:
-                _write_policy_state(registry, PolicyState(
-                    applied_digest=digest,
-                    applied_package_id=decision.package_id,
-                    applied_rung=decision.rung,
-                    user_digest=state.user_digest,
-                    user_package_id=state.user_package_id,
-                ))
+        # is the first built-in, not because anyone selected it. Record the
+        # *rung* this policy settled on, so the next run can refuse to lower it.
+        #
+        # The rung and not the digest. An earlier version recorded both, and
+        # that made the policy the owner of a digest it had never selected: a
+        # user who later chose that same package was then indistinguishable from
+        # the policy's own claim, ``preserved_user_choice`` came out false, and
+        # the recorded user selection stayed at whatever they had abandoned
+        # before it. ``applied_digest`` is now written in exactly one place —
+        # after ``registry.select()`` returns — so any recorded selection the
+        # policy did not make is, by construction, somebody's.
+        if not decision.preserved_user_choice and not state.applied_rung:
+            _write_policy_state(registry, PolicyState(
+                applied_digest="",
+                applied_package_id=decision.package_id,
+                applied_rung=decision.rung,
+                user_digest=state.user_digest,
+                user_package_id=state.user_package_id,
+            ))
         return decision
     try:
         selected = registry.select(decision.package_id)

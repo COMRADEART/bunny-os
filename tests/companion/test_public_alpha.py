@@ -149,6 +149,35 @@ class DefaultCharacterPolicyTests(TemporaryRootTests):
         self.assertFalse(refused.applied)
         self.assertTrue(any("until capability allows it" in reason for reason in refused.reasons))
 
+    def test_a_dry_run_writes_nothing(self) -> None:
+        """``survey_character`` asks the policy what it would do, on every draw
+        of the first-run character page. That must not persist anything."""
+        registry = self.registry()
+        apply_default_character_policy(registry, eligible="animated-2d")
+        registry.select("bunny-default-3d")
+        before = read_policy_state(registry)
+        decision = apply_default_character_policy(registry, eligible="full-3d", dry_run=True)
+        self.assertTrue(decision.preserved_user_choice)
+        self.assertEqual(read_policy_state(registry), before)
+
+    def test_the_recorded_user_choice_follows_the_user(self) -> None:
+        """Recovery restores what the user chose, not what they chose first.
+
+        The first version recorded the user's selection only when nothing was on
+        file, so a person who changed their mind twice would have recovery put
+        back the character they abandoned.
+        """
+        registry = self.registry()
+        apply_default_character_policy(registry, eligible="animated-2d")
+        registry.select("bunny-default-3d")
+        apply_default_character_policy(registry, eligible="animated-2d")
+        self.assertEqual(read_policy_state(registry).user_package_id, "bunny-default-3d")
+        registry.select("org.bunny-os.default-bunny")
+        apply_default_character_policy(registry, eligible="animated-2d")
+        self.assertEqual(
+            read_policy_state(registry).user_package_id, "org.bunny-os.default-bunny",
+        )
+
     def test_the_ladder_names_a_bundle_not_a_package_id(self) -> None:
         """The two built-ins disagree about their own naming; the ladder must not
         assume either. ``org.bunny-os.default-bunny`` and ``bunny-default-3d``."""
