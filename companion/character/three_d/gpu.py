@@ -27,9 +27,9 @@ peak is two models rather than a growing set.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import time
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from .errors import RendererContextError
 

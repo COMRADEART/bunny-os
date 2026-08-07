@@ -41,7 +41,7 @@ from pathlib import Path
 import time
 from typing import Any, Callable, Mapping
 
-from .context import ContextInfo, SurfacelessContext, offscreen_available
+from .context import SurfacelessContext, offscreen_available
 from .errors import RendererCapabilityError, RendererContextError
 
 #: The six §31 names. Adding a seventh means adding a handler *and* a line here,

@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import ctypes
 from dataclasses import dataclass
-import math
 import time
 from typing import Any, Mapping, Sequence
 
@@ -99,7 +98,7 @@ from .gl import (
 from .procedural import ProceduralBehaviour
 from .scene import DEFAULT_LIGHTING, LIGHTWEIGHT_LIGHTING, Lighting, PresentationCamera
 from .shaders import ATTRIBUTE_LOCATIONS, MAX_ACTIVE_MORPHS, shader_sources
-from .transform import IDENTITY, Matrix4, compose, multiply, scale_matrix, translation_matrix
+from .transform import Matrix4, compose, multiply, scale_matrix, translation_matrix
 
 #: The two quality levels §21 defines, and what each one changes.
 QUALITY_LEVELS: Mapping[str, dict[str, Any]] = {
@@ -426,9 +425,16 @@ class ThreeDRenderer(CharacterRenderer):
         uploaded_bytes = 0
         skinned = "JOINTS_0" in primitive.attributes and "WEIGHTS_0" in primitive.attributes
 
-        for attribute, shader_name, components in _ATTRIBUTE_BINDINGS:
+        for attribute, shader_name, default_components in _ATTRIBUTE_BINDINGS:
             location = ATTRIBUTE_LOCATIONS[shader_name]
             stream = primitive.attributes.get(attribute)
+            # glTF permits ``COLOR_0`` as VEC3 or VEC4, and the binding table
+            # can only name one. Take the stream's own component count when
+            # there is a stream: OpenGL fills the missing components of a vec4
+            # attribute with (0, 0, 0, 1), so a VEC3 colour arrives with alpha
+            # 1 — which is what it means. Reading four components from a
+            # three-component buffer would have read past the end of it.
+            components = default_components if stream is None else stream.components
             if stream is None:
                 default = _ATTRIBUTE_DEFAULTS.get(attribute)
                 if attribute == "JOINTS_0":

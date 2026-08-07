@@ -194,6 +194,7 @@ class SurfacelessContext(GraphicsContext):
         self._context = None
         self._gl: GL | None = None
         self._lost = False
+        self._loss_reason = ""
         self._egl_vendor = ""
         self._create()
 

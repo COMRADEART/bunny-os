@@ -735,7 +735,51 @@ background renderer nobody asked for.
 
 ## 29. Security results
 
-*(§28's case list, run: filled in with the test counts below)*
+`tests/companion/test_three_d_security.py`: **69 tests, 69 pass, 0 skipped** on
+both hosts. None needs a GPU: every refusal happens before anything is
+allocated, uploaded or decoded.
+
+Each test changes exactly one thing about a model the validator accepts, so a
+refusal is attributable — the baseline is built once by
+`tests/companion/three_d_support.py` and the test's callback is the only edit.
+Each asserts the *typed* refusal, not merely that something was raised.
+
+| §28 case | Result | Refusal |
+|---|---|---|
+| malformed GLB | refused | truncated container, wrong magic, non-UTF-8 or invalid JSON, repeated JSON key |
+| oversized GLB | refused | `ModelLimitError`, at the declared length, before parsing |
+| external texture URL | refused | `ModelSecurityError` "declares a uri" |
+| external buffer URI | refused | same, and the same for relative paths and `data:` URIs |
+| unsupported extension | refused | by name where known (Draco, meshopt, Basis, instancing, variants), generically otherwise |
+| shader injection | impossible | AST test: only `renderer.py` calls `glShaderSource`; alpha mode is a closed-table lookup; no `shader` field exists in the 3D section |
+| NaN transform | refused | `ModelSecurityError` "NaN or infinite" |
+| infinite transform | refused | same |
+| extreme scale | refused | `ModelLimitError` "scale limit" (and "scale floor" for a vanishing one) |
+| excessive vertex count | refused | `ModelLimitError` |
+| excessive bones | refused | `ModelLimitError` |
+| excessive morphs | refused | `ModelLimitError` |
+| excessive animations | refused | `ModelLimitError` |
+| excessive duration | refused | `ModelLimitError`, against the per-model second limit |
+| excessive keyframes | refused | `ModelLimitError`, total and per-sampler |
+| texture bomb | refused | `CharacterSecurityError` "expands beyond", in the shared bounded PNG reader |
+| malformed compressed texture | refused | `CharacterSecurityError` from the PNG checksum/inflate path |
+| skeleton cycle | refused | `ModelSecurityError`, both self-parent and no-root forms |
+| missing root | refused | `ModelSchemaError` "missing: root" from the profile resolver |
+| invalid bone reference | refused | `ModelSecurityError` "references joint N of M" |
+| animation references missing bone | refused | `ModelSchemaError` "out of range" |
+| invalid morph reference | refused | wrong delta count, unsupported target attribute |
+| archive traversal | refused | `CharacterSecurityError`, in the existing importer |
+| package-root symlink | refused | `CharacterSecurityError`, in the existing directory walker |
+| hash mismatch | refused | `ModelSecurityError` "digest does not match", before parsing |
+| model substitution after approval | refused | same check, asserted against two models that differ by one clip |
+| character package replaced while loading | refused | staging validation happens before `os.replace`; the previous selection is retained |
+| renderer reading outside package root | impossible | `asset_path` re-resolves and re-checks containment even for a trusted manifest |
+
+Additional refusals beyond §28's list: a second buffer, sparse accessors, matrix
+node transforms, non-triangle primitives, package-supplied cameras, unknown
+top-level and node fields, unsupported wrap and filter modes, nodes with two
+parents, unreachable nodes, buffer views reaching past the binary chunk, and a
+configuration attempting to *raise* a hard ceiling.
 
 ## 30. GTK and Wayland results
 
@@ -759,20 +803,159 @@ background renderer nobody asked for.
 
 ## 35. Known limitations
 
-*(below)*
+**Measured only on a software rasteriser.** The reference host reports
+`llvmpipe (LLVM 22.1.8, 256 bits)`, OpenGL 4.6 core, `Accelerated: no`, and has
+no `/dev/dri`. Every frame time in §33 is a software-rasteriser figure. That is a
+genuinely useful measurement — it is the *floor*, and the character draws at it —
+but nothing here says what a GPU does, and the degradation thresholds in
+`budget.py` were chosen from the ladder's shape rather than from hardware
+measurement.
+
+**The 3D character is not the default selection.** Both packages ship; the 2D one
+remains what a machine draws out of the box, and the 3D one is selected with
+`bunny-os companion character select bunny-default-3d`. §24 requires a package
+change to be user-initiated, and promoting the 3D character would have been this
+phase changing what every existing machine draws as a side effect of adding a
+renderer. Making it the default is a product decision for a later phase.
+
+**The renderer's `none` motion mode is implemented and tested but the ladder does
+not select it.** `no_animation` drops to `static-image` instead, because a still
+3D render costs more than the static PNG for the same visual result. The mode is
+reachable through `set_no_animation` and is exercised by tests.
+
+**Lip sync in the slice is link-driven rather than worker-driven.** The events
+are real `VoiceEvent` values through the real `VisemeLink` — its request
+matching, ordering, revision matching and neutral reset all run — but the
+*producer* is the slice, because this host has no speech-synthesis provider and
+therefore no worker to produce them. The worker-to-link half was established by
+the voice-closure phase; this phase establishes link-to-3D-mouth. Both halves
+exist; they have not been demonstrated in one process on one host.
+
+**No hardware-accelerated GPU-context-loss test.** Context loss is produced by
+`simulate_loss` and by destroying the EGL context underneath a live renderer.
+A real GPU reset (TDR, driver crash, hot-unplug) has not been observed.
+
+**Skinning is CPU-composed per joint.** One 4x4 per joint per frame in pure
+Python. At 23 joints this is not the bottleneck; a 96-joint character wants
+re-measuring, and NumPy or a C helper would be the answer if it is.
+
+**No mipmaps.** The character occupies a fixed fraction of a small surface, a mip
+chain costs a third more memory, and generating one on llvmpipe is measurable.
+Linear minification is the trade.
+
+**PNG only.** A second image decoder is a second set of bombs. A package with
+JPEG textures is refused rather than converted.
+
+**One skin per model.** A Bunny character declares exactly one skin. Multi-skin
+characters (a rigged prop held by a rigged hand) are refused.
+
+**The upper-body overlay is one bone subtree.** Everything below `chest`.
+A package cannot declare its own mask.
+
+**GTK results are from WSLg.** See §30. WSLg is a Weston-based Wayland
+compositor bridged to Windows; it is not native GNOME on Wayland and no result
+in §30 should be read as one.
 
 ## 36. NOT_RUN items
 
-*(below)*
+Recorded as NOT_RUN with a reason, never as passes:
+
+| Item | Reason |
+|---|---|
+| slice steps 21–25 (push-to-talk, listening, recognition, waiting-for-user, transcript) | the runtime advertises speech input and refuses the capture: "no local speech recogniser is installed; capture without recognition would be a recording nobody asked for" |
+| hardware-GPU frame times | no `/dev/dri` and no accelerated renderer on the reference host |
+| native GNOME Wayland session | not available on this machine |
+| X11 session | not available on this machine |
+| compositor disconnect during rendering | WSLg's compositor cannot be restarted underneath a client here |
+| a booted Bunny OS image drawing the character | no image was built this phase; §39 |
+| ARM | no ARM host |
+| physical-hardware validation | §38 |
+
+Every NOT_RUN appears in the slice report's `notRun` list and in the gate
+evidence, not only in this document.
 
 ## 37. Remaining production-art work
 
-*(below)*
+The shipped character is a **reference**, and §25 asks for exactly that: a
+stylised human-shaped figure of 2,452 triangles, rigged to the profile, with the
+eleven face morphs the viseme and expression maps need and one clip per canonical
+state. What real production art would add:
+
+* **Geometry and materials.** A sculpted mesh with proper topology, UV layout and
+  authored textures rather than a generated gradient; hair and clothing as
+  separate rigged pieces rather than proud tubes.
+* **Hands.** The profile supports finger bones by pattern; the reference
+  character has none, so its hands are boxes and it cannot point, count or
+  gesture with fingers.
+* **Eyelids.** The reference blinks by flattening the eyeball on the eye bone.
+  A production character would have eyelid geometry driven by a blink morph;
+  the renderer already prefers a `blink` morph target where one exists.
+* **Facial rig.** Eleven analytic morphs cover the states; a production face
+  would have thirty to fifty authored shapes and separate brow, lid, cheek and
+  lip corners.
+* **Animation.** The clips are keyframed by hand in the generator from a few
+  poses each. Production clips would be authored or captured, with overlapping
+  action, weight and follow-through.
+* **The 2D fallback frames.** These are flat arithmetic silhouettes. They are
+  legible and they are not art; §22's fallback deserves renders of the same
+  character.
+* **A second character.** The importer, the profile aliasing and the package
+  schema exist so that a character from a different tool can be installed
+  without changing the runtime. That path is tested against synthetic models and
+  the built-in package; it has not been exercised against a character authored
+  in Blender, VRoid or Mixamo by somebody else.
 
 ## 38. Remaining physical-hardware validation
 
-*(below)*
+Nothing in this phase ran on physical hardware. Specifically not run:
+
+* an Intel, AMD or NVIDIA GPU — so no measurement of the frame times the
+  thresholds in `budget.py` were chosen to sit above, and no observation of the
+  full rung being *held* rather than immediately degraded;
+* a real display server on a laptop panel, so no measurement of transparent
+  compositing against a real desktop, of HiDPI scaling, or of the character at
+  a physical size;
+* battery and thermal transitions on a machine that has them — the degradation
+  rules read those signals from the capability inventory and are tested with
+  synthetic signals;
+* a GPU reset or driver crash;
+* an ARM machine.
+
+`PHYSICAL_HARDWARE_EVIDENCE_PLAN.md` is the existing plan for this class of
+work; the 3D renderer adds the items above to it.
 
 ## 39. Reproducibility implications
 
-*(below)*
+**No reproducibility candidate was created and none is claimed.** The directive
+forbade creating one during implementation and this phase did not.
+
+What this phase does to the build:
+
+* **52 installed paths, no new route, no new destination, no new RPM.** The
+  companion package route and the character-package tree route both already
+  existed. Nothing was added to `build/packages/*.txt`.
+* **The three-builder reproducibility result recorded at Commit C `225a5e1` /
+  Commit D `f65b65c` is not invalidated and is not extended.** It is a statement
+  about those commits. A future candidate on this branch would have to be built
+  and compared afresh, and [[pinned-base-digests-are-not-durable]] applies: the
+  `fedora-bootc:44` base is rebuilt daily and old digests vanish.
+* **The new package's determinism is a property of the generator, not of the
+  build.** `scripts/build_default_character_3d.py` produces a byte-identical GLB
+  on Linux and Windows (`778228cd…`, 303,984 bytes, verified on both), which
+  means a future rebuild of the *asset* is reproducible. Getting there required
+  a portable deflate encoder and float quantisation, both recorded in §23 and in
+  the script.
+* **`assets/companion/characters/** -text`** already covered the new package, so
+  its files round-trip git byte-exactly on a Windows checkout — verified:
+  `git cat-file` returns 303,984 bytes and so does the working tree. Without
+  that attribute the manifest digest would fail on one of the two platforms,
+  which is the failure the 2D character phase had and fixed.
+* **Every commit changes the OCI configuration digest** through the revision
+  label and `/usr/lib/bunny-os/release.json`. An unchanged layer digest is not an
+  unchanged image.
+
+What a future reproducibility phase would need to check about this one: that the
+GLB and its PNGs land in the image with the bytes recorded here, and that adding
+a 300 KB binary asset to `/usr/share` does not perturb layer ordering — neither
+of which this phase measured, because measuring them means building an image and
+that is a candidate.

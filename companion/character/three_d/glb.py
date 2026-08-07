@@ -44,7 +44,7 @@ import json
 import math
 import struct
 import sys
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
 from . import SUPPORTED_GLTF_VERSION
 from .errors import ModelLimitError, ModelSchemaError, ModelSecurityError
@@ -1073,6 +1073,21 @@ def validate_glb(
                     if element_type != "VEC4":
                         raise ModelSchemaError(f"{label}.WEIGHTS_0 must be VEC4")
                     _decode_components(data_bytes, component_type, normalized, f"{label}.WEIGHTS_0")
+                elif attribute_name == "COLOR_0":
+                    # The one attribute glTF permits in two shapes.
+                    if element_type not in {"VEC3", "VEC4"}:
+                        raise ModelSchemaError(f"{label}.COLOR_0 must be VEC3 or VEC4")
+                    if component_type not in {5126, 5121, 5123}:
+                        raise ModelSchemaError(f"{label}.COLOR_0 has an unsupported component type")
+                    _decode_components(data_bytes, component_type, normalized, f"{label}.COLOR_0")
+                elif attribute_name == "TEXCOORD_0":
+                    if element_type != "VEC2":
+                        raise ModelSchemaError(f"{label}.TEXCOORD_0 must be VEC2")
+                    _decode_components(data_bytes, component_type, normalized, f"{label}.TEXCOORD_0")
+                elif attribute_name == "NORMAL":
+                    if element_type != "VEC3" or component_type != 5126:
+                        raise ModelSchemaError(f"{label}.NORMAL must be float VEC3")
+                    _decode_components(data_bytes, component_type, normalized, f"{label}.NORMAL")
                 else:
                     _decode_components(data_bytes, component_type, normalized, f"{label}.{attribute_name}")
                 streams[attribute_name] = VertexStream(

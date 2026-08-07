@@ -26,11 +26,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
 
 from companion.character.lipsync import MouthShape
 
-from .animation import Pose, Quaternion
+from .animation import Pose
 from .errors import ModelSchemaError
 from .glb import ValidatedModel
 from .skeleton import SkeletonProfile
