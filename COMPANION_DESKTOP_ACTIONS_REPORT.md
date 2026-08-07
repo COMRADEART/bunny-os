@@ -18,8 +18,13 @@ something was not run it is listed as NOT_RUN with the reason, not omitted.
 | Starting commit | `ef0c9572262acd8bd48b74ff7234573ac0b78d55` (verified head of the base branch) |
 | Working branch | `feature/companion-desktop-actions` |
 | Gate commit | `d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c` (all 170 gate iterations record it) |
-| Evidence commit | *(filled by the evidence commit)* |
-| Final SHA | *(filled at closure)* |
+| Evidence commit | `a123ea2` — the fourteen evidence files and the report |
+| Final SHA | the closure commit that follows, which edits only this table and §3's post-gate paragraph — non-build-affecting by construction |
+
+The analyser over `d0442fb..HEAD` at the evidence commit reports **0 installed,
+1 context-only, 16 unreachable**: the verdict collector, and this report with
+its fourteen evidence files. Nothing after the gate commit differs from it by
+anything the build can see.
 
 Preflight, before the branch was created:
 
@@ -124,9 +129,10 @@ settled by inspection, which is the discipline
 `build/scripts/build-input-closure.py`'s own docstring exists to enforce.
 
 **Post-gate closure.** The analyser over `d0442fb..HEAD` — everything after the
-gate commit — reports **0 installed, 1 context-only, 1 unreachable**. The
+gate commit — reports **0 installed, 1 context-only, 16 unreachable**. The
 context-only path is `scripts/ops/desktop-collect.py`, the verdict collector,
-which no route installs; the unreachable one is this report. Nothing the gates
+which no route installs; the sixteen unreachable ones are this report, the
+preserved-evidence record and the fourteen evidence files. Nothing the gates
 measured differs from the gate commit by anything the build could see.
 
 The collector was corrected twice after the gates ran, and it is worth saying
