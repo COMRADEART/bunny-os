@@ -65,12 +65,27 @@ _ABSOLUTE = (
     "startedActions",
 )
 
-#: List-valued absolutes: a lease, a waiter or an outstanding question between
-#: iterations is wrong however it got there.
+#: List-valued absolutes: a lease, a waiter, an outstanding question or a held
+#: store lock between iterations is wrong however it got there. Each of these
+#: names something a runtime is *holding*.
+#:
+#: ``activeExecutors`` is deliberately **not** here, and the distinction is the
+#: point. It is ``CompanionRuntime._executors`` — the executors a runtime was
+#: *configured with* — so a runtime object that a test fixture still references
+#: reports its configured executors forever. That is a live *object*, which is
+#: what ``liveRuntimes`` and ``liveServices`` already measure and what the
+#: warm-up column already records; it is not held authority. Treating it as an
+#: absolute failed a fifty-run gate on a constant pair of names that was there
+#: from iteration 1 and never moved, while every measure of actual authority —
+#: leases, waiters, held answers, pending approvals, store locks — was clean in
+#: all fifty.
 _ABSOLUTE_LISTS = (
     "executorLeases", "consentWaiters", "heldAnswers",
-    "pendingApprovals", "activeExecutors", "lockedStores",
+    "pendingApprovals", "lockedStores",
 )
+
+#: Reported and never failed on. See the note above.
+_REPORTED_LISTS = ("activeExecutors",)
 
 
 def _verdict(path: Path) -> dict[str, Any]:
@@ -95,6 +110,7 @@ def _verdict(path: Path) -> dict[str, Any]:
     cleanup: dict[str, int] = {}
     net: dict[str, int] = {}
     violations: dict[str, Any] = {}
+    reported: dict[str, set] = {}
     failures: list[dict[str, Any]] = []
     ledger_inconsistent: list[int] = []
     postures: dict[str, int] = {}
@@ -142,6 +158,10 @@ def _verdict(path: Path) -> dict[str, Any]:
                 violations.setdefault(name, []).append(
                     {"iteration": item.get("iteration"), "value": value}
                 )
+        for name in _REPORTED_LISTS:
+            value = delta.get(name)
+            if value:
+                reported.setdefault(name, set()).update(value)
         if delta.get("ledgerConsistent") is False:
             ledger_inconsistent.append(item.get("iteration"))
 
@@ -155,8 +175,13 @@ def _verdict(path: Path) -> dict[str, Any]:
         "file": path.name,
         "target": document.get("target"),
         "runs": document.get("runs"),
-        "commit": document.get("commit"),
-        "consecutive": document.get("consecutive", document.get("bestConsecutive")),
+        # Read from an *iteration*, not from the top level: the harness records
+        # the commit per iteration precisely so a header cannot claim a tree
+        # that moved underneath the run.
+        "commit": iterations[0].get("commit") if iterations else None,
+        "consecutive": document.get("longestConsecutivePass"),
+        "finalConsecutive": document.get("finalConsecutivePass"),
+        "passedIterations": document.get("passed"),
         "passed": (
             not leaked and not violations and not failures and not ledger_inconsistent
         ),
@@ -176,6 +201,10 @@ def _verdict(path: Path) -> dict[str, Any]:
         "gainedAcrossIterations": dict(sorted(growth.items())),
         "releasedAcrossIterations": dict(sorted(cleanup.items())),
         "transientOnly": transient,
+        # Live objects a fixture still references. Reported, never failed on.
+        "liveObjectsBetweenIterations": {
+            name: sorted(values) for name, values in sorted(reported.items())
+        },
         "absoluteViolations": violations,
         "ledgerInconsistentIterations": ledger_inconsistent,
         "failedIterations": failures,

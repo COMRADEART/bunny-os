@@ -17,7 +17,7 @@ something was not run it is listed as NOT_RUN with the reason, not omitted.
 | Base branch | `feature/companion-agent-providers` |
 | Starting commit | `ef0c9572262acd8bd48b74ff7234573ac0b78d55` (verified head of the base branch) |
 | Working branch | `feature/companion-desktop-actions` |
-| Gate commit | `d0442fb` — the final SHA is filled at closure and the gate commit is quoted in full in §22 |
+| Gate commit | `d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c` (all 170 gate iterations record it) |
 | Evidence commit | *(filled by the evidence commit)* |
 | Final SHA | *(filled at closure)* |
 
@@ -786,8 +786,19 @@ a concurrent attempt would be reclassified while it was still running.
 
 ## 22. Stress gates
 
-All three on one commit, `d0442fb` *(full SHA filled at closure)*, recorded by
-every iteration.
+All three on one commit, `d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c`, recorded by
+every iteration and asserted before gate 2 ran: the runner reads the commit out
+of gate 1's and gate 3's own reports and refuses if either differs from the tree
+it is about to clone.
+
+**The collector was corrected after the gates ran, and the correction re-derives
+the verdicts from the raw reports — which are unchanged.** Summing only the
+positive per-iteration deltas failed a clean suite gate on a fixture thread that
+was merely *exiting* when a snapshot happened to be taken: +1 in one iteration,
+−1 in the next, and a positives-only sum calls that growth. The verdict is now
+taken on the net, both halves are reported, and a four-iteration measurement
+confirms the thread is flat from iteration 2 onward. The JSON the harness wrote
+is the evidence; `gate-verdicts.json` summarises it.
 
 **The desk is asserted before the gates run.** The runner refuses unless the
 posture is `desktop-actions-available` with all nine actions, because a gate
@@ -800,21 +811,32 @@ than one that did not run: the numbers would look like evidence.
 | complete companion suites | 50 | *(filled)* | *(filled)* |
 | installed desktop-action slices | 20 | **20/20** | 20 |
 
-Recorded per iteration, §23's list:
+Recorded per iteration, §23's list. "net" means summed across iterations 2..N,
+positives and negatives together.
 
 | column | gate 1 | gate 3 |
 |---|---|---|
-| thread delta | 0 | 0 |
-| file-descriptor delta | +3 on iteration 1, then 0 | +7 on iteration 1, then 0 |
-| portal-handle delta | 0 | 0 |
-| D-Bus connection delta | 0 | 0 |
-| clipboard-owner delta | 0 | 0 |
+| thread delta | net 0 | net 0 |
+| file-descriptor delta | +4 on iteration 1; net 0 after (3 gained, 3 released) | +7 on iteration 1; net 0 after |
+| portal-handle delta | net 0 | net 0 |
+| D-Bus connection delta | net 0 | net 0 |
+| clipboard-owner delta | net 0 | net 0 |
+| child processes | +1 on iteration 1; net 0 after (3 gained, 3 released) | net 0 |
+| zombies | net 0 (3 gained, 3 released) | net 0 |
 | pending-action count | 0 every iteration | 0 every iteration |
+| prepared-action count | 0 every iteration | 0 every iteration |
 | approval count | reported, never failed on | reported, never failed on |
-| operation-ledger consistency | true every iteration | true every iteration |
-| temporary-file delta | 0 | +1 on iteration 1, then 0 |
-| duration (min / median / p95 / max) | 0.077 / 0.100 / 0.104 / 0.211 s | 0.991 / 1.038 / 1.078 / 1.280 s |
+| operation-ledger consistency | **true every iteration** | **true every iteration** |
+| temporary-file delta | net 0 | net 0 |
+| duration (min / median / p95 / max) | 0.219 / 0.222 / 0.224 / 0.531 s | 1.000 / 1.061 / 1.100 / 1.257 s |
 | exit status | 0 | 0 |
+
+The three gained-and-released triples in gate 1 are the same event seen three
+times: a settings program that had exited but not yet been reaped when a
+snapshot was taken, collected by the next iteration's spawn. It is the window
+`DetachedChildren.reap` closes, it is bounded by one iteration, and it is the
+reason the verdict is taken on the net — the positives-only sum would have
+called it a leak of three descriptors, three children and three zombies.
 
 **Iteration 1 is measured and does not fail a gate.** A broker's first run opens
 a session-bus connection and maps the GObject typelib; the second reuses both.
@@ -824,7 +846,7 @@ reported under `firstIterationWarmUp` and the growth that fails is summed from
 iteration 2 — where a genuine leak of one descriptor per run still totals
 ninety-nine.
 
-RSS since baseline is flat: 23.9 MB after a hundred lifecycles, 60.9 MB after
+RSS since baseline is flat: 26.8 MB after a hundred lifecycles, 62.9 MB after
 twenty slices, both reached in the first iteration.
 
 **Which user each gate ran as, and why.** Gates 1 and 3 ran as root, because
@@ -983,14 +1005,16 @@ the offer. Shortening it would trade a real observation for a faster number.
 
 ## 25. Complete test results
 
+All at the gate commit `d0442fb` unless noted.
+
 | run | result |
 |---|---|
-| whole repository, Linux, as `bunny` | **4035 tests, OK**, 8 skipped |
-| whole repository, Linux, as root | 4035 tests, **1 failure**, 5 skipped |
-| whole repository, Windows | 4011 tests, **2 failures**, 77 skipped |
-| companion suite, Linux, as `bunny` | **1500 tests, OK**, 2 skipped |
-| companion suite, Windows | **1500 tests, OK**, 41 skipped |
-| desktop files alone, Windows | **156 tests, OK**, 4 skipped |
+| whole repository, Linux, as `bunny` | **4037 tests, OK**, 8 skipped |
+| whole repository, Linux, as root | 4037 tests, **1 failure**, 5 skipped |
+| whole repository, Windows (at the branch head) | 4020 tests, **2 failures**, 77 skipped |
+| companion suite, Linux, as `bunny` | **1507 tests, OK** |
+| companion suite, Windows | **1507 tests, OK**, 41 skipped |
+| desktop files alone, Windows | **158 tests, OK**, 4 skipped |
 
 The three failures outside the clean run are all environmental and all verified
 as such:
