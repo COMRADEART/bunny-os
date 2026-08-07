@@ -769,6 +769,38 @@ class BuildIntegrationTests(unittest.TestCase):
             "/usr/share/doc/bunny-os/PUBLIC_ALPHA_SCOPE.md",
         )
 
+    def test_no_shell_script_has_crlf_line_endings(self) -> None:
+        """``.gitattributes`` says ``*.sh -text``, so git will never fix this.
+
+        ``-text`` means no normalisation in either direction: whatever bytes are
+        in the working copy go into the index verbatim and come back out the
+        same on every platform. A script authored on Windows therefore reaches
+        Linux with CRLF, and bash reports it as
+
+            set: pipefail: invalid option name
+            $'\\r': command not found
+
+        which reads like a syntax error in the script rather than a line-ending
+        problem. Two harness scripts on this branch were written that way and
+        the first VM run failed on them.
+
+        Checked over every ``.sh`` in the repository rather than only the new
+        ones, because the property is about the repository.
+        """
+        offenders: list[str] = []
+        for path in sorted(REPOSITORY.rglob("*.sh")):
+            relative = path.relative_to(REPOSITORY).as_posix()
+            if any(part in ("node_modules", ".git", "build/out") for part in relative.split("/")):
+                continue
+            if relative.startswith(("node_modules/", "build/out/", "qualification/")):
+                continue
+            try:
+                if b"\r\n" in path.read_bytes():
+                    offenders.append(relative)
+            except OSError:
+                continue
+        self.assertEqual(offenders, [], "shell scripts with CRLF line endings will not run on Linux")
+
     def test_the_installer_models_everything_it_installs(self) -> None:
         """The closure analyser must not have to fail closed on this branch."""
         from install_routes_shim import audit_installer  # type: ignore
