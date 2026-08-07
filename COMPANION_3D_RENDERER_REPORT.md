@@ -139,8 +139,11 @@ CharacterRendererController        companion/character/controller.py
 ThreeDRenderer                     companion/character/three_d/renderer.py
 ```
 
-Nineteen modules under `companion/character/three_d/`, listed with what each
-owns in `docs/COMPANION_3D_RENDERER.md`. The renderer implements the existing
+Nineteen files under `companion/character/three_d/`.
+`docs/COMPANION_3D_RENDERER.md` tabulates the seventeen that own a subsystem
+responsibility; the other two are `__init__.py`, which holds the schema and
+renderer API versions and the two rung names, and `errors.py`, whose typed
+refusals all descend from the character package's existing `CharacterError`. The renderer implements the existing
 `companion.character.renderer.CharacterRenderer` contract, so the controller
 drives it exactly as it drives the static and animated-2D renderers — same
 package loading, position, scale, speech bubble, mouth shape and status.
