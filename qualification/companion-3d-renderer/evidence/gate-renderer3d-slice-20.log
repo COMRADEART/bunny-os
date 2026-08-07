@@ -1,0 +1,22 @@
+stress: target=renderer3d-slice runs=20 order=declared mode=in-process pid=1186954
+     1 ok    1.40s threads+0 fd+2 rss+154644K
+     2 ok    0.76s threads+0 fd+0 rss+175872K
+     3 ok    0.77s threads+0 fd+0 rss+180800K
+     4 ok    0.75s threads+0 fd+0 rss+182840K
+     5 ok    0.75s threads+0 fd+0 rss+183456K
+     6 ok    0.76s threads+0 fd+0 rss+183592K
+     7 ok    0.76s threads+0 fd+0 rss+183980K
+     8 ok    0.76s threads+0 fd+0 rss+184028K
+     9 ok    0.77s threads+0 fd+0 rss+185056K
+    10 ok    0.76s threads+0 fd+0 rss+185224K
+    11 ok    0.74s threads+0 fd+0 rss+185232K
+    12 ok    0.76s threads+0 fd+0 rss+185240K
+    13 ok    0.76s threads+0 fd+0 rss+185252K
+    14 ok    0.76s threads+0 fd+0 rss+186284K
+    15 ok    0.76s threads+0 fd+0 rss+186296K
+    16 ok    0.76s threads+0 fd+0 rss+187364K
+    17 ok    0.76s threads+0 fd+0 rss+187380K
+    18 ok    0.76s threads+0 fd+0 rss+187396K
+    19 ok    0.75s threads+0 fd+0 rss+188420K
+    20 ok    0.74s threads+0 fd+0 rss+187400K
+stress: 20/20 passed, longest consecutive 20

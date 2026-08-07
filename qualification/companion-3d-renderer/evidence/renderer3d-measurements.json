@@ -1,0 +1,103 @@
+{
+  "columns": {
+    "droppedFrames": {
+      "maximum": 0.0,
+      "median": 0.0,
+      "minimum": 0.0,
+      "p95": 0.0,
+      "samples": 20
+    },
+    "droppedFramesBeforeRestart": {
+      "maximum": 0.0,
+      "median": 0.0,
+      "minimum": 0.0,
+      "p95": 0.0,
+      "samples": 20
+    },
+    "estimatedGpuBytes": {
+      "maximum": 269264.0,
+      "median": 269264.0,
+      "minimum": 269264.0,
+      "p95": 269264.0,
+      "samples": 20
+    },
+    "firstFrameMs": {
+      "maximum": 7.265,
+      "median": 5.021,
+      "minimum": 4.586,
+      "p95": 7.122,
+      "samples": 20
+    },
+    "framesDrawn": {
+      "maximum": 1.0,
+      "median": 1.0,
+      "minimum": 1.0,
+      "p95": 1.0,
+      "samples": 20
+    },
+    "framesDrawnBeforeRestart": {
+      "maximum": 48.0,
+      "median": 48.0,
+      "minimum": 48.0,
+      "p95": 48.0,
+      "samples": 20
+    },
+    "liveGpuResources": {
+      "maximum": 32.0,
+      "median": 32.0,
+      "minimum": 32.0,
+      "p95": 32.0,
+      "samples": 20
+    },
+    "meanFrameMs": {
+      "maximum": 4.0798,
+      "median": 2.6313,
+      "minimum": 2.4186,
+      "p95": 3.8548,
+      "samples": 20
+    },
+    "meanFrameMsBeforeRestart": {
+      "maximum": 0.9989,
+      "median": 0.7701,
+      "minimum": 0.7053,
+      "p95": 0.8462,
+      "samples": 20
+    },
+    "modelUploadMs": {
+      "maximum": 16.047,
+      "median": 8.0645,
+      "minimum": 7.416,
+      "p95": 9.596,
+      "samples": 20
+    },
+    "modelValidationMs": {
+      "maximum": 26.746,
+      "median": 16.3055,
+      "minimum": 15.278,
+      "p95": 18.532,
+      "samples": 20
+    },
+    "p95FrameMs": {
+      "maximum": 4.0798,
+      "median": 2.6313,
+      "minimum": 2.4186,
+      "p95": 3.8548,
+      "samples": 20
+    },
+    "p95FrameMsBeforeRestart": {
+      "maximum": 2.8492,
+      "median": 2.0983,
+      "minimum": 1.5569,
+      "p95": 2.7198,
+      "samples": 20
+    },
+    "rendererRestartMs": {
+      "maximum": 21.254,
+      "median": 15.6145,
+      "minimum": 12.577,
+      "p95": 20.34,
+      "samples": 20
+    }
+  },
+  "schema": "bunny-os/renderer-3d-measurements/1"
+}

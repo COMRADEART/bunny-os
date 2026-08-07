@@ -1,0 +1,135 @@
+{
+  "allPassed": true,
+  "commit": "75bc033b015cddc568ee6b09477327f8c6708498",
+  "gates": {
+    "renderer3d-100": {
+      "absoluteViolations": {},
+      "allPassed": true,
+      "commit": "75bc033b015cddc568ee6b09477327f8c6708498",
+      "coverage": {
+        "maximum": 0.15613,
+        "mean": 0.15613,
+        "minimum": 0.15613
+      },
+      "failedIterations": [],
+      "finalConsecutive": 100,
+      "gainedTotals": {},
+      "glTableLoadedAtEnd": true,
+      "iterationsMeasured": 100,
+      "leakSuspicions": [],
+      "longestConsecutive": 100,
+      "netGrowth": {},
+      "passed": 100,
+      "releasedTotals": {},
+      "residualHeldResources": {},
+      "retainedPythonObjects": {},
+      "rss": {
+        "baselineBytes": 24526848,
+        "finalBytes": 155508736,
+        "growthBytes": 130981888
+      },
+      "runs": 100,
+      "seconds": {
+        "maximum": 0.166,
+        "median": 0.06,
+        "minimum": 0.055,
+        "total": 6.156
+      },
+      "target": "renderer3d",
+      "warmUp": {
+        "descriptors": 1,
+        "rssBytes": 103976960
+      }
+    },
+    "renderer3d-slice-20": {
+      "absoluteViolations": {},
+      "allPassed": true,
+      "commit": "75bc033b015cddc568ee6b09477327f8c6708498",
+      "coverage": {
+        "maximum": null,
+        "mean": null,
+        "minimum": null
+      },
+      "failedIterations": [],
+      "finalConsecutive": 20,
+      "gainedTotals": {},
+      "glTableLoadedAtEnd": true,
+      "iterationsMeasured": 20,
+      "leakSuspicions": [],
+      "longestConsecutive": 20,
+      "netGrowth": {},
+      "passed": 20,
+      "releasedTotals": {},
+      "residualHeldResources": {},
+      "retainedPythonObjects": {},
+      "rss": {
+        "baselineBytes": 24494080,
+        "finalBytes": 217440256,
+        "growthBytes": 192946176
+      },
+      "runs": 20,
+      "seconds": {
+        "maximum": 1.398,
+        "median": 0.759,
+        "minimum": 0.743,
+        "total": 15.797
+      },
+      "target": "renderer3d-slice",
+      "warmUp": {
+        "descriptors": 2,
+        "rssBytes": 157147136,
+        "tcpTimeWait": 3
+      }
+    },
+    "suite-50": {
+      "absoluteViolations": {},
+      "allPassed": true,
+      "commit": "75bc033b015cddc568ee6b09477327f8c6708498",
+      "coverage": {
+        "maximum": null,
+        "mean": null,
+        "minimum": null
+      },
+      "failedIterations": [],
+      "finalConsecutive": 50,
+      "gainedTotals": {},
+      "glTableLoadedAtEnd": true,
+      "iterationsMeasured": 50,
+      "leakSuspicions": [],
+      "longestConsecutive": 50,
+      "netGrowth": {},
+      "passed": 50,
+      "releasedTotals": {},
+      "residualHeldResources": {},
+      "retainedPythonObjects": {},
+      "rss": {
+        "baselineBytes": 24326144,
+        "finalBytes": 291926016,
+        "growthBytes": 267599872
+      },
+      "runs": 50,
+      "seconds": {
+        "maximum": 56.167,
+        "median": 54.448,
+        "minimum": 53.688,
+        "total": 2725.685
+      },
+      "target": "suite",
+      "warmUp": {
+        "descriptors": 2,
+        "liveAgentServices": 1,
+        "liveAgentWorkers": 1,
+        "liveCaptureWorkers": 1,
+        "liveDesktopBrokers": 1,
+        "liveRuntimes": 1,
+        "liveServices": 1,
+        "liveSpeechServices": 1,
+        "liveVoiceServices": 1,
+        "liveVoiceWorkers": 1,
+        "rssBytes": 232558592,
+        "threads": 1
+      }
+    }
+  },
+  "schema": "bunny-os/renderer-3d-gates/1"
+}

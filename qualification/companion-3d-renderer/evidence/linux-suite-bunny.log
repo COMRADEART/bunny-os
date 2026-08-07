@@ -1,0 +1,6 @@
+/usr/lib64/python3.14/site-packages/gi/overrides/__init__.py:159: PyGIDeprecationWarning: GLib.unix_signal_add_full is deprecated; use GLibUnix.signal_add_full instead
+  value = getattr(proxy, attr)
+----------------------------------------------------------------------
+Ran 1748 tests in 56.239s
+
+OK (skipped=2)

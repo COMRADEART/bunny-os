@@ -1,0 +1,62 @@
+{
+  "commit": "75bc033b015cddc568ee6b09477327f8c6708498",
+  "files": {
+    "env.json": {
+      "bytes": 1477,
+      "sha256": "91b0ccf1b34bca0e3e7f86327471f344ecc9485402500ab2faaa28f42bdce82b"
+    },
+    "gate-commit": {
+      "bytes": 41,
+      "sha256": "64fc5eca8f9d1acf2a64f2ded5425f92fc7beb7ffd035be7768c4eee376d675f"
+    },
+    "gate-renderer3d-100.json": {
+      "bytes": 435544,
+      "sha256": "f492c19c99c927d3cc63495d9d7c168447d917d85ad7ba02757c3dd9f1749396"
+    },
+    "gate-renderer3d-100.log": {
+      "bytes": 4726,
+      "sha256": "8283ae6f890015cdd02b217a1109dd5b3e15e43e3aad0625ad012e7f8ed99cb0"
+    },
+    "gate-renderer3d-slice-20.json": {
+      "bytes": 140589,
+      "sha256": "f135984c84c46500b24fad08513b2d5854174c65a8875441c8292b6bc41bf74f"
+    },
+    "gate-renderer3d-slice-20.log": {
+      "bytes": 1048,
+      "sha256": "070291a46e4d912ecbe23791b09e012f7e5582532cf2fdecb381940747bc5b4e"
+    },
+    "gate-suite-50.json": {
+      "bytes": 216129,
+      "sha256": "3f5825e8a310309c13488321bf5f2bdb5c6635e6d1a04603d8507e55a54594de"
+    },
+    "gate-suite-50.log": {
+      "bytes": 14379,
+      "sha256": "d46141bfe30681747bdd1f06ef35d807886c768c7a5de8757709fe1c89065b9f"
+    },
+    "gate-verdicts.json": {
+      "bytes": 3440,
+      "sha256": "48d57ff7acb87b8162848a585d4dd3a7baad6605d533447d78806db2adec3cab"
+    },
+    "gtk-wayland.json": {
+      "bytes": 2374,
+      "sha256": "dd075a36cf8040e777e6386451127346a5eeea498ac6e09d97190262b342a439"
+    },
+    "linux-suite-bunny.log": {
+      "bytes": 312,
+      "sha256": "ebf4d9607585b1412e41024572e57037beadba55f10f66da252f139c06d97710"
+    },
+    "linux-suite-root.log": {
+      "bytes": 1077,
+      "sha256": "55312595632a3a554358d35fa2d5dd83d27f46a676a5611624ddd423926ace83"
+    },
+    "renderer3d-measurements.json": {
+      "bytes": 2106,
+      "sha256": "b772cbd084aba5f8cc2d7a7252d2ed2faef74ace449f73cbc1d902c65ff6f6e9"
+    },
+    "renderer3d-memory.json": {
+      "bytes": 2454,
+      "sha256": "93e8e4180237e50e6a3c664f505d695e5999bfb3b2408a3e1924ea9d6f2d9390"
+    }
+  },
+  "schema": "bunny-os/renderer-3d-evidence-manifest/1"
+}

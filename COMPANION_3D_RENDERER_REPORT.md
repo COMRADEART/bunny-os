@@ -8,7 +8,7 @@
 | Starting commit | `fa49380dadf0aa90690c4f2be5b483b16a56c0db` (verified head of the base branch; working tree clean) |
 | Branch | `feature/companion-3d-renderer` |
 | First source commit | `8bd18d7a62831b553b1505f0967ceaa2dfe0d991` — "A ladder that had two rungs nobody had built" |
-| Gate commit | `dd79cece42b4382c3ea6cc1ed018d3a2836cd96d` — every gate iteration records it |
+| Gate commit | `75bc033b015cddc568ee6b09477327f8c6708498` — every gate iteration records it |
 | Evidence commit | *(the commit that adds `qualification/companion-3d-renderer/evidence/` and this report)* |
 | Final SHA | *(the closure commit that follows, which edits only this table and §3's post-gate paragraph)* |
 
@@ -53,7 +53,7 @@ earlier claim.
 
 ## 3. Build-input impact
 
-The analyser over `fa49380..dd79cec` — the base to the gate commit — reports
+The analyser over `fa49380..75bc033` — the base to the gate commit — reports
 **54 installed, 6 context-only, 14 unreachable**. Profiles affected: `beta`,
 `desktop`, `developer`, `live`, `minimal`, `recovery`, `shell`, `shell-test`.
 
@@ -914,7 +914,7 @@ the result, the graphics context, the pixels — is real.
 
 ## 32. Stress gates
 
-**All three gates ran on one exact commit: `dd79cece42b4382c3ea6cc1ed018d3a2836cd96d`.**
+**All three gates ran on one exact commit: `75bc033b015cddc568ee6b09477327f8c6708498`.**
 Every iteration of every gate records that commit in its own record — per
 iteration rather than once per run, so a tree that moved underneath a gate could
 not be hidden by a header.
@@ -924,11 +924,36 @@ Python 3.14.3, Mesa 26.1.5 (`llvmpipe`), GTK 4.22.4. The trees are ext4 copies,
 never `/mnt/c` — a package under DrvFs presents every file as 0777 and the
 character validator correctly refuses an executable file in a package.
 
-| Gate | Required | Result |
-|---|---|---|
-| 3D-renderer lifecycles | 100 consecutive | *(filled in)* |
-| complete companion suites | 50 consecutive | *(filled in)* |
-| installed 3D vertical slices | 20 consecutive | *(filled in)* |
+| Gate | Required | Result | Longest consecutive | Net growth | Held resources at end |
+|---|---|---|---|---|---|
+| 3D-renderer lifecycles | 100 consecutive | **100 / 100** | 100 | none | none |
+| complete companion suites | 50 consecutive | **50 / 50** | 50 | none | none |
+| installed 3D vertical slices | 20 consecutive | **20 / 20** | 20 | none | none |
+
+`gate-verdicts.json` records **`allPassed: true`**. No leak suspicions in any
+gate; no absolute violations; no residual held GPU resource and no retained
+renderer object at the end of any run.
+
+Durations: the renderer lifecycle runs in a median **60 ms** (min 55 ms, max
+166 ms, 6.2 s for all hundred); the installed slice in a median **759 ms** (min
+743 ms, max 1.40 s); a complete companion suite in a median **54.4 s** (min
+53.7 s, max 56.2 s, 45 minutes for all fifty).
+
+Warm-up, measured on iteration 1 and excluded from the verdict by the rule
+above: the lifecycle gate's first iteration costs 1 descriptor and 99 MiB of RSS
+— Mesa mapping `llvmpipe` and three shader programs compiling — and every
+iteration after it costs nothing. The suite gate's first iteration additionally
+brings up one runtime, one service and one worker of each kind, which is the
+first test module constructing its fixtures.
+
+RSS across a whole gate, baseline to final: lifecycle **23 MiB → 148 MiB**,
+slice **23 MiB → 207 MiB**, suite **23 MiB → 278 MiB**. All of that growth is in
+the first iterations; the per-iteration deltas are zero from iteration 2 onward,
+which is what the net-growth column is reporting.
+
+The character covered **15.6 %** of the surface in every one of the hundred
+lifecycle iterations — identical to five decimal places, which is what a
+deterministic renderer with a seeded procedural behaviour should produce.
 
 **Which user each gate runs as.** Gates 1 and 3 run as `root`: WSLg gives root
 the graphical session and the EGL device. Gate 2 runs as `bunny`, because root
@@ -1021,14 +1046,14 @@ From the 20-iteration slice gate (`renderer3d-measurements.json`), 20 samples:
 
 | Measurement | min | median | p95 | max |
 |---|---|---|---|---|
-| model validation | 14.8 ms | **16.0 ms** | 17.8 ms | 25.7 ms |
-| model load (upload to GPU) | 7.6 ms | **8.1 ms** | 9.7 ms | 9.8 ms |
-| first frame | 4.6 ms | **5.0 ms** | 6.1 ms | 7.1 ms |
-| frame time, mean over a slice | 0.70 ms | **0.74 ms** | 0.82 ms | 1.03 ms |
-| frame time, p95 over a slice | 1.32 ms | **2.02 ms** | 2.53 ms | 2.79 ms |
-| renderer restart | 11.7 ms | **18.0 ms** | 21.0 ms | 22.0 ms |
+| model validation | 15.3 ms | **16.3 ms** | 18.5 ms | 26.7 ms |
+| model load (upload to GPU) | 7.4 ms | **8.1 ms** | 9.6 ms | 16.0 ms |
+| first frame | 4.6 ms | **5.0 ms** | 7.1 ms | 7.3 ms |
+| frame time, mean over a slice | 0.71 ms | **0.77 ms** | 0.85 ms | 1.00 ms |
+| frame time, p95 over a slice | 1.56 ms | **2.10 ms** | 2.72 ms | 2.85 ms |
+| renderer restart | 12.6 ms | **15.6 ms** | 20.3 ms | 21.3 ms |
 | dropped frames | 0 | **0** | 0 | 0 |
-| live GPU resources at the end of a slice | 32 | **32** | 32 | 32 |
+| live GPU resources while a slice is drawing | 32 | **32** | 32 | 32 |
 
 From a 241-frame offscreen run at 288×360: first frame **7.4 ms**, mean
 **1.17 ms**, p95 **3.09 ms**, max **10.2 ms**, **0 dropped**.
@@ -1063,7 +1088,7 @@ the frame that draws it, so its latency is the frame time.
 
 ### The 3D suites
 
-**227 tests, all passing, zero failures.** On Linux every one runs; on Windows
+**229 tests, all passing, zero failures.** On Linux every one runs; on Windows
 the graphics ones skip rather than pass.
 
 | Module | Tests | Linux | Windows |
@@ -1073,7 +1098,7 @@ the graphics ones skip rather than pass.
 | `test_three_d_package.py` | 38 | 38 pass | 38 pass |
 | `test_three_d_ladder.py` | 27 | 27 pass | 27 pass |
 | `test_three_d_diagnostics.py` | 16 | 16 pass | 8 pass, 8 skip (no graphics) |
-| `test_three_d_render.py` | 17 | 17 pass | skipped (no graphics) |
+| `test_three_d_render.py` | 19 | 19 pass | skipped (no graphics) |
 | `test_three_d_isolation.py` | 11 | 11 pass | 11 pass |
 | `test_three_d_preservation.py` | 4 | 4 pass | 4 pass |
 
@@ -1086,9 +1111,9 @@ cannot become a rubber stamp on a machine without graphics.
 
 | Where | Tests | Result |
 |---|---|---|
-| Windows 11, Python 3.14.3 | 1,731 | OK, 52 skipped |
-| Fedora 44 WSL2, as `root` | 1,746 | 1 failure, 2 skipped — the read-only-directory test, which cannot pass as root |
-| Fedora 44 WSL2, as `bunny` | 1,746 | *(filled in from the gate run)* |
+| Windows 11, Python 3.14.3 | 1,733 | OK, 54 skipped |
+| Fedora 44 WSL2, as `root` | 1,748 | 1 failure, 2 skipped — the read-only-directory test, which cannot pass as root |
+| Fedora 44 WSL2, as `bunny` | 1,748 | OK, 2 skipped — fifty times consecutively |
 | `tests/image` (build-input closure) | 50 | OK |
 
 The Linux runs execute fifteen more tests and skip fifty fewer than Windows,
@@ -1299,7 +1324,7 @@ The twenty conditions, each answered by the section that measured it.
 | 14 | task identity and result unchanged across degradation | §31 step 31, step 36 | **met** |
 | 15 | reduced-motion mode works | §20, §34 | **met** — the rung is kept and the motion is removed |
 | 16 | headless fallback works | §27 | **met** — and no GPU library is opened to find out |
-| 17 | the 100/50/20 gates pass on one commit | §32 | *(filled in)* |
+| 17 | the 100/50/20 gates pass on one commit | §32 | **met** — `allPassed: true` at `75bc033`, all three |
 | 18 | Linux compositor rendering is measured | §30 | **met** — on WSLg, recorded as WSLg |
 | 19 | memory and frame-time metrics are reported honestly | §33, §35 | **met** — separated per component, and labelled software-rasteriser throughout |
 | 20 | no release or reproducibility qualification is claimed | §39 | **met** — no image was built and no candidate created |

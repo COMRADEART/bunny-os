@@ -1,0 +1,215 @@
+Started bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+stress: target=suite runs=50 order=declared mode=in-process pid=798902
+     1 FAIL  59.71s threads+1 fd+2 rss+238332K
+     2 FAIL  57.37s threads+0 fd+0 rss+258756K
+     3 FAIL  58.27s threads+0 fd+0 rss+262284K
+Stopping bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json...
+bunny-3d-suite-gate.service: Deactivated successfully.
+Stopped bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+bunny-3d-suite-gate.service: Consumed 1min 48.688s CPU time over 3min 14.594s wall clock time, 654.4M memory peak.
+Started bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+stress: target=suite runs=50 order=declared mode=in-process pid=813397
+     1 FAIL  50.14s threads+1 fd+3 rss+191672K
+     2 FAIL  49.34s threads+0 fd+0 rss+239108K
+Stopping bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json...
+bunny-3d-suite-gate.service: Deactivated successfully.
+Stopped bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+bunny-3d-suite-gate.service: Consumed 1min 1.129s CPU time over 1min 50.606s wall clock time, 494.5M memory peak.
+Started bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+stress: target=suite runs=50 order=declared mode=in-process pid=823282
+     1 ok   52.25s threads+1 fd+2 rss+218484K
+     2 ok   52.58s threads+0 fd+0 rss+234544K
+     3 ok   52.97s threads+0 fd+0 rss+225996K
+     4 ok   51.60s threads+0 fd+0 rss+239252K
+     5 ok   52.18s threads+0 fd+0 rss+242168K
+     6 ok   53.17s threads+0 fd+0 rss+253372K
+Stopping bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json...
+bunny-3d-suite-gate.service: Deactivated successfully.
+Stopped bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+bunny-3d-suite-gate.service: Consumed 3min 23.631s CPU time over 5min 44.342s wall clock time, 979.5M memory peak.
+Started bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+stress: target=suite runs=50 order=declared mode=in-process pid=850802
+     1 ok   53.24s threads+1 fd+2 rss+227752K
+     2 ok   52.80s threads+0 fd+0 rss+240292K
+     3 ok   52.12s threads+0 fd+0 rss+241648K
+     4 ok   52.73s threads+0 fd+0 rss+242976K
+     5 ok   52.54s threads+0 fd+0 rss+246156K
+     6 ok   53.06s threads+0 fd+0 rss+244584K
+     7 ok   52.82s threads+0 fd+0 rss+246620K
+     8 ok   62.95s threads+1 fd+0 rss+250428K
+     9 ok   52.79s threads-1 fd+0 rss+251324K
+    10 ok   52.55s threads+0 fd+0 rss+249628K
+Stopping bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json...
+bunny-3d-suite-gate.service: Deactivated successfully.
+Stopped bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+bunny-3d-suite-gate.service: Consumed 5min 26.838s CPU time over 9min 13.679s wall clock time, 1.2G memory peak.
+Started bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+stress: target=suite runs=50 order=declared mode=in-process pid=888684
+     1 ok   54.05s threads+1 fd+2 rss+225684K
+     2 ok   52.33s threads+0 fd+0 rss+238652K
+Stopping bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json...
+bunny-3d-suite-gate.service: Deactivated successfully.
+Stopped bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+bunny-3d-suite-gate.service: Consumed 1min 9.828s CPU time over 1min 55.718s wall clock time, 466.2M memory peak.
+Started bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+stress: target=suite runs=50 order=declared mode=in-process pid=904321
+     1 ok   54.09s threads+1 fd+2 rss+227260K
+     2 ok   52.91s threads+0 fd+0 rss+238712K
+     3 ok   53.08s threads+0 fd+0 rss+242664K
+     4 ok   52.41s threads+0 fd+0 rss+243412K
+     5 ok   52.96s threads+0 fd+0 rss+244240K
+     6 ok   53.05s threads+0 fd+0 rss+246304K
+     7 ok   53.41s threads+0 fd+0 rss+249216K
+     8 ok   52.34s threads+0 fd+0 rss+250840K
+     9 ok   52.87s threads+0 fd+0 rss+249884K
+    10 ok   53.10s threads+0 fd+0 rss+250464K
+    11 ok   53.50s threads+0 fd+0 rss+252624K
+    12 ok   53.39s threads+0 fd+0 rss+245420K
+    13 ok   53.81s threads+0 fd+0 rss+254844K
+    14 ok   53.42s threads+0 fd+0 rss+255280K
+    15 ok   53.48s threads+0 fd+0 rss+255312K
+    16 ok   52.74s threads+0 fd+0 rss+257012K
+    17 ok   53.00s threads+0 fd+0 rss+258640K
+    18 ok   52.99s threads+0 fd+0 rss+259468K
+    19 ok   52.97s threads+0 fd+0 rss+260020K
+    20 ok   52.93s threads+0 fd+0 rss+257536K
+    21 ok   53.03s threads+0 fd+0 rss+259112K
+    22 ok   53.37s threads+0 fd+0 rss+258684K
+    23 ok   54.16s threads+0 fd+0 rss+258812K
+    24 ok   53.08s threads+0 fd+0 rss+258504K
+    25 ok   52.78s threads+0 fd+0 rss+257480K
+    26 ok   54.01s threads+0 fd+0 rss+258684K
+    27 ok   53.08s threads+0 fd+0 rss+260096K
+    28 ok   52.93s threads+0 fd+0 rss+258164K
+    29 ok   53.23s threads+0 fd+0 rss+262976K
+    30 ok   53.03s threads+0 fd+0 rss+261088K
+    31 ok   53.96s threads+0 fd+0 rss+258032K
+Stopping bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json...
+bunny-3d-suite-gate.service: Deactivated successfully.
+Stopped bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+bunny-3d-suite-gate.service: Consumed 17min 20.711s CPU time over 28min 28.200s wall clock time, 2.3G memory peak.
+Started bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+stress: target=suite runs=50 order=declared mode=in-process pid=1001026
+     1 ok   54.80s threads+1 fd+2 rss+229304K
+     2 ok   53.80s threads+0 fd+0 rss+239044K
+     3 ok   53.54s threads+0 fd+0 rss+242336K
+     4 ok   53.46s threads+0 fd+0 rss+243568K
+     5 ok   53.30s threads+0 fd+0 rss+245540K
+     6 ok   53.80s threads+0 fd+0 rss+245148K
+     7 ok   53.43s threads+0 fd+0 rss+247936K
+     8 ok   52.99s threads+0 fd+0 rss+248932K
+     9 ok   53.00s threads+0 fd+0 rss+249652K
+    10 ok   53.78s threads+0 fd+0 rss+249996K
+    11 ok   53.79s threads+0 fd+0 rss+250344K
+    12 ok   53.34s threads+0 fd+0 rss+254568K
+    13 ok   54.21s threads+0 fd+0 rss+252428K
+    14 ok   53.70s threads+0 fd+0 rss+256488K
+    15 ok   53.40s threads+0 fd+0 rss+252996K
+    16 ok   53.76s threads+0 fd+0 rss+252984K
+    17 ok   52.81s threads+0 fd+0 rss+257684K
+    18 ok   53.80s threads+0 fd+0 rss+256988K
+    19 ok   53.09s threads+0 fd+0 rss+257576K
+    20 ok   53.41s threads+0 fd+0 rss+265036K
+    21 ok   53.78s threads+0 fd+0 rss+266212K
+    22 ok   53.71s threads+0 fd+0 rss+265992K
+    23 ok   53.72s threads+0 fd+0 rss+266808K
+    24 ok   53.46s threads+0 fd+0 rss+267188K
+    25 ok   53.44s threads+0 fd+0 rss+267368K
+    26 ok   53.55s threads+0 fd+0 rss+267652K
+    27 ok   54.52s threads+0 fd+0 rss+267372K
+    28 ok   55.37s threads+0 fd+0 rss+267540K
+    29 ok   55.47s threads+0 fd+0 rss+268596K
+    30 ok   54.87s threads+0 fd+0 rss+269820K
+    31 ok   54.87s threads+0 fd+0 rss+269652K
+    32 ok   55.42s threads+0 fd+0 rss+269908K
+    33 ok   53.73s threads+0 fd+0 rss+269944K
+    34 ok   53.12s threads+0 fd+0 rss+268528K
+    35 ok   53.38s threads+0 fd+0 rss+268152K
+    36 ok   53.44s threads+0 fd+0 rss+267648K
+    37 ok   53.97s threads+0 fd+0 rss+268200K
+    38 ok   54.59s threads+0 fd+0 rss+267908K
+    39 ok   53.95s threads+0 fd+0 rss+268832K
+    40 ok   53.59s threads+0 fd+0 rss+268964K
+    41 ok   54.23s threads+0 fd+0 rss+268524K
+    42 ok   53.69s threads+0 fd+0 rss+270296K
+    43 ok   53.78s threads+0 fd+0 rss+270324K
+    44 ok   54.21s threads+0 fd+0 rss+270164K
+    45 ok   53.11s threads+0 fd+0 rss+269328K
+    46 ok   53.40s threads+0 fd+0 rss+269248K
+    47 ok   53.58s threads+0 fd+0 rss+268936K
+    48 ok   53.58s threads+0 fd+0 rss+269432K
+    49 ok   53.84s threads+0 fd+0 rss+269888K
+    50 ok   54.47s threads+0 fd+0 rss+272768K
+stress: 50/50 passed, longest consecutive 50
+bunny-3d-suite-gate.service: Deactivated successfully.
+bunny-3d-suite-gate.service: Consumed 27min 42.692s CPU time over 45min 8.073s wall clock time, 3.1G memory peak.
+Started bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+stress: target=suite runs=50 order=declared mode=in-process pid=1153972
+     1 ok   55.25s threads+1 fd+2 rss+226744K
+     2 ok   53.77s threads+0 fd+0 rss+241592K
+     3 ok   54.21s threads+0 fd+0 rss+242816K
+     4 ok   53.94s threads+0 fd+0 rss+230484K
+     5 ok   53.79s threads+0 fd+0 rss+244816K
+     6 ok   53.62s threads+0 fd+0 rss+249300K
+     7 ok   54.01s threads+0 fd+0 rss+262216K
+     8 ok   54.01s threads+0 fd+0 rss+235204K
+     9 ok   53.83s threads+0 fd+0 rss+252512K
+Stopping bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json...
+bunny-3d-suite-gate.service: Deactivated successfully.
+Stopped bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+bunny-3d-suite-gate.service: Consumed 5min 30.512s CPU time over 8min 56.648s wall clock time, 1.2G memory peak.
+Started bunny-3d-suite-gate.service - [systemd-run] /usr/bin/python3 /home/bunny/three-d/scripts/companion_stress.py --target suite --runs 50 --output /home/bunny/three-d-evidence/gate-suite-50.json.
+stress: target=suite runs=50 order=declared mode=in-process pid=1191710
+     1 ok   54.76s threads+1 fd+2 rss+228220K
+     2 ok   53.94s threads+0 fd+0 rss+238068K
+     3 ok   54.44s threads+0 fd+0 rss+240636K
+     4 ok   54.35s threads+0 fd+0 rss+243356K
+     5 ok   54.46s threads+0 fd+0 rss+246272K
+     6 ok   54.43s threads+0 fd+0 rss+248496K
+     7 ok   53.92s threads+0 fd+0 rss+252064K
+     8 ok   54.09s threads+0 fd+0 rss+253992K
+     9 ok   54.32s threads+0 fd+0 rss+252612K
+    10 ok   54.26s threads+0 fd+0 rss+255088K
+    11 ok   53.69s threads+0 fd+0 rss+259396K
+    12 ok   54.56s threads+0 fd+0 rss+255560K
+    13 ok   54.11s threads+0 fd+0 rss+257444K
+    14 ok   54.40s threads+0 fd+0 rss+259184K
+    15 ok   55.02s threads+0 fd+0 rss+259148K
+    16 ok   54.24s threads+0 fd+0 rss+259520K
+    17 ok   54.55s threads+0 fd+0 rss+259548K
+    18 ok   54.55s threads+0 fd+0 rss+257904K
+    19 ok   54.49s threads+0 fd+0 rss+258596K
+    20 ok   53.69s threads+0 fd+0 rss+259224K
+    21 ok   54.04s threads+0 fd+0 rss+260260K
+    22 ok   54.08s threads+0 fd+0 rss+260620K
+    23 ok   54.36s threads+0 fd+0 rss+260640K
+    24 ok   53.95s threads+0 fd+0 rss+259580K
+    25 ok   54.58s threads+0 fd+0 rss+261972K
+    26 ok   54.32s threads+0 fd+0 rss+261004K
+    27 ok   54.77s threads+0 fd+0 rss+265568K
+    28 ok   54.76s threads+0 fd+0 rss+262152K
+    29 ok   54.64s threads+0 fd+0 rss+263588K
+    30 ok   54.78s threads+0 fd+0 rss+265676K
+    31 ok   54.18s threads+0 fd+0 rss+265080K
+    32 ok   54.86s threads+0 fd+0 rss+263124K
+    33 ok   54.96s threads+0 fd+0 rss+265104K
+    34 ok   54.80s threads+0 fd+0 rss+265372K
+    35 ok   54.65s threads+0 fd+0 rss+263596K
+    36 ok   54.11s threads+0 fd+0 rss+263632K
+    37 ok   54.35s threads+0 fd+0 rss+264712K
+    38 ok   55.03s threads+0 fd+0 rss+265732K
+    39 ok   54.81s threads+0 fd+0 rss+263788K
+    40 ok   55.27s threads+0 fd+0 rss+261952K
+    41 ok   55.23s threads+0 fd+0 rss+260616K
+    42 ok   54.54s threads+0 fd+0 rss+262012K
+    43 ok   55.01s threads+0 fd+0 rss+262208K
+    44 ok   53.95s threads+0 fd+0 rss+261160K
+    45 ok   54.17s threads+0 fd+0 rss+262184K
+    46 ok   54.40s threads+0 fd+0 rss+262220K
+    47 ok   55.00s threads+0 fd+0 rss+261252K
+    48 ok   54.42s threads+0 fd+0 rss+261220K
+    49 ok   56.17s threads+0 fd+0 rss+261236K
+    50 ok   55.22s threads+0 fd+0 rss+261328K
+stress: 50/50 passed, longest consecutive 50
+bunny-3d-suite-gate.service: Deactivated successfully.
+bunny-3d-suite-gate.service: Consumed 28min 13.527s CPU time over 45min 43.946s wall clock time, 3.3G memory peak.

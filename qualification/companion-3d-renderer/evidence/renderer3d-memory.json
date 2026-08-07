@@ -1,0 +1,94 @@
+{
+  "derived": {
+    "bare-interpreterAboveInterpreterBytes": 0,
+    "character-drawnAboveInterpreterBytes": 180813824,
+    "character-loadedAboveInterpreterBytes": 85237760,
+    "companion-runtime-importedAboveInterpreterBytes": 21856256,
+    "context-createdAboveInterpreterBytes": 65134592,
+    "package-validatedAboveInterpreterBytes": 11165696,
+    "renderer-idleAboveInterpreterBytes": 72183808,
+    "three-d-importedAboveInterpreterBytes": 13107200
+  },
+  "note": "Each stage is a separate interpreter holding only what its name says. No figure here includes GTK, and none includes a local language-model server: neither was in any of these processes.",
+  "schema": "bunny-os/renderer-3d-memory/1",
+  "stages": {
+    "bare-interpreter": {
+      "extra": {},
+      "memory": {
+        "peakRssBytes": 11145216,
+        "pssBytes": 6790144,
+        "rssBytes": 11145216
+      }
+    },
+    "character-drawn": {
+      "extra": {
+        "frames": {
+          "droppedFrames": 0,
+          "firstFrameMs": 5.9688,
+          "frames": 241,
+          "lastMs": 0.5975,
+          "maxMs": 11.0095,
+          "meanMs": 0.7744,
+          "p95Ms": 0.9116
+        }
+      },
+      "memory": {
+        "peakRssBytes": 191959040,
+        "pssBytes": 183407616,
+        "rssBytes": 191959040
+      }
+    },
+    "character-loaded": {
+      "extra": {
+        "decodedTextureBytes": 16384,
+        "estimatedGpuBytes": 269264,
+        "observedGpuBytes": 283504
+      },
+      "memory": {
+        "peakRssBytes": 96382976,
+        "pssBytes": 87851008,
+        "rssBytes": 96382976
+      }
+    },
+    "companion-runtime-imported": {
+      "extra": {},
+      "memory": {
+        "peakRssBytes": 33001472,
+        "pssBytes": 25733120,
+        "rssBytes": 33001472
+      }
+    },
+    "context-created": {
+      "extra": {},
+      "memory": {
+        "peakRssBytes": 76279808,
+        "pssBytes": 69726208,
+        "rssBytes": 76279808
+      }
+    },
+    "package-validated": {
+      "extra": {},
+      "memory": {
+        "peakRssBytes": 22310912,
+        "pssBytes": 15592448,
+        "rssBytes": 22310912
+      }
+    },
+    "renderer-idle": {
+      "extra": {},
+      "memory": {
+        "peakRssBytes": 83329024,
+        "pssBytes": 74915840,
+        "rssBytes": 83329024
+      }
+    },
+    "three-d-imported": {
+      "extra": {},
+      "memory": {
+        "peakRssBytes": 24252416,
+        "pssBytes": 16982016,
+        "rssBytes": 24252416
+      }
+    }
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "environment": {
+    "desktop": "",
+    "isWslg": true,
+    "note": "WSLg is WSLg: a Weston-based Wayland compositor bridged to Windows. It is not native GNOME on Wayland and no result here should be read as one.",
+    "sessionType": "wayland",
+    "waylandDisplay": "wayland-0",
+    "wslKernel": "6.18.33.2-microsoft-standard-WSL2",
+    "x11Display": ":0"
+  },
+  "exitStatus": 0,
+  "gtkAvailable": true,
+  "gtkReason": "GTK 4 and a display are available",
+  "passed": true,
+  "probe": "companion-3d-gtk",
+  "renderer": null,
+  "result": "RAN",
+  "steps": [
+    {
+      "ok": true,
+      "step": "present-window"
+    },
+    {
+      "frames": 1,
+      "ok": true,
+      "step": "state:idle"
+    },
+    {
+      "frames": 11,
+      "ok": true,
+      "step": "state:understanding"
+    },
+    {
+      "frames": 22,
+      "ok": true,
+      "step": "state:planning"
+    },
+    {
+      "frames": 32,
+      "ok": true,
+      "step": "state:working"
+    },
+    {
+      "frames": 43,
+      "ok": true,
+      "step": "state:waiting-for-approval"
+    },
+    {
+      "frames": 54,
+      "ok": true,
+      "step": "state:speaking"
+    },
+    {
+      "frames": 65,
+      "ok": true,
+      "step": "state:success"
+    },
+    {
+      "frames": 76,
+      "ok": true,
+      "step": "state:listening"
+    },
+    {
+      "frames": 88,
+      "ok": true,
+      "step": "state:error"
+    },
+    {
+      "ok": true,
+      "step": "mouth:open-wide"
+    },
+    {
+      "ok": true,
+      "scaleChanges": 1,
+      "step": "scale:1.4"
+    },
+    {
+      "ok": true,
+      "resizes": 1,
+      "step": "mode:compact"
+    },
+    {
+      "ok": true,
+      "step": "reduced-motion"
+    },
+    {
+      "ok": true,
+      "restarts": 1,
+      "step": "renderer-restart"
+    },
+    {
+      "frames": 290,
+      "ok": true,
+      "step": "frames-drawn"
+    }
+  ],
+  "surface": {
+    "alphaSupported": true,
+    "compositor": "wayland:wayland-0",
+    "contextCreated": true,
+    "contextLosses": 0,
+    "errors": [],
+    "firstFrameMs": 7.5793,
+    "frameCount": 290,
+    "framesRendered": 290,
+    "glRenderer": "llvmpipe (LLVM 22.1.8, 256 bits)",
+    "glVersion": "4.6 (Core Profile) Mesa 26.1.5",
+    "meanFrameMs": 1.118,
+    "p95FrameMs": 1.6713,
+    "realized": true,
+    "rendererRestarts": 1,
+    "resizes": 2,
+    "scaleChanges": 1,
+    "sessionType": "wayland",
+    "transparencyRequested": true
+  }
+}
