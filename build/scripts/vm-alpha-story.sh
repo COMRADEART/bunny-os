@@ -40,7 +40,7 @@ seconds="${BUNNY_ALPHA_TIMEOUT:-600}"
 offline="${BUNNY_ALPHA_OFFLINE:-0}"
 user="${BUNNY_ALPHA_USER:-bunny}"
 
-bunny_require_commands qemu-system-x86_64 virt-customize git python3 || exit 3
+bunny_require_commands qemu-system-x86_64 guestfish openssl git python3 || exit 3
 
 # BUNNY_ALPHA_IMAGE names the disk explicitly. It exists so the harness can run
 # from a worktree while the image lives in the tree that built it — a build takes
@@ -71,58 +71,19 @@ echo "source image: ${source_image}"
 echo "work:         ${work}"
 echo "network:      $([[ "${offline}" == "1" ]] && echo 'disconnected (§13)' || echo 'user-mode NAT (§14)')"
 
-# A copy, not a snapshot overlay: virt-customize writes into the disk, and the
-# source image is evidence.
+# A copy, not a snapshot overlay: the injection writes into the disk, and the
+# image the build produced is evidence.
 cp --reflink=auto "${source_image}" "${disk}"
 
-cat >"${work}/bunny-alpha-probe.service" <<'UNIT'
-[Unit]
-Description=Bunny OS Public Alpha probe (injected by the harness, not shipped)
-# After the graphical target and after a delay, because the questions are about
-# a settled session: a probe that ran the moment graphical.target was reached
-# would ask whether the companion had started before it had had a chance to.
-After=graphical.target
-Wants=graphical.target
-
-[Service]
-Type=oneshot
-ExecStartPre=/usr/bin/sleep 45
-ExecStart=/usr/local/bin/bunny-alpha-probe
-StandardOutput=journal+console
-StandardError=journal+console
-TimeoutStartSec=900
-
-[Install]
-WantedBy=graphical.target
-UNIT
-
-# A serial console the probe's output can reach, and a kernel that logs to it.
-customize_args=(
-  --root-password "password:bunny-alpha-vm"
-  --run-command "useradd -m -s /bin/bash -G wheel ${user} 2>/dev/null || true"
-  --password "${user}:password:bunny-alpha-vm"
-  --run-command "loginctl enable-linger ${user} 2>/dev/null || true"
-  --mkdir /etc/gdm
-  --write "/etc/gdm/custom.conf:[daemon]\nAutomaticLoginEnable=True\nAutomaticLogin=${user}\nWaylandEnable=True\n"
-  --copy-in "build/scripts/alpha-probe.py:/usr/local/bin"
-  --run-command "mv /usr/local/bin/alpha-probe.py /usr/local/bin/bunny-alpha-probe && chmod 0755 /usr/local/bin/bunny-alpha-probe"
-  --copy-in "${work}/bunny-alpha-probe.service:/etc/systemd/system"
-  --run-command "systemctl enable bunny-alpha-probe.service"
-  --run-command "printf 'BUNNY_PROBE_USER=%s\n' '${user}' >>/etc/environment"
-)
-if [[ "${offline}" == "1" ]]; then
-  # §13: disconnect the network *inside* the guest as well as outside it, so the
-  # record shows a system that was configured offline rather than one that
-  # merely had nowhere to go.
-  customize_args+=(--run-command "systemctl disable NetworkManager.service || true")
-fi
-
-echo "--- customising ---"
-if ! virt-customize -a "${disk}" "${customize_args[@]}" >"${work}/customize.log" 2>&1; then
-  echo "virt-customize failed; see ${work}/customize.log" >&2
-  tail -20 "${work}/customize.log" >&2
+echo "--- injecting ---"
+if ! bash build/scripts/alpha-inject.sh \
+      "${disk}" build/scripts/alpha-probe.py "${user}" "${offline}" \
+      >"${work}/inject.log" 2>&1; then
+  echo "injection failed; see ${work}/inject.log" >&2
+  tail -20 "${work}/inject.log" >&2
   exit 4
 fi
+cat "${work}/inject.log"
 
 echo "--- booting (${seconds}s budget) ---"
 network_args=(-device virtio-net-pci,netdev=net0 -netdev user,id=net0)
