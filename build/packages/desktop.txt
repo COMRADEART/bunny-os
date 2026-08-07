@@ -21,3 +21,41 @@ mousetweaks
 mesa-dri-drivers
 mesa-vulkan-drivers
 vulkan-tools
+
+# category: audio, so that Bunny can be heard and can hear
+#
+# Every line below was missing from the image and the omission was invisible,
+# because the *libraries* arrived transitively and the *programs* did not.
+# Measured on the beta image built from 339b629: pipewire, wireplumber,
+# pulseaudio-libs and alsa-lib were all installed, and `paplay`, `pactl`,
+# `pw-play`, `pw-cat`, `aplay`, `arecord`, `parecord` and `spd-say` were all
+# absent. The companion drives players by name — see the multi-call player
+# contract in companion/voice/audio.py — so a sound server with no player is a
+# companion that reports "no audio backend answered" on a machine with working
+# speakers. §1's "the result is spoken" could not happen on the shipped image.
+#
+# pipewire-pulseaudio is the PulseAudio-compatible server. Without it the
+# PulseAudio socket does not exist, and the primary backend has nothing to
+# connect to however installed `paplay` is.
+pipewire-pulseaudio
+# paplay, pactl, parec, parecord — the primary playback and capture backend.
+pulseaudio-utils
+# pw-play, pw-cat, pw-dump — the second rung of the backend ladder.
+pipewire-utils
+# aplay, arecord — the last rung, which needs no sound server at all.
+alsa-utils
+
+# category: local text to speech
+#
+# Declared rather than inherited. All three were in the image already, pulled in
+# by `orca`: espeak-ng was required by nothing at all, and speech-dispatcher was
+# required only by the screen reader. Removing Orca would have silently removed
+# Bunny's voice, and an input that arrives as a side effect of an unrelated
+# package is exactly what §41 means by an unrecorded build input.
+espeak-ng
+speech-dispatcher
+speech-dispatcher-espeak-ng
+# spd-say, which is what the Speech Dispatcher voice provider actually executes.
+# It lives in -utils, which nothing pulled in, so that provider could never have
+# been selected on the shipped image.
+speech-dispatcher-utils

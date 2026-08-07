@@ -709,6 +709,60 @@ class BuildIntegrationTests(unittest.TestCase):
             # has, and a minimal image should not advertise a window it cannot open.
             self.assertIsNone(self.destination("minimal", source))
 
+    def test_the_desktop_set_declares_a_player_for_every_audio_backend(self) -> None:
+        """A sound server with no player is a companion that cannot be heard.
+
+        The beta image built from 339b629 had pipewire, wireplumber,
+        pulseaudio-libs and alsa-lib installed and not one of ``paplay``,
+        ``pw-play``, ``aplay``, ``parecord`` or ``spd-say``. The libraries
+        arrived transitively; the programs are in packages nothing pulled in.
+        Because the companion drives players *by name*, every backend reported
+        itself unavailable on a machine with working speakers.
+
+        This asserts the packages, not the binaries, because the assertion has
+        to hold on a build machine that is not the image.
+        """
+        declared = {
+            line.strip()
+            for line in (REPOSITORY / "build/packages/desktop.txt").read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.startswith("#")
+        }
+        for backend, package in (
+            ("paplay/pactl/parecord (pulse)", "pulseaudio-utils"),
+            ("the PulseAudio-compatible server", "pipewire-pulseaudio"),
+            ("pw-play/pw-cat (pipewire)", "pipewire-utils"),
+            ("aplay/arecord (alsa)", "alsa-utils"),
+            ("spd-say (speech-dispatcher voice provider)", "speech-dispatcher-utils"),
+        ):
+            self.assertIn(package, declared, f"{backend} has no package in the desktop set")
+
+    def test_the_voice_stack_is_declared_and_not_inherited(self) -> None:
+        """espeak-ng was required by nothing and speech-dispatcher only by Orca.
+
+        Removing the screen reader would have silently removed Bunny's voice.
+        §41: an input that arrives as a side effect of an unrelated package is
+        an unrecorded build input.
+        """
+        declared = {
+            line.strip()
+            for line in (REPOSITORY / "build/packages/desktop.txt").read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.startswith("#")
+        }
+        for package in ("espeak-ng", "speech-dispatcher", "speech-dispatcher-espeak-ng"):
+            self.assertIn(package, declared)
+
+    def test_the_speech_dispatcher_log_is_bounded_by_a_drop_in(self) -> None:
+        """1.6 GiB of voice-list transcript in a RAM-backed tmpfs, measured."""
+        drop_in = REPOSITORY / "config/speech-dispatcher/bunny-os.conf"
+        self.assertTrue(drop_in.is_file())
+        self.assertIn("LogLevel  1", drop_in.read_text(encoding="utf-8"))
+        self.assertEqual(
+            self.destination("beta", "config/speech-dispatcher/bunny-os.conf"),
+            # The shipped speechd.conf ends with Include "clients/*.conf", so a
+            # drop-in here is read without rewriting a file the RPM owns.
+            "/etc/speech-dispatcher/clients/bunny-os.conf",
+        )
+
     def test_the_alpha_scope_document_ships(self) -> None:
         self.assertEqual(
             self.destination("beta", "docs/PUBLIC_ALPHA_SCOPE.md"),

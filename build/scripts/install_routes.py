@@ -310,6 +310,17 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "firewalld-zone", "config/firewalld/bunny-default.xml",
         "/usr/lib/firewalld/zones/bunny-default.xml", 0o644,
     ),
+    # A Speech Dispatcher drop-in, read through the `Include "clients/*.conf"`
+    # that its own speechd.conf ends with. A drop-in rather than an edit,
+    # because the RPM owns speechd.conf and an image that rewrote it would
+    # report a modified configuration file for ever after. Desktop profiles
+    # only: a profile with no voice runtime has no Speech Dispatcher to
+    # configure.
+    _file_route(
+        "speech-dispatcher-log-bound", "config/speech-dispatcher/bunny-os.conf",
+        "/etc/speech-dispatcher/clients/bunny-os.conf", 0o644,
+        profiles=DESKTOP_PROFILES,
+    ),
     _file_route(
         "system-preset", "config/systemd/60-bunny-os.preset",
         "/usr/lib/systemd/system-preset/60-bunny-os.preset", 0o644,
