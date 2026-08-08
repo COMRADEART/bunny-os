@@ -26,7 +26,7 @@ import St from 'gi://St';
 import {Rgb} from '../tokens.js';
 import {box, glass} from '../widgets.js';
 import {ease, animationsEnabled} from '../animation.js';
-import {clamp, logError_} from '../util.js';
+import {clamp, logError_, setAccessibleRole} from '../util.js';
 import {Motion} from '../tokens.js';
 
 const MAX_WIDTH = 320;
@@ -53,7 +53,7 @@ export class AssistantBubble {
         this._wave.connect('repaint', area => this._paintWave(area));
         this._column.add_child(this._wave);
 
-        this.actor.accessible_role = Clutter.AccessibleRole.NOTIFICATION;
+        setAccessibleRole(this.actor, 'NOTIFICATION');
         this._wavePhase = 0;
         this._timeline = null;
     }

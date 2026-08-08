@@ -239,6 +239,51 @@ class MotionTests(unittest.TestCase):
         self.assertIn("St.Settings.get().enable_animations", text)
 
 
+class IntrospectionSafetyTests(unittest.TestCase):
+    """Guards for the failure class that took the desktop down on its first boot.
+
+    `Clutter.AccessibleRole.PUSH_BUTTON` parses, resolves, passes every static
+    check in this repository, and throws at runtime because Clutter has no
+    AccessibleRole — the property is an `Atk.Role`. It threw inside the first
+    widget the top bar built, propagated out of DesktopShell's constructor, and
+    the entire desktop refused to start over a screen-reader hint. The
+    screenshot from that run is a GNOME session with GNOME's panel back.
+
+    Nothing static can tell whether a GI enum exists; that needs the library.
+    What can be checked is that the two habits which turned a wrong constant
+    into a dead desktop are gone: the role is set in one guarded place, and the
+    constant is looked up by name so a miss is a log line and not a TypeError.
+    """
+
+    def test_no_module_assigns_an_accessible_role_directly(self) -> None:
+        offenders = []
+        for path in sorted(EXTENSION.rglob("*.js")):
+            # util.js is the one guarded place, and the assignment inside
+            # setAccessibleRole is what every other module is required to use.
+            if path.name == "util.js":
+                continue
+            text = path.read_text(encoding="utf-8")
+            if re.search(r"\.accessible_role\s*=", text):
+                offenders.append(path.relative_to(EXTENSION).as_posix())
+        self.assertEqual(
+            offenders, [],
+            "assign accessible roles through setAccessibleRole, which cannot throw")
+
+    def test_clutter_has_no_accessible_role_namespace_in_use(self) -> None:
+        offenders = []
+        for path in sorted(EXTENSION.rglob("*.js")):
+            if path.name == "util.js":
+                continue  # names it in the comment that explains the bug
+            if "Clutter.AccessibleRole" in path.read_text(encoding="utf-8"):
+                offenders.append(path.relative_to(EXTENSION).as_posix())
+        self.assertEqual(offenders, [], "Clutter has no AccessibleRole; roles are Atk.Role")
+
+    def test_the_role_helper_looks_the_constant_up_rather_than_dereferencing_it(self) -> None:
+        text = module_text("lib/util.js")
+        self.assertIn("Atk?.Role?.[roleName]", text)
+        self.assertIn("logOnce(", text.split("export function setAccessibleRole")[1][:900])
+
+
 class DesignTokenTests(unittest.TestCase):
     """stylesheet.css repeats literals from tokens.js; this is the pairing check."""
 

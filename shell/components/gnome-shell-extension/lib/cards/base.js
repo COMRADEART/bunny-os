@@ -10,12 +10,11 @@
 // the layout solver at 1280x720 must not keep reading /proc every two seconds
 // for a widget nobody can see.
 
-import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
 import {box, glass, cardHeader} from '../widgets.js';
 import {ease, enter} from '../animation.js';
-import {interval, makeActivatable} from '../util.js';
+import {interval, makeActivatable, setAccessibleRole} from '../util.js';
 import {Motion} from '../tokens.js';
 
 export class Card {
@@ -35,7 +34,7 @@ export class Card {
         this.content.add_child(cardHeader(title, headerTrailing));
 
         this.actor.accessible_name = accessibleName ?? title;
-        this.actor.accessible_role = Clutter.AccessibleRole.PANEL;
+        setAccessibleRole(this.actor, 'PANEL');
 
         if (onActivate) {
             makeActivatable(this.actor, onActivate, {accessibleName: accessibleName ?? title});

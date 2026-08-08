@@ -15,6 +15,7 @@
 // per session rather than 1,800 an hour, which is how a real fault becomes
 // invisible.
 
+import Atk from 'gi://Atk';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
@@ -167,6 +168,37 @@ export function timeout(milliseconds, callback) {
 }
 
 /**
+ * Set an actor's accessible role, and never take the desktop down doing it.
+ *
+ * `accessible-role` is an Atk.Role, not a Clutter one. Getting that wrong cost
+ * a boot: `Clutter.AccessibleRole.PUSH_BUTTON` is `undefined.PUSH_BUTTON`,
+ * which throws a TypeError, which propagated out of the first widget the top
+ * bar built and out of DesktopShell's constructor, and the whole desktop
+ * refused to start over a screen-reader hint.
+ *
+ * So the lookup is by name against Atk.Role and a miss is logged and skipped.
+ * A missing role costs Orca one label; it must not cost the user their desktop.
+ * The consequence is stated rather than swallowed, which is why this logs.
+ */
+export function setAccessibleRole(actor, roleName) {
+    const role = Atk?.Role?.[roleName];
+    if (role === undefined) {
+        logOnce(`atk-role-${roleName}`,
+            `Atk.Role.${roleName} is not available; the role is left unset and screen readers ` +
+            'will announce the generic role for this control');
+        return false;
+    }
+    try {
+        actor.accessible_role = role;
+        return true;
+    } catch (error) {
+        logOnce(`atk-role-set-${roleName}`,
+            `setting Atk.Role.${roleName} was refused (${error.message})`);
+        return false;
+    }
+}
+
+/**
  * Make an actor operable from the keyboard as well as the pointer.
  *
  * St gives buttons this for free and gives plain widgets none of it. Several
@@ -178,7 +210,7 @@ export function makeActivatable(actor, onActivate, {accessibleName = null} = {})
     actor.reactive = true;
     actor.can_focus = true;
     actor.track_hover = true;
-    actor.accessible_role = Clutter.AccessibleRole.PUSH_BUTTON;
+    setAccessibleRole(actor, 'PUSH_BUTTON');
     if (accessibleName)
         actor.accessible_name = accessibleName;
     actor.connect('button-release-event', () => {

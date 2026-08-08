@@ -22,12 +22,11 @@
 // are never the only report of anything: every message here is also a journal
 // line, because a toast that has faded is evidence nobody can retrieve.
 
-import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
 import {box, glass} from './widgets.js';
 import {ease, enter} from './animation.js';
-import {log_, makeActivatable, timeout} from './util.js';
+import {log_, makeActivatable, setAccessibleRole, timeout} from './util.js';
 import {Motion} from './tokens.js';
 
 const DISMISS_AFTER_MS = {info: 4500, warning: 7000, error: 9000};
@@ -70,7 +69,7 @@ export class NotificationLayer {
         label.clutter_text.set_line_wrap_mode(2);
         row.add_child(label);
         toast.add_child(row);
-        toast.accessible_role = Clutter.AccessibleRole.NOTIFICATION;
+        setAccessibleRole(toast, 'NOTIFICATION');
         toast.accessible_name = message;
 
         const dismiss = () => this._dismiss(toast);
