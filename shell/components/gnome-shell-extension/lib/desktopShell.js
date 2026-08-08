@@ -83,15 +83,30 @@ export class DesktopShell {
         this._destroyed = false;
 
         this._blur = this._decideBlur();
-
         this.notifications = new NotificationService();
-        this._buildServices();
-        this._buildComponents();
-        this._placeActors();
-        this._connectSession();
-        this._installKeybindings();
 
-        this._relayout();
+        // Construction is all-or-nothing. addChrome parents an actor before it
+        // validates its own arguments, so a throw partway through leaves pieces
+        // of a desktop in the scene graph that nothing holds a reference to —
+        // which is exactly what the first graphical boot produced. destroy() is
+        // written to tolerate a half-built object, so the cleanest guarantee is
+        // to call it here and let the caller see the original error.
+        try {
+            this._buildServices();
+            this._buildComponents();
+            this._placeActors();
+            this._connectSession();
+            this._installKeybindings();
+            this._relayout();
+        } catch (error) {
+            try {
+                this.destroy();
+            } catch (teardownError) {
+                logError_('teardown after a failed construction also failed', teardownError);
+            }
+            throw error;
+        }
+
         this._greet();
 
         // Cheap, and it catches the two things no signal reports: an
@@ -105,7 +120,16 @@ export class DesktopShell {
      * Blur costs a full-surface sample per blurred panel per frame. On a GPU
      * that is free; on llvmpipe in a VM — a configuration this image must stay
      * usable in — it is not. The setting wins when the user has expressed a
-     * preference; otherwise the renderer probe decides and says so.
+     * preference; otherwise the renderer decides and the decision is logged.
+     *
+     * The renderer is asked, not inferred. The first version of this counted
+     * DRM render nodes and got the answer wrong on the very first VM it ran
+     * on: QEMU's virtio-gpu creates /dev/dri/renderD128 and reports
+     * `features: -virgl`, so there is a render node and Mesa is still on
+     * llvmpipe. Mutter already knows — it is the thing doing the rendering —
+     * and `is_rendering_hardware_accelerated` is the answer it gives GNOME
+     * Shell for the same question. The node count survives only as the
+     * fallback for a backend that does not expose it.
      */
     _decideBlur() {
         const preference = this._settings.get_string('desktop-blur');
@@ -113,11 +137,23 @@ export class DesktopShell {
             return true;
         if (preference === 'off')
             return false;
-        const software = isLikelySoftwareRendering();
-        log_(software
-            ? 'no DRM render node found; assuming software rendering and disabling panel blur'
-            : 'hardware rendering detected; panel blur enabled');
-        return !software;
+
+        let accelerated = null;
+        try {
+            accelerated = global.backend?.is_rendering_hardware_accelerated?.() ?? null;
+        } catch (error) {
+            logError_('the backend would not report its rendering path', error);
+        }
+        if (accelerated === null) {
+            const software = isLikelySoftwareRendering();
+            log_(`the backend does not report acceleration; falling back to the render-node ` +
+                `count, which says ${software ? 'software' : 'hardware'}`);
+            accelerated = !software;
+        } else {
+            log_(`mutter reports rendering is ${accelerated ? 'hardware accelerated' : 'software'}`);
+        }
+        log_(`panel blur ${accelerated ? 'enabled' : 'disabled'}`);
+        return accelerated;
     }
 
     _buildServices() {
@@ -257,9 +293,22 @@ export class DesktopShell {
         for (const card of Object.values(this.cards))
             this._desktopLayer.add_child(card.actor);
 
+        // affectsStruts and trackFullscreen only. `affectsInputRegion` was a
+        // parameter of this call until the X11 input-region bookkeeping went
+        // away, and Params.parse refuses an unrecognised key rather than
+        // ignoring it — measured on the first graphical boot:
+        //
+        //   bunny-desktop: failed to start
+        //     (Unrecognized parameter "affectsInputRegion")
+        //   _trackActor@resource:///org/gnome/shell/ui/layout.js:957
+        //
+        // addChrome adds the actor to uiGroup *before* it parses the
+        // parameters, so the top bar was parented and then the constructor
+        // aborted: one unsized bar, no sidebar, no dock, no cards, and GNOME's
+        // panel back. That is why the constructor now tears down what it built
+        // before rethrowing.
         const chrome = actor => Main.layoutManager.addChrome(actor, {
             affectsStruts: false,
-            affectsInputRegion: true,
             trackFullscreen: true,
         });
         chrome(this.topBar.actor);
@@ -272,10 +321,35 @@ export class DesktopShell {
             this.notificationLayer.actor, this._searchResults,
         ];
 
-        // GNOME's own top bar goes away. panelBox rather than Main.panel, so
-        // the work area grows by its height instead of leaving a 32px gap that
+        this._hidePanel();
+    }
+
+    /**
+     * Hide GNOME's top bar, and keep it hidden.
+     *
+     * One `hide()` at enable() is not enough and the first graphical boot
+     * showed why: LayoutManager's startup animation shows panelBox when the
+     * session finishes coming up, which on an autologin session is *after* an
+     * extension has enabled. The result was the Bunny bar and GNOME's bar on
+     * screen together.
+     *
+     * So the visibility is watched. The handler is guarded against its own
+     * signal — hide() inside a notify::visible handler re-enters — and the
+     * connection is dropped in destroy() before the final show(), so disabling
+     * the extension gives the panel back rather than fighting for it.
+     */
+    _hidePanel() {
+        // panelBox rather than Main.panel: hiding the box removes its strut, so
+        // the work area grows by its height instead of leaving a 32px band that
         // maximised windows refuse to use.
-        Main.layoutManager.panelBox.hide();
+        const panelBox = Main.layoutManager.panelBox;
+        panelBox.hide();
+        this._panelVisibilityId = panelBox.connect('notify::visible', () => {
+            if (this._destroyed || !panelBox.visible)
+                return;
+            panelBox.hide();
+        });
+        this._signals.push([panelBox, this._panelVisibilityId]);
     }
 
     _connectSession() {
@@ -751,65 +825,96 @@ export class DesktopShell {
 
     // --------------------------------------------------------------- teardown
 
+    /**
+     * Tear everything down, from any state the constructor may have reached.
+     *
+     * Every step is individually guarded and every reference is optional,
+     * because this is called both on a clean disable and on a construction that
+     * threw partway. A teardown that assumed a fully built object would throw
+     * on the first missing field and leave the rest of the desktop — including
+     * GNOME's hidden panel — exactly as the failure left it.
+     */
     destroy() {
         this._destroyed = true;
 
-        this._housekeeping?.stop();
-        this._greetTimer?.stop();
-        this._talkTimer?.stop();
-
-        for (const key of this._keybindings ?? [])
-            Main.wm.removeKeybinding(key);
-        this._keybindings = [];
-
-        this._closePowerMenu();
-
-        for (const [object, id] of this._signals) {
+        const attempt = (what, action) => {
             try {
-                object.disconnect(id);
+                action();
             } catch (error) {
-                logError_('a session signal could not be disconnected', error);
+                logError_(`teardown step "${what}" failed`, error);
             }
-        }
-        this._signals = [];
-        this.launcher.disconnect(this._installedChangedId);
-        this._characterUnsubscribe?.();
+        };
 
-        for (const actor of this._chromeActors ?? []) {
-            try {
-                Main.layoutManager.removeChrome(actor);
-            } catch (_error) {
-                // Already removed with its component.
+        attempt('timers', () => {
+            this._housekeeping?.stop();
+            this._greetTimer?.stop();
+            this._talkTimer?.stop();
+        });
+
+        attempt('keybindings', () => {
+            for (const key of this._keybindings ?? [])
+                Main.wm.removeKeybinding(key);
+            this._keybindings = [];
+        });
+
+        attempt('power menu', () => this._closePowerMenu());
+
+        attempt('signals', () => {
+            for (const [object, id] of this._signals ?? []) {
+                try {
+                    object.disconnect(id);
+                } catch (error) {
+                    logError_('a session signal could not be disconnected', error);
+                }
             }
+            this._signals = [];
+            if (this._installedChangedId)
+                this.launcher?.disconnect(this._installedChangedId);
+            this._characterUnsubscribe?.();
+        });
+
+        attempt('chrome', () => {
+            for (const actor of this._chromeActors ?? []) {
+                try {
+                    Main.layoutManager.removeChrome(actor);
+                } catch (_error) {
+                    // Never tracked, because addChrome threw after parenting it.
+                    // Reparenting is undone by the destroy below either way.
+                }
+            }
+        });
+
+        for (const [what, component] of [
+            ['top bar', this.topBar], ['sidebar', this.sidebar], ['dock', this.dock],
+            ['notification layer', this.notificationLayer], ['bubble', this._bubble],
+            ['suggestions', this._suggestions], ['character', this._characterViewport],
+            ['wallpaper', this.wallpaper],
+        ]) {
+            attempt(what, () => component?.destroy());
+        }
+        attempt('notifications', () => this.notifications?.detach());
+        attempt('search results', () => this._searchResults?.destroy());
+        attempt('cards', () => {
+            for (const card of Object.values(this.cards ?? {}))
+                card?.destroy();
+        });
+        attempt('desktop layer', () => this._desktopLayer?.destroy());
+
+        for (const [what, service] of [
+            ['character state', this.characterState], ['assistant', this.assistant],
+            ['search', this.search], ['agenda', this.agenda], ['media', this.media],
+            ['audio', this.audio], ['brightness', this.brightness], ['network', this.network],
+        ]) {
+            attempt(what, () => service?.destroy());
         }
 
-        this.topBar.destroy();
-        this.sidebar.destroy();
-        this.dock.destroy();
-        this.notificationLayer.destroy();
-        this.notifications.detach();
-        this._searchResults.destroy();
-
-        for (const card of Object.values(this.cards))
-            card.destroy();
-        this._bubble.destroy();
-        this._suggestions.destroy();
-        this._characterViewport.destroy();
-        this.wallpaper.destroy();
-        this._desktopLayer.destroy();
-
-        this.characterState.destroy();
-        this.assistant.destroy();
-        this.search.destroy();
-        this.agenda.destroy();
-        this.media.destroy();
-        this.audio.destroy();
-        this.brightness.destroy();
-        this.network.destroy();
-
-        // Give GNOME its panel back. An extension that left the session without
-        // a top bar after being disabled would be unrecoverable without a
-        // terminal, which is the exact failure this desktop exists to avoid.
-        Main.layoutManager.panelBox.show();
+        // Give GNOME its panel back, last and unconditionally. An extension
+        // that left the session without a top bar after being disabled would be
+        // unrecoverable without a terminal, which is the exact failure this
+        // desktop exists to avoid.
+        attempt('restore the GNOME panel', () => {
+            this._panelVisibilityId = 0;
+            Main.layoutManager.panelBox.show();
+        });
     }
 }
