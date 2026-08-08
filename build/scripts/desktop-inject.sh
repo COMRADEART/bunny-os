@@ -172,14 +172,23 @@ echo "injected: probe, ${user}, autologin into ${session}, linger"
 # remembered, and the run stops if a path's expected label is not in it.
 # ---------------------------------------------------------------------------
 contexts="${work}/file_contexts"
-guestfish --ro -a "${disk}" run : mount "${root_partition}" / \
-  : download "${deployment}/etc/selinux/targeted/contexts/files/file_contexts" "${contexts}" \
-  2>/dev/null || true
+: >"${contexts}"
+# Both files. The policy splits its specifications: general paths live in
+# file_contexts and user home directories live in file_contexts.homedirs,
+# which is why the first attempt at this could not justify user_home_dir_t and
+# stopped — correctly, and that is what the justification check is for.
+for specification in file_contexts file_contexts.homedirs; do
+  guestfish --ro -a "${disk}" run : mount "${root_partition}" / \
+    : download "${deployment}/etc/selinux/targeted/contexts/files/${specification}" \
+      "${work}/${specification}" 2>/dev/null || continue
+  cat "${work}/${specification}" >>"${contexts}"
+done
 
 if [[ ! -s "${contexts}" ]]; then
   echo "the guest has no file_contexts; cannot label the injected files" >&2
   exit 5
 fi
+echo "policy: $(wc -l <"${contexts}") specifications read from the guest"
 
 # path <tab> label <tab> the specification that has to exist to justify it
 label_plan="$(cat <<'PLAN'
