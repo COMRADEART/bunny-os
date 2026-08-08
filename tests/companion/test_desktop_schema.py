@@ -203,7 +203,7 @@ class Presentation(unittest.TestCase):
     """§18: the exact sentence, not a category."""
 
     def test_the_examples_in_section_eighteen_are_produced(self) -> None:
-        context, _ = make_paths("report.pdf")
+        context, _ = make_paths("report.pdf", test=self)
         cases = {
             "desktop.uri.open": (
                 sample_parameters("desktop.uri.open"), "Open https://example.com/docs",
@@ -226,13 +226,13 @@ class Presentation(unittest.TestCase):
         self.assertEqual(action.previous_state["percent"], 35)
 
     def test_a_reveal_names_the_file_as_the_user_knows_it(self) -> None:
-        context, _ = make_paths("report.pdf")
+        context, _ = make_paths("report.pdf", test=self)
         action = normalise("desktop.file.reveal", {"pathReference": "ref-0"}, path_context=context)
         self.assertTrue(action.presentation.startswith("Reveal "))
         self.assertIn("report.pdf", action.presentation)
 
     def test_no_presentation_is_a_vague_label(self) -> None:
-        context, _ = make_paths("report.pdf")
+        context, _ = make_paths("report.pdf", test=self)
         for action_id in ACTION_IDS:
             parameters = sample_parameters(action_id)
             try:

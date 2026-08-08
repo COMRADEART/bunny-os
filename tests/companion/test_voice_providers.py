@@ -43,6 +43,7 @@ from companion.voice.providers import (
 )
 
 from .voice_support import (
+
     ScriptedProvider,
     echoing_child,
     ignoring_terminator,
@@ -50,6 +51,7 @@ from .voice_support import (
     noisy_child,
     sleeping_child,
 )
+from .support import temporary_root
 
 POSIX = posix_only()
 
@@ -77,7 +79,7 @@ class AllowlistTests(unittest.TestCase):
 
     @unittest.skipUnless(POSIX, "trusted directories are a POSIX arrangement")
     def test_resolution_searches_trusted_directories_and_never_the_path(self) -> None:
-        directory = Path(tempfile.mkdtemp())
+        directory = temporary_root(self)
         planted = directory / "espeak-ng"
         planted.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         planted.chmod(0o755)
@@ -100,7 +102,7 @@ class AllowlistTests(unittest.TestCase):
 
     @unittest.skipUnless(POSIX, "file modes are a POSIX arrangement")
     def test_a_world_writable_binary_is_refused(self) -> None:
-        directory = Path(tempfile.mkdtemp())
+        directory = temporary_root(self)
         planted = directory / "espeak-ng"
         planted.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         planted.chmod(0o777)
@@ -121,7 +123,7 @@ class AllowlistTests(unittest.TestCase):
         The resolved target is still checked; what is returned is the trusted
         path that was asked for.
         """
-        directory = Path(tempfile.mkdtemp())
+        directory = temporary_root(self)
         real = directory / "pacat"
         real.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         real.chmod(0o755)
@@ -137,8 +139,8 @@ class AllowlistTests(unittest.TestCase):
 
     @unittest.skipUnless(POSIX, "symbolic links are a POSIX arrangement")
     def test_a_trusted_name_linking_out_of_the_trusted_set_is_refused(self) -> None:
-        trusted = Path(tempfile.mkdtemp())
-        elsewhere = Path(tempfile.mkdtemp())
+        trusted = temporary_root(self)
+        elsewhere = temporary_root(self)
         real = elsewhere / "impostor"
         real.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         real.chmod(0o755)
@@ -241,7 +243,7 @@ class WorkspaceTests(unittest.TestCase):
 
 class SubprocessTests(unittest.TestCase):
     def test_the_utterance_travels_through_stdin_rather_than_the_argv(self) -> None:
-        directory = Path(tempfile.mkdtemp())
+        directory = temporary_root(self)
         target = directory / "echoed.txt"
         argv = echoing_child()
         outcome = run(CommandSpec(
@@ -321,7 +323,7 @@ class SubprocessTests(unittest.TestCase):
 
     def test_hostile_text_is_data_and_never_a_command(self) -> None:
         """Argument injection: the text is read, never interpreted."""
-        directory = Path(tempfile.mkdtemp())
+        directory = temporary_root(self)
         target = directory / "echoed.txt"
         argv = echoing_child()
         hostile = "--version; $(id) `whoami` && rm -rf / | tee /tmp/x -h --help"

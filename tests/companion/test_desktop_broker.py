@@ -33,6 +33,8 @@ from companion.desktop.undo import undo_plan_for
 
 from .desktop_support import FakeAdapters, build_broker, make_paths, sample_parameters
 
+from .support import temporary_root
+
 
 def _prepare(broker, action_id, parameters=None, *, path_context=None, operation_id="op-1"):
     return broker.prepare(
@@ -91,7 +93,7 @@ class Dispatch(unittest.TestCase):
         self.assertEqual(self.adapters.state["opened"], ["https://example.com/docs"])
 
     def test_a_reveal_uses_the_resolved_real_path(self) -> None:
-        context, base = make_paths("report.pdf")
+        context, base = make_paths("report.pdf", test=self)
         prepared = _prepare(self.broker, "desktop.file.reveal", path_context=context)
         result = _run(self.broker, prepared, path_context=context)
         self.assertEqual(result.state, "accepted-not-confirmed")
@@ -342,7 +344,7 @@ class Recovery(unittest.TestCase):
     """§20: what a restarted runtime may conclude, and what it may not."""
 
     def setUp(self) -> None:
-        self.path = Path(tempfile.mkdtemp()) / "ledger.json"
+        self.path = temporary_root(self) / "ledger.json"
 
     def test_a_completed_action_survives_a_restart_as_completed(self) -> None:
         broker, adapters = build_broker(ledger_path=self.path)
@@ -483,7 +485,7 @@ class RuntimeIntegration(unittest.TestCase):
 
         from .support import machine
 
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         adapters = FakeAdapters()
         support = DesktopSupport.create(adapters=adapters, ledger_path=root / "ledger.json")
         support.start()

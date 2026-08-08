@@ -45,6 +45,8 @@ from companion.desktop.uris import parse_uri
 
 from .desktop_support import FakeAdapters, build_broker, make_paths, sample_parameters
 
+from .support import temporary_root
+
 
 def _entries(root: Path, *files: tuple[str, str]) -> Path:
     directory = root / "applications"
@@ -104,7 +106,7 @@ class MaliciousDesktopEntry(unittest.TestCase):
     """§19: a malicious entry, and field-code injection."""
 
     def setUp(self) -> None:
-        self.root = Path(tempfile.mkdtemp())
+        self.root = temporary_root(self)
 
     def _resolve(self, body: str, name: str = "org.example.Thing.desktop"):
         directory = _entries(self.root, (name, body))
@@ -261,14 +263,14 @@ class PathTraversal(unittest.TestCase):
     """§19: file traversal; symlink path substitution."""
 
     def test_a_provider_cannot_name_a_path_at_all(self) -> None:
-        context, _ = make_paths("report.pdf")
+        context, _ = make_paths("report.pdf", test=self)
         with self.assertRaises(DesktopSchemaError):
             validate_parameters("desktop.file.reveal", {"path": "/etc/passwd"})
         with self.assertRaises(DesktopRefused):
             context.resolve("ref-99")
 
     def test_a_traversal_inside_a_reference_is_refused(self) -> None:
-        base = Path(tempfile.mkdtemp())
+        base = temporary_root(self)
         documents = base / "Documents"
         documents.mkdir(parents=True)
         (documents / "ok.txt").write_text("x", encoding="utf-8")
@@ -283,7 +285,7 @@ class PathTraversal(unittest.TestCase):
 
     @unittest.skipIf(os.name != "posix", "symlink substitution needs POSIX links")
     def test_a_symlink_out_of_the_approved_roots_is_refused(self) -> None:
-        base = Path(tempfile.mkdtemp())
+        base = temporary_root(self)
         documents = base / "Documents"
         documents.mkdir(parents=True)
         outside = base / "outside.txt"
@@ -296,7 +298,7 @@ class PathTraversal(unittest.TestCase):
         self.assertIn("symlinks are", str(caught.exception))
 
     def test_a_sibling_directory_with_a_shared_prefix_is_not_inside(self) -> None:
-        base = Path(tempfile.mkdtemp())
+        base = temporary_root(self)
         (base / "Documents").mkdir()
         evil = base / "Documents-evil"
         evil.mkdir()
@@ -306,7 +308,7 @@ class PathTraversal(unittest.TestCase):
             context.resolve("ref")
 
     def test_a_credential_directory_is_refused_even_inside_a_root(self) -> None:
-        base = Path(tempfile.mkdtemp())
+        base = temporary_root(self)
         secrets = base / "Documents" / ".ssh"
         secrets.mkdir(parents=True)
         (secrets / "id_ed25519").write_text("x", encoding="utf-8")
@@ -319,7 +321,7 @@ class PathTraversal(unittest.TestCase):
 
     @unittest.skipIf(os.name != "posix", "device nodes need POSIX")
     def test_only_regular_files_and_directories_are_revealed(self) -> None:
-        base = Path(tempfile.mkdtemp())
+        base = temporary_root(self)
         documents = base / "Documents"
         documents.mkdir(parents=True)
         fifo = documents / "pipe"
@@ -338,7 +340,7 @@ class PathTraversal(unittest.TestCase):
         compares against the target the approval bound, so what is revealed is
         the file the person saw or nothing at all.
         """
-        base = Path(tempfile.mkdtemp())
+        base = temporary_root(self)
         documents = base / "Documents"
         documents.mkdir(parents=True)
         first = documents / "first.txt"
@@ -709,7 +711,7 @@ class ResultPersistence(unittest.TestCase):
     def test_a_ledger_that_cannot_be_written_does_not_produce_a_silent_effect(self) -> None:
         from companion.errors import StoreError
 
-        directory = Path(tempfile.mkdtemp())
+        directory = temporary_root(self)
         ledger = directory / "nested" / "ledger.json"
         broker, adapters = build_broker(ledger_path=ledger)
         self.addCleanup(broker.stop)
@@ -732,7 +734,7 @@ class ResultPersistence(unittest.TestCase):
     def test_an_interrupted_attempt_reloads_as_unknown_and_is_not_repeatable(self) -> None:
         from companion.desktop.ledger import OperationLedger
 
-        path = Path(tempfile.mkdtemp()) / "ledger.json"
+        path = temporary_root(self) / "ledger.json"
         broker, _ = build_broker(ledger_path=path)
         prepared = _prepare(broker, "desktop.uri.open", sample_parameters("desktop.uri.open"))
         _begin(broker, prepared)  # started, never settled: a crash

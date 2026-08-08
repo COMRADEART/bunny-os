@@ -837,6 +837,20 @@ def _commit() -> str:
     return value
 
 
+def _temporary_directory_count() -> int:
+    """How many directories are sitting in the temporary directory right now.
+
+    Counted rather than matched on a prefix. The absolute number is not the
+    interesting part — a shared /tmp has other things in it — the *delta* across
+    one iteration is, and a delta is only meaningful if the count includes the
+    directories that actually accumulate.
+    """
+    try:
+        return sum(1 for item in Path(tempfile.gettempdir()).iterdir() if item.is_dir())
+    except OSError:
+        return 0
+
+
 def snapshot(label: str) -> dict[str, Any]:
     return {
         "label": label,
@@ -850,7 +864,17 @@ def snapshot(label: str) -> dict[str, Any]:
         "desktop": desktop_inventory(),
         "renderer3d": renderer3d_inventory(),
         "memory": memory_inventory(),
-        "tempDirectories": len(list(Path(tempfile.gettempdir()).glob("bunny-*"))),
+        # Every directory in the temporary directory, not only the ones this
+        # project names.
+        #
+        # This globbed ``bunny-*`` and reported 0 -> 0 for every gate ever run,
+        # while the suite gate filled a 7.8 GB tmpfs with **10,591** directories
+        # and died with ENOSPC at iteration 12. They were all bare
+        # ``tempfile.mkdtemp()`` — no prefix — each holding a companion store
+        # and an agents journal, left behind by tests that never removed them.
+        # A counter that only sees the well-named ones reports a clean run in
+        # exactly the case it exists to catch.
+        "tempDirectories": _temporary_directory_count(),
     }
 
 

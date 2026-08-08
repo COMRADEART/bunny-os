@@ -36,6 +36,8 @@ from companion.voice.visemes import (
 
 from .voice_support import make_request, presentation, write_wav
 
+from .support import temporary_root
+
 
 class CaptionAuthorityTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -261,7 +263,7 @@ class VisemeSourceTests(unittest.TestCase):
 
 class VisemeTimelineTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.directory = Path(tempfile.mkdtemp())
+        self.directory = temporary_root(self)
 
     def test_amplitude_timing_is_derived_from_the_samples_that_will_be_played(self) -> None:
         path = write_wav(self.directory / "speech.wav", seconds=0.6)
@@ -441,7 +443,7 @@ class PcmTests(unittest.TestCase):
     """The artifact check that turns "exit 0" into "there is audio"."""
 
     def setUp(self) -> None:
-        self.directory = Path(tempfile.mkdtemp())
+        self.directory = temporary_root(self)
 
     def test_a_missing_file_is_reported_rather_than_raising_an_os_error(self) -> None:
         with self.assertRaises(PcmError) as caught:

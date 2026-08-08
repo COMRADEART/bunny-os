@@ -51,10 +51,17 @@ this phase built the means to do.
 | | |
 | --- | --- |
 | Base commit | `b8b99f69a4d2f742fafb28dcbdd8d1805ff0dd20` |
-| Gate commit | `8bb2b0d3b667737918c082dfe2fea1d491d2d556` |
-| Commits | 14 |
-| Files changed | 50 (+9,323 / −42) |
-| Image built from the gate commit | `bunny-os-0.1.0-alpha-8bb2b0d3b667.1786121034-x86_64.qcow2` |
+| Final / gate commit | `959e43dc96078ed9b3c6d865cf42cb061754dcb9` |
+| Commits | 23 |
+| Files changed | 54 files changed, 10279 insertions(+), 47 deletions(-) |
+| Image under test | `bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64.qcow2` |
+
+The image was built at `00adf30`, three commits before the gate commit, and it
+is still the artifact this commit produces: the range `00adf30..959e43d`
+touches **no installed path**. The gate runner checks that with
+`build-input-closure.py --range` before it will run, rather than assuming it —
+the three commits are the VM harness and two test fixtures, none of which is in
+the image.
 
 Every commit in the range, in order:
 
@@ -66,13 +73,22 @@ d93e22d The character a machine starts with was decided by tuple order
 62b7ef9 The image had a sound server and no player
 aa9c6af A harness that asks the booted system about itself
 fa9ae69 The gates, and a collector that cannot call an unrun gate a passed one
-bb2f085 BUNNY_ALPHA_IMAGE, so the harness can run from a worktree
+bb2f085 BUNNY_ALPHA_IMAGE, so the harness can run from a worktree while the image stays in the tree that built it
 2594f87 virt-customize cannot inspect a bootc disk, and says so
 09ace58 Two harness scripts reached Linux with CRLF and bash blamed the script
 bf5da4b The first booted Alpha image made one outbound connection nobody asked for
 3ee45ff The companion has never started at login on a built image
-43176be The capability record reported three desktop capabilities unavailable
+43176be The capability record reported three desktop capabilities unavailable on a machine where they worked
 8bb2b0d Disable could not reach a unit wanted from /usr/lib; mask can
+50e8622 The report, with the gate figures still to come
+8e2a795 Six limitations the Public Alpha pass established
+2739020 The policy owned a digest it had never selected
+00adf30 Both audio directions lost their own failure reason
+9174ebf The suite gate cannot observe a refusal it is running as root
+03241df A kernel message landed inside the record at character 48312
+a389381 The disk is authoritative; the console is the fallback
+103f322 A test fixture sat in the column a real thread leak would use
+959e43d The probe's fallback wrote to a tmpfs the harness cannot read
 ```
 
 ## 2. Alpha scope

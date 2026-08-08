@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from pathlib import Path
+import shutil
 import tempfile
 import threading
 from typing import Any, Mapping, Sequence
@@ -48,6 +49,27 @@ SIMPLE_REQUEST = "Count the words in this note and validate the count."
 
 def machine(name: str = "laptop") -> Assessment:
     return assess(simulate(name))
+
+
+def temporary_root(test: unittest.TestCase) -> Path:
+    """A temporary directory that is removed when the test that made it ends.
+
+    ``temporary_root(self)`` was written out at 58 call sites and none of
+    them removed the directory. Each one holds a companion store and an agents
+    journal, so the suite leaves **130 directories** behind per run — invisible
+    on a developer's disk-backed /tmp, and fatal to a fifty-iteration gate: the
+    suite gate filled a 7.8 GB tmpfs with 10,591 of them and died at iteration
+    12 with ENOSPC.
+
+    The stress runner's own counter did not see it. It globbed ``bunny-*`` and
+    these have no prefix, so it reported ``tempDirectories 0 -> 0`` for every
+    gate ever run — a clean result in exactly the case it exists to catch.
+    Both halves are fixed: the counter counts every directory now, and this
+    exists so a call site cannot forget.
+    """
+    directory = tempfile.mkdtemp()
+    test.addCleanup(shutil.rmtree, directory, ignore_errors=True)
+    return Path(directory)
 
 
 @dataclass
@@ -337,6 +359,7 @@ __all__ = [
     "RemoteExecutor",
     "SIMPLE_REQUEST",
     "SlowReviewer",
+    "temporary_root",
     "ToolCallingReviewer",
     "UnavailableExecutor",
     "machine",

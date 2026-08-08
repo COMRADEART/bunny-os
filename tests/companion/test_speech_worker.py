@@ -19,6 +19,7 @@ from companion.speech.policy import SpeechInputPreferences
 from companion.speech.recovery import SpeechJournal
 
 from .speech_support import (
+
     FrameScript,
     RecordingSink,
     ScriptedCaptureBackend,
@@ -30,6 +31,7 @@ from .speech_support import (
     speech_pcm,
     wait_for,
 )
+from .support import temporary_root
 
 
 def _run_capture(harness, request, *, timeout: float = 10.0) -> None:
@@ -107,7 +109,7 @@ class HappyPath(unittest.TestCase):
         self.assertIsNotNone(document["finalTranscriptLatencySeconds"])
 
     def test_the_journal_records_start_and_settle(self) -> None:
-        journal = SpeechJournal(Path(tempfile.mkdtemp()) / "journal.jsonl")
+        journal = SpeechJournal(temporary_root(self) / "journal.jsonl")
         script = FrameScript([speech_pcm(1.0), silence_pcm(1.0)])
         harness = build_worker(
             backend=ScriptedCaptureBackend(script=script), journal=journal,

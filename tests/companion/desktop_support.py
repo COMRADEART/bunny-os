@@ -498,7 +498,9 @@ def make_entry(**overrides: Any) -> _Entry:
     return _Entry(**overrides)
 
 
-def make_paths(*names: str, root: Path | None = None) -> tuple[PathContext, Path]:
+def make_paths(
+    *names: str, root: Path | None = None, test: Any = None,
+) -> tuple[PathContext, Path]:
     """A path context over a real temporary directory with real files in it.
 
     Real, because every interesting property of
@@ -506,7 +508,17 @@ def make_paths(*names: str, root: Path | None = None) -> tuple[PathContext, Path
     symlink resolution, containment after resolution, existence, file type — and
     a fixture that faked the filesystem would be testing the fixture.
     """
-    base = Path(root) if root is not None else Path(tempfile.mkdtemp())
+    # ``test`` is the TestCase, so the directory this makes goes away with it.
+    # Without it the fixture leaked one directory per call — see
+    # ``support.temporary_root`` for what fifty gate iterations of that did.
+    if root is not None:
+        base = Path(root)
+    elif test is not None:
+        from .support import temporary_root
+
+        base = temporary_root(test)
+    else:
+        base = Path(tempfile.mkdtemp())
     documents = base / "Documents"
     documents.mkdir(parents=True, exist_ok=True)
     entries: dict[str, str] = {}

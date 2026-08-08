@@ -13,6 +13,7 @@ confirmed transcript becomes a task.
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 import tempfile
 import time
 import unittest
@@ -21,6 +22,7 @@ from companion.protocol import CompanionClient, CompanionClientError
 from companion.service import CompanionService, ServiceOptions
 
 from .speech_support import (
+
     FrameScript,
     RecordingSink,
     ScriptedCaptureBackend,
@@ -29,6 +31,7 @@ from .speech_support import (
     speech_pcm,
     wait_for,
 )
+from .support import temporary_root
 
 
 def _service(root: Path) -> CompanionService:
@@ -65,7 +68,11 @@ def _script_speech(service: CompanionService, *, script: FrameScript | None = No
 class ProtocolValidation(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.root = Path(tempfile.mkdtemp())
+        # addClassCleanup, because a class-level fixture outlives every test in
+        # the class and `self` does not exist here.
+        directory = tempfile.mkdtemp()
+        cls.addClassCleanup(shutil.rmtree, directory, ignore_errors=True)
+        cls.root = Path(directory)
         cls.service = _service(cls.root)
         cls.client = CompanionClient(cls.service.server.endpoint)
         session = cls.client.call("create_session", {"title": "speech protocol"})
@@ -128,7 +135,7 @@ class ProtocolValidation(unittest.TestCase):
 
 class EndToEnd(unittest.TestCase):
     def setUp(self) -> None:
-        self.root = Path(tempfile.mkdtemp())
+        self.root = temporary_root(self)
         self.service = _service(self.root)
         self.addCleanup(self.service.close)
         self.client = CompanionClient(self.service.server.endpoint)
@@ -269,7 +276,7 @@ class EndToEnd(unittest.TestCase):
 
 class WorkerRestart(unittest.TestCase):
     def test_restart_mid_capture_cancels_and_the_task_surface_is_untouched(self) -> None:
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         service = _service(root)
         self.addCleanup(service.close)
         client = CompanionClient(service.server.endpoint)
@@ -303,7 +310,7 @@ class WorkerRestart(unittest.TestCase):
 
 class DisabledSpeech(unittest.TestCase):
     def test_a_service_without_speech_answers_honestly(self) -> None:
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         service = CompanionService(ServiceOptions(
             root=root / "store", endpoint=root / "run" / "runtime.sock",
             machine="laptop", speech_enabled=False,

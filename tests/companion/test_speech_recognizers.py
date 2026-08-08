@@ -25,6 +25,8 @@ from companion.speech.recognizers import (
 
 from .speech_support import make_request
 
+from .support import temporary_root
+
 
 class _FakeEngine:
     """The KaldiRecognizer surface the session drives, scripted."""
@@ -90,7 +92,7 @@ class Availability(unittest.TestCase):
             raise ImportError("No module named 'vosk'")
 
         recognizer = VoskRecognizer(
-            model_directories=(tempfile.mkdtemp(),), importer=_refuse,
+            model_directories=(str(temporary_root(self)),), importer=_refuse,
         )
         health = recognizer.health()
         self.assertFalse(health.available)
@@ -98,14 +100,14 @@ class Availability(unittest.TestCase):
 
     def test_a_library_with_no_model_reports_unavailable(self) -> None:
         recognizer = VoskRecognizer(
-            model_directories=(tempfile.mkdtemp(),), importer=_FakeVosk,
+            model_directories=(str(temporary_root(self)),), importer=_FakeVosk,
         )
         health = recognizer.health()
         self.assertFalse(health.available)
         self.assertIn("no recognition model", health.detail)
 
     def test_an_installed_model_makes_the_adapter_ready_and_declared(self) -> None:
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         _model_directory(root)
         recognizer = VoskRecognizer(model_directories=(str(root),), importer=_FakeVosk)
         health = recognizer.health()
@@ -121,7 +123,7 @@ class Availability(unittest.TestCase):
 
     def test_nothing_loads_at_construction(self) -> None:
         """§4: no model in memory until a capture needs one."""
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         _model_directory(root)
         fake = _FakeVosk()
         recognizer = VoskRecognizer(model_directories=(str(root),), importer=lambda: fake)
@@ -139,7 +141,7 @@ class ModelDiscovery(unittest.TestCase):
         ))
 
     def test_an_unrecognised_directory_name_is_not_a_model(self) -> None:
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         (root / "definitely-not-a-model").mkdir()
         path, _language, _locale, detail = _discover_model((str(root),))
         self.assertIsNone(path)
@@ -147,7 +149,7 @@ class ModelDiscovery(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "posix", "permission semantics are POSIX")
     def test_a_world_writable_model_is_refused_with_the_reason(self) -> None:
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         target = _model_directory(root)
         target.chmod(0o777)
         path, _language, _locale, detail = _discover_model((str(root),))
@@ -156,8 +158,8 @@ class ModelDiscovery(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "posix", "symlink semantics are POSIX")
     def test_a_symlinked_model_is_refused(self) -> None:
-        root = Path(tempfile.mkdtemp())
-        elsewhere = Path(tempfile.mkdtemp()) / "vosk-model-small-en-us-0.15"
+        root = temporary_root(self)
+        elsewhere = temporary_root(self) / "vosk-model-small-en-us-0.15"
         elsewhere.mkdir()
         (root / "vosk-model-small-en-us-0.15").symlink_to(elsewhere)
         path, _language, _locale, detail = _discover_model((str(root),))
@@ -167,7 +169,7 @@ class ModelDiscovery(unittest.TestCase):
 
 class Sessions(unittest.TestCase):
     def setUp(self) -> None:
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         _model_directory(root)
         self.recognizer = VoskRecognizer(
             model_directories=(str(root),), importer=_FakeVosk,
@@ -205,7 +207,7 @@ class Sessions(unittest.TestCase):
 
     def test_the_model_loads_once_across_sessions(self) -> None:
         fake = _FakeVosk()
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         _model_directory(root)
         recognizer = VoskRecognizer(model_directories=(str(root),), importer=lambda: fake)
         recognizer.start(make_request(request_id="speechreq-a"))
