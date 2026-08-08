@@ -1,0 +1,223 @@
+#!/usr/bin/python3
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""The desktop's line to the companion runtime, and the only one.
+
+GNOME Shell extensions are JavaScript. The companion speaks a framed JSON
+protocol over a private AF_UNIX socket with a schema version, a request-size
+limit, a transport token for the loopback fallback and an operation table that
+refuses anything not in it. Implementing a second client for that in GJS would
+mean two implementations of one protocol, which is the failure this repository
+has already paid for once — see the module docstring of
+``build/scripts/install_routes.py``. So the desktop spawns this, and this uses
+``companion.protocol.CompanionClient``: one client, one truth about the wire.
+
+The output is newline-delimited JSON on stdout, one event per line, flushed as
+it happens. That shape is chosen because ``Gio.DataInputStream.read_line_async``
+consumes it without a parser and without buffering a whole reply, so the
+character can change state while the task is still running rather than after it
+finishes.
+
+Every line has an ``event`` key. The vocabulary is small on purpose:
+
+``health``    the answer to ``health``: whether a runtime is listening, and if
+              not, why not, in words a person can act on.
+``accepted``  the task exists and has an id.
+``phase``     the companion's own presentation phase changed. Not translated
+              here: the desktop maps phases to character states, and doing it
+              in two places would let them disagree.
+``reply``     the result summary, once.
+``finished``  terminal, with the last phase.
+``error``     terminal, with a reason.
+
+Nothing here decides anything. It submits what it is given, reports what comes
+back, and stops when the runtime says the task is over or the deadline passes.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import sys
+import time
+
+# The installed tree, but only when the checkout is not already importable.
+# Prepending unconditionally would put /usr/lib/bunny-os/python ahead of a
+# developer's working copy and run the shipped companion against edited tests.
+try:  # pragma: no cover - exercised by which tree the import resolves to
+    import companion.protocol as _probe  # noqa: F401
+except ImportError:
+    for _candidate in (Path("/usr/lib/bunny-os/python"), Path(__file__).resolve().parents[3]):
+        if _candidate.is_dir() and str(_candidate) not in sys.path:
+            sys.path.insert(0, str(_candidate))
+
+from companion.protocol import (  # noqa: E402
+    CompanionClient,
+    CompanionClientError,
+    default_endpoint_path,
+)
+
+#: How long a single request may run before this gives up watching it. The task
+#: itself is not cancelled: the runtime owns it, the Tasks surface can still see
+#: it, and a desktop that killed work because a poller timed out would be
+#: destroying results it merely stopped watching.
+DEADLINE_SECONDS = 180.0
+
+#: Phases after which nothing further will arrive.
+TERMINAL_PHASES = frozenset({"success", "error", "cancelled", "blocked"})
+
+POLL_SECONDS = 0.4
+
+
+def emit(event: str, **fields: object) -> None:
+    """One event, one line, flushed. Buffering would defeat the point."""
+    print(json.dumps({"event": event, **fields}, ensure_ascii=False), flush=True)
+
+
+def client(timeout: float) -> CompanionClient:
+    return CompanionClient(default_endpoint_path(), timeout=timeout)
+
+
+def command_health(_arguments: argparse.Namespace) -> int:
+    endpoint = default_endpoint_path()
+    try:
+        document = client(5.0).health()
+    except (CompanionClientError, OSError) as exc:
+        emit(
+            "health",
+            available=False,
+            endpoint=str(endpoint),
+            reason=str(exc),
+            hint="systemctl --user start bunny-companion.service",
+        )
+        return 0
+    emit(
+        "health",
+        available=True,
+        endpoint=str(endpoint),
+        schemaVersion=document.get("schemaVersion"),
+        runtime=document.get("runtime", "unknown"),
+    )
+    return 0
+
+
+def command_ask(arguments: argparse.Namespace) -> int:
+    text = arguments.text.strip()
+    if not text:
+        emit("error", reason="an empty request was not submitted")
+        return 2
+
+    connection = client(arguments.timeout)
+    try:
+        session_id = resolve_session(connection, arguments.session_title)
+    except (CompanionClientError, OSError) as exc:
+        emit("error", reason=f"no companion session could be opened: {exc}")
+        return 4
+
+    try:
+        submitted = connection.submit_task(session_id, text, run=True)
+    except (CompanionClientError, OSError) as exc:
+        emit("error", reason=f"the request was refused: {exc}")
+        return 4
+
+    task_id = str(submitted.get("taskId") or "")
+    if not task_id:
+        emit("error", reason="the runtime accepted the request without returning a task id")
+        return 4
+    emit("accepted", taskId=task_id, sessionId=session_id)
+
+    return watch(connection, task_id, deadline=time.monotonic() + arguments.deadline)
+
+
+def resolve_session(connection: CompanionClient, title: str) -> str:
+    """Reuse the desktop's session if it exists; open one if it does not.
+
+    A new session per question would scatter one conversation across a dozen
+    records and lose the context each answer was given in. The title is the key
+    because the protocol has no "find by name" operation and inventing one for
+    the desktop's convenience would widen a deliberately small surface.
+    """
+    listing = connection.list_sessions()
+    for session in listing.get("sessions", []):
+        if session.get("title") == title:
+            return str(session["sessionId"])
+    created = connection.create_session(title=title, locality="device-only")
+    return str(created["sessionId"])
+
+
+def watch(connection: CompanionClient, task_id: str, *, deadline: float) -> int:
+    """Poll the presentation state and report every change until it settles."""
+    last_phase = ""
+    last_revision = -1
+    replied = False
+    while True:
+        if time.monotonic() > deadline:
+            emit("error", reason="the runtime did not finish within the deadline", taskId=task_id)
+            return 5
+        try:
+            document = connection.get_presentation_state(task_id)
+        except (CompanionClientError, OSError) as exc:
+            emit("error", reason=f"the runtime stopped answering: {exc}", taskId=task_id)
+            return 4
+
+        state = document.get("state", {})
+        revision = document.get("revision", 0)
+        phase = str(state.get("phase", "idle"))
+
+        if phase != last_phase:
+            last_phase = phase
+            emit(
+                "phase",
+                phase=phase,
+                statusText=state.get("statusText", ""),
+                approvalState=state.get("approvalState", "not_required"),
+                taskId=task_id,
+            )
+
+        summary = str(state.get("resultSummary") or "")
+        if summary and not replied:
+            replied = True
+            emit("reply", text=summary, taskId=task_id)
+
+        error = str(state.get("errorSummary") or "")
+        if phase in TERMINAL_PHASES:
+            if error:
+                emit("reply", text=error, taskId=task_id, kind="error")
+            emit("finished", phase=phase, taskId=task_id)
+            return 0
+
+        # Sleep only when nothing moved. A task emitting events quickly should
+        # be reported quickly; one sitting in an approval should not be polled
+        # 150 times a minute.
+        if revision == last_revision:
+            time.sleep(POLL_SECONDS)
+        last_revision = revision
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="bunny-shell-assistant",
+        description="Newline-delimited JSON bridge between the Bunny desktop and the companion runtime.",
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    health = commands.add_parser("health", help="report whether a companion runtime is listening")
+    health.set_defaults(handler=command_health)
+
+    ask = commands.add_parser("ask", help="submit a request and stream its progress")
+    ask.add_argument("text", help="the request, as the user typed it")
+    ask.add_argument("--session-title", default="Bunny Desktop")
+    ask.add_argument("--timeout", type=float, default=15.0, help="per-call socket timeout")
+    ask.add_argument("--deadline", type=float, default=DEADLINE_SECONDS)
+    ask.set_defaults(handler=command_ask)
+
+    arguments = parser.parse_args(argv)
+    try:
+        return int(arguments.handler(arguments))
+    except KeyboardInterrupt:  # pragma: no cover - the desktop kills the child
+        return 130
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -16,6 +16,15 @@ systemd/** -text
 config/** -text
 *.sh -text
 
+# The same hazard, one directory further on, and it bites harder. Every file in
+# shell/services/bin is installed to /usr/bin with mode 0555 and starts with
+# `#!/usr/bin/python3`. A CRLF checkout makes the interpreter path
+# `/usr/bin/python3\r`, which does not exist, so the kernel refuses the exec and
+# the program reports "no such file or directory" while naming a file that is
+# plainly there. These have no extension, so no `*.sh` rule reaches them.
+shell/services/bin/** -text
+installer/bin/** -text
+
 # Byte-attested evidence must bypass content filters.
 #
 # release/evidence.py verifies each record by hashing the file at its

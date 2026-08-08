@@ -8,5 +8,49 @@
     <key name="open-approvals" type="as"><default>['&lt;Super&gt;&lt;Shift&gt;a']</default><summary>Open approvals without replacing GNOME Super+A</summary></key>
     <key name="open-tasks" type="as"><default>['&lt;Super&gt;j']</default><summary>Open Bunny tasks</summary></key>
     <key name="open-workspaces" type="as"><default>['&lt;Super&gt;w']</default><summary>Open Bunny workspaces</summary></key>
+
+    <!-- The Bunny desktop. Off is a supported configuration, not a failure
+         mode: a machine that needs the stock GNOME shell for an accessibility
+         tool, a remote session or a reproduction should be able to have it
+         without removing the extension and losing the Bunny menu with it. -->
+    <key name="desktop-enabled" type="b">
+      <default>true</default>
+      <summary>Show the Bunny desktop</summary>
+      <description>
+        When false, GNOME's own desktop and top bar are left in place and only
+        the Bunny Shell panel indicator is added.
+      </description>
+    </key>
+
+    <!-- auto reads /dev/dri for a render node and turns blur off when there is
+         none, because Shell.BlurEffect samples the whole surface behind each
+         panel on every frame and llvmpipe cannot afford that. on and off are
+         the user overriding that decision. -->
+    <key name="desktop-blur" type="s">
+      <choices>
+        <choice value="auto"/>
+        <choice value="on"/>
+        <choice value="off"/>
+      </choices>
+      <default>'auto'</default>
+      <summary>Blur behind desktop panels</summary>
+      <description>
+        auto enables blur only where a hardware renderer is present. on and off
+        force it either way.
+      </description>
+    </key>
+
+    <key name="focus-desktop-search" type="as">
+      <default>['&lt;Super&gt;s']</default>
+      <summary>Focus the desktop search field</summary>
+    </key>
+    <key name="focus-desktop-sidebar" type="as">
+      <default>['&lt;Super&gt;&lt;Shift&gt;n']</default>
+      <summary>Move keyboard focus to the desktop sidebar</summary>
+    </key>
+    <key name="focus-desktop-assistant" type="as">
+      <default>['&lt;Super&gt;&lt;Shift&gt;b']</default>
+      <summary>Wake the assistant and focus its input</summary>
+    </key>
   </schema>
 </schemalist>

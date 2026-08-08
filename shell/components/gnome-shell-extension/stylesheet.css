@@ -1,13 +1,373 @@
+/*
+ * SPDX-FileCopyrightText: 2026 ComradeArt
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * The Bunny desktop's visual layer.
+ *
+ * St's stylesheet language is a subset of CSS. There are no custom properties,
+ * no calc(), no flexbox and no backdrop-filter, so every colour below is a
+ * literal with its token name in a comment beside it, and the blur is a
+ * Shell.BlurEffect attached in widgets.js rather than anything declared here.
+ * lib/tokens.js is the source; a literal here that does not match it is a
+ * defect, and the pairing is checked by tests/shell/test_desktop_shell.py.
+ *
+ * Focus styling is not decoration. Every reactive element in this file has a
+ * :focus rule with a 2px accent outline, because the desktop is operable from
+ * the keyboard and an invisible focus ring makes that theoretical.
+ */
+
+/* ---------------------------------------------------------------- indicator */
+
 .bunny-shell-icon {
-  color: #88e7c4;
+  color: #a78bfa; /* Colour.ACCENT_BRIGHT */
 }
 
 .bunny-shell-status {
-  color: #bac8c3;
+  color: #b4bac6; /* Colour.TEXT_SECONDARY */
   font-weight: 600;
 }
 
 .bunny-shell-status:focus {
-  outline: 2px solid #88e7c4;
+  outline: 2px solid #a78bfa;
   outline-offset: 2px;
 }
+
+/* ------------------------------------------------------------------ surfaces */
+
+.bunny-wallpaper-fallback {
+  background-gradient-direction: vertical;
+  background-gradient-start: #141033;
+  background-gradient-end: #080b12; /* Colour.BACKGROUND */
+}
+
+.bunny-card,
+.bunny-top-bar,
+.bunny-sidebar,
+.bunny-dock,
+.bunny-bubble,
+.bunny-suggestions,
+.bunny-search-results,
+.bunny-power-menu,
+.bunny-toast {
+  background-color: rgba(17, 21, 32, 0.72); /* Colour.PANEL */
+  border: 1px solid rgba(255, 255, 255, 0.10); /* Colour.BORDER */
+  color: #f7f8fa; /* Colour.TEXT */
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.42);
+}
+
+.bunny-card { border-radius: 18px; padding: 0; }
+.bunny-top-bar { border-radius: 0 0 22px 22px; border-top-width: 0; }
+.bunny-sidebar { border-radius: 22px; }
+.bunny-dock { border-radius: 22px; }
+.bunny-bubble { border-radius: 20px; }
+.bunny-suggestions { border-radius: 20px; }
+.bunny-search-results { border-radius: 16px; }
+.bunny-power-menu { border-radius: 18px; }
+.bunny-toast { border-radius: 14px; }
+
+/* --------------------------------------------------------------- the top bar */
+
+.bunny-top-bar-row {
+  padding: 0 16px;
+  spacing: 12px;
+  height: 44px; /* Metric.TOP_BAR_HEIGHT */
+}
+
+.bunny-top-identity { spacing: 8px; padding: 4px 8px; border-radius: 10px; }
+.bunny-top-identity:hover { background-color: rgba(255, 255, 255, 0.06); }
+.bunny-top-identity:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+.bunny-top-logo { color: #a78bfa; }
+.bunny-top-wordmark { font-weight: 700; font-size: 13px; color: #f7f8fa; }
+
+.bunny-search-wrapper { min-width: 300px; }
+
+.bunny-search-entry {
+  background-color: rgba(27, 31, 45, 0.65); /* Colour.PANEL_SECONDARY */
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px; /* Radius.CONTROL */
+  color: #f7f8fa;
+  padding: 5px 12px;
+  min-width: 300px;
+  font-size: 12px;
+}
+
+.bunny-search-entry:focus {
+  border-color: #8b5cf6; /* Colour.ACCENT */
+  background-color: rgba(27, 31, 45, 0.9);
+}
+
+.bunny-search-entry StLabel.hint-text { color: #8f96a4; }
+.bunny-search-icon { color: #b4bac6; }
+
+.bunny-top-indicators { spacing: 14px; }
+
+.bunny-top-indicator-icon {
+  color: #b4bac6;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.bunny-top-indicator-icon:hover { color: #f7f8fa; background-color: rgba(255, 255, 255, 0.07); }
+.bunny-top-indicator-icon:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+
+.bunny-top-battery { spacing: 5px; padding: 3px 6px; border-radius: 8px; }
+.bunny-top-battery:hover { background-color: rgba(255, 255, 255, 0.07); }
+.bunny-top-battery:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+.bunny-top-battery-label { font-size: 11px; color: #b4bac6; }
+
+.bunny-top-clock-box { padding: 2px 6px; border-radius: 8px; }
+.bunny-top-clock-box:hover { background-color: rgba(255, 255, 255, 0.07); }
+.bunny-top-clock-box:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+.bunny-top-clock { font-size: 13px; font-weight: 600; color: #f7f8fa; }
+.bunny-top-date { font-size: 10px; color: #b4bac6; }
+
+.bunny-top-avatar {
+  background-gradient-direction: vertical;
+  background-gradient-start: #8b5cf6;
+  background-gradient-end: #6d3fd4;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 14px;
+  width: 28px;
+  height: 28px;
+  text-align: center;
+  padding-top: 6px;
+}
+
+.bunny-top-avatar:focus { outline: 2px solid #a78bfa; outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- the sidebar */
+
+.bunny-sidebar-column { padding: 14px 10px; spacing: 3px; }
+
+.bunny-sidebar-row {
+  spacing: 12px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  color: #b4bac6;
+}
+
+.bunny-sidebar-row:hover { background-color: rgba(255, 255, 255, 0.07); color: #f7f8fa; }
+.bunny-sidebar-row:focus { outline: 2px solid #a78bfa; outline-offset: -1px; color: #f7f8fa; }
+
+.bunny-sidebar-row-selected {
+  background-color: rgba(139, 92, 246, 0.20);
+  color: #f7f8fa;
+  border-left: 3px solid #a78bfa;
+  padding-left: 8px;
+}
+
+.bunny-sidebar-icon { icon-size: 18px; }
+.bunny-sidebar-label { font-size: 12px; font-weight: 500; }
+
+.bunny-sidebar-collapsed .bunny-sidebar-row { padding: 9px 10px; }
+
+.bunny-sidebar-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.10);
+  margin: 8px 6px;
+}
+
+.bunny-sidebar-power { color: #f7a1a1; }
+.bunny-sidebar-power:hover { background-color: rgba(239, 68, 68, 0.16); color: #ffffff; }
+
+.bunny-power-column { padding: 8px; spacing: 2px; }
+.bunny-power-row { spacing: 11px; padding: 9px 12px; border-radius: 10px; color: #e6e8ee; }
+.bunny-power-row:hover { background-color: rgba(255, 255, 255, 0.08); }
+.bunny-power-row:focus { outline: 2px solid #a78bfa; outline-offset: -1px; }
+
+/* ------------------------------------------------------------------ the dock */
+
+.bunny-dock-row { padding: 8px 12px; spacing: 8px; }
+
+.bunny-dock-tile {
+  padding: 5px;
+  border-radius: 12px;
+  width: 44px; /* Metric.DOCK_ICON */
+  height: 44px;
+}
+
+.bunny-dock-tile:hover { background-color: rgba(255, 255, 255, 0.09); }
+.bunny-dock-tile:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+
+.bunny-dock-running {
+  width: 5px;
+  height: 5px;
+  border-radius: 3px;
+  background-color: #a78bfa;
+  margin-top: 2px;
+}
+
+/* ------------------------------------------------------------------- cards */
+
+.bunny-card-content { padding: 14px 16px; spacing: 10px; }
+.bunny-card-header { spacing: 8px; }
+
+.bunny-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b4bac6;
+  /* Uppercase with tracking is the one typographic device the dashboard uses to
+     separate a card's name from its content without a rule or a heavier weight. */
+  text-transform: uppercase;
+}
+
+.bunny-card-action {
+  font-size: 10px;
+  color: #a78bfa;
+  background-color: rgba(139, 92, 246, 0.14);
+  border-radius: 8px;
+  padding: 3px 9px;
+  border: none;
+}
+
+.bunny-card-action:hover { background-color: rgba(139, 92, 246, 0.26); color: #ffffff; }
+.bunny-card-action:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+
+.bunny-metric-row { spacing: 8px; padding: 2px 0; }
+.bunny-metric-name { font-size: 11px; color: #b4bac6; }
+.bunny-metric-value { font-size: 11px; font-weight: 600; color: #f7f8fa; }
+.bunny-metric-unavailable { color: #8f96a4; font-weight: 400; font-style: italic; }
+
+.bunny-meter {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+.bunny-meter-fill { border-radius: 3px; }
+.bunny-meter-unavailable { background-color: rgba(255, 255, 255, 0.04); }
+
+.bunny-overview-body { spacing: 14px; }
+.bunny-dial-column { spacing: 4px; }
+.bunny-dial-caption { font-size: 10px; color: #b4bac6; text-align: center; width: 96px; }
+.bunny-dial-value { font-size: 19px; font-weight: 700; color: #f7f8fa; }
+.bunny-dial-value-unavailable { font-size: 10px; font-weight: 400; color: #8f96a4; }
+.bunny-overview-rows { spacing: 7px; }
+
+.bunny-quick-grid { spacing: 6px; }
+
+.bunny-quick-tile {
+  padding: 8px 4px;
+  border-radius: 12px;
+  width: 62px;
+  spacing: 5px;
+}
+
+.bunny-quick-tile:hover { background-color: rgba(255, 255, 255, 0.08); }
+.bunny-quick-tile:focus { outline: 2px solid #a78bfa; outline-offset: -1px; }
+.bunny-tile-label { font-size: 9px; color: #b4bac6; text-align: center; }
+
+/* An application the image does not install. Dimmed rather than hidden, with
+   the reason in the accessible description; see cards/quickAccess.js. */
+.bunny-unavailable { opacity: 0.38; }
+
+.bunny-media-row { spacing: 10px; }
+.bunny-media-art { border-radius: 8px; }
+.bunny-media-text { spacing: 1px; }
+.bunny-media-title { font-size: 12px; font-weight: 600; color: #f7f8fa; }
+.bunny-media-artist { font-size: 10px; color: #b4bac6; }
+.bunny-media-controls { spacing: 6px; }
+.bunny-media-button { padding: 4px; border-radius: 8px; color: #b4bac6; }
+.bunny-media-button:hover { background-color: rgba(255, 255, 255, 0.09); color: #f7f8fa; }
+.bunny-media-button:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+.bunny-media-time { font-size: 9px; color: #8f96a4; }
+
+.bunny-agenda-list { spacing: 4px; }
+.bunny-agenda-row { spacing: 10px; padding: 5px 7px; border-radius: 9px; }
+.bunny-agenda-row:hover { background-color: rgba(255, 255, 255, 0.07); }
+.bunny-agenda-row:focus { outline: 2px solid #a78bfa; outline-offset: -1px; }
+.bunny-agenda-row-past { opacity: 0.5; }
+.bunny-agenda-time { font-size: 10px; font-weight: 600; color: #a78bfa; width: 52px; }
+.bunny-agenda-summary { font-size: 11px; color: #f7f8fa; }
+.bunny-agenda-empty { spacing: 3px; padding: 6px 2px; }
+.bunny-agenda-empty-primary { font-size: 12px; color: #f7f8fa; }
+.bunny-agenda-empty-secondary { font-size: 10px; color: #8f96a4; }
+.bunny-agenda-more { font-size: 10px; color: #b4bac6; padding-left: 7px; }
+
+.bunny-monitor-rates { spacing: 8px; }
+.bunny-monitor-up { font-size: 11px; font-weight: 600; color: #22c55e; }   /* Colour.SUCCESS */
+.bunny-monitor-down { font-size: 11px; font-weight: 600; color: #a78bfa; }
+.bunny-monitor-graph { border-radius: 8px; background-color: rgba(255, 255, 255, 0.03); }
+
+/* --------------------------------------------------------------- assistant */
+
+.bunny-assistant-scroll { max-height: 108px; }
+.bunny-assistant-transcript { spacing: 6px; padding-right: 4px; }
+
+.bunny-turn { padding: 7px 10px; border-radius: 12px; max-width: 240px; }
+.bunny-turn-user { background-color: rgba(139, 92, 246, 0.22); }
+.bunny-turn-bunny { background-color: rgba(27, 31, 45, 0.75); }
+.bunny-turn-error { background-color: rgba(239, 68, 68, 0.20); }
+.bunny-turn-text { font-size: 11px; color: #f7f8fa; }
+
+.bunny-assistant-status { font-size: 10px; color: #b4bac6; font-style: italic; }
+.bunny-assistant-status-error { color: #ef4444; font-style: normal; } /* Colour.ERROR */
+.bunny-assistant-busy .bunny-assistant-entry { opacity: 0.6; }
+
+.bunny-assistant-input-row { spacing: 6px; }
+
+.bunny-assistant-entry {
+  background-color: rgba(27, 31, 45, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  color: #f7f8fa;
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+.bunny-assistant-entry:focus { border-color: #8b5cf6; }
+.bunny-assistant-entry StLabel.hint-text { color: #8f96a4; }
+
+.bunny-assistant-icon-button { padding: 6px; border-radius: 10px; color: #b4bac6; }
+.bunny-assistant-icon-button:hover { background-color: rgba(139, 92, 246, 0.24); color: #ffffff; }
+.bunny-assistant-icon-button:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+
+/* ---------------------------------------------------- character and bubbles */
+
+.bunny-greeting { padding: 4px 8px; spacing: 2px; }
+
+.bunny-greeting-primary {
+  font-size: 26px;
+  font-weight: 700;
+  color: #f7f8fa;
+}
+
+.bunny-greeting-secondary { font-size: 14px; color: #b4bac6; }
+
+.bunny-bubble-column { padding: 13px 16px; spacing: 8px; }
+.bunny-bubble-text { font-size: 12px; color: #f7f8fa; }
+.bunny-bubble-warning { border-color: rgba(245, 158, 11, 0.55); } /* Colour.WARNING */
+.bunny-bubble-error { border-color: rgba(239, 68, 68, 0.55); }
+
+.bunny-suggestions-column { padding: 11px 12px; spacing: 3px; }
+.bunny-suggestion-row { spacing: 9px; padding: 7px 9px; border-radius: 11px; }
+.bunny-suggestion-row:hover { background-color: rgba(255, 255, 255, 0.08); }
+.bunny-suggestion-row:focus { outline: 2px solid #a78bfa; outline-offset: -1px; }
+.bunny-suggestion-glyph { font-size: 12px; }
+.bunny-suggestion-label { font-size: 11px; color: #f7f8fa; }
+.bunny-suggestions-more { font-size: 10px; color: #a78bfa; padding: 6px 9px; border-radius: 9px; }
+.bunny-suggestions-more:hover { background-color: rgba(139, 92, 246, 0.18); }
+.bunny-suggestions-more:focus { outline: 2px solid #a78bfa; outline-offset: -1px; }
+
+/* ---------------------------------------------------------- search results */
+
+.bunny-search-list { padding: 6px; spacing: 2px; }
+.bunny-search-row { spacing: 10px; padding: 7px 10px; border-radius: 10px; }
+.bunny-search-row:hover { background-color: rgba(255, 255, 255, 0.08); }
+.bunny-search-row:focus { outline: 2px solid #a78bfa; outline-offset: -1px; }
+.bunny-search-row-icon { color: #b4bac6; }
+.bunny-search-row-title { font-size: 12px; color: #f7f8fa; }
+.bunny-search-row-subtitle { font-size: 10px; color: #8f96a4; }
+
+/* ------------------------------------------------------------ notifications */
+
+.bunny-notification-layer { spacing: 8px; }
+.bunny-toast-row { spacing: 9px; padding: 10px 13px; }
+.bunny-toast-text { font-size: 11px; color: #f7f8fa; }
+.bunny-toast-icon { color: #b4bac6; }
+.bunny-toast-info { border-left: 3px solid #a78bfa; }
+.bunny-toast-warning { border-left: 3px solid #f59e0b; }
+.bunny-toast-error { border-left: 3px solid #ef4444; }
+.bunny-toast:hover { background-color: rgba(27, 31, 45, 0.9); }
+.bunny-toast:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }

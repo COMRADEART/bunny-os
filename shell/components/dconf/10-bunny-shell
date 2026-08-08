@@ -3,6 +3,37 @@ enabled-extensions=['bunny-shell@bunny-os.org']
 
 [org/gnome/desktop/interface]
 enable-animations=true
+# The desktop is drawn dark and only dark; its contrast ratios were measured
+# against #080B12 and none of them hold on a light background. Asking GNOME for
+# the dark preference makes the applications the desktop launches match it,
+# which is the difference between a themed shell and a themed system.
+color-scheme='prefer-dark'
+
+# The wallpaper.
+#
+# Set as a default rather than written into the user's dconf, so changing it in
+# Settings works and survives an update — a first-boot script that wrote the key
+# would silently overwrite a user's choice on every upgrade.
+#
+# Both URIs point at the same file. Bunny OS has no light desktop, and pointing
+# picture-uri at a light image would mean a user who switched color-scheme got a
+# wallpaper the panels were never contrast-tested against.
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/bunny-os/bunny-nocturne.svg'
+picture-uri-dark='file:///usr/share/backgrounds/bunny-os/bunny-nocturne.svg'
+picture-options='zoom'
+# The fallback the brief asks for. GNOME paints this gradient when the file
+# above cannot be loaded, so a missing or unreadable asset produces a composed
+# dark desktop rather than a grey rectangle, and the scrim in
+# lib/wallpaperLayer.js sits on it either way.
+primary-color='#141033'
+secondary-color='#080B12'
+color-shading-type='vertical'
+
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/backgrounds/bunny-os/bunny-nocturne.svg'
+primary-color='#141033'
+secondary-color='#080B12'
 
 # Nothing reaches the network without being asked to.
 #
