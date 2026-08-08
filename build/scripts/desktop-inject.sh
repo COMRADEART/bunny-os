@@ -171,7 +171,7 @@ echo "injected: probe, ${user}, autologin into ${session}, linger"
 # The labels are read out of the guest's own policy below rather than
 # remembered, and the run stops if a path's expected label is not in it.
 # ---------------------------------------------------------------------------
-contexts="${work}/file_contexts"
+contexts="${work}/policy-specifications"
 : >"${contexts}"
 # Both files. The policy splits its specifications: general paths live in
 # file_contexts and user home directories live in file_contexts.homedirs,
@@ -180,8 +180,8 @@ contexts="${work}/file_contexts"
 for specification in file_contexts file_contexts.homedirs; do
   guestfish --ro -a "${disk}" run : mount "${root_partition}" / \
     : download "${deployment}/etc/selinux/targeted/contexts/files/${specification}" \
-      "${work}/${specification}" 2>/dev/null || continue
-  cat "${work}/${specification}" >>"${contexts}"
+      "${work}/spec-${specification}" 2>/dev/null || continue
+  cat "${work}/spec-${specification}" >>"${contexts}"
 done
 
 if [[ ! -s "${contexts}" ]]; then
