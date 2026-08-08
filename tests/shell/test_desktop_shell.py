@@ -423,6 +423,80 @@ class NavigationContractTests(unittest.TestCase):
         self.assertEqual(offenders, [], "components spawning processes outside a service")
 
 
+class InstalledCommandTests(unittest.TestCase):
+    """Every bunny-* command has to survive being at /usr/bin.
+
+    The scripts in shell/services/bin add the installed Python tree to sys.path
+    with a candidate list that also names the repository root as
+    ``Path(__file__).resolve().parents[3]`` — correct from a checkout, where the
+    script is four levels down. Installed, the script is /usr/bin/<name>, whose
+    resolved path has three parents, and a *tuple literal* evaluates both
+    entries before the loop sees either: IndexError during construction, and
+    the installed tree — the entry that would have worked — never tried.
+
+    Measured on a booted image, where `bunny-shell-assistant health` produced
+    `IndexError: 3` and the assistant card had no runtime. `bunny-companion`
+    carried the identical line and had simply never been run from /usr/bin.
+
+    Checked statically, and the first attempt at checking it functionally is
+    the reason why: copying the script into a temporary directory and running
+    it there does not reproduce the fault, because a temporary directory is
+    several levels deep and `parents[3]` resolves happily. The negative control
+    passed, which is exactly what a test that cannot see the bug looks like.
+    Reproducing it needs a path with precisely three parents, which is
+    `/usr/bin/x` and nothing a test may create.
+
+    So the rule is encoded instead of the symptom: a script that indexes
+    `.parents[n]` must also measure `len(...parents)` before it does. That is
+    what the fix is, it is portable, and it fails on the unguarded form.
+    """
+
+    COMMAND_DIRECTORIES = ("shell/services/bin", "installer/bin")
+
+    def _commands(self):
+        for directory in self.COMMAND_DIRECTORIES:
+            base = ROOT / directory
+            if not base.is_dir():
+                continue
+            for script in sorted(base.iterdir()):
+                if not script.is_file():
+                    continue
+                text = script.read_text(encoding="utf-8", errors="replace")
+                if "python3" not in text[:200]:
+                    continue
+                yield f"{directory}/{script.name}", text
+
+    #: /usr/bin/<name> has three parents: /usr/bin, /usr and /. Indices 0..2
+    #: resolve there; 3 and beyond do not, and are the ones that need a guard.
+    #: bunny-approvals and its siblings use parents[1] and are correct as they
+    #: stand — a rule that flagged them too would be a rule people switch off.
+    SAFE_AT_USR_BIN = 3
+
+    def test_no_command_indexes_past_its_own_path_depth_unguarded(self) -> None:
+        for name, text in self._commands():
+            deep = [int(index) for index in re.findall(r"\.parents\[(\d+)\]", text)
+                    if int(index) >= self.SAFE_AT_USR_BIN]
+            if not deep:
+                continue
+            with self.subTest(command=name):
+                self.assertRegex(
+                    text, r"len\(\s*[\w.]+\.parents\s*\)",
+                    f"{name} indexes .parents[{max(deep)}] without checking how many there "
+                    "are; installed at /usr/bin there are three, and the index raises "
+                    "IndexError while the candidate list is being built")
+
+    def test_a_command_that_needs_the_python_tree_names_it_first(self) -> None:
+        """The entry that works on the image must not sit behind the one that throws."""
+        for name, text in self._commands():
+            if not re.search(r"\.parents\[(\d+)\]", text):
+                continue
+            if not any(int(index) >= self.SAFE_AT_USR_BIN
+                       for index in re.findall(r"\.parents\[(\d+)\]", text)):
+                continue
+            with self.subTest(command=name):
+                self.assertIn("/usr/lib/bunny-os/python", text)
+
+
 class AssistantBridgeTests(unittest.TestCase):
     """The bridge is a real program; run it."""
 

@@ -45,10 +45,29 @@ import time
 # The installed tree, but only when the checkout is not already importable.
 # Prepending unconditionally would put /usr/lib/bunny-os/python ahead of a
 # developer's working copy and run the shipped companion against edited tests.
+#
+# The candidate list is built, not written as a tuple literal, and that is the
+# whole of the difference between this working on the image and not. Installed,
+# this program is /usr/bin/bunny-shell-assistant, whose resolved path has three
+# parents; `parents[3]` therefore raises IndexError while the *tuple is being
+# constructed*, before the loop that would have found /usr/lib/bunny-os/python
+# ever runs. Measured on the booted image:
+#
+#   ModuleNotFoundError: No module named 'companion'
+#   During handling of the above exception, another exception occurred:
+#   File "/usr/bin/bunny-shell-assistant", line 51, in <module>
+#   IndexError: 3
+#
+# The repository-root candidate only exists when this is run from a checkout,
+# where the path has enough parents, so it is added only when it does.
 try:  # pragma: no cover - exercised by which tree the import resolves to
     import companion.protocol as _probe  # noqa: F401
 except ImportError:
-    for _candidate in (Path("/usr/lib/bunny-os/python"), Path(__file__).resolve().parents[3]):
+    _candidates = [Path("/usr/lib/bunny-os/python")]
+    _here = Path(__file__).resolve()
+    if len(_here.parents) > 3:
+        _candidates.append(_here.parents[3])
+    for _candidate in _candidates:
         if _candidate.is_dir() and str(_candidate) not in sys.path:
             sys.path.insert(0, str(_candidate))
 
