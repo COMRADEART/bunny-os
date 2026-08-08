@@ -146,3 +146,94 @@ commands+=(
 
 guestfish -a "${disk}" "${commands[@]}"
 echo "injected: probe, ${user}, autologin into ${session}, linger"
+
+# ---------------------------------------------------------------------------
+# SELinux labels for everything just created.
+#
+# Measured, not anticipated. The first run of this harness produced a system
+# where gdm.service exited 1 and was restarted eleven times, and the screenshot
+# was of a kernel console. The reason was in the guest's journal:
+#
+#   avc: denied { getattr } for comm="accounts-daemon"
+#     path="/var/lib/AccountsService/users/bunny"
+#     tcontext=system_u:object_r:unlabeled_t:s0 permissive=0
+#
+# A file guestfish creates has no security.selinux xattr at all, so the policy
+# sees unlabeled_t and refuses. GDM asks accounts-daemon which user to log in
+# automatically, accounts-daemon cannot read the file, and GDM gives up — with
+# no message of its own anywhere, which is what made this look like a broken
+# desktop rather than a broken harness.
+#
+# Files *overwritten* rather than created keep their label, because guestfish
+# truncates the existing inode: that is why /etc/passwd, /etc/shadow and
+# /etc/gdm/custom.conf were fine and the two new paths were not.
+#
+# The labels are read out of the guest's own policy below rather than
+# remembered, and the run stops if a path's expected label is not in it.
+# ---------------------------------------------------------------------------
+contexts="${work}/file_contexts"
+guestfish --ro -a "${disk}" run : mount "${root_partition}" / \
+  : download "${deployment}/etc/selinux/targeted/contexts/files/file_contexts" "${contexts}" \
+  2>/dev/null || true
+
+if [[ ! -s "${contexts}" ]]; then
+  echo "the guest has no file_contexts; cannot label the injected files" >&2
+  exit 5
+fi
+
+# path <tab> label <tab> the specification that has to exist to justify it
+label_plan="$(cat <<'PLAN'
+/var/lib/AccountsService	accountsd_var_lib_t	^/var/lib/AccountsService
+/var/lib/AccountsService/users	accountsd_var_lib_t	^/var/lib/AccountsService
+/var/lib/systemd/linger	systemd_logind_var_lib_t	^/var/lib/systemd/linger
+PLAN
+)"
+
+label_commands=(run : mount "${root_partition}" /)
+verify=()
+
+apply_label() {
+  local target="$1" type="$2" justification="$3"
+  if ! grep -qE "${justification}" "${contexts}"; then
+    echo "no specification matching ${justification} in the guest policy" >&2
+    exit 5
+  fi
+  local value="system_u:object_r:${type}:s0"
+  label_commands+=(: setxattr "security.selinux" "${value}" "${#value}" "${target}")
+  verify+=("${target}=${value}")
+}
+
+while IFS=$'\t' read -r relative type justification; do
+  [[ -z "${relative}" ]] && continue
+  apply_label "${stateroot}${relative}" "${type}" "${justification}"
+done <<<"${label_plan}"
+
+# The two per-user files inside those trees.
+apply_label "${stateroot}/var/lib/AccountsService/users/${user}" \
+  accountsd_var_lib_t '^/var/lib/AccountsService'
+apply_label "${stateroot}/var/lib/systemd/linger/${user}" \
+  systemd_logind_var_lib_t '^/var/lib/systemd/linger'
+# The home directory. /var/home is the ostree location of /home, and the policy
+# expresses user homes through the homedir template rather than file_contexts,
+# so the justification checks for the type's existence in the policy instead.
+apply_label "${stateroot}/var/home/${user}" user_home_dir_t 'user_home_dir_t'
+# The probe and its unit. Neither produced a denial — systemd read both while
+# they were unlabeled — but a file left unlabeled is a denial waiting for a
+# policy that is one release stricter.
+apply_label "${deployment}/etc/bunny-desktop-probe.py" etc_t '^/etc/\.\*'
+apply_label "${deployment}/etc/systemd/system/bunny-desktop-probe.service" \
+  systemd_unit_file_t 'systemd_unit_file_t'
+
+guestfish -a "${disk}" "${label_commands[@]}"
+
+echo "--- labels, read back ---"
+read_commands=(run : mount "${root_partition}" /)
+for entry in "${verify[@]}"; do
+  read_commands+=(: getxattr "${entry%%=*}" "security.selinux")
+done
+# Read back rather than trust the write. A setxattr that silently did nothing
+# would leave exactly the failure this whole block exists to remove.
+guestfish --ro -a "${disk}" "${read_commands[@]}" | tr -d '\000' | while read -r line; do
+  [[ -n "${line}" ]] && echo "  ${line}"
+done
+echo "labelled ${#verify[@]} paths from the guest's own policy"
