@@ -570,13 +570,61 @@ qualification phase:
 
 ## 42. Test gates
 
-Gate commit `8bb2b0d3b667737918c082dfe2fea1d491d2d556`. Results are in
-`qualification/public-alpha/alpha-gates.json`; the collector reports every gate
-with the count asked for, the count achieved, and `passed`/`failed`/`notRun`,
-and `complete` is separate from `allPassed` so a partial run cannot read as a
-whole one.
+Gate commit `b4379eb512f5646d17985a8bc4f8b3fb1852a921`, image
+`bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64.qcow2`. Evidence in
+`qualification/public-alpha/`.
 
-*(Gate figures are appended by the closing commit.)*
+| Gate | Brief asks | Ran | Result |
+| --- | --- | --- | --- |
+| Companion service lifecycles | 100 | 100 | **100/100**, longest consecutive 100 |
+| Alpha session-surface lifecycles | 100 | 100 | **100/100**, longest consecutive 100 |
+| Complete companion suites | 50 | 50 | **50/50**, longest consecutive 50 |
+| Booted VM Alpha stories | 20 | 5 | **5/5 held** — 3 online at 17/17 assertions, 2 offline at 18/18 |
+| Install → boot → first-run | 10 | 0 | **NOT_RUN** — there is no installation medium (§15) |
+| Reboot persistence | 20 | 0 | **NOT_RUN** |
+| Physical reboot / suspend cycles | 10 / 10 | 0 | **NOT_RUN** — no hardware |
+
+`allPassed=true`, `complete=false`. The two are separate fields precisely so
+that this run cannot be read as a complete gate run: three of the seven gates
+did not run, and the collector records each with the count the brief asks for
+beside the count achieved.
+
+### What the gates measured, beyond pass and fail
+
+Every iteration carries the commit it ran at — `b4379eb512f5` on all 250 — so
+the tree cannot have moved underneath a run without the record saying so.
+
+| | service-100 | alpha-100 | suite-50 |
+| --- | --- | --- | --- |
+| threads | 1 → 1 | 1 → 1 | 1 → 1 |
+| temp directories | 0 → 2 | 2 → 2 | 2 → 7 |
+| seconds (min/mean/max) | 18.5 / 19.2 / 29.0 | 0.2 / 0.2 / 0.4 | 49.2 / 50.1 / 59.7 |
+
+The temporary-directory column is the one worth reading. It said `0 → 0` on
+every gate ever run before this phase, because it globbed `bunny-*` and the
+directories that accumulate have no prefix. Corrected, it showed the suite
+leaking **130 directories per run** — 10,591 of them filled the builder's
+7.8 GB tmpfs and killed the suite gate at iteration 12 with ENOSPC. After the
+57 call sites were fixed it is 5 across 50 runs.
+
+### The five VM stories
+
+| Story | Network | gdm | graphical.target | Channel | Assertions |
+| --- | --- | --- | --- | --- | --- |
+| online-001 | NAT | 8.83 s | 9.00 s | guest filesystem | 17/17 |
+| online-002 | NAT | 8.98 s | 9.11 s | guest filesystem | 17/17 |
+| online-003 | NAT | 7.77 s | 7.88 s | guest filesystem | 17/17 |
+| offline-001 | none | 7.82 s | 7.94 s | guest filesystem | 18/18 |
+| offline-002 | none | 7.75 s | 7.89 s | guest filesystem | 18/18 |
+
+The offline stories carry one assertion more: `network.offline-has-no-default-route`.
+Every story asserts `network.no-unexplained-outbound` and every one measured
+**0 established non-loopback connections** — the same measurement that found
+`gnome-software` phoning out on the first booted image.
+
+Every record came off the **guest filesystem**. The serial console remains as a
+fallback and is no longer trusted: it lost a chunk of a 130 kB record to kernel
+interleaving on an offline boot, which cost a story before the channel changed.
 
 ## 43. Performance
 
@@ -624,7 +672,7 @@ are not repeated here as Alpha numbers.
 | 10 | Push-to-talk when speech resources exist | **n/a** — no vosk |
 | 11 | Voice output when audio exists | **partial** — the stack now ships; not exercised in the VM |
 | 12–13 | Approval-mediated and reversible desktop action | **not met** in a VM |
-| 14 | Offline local operation | **partial** — offline boots recorded |
+| 14 | Offline local operation | **partial** — two offline boots, 18/18 assertions each, no default route |
 | 15 | No-model fails gracefully | **met** |
 | 16 | No-microphone fails gracefully | **met** |
 | 17 | Renderer failure degrades safely | **partial** |
@@ -634,8 +682,8 @@ are not repeated here as Alpha numbers.
 | 21 | Settings persist | **met** |
 | 22 | Recovery and safe mode exist | **met** |
 | 23 | Diagnostics export exists | **met** |
-| 24 | No unexplained outbound traffic | **met** after the fixes; re-measured |
-| 25 | Automated Alpha gates pass | see §42 |
+| 24 | No unexplained outbound traffic | **met** — 0 established non-loopback connections on all five stories |
+| 25 | Automated Alpha gates pass | **partial** — every gate that ran passed (250 in-process iterations, 5 VM stories); three of seven did not run |
 | 26 | Real GPU validation recorded | **not met** |
 | 27 | Physical-laptop validation recorded | **not met** |
 | 28 | No P0/P1 open | **not met** — §15 |
@@ -643,9 +691,17 @@ are not repeated here as Alpha numbers.
 | 30 | No release/reproducibility claim made | **met** |
 
 **`feature/public-alpha-integration` is not complete.** Eleven criteria are met,
-nine are partial, ten are not met. The branch has done what it could do without
-hardware and without an installation medium, and the two things it could not do
-are named rather than approximated.
+ten are partial, nine are not met. The branch has done what it could do without
+hardware and without an installation medium, and what it could not do is named
+rather than approximated.
+
+The honest summary: **the operating system half of the Alpha is real and
+measured** — it boots, it says what it is, the companion starts, the code comes
+from the image, nothing reaches the network, and 250 consecutive in-process
+iterations and five booted stories hold at one commit. **The product half is
+structurally unexercised**, because the artifact ships no AI provider, no speech
+library, and no way to install itself, and because a headless harness proves a
+window started without ever seeing what was in it.
 
 ## Known limitations and NOT_RUN
 
