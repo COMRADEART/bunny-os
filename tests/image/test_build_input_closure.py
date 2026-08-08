@@ -345,9 +345,18 @@ class ARenameMovesNoRoute(unittest.TestCase):
         )
         self.assertEqual(
             GENERATOR_FUNCTIONS,
-            frozenset({"write_release_metadata", "write_package_inventory"}),
+            frozenset({
+                "write_release_metadata",
+                "write_package_inventory",
+                # Writes /usr/lib/os-release so the machine stops calling itself
+                # "Fedora Linux 44" in every system surface. Declared with a full
+                # GENERATED_ROUTES entry naming its destination, what it derives
+                # from and what produces it, which is the bar this pin exists to
+                # hold a generator to.
+                "write_os_release",
+            }),
         )
-        self.assertEqual(len(MODELLED_HELPERS), 7)
+        self.assertEqual(len(MODELLED_HELPERS), 8)
 
     def test_every_generated_route_names_what_produces_it(self) -> None:
         for entry in GENERATED_ROUTES:

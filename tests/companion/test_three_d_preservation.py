@@ -29,11 +29,26 @@ import unittest
 _ROOT = Path(__file__).resolve().parents[2]
 _RECORD = _ROOT / "qualification" / "companion-3d-renderer" / "preserved-evidence.json"
 
-#: This phase's own tree. It did not exist when the record was written, so it is
-#: excluded from the "nothing was added" check rather than added to the record —
-#: a record that included its own evidence would have to be rewritten every time
-#: a gate ran, which is the opposite of an immutable one.
-_OWN_PHASE = "qualification/companion-3d-renderer/"
+#: Phase trees that did not exist when the record was written. They are excluded
+#: from the "nothing was added" check rather than added to the record — a record
+#: that included them would have to be rewritten every time a gate ran, which is
+#: the opposite of an immutable one.
+#:
+#: The property being defended is that an *earlier* phase's evidence is
+#: immutable. A phase that came after the record is not an earlier phase, and
+#: recording it would freeze a tree that is still being written to.
+#:
+#: Listed explicitly rather than derived, so that a new phase tree fails here
+#: until somebody declares it deliberately — the same rule
+#: ``GENERATOR_FUNCTIONS`` applies to install helpers. Adding a file to any tree
+#: the record *does* cover still fails, which is the whole point.
+_PHASES_AFTER_THE_RECORD = (
+    # This phase's own tree.
+    "qualification/companion-3d-renderer/",
+    # Public Alpha ran after this record was cut from fa49380 and committed its
+    # gate evidence under its own name. It is a later phase, not an earlier one.
+    "qualification/public-alpha/",
+)
 
 #: Build residue, which is not evidence and is not in the repository.
 #:
@@ -127,7 +142,7 @@ class PreservedEvidence(unittest.TestCase):
         added = [
             name for name in sorted(tracked)
             if name not in recorded
-            and not name.startswith(_OWN_PHASE)
+            and not name.startswith(_PHASES_AFTER_THE_RECORD)
             and not _is_residue(name)
         ]
         self.assertEqual(added, [], "a file was added to an earlier phase's evidence tree")

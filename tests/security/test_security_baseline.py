@@ -37,8 +37,22 @@ class SecurityBaselineTests(unittest.TestCase):
         self.assertNotIn("ConditionPathIsExecutable", value)
 
     def test_app_server_not_exposed(self) -> None:
-        all_owned = "\n".join(path.read_text(encoding="utf-8", errors="ignore") for root in (ROOT / "services", ROOT / "systemd", ROOT / "config") for path in root.rglob("*") if path.is_file())
-        self.assertNotRegex(all_owned, r"0\.0\.0\.0:[0-9]+")
+        # Directives only. The comment that explains why `disable sshd.socket`
+        # is there has to be able to say that sshd was found LISTENING on
+        # 0.0.0.0:22 — that measurement is the reason the line below it exists.
+        # Matching raw file text made documenting a closed exposure trip the
+        # test that verifies exposures are closed, so the only way to a green
+        # gate was to delete the explanation. Everything from `#` to end of line
+        # is dropped; a binding that shares its line with a trailing comment is
+        # still matched, because the part before the `#` survives.
+        directives = []
+        for root in (ROOT / "services", ROOT / "systemd", ROOT / "config"):
+            for path in root.rglob("*"):
+                if not path.is_file():
+                    continue
+                for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+                    directives.append(line.partition("#")[0])
+        self.assertNotRegex("\n".join(directives), r"0\.0\.0\.0:[0-9]+")
 
     def test_privacy_defaults_off(self) -> None:
         source = (ROOT / "scripts/bunny-first-boot.py").read_text(encoding="utf-8")

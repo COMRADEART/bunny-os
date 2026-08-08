@@ -30,7 +30,10 @@
 set -uo pipefail
 
 repository_root="$(git rev-parse --show-toplevel)"
-cd "${repository_root}"
+# `set -e` is deliberately not in force above, so an unchecked `cd` that failed
+# would run the whole harness against whatever directory the caller happened to
+# be in and report its results as this repository's.
+cd "${repository_root}" || exit 1
 # shellcheck source=build/scripts/vm-lib.sh
 source build/scripts/vm-lib.sh
 
@@ -86,7 +89,9 @@ fi
 cat "${work}/inject.log"
 
 echo "--- booting (${seconds}s budget) ---"
-network_args=(-device virtio-net-pci,netdev=net0 -netdev user,id=net0)
+# Quoted because the commas belong to QEMU's option syntax, not to the array:
+# unquoted, they read as an attempt to separate array elements with commas.
+network_args=(-device "virtio-net-pci,netdev=net0" -netdev "user,id=net0")
 if [[ "${offline}" == "1" ]]; then
   network_args=(-nic none)
 fi
