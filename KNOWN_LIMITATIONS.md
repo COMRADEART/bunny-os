@@ -8,22 +8,41 @@ Full detail in `PUBLIC_ALPHA_INTEGRATION_REPORT.md`.
 
 ### The installation medium cannot be built
 
-`make build-alpha-iso` fails in `image-builder`'s `bootc-generic-iso` pipeline
-with `FileNotFoundError: /boot/efi/EFI/fedora/shimx64.efi`.
-`quay.io/fedora/fedora-bootc:44` ships an **empty `/boot`**: `shim-x64` is
-installed and its file list names those paths, but they are not materialised in
-the container and `dnf reinstall shim-x64` does not repopulate them. The
-disk-image path works because bootc regenerates `/boot` at deployment; the ISO
-path needs the files in the container.
+**Superseded 2026-08-08 — the mechanism is fixed at `0e6b346`.** The account
+below is kept because the conclusion it drew was wrong and the correction is
+the useful part.
 
-Measured with `image-builder 76.0.0` and `osbuild 185`. Upstream, and not
-introduced by any Bunny OS change — the live ISO has been recorded NOT PRODUCED
-since 2026-08-01 and this is the first run that established why.
+What was recorded: `make build-alpha-iso` fails in `image-builder`'s
+`bootc-generic-iso` pipeline with
+`FileNotFoundError: /boot/efi/EFI/fedora/shimx64.efi`, because
+`quay.io/fedora/fedora-bootc:44` ships an empty `/boot` and
+`dnf reinstall shim-x64` does not repopulate it.
 
-Consequence: **there is no supported installation path for Alpha 0.1**, and
-exit criteria 2, 3 and 28 cannot be met until it is resolved. The payload image
-boots, installs nothing, and is the artifact every other measurement in that
-report was taken from.
+Both observations were right. The conclusion — that the file is absent from the
+image — was not. It is at
+`/usr/lib/efi/shim/16.1-5/EFI/fedora/shimx64.efi`, and rpm marks the
+`/boot/efi` path `g` for **%ghost**: owned, never written. `reinstall` was
+never going to write it, and `rpm -V shim-x64` reports nothing about those
+paths for the same reason. Fedora moved the boot binaries to versioned
+directories under `/usr/lib/efi` and has bootupd copy them onto the ESP at
+deployment; `/usr/lib/bootupd/updates/EFI.json` names the two packages it
+installs. That is why every disk image is already correct, and why only the
+ISO path failed: `org.osbuild.grub2.iso` and `org.osbuild.bootiso.mono` read
+the buildroot's `/boot/efi/EFI/<vendor>/` by absolute path.
+
+The mismatch is upstream, between `osbuild 185` and Fedora 44's shim/grub2
+packaging. The repository-local correction places Fedora's own binaries at
+Fedora's own %ghost paths in the live profile only, verified against the
+rpm-owned originals with `cmp`.
+
+Measured end to end: `image-builder 76.0.0`, `osbuild 185`, exit 0, a 2.0 GB
+bootable ISO whose `BOOTX64.EFI`, `grubx64.efi` and `mmx64.efi` are
+byte-identical to `shim-x64-16.1-5` and `grub2-efi-x64-cdboot-2.12-60.fc44`.
+Secure Boot is unchanged.
+
+**Still outstanding:** that build used the cached *beta* live image. **No Alpha
+ISO has been produced**, because the Alpha payload is not built on any current
+builder. Exit criteria 2, 3 and 28 stay unmet until one exists and installs.
 
 ### The window was never seen
 
