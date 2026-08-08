@@ -12,7 +12,7 @@ The current checkout has source definitions and passing host gates, but this Win
 else in this repository.
 
 ```text
-Source gate:               NOT RE-VERIFIED for current candidate
+Source gate:               PASS at 85dead7 (Fedora 44 reference host)
 Qualification candidate:   BLOCKED   (3 of 14 prerequisites satisfied)
 Stable release:            NO-GO
 OEM pilot:                 BLOCKED
@@ -20,9 +20,18 @@ Enterprise pilot:          BLOCKED
 Encrypted-sync pilot:      BLOCKED
 ```
 
-The source gate's last recorded `PASS` was the assertion added in `9dc7e33`; no
-machine-readable `gate-source.json` was ever committed alongside it, so there is
-no artifact binding that result to a tree. It is not carried forward here.
+The source gate result binds to commit `85dead7`, measured by
+`python scripts/release.py gate --kind source` on the Fedora 44 reference host
+as unprivileged user `bunny` from an ext4 checkout — exit code 0, all six
+requirements satisfied. It is not a claim about any later commit.
+
+Two earlier statements it replaces. The previous `PASS` was the assertion added
+in `9dc7e33` with no `gate-source.json` committed beside it, so nothing bound it
+to a tree. And a Windows run of the same gate cannot stand in for this one:
+ShellCheck is absent there, so that validator skips and a real fail-open defect
+in `build/scripts/vm-alpha-story.sh` was invisible. Run it as `root` and an
+eighth test fails that should not — a read-only directory is writable for root —
+so the account is part of the measurement too.
 
 | Closed | State |
 |---|---|
