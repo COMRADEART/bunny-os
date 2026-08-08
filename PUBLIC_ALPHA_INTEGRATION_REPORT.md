@@ -44,6 +44,17 @@ Speech Dispatcher voice provider could never have been selected at all.
 Neither was findable without booting an image and looking at it. That is what
 this phase built the means to do.
 
+A third pattern ran through the whole phase and is worth naming on its own,
+because it is not about any one defect: **four separate checks passed because
+they were looking at the wrong thing.** The gate's temporary-directory counter
+globbed `bunny-*` and missed 10,591 directories with no prefix. The record
+extractor read a missing `NRestarts` as zero restarts. The provenance assertion
+read a missing rejection list as nothing rejected. The preservation check asked
+the filesystem a question that was about commits. Each reported a clean result
+in exactly the circumstance it existed to catch, and each is fixed here — but
+the pattern is the finding, and it is the reason every assertion in the VM
+harness now carries the evidence it was made from.
+
 ---
 
 ## 1. Starting and final SHAs
@@ -51,17 +62,16 @@ this phase built the means to do.
 | | |
 | --- | --- |
 | Base commit | `b8b99f69a4d2f742fafb28dcbdd8d1805ff0dd20` |
-| Final / gate commit | `959e43dc96078ed9b3c6d865cf42cb061754dcb9` |
-| Commits | 23 |
-| Files changed | 54 files changed, 10279 insertions(+), 47 deletions(-) |
+| Final / gate commit | `b4379eb512f5646d17985a8bc4f8b3fb1852a921` |
+| Commits | 24 |
+| Files changed | 69 files changed, 10449 insertions(+), 112 deletions(-) |
 | Image under test | `bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64.qcow2` |
 
-The image was built at `00adf30`, three commits before the gate commit, and it
-is still the artifact this commit produces: the range `00adf30..959e43d`
-touches **no installed path**. The gate runner checks that with
-`build-input-closure.py --range` before it will run, rather than assuming it —
-the three commits are the VM harness and two test fixtures, none of which is in
-the image.
+The image was built at `00adf30` and is still the artifact this commit
+produces: the range `00adf30..b4379eb` touches **no installed path** — it is
+the VM harness and the test suite, neither of which is in the image. The gate
+runner checks that with `build-input-closure.py --range` before it will run,
+and refuses if it is not true, rather than taking it on trust.
 
 Every commit in the range, in order:
 
@@ -89,6 +99,7 @@ bf5da4b The first booted Alpha image made one outbound connection nobody asked f
 a389381 The disk is authoritative; the console is the fallback
 103f322 A test fixture sat in the column a real thread leak would use
 959e43d The probe's fallback wrote to a tmpfs the harness cannot read
+b4379eb The suite leaked 130 temporary directories a run and the counter globbed bunny-*
 ```
 
 ## 2. Alpha scope
@@ -590,6 +601,9 @@ are not repeated here as Alpha numbers.
 | **P3** | `DefaultCharacterDecision.applied` meant "would change" in a dry run | fixed, `69c0f7f` |
 | **P3** | The preservation test asked the filesystem a question about commits | fixed, `501d936` |
 | **P3** | Two harness scripts reached Linux with CRLF | fixed, `09ace58` |
+| **P3** | The companion suite leaked 130 temporary directories per run, and the counter that watches for it globbed `bunny-*` so it reported zero | fixed, `b4379eb` |
+| **P3** | A test fixture's abandoned thread sat permanently in the column a real thread leak would use | fixed, `103f322` |
+| **P3** | The probe's fallback wrote its record to a tmpfs the harness cannot read | fixed, `959e43d` |
 | **P3** | A unit's `Documentation=` points at `docs/IMAGE_FINALISATION.md`, which does not exist | **OPEN** |
 
 **One P1 remains open** and it is not fixable in this repository: §15.
