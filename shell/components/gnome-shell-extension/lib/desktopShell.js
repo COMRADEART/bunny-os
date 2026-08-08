@@ -365,6 +365,23 @@ export class DesktopShell {
         track(Main.overview, 'showing', () => this._setDesktopVisible(false));
         track(Main.overview, 'hiding', () => this._setDesktopVisible(true));
 
+        // GNOME opens the overview at login when the session has no windows,
+        // and it was already open by the time this extension enabled — so
+        // 'showing' never fired, the desktop was never told to stand down, and
+        // the first working boot photographed the Bunny bar, sidebar and dock
+        // with GNOME's overview search, workspace strip and dash drawn over the
+        // middle of them.
+        //
+        // Two halves to the fix. The state is adopted rather than assumed,
+        // because whatever the overview is doing when this runs is not
+        // knowable from a signal that has already fired; and the overview is
+        // dismissed once at startup, because a desktop that shows the user a
+        // character and a dashboard has already answered the question the
+        // overview exists to ask.
+        this._setDesktopVisible(!Main.overview.visible);
+        track(Main.layoutManager, 'startup-complete', () => this._dismissOverviewOnce());
+        this._dismissOverviewOnce();
+
         track(St.Settings.get(), 'notify::enable-animations', () => this._relayout());
         track(St.Settings.get(), 'notify::font-name', () => this._relayout());
 
@@ -508,6 +525,25 @@ export class DesktopShell {
             this._suggestions.actor.set_position(
                 right, band.y + Math.round(figure.y + figure.height * 0.16));
         }
+    }
+
+    /**
+     * Close the login overview, once.
+     *
+     * Once, and only at startup: the overview is a surface the user can open
+     * deliberately, and a desktop that closed it whenever it appeared would be
+     * a desktop that had taken the Super key away. The flag is what makes the
+     * difference between dismissing GNOME's opening move and overriding the
+     * user.
+     */
+    _dismissOverviewOnce() {
+        if (this._overviewDismissed)
+            return;
+        this._overviewDismissed = true;
+        if (!Main.overview.visible)
+            return;
+        log_('the session opened the overview at login; dismissing it for the desktop');
+        Main.overview.hide();
     }
 
     _setDesktopVisible(visible) {
