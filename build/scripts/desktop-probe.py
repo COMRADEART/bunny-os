@@ -215,9 +215,16 @@ def background_setting(user: str, environment: list[str]) -> dict:
     }
 
 
-def assistant_bridge() -> dict:
-    """The bridge is a shipped program; run it and record what it says."""
-    result = run(["/usr/bin/bunny-shell-assistant", "health"])
+def assistant_bridge(user: str) -> dict:
+    """The bridge is a shipped program; run it and record what it says.
+
+    As the session user, not as the probe. The companion runtime's socket lives
+    under the *user's* state directory, so asking as root produces
+    ``/root/.local/state/.../runtime.sock: No such file or directory`` — a
+    correct answer to a question about the wrong account, and one that reads
+    exactly like a runtime that is not running.
+    """
+    result = run(["/usr/bin/bunny-shell-assistant", "health"], user=user)
     document = None
     if result.get("returncode") == 0:
         for line in result.get("stdout", "").splitlines():
@@ -250,7 +257,7 @@ def main() -> int:
     record["extension"] = extension_state(user, environment)
     record["installedModules"] = installed_modules()
     record["background"] = background_setting(user, environment)
-    record["assistantBridge"] = assistant_bridge()
+    record["assistantBridge"] = assistant_bridge(user)
     record["journal"] = desktop_journal(user)
 
     RECORD.parent.mkdir(parents=True, exist_ok=True)
