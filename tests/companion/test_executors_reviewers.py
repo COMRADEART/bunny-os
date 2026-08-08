@@ -194,8 +194,14 @@ class ReviewerBoundaryTests(CompanionTestCase):
             broker.invoke("text.count_words", {"text": "x"}, caller="reviewer:anybody")
 
     def test_a_reviewer_that_never_answers_is_left_behind_and_recorded(self) -> None:
+        slow = SlowReviewer()
+        # Released at teardown, after the assertions below. The runtime abandons
+        # the thread — it cannot kill one, and not waiting is the behaviour under
+        # test — so without this it stays alive for thirty seconds and shows up
+        # in the suite gate's thread delta as a leak that is not one.
+        self.addCleanup(slow.release)
         runtime = self.started(
-            reviewers=(SlowReviewer(),),
+            reviewers=(slow,),
             policy=CoordinationPolicy(reviewer_timeout_seconds=0.05),
         )
         session, task = self.completed_task(runtime)

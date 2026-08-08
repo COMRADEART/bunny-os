@@ -13,6 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 import tempfile
+import threading
 from typing import Any, Mapping, Sequence
 import unittest
 
@@ -255,16 +256,39 @@ class ToolCallingReviewer:
 
 @dataclass
 class SlowReviewer:
-    """A reviewer that never answers."""
+    """A reviewer that never answers — and can be let go afterwards.
+
+    The runtime runs a reviewer in a thread with a timeout, and when the timeout
+    fires it *abandons* the thread: Python cannot kill one, and waiting for a
+    reviewer that never answers is precisely the behaviour under test. So the
+    thread outlives the test, which is correct and, with a plain
+    ``time.sleep(30)``, also invisible for thirty seconds.
+
+    The suite gate measures thread deltas, and it reported ``threads 1 -> 2``
+    with ``review-local.slow-reviewer`` still alive at the end of fifty runs.
+    Nothing was leaking — the thread is a daemon and exits on its own — but a
+    fixture that always shows up in that column is a fixture that would hide a
+    real leak behind itself.
+
+    :meth:`release` cuts the wait short, so a test can let the thread go at
+    teardown *after* asserting that the runtime did not wait for it. The
+    reviewer still never answers inside the timeout, which is the whole of what
+    the test is about.
+    """
 
     reviewer_id: str = "local.slow-reviewer"
     seconds: float = 30.0
+    _released: threading.Event = field(default_factory=threading.Event, repr=False)
 
     def observe(self, context: ReviewContext) -> Sequence[ReviewObservation]:
-        import time
-
-        time.sleep(self.seconds)
+        # Waiting on an Event rather than sleeping: same "never answers in
+        # time", and interruptible from outside.
+        self._released.wait(self.seconds)
         return ()  # pragma: no cover - the timeout fires first
+
+    def release(self) -> None:
+        """Let the abandoned thread finish now instead of in thirty seconds."""
+        self._released.set()
 
 
 @dataclass
