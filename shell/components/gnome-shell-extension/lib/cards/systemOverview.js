@@ -91,10 +91,12 @@ export class SystemOverview extends Card {
             ? null
             : `${formatBytes(memory.usedBytes)} / ${formatBytes(memory.totalBytes)}`);
 
-        const storage = this._telemetry.storage('/');
+        const storage = this._telemetry.storage();
         this._storage.set(storage === null
             ? null
             : `${formatBytes(storage.usedBytes)} / ${formatBytes(storage.totalBytes)}`);
+        if (storage !== null)
+            this._storage.actor.accessible_description = `measured on ${storage.path}`;
 
         const temperature = this._telemetry.temperature();
         this._temperature.set(temperature === null ? null : `${Math.round(temperature)}°C`);

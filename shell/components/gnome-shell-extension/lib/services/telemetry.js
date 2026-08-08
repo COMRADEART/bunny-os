@@ -15,6 +15,7 @@
 // entirely reasonable on the dial.
 
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 
 import {logOnce, readText, listDirectory, readInt} from '../util.js';
 
@@ -75,20 +76,44 @@ export class SystemTelemetry {
         return {usedBytes: Math.max(0, total - available), totalBytes: total};
     }
 
-    /** {usedBytes, totalBytes} for the root filesystem, or null. */
-    storage(path = '/') {
-        try {
-            const info = Gio.File.new_for_path(path).query_filesystem_info(
-                'filesystem::size,filesystem::used', null);
-            const total = info.get_attribute_uint64('filesystem::size');
-            const used = info.get_attribute_uint64('filesystem::used');
-            if (!total)
-                return null;
-            return {usedBytes: used, totalBytes: total};
-        } catch (_error) {
-            logOnce('statfs', `${path} could not be queried; storage reports Unavailable`);
-            return null;
+    /**
+     * {usedBytes, totalBytes, path} for the filesystem the user's files are on.
+     *
+     * Not `/`. On this image `/` is an ostree composefs mount and statfs on it
+     * reports the overlay, not the disk — measured in the VM, where the card
+     * read "14.2 MB / 14.2 MB" on a machine with a 14 GB partition. The number
+     * was real; it was a true statement about the wrong filesystem, which is
+     * the failure mode this class of reader is most prone to and the hardest to
+     * notice, because it looks like a measurement.
+     *
+     * The home directory is the right question anyway: "Storage" on a desktop
+     * means the space the user's files can grow into. It resolves to the same
+     * device as `/` on an ordinary installation, and to the stateroot's
+     * partition on this one.
+     */
+    storage(path = null) {
+        const candidates = path !== null
+            ? [path]
+            : [GLib.get_home_dir(), '/sysroot', '/'];
+        for (const candidate of candidates) {
+            if (!candidate)
+                continue;
+            try {
+                const info = Gio.File.new_for_path(candidate).query_filesystem_info(
+                    'filesystem::size,filesystem::used', null);
+                const total = info.get_attribute_uint64('filesystem::size');
+                const used = info.get_attribute_uint64('filesystem::used');
+                if (!total)
+                    continue;
+                logOnce('statfs-target', `storage is reported for ${candidate}`);
+                return {usedBytes: used, totalBytes: total, path: candidate};
+            } catch (_error) {
+                continue;
+            }
         }
+        logOnce('statfs', `no filesystem among ${candidates.join(', ')} could be queried; ` +
+            'storage reports Unavailable');
+        return null;
     }
 
     /**

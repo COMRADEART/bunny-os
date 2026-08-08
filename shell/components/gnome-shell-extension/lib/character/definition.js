@@ -55,24 +55,35 @@ export const DEFAULT_CHARACTER = {
     // Every measurement the renderer uses, named. A shorter list would have
     // meant magic numbers in the drawing code, which is where a replaceable
     // asset stops being replaceable.
+    // Revised after looking at the first render on a booted machine. The
+    // original numbers gave a torso 45 units wide reaching to y=89 of 150 with
+    // the legs below it, and the result read as a robed figure rather than
+    // somebody in a hoodie: the garment came to the knee and the shoulders were
+    // wider than the stance.
+    //
+    // The change is in the ratios, not the style. The head is a little larger
+    // against a narrower torso (7.2 heads tall rather than 5.7, which is the
+    // stylised-realistic range), the hoodie hem is raised to y=80 so a clear
+    // band of trousers shows beneath it, the legs are longer, and the stance is
+    // wider than the hips so the figure stands rather than balances.
     geometry: {
-        headCentre: [50, 27],
-        headRadius: 13.2,
+        headCentre: [50, 24],
+        headRadius: 12.0,
         jawNarrow: 0.86,
-        neck: {x: 50, top: 37, bottom: 45, width: 8.5},
-        shoulder: {y: 47, halfWidth: 22.5},
-        torso: {top: 45, bottom: 89, topHalfWidth: 22.5, bottomHalfWidth: 18.5},
-        hood: {y: 41, halfWidth: 19, depth: 9},
-        sleeve: {width: 8.5, wristWidth: 6.2},
-        arm: {shoulderInset: 3.5, length: 40, handRadius: 4.0},
-        hip: {y: 89, halfWidth: 17},
-        leg: {length: 42, thighWidth: 11.5, ankleWidth: 7.4, separation: 9},
-        shoe: {height: 7.5, length: 15.5, soleHeight: 2.6},
-        logo: {centre: [50, 63], size: 11},
-        eyes: {offsetX: 5.0, offsetY: 1.0, radius: 1.85},
-        brow: {offsetY: -4.4, length: 4.4},
-        mouth: {offsetY: 6.4, width: 5.4},
-        groundShadow: {y: 142, radiusX: 26, radiusY: 5.2},
+        neck: {x: 50, top: 33, bottom: 41, width: 7.6},
+        shoulder: {y: 43, halfWidth: 18.5},
+        torso: {top: 41, bottom: 80, topHalfWidth: 18.5, bottomHalfWidth: 16.0},
+        hood: {y: 37, halfWidth: 16, depth: 8},
+        sleeve: {width: 7.6, wristWidth: 5.6},
+        arm: {shoulderInset: 3.0, length: 38, handRadius: 3.5},
+        hip: {y: 80, halfWidth: 14.5},
+        leg: {length: 52, thighWidth: 10.4, ankleWidth: 6.6, separation: 11},
+        shoe: {height: 7.0, length: 14.5, soleHeight: 2.4},
+        logo: {centre: [50, 58], size: 10},
+        eyes: {offsetX: 4.6, offsetY: 1.0, radius: 1.7},
+        brow: {offsetY: -4.0, length: 4.0},
+        mouth: {offsetY: 5.8, width: 4.8},
+        groundShadow: {y: 141, radiusX: 24, radiusY: 4.8},
     },
 
     /**

@@ -45,6 +45,20 @@ pipewire-utils
 # aplay, arecord — the last rung, which needs no sound server at all.
 alsa-utils
 
+# category: fonts the desktop actually draws with
+#
+# Measured on the first booted desktop, not anticipated. The greeting renders
+# "Good evening, Bunny 👋" and the suggestion chips carry 💡 📝 🧹 ▣; every one
+# of them came out as a tofu box, because this image has sans, CJK and nothing
+# else. The screenshot is in DESKTOP_SHELL_REPORT.md.
+#
+# The alternative was to remove the emoji from the interface, and that is the
+# wrong trade: an operating system whose desktop cannot draw an emoji cannot
+# draw one in a chat message, a file name, a calendar entry or an assistant
+# reply either. The font is ~10 MB and fixes all of those at once.
+google-noto-emoji-fonts
+google-noto-color-emoji-fonts
+
 # category: local text to speech
 #
 # Declared rather than inherited. All three were in the image already, pulled in
