@@ -467,8 +467,13 @@ def main() -> int:
     # The console output is kept as the fallback, because it is the only channel
     # that works when the guest never finishes shutting down cleanly, and
     # because it is what makes a run watchable while it happens.
+    #
+    # Both candidates are under ``/var`` because ``/var`` is on the disk. The
+    # fallback was ``/tmp`` and that is a tmpfs: it would have written
+    # successfully, reported success, and left the harness — which looks at the
+    # filesystem in the image — with nothing to find.
     serialised = json.dumps(record, sort_keys=True)
-    for destination in ("/var/log/bunny-alpha-record.json", "/tmp/bunny-alpha-record.json"):
+    for destination in ("/var/log/bunny-alpha-record.json", "/var/tmp/bunny-alpha-record.json"):
         try:
             path = Path(destination)
             path.parent.mkdir(parents=True, exist_ok=True)
