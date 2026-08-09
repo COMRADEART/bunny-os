@@ -335,8 +335,17 @@ APPLICATIONS = {
     },
     "terminal": {
         "scope": "org.gnome.Terminal",
-        "process": "gnome-terminal-server",
-        "atspi": ("Terminal", "gnome-terminal-server", "org.gnome.Terminal"),
+        # An alternation, because a terminal is two processes and which one is
+        # running depends on how it was started. GNOME Shell launches
+        # `gnome-terminal`, the client — systemd names the scope
+        # `app-gnome-org.gnome.Terminal-<pid>.scope`, "Application launched by
+        # gnome-shell" — and that client D-Bus-activates
+        # `gnome-terminal-server`, which owns the window. Matching only the
+        # server reported `process: absent` on a run where the unit, the window
+        # and a file typed into that window were all present.
+        "process": "gnome-terminal|gnome-console|kgx",
+        "atspi": ("Terminal", "gnome-terminal-server", "org.gnome.Terminal",
+                  "Console", "kgx"),
         "bus": "org.gnome.Terminal",
     },
 }
