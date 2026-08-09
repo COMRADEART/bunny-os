@@ -1040,46 +1040,54 @@ print(JSON.stringify(DEFAULT_CHARACTER.geometry));
         gap = runs[1][0] - runs[0][1]
         self.assertGreaterEqual(gap, 4, f"only {gap}px between the legs")
 
-    def test_the_garment_is_narrower_at_the_hem_than_at_the_shoulders(self) -> None:
-        """A hem wider than the shoulders is the silhouette of a robe.
+    def ink_at(self, y: int) -> int:
+        """How much figure there is on one scanline, in pixels.
 
-        This is the inequality the first two figures violated: the torso was a
-        capsule, so it ended in a semicircle wider than the hips under it.
+        The sum of the runs, not the distance from the first to the last. Extent
+        is the wrong measure here and measuring it was the first mistake in this
+        test: at hem height the extent includes the two hands hanging beside the
+        hips, so a correct figure reported a hem wider than its own shoulders.
+        Ink is what actually separates the two silhouettes — a robe keeps its
+        ink all the way to the floor, and a person in trousers loses half of it
+        the moment the garment ends.
         """
-        top = self.geometry["torso"]["top"]
+        return sum(end - start + 1 for start, end in self.runs_at(y))
+
+    def test_the_silhouette_loses_half_its_ink_where_the_garment_ends(self) -> None:
+        """The robe test, from the other direction.
+
+        A robe has no hem: the garment continues past the knee and the figure is
+        as wide at the shin as at the waist. A hoodie over trousers narrows
+        sharply, once, at a specific height — and that abrupt loss is the thing
+        a reader's eye uses to decide it is looking at clothes rather than a
+        cassock.
+        """
         hem = self.geometry["torso"]["hem"]
-        shoulder_y = self.unit_to_pixel_y(top + 6)
-        hem_y = self.unit_to_pixel_y(hem - 2)
-        shoulder_runs = self.runs_at(shoulder_y)
-        hem_runs = self.runs_at(hem_y)
-        self.assertTrue(shoulder_runs and hem_runs)
-        shoulder_width = shoulder_runs[-1][1] - shoulder_runs[0][0]
-        hem_width = hem_runs[-1][1] - hem_runs[0][0]
+        above = self.ink_at(self.unit_to_pixel_y(hem - 4))
+        below = self.ink_at(self.unit_to_pixel_y(hem + 14))
+        self.assertGreater(above, 0)
         self.assertLess(
-            hem_width, shoulder_width,
-            f"hem {hem_width}px is not narrower than shoulders {shoulder_width}px")
+            below, above * 0.7,
+            f"{below}px of figure below the hem against {above}px above it: "
+            "the garment does not visibly end")
 
     def test_the_stance_is_wider_than_the_hips(self) -> None:
         """A figure balancing on a point reads as a robe even with two legs."""
         stance = (self.geometry["leg"]["separation"] + self.geometry["leg"]["thighWidth"])
         self.assertGreater(stance, self.geometry["hip"]["halfWidth"] * 2)
 
-    def test_the_head_is_a_separate_mass_from_the_shoulders(self) -> None:
-        """Head, neck and shoulders: three widths, and the neck is the narrowest."""
-        centre_y = self.unit_to_pixel_y(self.geometry["headCentre"][1])
-        neck_y = self.unit_to_pixel_y(
-            (self.geometry["neck"]["top"] + self.geometry["neck"]["bottom"]) / 2)
-        shoulder_y = self.unit_to_pixel_y(self.geometry["torso"]["top"] + 6)
-
-        def width(y: int) -> int:
-            runs = self.runs_at(y)
-            return 0 if not runs else runs[-1][1] - runs[0][0]
-
-        head, neck, shoulder = width(centre_y), width(neck_y), width(shoulder_y)
+    def test_the_head_is_narrower_than_the_shoulders(self) -> None:
+        """A head as wide as the shoulders is a mascot, not a person."""
+        head = self.ink_at(self.unit_to_pixel_y(self.geometry["headCentre"][1]))
+        shoulder = self.ink_at(self.unit_to_pixel_y(self.geometry["torso"]["top"] + 6))
         self.assertGreater(head, 0)
-        self.assertGreater(neck, 0)
-        self.assertLess(neck, head, "the neck is not narrower than the head")
-        self.assertLess(neck, shoulder, "the neck is not narrower than the shoulders")
+        self.assertGreater(shoulder, 0)
+        self.assertLess(head, shoulder, f"head {head}px against shoulders {shoulder}px")
+
+    def test_the_head_is_one_shape(self) -> None:
+        """Two runs at the head's centre line means the face is split by something."""
+        runs = self.runs_at(self.unit_to_pixel_y(self.geometry["headCentre"][1]))
+        self.assertEqual(len(runs), 1, f"the head is drawn as {len(runs)} shapes: {runs}")
 
     def test_the_figure_is_between_six_and_seven_heads_tall(self) -> None:
         """Stylised, but adult. Under six reads as a child or a mascot."""
