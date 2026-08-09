@@ -93,31 +93,11 @@ export function isLikelySoftwareRendering() {
     return !listDirectory('/dev/dri').some(name => name.startsWith('renderD'));
 }
 
-/** Clamp, because three widgets wanted it and JavaScript has no Math.clamp. */
-export function clamp(value, low, high) {
-    return Math.min(high, Math.max(low, value));
-}
-
-export function formatBytes(bytes, {decimals = 1} = {}) {
-    if (bytes === null || !Number.isFinite(bytes))
-        return null;
-    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    let value = bytes;
-    let index = 0;
-    while (value >= 1024 && index < units.length - 1) {
-        value /= 1024;
-        index += 1;
-    }
-    const places = index <= 1 ? 0 : decimals;
-    return `${value.toFixed(places)} ${units[index]}`;
-}
-
-export function formatRate(bytesPerSecond) {
-    if (bytesPerSecond === null || !Number.isFinite(bytesPerSecond))
-        return null;
-    const formatted = formatBytes(bytesPerSecond, {decimals: 1});
-    return formatted === null ? null : `${formatted}/s`;
-}
+// The pure formatters live in format.js so they can be tested under node; see
+// the note at the top of that file. Re-exported here because every caller in
+// the desktop imports them from util.js and there is no reason to make the
+// split their problem.
+export * from './format.js';
 
 /**
  * A repeating timer that unregisters itself cleanly.

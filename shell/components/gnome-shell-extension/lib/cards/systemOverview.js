@@ -19,7 +19,7 @@ import St from 'gi://St';
 import {Card} from './base.js';
 import {Rgb} from '../tokens.js';
 import {box, MetricRow, UNAVAILABLE} from '../widgets.js';
-import {clamp, formatBytes, logError_} from '../util.js';
+import {clamp, formatBytes, formatPair, logError_} from '../util.js';
 
 export class SystemOverview extends Card {
     constructor({telemetry, launcher, blur}) {
@@ -86,15 +86,18 @@ export class SystemOverview extends Card {
             ? 'CPU usage Unavailable'
             : `CPU usage ${Math.round(cpu * 100)} percent`;
 
+        // `formatPair`, not two `formatBytes` around a slash: the long form is
+        // fifteen characters and ellipsises to "3.9 GB…" in a 248-pixel card,
+        // which is what the 1366x768 boot of the Alpha image showed.
         const memory = this._telemetry.memory();
         this._memory.set(memory === null
             ? null
-            : `${formatBytes(memory.usedBytes)} / ${formatBytes(memory.totalBytes)}`);
+            : formatPair(memory.usedBytes, memory.totalBytes));
 
         const storage = this._telemetry.storage();
         this._storage.set(storage === null
             ? null
-            : `${formatBytes(storage.usedBytes)} / ${formatBytes(storage.totalBytes)}`);
+            : formatPair(storage.usedBytes, storage.totalBytes));
         // Which filesystem the figure is about, for a screen reader and for
         // anyone who wonders why a 14 GB machine reports 8 GB. "Storage" is the
         // only metric on this card whose subject is a choice rather than the

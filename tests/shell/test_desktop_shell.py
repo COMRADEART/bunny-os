@@ -698,6 +698,71 @@ class StorageSelectionTests(unittest.TestCase):
         self.assertNotIn("gi://", text)
 
 
+class CompactFigureTests(unittest.TestCase):
+    """A used-of-total pair has to fit beside its label in the narrow card.
+
+    `3.9 GB / 8.3 GB` does not: at the compact breakpoint the card is 248 pixels
+    and the value ellipsised to `3.9 GB…`, dropping the half of the figure that
+    gives the other half a meaning. Measured on the 1366x768 boot of the Alpha
+    image, not predicted.
+    """
+
+    #: Roughly what fits beside a label in a 248px card at 11px. Deliberately a
+    #: character count rather than a pixel measurement: this test cannot lay out
+    #: text, and the failure it guards is an order-of-magnitude one.
+    BUDGET = 12
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        # format.js, not util.js: the formatters live in a module that imports
+        # nothing so this can evaluate the real function rather than a copy.
+        module = (LIB / "format.js").as_uri()
+        cls.cases = run_node("\n".join([
+            f"import {{formatPair}} from '{module}';",
+            "const cases = [",
+            "  [1023, 6227702579], [4187593114, 8912896000],",
+            "  [0, 8912896000], [8912896000, 8912896000],",
+            "  [512, 2048], [1536, 1048576],",
+            "];",
+            "console.log(JSON.stringify(cases.map(([u, t]) => "
+            "({used: u, total: t, text: formatPair(u, t)}))));",
+        ]))
+
+    def test_every_pair_fits_the_narrow_card(self) -> None:
+        for case in self.cases:
+            with self.subTest(**case):
+                self.assertIsNotNone(case["text"])
+                self.assertLessEqual(len(case["text"]), self.BUDGET, case["text"])
+
+    def test_both_numbers_survive(self) -> None:
+        """Short is not the goal; short *and complete* is."""
+        for case in self.cases:
+            with self.subTest(**case):
+                self.assertIn("/", case["text"])
+                left, right = case["text"].split("/")
+                self.assertTrue(left.strip())
+                self.assertTrue(right.strip())
+
+    def test_one_unit_for_both_numbers(self) -> None:
+        """`975.5 MB / 5.8 GB` invites a comparison between different units."""
+        for case in self.cases:
+            with self.subTest(**case):
+                self.assertEqual(len(re.findall(r"[KMGT]?B", case["text"])), 1)
+
+    def test_a_refused_measurement_is_still_null(self) -> None:
+        result = run_node("\n".join([
+            f"import {{formatPair}} from '{(LIB / 'format.js').as_uri()}';",
+            "console.log(JSON.stringify([formatPair(1, 0), formatPair(null, 10), "
+            "formatPair(1, null)]));",
+        ]))
+        self.assertEqual(result, [None, None, None])
+
+    def test_the_card_uses_it(self) -> None:
+        text = module_text("lib/cards/systemOverview.js")
+        self.assertIn("formatPair(memory.usedBytes", text)
+        self.assertIn("formatPair(storage.usedBytes", text)
+
+
 class IconTests(unittest.TestCase):
     """Every icon name the desktop draws, against the theme that ships.
 
