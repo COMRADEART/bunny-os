@@ -263,9 +263,17 @@ Run on the Fedora 44 reference host as `bunny` from the ext4 checkout.
 
 | Suite | Result |
 | --- | --- |
-| `tests/shell/test_desktop_shell.py` | 79 tests, all passing |
-| `python3 scripts/task.py test` (full) | see §5 |
-| `python3 scripts/task.py validate` | PASS, 15 validators |
+| `tests/shell/test_desktop_shell.py` | **88 tests, all passing** |
+| `python3 scripts/task.py test` (full) | **4446 tests, all passing**, 6 skipped |
+| `python3 scripts/task.py validate` | PASS, 15 validators, 40 extension modules with imports resolved |
+
+The full suite has no failures on the reference host. On Windows one test errors
+— `test_duplicate_boot_check_is_load_bearing` needs symlink privilege — which is
+environmental and pre-existing, and is the reason the gate is measured on Linux.
+
+The shell suite is 88 on the reference host and 81 on Windows: `gjs` is absent
+there, so `CharacterFigureTests` skips rather than passing. A silent pass on the
+host that has the tool is how the first version of that check would have shipped.
 
 New coverage, by the defect each guards:
 
