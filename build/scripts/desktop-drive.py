@@ -76,6 +76,10 @@ class Control:
         except json.JSONDecodeError:
             return None
 
+    def ask_nothing(self, document: dict) -> None:
+        """Send without waiting. Only the hello does this."""
+        self._socket.sendall((json.dumps(document) + "\n").encode("utf-8"))
+
     def ask(self, document: dict, timeout: float = 300.0) -> dict | None:
         self._socket.sendall((json.dumps(document) + "\n").encode("utf-8"))
         answer = self.read(timeout=timeout)
@@ -131,6 +135,10 @@ def main() -> int:
         report["error"] = f"cannot reach the control socket: {exc}"
         return save("no-control-channel")
 
+    # Say hello first. The guest is waiting to be asked rather than announcing,
+    # because QEMU discards what the guest writes while no client is attached
+    # and this driver attaches minutes after the guest is ready.
+    control.ask_nothing({"command": "hello"})
     print("waiting for the guest to report its controls...")
     ready = control.read(timeout=780)
     if ready is None or ready.get("event") != "ready":

@@ -267,6 +267,24 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
         print("interaction: no control port; the pointer test cannot run", flush=True)
         return result
 
+    # Wait to be asked, rather than announcing.
+    #
+    # A virtio-serial chardev with `wait=off` discards everything the guest
+    # writes while no host client is attached, and the host attaches after it
+    # has finished taking its timed screenshots — a minute or more after this
+    # probe is ready. Announcing first therefore writes the targets into a void
+    # and then blocks forever waiting for a reply to a message nobody received.
+    # The handshake removes the race instead of tuning the delays either side
+    # of it.
+    print("interaction: waiting for the host to open the control channel", flush=True)
+    hello = channel.receive(timeout=780)
+    if hello is None:
+        result["channel"]["error"] = "the host never opened the control channel"
+        print("interaction: the host never said hello", flush=True)
+        channel.close()
+        return result
+    result["hello"] = hello
+
     result["accessibility"] = desktop_interaction.enable_accessibility(user, environment)
     controls = desktop_interaction.locate_controls(user, environment)
     result["controls"] = controls
