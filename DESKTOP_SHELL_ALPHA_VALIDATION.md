@@ -6,19 +6,26 @@ SPDX-License-Identifier: GPL-3.0-or-later
 # Bunny desktop shell — Alpha validation
 
 Branch: `feature/bunny-desktop-shell`
-Candidate: `e440b496082939c701541fad6aa8d0b757dd5b33`
+Candidate: `be7e3d281fc1782c08263215b35da83cca490428`
 Base: `6eeda81ec8cd` (the desktop shell phase)
 Date: 2026-08-09
 
-Three Alpha images were built on this branch and each one was booted. The first
-two are reported here as well as the last, because each was built to answer a
-question the previous one had raised on screen and the sequence is the evidence:
+Four Alpha images were built on this branch and every one of them was booted.
+The earlier three are listed because each was built to answer a question its
+predecessor raised on screen, and the sequence is the evidence:
 
-| Candidate | Built | What its boot showed |
-| --- | --- | --- |
-| `a4d45905484c` | yes | Everything in §8 passed. The System card's figures were ellipsised at 1366×768 |
-| `520dfa2a6f50` | yes | `formatPair` fixed RAM and not Storage — the dial was taking the room |
-| `e440b4960829` | yes | The candidate |
+| Commit | What its boot showed |
+| --- | --- |
+| `a4d45905484c` | Every criterion in §8 passed. At 1366×768 the System card's figures were ellipsised: `3.9 GB…` |
+| `520dfa2a6f50` | A shorter string fixed RAM and not Storage — the 96-pixel dial was taking the room |
+| `e440b4960829` | A smaller dial fixed neither: "Storage" is four characters longer than "RAM" |
+| **`be7e3d281fc1`** | **The candidate.** Below the compact breakpoint the card stacks, and every figure is whole |
+
+Three attempts at one truncated label is more than it deserved, and the reason
+it took three is worth keeping: each fix was a piece of arithmetic about how
+much room a string needs, and each was checked by rebuilding and looking. The
+one that worked stopped doing arithmetic — below the breakpoint the figures go
+under the dial and have the card's full width, so no label length can be wrong.
 
 ## What this phase was for
 
@@ -56,9 +63,15 @@ or compare the name against the thing it names.
 | | |
 | --- | --- |
 | Branch | `feature/bunny-desktop-shell` |
-| Commit | `e440b496082939c701541fad6aa8d0b757dd5b33` |
+| Commit | `be7e3d281fc1782c08263215b35da83cca490428` |
 | Working tree | clean at the candidate commit |
 | Reference host | Fedora 44, as user `bunny`, from the ext4 checkout |
+
+The Alpha artifact in §6 and every measurement in §7 to §10 come from
+`be7e3d281fc1`. The commit that carries this document is its child and changes
+nothing but this file, which reaches no install route and is not copied into the
+image; `docs/` is a build COPY root and the repository root is not, which is why
+reports live here.
 
 ## 2. Architecture
 
@@ -289,14 +302,14 @@ checkout — not `/mnt/c`, and not as root.
 
 ```text
 branch: feature/bunny-desktop-shell
-head:   a4d45905484c67706107c35fc6b2f022ab22b6fb
+head:   be7e3d281fc1782c08263215b35da83cca490428
 clean:  []
 fs:     /dev/sdd ext4 (ext4, not 9p)
 user:   bunny
 
 command:  python3 scripts/release.py gate --kind source
-started:  2026-08-09T03:07:51Z
-finished: 2026-08-09T03:10:18Z
+started:  2026-08-09T06:04:11Z
+finished: 2026-08-09T06:06:38Z
 GATE_EXIT_CODE=0
 
 source gate: PASS
@@ -318,16 +331,16 @@ That is what §6 and §7 are for.
 ```text
 command:  make build-alpha-image
           (build/scripts/build-alpha-image.sh — profile `beta`, channel `alpha`)
-commit:   a4d45905484c67706107c35fc6b2f022ab22b6fb
-started:  2026-08-09T03:10:34Z
-finished: 2026-08-09T03:19:22Z
+commit:   be7e3d281fc1782c08263215b35da83cca490428
+started:  2026-08-09T06:11:07Z
+finished: 2026-08-09T06:20:34Z
 exit:     0
 ```
 
 | Artifact | Bytes | SHA-256 |
 | --- | --- | --- |
-| `bunny-os-0.1.0-alpha-a4d45905484c.1786244846-x86_64.qcow2` | 2,111,821,824 | `cfbe27bff6d8a807c1348acd64138343b7f6dc43e87921fad1ecb79c6a0a67a2` |
-| `bunny-os-0.1.0-alpha-a4d45905484c.1786244846-x86_64.raw` | 10,737,418,240 | `829b2126eb967da00178489a710957b713ffc58cfd588f49f58b781a23490bb0` |
+| `bunny-os-0.1.0-alpha-be7e3d281fc1.1786255521-x86_64.qcow2` | 2,112,098,816 | `a0c9d0ebbb8d9b35a56c7c96c636a3321128aadd42425be6e6b8f42f6c92f830` |
+| `bunny-os-0.1.0-alpha-be7e3d281fc1.1786255521-x86_64.raw` | 10,737,418,240 | `2c96908123de98da48650bd6f3a78c9d12cf291199a4ee3fea0189d4c401a5d2` |
 
 Both under `build/out/beta/`. The build id in the filename is the candidate
 commit and its commit timestamp, so the file and the machine it becomes cannot
@@ -337,17 +350,17 @@ disagree about what they are.
 
 ## 7. VM boot — the exact artifact
 
-`bunny-os-0.1.0-alpha-a4d45905484c.1786244846-x86_64.qcow2`, SHA-256
-`cfbe27bf…a67a2`, booted under QEMU/OVMF with GDM autologin into the `bunny`
+`bunny-os-0.1.0-alpha-be7e3d281fc1.1786255521-x86_64.qcow2`, SHA-256
+`a0c9d0eb…2f830`, booted under QEMU/OVMF with GDM autologin into the `bunny`
 Wayland session. The harness names the image explicitly rather than discovering
 it, so a run cannot silently use an older build that happens to be present.
 
-| | 1920×1080 (`a1`) | 1366×768 (`a2`) |
+| | 1920×1080 (`v1920`) | 1366×768 (`v1366`) |
 | --- | --- | --- |
 | Firmware → kernel → userspace → GDM | reached | reached |
 | Session | `bunny` Wayland | `bunny` Wayland |
 | Extension state | `ENABLED`, no error | `ENABLED`, no error |
-| Modules installed | 39 + compiled gschema | 39 + compiled gschema |
+| Modules installed | 40 + compiled gschema | 40 + compiled gschema |
 | Wallpaper | present, 5,609 bytes | present |
 | Shell answered D-Bus | immediately | immediately |
 | Assistant bridge | available, `/run/user/1000/bunny-companion/runtime.sock` | available |
@@ -466,7 +479,12 @@ other than where the solver put it, this finds where it *is*.
 | Breakpoint | `wide`, 2 card columns | `compact`, sidebar collapsed |
 | Sidebar | 196 px, expanded with labels | 60 px, icons with tooltips |
 | Dock | 560 × 64 at (680, 996) | 560 × 64 at (403, 684) |
+| System card | 304 × 236, dial beside the figures | 248 × 208, dial above them |
 | Character band | 347 × 520 | 274 × 411 |
+
+Every figure on the System card is whole at both: `RAM 1.0/5.8 GB`,
+`Storage 3.9/8.3 GB`, `Temp Unavailable`. Getting that right took three builds
+and is the subject of the table at the top of this document.
 
 **From the layout solver, under `node`.** Seven resolutions, every pair of
 rectangles compared, every panel required to stay on screen and the character
@@ -488,18 +506,20 @@ included so the small layout can be looked at.
 Under `build/out/` on the reference host, copied into `build/out/alpha-a1/`,
 `alpha-a2/` and `alpha-a3/`.
 
+All from the candidate artifact, under `build/out/`.
+
 | File | What it shows |
 | --- | --- |
-| `alpha-a1/00-desktop.png` | 1920×1080, the desktop as it appears after login |
-| `alpha-a1/01-files-open.png` | Files, opened by clicking the Bunny UI |
-| `alpha-a1/02-files-closed.png` | after Files closed |
-| `alpha-a1/03-terminal-open.png` | Terminal, opened by clicking the dock tile |
-| `alpha-a1/04-terminal-typed.png` | after the typed command ran |
-| `alpha-a1/05-terminal-closed.png` | after Terminal closed |
-| `alpha-a1/06-desktop-after.png` | the desktop, intact, after both |
-| `alpha-a2/*.png` | 1366×768 — sheared by the capture path; see §10 |
-| `alpha-a3/*.png` | 1360×768 — the small layout, viewable |
-| `build/out/character/contact-sheet.png` | the ten character states, rendered offline |
+| `alpha-1920/00-desktop.png` | the desktop as it appears after login |
+| `alpha-1920/01-files-open.png` | Files, opened by clicking the dock tile |
+| `alpha-1920/02-files-closed.png` | after Files closed |
+| `alpha-1920/03-terminal-open.png` | Terminal, opened by clicking the dock tile |
+| `alpha-1920/04-terminal-typed.png` | after the typed command ran |
+| `alpha-1920/05-terminal-closed.png` | after Terminal closed |
+| `alpha-1920/06-desktop-after.png` | the desktop, intact, after both |
+| `alpha-1366/*.png` | 1366×768 — the run every figure in §8 and §10 comes from; the capture is sheared, see §10 |
+| `alpha-1360/t230.png` | 1360×768 — the same `compact` breakpoint, viewable, with the System card stacked |
+| `character/contact-sheet.png` | the ten character states, rendered offline by `gjs -m build/scripts/render-character.js` |
 
 ---
 
