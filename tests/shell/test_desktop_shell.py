@@ -762,6 +762,30 @@ class CompactFigureTests(unittest.TestCase):
         self.assertIn("formatPair(memory.usedBytes", text)
         self.assertIn("formatPair(storage.usedBytes", text)
 
+    def test_the_dial_gives_the_figures_room_on_a_narrow_card(self) -> None:
+        """A shorter string was not enough on its own.
+
+        With `formatPair` alone, RAM fitted and Storage did not — the label is
+        four characters longer and the 96-pixel dial was taking 39% of a
+        248-pixel card. Both halves of the fix are needed and both are checked,
+        because a future change that restores the fixed dial size would put the
+        truncation back with the shorter string still in place.
+        """
+        text = module_text("lib/cards/systemOverview.js")
+        self.assertIn("resize(width)", text)
+        self.assertIn("DIAL_NARROW", text)
+        base = module_text("lib/cards/base.js")
+        self.assertIn("this.resize(rect.width);", base,
+                      "Card.show must pass its width to the card")
+
+    def test_the_narrow_dial_is_smaller_than_the_wide_one(self) -> None:
+        text = module_text("lib/cards/systemOverview.js")
+        wide = int(re.search(r"const DIAL_WIDE = (\d+);", text).group(1))
+        narrow = int(re.search(r"const DIAL_NARROW = (\d+);", text).group(1))
+        self.assertLess(narrow, wide)
+        # And not so small it stops being a dial.
+        self.assertGreaterEqual(narrow, 60)
+
 
 class IconTests(unittest.TestCase):
     """Every icon name the desktop draws, against the theme that ships.

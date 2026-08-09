@@ -52,6 +52,20 @@ export class Card {
     refresh() {}
 
     /**
+     * Subclasses override to adapt to the width they were given.
+     *
+     * St has no container queries and the stylesheet cannot know a card's
+     * allocation, so a card that has to change shape when it narrows has to be
+     * told. `show` is where the width arrives, which makes this the only place
+     * the information exists.
+     *
+     * The System card is the one that needs it: its 96-pixel dial is 39% of a
+     * 248-pixel card at the compact breakpoint, and what was left could not fit
+     * "Storage" and "3.9/8.3 GB" on one line.
+     */
+    resize(_width) {}
+
+    /**
      * Show the card and start its timer.
      *
      * @param {{x, y, width, height}} rect
@@ -63,6 +77,7 @@ export class Card {
         this.actor.visible = true;
         this.actor.set_position(rect.x, rect.y);
         this.actor.set_size(rect.width, rect.height);
+        this.resize(rect.width);
         this.refresh();
         if (this._refreshSeconds > 0 && this._timer === null)
             this._timer = interval(this._refreshSeconds, () => this.refresh());

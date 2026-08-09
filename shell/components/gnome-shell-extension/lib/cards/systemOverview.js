@@ -21,6 +21,13 @@ import {Rgb} from '../tokens.js';
 import {box, MetricRow, UNAVAILABLE} from '../widgets.js';
 import {clamp, formatBytes, formatPair, logError_} from '../util.js';
 
+/** The dial's diameter, wide and narrow. */
+const DIAL_WIDE = 96;
+const DIAL_NARROW = 72;
+
+/** Card widths at or above this keep the wide dial. `standard` is 276. */
+const COMPACT_CARD_WIDTH = 270;
+
 export class SystemOverview extends Card {
     constructor({telemetry, launcher, blur}) {
         super({
@@ -39,8 +46,8 @@ export class SystemOverview extends Card {
 
         this._dial = new St.DrawingArea({
             style_class: 'bunny-dial',
-            width: 96,
-            height: 96,
+            width: DIAL_WIDE,
+            height: DIAL_WIDE,
             reactive: false,
         });
         this._dial.connect('repaint', area => this._paintDial(area));
@@ -48,11 +55,12 @@ export class SystemOverview extends Card {
         // The ring and the number it labels are one stacked unit, so the
         // number stays centred when the theme changes the font size and when
         // the card is laid out at a different width.
-        const dialStack = new St.Widget({
+        this._dialStack = new St.Widget({
             layout_manager: new Clutter.BinLayout(),
-            width: 96,
-            height: 96,
+            width: DIAL_WIDE,
+            height: DIAL_WIDE,
         });
+        const dialStack = this._dialStack;
         dialStack.add_child(this._dial);
         this._dialLabel = new St.Label({
             text: UNAVAILABLE,
@@ -76,6 +84,26 @@ export class SystemOverview extends Card {
         rows.add_child(this._storage.actor);
         rows.add_child(this._temperature.actor);
         body.add_child(rows);
+    }
+
+    /**
+     * Shrink the dial when the card is narrow.
+     *
+     * The dial is 96 pixels and the card is 304 at the wide breakpoint and 248
+     * at the compact one, so the figures beside it go from 190 pixels of room
+     * to 134 — and "Storage 3.9/8.3 GB" does not fit in 134. Measured on the
+     * 1366x768 boot of the Alpha image, where the value read "3.9/8...".
+     *
+     * The dial loses 24 pixels and stays perfectly legible; the number it sits
+     * beside would have lost its second half.
+     */
+    resize(width) {
+        const size = width >= COMPACT_CARD_WIDTH ? DIAL_WIDE : DIAL_NARROW;
+        if (this._dial.width === size)
+            return;
+        this._dial.set_size(size, size);
+        this._dialStack.set_size(size, size);
+        this._dial.queue_repaint();
     }
 
     refresh() {
