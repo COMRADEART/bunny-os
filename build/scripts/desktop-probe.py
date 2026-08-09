@@ -92,12 +92,18 @@ def shell_dbus(user: str, environment: list[str], method: str, body: str) -> dic
     )
 
 
-def wait_for_shell(user: str, environment: list[str], *, seconds: int = 180) -> dict:
+def wait_for_shell(user: str, environment: list[str], *, seconds: int = 420) -> dict:
     """Poll until GNOME Shell answers, and say how long it took.
 
     A fixed sleep would either be too short on a cold llvmpipe boot or waste two
     minutes on a fast one, and — worse — a probe that ran too early would report
     a desktop that had not started yet as a desktop that failed.
+
+    The budget was 180 seconds and that was exactly the failure it was written
+    to avoid: a run reported `shellResponded: false after 180s` on a session
+    whose shell answered every later question in the same run. The poll returns
+    the moment the shell answers, so a larger budget costs a fast boot nothing
+    and stops a slow one being reported as a broken one.
     """
     started = time.monotonic()
     attempts = 0

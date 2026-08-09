@@ -62,7 +62,19 @@ import time
 CONTROL_PORT = Path("/dev/virtio-ports/org.bunny-os.control")
 
 
-def _run(argv: list[str], *, user: str | None = None, timeout: int = 30) -> dict:
+def _run(argv: list[str], *, user: str | None = None, timeout: int = 30,
+         limit: int = 8000) -> dict:
+    """Run a command and record what happened, including when it did not run.
+
+    `limit` truncates the captured output, because most of these are
+    `systemctl list-units` and a record full of them is unreadable. It is a
+    parameter and not a constant because the accessibility tree is one of these
+    calls and is far larger than any cap that suits the others: the first run of
+    this harness reported "the guest exposes 0 named controls" on a session
+    whose tree was returned correctly and then cut off at 8000 characters, so
+    `json.loads` failed and every target came back missing. Nothing was wrong
+    with the desktop and nothing was wrong with AT-SPI.
+    """
     if user:
         argv = ["/usr/bin/sudo", "-u", user, "-H", *argv]
     try:
@@ -73,7 +85,7 @@ def _run(argv: list[str], *, user: str | None = None, timeout: int = 30) -> dict
         "argv": argv,
         "ran": True,
         "returncode": completed.returncode,
-        "stdout": completed.stdout.strip()[:8000],
+        "stdout": completed.stdout.strip()[:limit],
         "stderr": completed.stderr.strip()[:2000],
     }
 
@@ -178,13 +190,18 @@ def _atspi(user: str, environment: list[str], mode: str) -> dict:
         return {"ran": False, "error": "no user session environment"}
     result = _run(
         ["/usr/bin/env", *environment, "/usr/bin/python3", "-c", _ATSPI_PROGRAM, mode],
-        user=user, timeout=60)
+        user=user, timeout=120, limit=4_000_000)
     if result.get("returncode") != 0:
         return {"ran": True, "ok": False, "call": result}
     try:
-        return {"ran": True, "ok": True, **json.loads(result.get("stdout", "{}"))}
+        parsed = json.loads(result.get("stdout", "{}"))
     except json.JSONDecodeError as exc:
         return {"ran": True, "ok": False, "error": str(exc), "call": result}
+    # The whole tree is megabytes and is not worth carrying into the record; the
+    # parsed result is what every caller uses, and the call is kept only for the
+    # failure paths above.
+    result.pop("stdout", None)
+    return {"ran": True, "ok": True, "call": result, **parsed}
 
 
 def enable_accessibility(user: str, environment: list[str]) -> dict:
