@@ -269,10 +269,36 @@ def _shell_paths(root: Path) -> list[Path]:
     return _walk(root, "*.sh")
 
 
+def _bash_executable() -> str | None:
+    """Find Bash on PATH or in the two standard Windows distributions.
+
+    Git for Windows and MSYS2 both ship a real Bash, but their installer does
+    not necessarily add it to the Windows process PATH.  Repository validation
+    should use that installed parser instead of reporting it as absent.  This
+    is only tool discovery: every script is still checked with ``bash -n``.
+    """
+    found = shutil.which("bash")
+    if found:
+        return found
+    if os.name != "nt":
+        return None
+
+    candidates: list[Path] = []
+    program_files = os.environ.get("ProgramFiles")
+    if program_files:
+        candidates.append(Path(program_files) / "Git" / "bin" / "bash.exe")
+    system_drive = os.environ.get("SystemDrive", "C:")
+    candidates.append(Path(system_drive + "\\") / "msys64" / "usr" / "bin" / "bash.exe")
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
 def _shell_syntax(root: Path) -> ValidatorOutcome:
     outcome = ValidatorOutcome("Shell syntax")
     paths = _shell_paths(root)
-    bash = shutil.which("bash")
+    bash = _bash_executable()
     if not bash:
         outcome.result = "SKIP"
         outcome.skipReason = "bash unavailable on this host"

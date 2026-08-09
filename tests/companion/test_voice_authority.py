@@ -345,8 +345,10 @@ class ServiceConstructionTests(unittest.TestCase):
         from companion.service import CompanionService, ServiceOptions
 
         before = self._voice_threads()
+        root = temporary_root(self)
         service = CompanionService(ServiceOptions(
-            root=temporary_root(self), machine="laptop", voice_enabled=False,
+            root=root, endpoint=root / "runtime.sock", machine="laptop",
+            voice_enabled=False,
         ))
         try:
             self.assertIsNone(service.voice)
