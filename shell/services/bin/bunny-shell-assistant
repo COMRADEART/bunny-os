@@ -40,6 +40,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+from typing import Mapping
 import time
 
 # The installed tree, but only when the checkout is not already importable.
@@ -140,9 +141,28 @@ def command_ask(arguments: argparse.Namespace) -> int:
         emit("error", reason=f"the request was refused: {exc}")
         return 4
 
-    task_id = str(submitted.get("taskId") or "")
+    # The id is inside the task, not beside it.
+    #
+    # `submit_task` answers `{"task": {...}, "sessionId": ..., "scheduled": ...}`
+    # and the id is `task.taskId`. Reading a top-level `taskId` found nothing on
+    # every request ever submitted, and the bridge reported "the runtime
+    # accepted the request without returning a task id" — which is a true
+    # sentence about the wrong key. It was never noticed because nothing had
+    # submitted a request through this program: the desktop's health check
+    # worked, so the bridge looked reachable, and `ask` was first exercised end
+    # to end by the assistant milestone.
+    #
+    # The top-level key is still accepted, because a future operation that
+    # returns one should not have to change this.
+    task = submitted.get("task")
+    task_id = ""
+    if isinstance(task, Mapping):
+        task_id = str(task.get("taskId") or "")
     if not task_id:
-        emit("error", reason="the runtime accepted the request without returning a task id")
+        task_id = str(submitted.get("taskId") or "")
+    if not task_id:
+        emit("error", reason=f"the runtime accepted the request without returning a task id "
+                             f"(keys: {sorted(submitted)})")
         return 4
     emit("accepted", taskId=task_id, sessionId=session_id)
 

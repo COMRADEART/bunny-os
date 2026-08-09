@@ -350,6 +350,75 @@ class EndToEndRuntimeTests(unittest.TestCase):
         self.assertEqual(operations, [])
 
 
+class BridgeContractTests(unittest.TestCase):
+    """The desktop's bridge against the service's actual response shapes.
+
+    The bridge read a top-level `taskId` from `submit_task`, which answers
+    `{"task": {...}, "sessionId": ..., "scheduled": ...}`. Every request ever
+    submitted through it therefore failed with "the runtime accepted the request
+    without returning a task id" — a true sentence about the wrong key.
+
+    It survived because the desktop's *health* check worked, so the bridge
+    looked reachable, and nothing had ever submitted a request through it. These
+    tests read the service's own handlers rather than a fixture, so the two
+    cannot drift apart again without failing here.
+    """
+
+    BRIDGE = ROOT / "shell/services/bin/bunny-shell-assistant"
+
+    @staticmethod
+    def _returned_keys(handler: str) -> set[str]:
+        """The literal keys a CompanionService handler's return dict has."""
+        import inspect
+
+        from companion.service import CompanionGateway
+
+        import textwrap
+
+        source = textwrap.dedent(inspect.getsource(getattr(CompanionGateway, handler)))
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Return) and isinstance(node.value, ast.Dict):
+                return {
+                    key.value for key in node.value.keys
+                    if isinstance(key, ast.Constant) and isinstance(key.value, str)
+                }
+        raise AssertionError(f"{handler} does not return a dict literal")
+
+    def test_submit_task_puts_the_id_inside_the_task(self) -> None:
+        keys = self._returned_keys("submit_task")
+        self.assertIn("task", keys)
+        self.assertNotIn(
+            "taskId", keys,
+            "if submit_task grows a top-level taskId, the bridge's comment is stale")
+
+    def test_the_bridge_reads_the_id_from_where_it_is(self) -> None:
+        text = self.BRIDGE.read_text(encoding="utf-8")
+        self.assertTrue('task.get("taskId")' in text,
+                        "the bridge must read the id out of the task")
+
+    def test_the_presentation_handler_still_answers_what_the_bridge_watches(self) -> None:
+        """The watch loop reads `state` and `revision` out of the response."""
+        keys = self._returned_keys("get_presentation_state")
+        self.assertIn("state", keys)
+        self.assertIn("revision", keys)
+        text = self.BRIDGE.read_text(encoding="utf-8")
+        self.assertTrue('document.get("state", {})' in text, "the watch loop reads state")
+        self.assertTrue('document.get("revision", 0)' in text, "the watch loop reads revision")
+
+    def test_the_bridge_emits_the_events_the_desktop_switches_on(self) -> None:
+        """The two halves of one vocabulary, in two languages."""
+        bridge = self.BRIDGE.read_text(encoding="utf-8")
+        service = (ROOT / "shell/components/gnome-shell-extension/lib/services/assistant.js")             .read_text(encoding="utf-8")
+        for event in ("accepted", "phase", "reply", "finished", "error"):
+            with self.subTest(event=event):
+                # `emit(` and its first argument may be on separate lines.
+                self.assertRegex(bridge, rf'emit\(\s*"{event}"')
+                self.assertTrue(
+                    f"case '{event}':" in service,
+                    f"the desktop does not handle the {event!r} event the bridge emits")
+
+
 class PermissionModelTests(unittest.TestCase):
     """The classification every action carries, and the ones that are refused."""
 
