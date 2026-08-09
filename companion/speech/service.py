@@ -111,7 +111,8 @@ class SpeechInputService:
             CaptureRouter() if self.options.router is None else self.options.router
         )
         self.registry = (
-            local_recognizers() if self.options.registry is None else self.options.registry
+            local_recognizers(preferred_model_id=self.options.preferences.model_id)
+            if self.options.registry is None else self.options.registry
         )
         self.indicator = (
             ListeningIndicator(clock=self.clock)
@@ -198,6 +199,18 @@ class SpeechInputService:
         self.policy.observe(signals, monotonic=now)
 
     def set_preferences(self, preferences: SpeechInputPreferences) -> None:
+        # Turning Voice Input off is an immediate privacy boundary, not a
+        # preference for the next capture. Release an active microphone before
+        # publishing the disabled policy.
+        if not preferences.enabled:
+            current = self.worker.status().get("current")
+            if isinstance(current, Mapping):
+                request_id = str(current.get("requestId") or "")
+                request = self._requests.get(request_id)
+                self.worker.cancel(
+                    request_id,
+                    token=request.cancellation_token if request is not None else "",
+                )
         self.options.preferences = preferences
         self.policy.set_preferences(preferences)
         self.router.prefer_device(preferences.input_device)

@@ -122,6 +122,13 @@ class VoicePreferences:
     #: captions, which the screen reader reads, remain.
     screen_reader_active: bool = False
     preferred_device: str = ""
+    #: Which request origins should be spoken. Policy still decides whether
+    #: this machine can speak; this setting can only make output quieter.
+    response_mode: str = "voice-only"
+
+    def __post_init__(self) -> None:
+        if self.response_mode not in ("voice-only", "all", "never"):
+            raise ValueError("response_mode is 'voice-only', 'all' or 'never'")
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -137,6 +144,7 @@ class VoicePreferences:
             "accessibilityRequired": self.accessibility_required,
             "screenReaderActive": self.screen_reader_active,
             "preferredDevice": self.preferred_device,
+            "responseMode": self.response_mode,
         }
 
 

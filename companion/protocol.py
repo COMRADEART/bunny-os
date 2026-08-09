@@ -347,6 +347,24 @@ OPERATIONS: Mapping[str, Operation] = {
             ),
             mutating=True,
         ),
+        # Focused voice preferences. A complete document is written in one
+        # operation so omitted fields can never silently reset an unrelated
+        # preference, and no credential-shaped field exists on the surface.
+        Operation("settings_voice_get"),
+        Operation(
+            "settings_voice_set",
+            (
+                Parameter("voiceInput", "boolean", required=True),
+                Parameter("speechResponses", "boolean", required=True),
+                Parameter("responseMode", "string", required=True, maximum_length=16),
+                Parameter("deviceId", "string", default="", maximum_length=128),
+                Parameter("modelId", "string", default="", maximum_length=128),
+                Parameter("language", "string", required=True, maximum_length=16),
+                Parameter("shortcut", "string", required=True, maximum_length=64),
+                Parameter("wakeWord", "string", required=True, maximum_length=16),
+            ),
+            mutating=True,
+        ),
         # -- speech ------------------------------------------------------
         #
         # §17's eight, and deliberately no ninth. Note what none of them takes:
@@ -593,6 +611,8 @@ class RuntimeGateway(TypingProtocol):
     def cancel_task(self, **params: Any) -> Mapping[str, Any]: ...
     def pause_task(self, **params: Any) -> Mapping[str, Any]: ...
     def resume_task(self, **params: Any) -> Mapping[str, Any]: ...
+    def settings_voice_get(self, **params: Any) -> Mapping[str, Any]: ...
+    def settings_voice_set(self, **params: Any) -> Mapping[str, Any]: ...
     def voice_health(self, **params: Any) -> Mapping[str, Any]: ...
     def voice_list(self, **params: Any) -> Mapping[str, Any]: ...
     def voice_status(self, **params: Any) -> Mapping[str, Any]: ...

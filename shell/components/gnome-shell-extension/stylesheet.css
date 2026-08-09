@@ -105,6 +105,16 @@
 .bunny-search-icon { color: #b4bac6; }
 
 .bunny-top-indicators { spacing: 14px; }
+.bunny-microphone-indicator {
+  spacing: 5px;
+  padding: 5px 8px;
+  border-radius: 10px;
+  background-color: rgba(239, 68, 68, 0.24);
+  border: 1px solid rgba(248, 113, 113, 0.72);
+}
+.bunny-microphone-indicator-icon,
+.bunny-microphone-indicator-label { color: #fca5a5; }
+.bunny-microphone-indicator-label { font-size: 9px; font-weight: 700; }
 
 .bunny-top-indicator-icon {
   color: #b4bac6;
@@ -341,6 +351,29 @@
 .bunny-assistant-icon-button { padding: 6px; border-radius: 10px; color: #b4bac6; }
 .bunny-assistant-icon-button:hover { background-color: rgba(139, 92, 246, 0.24); color: #ffffff; }
 .bunny-assistant-icon-button:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+.bunny-assistant-microphone-active {
+  color: #ffffff;
+  background-color: rgba(239, 68, 68, 0.42);
+  border: 1px solid rgba(248, 113, 113, 0.72);
+}
+.bunny-assistant-file-results-scroll { max-height: 132px; }
+.bunny-assistant-file-results { spacing: 5px; padding-right: 4px; }
+.bunny-assistant-file-result {
+  spacing: 6px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  background-color: rgba(27, 31, 45, 0.68);
+}
+.bunny-assistant-file-title { font-size: 10px; color: #f7f8fa; }
+.bunny-assistant-file-location { font-size: 9px; color: #8d95a5; }
+.bunny-assistant-file-action {
+  padding: 4px 6px;
+  border-radius: 7px;
+  color: #c4b5fd;
+  font-size: 9px;
+}
+.bunny-assistant-file-action:hover { background-color: rgba(139, 92, 246, 0.24); }
+.bunny-assistant-file-action:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
 
 /* ---------------------------------------------------- character and bubbles */
 

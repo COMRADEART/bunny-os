@@ -241,6 +241,7 @@ class DesktopSupport:
     def stop(self) -> dict[str, int]:
         with self._guard:
             self._prepared.clear()
+            self.path_contexts.clear()
         return self.broker.stop()
 
     def handles(self, tool_id: str) -> bool:
@@ -336,8 +337,10 @@ class DesktopSupport:
         itself and prove nothing.
         """
         prepared = None
+        path_context = None
         with self._guard:
             prepared = self._prepared.get(self._key(task, plan, operation))
+            path_context = self.path_contexts.get(task.task_id)
         reference = ""
         binding: ApprovalBinding | None = None
         if prepared is not None:
@@ -353,7 +356,7 @@ class DesktopSupport:
             classification=task.classification,
             approval_reference=reference,
             approved_binding=binding,
-            path_context=self.path_contexts.get(task.task_id),
+            path_context=path_context,
             cancelled=cancelled,
             audit_reference=audit_reference or getattr(plan, "plan_id", ""),
         )
@@ -361,6 +364,33 @@ class DesktopSupport:
     def forget_plan(self, task_id: str) -> None:
         """Drop cached preparations for a task whose plan was superseded."""
         with self._guard:
+            for key in [item for item in self._prepared if item[0] == task_id]:
+                self._prepared.pop(key, None)
+
+    def bind_path_context(self, task_id: str, context: PathContext) -> None:
+        """Attach canonical local-path authority before a task can be scheduled.
+
+        Once an action has been prepared its prompt is bound to the exact path,
+        so replacing the context after that point would create two competing
+        authorities for one task. Refuse that state instead of guessing which
+        one should win.
+        """
+        if not isinstance(context, PathContext):
+            raise CompanionError("a desktop path context must be a PathContext")
+        with self._guard:
+            if any(key[0] == task_id for key in self._prepared):
+                raise CompanionError(
+                    "path authority cannot change after a desktop action was prepared"
+                )
+            existing = self.path_contexts.get(task_id)
+            if existing is not None and existing != context:
+                raise CompanionError("a task already has different path authority")
+            self.path_contexts[task_id] = context
+
+    def release_task_context(self, task_id: str) -> None:
+        """Forget terminal task path authority and any prepared action objects."""
+        with self._guard:
+            self.path_contexts.pop(task_id, None)
             for key in [item for item in self._prepared if item[0] == task_id]:
                 self._prepared.pop(key, None)
 
@@ -377,6 +407,7 @@ class DesktopSupport:
             existing = self._prepared.get(key)
             if existing is not None:
                 return existing
+            path_context = self.path_contexts.get(task.task_id)
         prepared = self.broker.prepare(
             operation.tool,
             operation.arguments,
@@ -388,7 +419,7 @@ class DesktopSupport:
             operation_id=operation.name,
             cancellation_token=self.ids.next("dcancel"),
             classification=task.classification,
-            path_context=self.path_contexts.get(task.task_id),
+            path_context=path_context,
             audit_reference=getattr(plan, "plan_id", ""),
         )
         with self._guard:

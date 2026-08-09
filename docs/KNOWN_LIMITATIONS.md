@@ -1,5 +1,18 @@
 # Known limitations
 
+## Voice interaction milestone additions
+
+- Bunny Shell push-to-talk now uses the canonical companion capture,
+  recognition, assistant-action and TTS path, but the locked image ships no
+  `vosk` Python library or reviewed Vosk model. Real STT therefore reports
+  unavailable; no model is downloaded automatically.
+- This Windows run could not boot GNOME/Mutter/Wayland or exercise a physical
+  microphone/speaker. Spoken `Open Files`, offline voice, TTS audibility and
+  speech interruption remain graphical acceptance blockers.
+- 1920×1080 and 1366×768 pass static layout/source tests only; no current visual
+  screenshot acceptance run exists.
+- Wake-word capture is deliberately disabled and cannot be enabled by settings.
+
 - No OCI/disk artifact was built in this Windows environment: Podman/Docker, unified `image-builder`, QEMU, OVMF, libguestfs, systemd tooling, Syft, ShellCheck, Cosign, and a Linux/KVM executor were unavailable.
 - Consequently boot, first-login, GNOME, networking, audio, suspend, broker/systemd runtime, update staging, rollback, recovery boot, Secure Boot, disk encryption, SBOM generation, and hardware behavior are unvalidated.
 - The Bunny 0.2.0 integration is an explicit schema-described placeholder. Upstream reports did not qualify a signed Linux desktop artifact.

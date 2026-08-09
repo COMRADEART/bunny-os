@@ -39,6 +39,7 @@ __all__ = [
     "LOCAL_TEST_TOOLS",
     "ToolBroker",
     "ToolDeclaration",
+    "ToolInvocationContext",
     "ToolOutcome",
 ]
 
@@ -114,6 +115,29 @@ class ToolOutcome:
 
     def to_json(self) -> dict[str, Any]:
         return {"toolId": self.tool_id, "ok": self.ok, "value": self.value, "detail": self.detail}
+
+
+@dataclass(frozen=True)
+class ToolInvocationContext:
+    """Canonical task identity for a local tool that needs bounded context.
+
+    Most tools are pure functions of validated arguments and receive no
+    context.  A few safe local tools need to associate short-lived state with
+    the *actual* session (for example a numbered file-search result set).  The
+    runtime constructs this value; an executor or model cannot provide or
+    override it through operation arguments.
+
+    Desktop actions continue to receive ``DesktopToolContext``, which extends
+    this idea with approval bindings and path references.  This smaller type is
+    intentionally insufficient for a desktop broker action.
+    """
+
+    session_id: str
+    task_id: str
+    lifecycle_epoch: int
+    plan_id: str
+    operation_id: str
+    classification: str
 
 
 def _count_words(arguments: Mapping[str, Any]) -> ToolOutcome:

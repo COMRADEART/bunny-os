@@ -119,6 +119,7 @@ from .worker import (
     CaptureWorker,
     MAX_PARTIALS_PER_CAPTURE,
 )
+from .wakeword import WakeWordService, WakeWordState
 
 __all__ = [
     # Request and transcripts
@@ -163,6 +164,8 @@ __all__ = [
     "RecognizerSelection",
     "SpeechRecognizer",
     "VoskRecognizer",
+    "WakeWordService",
+    "WakeWordState",
     "local_recognizers",
     # Policy, indicator, events
     "SPEECH_EVENT_KINDS",

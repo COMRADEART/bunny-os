@@ -134,11 +134,14 @@ class VoiceSettings:
     """§29 Voice: selection, rate, volume, off."""
 
     enabled: bool = True
+    response_mode: str = "voice-only"
     voice_id: str = ""
     speaking_rate: float = 1.0
     volume: float = 1.0
 
     def __post_init__(self) -> None:
+        if self.response_mode not in ("voice-only", "all", "never"):
+            raise SettingsError("voice.responseMode is 'voice-only', 'all' or 'never'")
         object.__setattr__(self, "speaking_rate", _clamp(self.speaking_rate, 0.5, 2.0))
         object.__setattr__(self, "volume", _clamp(self.volume, 0.0, 1.0))
 
@@ -151,12 +154,27 @@ class SpeechInputSettings:
     device_id: str = ""
     #: The push-to-talk binding, as a GTK accelerator string. Recorded rather
     #: than enforced here: the window owns the binding and this is what it reads.
-    shortcut: str = "<Control><Alt>space"
+    shortcut: str = "<Super><Alt>space"
     model_id: str = ""
+    language: str = "automatic"
+    wake_word: str = "disabled"
 
     def __post_init__(self) -> None:
         if len(self.shortcut) > 64:
             raise SettingsError("speechInput.shortcut is too long to be an accelerator")
+        if len(self.device_id) > 128:
+            raise SettingsError("speechInput.deviceId is too long")
+        if (
+            len(self.model_id) > 128
+            or "/" in self.model_id
+            or "\\" in self.model_id
+            or self.model_id in (".", "..")
+        ):
+            raise SettingsError("speechInput.modelId is a model name, never a path")
+        if self.language not in ("automatic", "en"):
+            raise SettingsError("speechInput.language is 'automatic' or 'en'")
+        if self.wake_word != "disabled":
+            raise SettingsError("speechInput.wakeWord remains 'disabled' in this milestone")
 
 
 @dataclass(frozen=True)
@@ -279,7 +297,8 @@ class Settings:
         from .voice.policy import VoicePreferences
 
         return VoicePreferences(
-            enabled=self.voice.enabled,
+            enabled=(self.voice.enabled and self.voice.response_mode != "never"),
+            response_mode=self.voice.response_mode,
             voice_id=self.voice.voice_id,
             speaking_rate=self.voice.speaking_rate,
             volume=self.voice.volume,
@@ -288,7 +307,13 @@ class Settings:
     def speech_preferences(self) -> Any:
         from .speech.policy import SpeechInputPreferences
 
-        return SpeechInputPreferences(enabled=self.speech_input.enabled)
+        return SpeechInputPreferences(
+            enabled=self.speech_input.enabled,
+            input_device=self.speech_input.device_id,
+            language="en",
+            locale="en-US",
+            model_id=self.speech_input.model_id,
+        )
 
     # -- serialisation -------------------------------------------------------
 
@@ -304,6 +329,7 @@ class Settings:
             },
             "voice": {
                 "enabled": self.voice.enabled,
+                "responseMode": self.voice.response_mode,
                 "voiceId": self.voice.voice_id,
                 "speakingRate": self.voice.speaking_rate,
                 "volume": self.voice.volume,
@@ -313,6 +339,8 @@ class Settings:
                 "deviceId": self.speech_input.device_id,
                 "shortcut": self.speech_input.shortcut,
                 "modelId": self.speech_input.model_id,
+                "language": self.speech_input.language,
+                "wakeWord": self.speech_input.wake_word,
             },
             "ai": {
                 "preferredProviderId": self.ai.preferred_provider_id,
@@ -387,6 +415,7 @@ class Settings:
             ),
             voice=VoiceSettings(
                 enabled=flag(voice, "enabled", True),
+                response_mode=text(voice, "responseMode", "voice-only"),
                 voice_id=text(voice, "voiceId"),
                 speaking_rate=number(voice, "speakingRate", 1.0),
                 volume=number(voice, "volume", 1.0),
@@ -394,8 +423,10 @@ class Settings:
             speech_input=SpeechInputSettings(
                 enabled=flag(speech, "enabled", True),
                 device_id=text(speech, "deviceId"),
-                shortcut=text(speech, "shortcut", "<Control><Alt>space"),
+                shortcut=text(speech, "shortcut", "<Super><Alt>space"),
                 model_id=text(speech, "modelId"),
+                language=text(speech, "language", "automatic"),
+                wake_word=text(speech, "wakeWord", "disabled"),
             ),
             ai=AiSettings(
                 preferred_provider_id=text(ai, "preferredProviderId"),

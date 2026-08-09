@@ -41,6 +41,9 @@ export class AssistantPanel extends Card {
         });
         this._context = context;
         this._turns = [];
+        this._voiceAvailable = false;
+        this._voiceActive = false;
+        this._voiceStoppable = false;
 
         this._scroll = new St.ScrollView({
             style_class: 'bunny-assistant-scroll',
@@ -55,6 +58,17 @@ export class AssistantPanel extends Card {
         this._status = new St.Label({text: '', style_class: 'bunny-assistant-status'});
         this._status.visible = false;
         this.content.add_child(this._status);
+
+        this._fileResultsScroll = new St.ScrollView({
+            style_class: 'bunny-assistant-file-results-scroll',
+            hscrollbar_policy: St.PolicyType.NEVER,
+            vscrollbar_policy: St.PolicyType.AUTOMATIC,
+        });
+        this._fileResults = box({vertical: true, style_class: 'bunny-assistant-file-results'});
+        this._fileResultsScroll.set_child(this._fileResults);
+        this._fileResultsScroll.visible = false;
+        this._fileResultItems = [];
+        this.content.add_child(this._fileResultsScroll);
 
         const inputRow = box({style_class: 'bunny-assistant-input-row'});
         this._entry = new St.Entry({
@@ -144,12 +158,69 @@ export class AssistantPanel extends Card {
 
     /** Grey the microphone when the companion's speech service cannot be reached. */
     setVoiceAvailable(available, reason = '') {
-        this._microphone.reactive = available;
-        this._microphone.can_focus = available;
-        this._microphone.opacity = available ? 255 : 110;
-        this._microphone.accessible_name = available
-            ? 'Speak to Bunny'
-            : `Speak to Bunny. Unavailable: ${reason}`;
+        this._voiceAvailable = available;
+        const enabled = available || this._voiceActive || this._voiceStoppable;
+        this._microphone.reactive = enabled;
+        this._microphone.can_focus = enabled;
+        this._microphone.opacity = enabled ? 255 : 110;
+        this._microphone.accessible_name = this._voiceStoppable
+            ? 'Stop Bunny speaking'
+            : enabled ? 'Speak to Bunny' : `Speak to Bunny. Unavailable: ${reason}`;
+    }
+
+    /** Make recording and stop semantics unambiguous on the button itself. */
+    setVoiceState(active, phase = '') {
+        this._voiceActive = active;
+        this._voiceStoppable = phase === 'speaking';
+        this._microphone.remove_style_class_name('bunny-assistant-microphone-active');
+        if (active)
+            this._microphone.add_style_class_name('bunny-assistant-microphone-active');
+        const enabled = this._voiceAvailable || active || this._voiceStoppable;
+        this._microphone.reactive = enabled;
+        this._microphone.can_focus = enabled;
+        this._microphone.opacity = enabled ? 255 : 110;
+        this._microphone.accessible_name = active
+            ? 'Stop listening to Bunny'
+            : phase === 'speaking' ? 'Stop Bunny speaking' : 'Speak to Bunny';
+    }
+
+    /** Numbered, bounded results. Paths are display labels, never launch input. */
+    showFileResults(results) {
+        this._fileResultItems = Array.isArray(results) ? results.slice(0, 24) : [];
+        this._renderFileResults(false);
+    }
+
+    _renderFileResults(expanded) {
+        this._fileResults.destroy_all_children();
+        const safe = expanded ? this._fileResultItems : this._fileResultItems.slice(0, 6);
+        this._fileResultsScroll.visible = safe.length > 0;
+        safe.forEach((result, index) => {
+            const row = box({style_class: 'bunny-assistant-file-result'});
+            const text = box({vertical: true, x_expand: true});
+            const title = new St.Label({
+                text: `${index + 1}. ${result.name ?? 'File'}`,
+                style_class: 'bunny-assistant-file-title',
+            });
+            title.clutter_text.ellipsize = 3;
+            const location = new St.Label({
+                text: result.display ?? '',
+                style_class: 'bunny-assistant-file-location',
+            });
+            location.clutter_text.ellipsize = 3;
+            text.add_child(title);
+            text.add_child(location);
+            row.add_child(text);
+            row.add_child(this._textButton('Open', () =>
+                this._context.onFileResult?.(index + 1, 'open')));
+            row.add_child(this._textButton('Folder', () =>
+                this._context.onFileResult?.(index + 1, 'show_containing_folder')));
+            this._fileResults.add_child(row);
+        });
+        if (!expanded && this._fileResultItems.length > safe.length) {
+            this._fileResults.add_child(this._textButton(
+                `Show all ${this._fileResultItems.length} results`,
+                () => this._renderFileResults(true)));
+        }
     }
 
     _submit() {
@@ -165,6 +236,12 @@ export class AssistantPanel extends Card {
         button.add_child(themedIcon(iconName, {size: 16}));
         button.y_align = Clutter.ActorAlign.CENTER;
         makeActivatable(button, onActivate, {accessibleName});
+        return button;
+    }
+
+    _textButton(label, onActivate) {
+        const button = new St.Label({text: label, style_class: 'bunny-assistant-file-action'});
+        makeActivatable(button, onActivate, {accessibleName: `${label} file result`});
         return button;
     }
 }

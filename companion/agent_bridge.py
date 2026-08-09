@@ -413,6 +413,16 @@ class ProviderBackedExecutor:
     # -- Executor protocol ---------------------------------------------------
 
     def plan(self, context: TaskContext) -> TaskPlan:
+        # Closed local computer controls never need a model. A configured local
+        # provider may be first in preference order, so delegating here is what
+        # keeps Open Files, telemetry and file search working when its network
+        # endpoint disappears after the health probe.
+        from .intents import recognise
+        from .local_intent import LocalIntentExecutor
+
+        request = str(context.task.get("originalRequest", ""))
+        if recognise(request) is not None:
+            return LocalIntentExecutor().plan(context)
         explanation = self._select(context, purpose="plan")
         instruction = (
             "Produce a plan as JSON matching exactly: "
@@ -506,6 +516,12 @@ class ProviderBackedExecutor:
         )
 
     def result(self, context: TaskContext) -> TaskResult:
+        from .intents import recognise
+        from .local_intent import LocalIntentExecutor
+
+        request = str(context.task.get("originalRequest", ""))
+        if recognise(request) is not None:
+            return LocalIntentExecutor().result(context)
         explanation = self._select(context, purpose="result")
         instruction = (
             "Write the final answer for the user. Use the executed tool results "

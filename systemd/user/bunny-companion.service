@@ -59,9 +59,11 @@ MemoryDenyWriteExecute=yes
 SystemCallArchitectures=native
 SystemCallFilter=@system-service
 SystemCallErrorNumber=EPERM
-# Sized for the runtime alone; the window is a separate process with its own
-# budget. Measured idle usage is recorded in COMPANION_INTEGRATION_REPORT.md.
-MemoryMax=128M
+# The smallest validated Vosk model brings the companion process to roughly
+# 175 MiB while recognition is active. 128 MiB killed real STT before it could
+# return a transcript; 384 MiB keeps inference bounded while leaving measured
+# headroom for the task runtime and TTS. The window remains a separate process.
+MemoryMax=384M
 TasksMax=64
 StandardOutput=journal
 StandardError=journal

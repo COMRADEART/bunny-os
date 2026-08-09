@@ -118,6 +118,15 @@ _REQUIRED_CAPABILITIES: Mapping[str, tuple[str, ...]] = {
 
 def classify_request(request: str) -> tuple[str, tuple[str, ...]]:
     """Decide what kind of task this is. Pure and deterministic."""
+    # The closed local-intent grammar is more precise than keyword classes:
+    # "What is RAM?" remains a question, while "How much RAM am I using?" is
+    # a local metric even though both contain the same noun. This also keeps
+    # safe computer controls eligible with no inference or network capability.
+    from .intents import recognise
+
+    intent = recognise(request)
+    if intent is not None and intent.kind not in ("capabilities",):
+        return "local_action", _REQUIRED_CAPABILITIES["local_action"]
     for task_type, pattern in _CLASSIFIERS:
         if pattern.search(request):
             return task_type, _REQUIRED_CAPABILITIES[task_type]
@@ -1341,6 +1350,28 @@ class CompanionRuntime:
             task = replace(task, tool_call_count=task.tool_call_count + 1)
             task = self._save_running_task(task)
 
+            from .tools import ToolInvocationContext
+
+            tool_context = None
+            declaration = self.broker.declaration(operation.tool)
+            if declaration is not None and declaration.requires_context:
+                tool_context = (
+                    self.desktop.context_for(
+                        task, plan, operation,
+                        cancelled=lambda: self._cancellation_arrived(task),
+                        audit_reference=plan.plan_id,
+                    )
+                    if self.desktop is not None and self.desktop.handles(operation.tool)
+                    else ToolInvocationContext(
+                        session_id=task.session_id,
+                        task_id=task.task_id,
+                        lifecycle_epoch=task.lifecycle_epoch,
+                        plan_id=plan.plan_id,
+                        operation_id=operation.name,
+                        classification=task.classification,
+                    )
+                )
+
             outcome = self.broker.invoke(
                 operation.tool, operation.arguments,
                 caller="runtime", classification=task.classification,
@@ -1351,15 +1382,7 @@ class CompanionRuntime:
                 # callable because a stop can arrive from another process while
                 # a backend call is in flight, and a flag captured at entry
                 # would not see it.
-                context=(
-                    self.desktop.context_for(
-                        task, plan, operation,
-                        cancelled=lambda: self._cancellation_arrived(task),
-                        audit_reference=plan.plan_id,
-                    )
-                    if self.desktop is not None and self.desktop.handles(operation.tool)
-                    else None
-                ),
+                context=tool_context,
             )
             self._emit(
                 task.session_id, task.task_id, "operation_progress",

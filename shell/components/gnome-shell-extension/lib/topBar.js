@@ -67,6 +67,16 @@ export class TopBar {
         this._search.set_text('');
     }
 
+    /** Persistent chrome indicator: visible for every open-microphone interval. */
+    setMicrophoneActive(active) {
+        if (!this._microphoneIndicator)
+            return;
+        this._microphoneIndicator.visible = Boolean(active);
+        this._microphoneIndicator.accessible_name = active
+            ? 'Microphone active. Bunny is listening.'
+            : 'Microphone inactive';
+    }
+
     destroy() {
         this._clockTimer?.stop();
         this._alignTimer?.stop();
@@ -114,6 +124,17 @@ export class TopBar {
 
     _buildIndicators() {
         const indicators = box({style_class: 'bunny-top-indicators'});
+
+        this._microphoneIndicator = box({style_class: 'bunny-microphone-indicator'});
+        this._microphoneIndicator.add_child(themedIcon(Icons.MICROPHONE, {
+            size: 16, styleClass: 'bunny-microphone-indicator-icon',
+        }));
+        this._microphoneIndicator.add_child(new St.Label({
+            text: 'MIC', style_class: 'bunny-microphone-indicator-label',
+        }));
+        this._microphoneIndicator.visible = false;
+        this._microphoneIndicator.accessible_name = 'Microphone inactive';
+        indicators.add_child(this._microphoneIndicator);
 
         this._volumeIcon = this._indicatorButton(VOLUME_ICONS.high, 'Volume', () => {
             this._context.audio?.toggleMute();

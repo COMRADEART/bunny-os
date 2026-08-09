@@ -2,6 +2,34 @@
 
 This root report mirrors the maintained detail in `docs/KNOWN_LIMITATIONS.md`.
 
+## Added by the voice interaction milestone — 2026-08-09
+
+The source now connects explicit Bunny Shell push-to-talk to the existing
+companion speech-input service, canonical AssistantService task submission,
+validated local actions, and the existing local speech-output service. The
+shell displays transcription, microphone state, safe file results and the full
+character lifecycle; it never captures audio or runs inference itself.
+
+This is **not yet a graphical voice acceptance pass**. The locked Bunny image
+contains PipeWire/PulseAudio capture tools and real eSpeak NG/Speech Dispatcher
+TTS, but it still contains neither the `vosk` Python library nor a reviewed Vosk
+model. The genuine adapter therefore reports unavailable and typed interaction
+remains the fallback. The prior speech-input validation used a manually
+installed `vosk-model-small-en-us-0.15` model (68 MiB); that model was not added
+to the image and no automatic download path was introduced.
+
+This development host is Windows and cannot boot the GNOME/Mutter/Wayland
+session or present a physical microphone/speaker to Bunny OS. Consequently:
+
+* no spoken `Open Files` transcription was captured on this candidate;
+* no physical-speaker TTS or end-user speech interruption was observed here;
+* the offline network-disconnect voice scenario was not run;
+* 1920×1080 and 1366×768 pass the source/layout solver tests, but received no
+  current visual screenshot acceptance run.
+
+Wake-word support remains an intentionally disabled interface seam. There is no
+continuous capture and no setting can enable it in this milestone.
+
 ## Added by the Public Alpha integration pass — 2026-08-07
 
 Full detail in `PUBLIC_ALPHA_INTEGRATION_REPORT.md`.

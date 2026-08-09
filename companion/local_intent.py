@@ -20,14 +20,15 @@ booted on.
 
 An executor is provider-neutral and this one is not a provider — but it is the
 component that stands where a model would stand, so it is built to the rule
-that applies there: **nothing the user typed becomes an argument.**
+that applies there: **nothing the user typed becomes executable authority.**
 
 :mod:`companion.intents` recognises a sentence as one of a closed set of intents
 and attaches constants from its own tables. This module reads those constants,
 resolves an application id against the *installed* entry registry, and emits a
-:class:`~companion.executor.PlannedOperation` naming a declared tool. There is
-no path from request text to an executable path, a command line, a URI or a
-filesystem path outside the user's own XDG directories.
+:class:`~companion.executor.PlannedOperation` naming a declared tool. A bounded
+file-name query may become a literal search argument; it is validated again and
+never interpreted as a path or pattern. There is no path from request text to
+an executable path, command line, URI or filesystem root.
 
 The consequences of that are worth being concrete about. ``rm -rf /`` typed into
 the assistant is not recognised, so it plans nothing and the answer says what
@@ -63,16 +64,21 @@ from .executor import (
     display_summary,
 )
 from .intents import Intent, capability_sentence, recognise
+from .local_files import SEARCH_DIRECTORY_KEYS
 
 __all__ = ["LocalIntentExecutor", "resolve_installed_application", "user_directory"]
 
 
-#: The tool the folder-listing intent plans. Declared in :mod:`companion.local_files`.
+#: Local tools planned by the bounded intent recogniser.
 LIST_DIRECTORY_TOOL = "files.list_directory"
+SEARCH_FILES_TOOL = "files.search"
+SYSTEM_METRIC_TOOL = "system.get_metric"
+MEDIA_CONTROL_TOOL = "media.control"
 
 #: The desktop actions this executor may plan. Written out rather than derived
 #: so that adding a new intent cannot silently reach an action nobody reviewed.
 LAUNCH_ACTION = "desktop.application.launch"
+OPEN_URI_ACTION = "desktop.uri.open"
 REVEAL_ACTION = "desktop.file.reveal"
 
 
@@ -216,16 +222,80 @@ class LocalIntentExecutor:
                 ),
             ], intent.description
 
+        if intent.kind == "search_files":
+            return [
+                PlannedOperation(
+                    name="search-files",
+                    tool=SEARCH_FILES_TOOL,
+                    arguments={
+                        "query": str(intent.parameters.get("query", "")),
+                        "scope": str(intent.parameters.get("scope", "all")),
+                        "fileType": str(intent.parameters.get("fileType", "")),
+                    },
+                ),
+            ], intent.description
+
+        if intent.kind == "open_search_result":
+            selector = str(intent.parameters.get("selector", ""))
+            command = str(intent.parameters.get("command", ""))
+            if command not in ("open", "show_containing_folder"):
+                return [], "Report that the requested file action is not permitted"
+            return [
+                PlannedOperation(
+                    name="file-result-action",
+                    tool=(
+                        OPEN_URI_ACTION
+                        if command == "open"
+                        else REVEAL_ACTION
+                    ),
+                    # The absolute path is held only in the task's PathContext.
+                    # A provider-visible plan receives this opaque reference.
+                    arguments=(
+                        {
+                            "expectedScheme": "file",
+                            "expectedDestinationClass": "local-file",
+                            "pathReference": "search-result",
+                        }
+                        if command == "open"
+                        else {"pathReference": "search-result"}
+                    ),
+                ),
+            ], intent.description
+
+        if intent.kind == "system_metric":
+            return [
+                PlannedOperation(
+                    name="get-system-metric",
+                    tool=SYSTEM_METRIC_TOOL,
+                    arguments={"metric": str(intent.parameters.get("metric", ""))},
+                ),
+            ], intent.description
+
+        if intent.kind == "media_control":
+            return [
+                PlannedOperation(
+                    name="media-control",
+                    tool=MEDIA_CONTROL_TOOL,
+                    arguments={"command": str(intent.parameters.get("command", ""))},
+                ),
+            ], intent.description
+
         if intent.kind == "show_folder":
             key = str(intent.parameters.get("directory", ""))
+            if key not in SEARCH_DIRECTORY_KEYS:
+                return [], "Report that only approved user folders can be opened"
             path = user_directory(key)
             if path is None:
                 return [], f"Report that the {intent.parameters.get('spoken', '')} folder was not found"
             return [
                 PlannedOperation(
-                    name="reveal-folder",
-                    tool=REVEAL_ACTION,
-                    arguments={"path": str(path)},
+                    name="show-directory",
+                    tool=OPEN_URI_ACTION,
+                    arguments={
+                        "expectedScheme": "file",
+                        "expectedDestinationClass": "local-file",
+                        "pathReference": "requested-directory",
+                    },
                 ),
             ], intent.description
 
@@ -314,10 +384,52 @@ class LocalIntentExecutor:
                 )
             return value, value
 
+        if intent.kind == "search_files":
+            outcome = self._outcome(results, "search-files")
+            value = outcome.get("value") if outcome is not None else None
+            if not isinstance(value, Mapping):
+                return (
+                    "I could not search those folders safely.",
+                    "file search did not complete",
+                )
+            summary = str(value.get("summary") or "I did not find a matching file.")
+            return summary, summary
+
+        if intent.kind == "open_search_result":
+            outcome = self._outcome(results, "file-result-action")
+            value = outcome.get("value") if outcome is not None else None
+            if not isinstance(value, Mapping) or not value.get("succeeded"):
+                return (
+                    "I could not use that file result. Search again, then choose one of the numbered results.",
+                    "file result action did not complete",
+                )
+            command = str(intent.parameters.get("command", ""))
+            sentence = (
+                "The selected file is open."
+                if command == "open"
+                else "The selected file is shown in its containing folder."
+            )
+            return sentence, sentence
+
+        if intent.kind == "system_metric":
+            outcome = self._outcome(results, "get-system-metric")
+            if outcome is None:
+                return "I could not read that system metric.", "system metric did not complete"
+            value = str(outcome.get("value") or "").strip()
+            return (value or "That metric is unavailable."), (value or "metric unavailable")
+
+        if intent.kind == "media_control":
+            outcome = self._outcome(results, "media-control")
+            if outcome is None:
+                return "I could not control an active media player.", "media control did not complete"
+            value = str(outcome.get("value") or "").strip()
+            return (value or "The media command completed."), (value or "media command completed")
+
         if intent.kind == "show_folder":
             spoken = str(intent.parameters.get("spoken", "that folder"))
-            outcome = self._outcome(results, "reveal-folder")
-            if outcome is None:
+            outcome = self._outcome(results, "show-directory")
+            value = outcome.get("value") if outcome is not None else None
+            if not isinstance(value, Mapping) or not value.get("succeeded"):
                 return (
                     f"I could not open your {spoken.title()} folder.",
                     f"reveal did not complete: {spoken}",

@@ -52,5 +52,11 @@
       <default>['&lt;Super&gt;&lt;Shift&gt;b']</default>
       <summary>Wake the assistant and focus its input</summary>
     </key>
+    <key name="push-to-talk" type="as">
+      <!-- Super+Space and Shift+Super+Space are GNOME's forward/backward input
+           source bindings, so push-to-talk deliberately uses neither. -->
+      <default>['&lt;Super&gt;&lt;Alt&gt;space']</default>
+      <summary>Start or stop Bunny push-to-talk</summary>
+    </key>
   </schema>
 </schemalist>

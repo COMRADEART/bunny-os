@@ -418,6 +418,7 @@ class RefusalTests(ServiceTestCase):
             "health", "create_session", "list_sessions", "get_session", "submit_task",
             "list_tasks", "get_task", "get_events", "get_presentation_state",
             "resolve_approval", "cancel_task", "pause_task", "resume_task",
+            "settings_voice_get", "settings_voice_set",
             # §17's speech operations. Listed here rather than derived from
             # OPERATIONS on purpose: this test exists to notice an operation
             # being *added*, and a test that computed its own expectation from

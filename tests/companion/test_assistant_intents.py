@@ -4,16 +4,19 @@
 
 The interesting property here is not that "Open Files" works. It is that
 everything else does *not* — that a recogniser which cannot understand a request
-declines instead of guessing, and that nothing a person types can become an
-argument to anything.
+declines instead of guessing, and that nothing a person types can become
+executable, path, URI or filesystem-root authority. A bounded literal filename
+query is the deliberate exception: it reaches only ``files.search`` and that
+tool validates it again before reading approved roots.
 
 Two of these tests are the reason the module exists at all. One drives a real
 :class:`companion.runtime.CompanionRuntime` end to end, because every layer
 between the sentence and the answer — planning, approval derivation, the tool
 allowlist, the result — is a place the flow can break in a way no unit test of
 the recogniser would see. The other reads the source of
-:mod:`companion.local_intent` and asserts that the request string never reaches
-a tool argument, which is a property no example can establish.
+:mod:`companion.local_intent` and asserts that the raw request string never
+reaches a planned operation directly, which is a property no example can
+establish.
 """
 
 from __future__ import annotations
@@ -31,6 +34,7 @@ from companion.executor import DeterministicLocalExecutor
 from companion.intents import APPLICATIONS, FOLDERS, KNOWN_INTENTS, capability_sentence, recognise
 from companion.local_files import LOCAL_FILE_TOOLS, list_directory
 from companion.local_intent import LocalIntentExecutor, resolve_installed_application, user_directory
+from companion.local_system import LOCAL_SYSTEM_TOOLS
 from companion.reviewer import DeterministicLocalReviewer
 from companion.runtime import CompanionRuntime, RuntimeOptions
 from companion.store import CompanionStore
@@ -98,7 +102,9 @@ class RecognitionTests(unittest.TestCase):
         produced = {
             recognise(sentence).kind
             for sentence in ("Open Files", "what is in my downloads",
-                             "open my downloads folder", "what can you do")
+                             "open my downloads folder", "Find my resume",
+                             "Open the newest one", "How much memory am I using?",
+                             "Pause music", "what can you do")
         }
         self.assertEqual(produced, set(KNOWN_INTENTS))
 
@@ -109,18 +115,19 @@ class RecognitionTests(unittest.TestCase):
         self.assertIn("language model", sentence)
 
 
-class NoTextReachesAnArgumentTests(unittest.TestCase):
-    """The safety property, asserted against the source rather than by example.
+class NoTextBecomesExecutableAuthorityTests(unittest.TestCase):
+    """The execution-authority property, asserted against source and schemas.
 
     No number of "rm -rf / is not recognised" cases can establish that *no*
-    sentence reaches an argument. What can establish it is that the module which
-    builds planned operations never puts the request into one — so this parses
-    it and looks.
+    sentence reaches an executable argument. The raw request must not be copied
+    into a planned operation; the only request-derived value is a literal
+    filename query returned by the closed recogniser, and the search tool
+    rejects path, traversal, wildcard and control syntax before scanning.
     """
 
     MODULE = ROOT / "companion/local_intent.py"
 
-    def test_the_request_string_is_never_a_planned_argument(self) -> None:
+    def test_the_raw_request_is_never_copied_into_a_planned_argument(self) -> None:
         tree = ast.parse(self.MODULE.read_text(encoding="utf-8"))
 
         # Every name assigned from `context.task.get("originalRequest", ...)`.
@@ -150,8 +157,28 @@ class NoTextReachesAnArgumentTests(unittest.TestCase):
                         offenders.append(f"line {node.lineno}: argument built from {name!r}")
         self.assertEqual(
             offenders, [],
-            "a planned operation's arguments are built from the request text; "
-            "arguments must come from the intent tables or the machine",
+            "a planned operation directly copied the raw request; values must "
+            "come from a closed intent schema or a machine registry",
+        )
+
+    def test_request_derived_search_text_cannot_express_authority(self) -> None:
+        from companion.local_files import validate_search_arguments
+
+        for query in (
+            "/etc/passwd", "../../etc", "..", "~/secret", "*.pdf",
+            "folder\\secret", "name\x00suffix",
+        ):
+            with self.subTest(query=query):
+                reason = validate_search_arguments({
+                    "query": query, "scope": "all", "fileType": "",
+                })
+                self.assertIsInstance(reason, str)
+
+        self.assertEqual(
+            validate_search_arguments({
+                "query": "quarterly report", "scope": "downloads", "fileType": "pdf",
+            }),
+            ("quarterly report", "downloads", "pdf"),
         )
 
     def test_no_shell_or_process_execution_in_the_intent_path(self) -> None:
@@ -242,7 +269,11 @@ class EndToEndRuntimeTests(unittest.TestCase):
 
         self.root = Path(tempfile.mkdtemp())
         self.broker = ToolBroker()
-        self.broker.tools = {**self.broker.tools, **LOCAL_FILE_TOOLS}
+        self.broker.tools = {
+            **self.broker.tools,
+            **LOCAL_FILE_TOOLS,
+            **LOCAL_SYSTEM_TOOLS,
+        }
         self.runtime = CompanionRuntime(RuntimeOptions(
             store=CompanionStore(self.root / "store"),
             assessment=assess_current_machine(),
@@ -326,6 +357,41 @@ class EndToEndRuntimeTests(unittest.TestCase):
         self.assertIn("report.pdf", summary)
         names = {str(item.get("name")) for item in view.get("operations", [])}
         self.assertIn("list-directory", names)
+
+    def test_file_search_uses_the_runtime_context_and_approved_root(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Downloads").mkdir()
+            (root / "Downloads" / "report.pdf").write_text("x", encoding="utf-8")
+            previous = os.environ.get("HOME")
+            os.environ["HOME"] = str(root)
+            try:
+                summary, view = self._answer("Find PDF files in Downloads.")
+            finally:
+                if previous is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = previous
+        self.assertEqual(view["state"], "completed")
+        self.assertIn("report.pdf", summary)
+        names = {str(item.get("name")) for item in view.get("operations", [])}
+        self.assertIn("search-files", names)
+
+    def test_system_metric_reaches_the_measured_local_tool(self) -> None:
+        previous = os.environ.get("HOME")
+        os.environ["HOME"] = str(self.root)
+        try:
+            summary, view = self._answer("How much storage do I have?")
+        finally:
+            if previous is None:
+                os.environ.pop("HOME", None)
+            else:
+                os.environ["HOME"] = previous
+        self.assertEqual(view["state"], "completed")
+        self.assertIn("storage", summary.lower())
+        self.assertIn("free", summary.lower())
+        names = {str(item.get("name")) for item in view.get("operations", [])}
+        self.assertIn("get-system-metric", names)
 
     def test_the_launch_plan_names_the_declared_action(self) -> None:
         """The plan must reach `desktop.application.launch` and nothing else."""

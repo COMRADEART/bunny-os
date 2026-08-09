@@ -18,7 +18,9 @@ consumes it without a parser and without buffering a whole reply, so the
 character can change state while the task is still running rather than after it
 finishes.
 
-Every line has an ``event`` key. The vocabulary is small on purpose:
+Every line has an ``event`` key. Typed requests use the small lifecycle below;
+push-to-talk adds microphone, transcript and real speech-output events around
+that same task lifecycle:
 
 ``health``    the answer to ``health``: whether a runtime is listening, and if
               not, why not, in words a person can act on.
@@ -27,6 +29,9 @@ Every line has an ``event`` key. The vocabulary is small on purpose:
               here: the desktop maps phases to character states, and doing it
               in two places would let them disagree.
 ``reply``     the result summary, once.
+``transcript`` the recogniser's structured final text, before confirmation.
+``microphone`` whether the companion has confirmed capture is active.
+``speech_*``  actual synthesis/playback start, completion, cancellation or failure.
 ``finished``  terminal, with the last phase.
 ``error``     terminal, with a reason.
 
@@ -89,6 +94,12 @@ TERMINAL_PHASES = frozenset({"success", "error", "cancelled", "blocked"})
 
 POLL_SECONDS = 0.4
 
+# Capture is bounded by the speech request at 30 seconds.  Recognition gets a
+# separate grace period: a low-end machine may need several seconds after the
+# microphone has closed, but a bridge must still have a terminal condition.
+VOICE_DEADLINE_SECONDS = 75.0
+LOW_CONFIDENCE = 0.35
+
 
 def emit(event: str, **fields: object) -> None:
     """One event, one line, flushed. Buffering would defeat the point."""
@@ -119,6 +130,344 @@ def command_health(_arguments: argparse.Namespace) -> int:
         schemaVersion=document.get("schemaVersion"),
         runtime=document.get("runtime", "unknown"),
     )
+    return 0
+
+
+def _task_id(document: Mapping[str, object]) -> str:
+    task = document.get("task")
+    if isinstance(task, Mapping):
+        identifier = str(task.get("taskId") or "")
+        if identifier:
+            return identifier
+    return str(document.get("taskId") or "")
+
+
+def command_voice_health(arguments: argparse.Namespace) -> int:
+    """Report capture/STT readiness, not merely companion socket readiness."""
+    try:
+        connection = client(arguments.timeout)
+        health = connection.call("speech_input_health", {})
+        devices = connection.call("speech_input_devices", {})
+    except (CompanionClientError, OSError) as exc:
+        emit("voice_health", available=False, reason=str(exc), devices=[])
+        return 0
+
+    recognizers = health.get("recognizers", [])
+    ready = [
+        item for item in recognizers
+        if isinstance(item, Mapping) and item.get("ready") is True
+    ] if isinstance(recognizers, list) else []
+    policy = health.get("policy", {})
+    decision = policy.get("decision", {}) if isinstance(policy, Mapping) else {}
+    may_capture = bool(decision.get("mayCapture")) if isinstance(decision, Mapping) else False
+    device_list = devices.get("devices", [])
+    if not isinstance(device_list, list):
+        device_list = []
+
+    available = bool(health.get("available", True) and ready and may_capture and device_list)
+    reasons: list[str] = []
+    if not health.get("available", True):
+        reasons.append(str(health.get("reason") or "speech input is not running"))
+    if not ready:
+        details = [
+            str(item.get("detail") or "") for item in recognizers
+            if isinstance(item, Mapping) and item.get("detail")
+        ] if isinstance(recognizers, list) else []
+        reasons.append(details[0] if details else "no local speech recognizer is ready")
+    if not device_list:
+        reasons.append("no microphone is available")
+    if not may_capture and isinstance(decision, Mapping):
+        policy_reasons = decision.get("reasons", [])
+        if isinstance(policy_reasons, list) and policy_reasons:
+            reasons.append(str(policy_reasons[0]))
+
+    selected = ready[0] if ready else {}
+    emit(
+        "voice_health",
+        available=available,
+        reason="; ".join(dict.fromkeys(item for item in reasons if item)),
+        providerId=selected.get("providerId", "") if isinstance(selected, Mapping) else "",
+        implementationId=selected.get("implementationId", "") if isinstance(selected, Mapping) else "",
+        language=selected.get("language", "") if isinstance(selected, Mapping) else "",
+        devices=device_list,
+        selectedDevice=devices.get("preferredDevice", ""),
+        maxCaptureMs=30_000,
+        wakeWord="disabled",
+    )
+    return 0
+
+
+def _speech_disposition(status: Mapping[str, object], request_id: str) -> tuple[str, str]:
+    records = status.get("recentDispositions", [])
+    if not isinstance(records, list):
+        return "", ""
+    for item in reversed(records):
+        if isinstance(item, Mapping) and str(item.get("requestId") or "") == request_id:
+            return str(item.get("disposition") or ""), str(item.get("detail") or "")
+    return "", ""
+
+
+def command_listen(arguments: argparse.Namespace) -> int:
+    """Capture once, confirm the transcript, then watch the canonical task."""
+    connection = client(arguments.timeout)
+    try:
+        session_id = resolve_session(connection, arguments.session_title)
+        started = connection.call("speech_input_start", {
+            "sessionId": session_id,
+            "activationSource": arguments.activation_source,
+            "language": arguments.language,
+            "locale": "",
+            "deviceId": arguments.device,
+            "providerId": arguments.provider,
+            "maxCaptureMs": 30_000,
+            "initialSilenceMs": 6_000,
+            "endpointSilenceMs": 1_200,
+            "partialTranscripts": True,
+            # The bridge displays the final text before this confirmation call.
+            "confirmationRequired": True,
+            "presentationRevision": 0,
+        })
+    except (CompanionClientError, OSError) as exc:
+        emit("error", reason=f"speech input could not start: {exc}")
+        return 4
+
+    if not started.get("accepted"):
+        emit("error", reason=str(started.get("detail") or "speech input was refused"))
+        return 4
+    request_id = str(started.get("requestId") or "")
+    cancellation_token = str(started.get("cancellationToken") or "")
+    if not request_id:
+        emit("error", reason="speech input started without a request identifier")
+        return 4
+    emit(
+        "voice_started", requestId=request_id, sessionId=session_id,
+        cancellationToken=cancellation_token, maxCaptureMs=30_000,
+    )
+
+    deadline = time.monotonic() + min(arguments.deadline, VOICE_DEADLINE_SECONDS)
+    last_partial = ""
+    last_sequence = 0
+    listening_reported = False
+    transcribing_reported = False
+    completed_without_transcript_polls = 0
+    while time.monotonic() <= deadline:
+        try:
+            status = connection.call("speech_input_status", {})
+        except (CompanionClientError, OSError) as exc:
+            emit("error", reason=f"speech input stopped answering: {exc}", requestId=request_id)
+            return 4
+
+        current = status.get("current")
+        if isinstance(current, Mapping) and str(current.get("requestId") or "") == request_id:
+            phase = str(current.get("phase") or "")
+            partial = str(current.get("partialText") or "")
+            if partial and partial != last_partial:
+                last_partial = partial
+                emit("partial", text=partial, requestId=request_id)
+            if phase in ("reserved", "capturing", "speech", "silence") and not listening_reported:
+                listening_reported = True
+                emit("microphone", active=True, requestId=request_id)
+                emit("voice_phase", phase="listening", statusText="Listening...", requestId=request_id)
+            if phase in ("finalizing", "recognizing") and not transcribing_reported:
+                transcribing_reported = True
+                emit("microphone", active=False, requestId=request_id)
+                emit("voice_phase", phase="transcribing", statusText="Transcribing...", requestId=request_id)
+
+        events = status.get("recentEvents", [])
+        if not isinstance(events, list):
+            events = []
+        for event in events:
+            if not isinstance(event, Mapping):
+                continue
+            if str(event.get("requestId") or "") != request_id:
+                continue
+            sequence = int(event.get("sequence") or 0)
+            if sequence <= last_sequence:
+                continue
+            last_sequence = sequence
+            kind = str(event.get("kind") or "")
+            if kind == "microphone_indicator_raised" and not listening_reported:
+                listening_reported = True
+                emit("microphone", active=True, requestId=request_id)
+                emit("voice_phase", phase="listening", statusText="Listening...", requestId=request_id)
+            elif kind in ("capture_stopped", "microphone_closed", "indicator_cleared"):
+                emit("microphone", active=False, requestId=request_id)
+            elif kind == "recognition_finalizing" and not transcribing_reported:
+                transcribing_reported = True
+                emit("voice_phase", phase="transcribing", statusText="Transcribing...", requestId=request_id)
+            elif kind == "final_transcript":
+                text_value = str(event.get("text") or "").strip()
+                confidence_value = event.get("confidence")
+                confidence = (
+                    float(confidence_value)
+                    if isinstance(confidence_value, (int, float)) and not isinstance(confidence_value, bool)
+                    else None
+                )
+                emit(
+                    "transcript", text=text_value, confidence=confidence,
+                    language=event.get("language", ""),
+                    durationMs=round(
+                        max(0.0, float(event.get("audioEndedAt") or 0.0) -
+                            float(event.get("audioStartedAt") or 0.0)) * 1000
+                    ),
+                    providerId=event.get("providerId", ""), requestId=request_id,
+                )
+                inadequate = (
+                    not text_value
+                    or bool(event.get("incomplete"))
+                    or (confidence is not None and confidence < LOW_CONFIDENCE)
+                )
+                if inadequate:
+                    try:
+                        connection.call("speech_input_cancel", {
+                            "requestId": request_id,
+                            "cancellationToken": cancellation_token,
+                        })
+                    except (CompanionClientError, OSError):
+                        pass
+                    reason = "I didn't catch that. Could you say it again?"
+                    emit("warning", reason=reason, requestId=request_id)
+                    emit("finished", phase="warning", requestId=request_id)
+                    return 0
+                try:
+                    confirmed = connection.call("speech_input_confirm", {
+                        "requestId": request_id,
+                        "sessionId": session_id,
+                        "text": None,
+                        "reviewedDigest": str(event.get("textDigest") or ""),
+                        "cancellationToken": cancellation_token,
+                    })
+                except (CompanionClientError, OSError) as exc:
+                    emit("error", reason=f"the transcript could not be submitted: {exc}", requestId=request_id)
+                    return 4
+                if not confirmed.get("submitted"):
+                    emit("error", reason=str(confirmed.get("reason") or "the transcript was not submitted"), requestId=request_id)
+                    return 4
+                task_id = _task_id(confirmed)
+                if not task_id:
+                    emit("error", reason="the transcript created no identifiable task", requestId=request_id)
+                    return 4
+                emit("accepted", taskId=task_id, sessionId=session_id, origin="voice")
+                return watch(
+                    connection, task_id,
+                    deadline=time.monotonic() + arguments.task_deadline,
+                    speak_response=(
+                        not arguments.no_speech
+                        and _voice_response_mode(connection) != "never"
+                    ),
+                )
+
+        capturing = bool(status.get("capturing"))
+        disposition, detail = _speech_disposition(status, request_id)
+        if not capturing and disposition:
+            emit("microphone", active=False, requestId=request_id)
+            if disposition == "completed":
+                # The final event and the disposition can cross adjacent polls;
+                # give the event ring a few passes rather than misreporting an
+                # otherwise valid transcript as empty. Never spin until the
+                # overall deadline if a broken backend omitted the event.
+                completed_without_transcript_polls += 1
+                if completed_without_transcript_polls > 3:
+                    reason = "I didn't catch that. Could you say it again?"
+                    emit("warning", reason=reason, requestId=request_id)
+                    emit("finished", phase="warning", requestId=request_id)
+                    return 0
+                time.sleep(0.05)
+                continue
+            if disposition == "cancelled":
+                emit("finished", phase="cancelled", requestId=request_id)
+                return 0
+            if disposition == "no-speech":
+                reason = "I didn't catch that. Could you say it again?"
+                emit("warning", reason=reason, requestId=request_id)
+                emit("finished", phase="warning", requestId=request_id)
+                return 0
+            emit("error", reason=detail or "speech recognition failed", requestId=request_id)
+            return 4
+        time.sleep(0.1)
+
+    try:
+        connection.call("speech_input_cancel", {
+            "requestId": request_id, "cancellationToken": cancellation_token,
+        })
+    except (CompanionClientError, OSError):
+        pass
+    emit("microphone", active=False, requestId=request_id)
+    emit("error", reason="speech recognition did not finish within its time limit", requestId=request_id)
+    return 5
+
+
+def command_speech_stop(arguments: argparse.Namespace) -> int:
+    try:
+        result = client(arguments.timeout).call(
+            "speech_input_stop", {"requestId": arguments.request_id})
+    except (CompanionClientError, OSError) as exc:
+        emit("error", reason=str(exc), requestId=arguments.request_id)
+        return 4
+    payload = dict(result)
+    payload["requestId"] = arguments.request_id
+    emit("speech_stopped", **payload)
+    return 0
+
+
+def command_speech_cancel(arguments: argparse.Namespace) -> int:
+    connection = client(arguments.timeout)
+    try:
+        result = connection.call("speech_input_cancel", {
+            "requestId": arguments.request_id,
+            "cancellationToken": arguments.cancellation_token,
+        })
+    except (CompanionClientError, OSError) as exc:
+        emit("error", reason=str(exc), requestId=arguments.request_id)
+        return 4
+
+    # ``speech_input_cancel`` sets a cancellation flag; its return is not proof
+    # that the recorder has closed. Keep this control process alive until the
+    # worker no longer reports this capture as current, so the shell has a
+    # trustworthy point at which it may remove its privacy indicator.
+    deadline = time.monotonic() + min(max(arguments.timeout, 1.0), 15.0)
+    while time.monotonic() <= deadline:
+        try:
+            status = connection.call("speech_input_status", {})
+        except (CompanionClientError, OSError) as exc:
+            emit(
+                "error",
+                reason=f"capture cancellation was requested, but microphone closure could not be confirmed: {exc}",
+                requestId=arguments.request_id,
+            )
+            return 4
+        current = status.get("current")
+        still_current = (
+            isinstance(current, Mapping)
+            and str(current.get("requestId") or "") == arguments.request_id
+        )
+        if not still_current:
+            payload = dict(result)
+            payload["requestId"] = arguments.request_id
+            payload["microphoneClosed"] = True
+            emit("speech_cancelled", **payload)
+            return 0
+        time.sleep(0.05)
+
+    emit(
+        "error",
+        reason="capture cancellation was requested, but the microphone did not confirm closure in time",
+        requestId=arguments.request_id,
+    )
+    return 5
+
+
+def command_voice_cancel(arguments: argparse.Namespace) -> int:
+    try:
+        result = client(arguments.timeout).call("voice_cancel", {
+            "requestId": "", "taskId": arguments.task_id, "cancellationToken": "",
+        })
+    except (CompanionClientError, OSError) as exc:
+        emit("error", reason=str(exc), taskId=arguments.task_id)
+        return 4
+    payload = dict(result)
+    payload["taskId"] = arguments.task_id
+    emit("speech_output_cancelled", **payload)
     return 0
 
 
@@ -154,19 +503,31 @@ def command_ask(arguments: argparse.Namespace) -> int:
     #
     # The top-level key is still accepted, because a future operation that
     # returns one should not have to change this.
-    task = submitted.get("task")
-    task_id = ""
-    if isinstance(task, Mapping):
-        task_id = str(task.get("taskId") or "")
-    if not task_id:
-        task_id = str(submitted.get("taskId") or "")
+    task_id = _task_id(submitted)
     if not task_id:
         emit("error", reason=f"the runtime accepted the request without returning a task id "
                              f"(keys: {sorted(submitted)})")
         return 4
     emit("accepted", taskId=task_id, sessionId=session_id)
 
-    return watch(connection, task_id, deadline=time.monotonic() + arguments.deadline)
+    return watch(
+        connection, task_id, deadline=time.monotonic() + arguments.deadline,
+        speak_response=_voice_response_mode(connection) == "all",
+    )
+
+
+def _voice_response_mode(connection: CompanionClient) -> str:
+    """The persisted quietness policy; failure safely means voice requests only."""
+    try:
+        health = connection.call("voice_health", {})
+    except (CompanionClientError, OSError):
+        return "voice-only"
+    policy = health.get("policy", {})
+    preferences = policy.get("preferences", {}) if isinstance(policy, Mapping) else {}
+    if isinstance(preferences, Mapping) and preferences.get("enabled") is False:
+        return "never"
+    mode = str(preferences.get("responseMode") or "voice-only") if isinstance(preferences, Mapping) else "voice-only"
+    return mode if mode in ("voice-only", "all", "never") else "voice-only"
 
 
 def resolve_session(connection: CompanionClient, title: str) -> str:
@@ -185,11 +546,105 @@ def resolve_session(connection: CompanionClient, title: str) -> str:
     return str(created["sessionId"])
 
 
-def watch(connection: CompanionClient, task_id: str, *, deadline: float) -> int:
+def _file_results(events: object) -> list[dict[str, object]]:
+    """Extract only the presentation-safe part of a file-search outcome."""
+    if not isinstance(events, list):
+        return []
+    for event in events:
+        if not isinstance(event, Mapping):
+            continue
+        if event.get("kind") != "operation_completed" or event.get("name") != "search-files":
+            continue
+        value = event.get("value")
+        if not isinstance(value, Mapping):
+            continue
+        # The service keeps a bounded 24-result conversation set. Six are
+        # presented initially; the shell receives the rest of that same safe,
+        # path-free set so its Show all control is a display expansion rather
+        # than a second filesystem query.
+        results = value.get("allResults", value.get("results"))
+        if not isinstance(results, list):
+            continue
+        safe: list[dict[str, object]] = []
+        for item in results[:24]:
+            if not isinstance(item, Mapping):
+                continue
+            reference = str(item.get("reference") or "")
+            name = str(item.get("name") or "")
+            display = str(item.get("display") or "")
+            if reference and name:
+                safe.append({"reference": reference, "name": name, "display": display})
+        return safe
+    return []
+
+
+def _wait_for_speech(
+    connection: CompanionClient, request_id: str, *, deadline: float
+) -> tuple[str, str]:
+    """Wait for one accepted TTS request; return disposition and detail."""
+    while time.monotonic() <= deadline:
+        try:
+            status = connection.call("voice_status", {})
+        except (CompanionClientError, OSError) as exc:
+            return "failed", str(exc)
+        events = status.get("recentEvents", [])
+        if isinstance(events, list):
+            for event in reversed(events):
+                if not isinstance(event, Mapping):
+                    continue
+                if str(event.get("requestId") or "") != request_id:
+                    continue
+                kind = str(event.get("kind") or "")
+                if kind == "speech_finished":
+                    return "finished", ""
+                if kind in ("speech_cancelled", "speech_interrupted"):
+                    return "cancelled", str(event.get("detail") or "")
+                if kind in ("speech_failed", "speech_rejected"):
+                    return "failed", str(event.get("detail") or "speech output failed")
+        time.sleep(0.1)
+    return "failed", "speech output did not finish within its time limit"
+
+
+def _speak_result(
+    connection: CompanionClient, caption_id: str, task_id: str, *, deadline: float
+) -> tuple[str, str]:
+    if not caption_id:
+        return "failed", "no speakable caption was published"
+    try:
+        answer = connection.call("voice_speak", {
+            "captionId": caption_id,
+            "priority": "",
+            "interruptionPolicy": "",
+            "voiceId": "",
+            "replay": False,
+        })
+    except (CompanionClientError, OSError) as exc:
+        return "failed", str(exc)
+    if not answer.get("accepted"):
+        return "failed", str(answer.get("reason") or "speech output is unavailable")
+    request_id = str(answer.get("requestId") or "")
+    emit(
+        "speech_started", requestId=request_id, taskId=task_id,
+        cancellationToken=answer.get("cancellationToken", ""),
+    )
+    emit("phase", phase="speaking", statusText="Speaking...", taskId=task_id)
+    disposition, detail = _wait_for_speech(connection, request_id, deadline=deadline)
+    emit("speech_finished", requestId=request_id, taskId=task_id, disposition=disposition)
+    return disposition, detail
+
+
+def watch(
+    connection: CompanionClient,
+    task_id: str,
+    *,
+    deadline: float,
+    speak_response: bool = False,
+) -> int:
     """Poll the presentation state and report every change until it settles."""
     last_phase = ""
     last_revision = -1
     replied = False
+    results_reported = False
     while True:
         if time.monotonic() > deadline:
             emit("error", reason="the runtime did not finish within the deadline", taskId=task_id)
@@ -204,7 +659,11 @@ def watch(connection: CompanionClient, task_id: str, *, deadline: float) -> int:
         revision = document.get("revision", 0)
         phase = str(state.get("phase", "idle"))
 
-        if phase != last_phase:
+        # A successful task that will now be spoken has not reached its visible
+        # terminal state yet: TALKING is real TTS work and sits between the
+        # runtime's success and the shell's final SUCCESS gesture.
+        defer_success = phase == "success" and speak_response
+        if phase != last_phase and not defer_success:
             last_phase = phase
             emit(
                 "phase",
@@ -219,10 +678,26 @@ def watch(connection: CompanionClient, task_id: str, *, deadline: float) -> int:
             replied = True
             emit("reply", text=summary, taskId=task_id)
 
+        if not results_reported:
+            results = _file_results(document.get("events"))
+            if results:
+                results_reported = True
+                emit("file_results", results=results, taskId=task_id)
+
         error = str(state.get("errorSummary") or "")
         if phase in TERMINAL_PHASES:
             if error:
                 emit("reply", text=error, taskId=task_id, kind="error")
+            if phase == "success" and speak_response and summary:
+                speech_disposition, detail = _speak_result(
+                    connection, str(document.get("captionId") or ""), task_id,
+                    deadline=min(deadline, time.monotonic() + 60.0),
+                )
+                if speech_disposition == "failed":
+                    # Speech is optional; the task remains a success and the
+                    # visible answer remains authoritative.
+                    emit("speech_error", reason=detail, taskId=task_id)
+                emit("phase", phase="success", statusText="Done", taskId=task_id)
             emit("finished", phase=phase, taskId=task_id)
             return 0
 
@@ -244,12 +719,53 @@ def main(argv: list[str] | None = None) -> int:
     health = commands.add_parser("health", help="report whether a companion runtime is listening")
     health.set_defaults(handler=command_health)
 
+    voice_health = commands.add_parser(
+        "voice-health", help="report whether local microphone capture and STT are ready")
+    voice_health.add_argument("--timeout", type=float, default=15.0)
+    voice_health.set_defaults(handler=command_voice_health)
+
     ask = commands.add_parser("ask", help="submit a request and stream its progress")
     ask.add_argument("text", help="the request, as the user typed it")
     ask.add_argument("--session-title", default="Bunny Desktop")
     ask.add_argument("--timeout", type=float, default=15.0, help="per-call socket timeout")
     ask.add_argument("--deadline", type=float, default=DEADLINE_SECONDS)
     ask.set_defaults(handler=command_ask)
+
+    listen = commands.add_parser(
+        "listen", help="capture one bounded utterance and submit its confirmed transcript")
+    listen.add_argument("--session-title", default="Bunny Desktop")
+    listen.add_argument(
+        "--activation-source",
+        choices=("push-to-talk-button", "keyboard-shortcut", "accessibility-control"),
+        default="push-to-talk-button",
+    )
+    listen.add_argument("--language", default="")
+    listen.add_argument("--device", default="")
+    listen.add_argument("--provider", default="")
+    listen.add_argument("--timeout", type=float, default=15.0, help="per-call socket timeout")
+    listen.add_argument("--deadline", type=float, default=VOICE_DEADLINE_SECONDS)
+    listen.add_argument("--task-deadline", type=float, default=DEADLINE_SECONDS)
+    listen.add_argument("--no-speech", action="store_true")
+    listen.set_defaults(handler=command_listen)
+
+    speech_stop = commands.add_parser(
+        "speech-stop", help="stop microphone capture and continue transcription")
+    speech_stop.add_argument("request_id")
+    speech_stop.add_argument("--timeout", type=float, default=15.0)
+    speech_stop.set_defaults(handler=command_speech_stop)
+
+    speech_cancel = commands.add_parser(
+        "speech-cancel", help="cancel capture or a pending transcript")
+    speech_cancel.add_argument("request_id")
+    speech_cancel.add_argument("--cancellation-token", default="")
+    speech_cancel.add_argument("--timeout", type=float, default=15.0)
+    speech_cancel.set_defaults(handler=command_speech_cancel)
+
+    voice_cancel = commands.add_parser(
+        "voice-cancel", help="interrupt spoken output for one assistant task")
+    voice_cancel.add_argument("task_id")
+    voice_cancel.add_argument("--timeout", type=float, default=15.0)
+    voice_cancel.set_defaults(handler=command_voice_cancel)
 
     arguments = parser.parse_args(argv)
     try:

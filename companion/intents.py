@@ -97,16 +97,25 @@ FOLDERS: Mapping[str, str] = {
 #: Every intent kind this recogniser can produce. Named so a caller can
 #: exhaustively handle them and a test can assert the set has not grown by
 #: accident.
-KNOWN_INTENTS = ("open_application", "show_folder", "list_folder", "capabilities")
+KNOWN_INTENTS = (
+    "open_application",
+    "show_folder",
+    "list_folder",
+    "search_files",
+    "open_search_result",
+    "system_metric",
+    "media_control",
+    "capabilities",
+)
 
 
 @dataclass(frozen=True)
 class Intent:
     """One recognised request.
 
-    ``parameters`` holds only values that came from the tables above or from
-    the machine. Nothing a person typed is carried through into it, which is
-    what the executor relies on when it builds a planned operation.
+    ``parameters`` is a closed schema. Most values come from the tables above;
+    ``search_files.query`` may contain a bounded literal filename fragment and
+    is validated again by the file-search tool before any directory is read.
     """
 
     kind: str
@@ -123,7 +132,7 @@ class Intent:
 # --------------------------------------------------------------------------- #
 
 #: Verbs that mean "make this application appear".
-_OPEN = r"(?:open|launch|start|run|show me|bring up|go to)"
+_OPEN = r"(?:open|launch|start|run|show(?: me)?|bring up|go to)"
 
 #: Verbs that mean "show me the contents of this folder".
 _LIST = r"(?:list|what(?:'s| is| are)?(?: the)?(?: files)?(?: in)?|show me(?: the)?(?: files)?(?: in)?)"
@@ -177,6 +186,104 @@ def recognise(request: str) -> Intent | None:
     if re.search(r"\b(?:what can you do|what do you do|help|capabilities)\b", text):
         return Intent(kind="capabilities", description="Explain what I can do", matched=text)
 
+    # -- current system facts ---------------------------------------------
+    # These phrases ask for this machine's measured state. "What is RAM?"
+    # deliberately does not match: that is a conversational definition, not a
+    # computer-control request, and a configured model remains free to answer.
+    metric_patterns = (
+        (
+            "memory",
+            r"^(?:how much|what(?:'s| is)) (?:memory|ram) "
+            r"(?:am i using|is (?:currently )?(?:in use|being used|used)|do i have(?: available)?)$",
+        ),
+        (
+            "storage",
+            r"^(?:how much|what(?:'s| is)) (?:storage|disk space) "
+            r"(?:do i have|is (?:free|available|used)|am i using)$",
+        ),
+        (
+            "wifi",
+            r"^(?:is (?:wi-?fi|wireless)(?: connected| on)?|"
+            r"am i connected to (?:wi-?fi|wireless)|what is my (?:wi-?fi|wireless) status)$",
+        ),
+    )
+    for metric, pattern in metric_patterns:
+        if re.fullmatch(pattern, text):
+            return Intent(
+                kind="system_metric",
+                description=f"Read the current {metric} status",
+                parameters={"metric": metric},
+                matched=metric,
+            )
+
+    # -- media -------------------------------------------------------------
+    media_match = re.fullmatch(
+        r"(?:(pause|play|resume)(?: (?:the )?(?:music|media|song|audio))?|"
+        r"(next)(?: (?:song|track))?|skip(?: to)? the next (song|track))",
+        text,
+    )
+    if media_match:
+        spoken = next((item for item in media_match.groups() if item), "next")
+        command = "play" if spoken == "resume" else spoken
+        return Intent(
+            kind="media_control",
+            description=f"{command.title()} the active media player",
+            parameters={"command": command},
+            matched=spoken,
+        )
+
+    # -- short-lived file-result context ----------------------------------
+    result_match = re.fullmatch(
+        r"(?P<verb>open|show)(?: me)?(?: the)? "
+        r"(?:(?:result|file) )?"
+        r"(?P<selector>newest|latest|first|second|third|fourth|fifth|sixth|"
+        r"(?:[1-9]|1[0-9]|2[0-4]))(?:st|nd|rd|th)?"
+        r"(?: (?:one|result|file))?(?P<folder> in (?:its |the )?(?:containing )?folder)?",
+        text,
+    )
+    if result_match:
+        words = {
+            "first": "1", "second": "2", "third": "3", "fourth": "4",
+            "fifth": "5", "sixth": "6", "latest": "newest",
+        }
+        selector = words.get(result_match.group("selector"), result_match.group("selector"))
+        command = "show_containing_folder" if result_match.group("folder") else "open"
+        return Intent(
+            kind="open_search_result",
+            description="Open a validated recent file-search result",
+            parameters={"selector": selector, "command": command},
+            matched=result_match.group(0),
+        )
+
+    # -- safe local filename search ---------------------------------------
+    search_match = re.fullmatch(r"(?:find|search for|look for) (.+)", text)
+    if search_match:
+        body = search_match.group(1).strip()
+        scope = "all"
+        scope_match = re.search(
+            r"(?:\s+(?:in|under|from)\s+(?:my\s+)?)"
+            r"(desktop|documents|downloads|pictures|videos|music)(?:\s+folder)?$",
+            body,
+        )
+        if scope_match:
+            scope = scope_match.group(1)
+            body = body[:scope_match.start()].strip()
+        body = re.sub(r"^(?:my|the)\s+", "", body).strip()
+        file_type = ""
+        if re.fullmatch(r"(?:all\s+)?(?:pdfs?|pdf files?)", body):
+            file_type = "pdf"
+            body = ""
+        elif re.fullmatch(r"(?:all\s+)?(?:images?|pictures?|photos?)", body):
+            file_type = "image"
+            body = ""
+        if body or file_type:
+            return Intent(
+                kind="search_files",
+                description="Search file names in approved user folders",
+                parameters={"query": body, "scope": scope, "fileType": file_type},
+                matched=search_match.group(0),
+            )
+
     # -- listing a folder's contents ---------------------------------------
     # Checked before "open", because "show me the files in Downloads" contains
     # a word from both tables and the more specific reading is the right one.
@@ -229,9 +336,10 @@ def capability_sentence() -> str:
     only thing that knows where it is.
     """
     return (
-        "I can open applications and folders for you on this machine — "
-        "try “Open Files”, “Open Terminal” or "
-        "“What is in my Downloads folder”. "
+        "I can open applications and folders, search approved user folders, "
+        "read current system metrics, and control an active media player — "
+        "try “Open Files”, “Find PDFs in Downloads” or "
+        "“How much memory am I using?”. "
         "I do not have a language model configured on this machine, so I cannot "
         "answer general questions yet."
     )

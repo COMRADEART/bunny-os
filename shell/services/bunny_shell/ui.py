@@ -172,6 +172,8 @@ class BunnyApplication:
             elif name == "Recovery":
                 detail.append(self._label("Recovery, previous deployments, safe graphics, and diagnostics remain available without Bunny Core."))
                 detail.append(self._button("Inspect recovery status", lambda _b: _fixed_spawn(["/usr/bin/gnome-terminal", "--", "/usr/bin/bunny-os", "recovery", "status"])))
+            elif name == "Voice":
+                self._voice_settings(detail)
             else:
                 for key, value in settings.items():
                     if isinstance(value, bool):
@@ -197,6 +199,121 @@ class BunnyApplication:
         split.set_end_child(detail)
         navigation.select_row(selected_row or navigation.get_row_at_index(0))
         return split
+
+    def _voice_settings(self, detail: Any) -> None:
+        """The focused voice page, backed by the running companion service."""
+        try:
+            from companion.protocol import CompanionClient, default_endpoint_path
+
+            connection = CompanionClient(default_endpoint_path(), timeout=5.0)
+            state = dict(connection.call("settings_voice_get", {}))
+        except Exception as exc:  # noqa: BLE001 - settings remains a usable page
+            detail.append(self._label(
+                f"Voice settings are unavailable because Bunny Companion is not reachable: {exc}"))
+            detail.append(self._label(
+                "Typed input remains available. Start bunny-companion.service and reopen this page."))
+            return
+
+        detail.append(self._label(
+            "Push-to-talk is explicit and bounded to 30 seconds. Audio and recognition run "
+            "outside GNOME Shell, and no model is downloaded automatically."))
+
+        def switch_row(label: str, active: bool) -> Any:
+            row = self.Gtk.Box(orientation=self.Gtk.Orientation.HORIZONTAL, spacing=12)
+            row.append(self._label(label))
+            control = self.Gtk.Switch(active=active, hexpand=False)
+            control.update_property([self.Gtk.AccessibleProperty.LABEL], [label])
+            row.append(control)
+            detail.append(row)
+            return control
+
+        def dropdown_row(label: str, labels: list[str], selected: int = 0) -> Any:
+            row = self.Gtk.Box(orientation=self.Gtk.Orientation.HORIZONTAL, spacing=12)
+            row.append(self._label(label))
+            control = self.Gtk.DropDown.new_from_strings(labels)
+            control.set_selected(max(0, min(selected, len(labels) - 1)))
+            control.update_property([self.Gtk.AccessibleProperty.LABEL], [label])
+            row.append(control)
+            detail.append(row)
+            return control
+
+        voice_input = switch_row("Voice input", bool(state.get("voiceInput", True)))
+        speech_responses = switch_row(
+            "Speech responses", bool(state.get("speechResponses", True)))
+
+        response_values = ["voice-only", "all", "never"]
+        response_labels = ["Voice requests only", "All requests", "Never"]
+        response_mode = str(state.get("responseMode") or "voice-only")
+        response = dropdown_row(
+            "Speak responses for", response_labels,
+            response_values.index(response_mode) if response_mode in response_values else 0,
+        )
+
+        devices = [item for item in state.get("devices", []) if isinstance(item, dict)]
+        device_values = [""] + [str(item.get("deviceId") or "") for item in devices]
+        device_labels = ["System default"] + [
+            str(item.get("description") or item.get("name") or item.get("deviceId") or "Microphone")
+            for item in devices
+        ]
+        selected_device = str(state.get("deviceId") or "")
+        device = dropdown_row(
+            "Microphone", device_labels,
+            device_values.index(selected_device) if selected_device in device_values else 0,
+        )
+
+        recognizers = [item for item in state.get("recognizers", []) if isinstance(item, dict)]
+        discovered_models: list[str] = []
+        for item in recognizers:
+            origin = str(item.get("modelOrigin") or "")
+            if origin:
+                discovered_models.append(Path(origin).name)
+        model_values = [""] + list(dict.fromkeys(discovered_models))
+        model_labels = ["Automatic (smallest installed)"] + list(dict.fromkeys(discovered_models))
+        selected_model = str(state.get("modelId") or "")
+        if selected_model and selected_model not in model_values:
+            model_values.append(selected_model)
+            model_labels.append(f"{selected_model} (not installed)")
+        model = dropdown_row(
+            "Speech recognition model", model_labels,
+            model_values.index(selected_model) if selected_model in model_values else 0,
+        )
+        if not discovered_models:
+            detail.append(self._label(
+                "No trusted local STT model is installed. Install one knowingly under "
+                "/usr/share/bunny-os/speech-models or ~/.local/share/bunny-os/speech-models."))
+
+        language_values = ["automatic", "en"]
+        language_name = str(state.get("language") or "automatic")
+        language = dropdown_row(
+            "Language", ["Automatic", "English"],
+            language_values.index(language_name) if language_name in language_values else 0,
+        )
+        detail.append(self._label(
+            f"Push-to-talk shortcut: {state.get('shortcut') or '<Super><Alt>Space'}"))
+        detail.append(self._label("Wake word: Disabled (not available in this milestone)"))
+
+        status = self._label("")
+        detail.append(status)
+
+        def save(_button: Any) -> None:
+            try:
+                answer = connection.call("settings_voice_set", {
+                    "voiceInput": voice_input.get_active(),
+                    "speechResponses": speech_responses.get_active(),
+                    "responseMode": response_values[response.get_selected()],
+                    "deviceId": device_values[device.get_selected()],
+                    "modelId": model_values[model.get_selected()],
+                    "language": language_values[language.get_selected()],
+                    "shortcut": str(state.get("shortcut") or "<Super><Alt>space"),
+                    "wakeWord": "disabled",
+                })
+                status.set_text(
+                    "Saved. Restart Bunny Companion to change the loaded model."
+                    if answer.get("restartRequired") else "Saved and applied.")
+            except Exception as exc:  # noqa: BLE001 - keep the editor open
+                status.set_text(f"Voice settings were not saved: {exc}")
+
+        detail.append(self._button("Save voice settings", save))
 
     def _workspaces(self) -> Any:
         box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)

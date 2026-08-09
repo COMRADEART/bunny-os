@@ -446,7 +446,8 @@ class NavigationContractTests(unittest.TestCase):
             relative = path.relative_to(EXTENSION).as_posix()
             if relative in {"extension.js", "lib/services/launcher.js",
                             "lib/services/search.js", "lib/services/assistant.js",
-                            "lib/services/agenda.js", "lib/services/network.js"}:
+                            "lib/services/voice.js", "lib/services/agenda.js",
+                            "lib/services/network.js"}:
                 continue
             if "Gio.Subprocess.new" in path.read_text(encoding="utf-8"):
                 offenders.append(relative)
@@ -1560,7 +1561,8 @@ class AssistantFlowTests(unittest.TestCase):
     def test_activation_focuses_the_input_and_shows_it_happened(self) -> None:
         shell = module_text(self.SHELL)
         body = shell.split("_activateAssistant() {", 1)[1][:500]
-        self.assertIn("setState('listening'", body)
+        self.assertNotIn("setState('listening'", body,
+                         "typed focus must never imply an active microphone")
         self.assertIn("focusInput()", body)
         self.assertIn("_bubble?.say(", body)
 
@@ -1570,8 +1572,9 @@ class AssistantFlowTests(unittest.TestCase):
         self.assertIn("onDismiss", panel)
         shell = module_text(self.SHELL)
         dismiss = shell.split("_dismissAssistant() {", 1)[1][:400]
-        # Escape is not a cancel button: a running request keeps running.
-        self.assertIn("=== 'listening'", dismiss)
+        # Escape releases speech resources but still does not cancel a task.
+        self.assertIn("_releaseVoiceInteraction", dismiss)
+        self.assertNotIn("cancel_task", dismiss)
 
 
 class BubbleResponseTests(unittest.TestCase):

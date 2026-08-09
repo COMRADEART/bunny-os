@@ -48,6 +48,7 @@ export const PHASE_TO_STATE = {
     reviewing: 'thinking',
     waiting_for_approval: 'warning',
     listening: 'listening',
+    transcribing: 'thinking',
     speaking: 'talking',
     presenting_result: 'talking',
     working: 'working',
@@ -69,6 +70,8 @@ export class AssistantService {
         this._sequence = 0;
         this._activeRequestId = 0;
         this._watchdog = null;
+        this._taskId = '';
+        this._speechActive = false;
     }
 
     /**
@@ -110,6 +113,9 @@ export class AssistantService {
      *   PHASE_TO_STATE above; doing it here would put the mapping in two files.
      */
     ask(text, handlers = {}) {
+        // A new request interrupts output speech from the previous one but,
+        // as before, does not cancel the task that produced it.
+        this.interruptSpeech();
         this.cancelWatch();
         const trimmed = text.trim();
         if (trimmed === '') {
@@ -133,6 +139,8 @@ export class AssistantService {
         this._sequence += 1;
         const requestId = this._sequence;
         this._activeRequestId = requestId;
+        this._taskId = '';
+        this._speechActive = false;
 
         const stillCurrent = () => this._activeRequestId === requestId;
 
@@ -168,6 +176,7 @@ export class AssistantService {
                 return;
             switch (line.event) {
             case 'accepted':
+                this._taskId = line.taskId ?? '';
                 handlers.onAccepted?.(line.taskId, {requestId});
                 break;
             case 'phase':
@@ -176,11 +185,28 @@ export class AssistantService {
             case 'reply':
                 handlers.onReply?.(line.text, line.kind === 'error', {requestId});
                 break;
+            case 'file_results':
+                handlers.onFileResults?.(line.results ?? [], {requestId});
+                break;
+            case 'speech_started':
+                this._speechActive = true;
+                handlers.onSpeechStarted?.(line, {requestId});
+                break;
+            case 'speech_finished':
+                this._speechActive = false;
+                handlers.onSpeechFinished?.(line, {requestId});
+                break;
+            case 'speech_error':
+                this._speechActive = false;
+                handlers.onSpeechError?.(line.reason ?? 'Speech output is unavailable.', {requestId});
+                break;
             case 'finished':
+                this._speechActive = false;
                 finish();
                 handlers.onFinished?.(line.phase, {requestId});
                 break;
             case 'error':
+                this._speechActive = false;
                 this._available = false;
                 this._availabilityReason = line.reason;
                 finish();
@@ -209,6 +235,26 @@ export class AssistantService {
         return this._activeRequestId;
     }
 
+    get speechActive() {
+        return this._speechActive;
+    }
+
+    /** Interrupt spoken output without cancelling its completed task. */
+    interruptSpeech() {
+        // Task-scoped cancellation is harmless before synthesis starts and
+        // closes the small race between the bridge accepting TTS and this
+        // reader receiving its speech_started line.
+        if (!this._taskId)
+            return false;
+        const taskId = this._taskId;
+        this._run(['voice-cancel', taskId], line => {
+            if (line.event === 'error')
+                logOnce('assistant-speech-cancel', line.reason ?? 'speech cancellation failed');
+        }, null);
+        this._speechActive = false;
+        return true;
+    }
+
     /**
      * Stop watching the current request.
      *
@@ -230,6 +276,7 @@ export class AssistantService {
     }
 
     destroy() {
+        this.interruptSpeech();
         this.cancelWatch();
     }
 

@@ -74,7 +74,27 @@ def _options() -> ServiceOptions:
     inherits theirs.
     """
     root = _state_root()
-    options = ServiceOptions(root=root)
+    try:
+        from companion.settings import load_settings
+
+        settings = load_settings(root)
+        options = ServiceOptions(
+            root=root,
+            preferences=settings.accessibility_preferences(),
+            # Constructing either subsystem opens no device and starts no
+            # capture. Keep the objects available so an Off→On setting applies
+            # live; the preference is the fail-closed gate.
+            voice_enabled=True,
+            voice_preferences=settings.voice_preferences(),
+            speech_enabled=True,
+            speech_preferences=settings.speech_preferences(),
+        )
+    except Exception as exc:  # pragma: no cover - settings cannot block login
+        print(
+            f"bunny-companion-service: voice settings not applied ({exc}); using safe defaults",
+            file=sys.stderr,
+        )
+        options = ServiceOptions(root=root)
     try:
         from companion.support.safemode import (
             local_only_configuration, read_safe_mode, service_overrides,

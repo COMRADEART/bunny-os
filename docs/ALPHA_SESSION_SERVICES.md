@@ -47,7 +47,7 @@ the runtime to start:
 
 | Component | If it is missing or broken | The runtime |
 | --- | --- | --- |
-| Vosk / a recognition model | `speech_input_*` answers "no speech-input runtime" | starts |
+| Vosk / a recognition model | speech health names the missing library/model; push-to-talk is unavailable and typed input remains | starts |
 | Ollama / llama.cpp | provider selection finds nothing eligible; typed input still produces a task | starts |
 | Audio output | `voice_*` degrades to captions | starts |
 | Microphone | push-to-talk reports unavailable | starts |

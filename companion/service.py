@@ -38,7 +38,7 @@ a result, because none of those were ever attached to a socket.
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import os
 from pathlib import Path
 import queue
@@ -72,6 +72,7 @@ from .protocol import (
 )
 from .recovery import recover
 from .runtime import CompanionRuntime
+from .states import TERMINAL_STATES
 # The *preferences* type only. The service reaches the voice runtime through
 # :meth:`CompanionService._build_voice`, which imports it inside the function —
 # so a build with no voice package still imports this module, and the dependency
@@ -498,6 +499,7 @@ class CompanionGateway:
         clock: Clock | None = None,
         voice: "VoiceService | None" = None,
         agents: "AgentProviderService | None" = None,
+        settings_root: Path | None = None,
     ) -> None:
         self.runtime = runtime
         self.consent = consent
@@ -520,6 +522,7 @@ class CompanionGateway:
         #: operation answers "no agent-provider runtime" and the deterministic
         #: executor carries every task.
         self.agents = agents
+        self.settings_root = Path(settings_root) if settings_root is not None else None
         #: Attached by the service after the runtime exists, through
         #: :meth:`attach_desktop`. Absent means every ``desktop_action*``
         #: operation answers "no desktop action broker" — and, unlike the other
@@ -587,6 +590,14 @@ class CompanionGateway:
                 # write before it unwound.
                 self._record_fault(item, exc, classified=False, state_before=state_before)
             finally:
+                if self._task_state(item) in TERMINAL_STATES:
+                    try:
+                        self._release_desktop_context(item)
+                    except Exception as exc:  # noqa: BLE001 - cleanup must not kill the worker
+                        self._record_fault(
+                            item, exc, classified=False,
+                            state_before=self._task_state(item),
+                        )
                 with self._guard:
                     self._running.discard(item)
 
@@ -800,8 +811,11 @@ class CompanionGateway:
         costLimitUnits: int | None,
         run: bool,
     ) -> dict[str, Any]:
-        task = self.runtime.submit_task(
-            sessionId, request, classification=classification, cost_limit_units=costLimitUnits
+        task = self._submit_runtime_task(
+            sessionId,
+            request,
+            classification=classification,
+            cost_limit_units=costLimitUnits,
         )
         scheduled = self._schedule(task.task_id) if run else "not-scheduled"
         return {
@@ -809,6 +823,94 @@ class CompanionGateway:
             "sessionId": sessionId,
             "scheduled": scheduled,
         }
+
+    def _path_context_for_request(self, session_id: str, request: str) -> Any:
+        """Canonical local-path authority implied by one closed local intent.
+
+        A request can select only an XDG directory key or a numbered result in
+        the service-owned, session-bound search ledger. The returned object is
+        consumed by :class:`DesktopSupport`; it never enters a task document,
+        executor plan, model prompt or protocol response.
+        """
+        binder = getattr(self.desktop, "bind_path_context", None)
+        if not callable(binder):
+            return None
+
+        from .desktop.paths import PathContext
+        from .intents import recognise
+        from .local_files import (
+            SEARCH_DIRECTORY_KEYS,
+            resolve_search_result,
+        )
+        from .local_intent import user_directory
+
+        intent = recognise(request)
+        if intent is None:
+            return None
+        reference = ""
+        path: Path | None = None
+        root: Path | None = None
+        origin = ""
+        if intent.kind == "show_folder":
+            key = str(intent.parameters.get("directory", ""))
+            if key not in SEARCH_DIRECTORY_KEYS:
+                return None
+            selected = user_directory(key)
+            if selected is None:
+                return None
+            path = Path(os.path.realpath(selected))
+            root = path
+            reference = "requested-directory"
+            origin = "closed-user-directory"
+        elif intent.kind == "open_search_result":
+            selector = str(intent.parameters.get("selector", ""))
+            authority, _reason = resolve_search_result(session_id, selector)
+            if authority is None:
+                return None
+            path = authority.path
+            root = authority.root
+            reference = "search-result"
+            origin = "earlier-search-result"
+        else:
+            return None
+
+        context = PathContext.build(
+            {reference: str(path)},
+            roots=(root,),
+            origin=origin,
+        )
+        # Establish every invariant now, then establish it again when the
+        # desktop broker prepares the action. The second check catches a file
+        # moved or replaced after submission and before approval.
+        try:
+            context.resolve(reference)
+        except CompanionError:
+            return None
+        return context
+
+    def _submit_runtime_task(
+        self,
+        session_id: str,
+        request: str,
+        *,
+        classification: str | None = None,
+        cost_limit_units: int | None = None,
+    ) -> Any:
+        path_context = self._path_context_for_request(session_id, request)
+        task = self.runtime.submit_task(
+            session_id,
+            request,
+            classification=classification,
+            cost_limit_units=cost_limit_units,
+        )
+        if path_context is not None:
+            self.desktop.bind_path_context(task.task_id, path_context)
+        return task
+
+    def _release_desktop_context(self, task_id: str) -> None:
+        release = getattr(self.desktop, "release_task_context", None)
+        if callable(release):
+            release(task_id)
 
     def list_tasks(self, *, sessionId: str | None) -> dict[str, Any]:
         session_ids = [sessionId] if sessionId else list(self.runtime.store.session_ids())
@@ -1042,6 +1144,14 @@ class CompanionGateway:
                 )
             except Exception:  # noqa: BLE001 - a voice fault must not fail a cancellation
                 silenced = ()
+        if outcome.task.state in TERMINAL_STATES:
+            try:
+                self._release_desktop_context(task.task_id)
+            except Exception as exc:  # noqa: BLE001 - cancellation itself already succeeded
+                self._record_fault(
+                    task.task_id, exc, classified=False,
+                    state_before=outcome.task.state,
+                )
         return {
             "sessionId": session_id,
             "cancellation": outcome.to_json(),
@@ -1082,6 +1192,104 @@ class CompanionGateway:
         task = self.runtime.resume_task(session_id, taskId)
         self._schedule(task.task_id)
         return {"sessionId": session_id, "task": task.view(PRESENTATION_AUDIENCE), "scheduled": "queued"}
+
+    # -- focused voice settings -------------------------------------------
+
+    def _voice_settings_document(self, settings: Any) -> dict[str, Any]:
+        devices: list[dict[str, Any]] = []
+        recognizers: list[dict[str, Any]] = []
+        if self.speech is not None:
+            try:
+                devices = list(self.speech.speech_input_devices().get("devices", []))
+                recognizers = list(self.speech.speech_input_health().get("recognizers", []))
+            except Exception:  # noqa: BLE001 - inventory never blocks settings
+                devices, recognizers = [], []
+        return {
+            "voiceInput": settings.speech_input.enabled,
+            "speechResponses": settings.voice.enabled,
+            "responseMode": settings.voice.response_mode,
+            "deviceId": settings.speech_input.device_id,
+            "modelId": settings.speech_input.model_id,
+            "language": settings.speech_input.language,
+            "shortcut": settings.speech_input.shortcut,
+            "wakeWord": settings.speech_input.wake_word,
+            "devices": devices[:64],
+            "recognizers": recognizers,
+            "modelDownloadAutomatic": False,
+            "wakeWordAvailable": False,
+        }
+
+    def settings_voice_get(self) -> dict[str, Any]:
+        from .settings import Settings, load_settings
+
+        settings = load_settings(self.settings_root) if self.settings_root is not None else Settings()
+        return self._voice_settings_document(settings)
+
+    def settings_voice_set(
+        self,
+        *,
+        voiceInput: bool,
+        speechResponses: bool,
+        responseMode: str,
+        deviceId: str,
+        modelId: str,
+        language: str,
+        shortcut: str,
+        wakeWord: str,
+    ) -> dict[str, Any]:
+        if self.settings_root is None:
+            raise CompanionError("this runtime has no writable settings root")
+        from .settings import (
+            SpeechInputSettings,
+            VoiceSettings,
+            load_settings,
+            save_settings,
+        )
+
+        current = load_settings(self.settings_root)
+        voice = VoiceSettings(
+            enabled=bool(speechResponses),
+            response_mode=responseMode,
+            voice_id=current.voice.voice_id,
+            speaking_rate=current.voice.speaking_rate,
+            volume=current.voice.volume,
+        )
+        speech = SpeechInputSettings(
+            enabled=bool(voiceInput),
+            device_id=deviceId,
+            shortcut=shortcut,
+            model_id=modelId,
+            language=language,
+            wake_word=wakeWord,
+        )
+        updated = replace(current, voice=voice, speech_input=speech)
+        save_settings(self.settings_root, updated)
+
+        applied_live = True
+        model_changed = current.speech_input.model_id != updated.speech_input.model_id
+        if self.speech is not None:
+            self.speech.set_preferences(updated.speech_preferences())
+            if model_changed:
+                applied_live = False
+        elif voiceInput:
+            applied_live = False
+        if self.voice is not None:
+            preferences = updated.voice_preferences()
+            if not speechResponses or responseMode == "never":
+                preferences = replace(preferences, enabled=False)
+                status = self.voice.worker.status()
+                current_voice = status.get("current")
+                if isinstance(current_voice, Mapping):
+                    self.voice.worker.cancel(str(current_voice.get("requestId") or ""))
+            self.voice.set_preferences(preferences)
+        elif speechResponses and responseMode != "never":
+            applied_live = False
+        return {
+            **self._voice_settings_document(updated),
+            "saved": True,
+            "appliedLive": applied_live,
+            "restartRequired": not applied_live,
+        }
 
     # -- internals ---------------------------------------------------------
 
@@ -1198,7 +1406,7 @@ class CompanionGateway:
 
     def _submit_confirmed_transcript(self, submission: Any) -> str:
         session_id = submission.transcript.session_id
-        task = self.runtime.submit_task(session_id, submission.text)
+        task = self._submit_runtime_task(session_id, submission.text)
         self._schedule(task.task_id)
         return task.task_id
 
@@ -1308,7 +1516,7 @@ class CompanionGateway:
                 "typedInputPreserved": True,
             }
         try:
-            task = self.runtime.submit_task(sessionId, submission.text)
+            task = self._submit_runtime_task(sessionId, submission.text)
         except CompanionError as exc:
             # Confirmed and refused downstream — a transcript over the task
             # bound, a session that lapsed. The record says both facts; the
@@ -1936,6 +2144,7 @@ class CompanionService:
             clock=self.runtime.clock,
             voice=self.voice,
             agents=self.agents,
+            settings_root=self.root,
         )
         # The desktop broker was built with the runtime, two steps ago, because
         # registering its tools has to happen before the runtime holds the
@@ -2087,6 +2296,7 @@ class CompanionService:
         from .executor import DeterministicLocalExecutor
         from .ids import RandomIds
         from .local_files import LOCAL_FILE_TOOLS
+        from .local_system import LOCAL_SYSTEM_TOOLS
         from .reviewer import DeterministicLocalReviewer
         from .runtime import RuntimeOptions
         from .store import CompanionStore
@@ -2104,7 +2314,7 @@ class CompanionService:
         # that skipped this line would refuse `files.list_directory` exactly as
         # it refuses an invented one — which is the correct failure, just not
         # the intended one.
-        broker.tools = {**broker.tools, **LOCAL_FILE_TOOLS}
+        broker.tools = {**broker.tools, **LOCAL_FILE_TOOLS, **LOCAL_SYSTEM_TOOLS}
         # One local executor, as before. The desktop intents are reached
         # through it rather than beside it — see DeterministicLocalExecutor's
         # `_intent` — because capability selection picks exactly one local

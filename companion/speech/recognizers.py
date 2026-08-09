@@ -119,6 +119,7 @@ def _directory_bytes(path: Path) -> int:
 
 def _discover_model(
     directories: Sequence[str] = MODEL_DIRECTORIES,
+    preferred_model_id: str = "",
 ) -> tuple[Path | None, str, str, str]:
     """The first usable model, or the reason there is none.
 
@@ -141,6 +142,8 @@ def _discover_model(
             match = _MODEL_NAME.match(child.name)
             if match is None:
                 continue
+            if preferred_model_id and child.name != preferred_model_id:
+                continue
             safe, reason = _directory_safe(child)
             if not safe:
                 problems.append(f"{child.name}: {reason}")
@@ -151,6 +154,10 @@ def _discover_model(
             return child, language, locale, ""
     if problems:
         return None, "", "", "; ".join(problems[:4])
+    if preferred_model_id:
+        return None, "", "", (
+            f"the selected local model {preferred_model_id!r} is not installed in a trusted model directory"
+        )
     return None, "", "", (
         "no recognition model is installed in a trusted directory; searched "
         + ", ".join(directories)
@@ -288,9 +295,11 @@ class VoskRecognizer:
         self,
         *,
         model_directories: Sequence[str] = MODEL_DIRECTORIES,
+        preferred_model_id: str = "",
         importer: Callable[[], Any] | None = None,
     ) -> None:
         self._model_directories = tuple(model_directories)
+        self._preferred_model_id = preferred_model_id
         self._importer = importer or self._import_vosk
         self._guard = threading.RLock()
         self._probed = False
@@ -329,7 +338,8 @@ class VoskRecognizer:
                     self._module = None
                     self._detail = f"the vosk library is not importable: {exc}"
                     return
-            path, language, locale, detail = _discover_model(self._model_directories)
+            path, language, locale, detail = _discover_model(
+                self._model_directories, self._preferred_model_id)
             if path is None:
                 self._detail = detail
                 return
@@ -432,6 +442,7 @@ class VoskRecognizer:
 def local_recognizers(
     *,
     model_directories: Sequence[str] = MODEL_DIRECTORIES,
+    preferred_model_id: str = "",
 ) -> "RecognizerRegistry":
     """Every real local recogniser, in preference order. Today that is one.
 
@@ -442,5 +453,8 @@ def local_recognizers(
     from .recognizer import RecognizerRegistry
 
     return RecognizerRegistry([
-        VoskRecognizer(model_directories=model_directories),
+        VoskRecognizer(
+            model_directories=model_directories,
+            preferred_model_id=preferred_model_id,
+        ),
     ])

@@ -72,6 +72,7 @@ import {ApplicationLauncher} from './services/launcher.js';
 import {MediaService} from './services/mpris.js';
 import {AgendaService} from './services/agenda.js';
 import {AssistantService, PHASE_TO_STATE} from './services/assistant.js';
+import {VoiceService} from './services/voice.js';
 import {UniversalSearch} from './services/search.js';
 
 /** How long a reply stays on the character's face before it returns to idle. */
@@ -93,6 +94,8 @@ export class DesktopShell {
         this._destroyed = false;
         //: The request the desktop is currently showing. See `_owns`.
         this._requestId = 0;
+        this._voiceInteractionId = 0;
+        this._voicePhase = 'idle';
         this._lastRequest = '';
 
         /** Names of components that failed to build. See `_optional`. */
@@ -234,9 +237,9 @@ export class DesktopShell {
         this.media = this._optional('media control', () => new MediaService());
         this.agenda = this._optional('calendar', () => new AgendaService());
         this.assistant = this._optional('assistant bridge', () => new AssistantService());
+        this.voice = this._optional('voice bridge', () => new VoiceService());
 
         this.assistant?.checkHealth((available, reason) => {
-            this._assistantPanel?.setVoiceAvailable(available, reason);
             this._suggestions?.rebuild();
             if (!available) {
                 this.characterState.setState('sleeping', {reason});
@@ -244,6 +247,11 @@ export class DesktopShell {
                     'I am not connected to my runtime yet. Everything else on this desktop still works.',
                     {tone: 'warning'});
             }
+        });
+        this.voice?.checkHealth((available, reason) => {
+            this._assistantPanel?.setVoiceAvailable(available, reason);
+            if (!available)
+                log_(`push-to-talk unavailable: ${reason}`);
         });
     }
 
@@ -302,6 +310,7 @@ export class DesktopShell {
             assistant: this.assistant,
             onSubmit: text => this._ask(text),
             onVoice: () => this._startVoice(),
+            onFileResult: (index, command) => this._openFileResult(index, command),
             onOpenFull: () => this.launcher.spawn(['bunny-command']),
             onDismiss: () => this._dismissAssistant(),
         }));
@@ -513,6 +522,7 @@ export class DesktopShell {
             });
             bind('focus-desktop-sidebar', () => this.sidebar?.focus());
             bind('focus-desktop-assistant', () => this._activateAssistant());
+            bind('push-to-talk', () => this._startVoice('keyboard-shortcut'));
         } catch (error) {
             // A key missing from the compiled schema must not take the desktop
             // down with it: everything else here works without a shortcut.
@@ -761,29 +771,30 @@ export class DesktopShell {
     /**
      * Click the character, press Super+Shift+B, or choose AI Assistant.
      *
-     * Three things happen and all three are the point: the input takes focus so
-     * the next keystroke lands in it, the character adopts LISTENING so the
-     * desktop visibly acknowledges the shortcut, and the bubble says what is
-     * being waited for. A shortcut whose only effect is an invisible focus
-     * change is a shortcut people press twice.
+     * This is the typed-input shortcut. LISTENING is reserved for an explicit
+     * microphone activation, so keyboard focus can never be mistaken for a
+     * live microphone.
      */
     _activateAssistant() {
-        log_('assistant activated; the input has focus and the character is listening');
-        this.characterState.setState('listening', {reason: 'waiting for your request'});
-        this._bubble?.say('I am listening. What would you like to do?', {wave: true});
+        log_('assistant activated; the text input has focus');
+        this.characterState.noteActivity();
+        this._bubble?.say('Ready when you are. Type a request or press the microphone.', {wave: true});
         this._assistantPanel?.focusInput();
     }
 
     /**
      * Escape out of the assistant without submitting.
      *
-     * LISTENING is the only state this clears. A dismissal that also stopped a
-     * THINKING or WORKING request would make Escape a cancel button, which it
-     * is not: the request belongs to the runtime and the Tasks surface owns
-     * stopping it.
+     * Escape is also the explicit speech-interruption control. It releases an
+     * open microphone and stops output speech; it does not cancel a task that
+     * the runtime already owns.
      */
     _dismissAssistant() {
-        if (this.characterState.state === 'listening')
+        if (this._voicePhase === 'speaking')
+            this.voice?.interruptSpeech() || this.assistant?.interruptSpeech();
+        this._releaseVoiceInteraction({notify: true});
+        this._voicePhase = 'idle';
+        if (this.characterState.state === 'listening' || this.characterState.state === 'talking')
             this.characterState.setState('idle', {reason: 'the request was dismissed'});
         this._bubble?.hide();
         global.stage.set_key_focus(null);
@@ -815,9 +826,15 @@ export class DesktopShell {
             return;
         }
 
+        // A new request immediately releases speech resources. A task already
+        // accepted by the runtime remains there and stays visible in Tasks.
+        this._releaseVoiceInteraction({notify: false});
+        this._voicePhase = 'idle';
+
         log_(`assistant request submitted: ${trimmed.length} characters`);
         this.characterState.noteActivity();
         this._assistantPanel?.addTurn('user', trimmed);
+        this._assistantPanel?.showFileResults([]);
         this._assistantPanel?.setBusy(true);
         this._assistantPanel?.setStatus('Thinking…');
         this.characterState.setState('thinking', {reason: trimmed});
@@ -828,6 +845,8 @@ export class DesktopShell {
             onPhase: (phase, statusText, meta) => {
                 if (!this._owns(meta))
                     return;
+                if (phase === 'speaking')
+                    this._voicePhase = 'speaking';
                 this.characterState.adoptPhase(phase, PHASE_TO_STATE, {statusText});
                 if (statusText)
                     this._assistantPanel?.setStatus(statusText);
@@ -849,9 +868,31 @@ export class DesktopShell {
                     this._returnToIdleAfterTalking();
                 }
             },
+            onFileResults: (results, meta) => {
+                if (this._owns(meta))
+                    this._assistantPanel?.showFileResults(results);
+            },
+            onSpeechStarted: (_speech, meta) => {
+                if (!this._owns(meta))
+                    return;
+                this._voicePhase = 'speaking';
+                this._assistantPanel?.setVoiceState(false, 'speaking');
+                this.characterState.setState('talking', {reason: 'speaking the typed response'});
+            },
+            onSpeechFinished: (_speech, meta) => {
+                if (this._owns(meta))
+                    this._voicePhase = 'idle';
+            },
+            onSpeechError: (reason, meta) => {
+                if (!this._owns(meta))
+                    return;
+                this._voicePhase = 'idle';
+                this.notifications.warning(`Bunny could not speak: ${reason}`);
+            },
             onFinished: (phase, meta) => {
                 if (!this._owns(meta))
                     return;
+                this._voicePhase = 'idle';
                 this._assistantPanel?.setBusy(false);
                 this._assistantPanel?.setStatus('');
                 if (phase === 'success') {
@@ -920,19 +961,230 @@ export class DesktopShell {
     }
 
     /**
-     * Hand the microphone to the companion's speech service.
-     *
-     * Not implemented as a capture stream here; see the note in
-     * assistant/panel.js. `bunny-command --listen` is the surface that owns
-     * consent and the confirmation step.
+     * Run one explicit, bounded voice interaction in the companion service.
+     * GNOME Shell renders events only; it never opens an audio device or loads
+     * a recognition/synthesis model.
      */
-    _startVoice() {
-        this.characterState.setState('listening', {reason: 'speech input requested'});
-        this._bubble?.say('Listening…', {wave: true});
-        if (!this.launcher.spawn(['bunny-command', '--listen'])) {
-            this.characterState.setState('warning', {reason: 'speech input is unavailable'});
-            this.notifications.warning('Speech input is not available on this system.');
+    _startVoice(activationSource = 'push-to-talk-button') {
+        // Output speech remains interruptible even when Voice Input is Off.
+        // In that configuration this control is a Stop button, not an attempt
+        // to open a disabled microphone.
+        if (this._voicePhase === 'speaking') {
+            this.voice?.interruptSpeech() || this.assistant?.interruptSpeech();
+            this._voicePhase = 'idle';
+            this._assistantPanel?.setVoiceState(false);
+            this._assistantPanel?.setBusy(false);
+            this._assistantPanel?.setStatus('Speech stopped.');
+            this.characterState.setState('idle', {reason: 'speech was interrupted'});
+            return;
         }
+
+        if (!this.voice || this.voice.available === false) {
+            const reason = this.voice?.availabilityReason ?? 'the voice service is unavailable';
+            this.characterState.setState('warning', {reason});
+            this._bubble?.say(`Voice input is unavailable: ${reason}`, {tone: 'warning'});
+            this.notifications.warning(`Speech input is unavailable: ${reason}`);
+            this._returnToIdleAfterTalking();
+            return;
+        }
+
+        if (this.voice.cancellationPending) {
+            this._assistantPanel?.setStatus(
+                'Waiting for the microphone to confirm it is closed…');
+            return;
+        }
+
+        // A second activation while the initial request is crossing the IPC
+        // boundary means cancel, not another capture. At this point the shell
+        // may not have a request id yet, so VoiceService keeps reading until it
+        // can cancel and confirm closure.
+        if (this._voicePhase === 'starting') {
+            this._voicePhase = 'stopping';
+            this._assistantPanel?.setStatus('Stopping the microphone…');
+            this._releaseVoiceInteraction({
+                notify: false,
+                onClosed: () => {
+                    if (this._voicePhase !== 'stopping')
+                        return;
+                    this._voicePhase = 'idle';
+                    this._assistantPanel?.setBusy(false);
+                    this._assistantPanel?.setStatus('');
+                    this.characterState.setState('idle', {
+                        reason: 'voice activation was cancelled',
+                    });
+                },
+            });
+            return;
+        }
+
+        // Clicking the same button while listening is an explicit manual stop,
+        // not a second capture. Recognition continues over what was recorded.
+        if (this._voicePhase === 'listening' && this.voice.stopCapture()) {
+            this._voicePhase = 'stopping';
+            // The MIC indicator and LISTENING pose remain until the companion
+            // reports that the device actually closed. A requested stop is not
+            // yet a closed microphone.
+            this._assistantPanel?.setStatus('Stopping the microphone…');
+            return;
+        }
+        if (this._voicePhase === 'stopping')
+            return;
+        this.assistant?.interruptSpeech();
+        this.assistant?.cancelWatch();
+        this._releaseVoiceInteraction({notify: false});
+        this._voicePhase = 'starting';
+        this._assistantPanel?.showFileResults([]);
+        this._assistantPanel?.setBusy(true);
+        // Conservative privacy ordering: make the persistent chrome indicator
+        // visible before asking the service to open a device. The companion
+        // enforces the same order internally with its ListeningIndicator.
+        this._setMicrophoneVisible(true);
+        this._assistantPanel?.setVoiceState(true, 'starting');
+        this._assistantPanel?.setStatus('Starting microphone…');
+        this.characterState.setState('listening', {reason: 'explicit push-to-talk activation'});
+        this._bubble?.say('Starting the microphone…', {wave: true});
+
+        const interactionId = this.voice.start(activationSource, {
+            onMicrophone: (active, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                this._setMicrophoneVisible(active);
+                this._assistantPanel?.setVoiceState(active, active ? 'listening' : this._voicePhase);
+                if (active) {
+                    this._voicePhase = 'listening';
+                    this._assistantPanel?.setStatus('Listening… Click the microphone to stop.');
+                    this.characterState.setState('listening', {reason: 'microphone is active'});
+                    this._bubble?.say('Listening…', {wave: true});
+                }
+            },
+            onPhase: (phase, statusText, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                this._voicePhase = phase === 'speaking' ? 'speaking' : phase;
+                this.characterState.adoptPhase(phase, PHASE_TO_STATE, {statusText});
+                if (statusText)
+                    this._assistantPanel?.setStatus(statusText);
+                if (phase === 'speaking')
+                    this._assistantPanel?.setVoiceState(false, 'speaking');
+            },
+            onPartial: (partial, meta) => {
+                if (this._ownsVoice(meta) && partial)
+                    this._assistantPanel?.setStatus(`Hearing: ${partial}`);
+            },
+            onTranscript: (transcript, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                const text = String(transcript.text ?? '').trim();
+                this._setMicrophoneVisible(false);
+                this._assistantPanel?.setVoiceState(false);
+                if (text) {
+                    this._assistantPanel?.addTurn('user', text);
+                    this._assistantPanel?.setStatus(`Heard: ${text}`);
+                    this._bubble?.say(text, {wave: false});
+                }
+                this._voicePhase = 'thinking';
+                this.characterState.setState('thinking', {reason: 'the transcript is being understood'});
+            },
+            onAccepted: (_taskId, meta) => {
+                if (this._ownsVoice(meta))
+                    this._assistantPanel?.setStatus('Thinking…');
+            },
+            onReply: (reply, isError, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                this._assistantPanel?.addTurn('bunny', reply, {tone: isError ? 'error' : 'normal'});
+                this._bubble?.say(reply, {
+                    tone: isError ? 'error' : 'normal',
+                    wave: !isError,
+                    onOpenFull: () => this._assistantPanel?.focusInput(),
+                });
+            },
+            onFileResults: (results, meta) => {
+                if (this._ownsVoice(meta))
+                    this._assistantPanel?.showFileResults(results);
+            },
+            onSpeechStarted: (_speech, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                this._voicePhase = 'speaking';
+                this._assistantPanel?.setVoiceState(false, 'speaking');
+                this.characterState.setState('talking', {reason: 'speaking the response'});
+            },
+            onSpeechError: (reason, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                this._assistantPanel?.setStatus(`Response displayed; speech unavailable: ${reason}`);
+                this.notifications.warning(`Bunny could not speak: ${reason}`);
+            },
+            onWarning: (reason, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                this._assistantPanel?.addTurn('bunny', reason, {tone: 'error'});
+                this._assistantPanel?.setStatus(reason);
+                this.characterState.setState('warning', {reason});
+                this._bubble?.say(reason, {tone: 'warning'});
+            },
+            onFinished: (phase, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                this._setMicrophoneVisible(false);
+                this._assistantPanel?.setVoiceState(false);
+                this._assistantPanel?.setBusy(false);
+                if (phase === 'success') {
+                    this._assistantPanel?.setStatus('');
+                    this.characterState.setState('success', {reason: 'the voice request finished'});
+                } else if (phase === 'cancelled') {
+                    this._assistantPanel?.setStatus('');
+                    this.characterState.setState('idle', {reason: 'voice interaction cancelled'});
+                }
+                this._voicePhase = 'idle';
+                this._returnToIdleAfterTalking();
+            },
+            onError: (reason, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                this._voicePhase = 'idle';
+                this._failRequest(reason, {retry: null});
+            },
+        });
+        this._voiceInteractionId = interactionId;
+    }
+
+    _ownsVoice(meta) {
+        if (this._destroyed)
+            return false;
+        return !meta || meta.interactionId === this._voiceInteractionId;
+    }
+
+    _setMicrophoneVisible(active) {
+        this.topBar?.setMicrophoneActive(active);
+    }
+
+    _releaseVoiceInteraction({notify = false, onClosed = null} = {}) {
+        const closed = () => {
+            this._setMicrophoneVisible(false);
+            this._assistantPanel?.setVoiceState(false);
+            onClosed?.();
+        };
+        if (!this.voice) {
+            closed();
+            return false;
+        }
+        return this.voice.cancel({
+            notify,
+            onMicrophoneClosed: closed,
+        });
+    }
+
+    _openFileResult(index, command) {
+        const ordinals = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'];
+        if (!Number.isInteger(index) || index < 1 || index > 24)
+            return;
+        const selector = ordinals[index - 1] ?? String(index);
+        const request = command === 'show_containing_folder'
+            ? `Show result ${selector} in its containing folder`
+            : `Open result ${selector}`;
+        this._ask(request);
     }
 
     /**
@@ -1210,6 +1462,7 @@ export class DesktopShell {
 
         for (const [what, service] of [
             ['character state', this.characterState], ['assistant', this.assistant],
+            ['voice', this.voice],
             ['search', this.search], ['agenda', this.agenda], ['media', this.media],
             ['audio', this.audio], ['brightness', this.brightness], ['network', this.network],
         ]) {
