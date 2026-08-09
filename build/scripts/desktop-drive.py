@@ -282,6 +282,83 @@ def interact(control, qmp, pointer, targets, arguments,
         (before_files or {}).get("state", {}).get("launched") or
         (before_terminal or {}).get("state", {}).get("launched"))
 
+    # ---- the assistant, end to end ----------------------------------------
+    #
+    # The milestone's central claim: a person types a request, the character
+    # moves through the states the request is actually in, and a real answer
+    # comes back from the runtime. Every observation is read out of the
+    # accessibility tree, which is the same thing a screen reader would see.
+    def watch_character(seconds: float, label: str) -> list[dict]:
+        """Poll the character and record every state it passes through."""
+        seen: list[dict] = []
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            answer = control.ask({"command": "character", "label": label}, timeout=120)
+            observation = (answer or {}).get("character") or {}
+            state = observation.get("state", "")
+            if state and (not seen or seen[-1]["state"] != state):
+                seen.append({"state": state, "says": observation.get("says", ""),
+                             "reason": observation.get("reason", "")})
+                # Idle after something happened means the request is over.
+                if state == "idle" and len(seen) > 1:
+                    break
+            time.sleep(2)
+        return seen
+
+    for label, request in (("factual", arguments.ask), ("action", arguments.ask_action)):
+        if not request:
+            continue
+        # Activated by the shortcut, not by clicking the field.
+        #
+        # Super+Shift+B is the desktop's documented activation binding and it
+        # goes through Mutter's global keybinding path, which does not depend on
+        # the shell's input region at all. Clicking the field was tried first
+        # and produced nothing: no "assistant activated" line, no state change,
+        # an empty entry in the screenshot. The binding also *is* the path the
+        # brief asks for — focus the input, set LISTENING, make it obvious — so
+        # testing it tests the feature rather than working around it.
+        pointer.key("meta_l", "shift", "b")
+        time.sleep(2.5)
+        activated = control.ask({"command": "character", "label": f"{label}-activated"},
+                                timeout=120)
+        listening = ((activated or {}).get("character") or {}).get("state", "")
+        if listening != "listening":
+            # Fall back to the pointer, and record which route was used so the
+            # report cannot claim the shortcut worked when it did not.
+            target = targets.get("ask")
+            if target is None:
+                step(f"assistant-{label}", asked=False, route="none",
+                     reason="the shortcut did not activate and the input was not found")
+                continue
+            x, y = centre(target["extents"])
+            pointer.click(x, y)
+            time.sleep(1.5)
+            route = "pointer"
+        else:
+            route = "shortcut"
+        before = control.ask({"command": "character", "label": f"{label}-before"}, timeout=120)
+        screenshot(f"06-{label}-activated")
+        pointer.type_text(request)
+        time.sleep(0.5)
+        screenshot(f"07-{label}-typed")
+        pointer.key("ret")
+
+        transitions = watch_character(arguments.settle * 2, label)
+        after = control.ask({"command": "character", "label": f"{label}-after"}, timeout=120)
+        final = (after or {}).get("character") or {}
+        step(f"assistant-{label}", asked=True, request=request, route=route,
+             stateBefore=((before or {}).get("character") or {}).get("state"),
+             states=[item["state"] for item in transitions],
+             answer=final.get("says", ""),
+             finalState=final.get("state", ""))
+        report[f"assistant_{label}"] = {
+            "request": request,
+            "route": route,
+            "transitions": transitions,
+            "final": final,
+        }
+        screenshot(f"08-{label}-answered")
+
     # ---- Files ------------------------------------------------------------
     if press("files", "Files") is not None:
         state = wait_for("files", True, "after-click")
@@ -334,63 +411,6 @@ def interact(control, qmp, pointer, targets, arguments,
              windows=closed.get("windows", {}).get("count"), state=closed)
         report["terminalClosed"] = closed
         screenshot("05-terminal-closed")
-
-    # ---- the assistant, end to end ----------------------------------------
-    #
-    # The milestone's central claim: a person types a request, the character
-    # moves through the states the request is actually in, and a real answer
-    # comes back from the runtime. Every observation is read out of the
-    # accessibility tree, which is the same thing a screen reader would see.
-    def watch_character(seconds: float, label: str) -> list[dict]:
-        """Poll the character and record every state it passes through."""
-        seen: list[dict] = []
-        deadline = time.monotonic() + seconds
-        while time.monotonic() < deadline:
-            answer = control.ask({"command": "character", "label": label}, timeout=120)
-            observation = (answer or {}).get("character") or {}
-            state = observation.get("state", "")
-            if state and (not seen or seen[-1]["state"] != state):
-                seen.append({"state": state, "says": observation.get("says", ""),
-                             "reason": observation.get("reason", "")})
-                # Idle after something happened means the request is over.
-                if state == "idle" and len(seen) > 1:
-                    break
-            time.sleep(2)
-        return seen
-
-    for label, request in (("factual", arguments.ask), ("action", arguments.ask_action)):
-        if not request:
-            continue
-        target = targets.get("ask")
-        if target is None:
-            step(f"assistant-{label}", asked=False,
-                 reason="the assistant input was not found in the accessibility tree")
-            continue
-
-        x, y = centre(target["extents"])
-        pointer.click(x, y)
-        time.sleep(1.5)
-        before = control.ask({"command": "character", "label": f"{label}-before"}, timeout=120)
-        pointer.type_text(request)
-        time.sleep(0.5)
-        screenshot(f"07-{label}-typed")
-        pointer.key("ret")
-
-        transitions = watch_character(arguments.settle * 2, label)
-        after = control.ask({"command": "character", "label": f"{label}-after"}, timeout=120)
-        final = (after or {}).get("character") or {}
-        step(f"assistant-{label}", asked=True, request=request,
-             at={"x": x, "y": y},
-             stateBefore=((before or {}).get("character") or {}).get("state"),
-             states=[item["state"] for item in transitions],
-             answer=final.get("says", ""),
-             finalState=final.get("state", ""))
-        report[f"assistant_{label}"] = {
-            "request": request,
-            "transitions": transitions,
-            "final": final,
-        }
-        screenshot(f"08-{label}-answered")
 
     # ---- the desktop is still there and still takes input -----------------
     shell = (control.ask({"command": "shell", "label": "after-terminal"}, timeout=120) or {}).get("shell", {})
