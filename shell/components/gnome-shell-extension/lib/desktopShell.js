@@ -359,19 +359,33 @@ export class DesktopShell {
             layout_manager: new Clutter.FixedLayout(),
         });
 
-        const backgroundGroup = Main.layoutManager._backgroundGroup;
-        if (backgroundGroup) {
-            backgroundGroup.add_child(this._desktopLayer);
-            this._desktopParent = backgroundGroup;
-        } else {
-            // Same position in the scene graph, reached without the private
-            // field. Logged because it means a Shell change and somebody should
-            // look at it before the next release.
-            log_('Main.layoutManager._backgroundGroup is absent; ' +
-                'placing desktop content below window_group in uiGroup');
-            Main.layoutManager.uiGroup.insert_child_below(this._desktopLayer, global.window_group);
-            this._desktopParent = Main.layoutManager.uiGroup;
-        }
+        // Desktop content goes into uiGroup, below window_group, and is
+        // *tracked as chrome*. Both halves are load-bearing and the second one
+        // was missing for two releases.
+        //
+        // The background group was the obvious home and it is the wrong one:
+        // actors under `global.window_group` are not in the shell's input
+        // region, so a click on them is not delivered to the shell at all — it
+        // passes through to whatever is behind, which on an empty desktop is
+        // nothing. Every control in that layer was therefore inert. The dock
+        // and the sidebar worked because they are chrome; the character, the
+        // cards, the suggestions and the assistant's text field were not, and
+        // nothing had ever pressed one of those to find out. The first run of
+        // the assistant harness typed a request into a field that could not
+        // take focus.
+        //
+        // `addChrome` puts it in the input region, and then it is lowered below
+        // `window_group` so an open window still covers the dashboard the way
+        // it covers a wallpaper. `trackFullscreen` keeps the old behaviour of
+        // getting out of the way of a fullscreen video.
+        Main.layoutManager.addChrome(this._desktopLayer, {
+            affectsStruts: false,
+            trackFullscreen: true,
+        });
+        Main.layoutManager.uiGroup.set_child_below_sibling(
+            this._desktopLayer, global.window_group);
+        this._desktopParent = Main.layoutManager.uiGroup;
+        log_('desktop content is in uiGroup below window_group, tracked as chrome');
 
         for (const component of [
             this.wallpaper, this._characterViewport, this._bubble, this._suggestions,
@@ -399,7 +413,7 @@ export class DesktopShell {
             affectsStruts: false,
             trackFullscreen: true,
         });
-        this._chromeActors = [];
+        this._chromeActors = [this._desktopLayer];
         for (const actor of [
             this.topBar?.actor, this.sidebar?.actor, this.dock?.actor,
             this.notificationLayer?.actor, this._searchResults,
@@ -754,6 +768,7 @@ export class DesktopShell {
      * change is a shortcut people press twice.
      */
     _activateAssistant() {
+        log_('assistant activated; the input has focus and the character is listening');
         this.characterState.setState('listening', {reason: 'waiting for your request'});
         this._bubble?.say('I am listening. What would you like to do?', {wave: true});
         this._assistantPanel?.focusInput();
@@ -800,6 +815,7 @@ export class DesktopShell {
             return;
         }
 
+        log_(`assistant request submitted: ${trimmed.length} characters`);
         this.characterState.noteActivity();
         this._assistantPanel?.addTurn('user', trimmed);
         this._assistantPanel?.setBusy(true);

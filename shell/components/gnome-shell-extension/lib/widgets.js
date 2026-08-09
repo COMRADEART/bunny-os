@@ -201,10 +201,17 @@ export function iconTile({gicon = null, iconName = null, iconSize = 28, label = 
     tile.add_child(icon);
     if (label !== null)
         tile.add_child(new St.Label({text: label, style_class: 'bunny-tile-label'}));
-    if (onActivate)
-        makeActivatable(tile, onActivate, {accessibleName: accessibleName ?? label ?? ''});
-    if (tooltip)
-        tile.accessible_description = tooltip;
+    if (onActivate) {
+        // The tooltip goes into the *name*, after the label, because a dock
+        // tile has no visible text and `accessible_description` is a no-op on
+        // St actors — assigning it creates a JavaScript property nothing reads.
+        // Measured: every control in the desktop's accessibility tree reported
+        // an empty description.
+        const spoken = accessibleName ?? label ?? '';
+        makeActivatable(tile, onActivate, {
+            accessibleName: tooltip && tooltip !== spoken ? `${spoken}. ${tooltip}` : spoken,
+        });
+    }
     tile.iconActor = icon;
     return tile;
 }
@@ -221,5 +228,7 @@ export function setUnavailable(actor, reason) {
     actor.add_style_class_name('bunny-unavailable');
     actor.reactive = false;
     actor.can_focus = false;
-    actor.accessible_description = reason;
+    // Appended to the name; see iconTile above for why not the description.
+    const existing = actor.accessible_name ?? '';
+    actor.accessible_name = existing ? `${existing}. ${reason}` : reason;
 }

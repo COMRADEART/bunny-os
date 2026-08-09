@@ -203,10 +203,26 @@ export class CharacterViewport {
         this._glowColour = GLOW_COLOUR[state] ?? GLOW_COLOUR.idle;
         this._glowIntensity = GLOW_INTENSITY[state] ?? GLOW_INTENSITY.idle;
         this._glow.queue_repaint();
-        // The state is not visible to a screen reader, so it is said here.
-        this._hit.accessible_description = reason
-            ? `Bunny is ${state}. ${reason}`
-            : `Bunny is ${state}`;
+
+        // The state goes in the accessible *name*, not the description.
+        //
+        // `accessible_description` does nothing. St actors expose
+        // `accessible-name` and `accessible-role`; assigning
+        // `accessible_description` in GJS creates an ordinary JavaScript
+        // property on the object and no assistive technology ever sees it.
+        // Measured: every control in the desktop's accessibility tree reported
+        // an empty description, including this one — so a screen-reader user
+        // was told the character exists and never told what it is doing, which
+        // for a figure whose entire job is to show what is happening is most of
+        // the information gone.
+        //
+        // The name changes on every transition, which is what an assistive
+        // technology watches. It is also what makes the state observable from
+        // outside the process, so the harness can watch the lifecycle without
+        // the desktop growing a test hook.
+        this._hit.accessible_name = reason
+            ? `Bunny, your assistant — ${state}. ${reason}`
+            : `Bunny, your assistant — ${state}`;
     }
 
     _paintGlow(area) {

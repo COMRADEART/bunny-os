@@ -278,6 +278,36 @@ class IntrospectionSafetyTests(unittest.TestCase):
                 offenders.append(path.relative_to(EXTENSION).as_posix())
         self.assertEqual(offenders, [], "Clutter has no AccessibleRole; roles are Atk.Role")
 
+    def test_no_module_writes_to_accessible_description(self) -> None:
+        """St actors have no accessible-description, and assigning one is silent.
+
+        `accessible-name` and `accessible-role` are the two properties St
+        exposes. Assigning `accessible_description` in GJS creates an ordinary
+        JavaScript property on the object; nothing reads it and no assistive
+        technology sees it. Measured on a booted image: every one of the 307
+        controls in the desktop's accessibility tree reported an empty
+        description, including the character's — which was the only thing
+        telling a screen-reader user what the assistant was doing.
+
+        Six places wrote to it. They now put the information in the name.
+        """
+        offenders = []
+        for path in sorted(EXTENSION.rglob("*.js")):
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if line.lstrip().startswith(("//", "*")):
+                    continue
+                if re.search(r"\.accessible_description\s*=", line):
+                    offenders.append(f"{path.relative_to(EXTENSION).as_posix()}:{number}")
+        self.assertEqual(
+            offenders, [],
+            "accessible_description is not a St property; put it in accessible_name",
+        )
+
+    def test_the_character_announces_its_state_in_its_name(self) -> None:
+        text = module_text("lib/character/viewport.js")
+        self.assertIn("this._hit.accessible_name = reason", text)
+        self.assertIn("Bunny, your assistant —", text)
+
     def test_the_role_helper_looks_the_constant_up_rather_than_dereferencing_it(self) -> None:
         text = module_text("lib/util.js")
         self.assertIn("Atk?.Role?.[roleName]", text)

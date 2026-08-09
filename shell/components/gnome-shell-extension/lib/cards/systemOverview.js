@@ -151,9 +151,13 @@ export class SystemOverview extends Card {
         // anyone who wonders why a 14 GB machine reports 8 GB. "Storage" is the
         // only metric on this card whose subject is a choice rather than the
         // machine, so it is the only one that has to name its subject.
-        this._storage.actor.accessible_description = storage === null
-            ? 'no persistent filesystem could be measured'
-            : `${formatBytes(storage.freeBytes)} free on ${storage.path}` +
+        // Appended to the row's name. MetricRow.set already writes
+        // "Storage: 3.9/8.3 GB" there; this adds the subject, because Storage is
+        // the only figure on the card whose subject is a choice.
+        this._storage.actor.accessible_name = storage === null
+            ? 'Storage: Unavailable. No persistent filesystem could be measured'
+            : `Storage: ${formatPair(storage.usedBytes, storage.totalBytes)}. ` +
+              `${formatBytes(storage.freeBytes)} free on ${storage.path}` +
               (storage.filesystemType ? ` (${storage.filesystemType})` : '');
 
         const temperature = this._telemetry.temperature();

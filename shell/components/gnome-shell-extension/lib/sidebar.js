@@ -102,13 +102,15 @@ export class Sidebar {
             return;
         this._collapsed = collapsed;
         for (const row of [...this._rows.values(), this._power]) {
-            if (collapsed) {
+            // Collapsing hides the text, so the name is the only thing left
+            // that says what the row is. It is already the label — set by
+            // `select` and by makeActivatable — so nothing has to move here;
+            // what must *not* happen is writing it to accessible_description,
+            // which St ignores.
+            if (collapsed)
                 row.label_actor.hide();
-                row.actor.accessible_description = row.label;
-            } else {
+            else
                 row.label_actor.show();
-                row.actor.accessible_description = '';
-            }
         }
         this.actor.remove_style_class_name('bunny-sidebar-collapsed');
         if (collapsed)

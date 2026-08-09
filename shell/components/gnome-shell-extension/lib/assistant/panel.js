@@ -147,7 +147,9 @@ export class AssistantPanel extends Card {
         this._microphone.reactive = available;
         this._microphone.can_focus = available;
         this._microphone.opacity = available ? 255 : 110;
-        this._microphone.accessible_description = available ? '' : reason;
+        this._microphone.accessible_name = available
+            ? 'Speak to Bunny'
+            : `Speak to Bunny. Unavailable: ${reason}`;
     }
 
     _submit() {
