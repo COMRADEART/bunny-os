@@ -264,6 +264,7 @@ def verdict(name):
     closed = report.get(f"{name}Closed") or {}
     return (
         f"  {name:9s} launched={opened.get('launched')} "
+        f"startedByTheShell={opened.get('startedByTheShell')} "
         f"window={opened.get('windowVisible')} "
         f"closed={closed.get('windowVisible') is False}"
     )

@@ -270,9 +270,10 @@ def interact(control, qmp, pointer, targets, arguments,
     if press("files", "Files") is not None:
         state = wait_for("files", True, "after-click")
         step("files-opened", launched=state.get("launched"),
+             startedByTheShell=state.get("startedByTheShell"),
              windowVisible=state.get("windowVisible"),
              windows=state.get("windows", {}).get("count"),
-             scope=state.get("scope", {}).get("units"), state=state)
+             units=state.get("unit", {}).get("units"), state=state)
         report["files"] = state
         screenshot("01-files-open")
 
@@ -292,9 +293,10 @@ def interact(control, qmp, pointer, targets, arguments,
     if press("terminal", "Terminal") is not None:
         state = wait_for("terminal", True, "after-click")
         step("terminal-opened", launched=state.get("launched"),
+             startedByTheShell=state.get("startedByTheShell"),
              windowVisible=state.get("windowVisible"),
              windows=state.get("windows", {}).get("count"),
-             scope=state.get("scope", {}).get("units"), state=state)
+             units=state.get("unit", {}).get("units"), state=state)
         report["terminal"] = state
         screenshot("03-terminal-open")
 

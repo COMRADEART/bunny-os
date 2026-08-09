@@ -346,16 +346,26 @@ def application_state(name: str, user: str, environment: list[str]) -> dict:
     """The four independent signals for one application."""
     definition = APPLICATIONS[name]
 
-    scopes = _run(["/usr/bin/systemctl", "--user", "list-units", "--all",
-                   "--no-legend", "--plain", "--type=scope"], user=user)
-    scope_lines = [line for line in scopes.get("stdout", "").splitlines()
-                   if definition["scope"] in line]
+    # Every unit, not just scopes.
+    #
+    # The first version filtered `--type=scope`, on the belief that GNOME Shell
+    # starts an application in a transient scope. It does not, or not only:
+    # GNOME 50 starts it as `app-<desktop-id>@<token>.service`, and a terminal
+    # additionally gets a `vte-spawn-*.scope` for the shell it runs. Filtering
+    # to scopes therefore reported "not launched" for a Nautilus window that was
+    # open on screen at the time — which is the harness lying about the product
+    # in the safest-looking direction.
+    units = _run(["/usr/bin/systemctl", "--user", "list-units", "--all",
+                  "--no-legend", "--plain"], user=user, limit=60_000)
+    unit_lines = [line.strip() for line in units.get("stdout", "").splitlines()
+                  if definition["scope"] in line or definition["process"] in line]
 
     processes = _run(["/usr/bin/pgrep", "-a", "-u", user, "-f", definition["process"]])
     process_lines = [line for line in processes.get("stdout", "").splitlines() if line.strip()]
 
     names = _run(["/usr/bin/env", *environment, "/usr/bin/busctl", "--user",
-                  "list", "--no-legend", "--no-pager"], user=user) if environment else {}
+                  "list", "--no-legend", "--no-pager"], user=user,
+                 limit=60_000) if environment else {}
     owns_bus_name = any(line.split()[0] == definition["bus"]
                         for line in names.get("stdout", "").splitlines() if line.split())
 
@@ -366,13 +376,17 @@ def application_state(name: str, user: str, environment: list[str]) -> dict:
             frames.extend(application.get("frames", []))
 
     return {
-        "scope": {"present": bool(scope_lines), "units": scope_lines},
+        # Each of these is a separate measurement of a different thing, kept
+        # apart on purpose: a process with no window, a window with no unit and
+        # a unit with no process are three different failures and a single
+        # boolean would hide all of them.
+        "unit": {"present": bool(unit_lines), "units": unit_lines[:8]},
         "process": {"present": bool(process_lines), "processes": process_lines[:6]},
         "busName": {"owned": owns_bus_name, "name": definition["bus"]},
         "windows": {"count": len(frames), "frames": frames},
-        # Every field above is a separate measurement; this is the only derived
-        # value in the record and it says exactly what it is derived from.
-        "launched": bool(scope_lines) and bool(process_lines),
+        # The two derived values, each naming exactly what it is derived from.
+        "launched": bool(process_lines),
+        "startedByTheShell": bool(unit_lines),
         "windowVisible": any(frame.get("showing") for frame in frames),
     }
 
