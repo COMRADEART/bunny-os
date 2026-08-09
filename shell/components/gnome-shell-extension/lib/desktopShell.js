@@ -77,11 +77,23 @@ import {UniversalSearch} from './services/search.js';
 /** How long a reply stays on the character's face before it returns to idle. */
 const TALKING_DWELL_MS = 6000;
 
+/**
+ * The states a request leaves behind, which a timer may clear.
+ *
+ * Deliberately not "everything except idle": WORKING and LISTENING belong to a
+ * request that is still going, and a dwell timer from the *previous* request
+ * firing into one of those would stop the character mid-task.
+ */
+const TRANSIENT_STATES = new Set(['talking', 'success', 'error', 'warning']);
+
 export class DesktopShell {
     constructor({settings}) {
         this._settings = settings;
         this._signals = [];
         this._destroyed = false;
+        //: The request the desktop is currently showing. See `_owns`.
+        this._requestId = 0;
+        this._lastRequest = '';
 
         /** Names of components that failed to build. See `_optional`. */
         this.degraded = [];
@@ -291,6 +303,7 @@ export class DesktopShell {
             onSubmit: text => this._ask(text),
             onVoice: () => this._startVoice(),
             onOpenFull: () => this.launcher.spawn(['bunny-command']),
+            onDismiss: () => this._dismissAssistant(),
         }));
 
         // Cards, each on its own. A card is a widget over a service, so it is
@@ -731,57 +744,163 @@ export class DesktopShell {
             this._select(id);
     }
 
-    /** Click the character, press the shortcut, or choose AI Assistant. */
+    /**
+     * Click the character, press Super+Shift+B, or choose AI Assistant.
+     *
+     * Three things happen and all three are the point: the input takes focus so
+     * the next keystroke lands in it, the character adopts LISTENING so the
+     * desktop visibly acknowledges the shortcut, and the bubble says what is
+     * being waited for. A shortcut whose only effect is an invisible focus
+     * change is a shortcut people press twice.
+     */
     _activateAssistant() {
         this.characterState.setState('listening', {reason: 'waiting for your request'});
         this._bubble?.say('I am listening. What would you like to do?', {wave: true});
         this._assistantPanel?.focusInput();
     }
 
+    /**
+     * Escape out of the assistant without submitting.
+     *
+     * LISTENING is the only state this clears. A dismissal that also stopped a
+     * THINKING or WORKING request would make Escape a cancel button, which it
+     * is not: the request belongs to the runtime and the Tasks surface owns
+     * stopping it.
+     */
+    _dismissAssistant() {
+        if (this.characterState.state === 'listening')
+            this.characterState.setState('idle', {reason: 'the request was dismissed'});
+        this._bubble?.hide();
+        global.stage.set_key_focus(null);
+    }
+
+    /**
+     * Submit a request and drive the desktop from its lifecycle.
+     *
+     * Every callback here is guarded by `owns`, and that guard is the whole
+     * reason `AssistantService.ask` returns an id. Cancelling a bridge is not
+     * instantaneous — a line already written to the pipe still arrives, and the
+     * read callback for it is already scheduled — so the previous request's
+     * `finished` can land after the next one's `thinking`. Without the guard it
+     * sets the character to SUCCESS and then IDLE while the newer request is
+     * still running, and the figure goes calm in the middle of the work.
+     *
+     * The rule is one line: a late callback for a request that is no longer the
+     * active one updates nothing. It is not an error and is not reported; it is
+     * simply news about something the user has moved on from.
+     */
     _ask(text) {
         const trimmed = text.trim();
         if (trimmed === '')
             return;
         if (!this.assistant) {
-            this.notifications.warning('The assistant is not available on this session.');
+            this._failRequest('The assistant is not running on this session.', {
+                retry: null,
+            });
             return;
         }
+
         this.characterState.noteActivity();
         this._assistantPanel?.addTurn('user', trimmed);
         this._assistantPanel?.setBusy(true);
         this._assistantPanel?.setStatus('Thinking…');
         this.characterState.setState('thinking', {reason: trimmed});
-        this._bubble?.say('Let me work on that.', {wave: false});
+        this._bubble?.say('Let me look at that.', {wave: false});
+        this._lastRequest = trimmed;
 
-        this.assistant.ask(trimmed, {
-            onPhase: (phase, statusText) => {
+        const requestId = this.assistant.ask(trimmed, {
+            onPhase: (phase, statusText, meta) => {
+                if (!this._owns(meta))
+                    return;
                 this.characterState.adoptPhase(phase, PHASE_TO_STATE, {statusText});
                 if (statusText)
                     this._assistantPanel?.setStatus(statusText);
             },
-            onReply: (reply, isError) => {
+            onReply: (reply, isError, meta) => {
+                if (!this._owns(meta))
+                    return;
                 this._assistantPanel?.addTurn('bunny', reply, {tone: isError ? 'error' : 'normal'});
-                this._bubble?.say(reply, {tone: isError ? 'error' : 'normal', wave: !isError});
+                // The bubble is the primary surface: it shows a preview and
+                // hands the rest to the card, which is a scrolling transcript
+                // and already has the whole thing from `addTurn` above.
+                this._bubble?.say(reply, {
+                    tone: isError ? 'error' : 'normal',
+                    wave: !isError,
+                    onOpenFull: () => this._assistantPanel?.focusInput(),
+                });
                 if (!isError) {
                     this.characterState.setState('talking', {reason: 'delivering the answer'});
                     this._returnToIdleAfterTalking();
                 }
             },
-            onFinished: phase => {
+            onFinished: (phase, meta) => {
+                if (!this._owns(meta))
+                    return;
                 this._assistantPanel?.setBusy(false);
                 this._assistantPanel?.setStatus('');
-                if (phase === 'success')
+                if (phase === 'success') {
                     this.characterState.setState('success', {reason: 'the task finished'});
+                    // SUCCESS is a moment, not a resting state. Without this the
+                    // character holds a celebration until the next request.
+                    this._returnToIdleAfterTalking();
+                } else if (phase !== 'error') {
+                    // Cancelled, blocked, paused — terminal for this watcher and
+                    // not a failure to report. The character must still land
+                    // somewhere, and idle is where it lands.
+                    this._returnToIdleAfterTalking();
+                }
             },
-            onError: reason => {
-                this._assistantPanel?.setBusy(false);
-                this._assistantPanel?.setStatus(reason, {tone: 'error'});
-                this._assistantPanel?.addTurn('bunny', reason, {tone: 'error'});
-                this.characterState.setState('error', {reason});
-                this._bubble?.say(reason, {tone: 'error'});
-                this.notifications.error(`Bunny could not answer: ${reason}`);
+            onError: (reason, meta) => {
+                if (!this._owns(meta))
+                    return;
+                this._failRequest(reason, {retry: trimmed});
             },
         });
+        this._requestId = requestId;
+    }
+
+    /**
+     * Is this callback about the request the desktop is currently showing?
+     *
+     * A callback with no metadata is from a caller that predates request ids;
+     * it is treated as current, because refusing it would silently drop the
+     * only answer that caller can give.
+     */
+    _owns(meta) {
+        if (this._destroyed)
+            return false;
+        if (!meta || meta.requestId === undefined)
+            return true;
+        return meta.requestId === this._requestId;
+    }
+
+    /**
+     * One place where a failed request lands.
+     *
+     * Every failure the brief lists — backend down, timeout, malformed reply,
+     * action refused, application missing — arrives here as a sentence that was
+     * written for a person. The diagnostic detail is already in the journal by
+     * the time this runs; what goes on screen is what someone can act on, and a
+     * Retry that reruns the exact request they typed.
+     */
+    _failRequest(reason, {retry = null} = {}) {
+        this._assistantPanel?.setBusy(false);
+        this._assistantPanel?.setStatus(reason, {tone: 'error'});
+        this._assistantPanel?.addTurn('bunny', reason, {tone: 'error'});
+        this.characterState.setState('error', {reason});
+        this._bubble?.say(reason, {tone: 'error'});
+        logError_('the assistant request failed', new Error(reason));
+        if (retry) {
+            this.notifications.error(`Bunny could not answer: ${reason}`, {
+                onActivate: () => this._ask(retry),
+            });
+        } else {
+            this.notifications.error(`Bunny could not answer: ${reason}`);
+        }
+        // Even a failure ends. ERROR is a state the brief says the character may
+        // hold, but not for ever — the next thing a user does should not meet a
+        // figure still upset about the last thing.
+        this._returnToIdleAfterTalking();
     }
 
     /**
@@ -800,12 +919,22 @@ export class DesktopShell {
         }
     }
 
+    /**
+     * Land the character back on idle after a state that is a moment.
+     *
+     * TALKING, SUCCESS and ERROR are all things that happen *to* a request and
+     * none of them is where a character should live. The set is named here
+     * rather than checked as "not idle", because WORKING and LISTENING are also
+     * not idle and must not be cut short by a timer that fired from an earlier
+     * request — the newer request owns the character then, and this must leave
+     * it alone.
+     */
     _returnToIdleAfterTalking() {
         this._talkTimer?.stop();
         this._talkTimer = timeout(TALKING_DWELL_MS, () => {
             this._talkTimer = null;
-            if (this.characterState.state === 'talking')
-                this.characterState.setState('idle', {reason: 'finished speaking'});
+            if (TRANSIENT_STATES.has(this.characterState.state))
+                this.characterState.setState('idle', {reason: 'the request is over'});
         });
     }
 

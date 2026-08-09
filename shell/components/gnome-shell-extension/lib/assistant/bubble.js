@@ -29,9 +29,24 @@ import {ease, animationsEnabled} from '../animation.js';
 import {clamp, logError_, setAccessibleRole} from '../util.js';
 import {Motion} from '../tokens.js';
 
-const MAX_WIDTH = 320;
+const MAX_WIDTH = 360;
 const MIN_WIDTH = 200;
 const GAP = 20;
+
+/**
+ * How much of an answer the bubble shows before it offers the rest elsewhere.
+ *
+ * The bubble is beside a character in the middle of a desktop, not a chat
+ * transcript. A directory listing or a long explanation pinned open next to the
+ * figure covers the cards it is standing among, and the brief is explicit that
+ * a long response must not fill half the screen. So the bubble shows the first
+ * part and says how much more there is; the full text stays in the assistant
+ * card, which is a scrolling surface built for it.
+ *
+ * Counted in characters rather than lines because a line is a function of the
+ * width, and the width changes with the breakpoint.
+ */
+const PREVIEW_LIMIT = 220;
 
 export class AssistantBubble {
     constructor({blur = false} = {}) {
@@ -47,6 +62,19 @@ export class AssistantBubble {
         this._text.clutter_text.set_line_wrap_mode(2); // Pango.WrapMode.WORD_CHAR
         this._column.add_child(this._text);
 
+        // The "there is more" affordance. A button rather than a clickable
+        // label because it is a control, and St.Button brings the focus ring,
+        // the hover state and the accessible role with it.
+        this._more = new St.Button({
+            label: '',
+            style_class: 'bunny-bubble-more',
+            visible: false,
+            can_focus: true,
+            x_align: Clutter.ActorAlign.START,
+        });
+        this._more.connect('clicked', () => this._onOpenFull?.(this._full));
+        this._column.add_child(this._more);
+
         this._wave = new St.DrawingArea({
             style_class: 'bunny-bubble-wave', height: 18, visible: false, reactive: false,
         });
@@ -56,15 +84,42 @@ export class AssistantBubble {
         setAccessibleRole(this.actor, 'NOTIFICATION');
         this._wavePhase = 0;
         this._timeline = null;
+        this._full = '';
+        this._onOpenFull = null;
     }
 
     /**
      * @param {string} text
-     * @param {{tone?: 'normal'|'warning'|'error', wave?: boolean}} options
+     * @param {{tone?, wave?, onOpenFull?}} options
+     *   `onOpenFull` is called when the user presses the "more" affordance. It
+     *   is only offered when there is more, and the caller decides what "the
+     *   full response" means — the bubble does not know what other surfaces
+     *   exist.
      */
-    say(text, {tone = 'normal', wave = false} = {}) {
-        this._text.text = text;
-        this.actor.accessible_name = `Bunny says: ${text}`;
+    say(text, {tone = 'normal', wave = false, onOpenFull = null} = {}) {
+        const full = String(text ?? '');
+        const truncated = full.length > PREVIEW_LIMIT;
+        // Cut at a word, not mid-token: a directory listing broken inside a
+        // filename reads as a corrupted name rather than a shortened list.
+        let preview = full;
+        if (truncated) {
+            const cut = full.slice(0, PREVIEW_LIMIT);
+            const lastSpace = cut.lastIndexOf(' ');
+            preview = `${(lastSpace > PREVIEW_LIMIT * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+        }
+        this._text.text = preview;
+        // The accessible name carries the *whole* answer. A screen-reader user
+        // has no "read the rest in the card" affordance that is any easier than
+        // hearing it here, and the truncation is a visual accommodation.
+        this.actor.accessible_name = `Bunny says: ${full}`;
+        this._full = full;
+
+        this._more.visible = truncated && onOpenFull !== null;
+        this._onOpenFull = onOpenFull;
+        if (this._more.visible) {
+            const remaining = full.length - preview.length + 1;
+            this._more.label = `Read the rest (${remaining} more characters)`;
+        }
         for (const name of ['bunny-bubble-warning', 'bunny-bubble-error'])
             this.actor.remove_style_class_name(name);
         if (tone === 'warning')

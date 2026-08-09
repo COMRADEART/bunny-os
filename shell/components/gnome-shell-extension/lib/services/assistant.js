@@ -22,9 +22,21 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-import {logError_, logOnce} from '../util.js';
+import {logError_, logOnce, timeout} from '../util.js';
 
 const BRIDGE = 'bunny-shell-assistant';
+
+/**
+ * How long the desktop waits before it stops believing an answer is coming.
+ *
+ * Longer than the bridge's own 180-second deadline, on purpose: the bridge
+ * reports its own timeout as an `error` event and that is a better message
+ * than this one. This fires only when the bridge itself never speaks — it
+ * failed to exec, or it died without writing — and its job is to make sure
+ * the character cannot be left in THINKING for ever by a process that is no
+ * longer there.
+ */
+const WATCHDOG_MS = 200000;
 
 /** Companion presentation phase -> character state. The only place this maps. */
 export const PHASE_TO_STATE = {
@@ -53,6 +65,10 @@ export class AssistantService {
         this._current = null;
         this._available = null; // null = not yet asked
         this._availabilityReason = 'the companion runtime has not been contacted yet';
+        //: Monotonic, per session. Zero means nothing has been asked.
+        this._sequence = 0;
+        this._activeRequestId = 0;
+        this._watchdog = null;
     }
 
     /**
@@ -98,33 +114,99 @@ export class AssistantService {
         const trimmed = text.trim();
         if (trimmed === '') {
             handlers.onError?.('nothing was typed');
-            return;
+            return null;
         }
+
+        // Every request gets an id and every callback carries it.
+        //
+        // The bridge is a subprocess and cancelling one is not instantaneous:
+        // a reply already written to the pipe arrives after `force_exit`, and
+        // the reader is an async callback that has already been scheduled. So
+        // a second question can be in flight while the first one's `finished`
+        // is still on its way, and without an id the first would set the
+        // character to SUCCESS and then IDLE underneath the second — the
+        // character going calm while it is still working.
+        //
+        // `requestId` is compared by the caller, not here, because the
+        // interesting decision ("is this still the request I am showing?")
+        // belongs to whatever is showing it.
+        this._sequence += 1;
+        const requestId = this._sequence;
+        this._activeRequestId = requestId;
+
+        const stillCurrent = () => this._activeRequestId === requestId;
+
+        // A request that produces nothing at all still has to end. The runtime
+        // has its own deadline and the bridge has another; this is the third,
+        // and it exists because neither of those can fire if the *bridge* never
+        // starts or dies without writing a line. Without it the character sits
+        // in THINKING for ever, which is the one state the brief names twice.
+        let settled = false;
+        const finish = () => {
+            if (settled)
+                return;
+            settled = true;
+            this._watchdog?.stop();
+            this._watchdog = null;
+        };
+        this._watchdog?.stop();
+        this._watchdog = timeout(WATCHDOG_MS, () => {
+            if (!stillCurrent() || settled)
+                return;
+            logOnce('assistant-watchdog',
+                `no answer within ${Math.round(WATCHDOG_MS / 1000)}s; the request was abandoned`);
+            finish();
+            this.cancelWatch();
+            handlers.onError?.(
+                'The assistant did not answer in time. It may still be working — ' +
+                'the Tasks window will show it.',
+                {requestId});
+        });
+
         this._current = this._run(['ask', trimmed], line => {
+            if (!stillCurrent())
+                return;
             switch (line.event) {
             case 'accepted':
-                handlers.onAccepted?.(line.taskId);
+                handlers.onAccepted?.(line.taskId, {requestId});
                 break;
             case 'phase':
-                handlers.onPhase?.(line.phase, line.statusText ?? '');
+                handlers.onPhase?.(line.phase, line.statusText ?? '', {requestId});
                 break;
             case 'reply':
-                handlers.onReply?.(line.text, line.kind === 'error');
+                handlers.onReply?.(line.text, line.kind === 'error', {requestId});
                 break;
             case 'finished':
-                handlers.onFinished?.(line.phase);
+                finish();
+                handlers.onFinished?.(line.phase, {requestId});
                 break;
             case 'error':
                 this._available = false;
                 this._availabilityReason = line.reason;
-                handlers.onError?.(line.reason);
+                finish();
+                handlers.onError?.(line.reason, {requestId});
                 break;
             default:
                 break;
             }
         }, () => {
             this._current = null;
+            // The bridge closed its pipe. If nothing terminal arrived first,
+            // that is a crash or an exec failure, and it is terminal now — a
+            // process that has gone is not going to answer.
+            if (stillCurrent() && !settled) {
+                finish();
+                handlers.onError?.(
+                    'The assistant service stopped before answering.', {requestId});
+            }
+            finish();
         });
+        return requestId;
+    }
+
+    /** The id of the request the desktop should still be showing, or 0. */
+    get activeRequestId() {
+        return this._activeRequestId;
     }
 
     /**
@@ -135,6 +217,8 @@ export class AssistantService {
      * result is still recorded.
      */
     cancelWatch() {
+        this._watchdog?.stop();
+        this._watchdog = null;
         if (this._current === null)
             return;
         try {

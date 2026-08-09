@@ -269,10 +269,22 @@ def install_activation(profile: str) -> None:
     # This is the same failure shape as bunny-brlapi-key.service, for the same
     # reason, and it is caught the same way: by asserting the symlink below
     # rather than by trusting the command above.
+    #
+    # `bunny-companion-window.service` is deliberately **not** in this list.
+    # The runtime is the thing that has to be running at login; the window is a
+    # GTK client of it, and enabling it meant a full application window opened
+    # over the middle of the desktop at every login — on top of the
+    # shell-rendered character, which is the desktop's own representation of the
+    # same assistant. Two Bunnies, one covering the other.
+    #
+    # The unit is still shipped and still startable: the Applications grid has
+    # the entry, the dock tile runs it, and `systemctl --user start
+    # bunny-companion-window.service` works. What changed is that nothing starts
+    # it for you.
     subprocess.run([
         "/usr/bin/systemctl", "--global", "enable",
         "bunny-first-boot.service", "bunny-config-dir.service",
-        "bunny-companion.service", "bunny-companion-window.service",
+        "bunny-companion.service",
         "bunny-first-run.service",
     ], check=True)
     # Masked, not disabled. `--global disable` writes into /etc/systemd/user and

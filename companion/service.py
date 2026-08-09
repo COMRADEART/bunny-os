@@ -2086,6 +2086,7 @@ class CompanionService:
         from .coordination import CoordinationPolicy
         from .executor import DeterministicLocalExecutor
         from .ids import RandomIds
+        from .local_files import LOCAL_FILE_TOOLS
         from .reviewer import DeterministicLocalReviewer
         from .runtime import RuntimeOptions
         from .store import CompanionStore
@@ -2097,6 +2098,20 @@ class CompanionService:
             else assess_current_machine()
         )
         broker = ToolBroker()
+        # The folder-listing tool, merged into the allowlist before anything can
+        # plan it. `ToolBroker.tools` defaults to the shipped table and a plan
+        # naming a tool that is not in it is refused at the door, so a build
+        # that skipped this line would refuse `files.list_directory` exactly as
+        # it refuses an invented one — which is the correct failure, just not
+        # the intended one.
+        broker.tools = {**broker.tools, **LOCAL_FILE_TOOLS}
+        # One local executor, as before. The desktop intents are reached
+        # through it rather than beside it — see DeterministicLocalExecutor's
+        # `_intent` — because capability selection picks exactly one local
+        # executor and adding a second in front of this one changed which
+        # executor every existing task chose. The integration slice noticed:
+        # it asserts that the deterministic executor is selected and that its
+        # plan raises an approval, and both stopped being true.
         executors: tuple[Any, ...] = (DeterministicLocalExecutor(),)
         reviewers: tuple[Any, ...] = (DeterministicLocalReviewer(),)
         router_destinations: tuple[Any, ...] = ()

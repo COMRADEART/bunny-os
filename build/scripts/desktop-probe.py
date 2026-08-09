@@ -312,6 +312,10 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
         ("terminal", "Terminal", "Bunny dock"),
         ("assistant", "AI Assistant", "Bunny sidebar"),
         ("home", "Home", "Bunny sidebar"),
+        # The assistant's text field. Named by the entry's accessible name, and
+        # it is the control the whole end-to-end test is typed into.
+        ("ask", "Ask Bunny", None),
+        ("character", "Bunny, your assistant", None),
     ):
         found = desktop_interaction.find_control(controls, label, within=within)
         source = within
@@ -346,6 +350,11 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 answer["error"] = f"unknown application {name!r}"
         elif verb == "shell":
             answer["shell"] = desktop_interaction.shell_alive(user, environment)
+        elif verb == "character":
+            # What the figure is doing and what the bubble says, both read out
+            # of the accessibility tree. This is how the host watches the state
+            # machine it just started by typing.
+            answer["character"] = desktop_interaction.character_state(user, environment)
         elif verb == "done":
             transcript.append(answer)
             channel.send({"reply": answer})

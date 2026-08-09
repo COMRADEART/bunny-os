@@ -121,7 +121,13 @@ export class CharacterViewport {
         // The figure is sized from the band's height, capped so it does not
         // become a giant on a 1440p screen, and centred horizontally with its
         // feet a fifth of the way up from the bottom — where the dock is not.
-        const figureHeight = clamp(rect.height * 0.68, 260, 520);
+        //
+        // 0.78 of the band, not 0.68. The character is the desktop's primary
+        // interaction surface and at the smaller figure it read as one more
+        // widget among six — the booted screenshots show it about the same
+        // visual weight as the System card beside it. The cap moved with it so
+        // a 1440p screen still gets a person rather than a poster.
+        const figureHeight = clamp(rect.height * 0.78, 280, 600);
         const figureWidth = figureHeight * (100 / 150);
         const figureX = Math.round((rect.width - figureWidth) / 2);
         const figureY = Math.round(rect.height - figureHeight - rect.height * 0.06);

@@ -50,9 +50,14 @@
 .bunny-power-menu,
 .bunny-toast {
   background-color: rgba(17, 21, 32, 0.72); /* Colour.PANEL */
-  border: 1px solid rgba(255, 255, 255, 0.10); /* Colour.BORDER */
+  /* 6% rather than 10%. Every surface on the desktop carries this border, so
+     its weight is multiplied by the number of panels on screen — at 10% the
+     dashboard read as a set of outlined boxes rather than as one surface with
+     things on it. The shadow does the separating instead, which is what a
+     shadow is for. */
+  border: 1px solid rgba(255, 255, 255, 0.06); /* Colour.BORDER */
   color: #f7f8fa; /* Colour.TEXT */
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.42);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.50);
 }
 
 .bunny-card { border-radius: 18px; padding: 0; }
@@ -152,8 +157,12 @@
 .bunny-sidebar-row:focus { outline: 2px solid #a78bfa; outline-offset: -1px; color: #f7f8fa; }
 
 .bunny-sidebar-row-selected {
-  background-color: rgba(139, 92, 246, 0.20);
-  color: #f7f8fa;
+  /* Raised from 0.20. The selected row is the only state in the sidebar that
+     has to survive a glance, and against the darker panel the old fill was
+     nearly the same value as a hover. */
+  background-color: rgba(139, 92, 246, 0.30);
+  color: #ffffff;
+  font-weight: 600;
   border-left: 3px solid #a78bfa;
   padding-left: 8px;
 }
@@ -192,10 +201,14 @@
 .bunny-dock-tile:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
 
 .bunny-dock-running {
-  width: 5px;
-  height: 5px;
+  /* 6px and fully opaque. This is the only thing on the dock that says an
+     application is running, and at 5px against a translucent panel it was
+     easy to miss on the booted screenshots. */
+  width: 6px;
+  height: 6px;
   border-radius: 3px;
   background-color: #a78bfa;
+  box-shadow: 0 0 6px rgba(167, 139, 250, 0.8);
   margin-top: 2px;
 }
 
@@ -334,8 +347,8 @@
 .bunny-greeting { padding: 4px 8px; spacing: 2px; }
 
 .bunny-greeting-primary {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 600;
   color: #f7f8fa;
 }
 
@@ -343,6 +356,20 @@
 
 .bunny-bubble-column { padding: 13px 16px; spacing: 8px; }
 .bunny-bubble-text { font-size: 12px; color: #f7f8fa; }
+/* The affordance that hands a long answer to the assistant card. Sized and
+   coloured as a link rather than a button: it is the least important thing
+   in the bubble and must not compete with the answer above it. */
+.bunny-bubble-more {
+  font-size: 10px;
+  color: #a78bfa;
+  background-color: rgba(139, 92, 246, 0.14);
+  border-radius: 9px;
+  padding: 4px 9px;
+  border: none;
+}
+.bunny-bubble-more:hover { background-color: rgba(139, 92, 246, 0.26); color: #ffffff; }
+.bunny-bubble-more:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+
 .bunny-bubble-warning { border-color: rgba(245, 158, 11, 0.55); } /* Colour.WARNING */
 .bunny-bubble-error { border-color: rgba(239, 68, 68, 0.55); }
 
@@ -382,3 +409,5 @@
    rather than beside them, so each row has the card's full width. */
 .bunny-overview-body-stacked { spacing: 8px; }
 .bunny-overview-body-stacked .bunny-dial-column { padding-bottom: 2px; }
+
+.bunny-quick-empty { font-size: 11px; color: rgba(247, 248, 250, 0.55); padding: 6px 2px; }

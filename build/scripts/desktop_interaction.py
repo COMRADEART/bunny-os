@@ -115,9 +115,18 @@ def describe(node, ancestors=()):
         extents = component.get_extents(Atspi.CoordType.SCREEN) if component else None
     except Exception:
         extents = None
+    try:
+        description = node.get_description() or ""
+    except Exception:
+        description = ""
     entry = {
         "name": node.get_name() or "",
         "role": node.get_role_name(),
+        # The desktop puts the character's state and the assistant's answer in
+        # accessible descriptions and names, for a screen reader. Carrying them
+        # here is what lets the harness watch the state machine from outside
+        # the process without the product growing a test hook.
+        "description": description,
         # The named ancestors, outermost first. Two different controls are
         # called "Files" — the sidebar row and the dock tile — and nothing about
         # either one distinguishes them except where they are.
@@ -398,6 +407,37 @@ def application_state(name: str, user: str, environment: list[str]) -> dict:
         "startedByTheShell": bool(unit_lines),
         "windowVisible": any(frame.get("showing") for frame in frames),
     }
+
+
+def character_state(user: str, environment: list[str]) -> dict:
+    """What the character is doing, and what the bubble is saying.
+
+    Read out of the accessibility tree rather than out of the desktop's own
+    logs, and that is the whole point: the shell sets the character's accessible
+    description to ``Bunny is <state>. <reason>`` on every transition and the
+    bubble's accessible name to ``Bunny says: <text>``, both for a screen
+    reader. A harness reading the same two strings is seeing exactly what an
+    assistive technology sees, which is a much stronger claim than reading a
+    journal line the desktop wrote about itself.
+
+    So the state machine and the response are observable from outside the
+    process, with no test hook in the product.
+    """
+    controls = locate_controls(user, environment)
+    state = ""
+    reason = ""
+    says = ""
+    for entry in controls.get("controls", []):
+        name = str(entry.get("name", ""))
+        description = str(entry.get("description", ""))
+        if name == "Bunny, your assistant" and description.startswith("Bunny is "):
+            body = description[len("Bunny is "):]
+            state, _, reason = body.partition(". ")
+            state = state.strip().rstrip(".")
+        elif name.startswith("Bunny says: "):
+            says = name[len("Bunny says: "):]
+    return {"state": state, "reason": reason, "says": says,
+            "controlCount": len(controls.get("controls", []))}
 
 
 def shell_alive(user: str, environment: list[str]) -> dict:

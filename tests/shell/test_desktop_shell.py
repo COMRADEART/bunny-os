@@ -1396,5 +1396,233 @@ class InteractionHarnessTests(unittest.TestCase):
         self.assertIn("baselineClean", text)
 
 
+class AssistantFlowTests(unittest.TestCase):
+    """The desktop's half of a request, checked where it can be checked.
+
+    None of this can run a compositor, so what is asserted is the shape of the
+    code that survives contact with one: that every callback is guarded by the
+    request it belongs to, that a request cannot hang for ever, and that nothing
+    in the path blocks the main loop.
+    """
+
+    SERVICE = "lib/services/assistant.js"
+    SHELL = "lib/desktopShell.js"
+
+    @staticmethod
+    def failure_handler(shell: str) -> str:
+        """The body of `_failRequest`, not the call sites that mention it.
+
+        Splitting on the bare name found the call inside `_ask` first, which is
+        three lines long and contains none of what this checks.
+        """
+        marker = "_failRequest(reason, {retry = null} = {}) {"
+        start = shell.index(marker)
+        return shell[start:start + 1600]
+
+    def test_every_request_gets_an_identifier(self) -> None:
+        text = module_text(self.SERVICE)
+        self.assertIn("this._sequence += 1", text)
+        self.assertIn("const requestId = this._sequence", text)
+        # And every callback carries it, or the desktop cannot tell whose news
+        # it is hearing.
+        for callback in ("onAccepted", "onPhase", "onReply", "onFinished", "onError"):
+            with self.subTest(callback=callback):
+                self.assertRegex(text, rf"{callback}\?\.\([^)]*\{{requestId\}}\)")
+
+    def test_a_late_callback_for_an_old_request_changes_nothing(self) -> None:
+        """The out-of-order protection, at both ends.
+
+        The service refuses to deliver a callback for a superseded request, and
+        the shell refuses to act on one it is given. Either alone would be
+        enough today; both together survive one of them being refactored.
+        """
+        service = module_text(self.SERVICE)
+        self.assertIn("const stillCurrent = () => this._activeRequestId === requestId", service)
+        self.assertIn("if (!stillCurrent())\n                return;", service)
+
+        shell = module_text(self.SHELL)
+        self.assertIn("_owns(meta)", shell)
+        self.assertIn("return meta.requestId === this._requestId", shell)
+        for callback in ("onPhase", "onReply", "onFinished", "onError"):
+            with self.subTest(callback=callback):
+                body = shell.split(f"{callback}: (", 1)[1][:200]
+                self.assertIn("this._owns(meta)", body,
+                              f"{callback} acts without checking whose request it is")
+
+    def test_a_request_that_never_answers_still_ends(self) -> None:
+        """The character must not be left in THINKING by a bridge that died."""
+        text = module_text(self.SERVICE)
+        self.assertIn("WATCHDOG_MS", text)
+        self.assertIn("this._watchdog = timeout(WATCHDOG_MS", text)
+        # And a closed pipe with nothing terminal before it is itself terminal.
+        self.assertIn("The assistant service stopped before answering.", text)
+
+    def test_the_character_lands_on_idle_from_every_transient_state(self) -> None:
+        shell = module_text(self.SHELL)
+        transient = re.search(r"const TRANSIENT_STATES = new Set\(\[(.*?)\]\)", shell, re.S).group(1)
+        for state in ("talking", "success", "error"):
+            self.assertIn(f"'{state}'", transient)
+        # WORKING and LISTENING belong to a request in progress and must not be
+        # cleared by a dwell timer from an earlier one.
+        for state in ("working", "listening"):
+            self.assertNotIn(f"'{state}'", transient)
+
+    def test_every_terminal_phase_returns_the_character_to_idle(self) -> None:
+        """Success, failure and everything else must all land somewhere."""
+        shell = module_text(self.SHELL)
+        finished = shell.split("onFinished: (phase, meta)", 1)[1]
+        finished = finished[:finished.index("onError:")]
+        self.assertEqual(finished.count("_returnToIdleAfterTalking()"), 2,
+                         "success and the other terminal phases must both settle")
+        failure = self.failure_handler(shell)
+        self.assertIn("_returnToIdleAfterTalking()", failure)
+
+    def test_the_backend_is_reached_asynchronously(self) -> None:
+        """A synchronous read on the compositor's main loop is a frozen desktop."""
+        text = module_text(self.SERVICE)
+        self.assertIn("read_line_async", text)
+        for blocking in ("read_line(", "communicate_utf8(", "spawn_sync", "wait_check(", "wait()"):
+            with self.subTest(call=blocking):
+                self.assertNotIn(blocking, text)
+
+    def test_no_shell_module_blocks_the_main_loop(self) -> None:
+        """Statically detectable blocking calls, across the whole extension."""
+        forbidden = (
+            "spawn_command_line_sync", "spawn_sync", "communicate_utf8(", "communicate(",
+            "wait_check(", "GLib.usleep", "load_contents_finish(null)",
+        )
+        offenders = []
+        for path in sorted(EXTENSION.rglob("*.js")):
+            text = path.read_text(encoding="utf-8")
+            for number, line in enumerate(text.splitlines(), 1):
+                if line.lstrip().startswith(("//", "*")):
+                    continue
+                for call in forbidden:
+                    if call in line:
+                        offenders.append(
+                            f"{path.relative_to(EXTENSION).as_posix()}:{number} {call}")
+        self.assertEqual(offenders, [], "these block the compositor's main loop")
+
+    def test_a_failure_is_reported_to_the_user_and_the_journal(self) -> None:
+        shell = module_text(self.SHELL)
+        failure = self.failure_handler(shell)
+        self.assertIn("logError_(", failure)          # the journal gets the detail
+        self.assertIn("this.notifications.error(", failure)  # the user gets a sentence
+        self.assertIn("onActivate", failure)          # and a way to try again
+
+    def test_the_assistant_activation_shortcut_exists_and_is_not_super_space(self) -> None:
+        """Super+Space is GNOME's input-source switch and must not be taken.
+
+        Measured on the reference host: `org.gnome.desktop.wm.keybindings
+        switch-input-source` is `['<Super>space', 'XF86Keyboard']`. Taking it
+        would cost every multilingual user their layout switch.
+        """
+        schema = (EXTENSION / "schemas/org.gnome.shell.extensions.bunny-shell.gschema.xml") \
+            .read_text(encoding="utf-8")
+        binding = re.search(
+            r'name="focus-desktop-assistant".*?<default>\[(.*?)\]</default>', schema, re.S)
+        self.assertIsNotNone(binding, "the assistant needs an activation shortcut")
+        self.assertNotIn("&lt;Super&gt;space", binding.group(1))
+        # And the shell must actually bind it to activation.
+        self.assertIn("bind('focus-desktop-assistant', () => this._activateAssistant())",
+                      module_text(self.SHELL))
+
+    def test_activation_focuses_the_input_and_shows_it_happened(self) -> None:
+        shell = module_text(self.SHELL)
+        body = shell.split("_activateAssistant() {", 1)[1][:500]
+        self.assertIn("setState('listening'", body)
+        self.assertIn("focusInput()", body)
+        self.assertIn("_bubble?.say(", body)
+
+    def test_escape_leaves_the_input(self) -> None:
+        panel = module_text("lib/assistant/panel.js")
+        self.assertIn("Clutter.KEY_Escape", panel)
+        self.assertIn("onDismiss", panel)
+        shell = module_text(self.SHELL)
+        dismiss = shell.split("_dismissAssistant() {", 1)[1][:400]
+        # Escape is not a cancel button: a running request keeps running.
+        self.assertIn("=== 'listening'", dismiss)
+
+
+class BubbleResponseTests(unittest.TestCase):
+    """The bubble is the primary response surface, with a bound on its size."""
+
+    def test_a_long_answer_is_previewed_rather_than_shown_whole(self) -> None:
+        text = module_text("lib/assistant/bubble.js")
+        self.assertIn("PREVIEW_LIMIT", text)
+        limit = int(re.search(r"const PREVIEW_LIMIT = (\d+);", text).group(1))
+        # Small enough not to cover the dashboard, large enough to be an answer.
+        self.assertGreater(limit, 80)
+        self.assertLess(limit, 500)
+
+    def test_the_whole_answer_reaches_a_screen_reader(self) -> None:
+        """Truncation is a visual accommodation and must not remove information."""
+        text = module_text("lib/assistant/bubble.js")
+        self.assertIn("accessible_name = `Bunny says: ${full}`", text)
+
+    def test_the_rest_is_reachable(self) -> None:
+        text = module_text("lib/assistant/bubble.js")
+        self.assertIn("onOpenFull", text)
+        self.assertIn("bunny-bubble-more", text)
+        self.assertTrue(".bunny-bubble-more" in module_text("stylesheet.css"),
+                        "the affordance needs a style or it is an unstyled button")
+
+    def test_the_bubble_is_bounded(self) -> None:
+        text = module_text("lib/assistant/bubble.js")
+        self.assertIn("const MAX_WIDTH", text)
+
+
+class QuickAccessTests(unittest.TestCase):
+    """Only installed applications, with their own icons.
+
+    The booted screenshots showed five tiles carrying the same generic icon,
+    which reads as a broken icon theme rather than as "you do not have these".
+    """
+
+    MODULE = "lib/cards/quickAccess.js"
+
+    def test_no_tile_is_drawn_for_something_that_is_not_installed(self) -> None:
+        """Code only. The comments explain what was removed and why."""
+        code = "\n".join(
+            line for line in module_text(self.MODULE).splitlines()
+            if not line.lstrip().startswith(("//", "*", "/*"))
+        )
+        self.assertNotIn("setUnavailable", code)
+        self.assertNotIn("not installed", code)
+
+    def test_every_tile_uses_the_application_s_own_icon(self) -> None:
+        text = module_text(self.MODULE)
+        body = text.split("for (const app of chosen)", 1)[1]
+        self.assertIn("gicon: app.get_icon()", body)
+        self.assertNotIn("APP_GENERIC", body)
+        self.assertNotIn("iconName", body)
+
+    def test_tiles_come_from_the_installed_registry(self) -> None:
+        text = module_text(self.MODULE)
+        self.assertIn("this._launcher.resolve(logical)", text)
+        self.assertIn("this._launcher.listAll()", text)
+
+    def test_an_empty_card_says_so(self) -> None:
+        text = module_text(self.MODULE)
+        self.assertIn("_empty.visible = chosen.length === 0", text)
+
+
+class CompanionWindowTests(unittest.TestCase):
+    """The backend runs at login; the window does not."""
+
+    def test_the_build_does_not_enable_the_window_unit(self) -> None:
+        installer = (ROOT / "build/scripts/install-root.py").read_text(encoding="utf-8")
+        start = installer.index('"/usr/bin/systemctl", "--global", "enable"')
+        finish = installer.index("], check=True)", start)
+        block = installer[start:finish]
+        self.assertIn("bunny-companion.service", block)
+        self.assertNotIn("bunny-companion-window.service", block)
+
+    def test_the_runtime_unit_is_still_a_background_service(self) -> None:
+        unit = (ROOT / "systemd/user/bunny-companion.service").read_text(encoding="utf-8")
+        self.assertIn("WantedBy=graphical-session.target", unit)
+        self.assertIn("ExecStart=/usr/libexec/bunny-companion-service", unit)
+
+
 if __name__ == "__main__":
     unittest.main()

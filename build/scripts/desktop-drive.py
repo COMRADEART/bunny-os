@@ -112,6 +112,10 @@ def main() -> int:
     #: wait ends as soon as the guest reports a window, so the cost is only paid
     #: when something is actually wrong.
     parser.add_argument("--settle", type=float, default=45.0)
+    #: The two requests the milestone names. The first must produce a real
+    #: answer from the runtime; the second must produce a desktop action.
+    parser.add_argument("--ask", default="What files are in my Downloads folder?")
+    parser.add_argument("--ask-action", default="Open Files")
     arguments = parser.parse_args()
 
     steps: list[dict] = []
@@ -260,6 +264,7 @@ def main() -> int:
 
 def interact(control, qmp, pointer, targets, arguments,
              report, steps, step, screenshot, wait_for, press, close_focused, save):
+    """The scenario. Everything it needs is passed in; it owns no state."""
     # ---- baseline ---------------------------------------------------------
     before_files = control.ask({"command": "state", "application": "files",
                                 "label": "before"}, timeout=120)
@@ -329,6 +334,63 @@ def interact(control, qmp, pointer, targets, arguments,
              windows=closed.get("windows", {}).get("count"), state=closed)
         report["terminalClosed"] = closed
         screenshot("05-terminal-closed")
+
+    # ---- the assistant, end to end ----------------------------------------
+    #
+    # The milestone's central claim: a person types a request, the character
+    # moves through the states the request is actually in, and a real answer
+    # comes back from the runtime. Every observation is read out of the
+    # accessibility tree, which is the same thing a screen reader would see.
+    def watch_character(seconds: float, label: str) -> list[dict]:
+        """Poll the character and record every state it passes through."""
+        seen: list[dict] = []
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            answer = control.ask({"command": "character", "label": label}, timeout=120)
+            observation = (answer or {}).get("character") or {}
+            state = observation.get("state", "")
+            if state and (not seen or seen[-1]["state"] != state):
+                seen.append({"state": state, "says": observation.get("says", ""),
+                             "reason": observation.get("reason", "")})
+                # Idle after something happened means the request is over.
+                if state == "idle" and len(seen) > 1:
+                    break
+            time.sleep(2)
+        return seen
+
+    for label, request in (("factual", arguments.ask), ("action", arguments.ask_action)):
+        if not request:
+            continue
+        target = targets.get("ask")
+        if target is None:
+            step(f"assistant-{label}", asked=False,
+                 reason="the assistant input was not found in the accessibility tree")
+            continue
+
+        x, y = centre(target["extents"])
+        pointer.click(x, y)
+        time.sleep(1.5)
+        before = control.ask({"command": "character", "label": f"{label}-before"}, timeout=120)
+        pointer.type_text(request)
+        time.sleep(0.5)
+        screenshot(f"07-{label}-typed")
+        pointer.key("ret")
+
+        transitions = watch_character(arguments.settle * 2, label)
+        after = control.ask({"command": "character", "label": f"{label}-after"}, timeout=120)
+        final = (after or {}).get("character") or {}
+        step(f"assistant-{label}", asked=True, request=request,
+             at={"x": x, "y": y},
+             stateBefore=((before or {}).get("character") or {}).get("state"),
+             states=[item["state"] for item in transitions],
+             answer=final.get("says", ""),
+             finalState=final.get("state", ""))
+        report[f"assistant_{label}"] = {
+            "request": request,
+            "transitions": transitions,
+            "final": final,
+        }
+        screenshot(f"08-{label}-answered")
 
     # ---- the desktop is still there and still takes input -----------------
     shell = (control.ask({"command": "shell", "label": "after-terminal"}, timeout=120) or {}).get("shell", {})

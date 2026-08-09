@@ -276,6 +276,15 @@ print(f"  targets found:  {', '.join(sorted(report.get('targets', {}))) or 'none
 print(verdict("files"))
 print(verdict("terminal"))
 print(f"  keyboard reached the terminal: {marker.is_file() and marker.stat().st_size > 0}")
+for key in ("assistant_factual", "assistant_action"):
+    block = report.get(key)
+    if not block:
+        continue
+    states = " -> ".join(item["state"] for item in block.get("transitions", []))
+    print(f"  {key}: {block.get('request')!r}")
+    print(f"    states:  {states or '(none observed)'}")
+    print(f"    answer:  {(block.get('final') or {}).get('says', '')[:160]!r}")
+    print(f"    final:   {(block.get('final') or {}).get('state', '')}")
 for key in ("shellAfterFiles", "shellAfterTerminal"):
     state = report.get(key) or {}
     print(f"  {key}: responded={state.get('responded')} "

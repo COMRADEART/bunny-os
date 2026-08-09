@@ -720,11 +720,40 @@ class BuildIntegrationTests(unittest.TestCase):
                 return landed
         return None
 
-    def test_the_window_unit_exists_and_is_enabled_by_preset(self) -> None:
+    def test_the_window_unit_exists_and_is_not_started_for_you(self) -> None:
+        """The window ships and is startable; nothing starts it at login.
+
+        This assertion is the reverse of the one it replaces, and the reversal
+        is deliberate rather than a relaxation. The window was enabled when the
+        desktop had no assistant surface of its own and an invisible companion
+        was the problem. The desktop now renders the character, the bubble and
+        the input, and starting the GTK window at login put a second, larger
+        copy of the same assistant on top of the first — visible in the
+        screenshots in DESKTOP_SHELL_ALPHA_VALIDATION.md.
+
+        Three things are asserted, because "not enabled" alone would also be
+        true of a unit somebody deleted.
+        """
         unit = REPOSITORY / "systemd/user/bunny-companion-window.service"
-        self.assertTrue(unit.is_file())
+        self.assertTrue(unit.is_file(), "the window unit must still ship")
+
         preset = (REPOSITORY / "config/systemd/60-bunny-os-user.preset").read_text(encoding="utf-8")
-        self.assertIn("enable bunny-companion-window.service", preset)
+        self.assertNotIn("\nenable bunny-companion-window.service", f"\n{preset}")
+        self.assertIn("disable bunny-companion-window.service", preset)
+
+        # And the runtime, which must still be enabled — the whole point is that
+        # the backend runs and the window does not.
+        self.assertIn("\nenable bunny-companion.service", f"\n{preset}")
+
+    def test_the_window_is_still_reachable_by_a_person(self) -> None:
+        """Not started is not the same as not available.
+
+        A user who wants the task list must have a way to get it, or this
+        change removed a feature instead of moving it.
+        """
+        entry = REPOSITORY / "shell/components/applications/art.comrade.BunnyCompanion.desktop"
+        self.assertTrue(entry.is_file(), "the Applications entry must still exist")
+        self.assertIn("Exec=/usr/bin/bunny-companion", entry.read_text(encoding="utf-8"))
 
     def test_every_enabled_user_preset_unit_is_actually_enabled_by_the_build(self) -> None:
         """A preset file is not an enablement, and the two had drifted.
@@ -760,6 +789,17 @@ class BuildIntegrationTests(unittest.TestCase):
             missing, [],
             "these units are enabled in the user preset and never enabled by the build; "
             "systemd applies no preset by itself, so they would never start",
+        )
+        # And the other direction, which the first version did not check: a unit
+        # the build enables and the preset does not mention is a unit whose
+        # intended state is recorded in exactly one place. That is how the window
+        # would have been un-enabled in the preset and gone on starting anyway.
+        user_units = {path.name for path in (REPOSITORY / "systemd/user").glob("*.service")}
+        undeclared = sorted((activated & user_units) - enabled)
+        self.assertEqual(
+            undeclared, [],
+            "these user units are enabled by the build and not named in the preset; "
+            "the two lists are the same decision and must be changed together",
         )
 
     def test_the_window_unit_does_not_deny_write_execute(self) -> None:

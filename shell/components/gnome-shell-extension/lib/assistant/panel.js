@@ -65,6 +65,17 @@ export class AssistantPanel extends Card {
         });
         this._entry.accessible_name = 'Ask Bunny';
         this._entry.clutter_text.connect('activate', () => this._submit());
+        // Escape leaves. An input that traps focus is an input a keyboard user
+        // has to guess their way out of, and this one is reachable from a
+        // global shortcut — so it is reachable by accident, and getting out has
+        // to be as cheap as getting in.
+        this._entry.clutter_text.connect('key-press-event', (_actor, event) => {
+            if (event.get_key_symbol() !== Clutter.KEY_Escape)
+                return Clutter.EVENT_PROPAGATE;
+            this._entry.set_text('');
+            this._context.onDismiss?.();
+            return Clutter.EVENT_STOP;
+        });
         inputRow.add_child(this._entry);
 
         this._microphone = this._iconButton(Icons.MICROPHONE, 'Speak to Bunny',

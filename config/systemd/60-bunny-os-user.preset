@@ -15,9 +15,22 @@ disable gnome-software.service
 # *client*, and a client that had to start the runtime would mean closing the
 # last window stopped whatever it was doing.
 enable bunny-companion.service
-# And the window, which nothing started before the Public Alpha branch. A
-# freshly installed machine ran a companion that was invisible, and the only way
-# to see it was `bunny-os companion shell` in a terminal — the one thing §1 says
-# the normal path must not need. The unit carries a graphical-session condition,
-# so enabling it on a profile with no desktop costs a "condition failed" line.
-enable bunny-companion-window.service
+# The window is deliberately *not* enabled, and the history is worth keeping
+# because it reversed twice for good reasons both times.
+#
+# It was enabled on the Public Alpha branch because nothing started it: a fresh
+# machine ran a companion that was invisible and the only way to see it was
+# `bunny-os companion shell` in a terminal. That was a real problem and this was
+# the right fix for it *at the time* — the desktop had no assistant surface of
+# its own.
+#
+# It has one now. The shell renders the character, the speech bubble and the
+# assistant input, and starting the GTK window at login put a second, larger
+# representation of the same assistant on top of the first one. The screenshots
+# in DESKTOP_SHELL_ALPHA_VALIDATION.md show it covering the character.
+#
+# So the runtime is enabled and the window is not. Opening it still works — the
+# Applications grid, the dock tile, or `systemctl --user start
+# bunny-companion-window.service` — and it is the right surface for the task
+# list and the transcript. Nothing starts it for you.
+disable bunny-companion-window.service
