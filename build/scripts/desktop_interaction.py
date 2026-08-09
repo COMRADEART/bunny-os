@@ -204,6 +204,41 @@ def _atspi(user: str, environment: list[str], mode: str) -> dict:
     return {"ran": True, "ok": True, "call": result, **parsed}
 
 
+def keep_the_session_awake(user: str, environment: list[str]) -> dict:
+    """Stop the guest locking its own screen in the middle of the test.
+
+    Measured, not anticipated. A run that waited seven minutes before looking at
+    the desktop found the Bunny extension DISABLED and the accessibility tree
+    empty, on a session that had been correct four minutes earlier. Nothing had
+    failed: GNOME had idled, locked, and switched to the `unlock-dialog` session
+    mode, which disables every extension that does not declare that mode — and
+    the Bunny desktop deliberately does not, because a dashboard drawing behind
+    a lock screen would show a locked machine's calendar and notifications to
+    whoever is standing in front of it.
+
+    So this is a property of the *machine under test*, not of the product, and
+    it is turned off here rather than worked around by making the harness
+    faster. A test that only passes when it finishes inside five minutes is a
+    test that will fail the first time a build is slow.
+    """
+    if not environment:
+        return {"ran": False, "error": "no user session environment"}
+    settings = [
+        ("org.gnome.desktop.session", "idle-delay", "0"),
+        ("org.gnome.desktop.screensaver", "lock-enabled", "false"),
+        ("org.gnome.desktop.screensaver", "idle-activation-enabled", "false"),
+        ("org.gnome.settings-daemon.plugins.power", "sleep-inactive-ac-type", "'nothing'"),
+    ]
+    applied = []
+    for schema, key, value in settings:
+        applied.append({
+            "key": f"{schema} {key}",
+            "call": _run(["/usr/bin/env", *environment, "/usr/bin/gsettings",
+                          "set", schema, key, value], user=user, limit=400),
+        })
+    return {"ran": True, "settings": applied}
+
+
 def enable_accessibility(user: str, environment: list[str]) -> dict:
     """Ask the session to expose its widget tree, and give it a moment.
 

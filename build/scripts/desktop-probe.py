@@ -81,15 +81,23 @@ def user_bus_environment(user: str) -> list[str]:
 
 
 def shell_dbus(user: str, environment: list[str], method: str, body: str) -> dict:
+    """Call a method on org.gnome.Shell as the session user.
+
+    An empty `body` is dropped rather than passed. `ListExtensions` takes no
+    arguments, and handing gdbus an empty argv element is handing it one
+    argument — so the call was refused as "too many arguments" on every run, and
+    `wait_for_shell` reported a shell that was answering every other question as
+    not responding.
+    """
     if not environment:
         return {"ran": False, "error": "no user runtime directory; the session was not found"}
-    return run(
-        ["/usr/bin/env", *environment, "/usr/bin/gdbus", "call", "--session",
-         "--dest", "org.gnome.Shell",
-         "--object-path", "/org/gnome/Shell",
-         "--method", method, body],
-        user=user,
-    )
+    argv = ["/usr/bin/env", *environment, "/usr/bin/gdbus", "call", "--session",
+            "--dest", "org.gnome.Shell",
+            "--object-path", "/org/gnome/Shell",
+            "--method", method]
+    if body:
+        argv.append(body)
+    return run(argv, user=user)
 
 
 def wait_for_shell(user: str, environment: list[str], *, seconds: int = 420) -> dict:
@@ -355,6 +363,12 @@ def main() -> int:
         ),
         "userBusEnvironment": environment,
     }
+
+    # Before anything is measured: stop the machine locking itself. A session
+    # that idles into the lock screen disables every extension, including this
+    # desktop, and a probe that waited a few minutes too long would then report
+    # a working desktop as absent. See keep_the_session_awake.
+    record["sessionAwake"] = desktop_interaction.keep_the_session_awake(user, environment)
 
     record["shellResponded"] = wait_for_shell(user, environment)
     record["sessionIdentity"] = session_identity(user, environment)
