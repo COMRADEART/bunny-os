@@ -119,6 +119,12 @@ class ProtocolValidation(unittest.TestCase):
     def test_health_and_devices_answer_without_a_capture(self) -> None:
         health = self.client.call("speech_input_health")
         self.assertTrue(health["available"])
+        self.assertIn(health["readinessState"], {
+            "STT_READY", "STT_MODEL_MISSING", "STT_MODEL_CORRUPT",
+            "STT_RUNTIME_MISSING", "STT_PROVIDER_FAILED", "AUDIO_UNAVAILABLE",
+            "VOICE_INPUT_DISABLED", "VOICE_RESOURCE_UNAVAILABLE",
+        })
+        self.assertEqual(health["readiness"]["state"], health["readinessState"])
         boundaries = health["boundaries"]
         self.assertFalse(boundaries["wakeWordSupported"])
         self.assertFalse(boundaries["remoteRecognitionConfigured"])
@@ -163,6 +169,13 @@ class EndToEnd(unittest.TestCase):
         self.assertTrue(answer["accepted"], answer.get("detail"))
         self.assertTrue(wait_for(lambda: not self.service.speech.worker.active))
         return answer
+
+    def test_scripted_local_stack_reports_queryable_ready_state(self) -> None:
+        health = self.client.call("speech_input_health")
+        self.assertEqual(health["readinessState"], "STT_READY")
+        self.assertTrue(health["readiness"]["ready"])
+        self.assertEqual(health["readiness"]["audioState"], "AUDIO_READY")
+        self.assertEqual(health["readiness"]["sttState"], "STT_READY")
 
     def test_dictation_confirmation_and_exactly_one_task(self) -> None:
         started = self._capture()

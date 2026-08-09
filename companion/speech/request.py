@@ -249,7 +249,9 @@ class SpeechInputRequest:
     cancellation_token: str = ""
     #: The presentation revision the client was showing when the user activated.
     #: Carried into every event so a surface can tell an event belongs to the
-    #: state it is looking at.
+    #: state it is looking at. Zero means no out-of-process surface attestation;
+    #: a positive revision also certifies that Bunny Shell raised its persistent
+    #: listening indicator before asking the service to capture.
     presentation_revision: int = 0
     schema_version: int = SPEECH_INPUT_REQUEST_SCHEMA_VERSION
 

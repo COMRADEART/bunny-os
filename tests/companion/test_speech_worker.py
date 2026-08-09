@@ -89,6 +89,23 @@ class HappyPath(unittest.TestCase):
         self.assertFalse(entry.transcript.user_edited)
         self.assertTrue(entry.transcript.audio_digest.startswith("sha256:"))
 
+    def test_capture_journal_has_hardware_diagnostics_but_no_audio(self) -> None:
+        _run_capture(self.harness, make_request())
+        opened = next(event for event in self.received if event.kind == "microphone_opened")
+        stopped = next(event for event in self.received if event.kind == "capture_stopped")
+        opened_payload = dict(opened.payload)
+        stopped_payload = dict(stopped.payload)
+        self.assertEqual(opened_payload["audioFormat"], "raw-pcm-s16le")
+        self.assertEqual(opened_payload["sampleFormat"], "S16LE")
+        self.assertEqual(opened_payload["sampleRate"], 16_000)
+        self.assertEqual(opened_payload["channels"], 1)
+        self.assertTrue(stopped_payload["backendId"])
+        self.assertIn("deviceId", stopped_payload)
+        self.assertGreater(stopped_payload["durationSeconds"], 0)
+        self.assertGreater(stopped_payload["bytesCaptured"], 0)
+        self.assertNotIn("audio", stopped_payload)
+        self.assertNotIn("frames", stopped_payload)
+
     def test_the_indicator_showed_for_the_whole_interval(self) -> None:
         _run_capture(self.harness, make_request())
         sink = self.harness.sink
@@ -165,6 +182,31 @@ class ActivationGate(unittest.TestCase):
             if event.kind == "speech_input_degraded"
         ]
         self.assertTrue(any(item.get("kind") == "indicator-unavailable" for item in degradations))
+
+    def test_an_attested_shell_revision_allows_the_out_of_process_indicator(self) -> None:
+        """The GNOME surface is outside the service, but still precedes capture."""
+        harness = build_worker()
+        self.addCleanup(harness.close)
+        harness.indicator.detach(harness.sink)
+        _received, kinds = collect_events(harness.worker)
+        outcome = harness.worker.start_capture(make_request(presentation_revision=7))
+        self.assertTrue(outcome.accepted)
+        self.assertTrue(wait_for(lambda: not harness.worker.active))
+        self.assertEqual(harness.backend.opens, 1)
+        self.assertIn("microphone_indicator_raised", kinds())
+        self.assertIn("microphone_opened", kinds())
+        self.assertEqual(harness.indicator.describe()["attestedRaises"], 1)
+
+    def test_headless_revision_zero_without_a_sink_keeps_microphone_shut(self) -> None:
+        harness = build_worker()
+        self.addCleanup(harness.close)
+        harness.indicator.detach(harness.sink)
+        _received, kinds = collect_events(harness.worker)
+        outcome = harness.worker.start_capture(make_request(presentation_revision=0))
+        self.assertTrue(outcome.accepted, "the worker records the asynchronous refusal")
+        self.assertTrue(wait_for(lambda: not harness.worker.active))
+        self.assertEqual(harness.backend.opens, 0)
+        self.assertNotIn("microphone_opened", kinds())
 
     def test_immediate_submission_without_the_preference_is_refused(self) -> None:
         harness = build_worker()

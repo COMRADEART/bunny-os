@@ -471,8 +471,8 @@ class _BridgeConnection:
     def list_sessions(self) -> dict[str, object]:
         return {"sessions": [{"title": "Bunny Desktop", "sessionId": "session-voice"}]}
 
-    def create_session(self, **_params: object) -> dict[str, str]:
-        return {"sessionId": "session-voice"}
+    def create_session(self, **_params: object) -> dict[str, object]:
+        return {"session": {"sessionId": "session-voice", "title": "Bunny Desktop"}}
 
     def call(self, operation: str, params: dict[str, object]) -> dict[str, object]:
         self.calls.append((operation, dict(params)))
@@ -550,6 +550,7 @@ class VoiceBridgeFlowTests(unittest.TestCase):
             timeout=1.0, session_title="Bunny Desktop",
             activation_source="push-to-talk-button", language="", device="", provider="",
             deadline=10.0, task_deadline=10.0, no_speech=False,
+            presentation_revision=17,
         )
 
     def test_valid_stt_result_enters_the_canonical_task_and_real_tts_seam(self) -> None:
@@ -573,22 +574,76 @@ class VoiceBridgeFlowTests(unittest.TestCase):
 
     def test_bridge_carries_the_bounded_show_all_result_set_without_paths(self) -> None:
         events = [{
-            "kind": "operation_completed",
-            "name": "search-files",
-            "value": {
-                "results": [{
-                    "reference": "result-1", "name": "one.pdf",
-                    "display": "Downloads/one.pdf",
-                }],
-                "allResults": [{
-                    "reference": f"result-{index}", "name": f"{index}.pdf",
-                    "display": f"Downloads/{index}.pdf",
-                } for index in range(1, 11)],
+            "eventType": "operation_completed",
+            "sequence": 11,
+            "payload": {
+                "name": "search-files",
+                "value": {
+                    "results": [{
+                        "reference": "result-1", "name": "one.pdf",
+                        "display": "Downloads/one.pdf",
+                    }],
+                    "allResults": [{
+                        "reference": f"result-{index}", "name": f"{index}.pdf",
+                        "display": f"Downloads/{index}.pdf",
+                    } for index in range(1, 11)],
+                },
             },
         }]
         results = self.bridge._file_results(events)
         self.assertEqual(len(results), 10)
         self.assertNotIn("path", repr(results).casefold())
+
+    def test_fast_action_replays_working_before_real_speech_and_success(self) -> None:
+        connection = _BridgeConnection()
+        connection.get_presentation_state = lambda _task_id: {
+            "revision": 19,
+            "captionId": "caption-1",
+            "events": [
+                {
+                    "eventType": "operation_started", "sequence": 13,
+                    "payload": {"name": "launch-application"},
+                },
+                {
+                    "eventType": "operation_completed", "sequence": 15,
+                    "payload": {"name": "launch-application", "value": {}},
+                },
+                {
+                    "eventType": "task_state_changed", "sequence": 16,
+                    "payload": {"to": "reviewing"},
+                },
+                {
+                    "eventType": "reviewer_observation", "sequence": 17,
+                    "payload": {},
+                },
+                {
+                    "eventType": "result_created", "sequence": 18,
+                    "payload": {},
+                },
+                {
+                    "eventType": "task_completed", "sequence": 19,
+                    "payload": {},
+                },
+            ],
+            "state": {
+                "phase": "success", "statusText": "Done",
+                "approvalState": "granted", "resultSummary": "Files is open.",
+                "errorSummary": "",
+            },
+        }
+
+        self.assertEqual(self.bridge.watch(
+            connection, "task-voice", deadline=self.bridge.time.monotonic() + 10,
+            speak_response=True,
+        ), 0)
+        phases = [
+            item["phase"] for item in self.events if item["event"] == "phase"
+        ]
+        self.assertIn("working", phases)
+        self.assertIn("speaking", phases)
+        self.assertNotIn("reviewing", phases)
+        self.assertEqual(phases[-1], "success")
+        self.assertLess(phases.index("working"), phases.index("speaking"))
 
     def test_low_confidence_transcript_does_not_execute(self) -> None:
         connection = _BridgeConnection(confidence=0.1)
@@ -638,6 +693,56 @@ class VoiceBridgeFlowTests(unittest.TestCase):
         self.bridge.command_listen(self._arguments())
         start = next(params for name, params in connection.calls if name == "speech_input_start")
         self.assertEqual(start["maxCaptureMs"], 30_000)
+        self.assertEqual(start["presentationRevision"], 17)
+
+    def test_headless_bridge_revision_zero_never_calls_the_capture_service(self) -> None:
+        connection = _BridgeConnection()
+        self.bridge.client = lambda _timeout: connection
+        arguments = self._arguments()
+        arguments.presentation_revision = 0
+        self.assertEqual(self.bridge.command_listen(arguments), 4)
+        self.assertFalse(connection.calls)
+        self.assertEqual(self.events[-1]["event"], "error")
+
+    def test_approval_control_reloads_and_returns_the_canonical_binding(self) -> None:
+        binding = {
+            "requestId": "approval:voice-1", "sessionId": "session-voice",
+            "taskId": "task-voice", "planId": "plan-voice",
+            "transitionId": "transition-voice", "action": "launch_application",
+            "destination": "local", "providerId": "",
+            "dataClassification": "internal", "estimatedCostUnits": None,
+            "destinationFingerprint": "sha256:abc", "decision": "pending",
+            "reason": "Open Files.",
+        }
+
+        class ApprovalConnection:
+            def __init__(self) -> None:
+                self.resolved: tuple[dict[str, object], str] | None = None
+
+            def get_presentation_state(self, task_id: str) -> dict[str, object]:
+                self.task_id = task_id
+                return {"state": {"approvals": [binding]}}
+
+            def resolve_approval(
+                self, sent: dict[str, object], decision: str
+            ) -> dict[str, object]:
+                self.resolved = (sent, decision)
+                return {"resolved": True}
+
+        connection = ApprovalConnection()
+        self.bridge.client = lambda _timeout: connection
+        arguments = argparse.Namespace(
+            timeout=1.0, task_id="task-voice",
+            request_id="approval:voice-1", decision="allow",
+        )
+        self.assertEqual(self.bridge.command_approval(arguments), 0)
+        self.assertEqual(connection.task_id, "task-voice")
+        self.assertIsNotNone(connection.resolved)
+        sent, decision = connection.resolved or ({}, "")
+        self.assertEqual(decision, "granted")
+        self.assertEqual(set(sent), set(self.bridge.APPROVAL_BINDING_FIELDS))
+        self.assertNotIn("reason", sent)
+        self.assertEqual(self.events[-1]["event"], "approval_resolved")
 
     def test_capture_cancellation_waits_for_confirmed_microphone_close(self) -> None:
         connection = _BridgeConnection()
@@ -673,6 +778,39 @@ class VoiceBridgeFlowTests(unittest.TestCase):
         self.assertFalse(self.events[-1]["available"])
         self.assertIn("no microphone", str(self.events[-1]["reason"]))
 
+    def test_missing_packaged_model_has_a_normal_user_facing_state(self) -> None:
+        connection = _BridgeConnection()
+
+        def call(operation: str, _params: dict[str, object]) -> dict[str, object]:
+            if operation == "speech_input_health":
+                return {
+                    "available": True,
+                    "readinessState": "STT_MODEL_MISSING",
+                    "readiness": {
+                        "state": "STT_MODEL_MISSING",
+                        "ready": False,
+                        "message": "Voice recognition isn't installed yet.",
+                    },
+                    "recognizers": [{
+                        "ready": False,
+                        "providerId": "vosk",
+                        "detail": "developer-only model path diagnostic",
+                    }],
+                    "policy": {"decision": {"mayCapture": False, "reasons": []}},
+                }
+            if operation == "speech_input_devices":
+                return {"devices": [{"deviceId": "mic-1"}], "preferredDevice": ""}
+            raise AssertionError(operation)
+
+        connection.call = call
+        self.bridge.client = lambda _timeout: connection
+        self.assertEqual(
+            self.bridge.command_voice_health(argparse.Namespace(timeout=1.0)), 0)
+        event = self.events[-1]
+        self.assertFalse(event["available"])
+        self.assertEqual(event["readinessState"], "STT_MODEL_MISSING")
+        self.assertEqual(event["reason"], "Voice recognition isn't installed yet.")
+
 
 class ShellVoiceBoundaryTests(unittest.TestCase):
     def test_shell_renders_voice_but_contains_no_audio_or_inference_api(self) -> None:
@@ -688,6 +826,26 @@ class ShellVoiceBoundaryTests(unittest.TestCase):
         body = shell.split("_startVoice(", 1)[1].split("_ownsVoice(", 1)[0]
         self.assertLess(body.index("_setMicrophoneVisible(true)"), body.index("this.voice.start("))
         self.assertIn("setMicrophoneActive", (EXTENSION / "lib/topBar.js").read_text(encoding="utf-8"))
+        voice = (EXTENSION / "lib/services/voice.js").read_text(encoding="utf-8")
+        bridge = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("--presentation-revision", voice)
+        self.assertIn('"presentationRevision"', bridge)
+
+    def test_shell_renders_and_resolves_action_approval_without_weakening_policy(self) -> None:
+        bridge = BRIDGE.read_text(encoding="utf-8")
+        assistant = (EXTENSION / "lib/services/assistant.js").read_text(encoding="utf-8")
+        voice = (EXTENSION / "lib/services/voice.js").read_text(encoding="utf-8")
+        panel = (EXTENSION / "lib/assistant/panel.js").read_text(encoding="utf-8")
+        shell = (EXTENSION / "lib/desktopShell.js").read_text(encoding="utf-8")
+        self.assertIn('emit(\n                    "approval"', bridge)
+        self.assertIn("APPROVAL_BINDING_FIELDS", bridge)
+        self.assertIn("connection.resolve_approval(binding, decision)", bridge)
+        self.assertIn("case 'approval':", assistant)
+        self.assertIn("case 'approval':", voice)
+        self.assertIn("showApproval(approval", panel)
+        self.assertIn("'Deny'", panel)
+        self.assertIn("'Allow'", panel)
+        self.assertIn("resolveApproval(", shell)
 
     def test_stop_keeps_indicator_until_companion_confirms_device_closed(self) -> None:
         service = (EXTENSION / "lib/services/voice.js").read_text(encoding="utf-8")

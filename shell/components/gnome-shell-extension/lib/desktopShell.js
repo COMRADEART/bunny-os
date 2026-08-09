@@ -835,6 +835,7 @@ export class DesktopShell {
         this.characterState.noteActivity();
         this._assistantPanel?.addTurn('user', trimmed);
         this._assistantPanel?.showFileResults([]);
+        this._assistantPanel?.clearApproval();
         this._assistantPanel?.setBusy(true);
         this._assistantPanel?.setStatus('Thinking…');
         this.characterState.setState('thinking', {reason: trimmed});
@@ -850,6 +851,29 @@ export class DesktopShell {
                 this.characterState.adoptPhase(phase, PHASE_TO_STATE, {statusText});
                 if (statusText)
                     this._assistantPanel?.setStatus(statusText);
+                if (phase !== 'waiting_for_approval')
+                    this._assistantPanel?.clearApproval();
+            },
+            onApproval: (approval, meta) => {
+                if (!this._owns(meta))
+                    return;
+                this._assistantPanel?.showApproval(approval, (decision, requestId) => {
+                    this.assistant.resolveApproval(
+                        approval.taskId, requestId, decision,
+                        (resolved, line) => {
+                            if (!this._owns(meta))
+                                return;
+                            if (resolved) {
+                                this._assistantPanel?.clearApproval(requestId);
+                                this._assistantPanel?.setStatus('Permission recorded.');
+                            } else {
+                                this._assistantPanel?.approvalDecisionFailed(requestId);
+                                this._assistantPanel?.setStatus(
+                                    line?.reason ?? 'That permission answer was refused.',
+                                    {tone: 'error'});
+                            }
+                        });
+                });
             },
             onReply: (reply, isError, meta) => {
                 if (!this._owns(meta))
@@ -893,6 +917,7 @@ export class DesktopShell {
                 if (!this._owns(meta))
                     return;
                 this._voicePhase = 'idle';
+                this._assistantPanel?.clearApproval();
                 this._assistantPanel?.setBusy(false);
                 this._assistantPanel?.setStatus('');
                 if (phase === 'success') {
@@ -910,6 +935,7 @@ export class DesktopShell {
             onError: (reason, meta) => {
                 if (!this._owns(meta))
                     return;
+                this._assistantPanel?.clearApproval();
                 this._failRequest(reason, {retry: trimmed});
             },
         });
@@ -1034,6 +1060,7 @@ export class DesktopShell {
         this._releaseVoiceInteraction({notify: false});
         this._voicePhase = 'starting';
         this._assistantPanel?.showFileResults([]);
+        this._assistantPanel?.clearApproval();
         this._assistantPanel?.setBusy(true);
         // Conservative privacy ordering: make the persistent chrome indicator
         // visible before asking the service to open a device. The companion
@@ -1066,6 +1093,8 @@ export class DesktopShell {
                     this._assistantPanel?.setStatus(statusText);
                 if (phase === 'speaking')
                     this._assistantPanel?.setVoiceState(false, 'speaking');
+                if (phase !== 'waiting_for_approval')
+                    this._assistantPanel?.clearApproval();
             },
             onPartial: (partial, meta) => {
                 if (this._ownsVoice(meta) && partial)
@@ -1088,6 +1117,27 @@ export class DesktopShell {
             onAccepted: (_taskId, meta) => {
                 if (this._ownsVoice(meta))
                     this._assistantPanel?.setStatus('Thinking…');
+            },
+            onApproval: (approval, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                this._assistantPanel?.showApproval(approval, (decision, requestId) => {
+                    this.voice.resolveApproval(
+                        approval.taskId, requestId, decision,
+                        (resolved, line) => {
+                            if (!this._ownsVoice(meta))
+                                return;
+                            if (resolved) {
+                                this._assistantPanel?.clearApproval(requestId);
+                                this._assistantPanel?.setStatus('Permission recorded.');
+                            } else {
+                                this._assistantPanel?.approvalDecisionFailed(requestId);
+                                this._assistantPanel?.setStatus(
+                                    line?.reason ?? 'That permission answer was refused.',
+                                    {tone: 'error'});
+                            }
+                        });
+                });
             },
             onReply: (reply, isError, meta) => {
                 if (!this._ownsVoice(meta))
@@ -1128,6 +1178,7 @@ export class DesktopShell {
                 if (!this._ownsVoice(meta))
                     return;
                 this._setMicrophoneVisible(false);
+                this._assistantPanel?.clearApproval();
                 this._assistantPanel?.setVoiceState(false);
                 this._assistantPanel?.setBusy(false);
                 if (phase === 'success') {
@@ -1144,6 +1195,7 @@ export class DesktopShell {
                 if (!this._ownsVoice(meta))
                     return;
                 this._voicePhase = 'idle';
+                this._assistantPanel?.clearApproval();
                 this._failRequest(reason, {retry: null});
             },
         });

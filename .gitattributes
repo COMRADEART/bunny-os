@@ -59,3 +59,8 @@ operations/data/signing-keys.json               -text
 # own integrity check in 23 tests. The PNGs were unaffected because git already
 # treats them as binary; it is the one text file in the package that broke it.
 assets/companion/characters/** -text
+
+# The bundled speech model has its own per-file SHA-256 inventory. Preserve
+# those exact bytes across Windows and Linux checkouts just like character
+# packages and qualification evidence.
+assets/voice/models/** -text -diff

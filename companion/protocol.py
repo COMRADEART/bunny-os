@@ -420,8 +420,10 @@ OPERATIONS: Mapping[str, Operation] = {
         # set the request schema enforces, and every free string it accepts is
         # bounded here and validated again, more narrowly, at construction of
         # the request. A client cannot make the runtime record to a path,
-        # load a model, or open a microphone silently — the operations have
-        # nowhere to put any of those asks.
+        # load a model, or name an executable. A zero presentation revision
+        # cannot open a microphone without an attached service-side surface;
+        # Bunny Shell sends a positive revision only after raising its
+        # persistent MIC indicator.
         Operation("speech_input_health"),
         Operation("speech_input_devices"),
         Operation(

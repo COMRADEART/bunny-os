@@ -84,7 +84,16 @@ from .recognizer import (
     RecognizerSelection,
     SpeechRecognizer,
 )
-from .recognizers import MODEL_DIRECTORIES, VoskRecognizer, local_recognizers
+from .recognizers import (
+    MODEL_DIRECTORIES,
+    STT_MODEL_CORRUPT,
+    STT_MODEL_MISSING,
+    STT_PROVIDER_FAILED,
+    STT_READY,
+    STT_RUNTIME_MISSING,
+    VoskRecognizer,
+    local_recognizers,
+)
 from .recovery import (
     CAPTURE_DISPOSITIONS,
     SpeechJournal,
@@ -156,6 +165,11 @@ __all__ = [
     "SpeechActivityDetector",
     # Recognition
     "MODEL_DIRECTORIES",
+    "STT_MODEL_CORRUPT",
+    "STT_MODEL_MISSING",
+    "STT_PROVIDER_FAILED",
+    "STT_READY",
+    "STT_RUNTIME_MISSING",
     "RecognitionSession",
     "RecognizerDeclaration",
     "RecognizerHealth",

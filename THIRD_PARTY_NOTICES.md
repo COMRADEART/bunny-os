@@ -1,6 +1,6 @@
 # Third-party notices
 
-Date: 2026-07-29. Generated from review of the repository source and the recorded SPDX output, not from a shipped artifact.
+Date: 2026-08-09. Generated from review of the repository source and the recorded SPDX output, not from a shipped artifact.
 
 ## Scope and honesty statement
 
@@ -19,6 +19,7 @@ There is currently no root `LICENSE` file in this repository. That is an unresol
 | `jsonschema` | Development and CI only | MIT | Soft-imported by `scripts/task.py`; used to check schema validity, never for runtime validation. Not shipped. |
 | `typescript`, `@types/node`, `undici-types` | `node_modules/` | Apache-2.0, MIT | Vendored artefacts of the upstream Bunny application, not Bunny OS source. Excluded from `validate_python` and from container builds. |
 | Shell artwork | `shell/assets/` | CC BY 4.0 | Provenance and terms recorded in `shell/assets/LICENSE.md` |
+| Vosk small English model 0.15 | `assets/voice/models/vosk-model-small-en-us-0.15/` | Apache-2.0 | Bundled for offline Alpha speech recognition. Archive and per-file SHA-256 provenance are recorded in `assets/voice/PROVENANCE.json`; the licence text is in `assets/voice/licenses/Apache-2.0.txt`. |
 
 `docs/VISUAL_IDENTITY.md` records that no third-party font, raster artwork, or trademark asset is bundled, and that the visual identity is original rather than derived from another operating system's marks.
 
@@ -26,7 +27,7 @@ There is currently no root `LICENSE` file in this repository. That is an unresol
 
 Not enumerated here, because no image has been built with a recorded SBOM in this phase. The mechanism exists: `make sbom` runs `syft` to emit CycloneDX and SPDX, and `build/scripts/license-scan.py` checks the SPDX against `build/license-policy.json`. The last recorded run against a beta image produced 6,077 SPDX records with zero unresolved licences and zero prohibited markers.
 
-A released image would carry Fedora base userspace, the Linux kernel, systemd, GNOME, Mutter, NetworkManager, firewalld, SELinux policy, `bootc`, and their transitive dependencies. Their notices must be generated from the image SBOM at release time, not transcribed here.
+A released image would carry Fedora base userspace, the Linux kernel, systemd, GNOME, Mutter, NetworkManager, firewalld, SELinux policy, `bootc`, the Fedora `vosk-api-devel` native runtime, and their transitive dependencies. Their notices must be generated from the image SBOM at release time, not transcribed here.
 
 ## Phase 7 component classes requiring review before any deployment
 

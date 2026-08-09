@@ -114,14 +114,14 @@ class SpeechSurvey:
             )
         if not self.library_present:
             return (
-                "Install the vosk Python package to enable speech recognition, then choose "
-                "Check again. Typing works without it."
+                "Repair the Bunny OS voice packages, then choose Check again. "
+                "Typing works without speech recognition."
             )
         if not self.model_present:
             return (
-                "Place a Vosk model in one of the model directories to enable speech "
-                "recognition. Bunny does not download recognition models for you. "
-                "Typing works without one."
+                "The Bunny OS English voice model is missing or damaged. Repair the "
+                "installation; Bunny will not silently download a replacement. "
+                "Typing works without it."
             )
         return (
             "Speech recognition is installed but did not start. Diagnostics records the reason. "
@@ -245,12 +245,12 @@ def survey_speech(
     model_name = implementation.split("+", 1)[1] if "+" in implementation else ""
     model_present = bool(model_name) and model_name != "no-model"
     detail = str(getattr(health, "detail", "") or "")
-    if not library_present and "library is not importable" in detail:
+    if not library_present and "runtime is unavailable" in detail:
         library_detail = detail
     elif library_present:
-        library_detail = f"vosk {implementation.split('+')[0].removeprefix('vosk/')} is importable"
+        library_detail = f"vosk {implementation.split('+')[0].removeprefix('vosk/')} is available"
     else:
-        library_detail = detail or "the vosk library did not report a version"
+        library_detail = detail or "the Vosk runtime did not report an implementation"
 
     estimate = getattr(declaration, "resource_estimate", None)
     return SpeechSurvey(

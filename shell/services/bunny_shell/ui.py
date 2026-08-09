@@ -278,9 +278,14 @@ class BunnyApplication:
             model_values.index(selected_model) if selected_model in model_values else 0,
         )
         if not discovered_models:
+            readiness = state.get("readiness", {})
+            message = (
+                str(readiness.get("message") or "")
+                if isinstance(readiness, dict) else ""
+            )
             detail.append(self._label(
-                "No trusted local STT model is installed. Install one knowingly under "
-                "/usr/share/bunny-os/speech-models or ~/.local/share/bunny-os/speech-models."))
+                message or "Voice recognition isn't installed yet. Bunny OS can be repaired "
+                "without enabling a cloud speech service."))
 
         language_values = ["automatic", "en"]
         language_name = str(state.get("language") or "automatic")

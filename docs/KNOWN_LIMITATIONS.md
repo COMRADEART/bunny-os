@@ -2,10 +2,12 @@
 
 ## Voice interaction milestone additions
 
-- Bunny Shell push-to-talk now uses the canonical companion capture,
-  recognition, assistant-action and TTS path, but the locked image ships no
-  `vosk` Python library or reviewed Vosk model. Real STT therefore reports
-  unavailable; no model is downloaded automatically.
+- Bunny Shell push-to-talk uses the canonical companion capture, recognition,
+  assistant-action and TTS path. The Alpha image definition now declares
+  Fedora's native Vosk runtime and bundles the reviewed small English model;
+  the build has not yet run on a Fedora image builder, so installed-package and
+  model discovery remain artifact-validation blockers. No model is downloaded
+  automatically.
 - This Windows run could not boot GNOME/Mutter/Wayland or exercise a physical
   microphone/speaker. Spoken `Open Files`, offline voice, TTS audibility and
   speech interruption remain graphical acceptance blockers.

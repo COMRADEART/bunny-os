@@ -82,12 +82,23 @@ from companion.protocol import (  # noqa: E402
     CompanionClientError,
     default_endpoint_path,
 )
+from companion.presentation import EVENT_PHASES, TASK_STATE_PHASES  # noqa: E402
 
 #: How long a single request may run before this gives up watching it. The task
 #: itself is not cancelled: the runtime owns it, the Tasks surface can still see
 #: it, and a desktop that killed work because a poller timed out would be
 #: destroying results it merely stopped watching.
 DEADLINE_SECONDS = 180.0
+
+VOICE_READINESS_MESSAGES = {
+    "STT_MODEL_MISSING": "Voice recognition isn't installed yet.",
+    "STT_RUNTIME_MISSING": "Voice recognition isn't installed yet.",
+    "STT_MODEL_CORRUPT": "Voice recognition needs repair before it can be used.",
+    "STT_PROVIDER_FAILED": "Voice recognition stopped working. Try again in a moment.",
+    "AUDIO_UNAVAILABLE": "No microphone is available.",
+    "VOICE_INPUT_DISABLED": "Voice input is turned off in Bunny Settings.",
+    "VOICE_RESOURCE_UNAVAILABLE": "Voice input is temporarily unavailable on this machine.",
+}
 
 #: Phases after which nothing further will arrive.
 TERMINAL_PHASES = frozenset({"success", "error", "cancelled", "blocked"})
@@ -99,6 +110,33 @@ POLL_SECONDS = 0.4
 # microphone has closed, but a bridge must still have a terminal condition.
 VOICE_DEADLINE_SECONDS = 75.0
 LOW_CONFIDENCE = 0.35
+
+# The exact binding returned by PresentationState. An approval control sends
+# only task/request identifiers to this bridge; the bridge re-reads these
+# fields from the canonical service immediately before resolving the answer.
+# GNOME Shell therefore never constructs or edits authority-bearing material.
+APPROVAL_BINDING_FIELDS = (
+    "requestId", "sessionId", "taskId", "planId", "transitionId", "action",
+    "destination", "providerId", "dataClassification", "estimatedCostUnits",
+    "destinationFingerprint",
+)
+
+# Status text for a phase recovered from the canonical event page.  A local
+# desktop action can begin and finish between two 400 ms presentation polls;
+# replaying the event-backed phase is what keeps WORKING observable without
+# slowing the action down or inventing a timer in GNOME Shell.
+EVENT_PHASE_STATUS = {
+    "starting": "Starting...",
+    "understanding": "Understanding...",
+    "planning": "Planning...",
+    "waiting_for_approval": "Waiting for permission...",
+    "working": "Working...",
+    "presenting_result": "Preparing the response...",
+    "success": "Done",
+    "error": "The task failed.",
+    "cancelled": "Cancelled",
+    "blocked": "The task is blocked.",
+}
 
 
 def emit(event: str, **fields: object) -> None:
@@ -164,19 +202,37 @@ def command_voice_health(arguments: argparse.Namespace) -> int:
     if not isinstance(device_list, list):
         device_list = []
 
-    available = bool(health.get("available", True) and ready and may_capture and device_list)
+    readiness = health.get("readiness", {})
+    readiness_state = (
+        str(readiness.get("state") or health.get("readinessState") or "")
+        if isinstance(readiness, Mapping) else ""
+    )
+    service_ready = (
+        bool(readiness.get("ready")) if isinstance(readiness, Mapping) and readiness
+        else bool(ready and may_capture and device_list)
+    )
+    available = bool(health.get("available", True) and service_ready and device_list)
     reasons: list[str] = []
     if not health.get("available", True):
         reasons.append(str(health.get("reason") or "speech input is not running"))
-    if not ready:
+    if readiness_state and readiness_state != "STT_READY":
+        friendly = VOICE_READINESS_MESSAGES.get(readiness_state)
+        if not friendly and isinstance(readiness, Mapping):
+            friendly = str(readiness.get("message") or "")
+        reasons.append(friendly or "voice input is unavailable")
+    elif not ready:
         details = [
             str(item.get("detail") or "") for item in recognizers
             if isinstance(item, Mapping) and item.get("detail")
         ] if isinstance(recognizers, list) else []
         reasons.append(details[0] if details else "no local speech recognizer is ready")
-    if not device_list:
+    if not device_list and readiness_state != "AUDIO_UNAVAILABLE":
         reasons.append("no microphone is available")
-    if not may_capture and isinstance(decision, Mapping):
+    if (
+        not may_capture
+        and readiness_state in ("", "STT_READY")
+        and isinstance(decision, Mapping)
+    ):
         policy_reasons = decision.get("reasons", [])
         if isinstance(policy_reasons, list) and policy_reasons:
             reasons.append(str(policy_reasons[0]))
@@ -191,6 +247,7 @@ def command_voice_health(arguments: argparse.Namespace) -> int:
         language=selected.get("language", "") if isinstance(selected, Mapping) else "",
         devices=device_list,
         selectedDevice=devices.get("preferredDevice", ""),
+        readinessState=readiness_state,
         maxCaptureMs=30_000,
         wakeWord="disabled",
     )
@@ -209,6 +266,16 @@ def _speech_disposition(status: Mapping[str, object], request_id: str) -> tuple[
 
 def command_listen(arguments: argparse.Namespace) -> int:
     """Capture once, confirm the transcript, then watch the canonical task."""
+    presentation_revision = int(arguments.presentation_revision)
+    if presentation_revision <= 0:
+        emit(
+            "error",
+            reason=(
+                "speech input requires the positive revision of an already-visible "
+                "Bunny Shell microphone indicator"
+            ),
+        )
+        return 4
     connection = client(arguments.timeout)
     try:
         session_id = resolve_session(connection, arguments.session_title)
@@ -225,7 +292,10 @@ def command_listen(arguments: argparse.Namespace) -> int:
             "partialTranscripts": True,
             # The bridge displays the final text before this confirmation call.
             "confirmationRequired": True,
-            "presentationRevision": 0,
+            # Bunny Shell makes its persistent MIC indicator visible before it
+            # starts this bridge. The positive revision binds that displayed
+            # surface to this request; zero remains a headless refusal.
+            "presentationRevision": presentation_revision,
         })
     except (CompanionClientError, OSError) as exc:
         emit("error", reason=f"speech input could not start: {exc}")
@@ -471,6 +541,44 @@ def command_voice_cancel(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def command_approval(arguments: argparse.Namespace) -> int:
+    """Resolve exactly one displayed approval using its canonical binding."""
+    connection = client(arguments.timeout)
+    try:
+        document = connection.get_presentation_state(arguments.task_id)
+        state = document.get("state", {})
+        approvals = state.get("approvals", []) if isinstance(state, Mapping) else []
+        approval = next(
+            (
+                item for item in approvals
+                if isinstance(item, Mapping)
+                and str(item.get("requestId") or "") == arguments.request_id
+                and str(item.get("decision") or "pending") == "pending"
+            ),
+            None,
+        )
+        if approval is None:
+            emit(
+                "error", taskId=arguments.task_id, requestId=arguments.request_id,
+                reason="that approval is no longer pending",
+            )
+            return 4
+        binding = {key: approval.get(key) for key in APPROVAL_BINDING_FIELDS}
+        decision = "granted" if arguments.decision == "allow" else "denied"
+        connection.resolve_approval(binding, decision)
+    except (CompanionClientError, OSError) as exc:
+        emit(
+            "error", taskId=arguments.task_id, requestId=arguments.request_id,
+            reason=f"the approval answer was refused: {exc}",
+        )
+        return 4
+    emit(
+        "approval_resolved", taskId=arguments.task_id,
+        requestId=arguments.request_id, decision=decision,
+    )
+    return 0
+
+
 def command_ask(arguments: argparse.Namespace) -> int:
     text = arguments.text.strip()
     if not text:
@@ -543,7 +651,17 @@ def resolve_session(connection: CompanionClient, title: str) -> str:
         if session.get("title") == title:
             return str(session["sessionId"])
     created = connection.create_session(title=title, locality="device-only")
-    return str(created["sessionId"])
+    session = created.get("session")
+    if isinstance(session, Mapping) and session.get("sessionId"):
+        return str(session["sessionId"])
+    # Kept only for protocol compatibility with an older companion response;
+    # the current gateway returns the session object under ``session``.
+    if created.get("sessionId"):
+        return str(created["sessionId"])
+    raise CompanionClientError(
+        "invalid_response",
+        "the companion created a session without returning its identifier",
+    )
 
 
 def _file_results(events: object) -> list[dict[str, object]]:
@@ -553,9 +671,15 @@ def _file_results(events: object) -> list[dict[str, object]]:
     for event in events:
         if not isinstance(event, Mapping):
             continue
-        if event.get("kind") != "operation_completed" or event.get("name") != "search-files":
+        # The companion returns canonical TaskEvent views: eventType plus a
+        # payload.  Accept the old flattened fixture shape only for protocol
+        # compatibility; no production response has ever used it.
+        kind = str(event.get("eventType") or event.get("kind") or "")
+        payload = event.get("payload")
+        content = payload if isinstance(payload, Mapping) else event
+        if kind != "operation_completed" or content.get("name") != "search-files":
             continue
-        value = event.get("value")
+        value = content.get("value")
         if not isinstance(value, Mapping):
             continue
         # The service keeps a bounded 24-result conversation set. Six are
@@ -576,6 +700,33 @@ def _file_results(events: object) -> list[dict[str, object]]:
                 safe.append({"reference": reference, "name": name, "display": display})
         return safe
     return []
+
+
+def _recorded_phase(event: object) -> tuple[int, str]:
+    """Return one phase proven by a canonical event, or ``(sequence, '')``.
+
+    PresentationState remains authoritative.  This supplements it only for
+    states that started and ended between polls.  Reviewer observations and
+    approval resolutions are intentionally omitted: their presentation phase
+    depends on surrounding state and replaying an optimistic mapping could show
+    WORKING for a denial or THINKING after an already-completed action.
+    """
+    if not isinstance(event, Mapping):
+        return 0, ""
+    sequence = event.get("sequence")
+    sequence = sequence if isinstance(sequence, int) and not isinstance(sequence, bool) else 0
+    kind = str(event.get("eventType") or "")
+    payload = event.get("payload")
+    payload = payload if isinstance(payload, Mapping) else {}
+    if kind == "task_state_changed":
+        phase = TASK_STATE_PHASES.get(str(payload.get("to") or ""), "")
+        # A review that completed entirely between polls is audit history, not
+        # a useful animation after WORKING. If review remains current, the
+        # folded PresentationState below still exposes it normally.
+        return sequence, "" if phase == "reviewing" else phase
+    if kind in ("approval_resolved", "reviewer_observation", "reviewer_disagreement"):
+        return sequence, ""
+    return sequence, EVENT_PHASES.get(kind, "")
 
 
 def _wait_for_speech(
@@ -645,6 +796,8 @@ def watch(
     last_revision = -1
     replied = False
     results_reported = False
+    approvals_reported: set[str] = set()
+    last_event_sequence = 0
     while True:
         if time.monotonic() > deadline:
             emit("error", reason="the runtime did not finish within the deadline", taskId=task_id)
@@ -663,6 +816,34 @@ def watch(
         # terminal state yet: TALKING is real TTS work and sits between the
         # runtime's success and the shell's final SUCCESS gesture.
         defer_success = phase == "success" and speak_response
+
+        # Replay newly observed canonical transitions before the current folded
+        # state. This matters for local actions: Gio can accept a launch in a
+        # few milliseconds, so a poller otherwise sees approval then success
+        # and the character never communicates that Bunny did work.
+        event_page = document.get("events")
+        if isinstance(event_page, list):
+            recorded = sorted(
+                (_recorded_phase(event) for event in event_page),
+                key=lambda item: item[0],
+            )
+            for sequence, recorded_phase in recorded:
+                if sequence <= last_event_sequence:
+                    continue
+                last_event_sequence = max(last_event_sequence, sequence)
+                if not recorded_phase or recorded_phase == last_phase:
+                    continue
+                if recorded_phase == "success" and speak_response:
+                    continue
+                last_phase = recorded_phase
+                emit(
+                    "phase",
+                    phase=recorded_phase,
+                    statusText=EVENT_PHASE_STATUS.get(recorded_phase, ""),
+                    approvalState=state.get("approvalState", "not_required"),
+                    taskId=task_id,
+                )
+
         if phase != last_phase and not defer_success:
             last_phase = phase
             emit(
@@ -672,6 +853,29 @@ def watch(
                 approvalState=state.get("approvalState", "not_required"),
                 taskId=task_id,
             )
+
+        approvals = state.get("approvals", []) if isinstance(state, Mapping) else []
+        if isinstance(approvals, list):
+            for approval in approvals:
+                if not isinstance(approval, Mapping):
+                    continue
+                request_id = str(approval.get("requestId") or "")
+                if (
+                    not request_id
+                    or request_id in approvals_reported
+                    or str(approval.get("decision") or "pending") != "pending"
+                ):
+                    continue
+                approvals_reported.add(request_id)
+                emit(
+                    "approval",
+                    requestId=request_id,
+                    taskId=task_id,
+                    action=str(approval.get("action") or ""),
+                    reason=str(approval.get("reason") or state.get("statusText") or "Allow this action?"),
+                    destinationDetail=str(approval.get("destinationDetail") or ""),
+                    safeDefault=str(approval.get("safeDefault") or "denied"),
+                )
 
         summary = str(state.get("resultSummary") or "")
         if summary and not replied:
@@ -746,6 +950,10 @@ def main(argv: list[str] | None = None) -> int:
     listen.add_argument("--deadline", type=float, default=VOICE_DEADLINE_SECONDS)
     listen.add_argument("--task-deadline", type=float, default=DEADLINE_SECONDS)
     listen.add_argument("--no-speech", action="store_true")
+    listen.add_argument(
+        "--presentation-revision", type=int, required=True,
+        help="positive revision of the already-visible Bunny Shell microphone surface",
+    )
     listen.set_defaults(handler=command_listen)
 
     speech_stop = commands.add_parser(
@@ -766,6 +974,14 @@ def main(argv: list[str] | None = None) -> int:
     voice_cancel.add_argument("task_id")
     voice_cancel.add_argument("--timeout", type=float, default=15.0)
     voice_cancel.set_defaults(handler=command_voice_cancel)
+
+    approval = commands.add_parser(
+        "approval", help="allow or deny one approval currently displayed by Bunny")
+    approval.add_argument("task_id")
+    approval.add_argument("request_id")
+    approval.add_argument("decision", choices=("allow", "deny"))
+    approval.add_argument("--timeout", type=float, default=15.0)
+    approval.set_defaults(handler=command_approval)
 
     arguments = parser.parse_args(argv)
     try:

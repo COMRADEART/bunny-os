@@ -251,6 +251,25 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "capability-service-manifests", "tree",
         "capability/services", "/usr/share/bunny-os/capability/services", 0o444,
     ),
+    # The Alpha speech model is immutable image data, not first-run mutable
+    # state. Shipping the reviewed bytes here makes push-to-talk work offline
+    # on a fresh installation and avoids any silent boot-time download.
+    InstallRoute(
+        "speech-recognition-models", "tree",
+        "assets/voice/models", "/usr/share/bunny-os/speech-models", 0o444,
+        profiles=DESKTOP_PROFILES,
+        note="pinned local Vosk models with per-file Bunny integrity manifests",
+    ),
+    InstallRoute(
+        "speech-recognition-licenses", "tree",
+        "assets/voice/licenses", "/usr/share/licenses/bunny-os-voice", 0o444,
+        profiles=DESKTOP_PROFILES,
+    ),
+    _file_route(
+        "speech-recognition-provenance", "assets/voice/PROVENANCE.json",
+        "/usr/share/doc/bunny-os/voice-provenance.json", 0o444,
+        profiles=DESKTOP_PROFILES,
+    ),
     _file_route(
         "companion-service-executable",
         "services/bunny-companion/bunny_companion_service.py",

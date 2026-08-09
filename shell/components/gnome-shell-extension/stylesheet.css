@@ -333,6 +333,19 @@
 .bunny-assistant-status { font-size: 10px; color: #b4bac6; font-style: italic; }
 .bunny-assistant-status-error { color: #ef4444; font-style: normal; } /* Colour.ERROR */
 .bunny-assistant-busy .bunny-assistant-entry { opacity: 0.6; }
+.bunny-assistant-approval-active .bunny-assistant-scroll { max-height: 48px; }
+.bunny-assistant-approval {
+  spacing: 6px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  background-color: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.42);
+}
+.bunny-assistant-approval-label { font-size: 10px; color: #f7f8fa; }
+.bunny-assistant-approval-actions { spacing: 7px; }
+.bunny-assistant-approval-actions .bunny-assistant-file-action {
+  background-color: rgba(139, 92, 246, 0.16);
+}
 
 .bunny-assistant-input-row { spacing: 6px; }
 

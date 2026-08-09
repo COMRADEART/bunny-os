@@ -31,6 +31,7 @@ change shape depending on which is behind it.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -50,6 +51,11 @@ from .transcript import FinalTranscript, PartialTranscript, TranscriptError
 
 __all__ = [
     "MODEL_DIRECTORIES",
+    "STT_MODEL_CORRUPT",
+    "STT_MODEL_MISSING",
+    "STT_PROVIDER_FAILED",
+    "STT_READY",
+    "STT_RUNTIME_MISSING",
     "VoskRecognizer",
     "local_recognizers",
 ]
@@ -60,13 +66,38 @@ __all__ = [
 #: is data a native library parses, and pointing that parser at an attacker's
 #: file is handing it the process.
 #:
-#: The system location first, because a model the image ships is a model the
-#: build reviewed. The per-user location exists so a developer or a validation
-#: host can install one without root; it is validated for ownership before use.
+#: The immutable system location first, because a model the image ships is a
+#: model the build reviewed; then an administrator-managed mutable location;
+#: then the user's own data location. A setting selects only a model *name*,
+#: never a path, so this precedence cannot be redirected through IPC.
 MODEL_DIRECTORIES: tuple[str, ...] = (
     "/usr/share/bunny-os/speech-models",
+    "/var/lib/bunny-os/voice/models",
     "~/.local/share/bunny-os/speech-models",
 )
+
+STT_READY = "STT_READY"
+STT_MODEL_MISSING = "STT_MODEL_MISSING"
+STT_MODEL_CORRUPT = "STT_MODEL_CORRUPT"
+STT_RUNTIME_MISSING = "STT_RUNTIME_MISSING"
+STT_PROVIDER_FAILED = "STT_PROVIDER_FAILED"
+
+_MODEL_MANIFEST = ".bunny-model.json"
+_REQUIRED_MODEL_FILES: tuple[str, ...] = (
+    "am/final.mdl",
+    "conf/mfcc.conf",
+    "conf/model.conf",
+    "graph/phones/word_boundary.int",
+)
+_REQUIRED_IVECTOR_FILES: tuple[str, ...] = (
+    "ivector/final.dubm",
+    "ivector/final.ie",
+    "ivector/final.mat",
+    "ivector/global_cmvn.stats",
+    "ivector/online_cmvn.conf",
+    "ivector/splice.conf",
+)
+_SHA256 = re.compile(r"^[a-f0-9]{64}$")
 
 #: Model directory names Vosk publishes look like
 #: ``vosk-model-small-en-us-0.15``. The language is the first token after the
@@ -80,11 +111,11 @@ _MODEL_NAME = re.compile(
 _SAMPLE_RATES = (8_000, 16_000, 22_050, 44_100, 48_000)
 
 
-def _directory_safe(path: Path) -> tuple[bool, str]:
-    """Whether a model directory is one this process may trust.
+def _path_safe(path: Path, *, require_directory: bool | None = None) -> tuple[bool, str]:
+    """Whether a model-tree entry is one this process may trust.
 
     Ownership and permissions, checked before anything is parsed: a model
-    directory writable by another account is a model another account chooses.
+    entry writable by another account is data another account chooses.
     Root-owned is accepted — the system location is root's — and so is our own
     uid; nothing else is.
     """
@@ -93,13 +124,147 @@ def _directory_safe(path: Path) -> tuple[bool, str]:
     except OSError as exc:
         return False, f"could not be inspected: {exc.strerror or exc}"
     if stat.S_ISLNK(info.st_mode):
-        return False, "is a symbolic link rather than a directory"
-    if not stat.S_ISDIR(info.st_mode):
+        return False, "is a symbolic link"
+    if require_directory is True and not stat.S_ISDIR(info.st_mode):
         return False, "is not a directory"
+    if require_directory is False and not stat.S_ISREG(info.st_mode):
+        return False, "is not a regular file"
+    if require_directory is None and not (
+        stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode)
+    ):
+        return False, "is neither a regular file nor a directory"
     if hasattr(os, "getuid") and info.st_uid not in (0, os.getuid()):
         return False, f"is owned by uid {info.st_uid} rather than root or this user"
     if os.name == "posix" and info.st_mode & (stat.S_IWGRP | stat.S_IWOTH):
         return False, "is writable by group or other"
+    return True, ""
+
+
+def _directory_safe(path: Path) -> tuple[bool, str]:
+    """Compatibility name for the top-level model-directory trust check."""
+    return _path_safe(path, require_directory=True)
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        while block := source.read(1024 * 1024):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _manifest_safe(model: Path, manifest_path: Path) -> tuple[bool, str]:
+    """Validate every byte named by a bundled Bunny model manifest."""
+    try:
+        if manifest_path.stat().st_size > 1024 * 1024:
+            return False, f"{_MODEL_MANIFEST} exceeds its 1 MiB bound"
+        document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        return False, f"{_MODEL_MANIFEST} cannot be read: {exc}"
+    if not isinstance(document, dict) or document.get("schemaVersion") != 1:
+        return False, f"{_MODEL_MANIFEST} has an unsupported schema"
+    if document.get("modelId") != model.name:
+        return False, f"{_MODEL_MANIFEST} names a different model"
+    records = document.get("files")
+    if not isinstance(records, list) or not records:
+        return False, f"{_MODEL_MANIFEST} contains no file inventory"
+
+    declared: dict[str, tuple[int, str]] = {}
+    for record in records:
+        if not isinstance(record, dict):
+            return False, f"{_MODEL_MANIFEST} contains a non-object file record"
+        relative = record.get("path")
+        size = record.get("sizeBytes")
+        digest = record.get("sha256")
+        if not isinstance(relative, str) or not relative or "\\" in relative:
+            return False, f"{_MODEL_MANIFEST} contains an invalid relative path"
+        parts = Path(relative).parts
+        if Path(relative).is_absolute() or any(part in ("", ".", "..") for part in parts):
+            return False, f"{_MODEL_MANIFEST} contains an escaping relative path"
+        if relative in declared:
+            return False, f"{_MODEL_MANIFEST} names {relative!r} more than once"
+        if not isinstance(size, int) or isinstance(size, bool) or size <= 0:
+            return False, f"{_MODEL_MANIFEST} has an invalid size for {relative!r}"
+        if not isinstance(digest, str) or _SHA256.fullmatch(digest) is None:
+            return False, f"{_MODEL_MANIFEST} has an invalid digest for {relative!r}"
+        declared[relative] = (size, digest)
+
+    actual = {
+        item.relative_to(model).as_posix()
+        for item in model.rglob("*")
+        if item.is_file() and item != manifest_path
+    }
+    if actual != set(declared):
+        missing = sorted(set(declared) - actual)
+        extra = sorted(actual - set(declared))
+        summary: list[str] = []
+        if missing:
+            summary.append("missing " + ", ".join(missing[:3]))
+        if extra:
+            summary.append("unexpected " + ", ".join(extra[:3]))
+        return False, f"{_MODEL_MANIFEST} inventory differs from disk: " + "; ".join(summary)
+
+    for relative, (expected_size, expected_digest) in declared.items():
+        target = model / relative
+        try:
+            observed_size = target.stat().st_size
+        except OSError as exc:
+            return False, f"{relative} cannot be inspected: {exc}"
+        if observed_size != expected_size:
+            return False, f"{relative} has size {observed_size}, expected {expected_size}"
+        try:
+            observed_digest = _sha256(target)
+        except OSError as exc:
+            return False, f"{relative} cannot be hashed: {exc}"
+        if observed_digest != expected_digest:
+            return False, f"{relative} failed its SHA-256 integrity check"
+    return True, ""
+
+
+def _model_safe(path: Path) -> tuple[bool, str]:
+    """Validate trust, required Vosk structure, and optional pinned hashes."""
+    safe, reason = _directory_safe(path)
+    if not safe:
+        return False, reason
+    try:
+        entries = list(path.rglob("*"))
+    except OSError as exc:
+        return False, f"the model tree could not be inspected: {exc}"
+    for item in entries:
+        safe, reason = _path_safe(item)
+        if not safe:
+            return False, f"{item.relative_to(path).as_posix()}: {reason}"
+
+    for relative in _REQUIRED_MODEL_FILES:
+        target = path / relative
+        try:
+            if not target.is_file() or target.stat().st_size <= 0:
+                return False, f"required model file {relative} is missing or empty"
+        except OSError:
+            return False, f"required model file {relative} cannot be inspected"
+
+    hclg = path / "graph/HCLG.fst"
+    split_graph = (path / "graph/HCLr.fst", path / "graph/Gr.fst")
+    try:
+        has_hclg = hclg.is_file() and hclg.stat().st_size > 0
+        has_split_graph = all(item.is_file() and item.stat().st_size > 0 for item in split_graph)
+    except OSError:
+        has_hclg = has_split_graph = False
+    if not (has_hclg or has_split_graph):
+        return False, "the decoding graph is missing or empty"
+
+    if (path / "ivector").exists():
+        for relative in _REQUIRED_IVECTOR_FILES:
+            target = path / relative
+            try:
+                if not target.is_file() or target.stat().st_size <= 0:
+                    return False, f"required i-vector file {relative} is missing or empty"
+            except OSError:
+                return False, f"required i-vector file {relative} cannot be inspected"
+
+    manifest = path / _MODEL_MANIFEST
+    if manifest.exists():
+        return _manifest_safe(path, manifest)
     return True, ""
 
 
@@ -128,6 +293,17 @@ def _discover_model(
     permission-checked, first hit wins. Nothing recurses into unexpected
     places and nothing follows a link out of the tree.
     """
+    path, language, locale, _status, detail = _discover_model_status(
+        directories, preferred_model_id
+    )
+    return path, language, locale, detail
+
+
+def _discover_model_status(
+    directories: Sequence[str] = MODEL_DIRECTORIES,
+    preferred_model_id: str = "",
+) -> tuple[Path | None, str, str, str, str]:
+    """Detailed model discovery including a machine-readable readiness code."""
     problems: list[str] = []
     for root_name in directories:
         root = Path(os.path.expanduser(root_name))
@@ -144,21 +320,21 @@ def _discover_model(
                 continue
             if preferred_model_id and child.name != preferred_model_id:
                 continue
-            safe, reason = _directory_safe(child)
+            safe, reason = _model_safe(child)
             if not safe:
                 problems.append(f"{child.name}: {reason}")
                 continue
             language = match.group("language")
             region = match.group("region")
             locale = f"{language}-{region.upper()}" if region else ""
-            return child, language, locale, ""
+            return child, language, locale, STT_READY, ""
     if problems:
-        return None, "", "", "; ".join(problems[:4])
+        return None, "", "", STT_MODEL_CORRUPT, "; ".join(problems[:4])
     if preferred_model_id:
-        return None, "", "", (
+        return None, "", "", STT_MODEL_MISSING, (
             f"the selected local model {preferred_model_id!r} is not installed in a trusted model directory"
         )
-    return None, "", "", (
+    return None, "", "", STT_MODEL_MISSING, (
         "no recognition model is installed in a trusted directory; searched "
         + ", ".join(directories)
     )
@@ -209,9 +385,14 @@ class _VoskSession:
         with self._guard:
             if self._cancelled or self._finished or not frames:
                 return None
-            if not self._first_position:
-                self._first_position = position_seconds
-            self._last_position = position_seconds
+            # The worker's final non-blocking drain has no activity-detector
+            # position and therefore passes zero. It may add frames, but it
+            # must not erase the real end position accumulated while capture
+            # was live; doing so made every bridge transcript report 0 ms.
+            if position_seconds > 0:
+                if not self._first_position:
+                    self._first_position = position_seconds
+                self._last_position = max(self._last_position, position_seconds)
             if self._engine.AcceptWaveform(frames):
                 self._harvest(self._engine.Result())
                 partial_text = ""
@@ -275,9 +456,13 @@ class _VoskSession:
 
     def close(self) -> None:
         with self._guard:
+            engine = self._engine
             self._engine = None
             self._segments.clear()
             self._confidences.clear()
+        close = getattr(engine, "close", None)
+        if callable(close):
+            close()
 
 
 class VoskRecognizer:
@@ -285,8 +470,8 @@ class VoskRecognizer:
 
     ``importer`` is injectable so the deterministic suite can drive this
     adapter — declaration, health, session lifecycle — with a scripted engine,
-    while the Linux validation drives it with the real library. Production
-    passes nothing and gets ``import vosk``.
+    while the Linux validation drives it with Fedora's packaged native library.
+    Production passes nothing and gets the narrow local C-API binding.
     """
 
     provider_id = "vosk"
@@ -309,19 +494,21 @@ class VoskRecognizer:
         self._language = ""
         self._locale = ""
         self._detail = ""
+        self._status_code = STT_RUNTIME_MISSING
         self._failures = 0
         self._closed = False
         self._declaration: RecognizerDeclaration | None = None
 
     @staticmethod
     def _import_vosk() -> Any:
-        import vosk  # noqa: PLC0415 - lazily, §4 forbids model load at service start
+        from . import vosk_runtime  # noqa: PLC0415 - native load stays lazy
 
-        try:
-            vosk.SetLogLevel(-1)
-        except Exception:  # noqa: BLE001 - logging control is best-effort
-            pass
-        return vosk
+        # Importing Bunny's wrapper proves only that the wrapper ships. Probe
+        # the distribution library here so a missing RPM is reported before a
+        # microphone opens rather than becoming a first-capture exception.
+        vosk_runtime.probe()
+        vosk_runtime.SetLogLevel(-1)
+        return vosk_runtime
 
     # ----------------------------------------------------------------- #
 
@@ -331,18 +518,30 @@ class VoskRecognizer:
                 return
             self._probed = True
             self._detail = ""
+            old_path = self._model_path
+            self._model_path = None
+            self._language = ""
+            self._locale = ""
             if self._module is None:
                 try:
                     self._module = self._importer()
                 except Exception as exc:  # noqa: BLE001 - absence is a health answer
                     self._module = None
-                    self._detail = f"the vosk library is not importable: {exc}"
+                    self._status_code = STT_RUNTIME_MISSING
+                    self._detail = f"the Vosk runtime is unavailable: {exc}"
+                    if old_path is not None:
+                        self._model = None
                     return
-            path, language, locale, detail = _discover_model(
+            path, language, locale, status_code, detail = _discover_model_status(
                 self._model_directories, self._preferred_model_id)
+            self._status_code = status_code
             if path is None:
                 self._detail = detail
+                if old_path is not None:
+                    self._model = None
                 return
+            if old_path is not None and old_path != path:
+                self._model = None
             self._model_path = path
             self._language = language or "en"
             self._locale = locale
@@ -398,11 +597,21 @@ class VoskRecognizer:
                 and self._module is not None
                 and self._model_path is not None
             )
+            healthy = self._failures < 3
+            status_code = (
+                STT_READY if available and healthy
+                else STT_PROVIDER_FAILED if available
+                else self._status_code
+            )
+            detail = self._detail if not available else ""
+            if available and not healthy:
+                detail = f"the Vosk provider failed {self._failures} consecutive captures"
             return RecognizerHealth(
                 provider_id=self.provider_id,
                 available=available,
-                healthy=self._failures < 3,
-                detail=self._detail if not available else "",
+                healthy=healthy,
+                detail=detail,
+                status_code=status_code,
                 checked_at_monotonic=monotonic,
                 consecutive_failures=self._failures,
             )
@@ -435,8 +644,12 @@ class VoskRecognizer:
     def close(self) -> None:
         with self._guard:
             self._closed = True
+            model = self._model
             self._model = None
             self._module = None
+        close = getattr(model, "close", None)
+        if callable(close):
+            close()
 
 
 def local_recognizers(

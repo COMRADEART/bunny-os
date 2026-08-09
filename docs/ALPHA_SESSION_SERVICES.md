@@ -47,7 +47,7 @@ the runtime to start:
 
 | Component | If it is missing or broken | The runtime |
 | --- | --- | --- |
-| Vosk / a recognition model | speech health names the missing library/model; push-to-talk is unavailable and typed input remains | starts |
+| Fedora Vosk runtime / bundled recognition model | speech health exposes `STT_RUNTIME_MISSING`, `STT_MODEL_MISSING` or `STT_MODEL_CORRUPT`; push-to-talk is unavailable and typed input remains | starts |
 | Ollama / llama.cpp | provider selection finds nothing eligible; typed input still produces a task | starts |
 | Audio output | `voice_*` degrades to captions | starts |
 | Microphone | push-to-talk reports unavailable | starts |

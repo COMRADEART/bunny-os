@@ -271,6 +271,31 @@ class ReviewerBoundaryTests(CompanionTestCase):
         self.assertEqual(operations[0]["name"], "count-words")
         self.assertEqual(set(operations[0]["arguments"].values()), {"[redacted]"})
 
+    def test_withheld_context_does_not_invent_a_validation_requirement(self) -> None:
+        reviewer = DeterministicLocalReviewer()
+        context = reviewer_context(
+            task_view={"originalRequest": "[withheld: personal]"},
+            plan_view={
+                "operations": [{
+                    "name": "launch-application",
+                    "tool": "desktop.application.launch",
+                    "destination": "local",
+                }],
+            },
+            event_views=[],
+            classification="personal",
+            policy=CoordinationPolicy(),
+            round_number=1,
+        )
+
+        outcome = run_review_round(
+            (reviewer,), context, CoordinationPolicy(), round_number=1,
+        )
+
+        self.assertTrue(outcome.observations)
+        self.assertEqual(outcome.disagreements, ())
+        self.assertIn("withheld", outcome.observations[0].summary.lower())
+
     def test_reviewers_do_not_see_each_other(self) -> None:
         first = ChattyReviewer(reviewer_id="local.first")
         second = ChattyReviewer(reviewer_id="local.second")

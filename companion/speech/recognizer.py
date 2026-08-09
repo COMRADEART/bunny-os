@@ -228,6 +228,7 @@ class RecognizerHealth:
     available: bool = False
     healthy: bool = True
     detail: str = ""
+    status_code: str = ""
     checked_at_monotonic: float = 0.0
     consecutive_failures: int = 0
 
@@ -242,6 +243,7 @@ class RecognizerHealth:
             "healthy": self.healthy,
             "ready": self.ready,
             "detail": self.detail,
+            "statusCode": self.status_code,
             "checkedAtMonotonic": self.checked_at_monotonic,
             "consecutiveFailures": self.consecutive_failures,
         }

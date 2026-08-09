@@ -45,6 +45,14 @@ pipewire-utils
 # aplay, arecord — the last rung, which needs no sound server at all.
 alsa-utils
 
+# category: local speech recognition
+#
+# Fedora ships the Vosk native runtime as libvosk.so in this package. Despite
+# the -devel suffix it is Fedora 44's only vosk-api binary subpackage; Bunny uses
+# the stable public C API through Python's standard-library ctypes and therefore
+# does not need the upstream Python wheel or its HTTP/download dependencies.
+vosk-api-devel
+
 # category: fonts the desktop actually draws with
 #
 # Measured on the first booted desktop, not anticipated. The greeting renders

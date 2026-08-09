@@ -1198,12 +1198,15 @@ class CompanionGateway:
     def _voice_settings_document(self, settings: Any) -> dict[str, Any]:
         devices: list[dict[str, Any]] = []
         recognizers: list[dict[str, Any]] = []
+        readiness: dict[str, Any] = {}
         if self.speech is not None:
             try:
                 devices = list(self.speech.speech_input_devices().get("devices", []))
-                recognizers = list(self.speech.speech_input_health().get("recognizers", []))
+                speech_health = self.speech.speech_input_health()
+                recognizers = list(speech_health.get("recognizers", []))
+                readiness = dict(speech_health.get("readiness", {}))
             except Exception:  # noqa: BLE001 - inventory never blocks settings
-                devices, recognizers = [], []
+                devices, recognizers, readiness = [], [], {}
         return {
             "voiceInput": settings.speech_input.enabled,
             "speechResponses": settings.voice.enabled,
@@ -1215,6 +1218,7 @@ class CompanionGateway:
             "wakeWord": settings.speech_input.wake_word,
             "devices": devices[:64],
             "recognizers": recognizers,
+            "readiness": readiness,
             "modelDownloadAutomatic": False,
             "wakeWordAvailable": False,
         }

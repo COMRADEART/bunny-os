@@ -427,6 +427,75 @@ def assert_no_stray_user_units() -> None:
         )
 
 
+def assert_voice_image_payload(
+    profile: str,
+    installed: dict[str, list[str]],
+    *,
+    root: Path = Path("/"),
+) -> None:
+    """Refuse a desktop image whose declared local voice stack is incomplete.
+
+    Package installation and route copying are deliberately separate build
+    stages.  Either can exit successfully while still producing an unusable
+    feature: a package may not contain the executable we expected, or a tree
+    route whose source disappeared may copy zero files.  Check the resulting
+    filesystem, because that is what a fresh installation receives.
+    """
+    if profile not in {"developer", "desktop", "shell", "shell-test", "live", "beta"}:
+        return
+
+    required_routes = (
+        "companion-package",
+        "speech-recognition-models",
+        "speech-recognition-licenses",
+        "speech-recognition-provenance",
+        "user-units",
+    )
+    problems = [
+        f"install route {route_id!r} copied no files"
+        for route_id in required_routes
+        if not installed.get(route_id)
+    ]
+
+    required_files = (
+        "usr/bin/pw-record",
+        "usr/bin/parec",
+        "usr/bin/arecord",
+        "usr/bin/espeak-ng",
+        "usr/bin/spd-say",
+        "usr/lib/bunny-os/python/companion/speech/vosk_runtime.py",
+        "usr/lib/systemd/user/bunny-companion.service",
+        "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/.bunny-model.json",
+        "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/am/final.mdl",
+        "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/graph/Gr.fst",
+        "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/graph/HCLr.fst",
+        "usr/share/licenses/bunny-os-voice/Apache-2.0.txt",
+        "usr/share/doc/bunny-os/voice-provenance.json",
+    )
+    for relative in required_files:
+        target = root / relative
+        try:
+            present = target.is_file() and target.stat().st_size > 0
+        except OSError:
+            present = False
+        if not present:
+            problems.append(f"/{relative} is missing or empty")
+
+    runtime_candidates = (
+        root / "usr/lib64/libvosk.so",
+        root / "usr/lib/libvosk.so",
+    )
+    if not any(path.is_file() for path in runtime_candidates):
+        problems.append("libvosk.so is absent from both /usr/lib64 and /usr/lib")
+
+    if problems:
+        raise SystemExit(
+            "BLOCKED: the desktop voice payload is incomplete: "
+            + "; ".join(problems)
+            + ". A source implementation is not an installed-system feature."
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", required=True, type=Path)
@@ -454,8 +523,9 @@ def main() -> int:
     ], check=True)
     artifact_manifest = json.loads(artifact_manifest_path.read_text(encoding="utf-8"))
 
-    install_all_routes(source, args.profile)
+    installed = install_all_routes(source, args.profile)
     assert_no_stray_user_units()
+    assert_voice_image_payload(args.profile, installed)
     compile_desktop_assets(args.profile)
     write_release_metadata(args, artifact_manifest)
     write_package_inventory()

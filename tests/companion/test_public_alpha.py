@@ -872,8 +872,40 @@ class BuildIntegrationTests(unittest.TestCase):
             for line in (REPOSITORY / "build/packages/desktop.txt").read_text(encoding="utf-8").splitlines()
             if line.strip() and not line.startswith("#")
         }
-        for package in ("espeak-ng", "speech-dispatcher", "speech-dispatcher-espeak-ng"):
+        for package in (
+            "espeak-ng", "speech-dispatcher", "speech-dispatcher-espeak-ng",
+            "vosk-api-devel",
+        ):
             self.assertIn(package, declared)
+
+    def test_the_offline_stt_model_is_integrity_checked_and_installed(self) -> None:
+        from companion.speech.recognizers import _discover_model
+
+        model_root = REPOSITORY / "assets/voice/models"
+        model, language, locale, detail = _discover_model((str(model_root),))
+        self.assertIsNotNone(model, detail)
+        self.assertEqual(model.name, "vosk-model-small-en-us-0.15")
+        self.assertEqual((language, locale), ("en", "en-US"))
+        for source, destination in (
+            (
+                "assets/voice/models/vosk-model-small-en-us-0.15/am/final.mdl",
+                "/usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/am/final.mdl",
+            ),
+            (
+                "assets/voice/models/vosk-model-small-en-us-0.15/.bunny-model.json",
+                "/usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/.bunny-model.json",
+            ),
+            (
+                "assets/voice/licenses/Apache-2.0.txt",
+                "/usr/share/licenses/bunny-os-voice/Apache-2.0.txt",
+            ),
+            (
+                "assets/voice/PROVENANCE.json",
+                "/usr/share/doc/bunny-os/voice-provenance.json",
+            ),
+        ):
+            self.assertEqual(self.destination("beta", source), destination)
+            self.assertIsNone(self.destination("minimal", source))
 
     def test_the_speech_dispatcher_log_is_bounded_by_a_drop_in(self) -> None:
         """1.6 GiB of voice-list transcript in a RAM-backed tmpfs, measured."""

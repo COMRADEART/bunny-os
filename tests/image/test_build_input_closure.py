@@ -32,6 +32,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -64,6 +65,18 @@ def _closure_module():
 
 
 CLOSURE = _closure_module()
+
+
+def _installer_module():
+    path = SCRIPTS / "install-root.py"
+    spec = importlib.util.spec_from_file_location("bunny_install_root", path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+INSTALLER = _installer_module()
 
 #: The install set the voice runtime actually changed, derived mechanically
 #: rather than counted by hand. Pinned so that a future edit to the route table
@@ -160,6 +173,57 @@ class TheSharedDeclaration(unittest.TestCase):
                 )
                 checked += 1
         self.assertGreater(checked, 500)
+
+
+class TheInstalledVoicePayload(unittest.TestCase):
+    """The image build checks results, not just package and route declarations."""
+
+    @staticmethod
+    def _required_files(root: Path) -> None:
+        relative_paths = (
+            "usr/bin/pw-record",
+            "usr/bin/parec",
+            "usr/bin/arecord",
+            "usr/bin/espeak-ng",
+            "usr/bin/spd-say",
+            "usr/lib64/libvosk.so",
+            "usr/lib/bunny-os/python/companion/speech/vosk_runtime.py",
+            "usr/lib/systemd/user/bunny-companion.service",
+            "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/.bunny-model.json",
+            "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/am/final.mdl",
+            "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/graph/Gr.fst",
+            "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/graph/HCLr.fst",
+            "usr/share/licenses/bunny-os-voice/Apache-2.0.txt",
+            "usr/share/doc/bunny-os/voice-provenance.json",
+        )
+        for relative in relative_paths:
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(b"present")
+
+    def test_a_desktop_build_refuses_an_empty_voice_route(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="bunny-voice-image-") as temporary:
+            with self.assertRaisesRegex(SystemExit, "voice payload is incomplete"):
+                INSTALLER.assert_voice_image_payload("beta", {}, root=Path(temporary))
+
+    def test_a_complete_desktop_payload_passes_the_postcondition(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="bunny-voice-image-") as temporary:
+            root = Path(temporary)
+            self._required_files(root)
+            installed = {
+                route_id: [f"/{route_id}"]
+                for route_id in (
+                    "companion-package",
+                    "speech-recognition-models",
+                    "speech-recognition-licenses",
+                    "speech-recognition-provenance",
+                    "user-units",
+                )
+            }
+            INSTALLER.assert_voice_image_payload("beta", installed, root=root)
+
+    def test_a_non_desktop_profile_does_not_require_voice(self) -> None:
+        INSTALLER.assert_voice_image_payload("minimal", {}, root=Path("unused"))
 
 
 class ThePackageRoute(unittest.TestCase):

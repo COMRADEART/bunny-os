@@ -110,7 +110,10 @@ export class VoiceService {
         };
 
         this._current = this._run(
-            ['listen', '--activation-source', activationSource],
+            [
+                'listen', '--activation-source', activationSource,
+                '--presentation-revision', String(interactionId),
+            ],
             line => {
                 // Cancellation can arrive in the short interval after the
                 // service accepted capture but before this reader received its
@@ -146,6 +149,9 @@ export class VoiceService {
                 case 'accepted':
                     this._taskId = line.taskId ?? '';
                     handlers.onAccepted?.(this._taskId, meta());
+                    break;
+                case 'approval':
+                    handlers.onApproval?.(line, meta());
                     break;
                 case 'reply':
                     handlers.onReply?.(line.text ?? '', line.kind === 'error', meta());
@@ -215,6 +221,27 @@ export class VoiceService {
         if (!this._taskId)
             return false;
         this._control(['voice-cancel', this._taskId]);
+        return true;
+    }
+
+    /** Resolve one approval while the main voice watcher keeps running. */
+    resolveApproval(taskId, approvalRequestId, decision, onSettled = null) {
+        if (!taskId || !approvalRequestId || !['allow', 'deny'].includes(decision))
+            return false;
+        let reported = false;
+        const settle = (resolved, line) => {
+            if (reported)
+                return;
+            reported = true;
+            onSettled?.(resolved, line);
+        };
+        this._run(
+            ['approval', taskId, approvalRequestId, decision],
+            line => settle(line.event === 'approval_resolved', line),
+            () => settle(false, {
+                reason: 'The voice approval control stopped before recording an answer.',
+            }),
+        );
         return true;
     }
 

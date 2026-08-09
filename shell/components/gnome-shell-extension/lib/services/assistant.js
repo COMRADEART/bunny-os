@@ -182,6 +182,9 @@ export class AssistantService {
             case 'phase':
                 handlers.onPhase?.(line.phase, line.statusText ?? '', {requestId});
                 break;
+            case 'approval':
+                handlers.onApproval?.(line, {requestId});
+                break;
             case 'reply':
                 handlers.onReply?.(line.text, line.kind === 'error', {requestId});
                 break;
@@ -237,6 +240,27 @@ export class AssistantService {
 
     get speechActive() {
         return this._speechActive;
+    }
+
+    /** Resolve one approval that the bridge has just displayed. */
+    resolveApproval(taskId, approvalRequestId, decision, onSettled = null) {
+        if (!taskId || !approvalRequestId || !['allow', 'deny'].includes(decision))
+            return false;
+        let reported = false;
+        const settle = (resolved, line) => {
+            if (reported)
+                return;
+            reported = true;
+            onSettled?.(resolved, line);
+        };
+        this._run(
+            ['approval', taskId, approvalRequestId, decision],
+            line => settle(line.event === 'approval_resolved', line),
+            () => settle(false, {
+                reason: 'The assistant approval control stopped before recording an answer.',
+            }),
+        );
+        return true;
     }
 
     /** Interrupt spoken output without cancelling its completed task. */
