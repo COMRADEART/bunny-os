@@ -211,21 +211,32 @@ def main() -> int:
              within=target.get("path", [])[-3:])
         return target
 
-    def close_focused(what: str) -> None:
-        """Close the front window, and try the application's own accelerator too.
+    def close_focused(what: str, *, shell_exit: bool = False) -> None:
+        """Close the front window the way a person would.
 
-        Alt+F4 is the window manager's close and is the right first choice: it
-        exercises the unmap path a user's close button takes. It is not enough
-        on its own, though — a terminal traps Ctrl+D at the shell and Nautilus
-        answers Ctrl+W, and a window that ignored Alt+F4 because focus was
-        somewhere else would otherwise be reported as a desktop that cannot
-        close its own applications.
+        A terminal is closed by leaving the shell — that is what the window is
+        *for*, and `exit` cannot be confused with a window manager keybinding
+        that did not arrive. Everything else gets Alt+F4, the window manager's
+        own close, which exercises the same unmap path the title bar button
+        takes.
+
+        Ctrl+W follows as a second attempt for applications that answer it.
+        It is deliberately last: an earlier version sent it first and Nautilus
+        closed, which made Alt+F4 look like it was working when it was not.
         """
+        used = []
+        if shell_exit:
+            pointer.type_text("exit")
+            pointer.key("ret")
+            used.append("exit")
+            time.sleep(4)
         pointer.key("alt", "f4")
+        used.append("alt+f4")
         time.sleep(4)
         pointer.key("ctrl", "w")
+        used.append("ctrl+w")
         time.sleep(3)
-        step(f"close-{what}", keys=["alt+f4", "ctrl+w"])
+        step(f"close-{what}", keys=used)
 
     try:
         return interact(control, qmp, pointer, targets, arguments,
@@ -312,7 +323,7 @@ def interact(control, qmp, pointer, targets, arguments,
             step("terminal-typed", command=f"date > {arguments.marker}",
                  note="the file is read from the guest disk after shutdown")
 
-        close_focused("terminal")
+        close_focused("terminal", shell_exit=True)
         closed = wait_for("terminal", False, "after-close")
         step("terminal-closed", windowVisible=closed.get("windowVisible"),
              windows=closed.get("windows", {}).get("count"), state=closed)

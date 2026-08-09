@@ -113,17 +113,33 @@ class Pointer:
             {"type": "btn", "data": {"down": False, "button": button}},
         ])
 
-    def key(self, *names: str, hold: float = 0.05) -> None:
-        """Press a chord — `key("alt", "f4")` — and release it in reverse."""
-        down = [{"type": "key", "data": {"down": True,
-                                         "key": {"type": "qcode", "data": name}}}
-                for name in names]
-        up = [{"type": "key", "data": {"down": False,
-                                       "key": {"type": "qcode", "data": name}}}
-              for name in reversed(names)]
-        self._qmp.execute("input-send-event", events=down)
+    def key(self, *names: str, hold: float = 0.06) -> None:
+        """Press a chord — `key("alt", "f4")` — and release it in reverse.
+
+        One event per key, not one event carrying the whole chord. QEMU delivers
+        the events in a single call as one evdev frame, so the modifier and the
+        key it modifies arrive in the same SYN report and a compositor that
+        computes modifier state per frame can see F4 pressed with no Alt held.
+        Sending them separately, with a gap, is what a keyboard does.
+
+        This is not theoretical: with the chord in one frame, Alt+F4 closed
+        nothing. Nautilus appeared to close because the harness sent Ctrl+W
+        after it and Nautilus answers Ctrl+W; the terminal, which does not,
+        stayed open and made the difference visible.
+        """
+        for name in names:
+            self._qmp.execute("input-send-event", events=[
+                {"type": "key", "data": {"down": True,
+                                         "key": {"type": "qcode", "data": name}}},
+            ])
+            time.sleep(0.03)
         time.sleep(hold)
-        self._qmp.execute("input-send-event", events=up)
+        for name in reversed(names):
+            self._qmp.execute("input-send-event", events=[
+                {"type": "key", "data": {"down": False,
+                                         "key": {"type": "qcode", "data": name}}},
+            ])
+            time.sleep(0.03)
 
     def type_text(self, text: str, *, delay: float = 0.05) -> None:
         for character in text:
