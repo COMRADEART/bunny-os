@@ -333,19 +333,35 @@ def install_activation(profile: str) -> None:
         "bunny-first-boot.service": Path(
             "/etc/systemd/user/graphical-session.target.wants/bunny-first-boot.service"
         ),
-        # The Public Alpha's whole success path begins here. Without these two
-        # symlinks a person logs into a freshly installed machine and no
-        # companion appears — which is what every image before this one did.
+        # The Public Alpha's whole success path begins here. Without this
+        # symlink a person logs into a freshly installed machine and the
+        # assistant's backend is not running — which is what every image before
+        # the Public Alpha branch did.
         "bunny-companion.service": Path(
             "/etc/systemd/user/graphical-session.target.wants/bunny-companion.service"
-        ),
-        "bunny-companion-window.service": Path(
-            "/etc/systemd/user/graphical-session.target.wants/bunny-companion-window.service"
         ),
         "bunny-first-run.service": Path(
             "/etc/systemd/user/graphical-session.target.wants/bunny-first-run.service"
         ),
     }
+
+    #: Units that must **not** be activated, and why.
+    #:
+    #: The same fail-closed idea pointed the other way. `--global enable` is not
+    #: the only thing that can create one of these symlinks — a preset applied
+    #: by hand, a leftover from an earlier image, a merge that restored a line —
+    #: and the cost of the window unit being enabled is not subtle: a GTK
+    #: application window opens over the shell-rendered character at every
+    #: login, which is the defect this release removed.
+    #:
+    #: Asserting the absence is what makes "we stopped enabling it" a property
+    #: of the built filesystem rather than of one line in this file.
+    forbidden_activation = {
+        "bunny-companion-window.service": Path(
+            "/etc/systemd/user/graphical-session.target.wants/bunny-companion-window.service"
+        ),
+    }
+
     missing_activation = inert_rule + [
         f"{unit} (expected {link})"
         for unit, link in required_activation.items()
@@ -358,6 +374,20 @@ def install_activation(profile: str) -> None:
             + ". A unit that ships without its enablement is a unit systemd will "
             "never start, which is how /etc/brlapi.key came to be absent on every "
             "installed system."
+        )
+
+    unwanted_activation = [
+        f"{unit} (found {link})"
+        for unit, link in forbidden_activation.items()
+        if link.exists() or link.is_symlink()
+    ]
+    if unwanted_activation:
+        raise SystemExit(
+            "BLOCKED: these units are activated and must not be: "
+            + "; ".join(unwanted_activation)
+            + ". The companion window is a client of the runtime and opens over "
+            "the shell-rendered character; the runtime is what has to start at "
+            "login. Open the window from the Applications grid instead."
         )
 
 
