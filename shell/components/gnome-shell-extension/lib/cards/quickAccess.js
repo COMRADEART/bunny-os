@@ -16,6 +16,7 @@
 // entries are pinned first so the card has a stable shape between sessions.
 
 import {Card} from './base.js';
+import {Icons} from '../icons.js';
 import {box, iconTile, setUnavailable} from '../widgets.js';
 import {KNOWN_APPLICATIONS} from '../services/launcher.js';
 
@@ -53,7 +54,7 @@ export class QuickAccess extends Card {
             const app = this._launcher.resolve(entry.logical);
             const tile = iconTile({
                 gicon: app?.get_icon() ?? null,
-                iconName: app ? null : 'application-x-executable-symbolic',
+                iconName: app ? null : Icons.APP_GENERIC,
                 iconSize: 26,
                 label: entry.label,
                 styleClass: 'bunny-quick-tile',

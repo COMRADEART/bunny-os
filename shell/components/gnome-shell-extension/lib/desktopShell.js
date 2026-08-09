@@ -41,6 +41,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {solve, LEFT_COLUMN, RIGHT_COLUMN} from './layout.js';
 import {box, glass} from './widgets.js';
+import {Icons, resolveIconName} from './icons.js';
 import {enter, ease} from './animation.js';
 import {interval, isLikelySoftwareRendering, log_, logError_, makeActivatable, timeout} from './util.js';
 
@@ -82,15 +83,27 @@ export class DesktopShell {
         this._signals = [];
         this._destroyed = false;
 
+        /** Names of components that failed to build. See `_optional`. */
+        this.degraded = [];
+
         this._blur = this._decideBlur();
         this.notifications = new NotificationService();
 
-        // Construction is all-or-nothing. addChrome parents an actor before it
-        // validates its own arguments, so a throw partway through leaves pieces
-        // of a desktop in the scene graph that nothing holds a reference to —
-        // which is exactly what the first graphical boot produced. destroy() is
-        // written to tolerate a half-built object, so the cleanest guarantee is
-        // to call it here and let the caller see the original error.
+        // Two different guarantees, and the difference is the whole of this
+        // desktop's failure policy.
+        //
+        // *Inside* these steps, every component is built through `_optional`,
+        // so one widget meeting an API that moved costs that widget and
+        // nothing else. That is where the failures actually seen have been:
+        // an accessibility constant, an addChrome parameter, a private field.
+        //
+        // *Around* them, the try still exists, because a throw that escapes
+        // `_optional` is one of the structural steps failing — placing the
+        // layers, connecting the session — and a desktop that got half way
+        // through those is not a degraded desktop, it is debris in the
+        // compositor's scene graph. destroy() is written to tolerate a
+        // half-built object, so the cleanest guarantee is to tear down what
+        // exists and let extension.js see the original error and fall back.
         try {
             this._buildServices();
             this._buildComponents();
@@ -108,6 +121,7 @@ export class DesktopShell {
         }
 
         this._greet();
+        this._reportDegradation();
 
         // Cheap, and it catches the two things no signal reports: an
         // application that stopped running, and midnight.
@@ -156,20 +170,60 @@ export class DesktopShell {
         return accelerated;
     }
 
-    _buildServices() {
-        this.telemetry = new SystemTelemetry();
-        this.power = new PowerManager();
-        this.network = new NetworkManagerService();
-        this.audio = new AudioManager();
-        this.brightness = new BrightnessManager();
-        this.launcher = new ApplicationLauncher();
-        this.media = new MediaService();
-        this.agenda = new AgendaService();
-        this.assistant = new AssistantService();
-        this.search = new UniversalSearch(this.launcher);
-        this.characterState = new CharacterStateManager();
+    /**
+     * Construct something the desktop can do without, and survive it failing.
+     *
+     * The rule this enforces is the one the first three graphical boots taught,
+     * each at the cost of a whole desktop: an accessibility constant that does
+     * not exist, a parameter `addChrome` no longer accepts, a Shell field that
+     * moved. None of those was a failure of the desktop. Each was one widget
+     * asking one library for one thing, and each took every other widget down
+     * with it, because construction was a single unbroken sequence and an
+     * exception anywhere in it aborted the whole thing.
+     *
+     * So the sequence is broken up. What comes back is the component or null,
+     * the failure is named in the journal and in `degraded`, and the caller
+     * carries on. Nothing here swallows an error quietly — a desktop missing
+     * its dock with nothing in the log would be worse than one that did not
+     * start, because at least the second is reported.
+     *
+     * @param {string} what the user-facing name, for the journal and the toast
+     * @param {() => any} factory
+     */
+    _optional(what, factory) {
+        try {
+            return factory();
+        } catch (error) {
+            logError_(`${what} could not be created; the rest of the desktop continues`, error);
+            this.degraded.push(what);
+            return null;
+        }
+    }
 
-        this.assistant.checkHealth((available, reason) => {
+    _buildServices() {
+        // The four the desktop cannot be assembled without. Each reads a file
+        // or takes a reference; none of them talks to a bus or builds an actor,
+        // which is why they are the four that are not guarded — there is
+        // nothing here that can fail that would not also mean the session is
+        // gone.
+        this.telemetry = new SystemTelemetry();
+        this.launcher = new ApplicationLauncher();
+        this.characterState = new CharacterStateManager();
+        this.search = new UniversalSearch(this.launcher);
+
+        // Everything below reaches a system service — logind, NetworkManager,
+        // PulseAudio through Gvc, the session bus, the companion's socket. Any
+        // of them can be absent on a machine this desktop is expected to run
+        // on, and none of them is worth a desktop.
+        this.power = this._optional('power management', () => new PowerManager());
+        this.network = this._optional('network status', () => new NetworkManagerService());
+        this.audio = this._optional('audio control', () => new AudioManager());
+        this.brightness = this._optional('brightness control', () => new BrightnessManager());
+        this.media = this._optional('media control', () => new MediaService());
+        this.agenda = this._optional('calendar', () => new AgendaService());
+        this.assistant = this._optional('assistant bridge', () => new AssistantService());
+
+        this.assistant?.checkHealth((available, reason) => {
             this._assistantPanel?.setVoiceAvailable(available, reason);
             this._suggestions?.rebuild();
             if (!available) {
@@ -184,11 +238,12 @@ export class DesktopShell {
     _buildComponents() {
         const blur = this._blur;
 
-        this.wallpaper = new WallpaperLayer();
-        this.notificationLayer = new NotificationLayer({blur});
-        this.notifications.attach(this.notificationLayer);
+        this.wallpaper = this._optional('wallpaper', () => new WallpaperLayer());
+        this.notificationLayer = this._optional('notifications', () => new NotificationLayer({blur}));
+        if (this.notificationLayer)
+            this.notifications.attach(this.notificationLayer);
 
-        this.topBar = new TopBar({
+        this.topBar = this._optional('top bar', () => new TopBar({
             blur,
             launcher: this.launcher,
             audio: this.audio,
@@ -201,58 +256,77 @@ export class DesktopShell {
             onHome: () => this._select('home'),
             onAgenda: () => this._select('home'),
             onAvatar: () => this.launcher.spawn(['gnome-control-center', 'user-accounts']),
-        });
+        }));
 
-        this.sidebar = new Sidebar({
+        this.sidebar = this._optional('sidebar', () => new Sidebar({
             blur,
             onSelect: id => this._select(id),
             onLaunch: id => this._launchFromSidebar(id),
             onPower: () => this._togglePowerMenu(),
-        });
+        }));
 
-        this.dock = new BottomDock({
+        this.dock = this._optional('dock', () => new BottomDock({
             blur,
             launcher: this.launcher,
             onOverview: () => Main.overview.toggle(),
-        });
+        }));
 
-        this._characterViewport = new CharacterViewport({
+        this._characterViewport = this._optional('character', () => new CharacterViewport({
             stateManager: this.characterState,
             onActivate: () => this._activateAssistant(),
-        });
+        }));
 
-        this._bubble = new AssistantBubble({blur});
-        this._suggestions = new SuggestedActions({
+        this._bubble = this._optional('speech bubble', () => new AssistantBubble({blur}));
+        this._suggestions = this._optional('suggested actions', () => new SuggestedActions({
             blur,
             launcher: this.launcher,
             assistant: this.assistant,
             onPrompt: text => this._ask(text),
             onAction: id => this._runSuggestedAction(id),
-        });
+        }));
 
-        this._assistantPanel = new AssistantPanel({
+        this._assistantPanel = this._optional('assistant panel', () => new AssistantPanel({
             blur,
             assistant: this.assistant,
             onSubmit: text => this._ask(text),
             onVoice: () => this._startVoice(),
             onOpenFull: () => this.launcher.spawn(['bunny-command']),
-        });
+        }));
 
-        this.cards = {
-            systemOverview: new SystemOverview({telemetry: this.telemetry, launcher: this.launcher, blur}),
-            quickAccess: new QuickAccess({
-                launcher: this.launcher, blur, onSeeAll: () => Main.overview.toggle(),
-            }),
-            media: new MediaWidget({media: this.media, blur}),
-            agenda: new AgendaWidget({agenda: this.agenda, blur}),
-            systemMonitor: new SystemMonitor({
-                network: this.network, power: this.power, launcher: this.launcher, blur,
-            }),
+        // Cards, each on its own. A card is a widget over a service, so it is
+        // the piece most likely to meet a machine its service has no answer
+        // for, and the piece whose absence costs the least. A card whose
+        // service failed to construct is not built at all rather than built
+        // over a null: `media` with no MediaService is not a degraded media
+        // card, it is a card with nothing to say.
+        const built = {
+            systemOverview: this._optional('system overview', () =>
+                new SystemOverview({telemetry: this.telemetry, launcher: this.launcher, blur})),
+            quickAccess: this._optional('quick access', () =>
+                new QuickAccess({launcher: this.launcher, blur, onSeeAll: () => Main.overview.toggle()})),
+            media: this.media === null ? null : this._optional('media card', () =>
+                new MediaWidget({media: this.media, blur})),
+            agenda: this.agenda === null ? null : this._optional('agenda card', () =>
+                new AgendaWidget({agenda: this.agenda, blur})),
+            systemMonitor: this.network === null || this.power === null
+                ? null
+                : this._optional('system monitor', () => new SystemMonitor({
+                    network: this.network, power: this.power, launcher: this.launcher, blur,
+                })),
             assistant: this._assistantPanel,
         };
+        this.cards = {};
+        for (const [key, card] of Object.entries(built)) {
+            if (card !== null)
+                this.cards[key] = card;
+        }
 
         this._searchResults = this._buildSearchResults();
         this._powerMenu = null;
+
+        if (this.degraded.length > 0) {
+            log_(`the desktop started without: ${this.degraded.join(', ')}`);
+        }
     }
 
     _buildSearchResults() {
@@ -286,12 +360,13 @@ export class DesktopShell {
             this._desktopParent = Main.layoutManager.uiGroup;
         }
 
-        this._desktopLayer.add_child(this.wallpaper.actor);
-        this._desktopLayer.add_child(this._characterViewport.actor);
-        this._desktopLayer.add_child(this._bubble.actor);
-        this._desktopLayer.add_child(this._suggestions.actor);
-        for (const card of Object.values(this.cards))
-            this._desktopLayer.add_child(card.actor);
+        for (const component of [
+            this.wallpaper, this._characterViewport, this._bubble, this._suggestions,
+            ...Object.values(this.cards),
+        ]) {
+            if (component)
+                this._desktopLayer.add_child(component.actor);
+        }
 
         // affectsStruts and trackFullscreen only. `affectsInputRegion` was a
         // parameter of this call until the X11 input-region bookkeeping went
@@ -311,15 +386,16 @@ export class DesktopShell {
             affectsStruts: false,
             trackFullscreen: true,
         });
-        chrome(this.topBar.actor);
-        chrome(this.sidebar.actor);
-        chrome(this.dock.actor);
-        chrome(this.notificationLayer.actor);
-        chrome(this._searchResults);
-        this._chromeActors = [
-            this.topBar.actor, this.sidebar.actor, this.dock.actor,
-            this.notificationLayer.actor, this._searchResults,
-        ];
+        this._chromeActors = [];
+        for (const actor of [
+            this.topBar?.actor, this.sidebar?.actor, this.dock?.actor,
+            this.notificationLayer?.actor, this._searchResults,
+        ]) {
+            if (!actor)
+                continue;
+            chrome(actor);
+            this._chromeActors.push(actor);
+        }
 
         this._hidePanel();
     }
@@ -386,9 +462,9 @@ export class DesktopShell {
         track(St.Settings.get(), 'notify::font-name', () => this._relayout());
 
         this._installedChangedId = this.launcher.connectInstalledChanged(() => {
-            this.dock.rebuild();
-            this.cards.quickAccess.rebuild();
-            this._suggestions.rebuild();
+            this.dock?.rebuild();
+            this.cards.quickAccess?.rebuild();
+            this._suggestions?.rebuild();
         });
 
         this._characterUnsubscribe = this.characterState.subscribe(state =>
@@ -405,10 +481,10 @@ export class DesktopShell {
         };
         try {
             bind('focus-desktop-search', () => {
-                this.topBar.focusSearch();
+                this.topBar?.focusSearch();
                 this.characterState.noteActivity();
             });
-            bind('focus-desktop-sidebar', () => this.sidebar.focus());
+            bind('focus-desktop-sidebar', () => this.sidebar?.focus());
             bind('focus-desktop-assistant', () => this._activateAssistant());
         } catch (error) {
             // A key missing from the compiled schema must not take the desktop
@@ -435,7 +511,7 @@ export class DesktopShell {
 
         this._desktopLayer.set_position(monitor.x, monitor.y);
         this._desktopLayer.set_size(monitor.width, monitor.height);
-        this.wallpaper.setGeometry({x: 0, y: 0, width: monitor.width, height: monitor.height});
+        this.wallpaper?.setGeometry({x: 0, y: 0, width: monitor.width, height: monitor.height});
 
         const rects = solution.rects;
         const place = (actor, rect) => {
@@ -443,12 +519,16 @@ export class DesktopShell {
             actor.set_size(rect.width, rect.height);
         };
 
-        place(this.topBar.actor, rects.topBar);
-        place(this.sidebar.actor, rects.sidebar);
-        place(this.dock.actor, rects.dock);
-        this.sidebar.setCollapsed(solution.sidebarMode === 'collapsed');
+        if (this.topBar)
+            place(this.topBar.actor, rects.topBar);
+        if (this.sidebar) {
+            place(this.sidebar.actor, rects.sidebar);
+            this.sidebar.setCollapsed(solution.sidebarMode === 'collapsed');
+        }
+        if (this.dock)
+            place(this.dock.actor, rects.dock);
 
-        this.notificationLayer.setGeometry({
+        this.notificationLayer?.setGeometry({
             x: monitor.x + monitor.width - 360 - rects.topBar.height,
             y: monitor.y + rects.topBar.height + 12,
             width: 360,
@@ -471,7 +551,7 @@ export class DesktopShell {
                 card.hide();
                 continue;
             }
-            if (key === 'media' && !this.cards.media.hasMedia) {
+            if (key === 'media' && !this.cards.media?.hasMedia) {
                 // Nothing is playing. Collapse rather than show an empty card.
                 card.hide();
                 continue;
@@ -480,10 +560,10 @@ export class DesktopShell {
             index += 1;
         }
 
-        this._characterViewport.setGeometry(rects.character);
+        this._characterViewport?.setGeometry(rects.character);
         this._placeBubbles(rects.character);
 
-        log_(`layout ${screen.width}x${screen.height} → ${solution.breakpoint}, ` +
+        log_(`layout ${screen.width}x${screen.height} -> ${solution.breakpoint}, ` +
             `${solution.columns} card column(s)` +
             (solution.dropped.length > 0 ? `, dropped: ${solution.dropped.join(', ')}` : ''));
     }
@@ -505,6 +585,11 @@ export class DesktopShell {
     }
 
     _placeBubbles(band) {
+        // Both bubbles are positioned against the figure, so with no figure
+        // there is nothing to position them against and they stay where they
+        // are — which is off-screen, because they start hidden.
+        if (!this._characterViewport)
+            return;
         const rect = this._characterViewport.figureRect();
         const figure = {
             x: rect.x - band.x,
@@ -512,18 +597,22 @@ export class DesktopShell {
             width: rect.width,
             height: rect.height,
         };
-        this._bubble.place(figure, band, 'left');
-        this._bubble.actor.set_position(
-            band.x + this._bubble.actor.get_x(), band.y + this._bubble.actor.get_y());
+        if (this._bubble) {
+            this._bubble.place(figure, band, 'left');
+            this._bubble.actor.set_position(
+                band.x + this._bubble.actor.get_x(), band.y + this._bubble.actor.get_y());
+        }
 
-        const suggestionWidth = Math.min(268, Math.round(band.width * 0.30));
-        this._suggestions.setWidth(suggestionWidth);
-        const right = band.x + figure.x + figure.width + 20;
-        const fits = right + suggestionWidth <= band.x + band.width;
-        this._suggestions.actor.visible = fits;
-        if (fits) {
-            this._suggestions.actor.set_position(
-                right, band.y + Math.round(figure.y + figure.height * 0.16));
+        if (this._suggestions) {
+            const suggestionWidth = Math.min(268, Math.round(band.width * 0.30));
+            this._suggestions.setWidth(suggestionWidth);
+            const right = band.x + figure.x + figure.width + 20;
+            const fits = right + suggestionWidth <= band.x + band.width;
+            this._suggestions.actor.visible = fits;
+            if (fits) {
+                this._suggestions.actor.set_position(
+                    right, band.y + Math.round(figure.y + figure.height * 0.16));
+            }
         }
     }
 
@@ -560,9 +649,11 @@ export class DesktopShell {
     // ------------------------------------------------------------ behaviour
 
     _greet() {
+        if (!this._bubble)
+            return;
         const hour = new Date().getHours();
         const salutation = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-        const events = this.agenda.events().length;
+        const events = this.agenda?.events().length ?? 0;
         const agendaLine = events === 0
             ? 'Nothing is scheduled today.'
             : `You have ${events} thing${events === 1 ? '' : 's'} on today.`;
@@ -570,14 +661,31 @@ export class DesktopShell {
         // happens; a bubble that appears in the same frame as the cards reads
         // as a page load rather than as somebody saying hello.
         this._greetTimer = timeout(700, () => {
-            this._bubble.say(`${salutation}! ☀\n\n${agendaLine}\n\nShall we get started?`);
+            this._bubble.say(`${salutation}!\n\n${agendaLine}\n\nShall we get started?`);
             this.characterState.setState('talking', {reason: 'greeting'});
             this._returnToIdleAfterTalking();
         });
     }
 
+    /**
+     * Say what did not start, once, to the person looking at the screen.
+     *
+     * Not silently. A desktop that comes up without its dock and says nothing
+     * is a desktop the user reports as "the dock disappeared", with no way for
+     * anyone to tell whether it was never built, built and hidden, or built and
+     * placed off-screen. The journal line is for whoever debugs it; this toast
+     * is so the user knows the machine knows.
+     */
+    _reportDegradation() {
+        if (this.degraded.length === 0)
+            return;
+        this.notifications.warning(
+            `Some parts of the desktop did not start: ${this.degraded.join(', ')}. ` +
+            'Everything else is working.');
+    }
+
     _select(id) {
-        this.sidebar.select(id);
+        this.sidebar?.select(id);
         this.characterState.noteActivity();
         switch (id) {
         case 'home':
@@ -626,47 +734,51 @@ export class DesktopShell {
     /** Click the character, press the shortcut, or choose AI Assistant. */
     _activateAssistant() {
         this.characterState.setState('listening', {reason: 'waiting for your request'});
-        this._bubble.say('I am listening. What would you like to do?', {wave: true});
-        this._assistantPanel.focusInput();
+        this._bubble?.say('I am listening. What would you like to do?', {wave: true});
+        this._assistantPanel?.focusInput();
     }
 
     _ask(text) {
         const trimmed = text.trim();
         if (trimmed === '')
             return;
+        if (!this.assistant) {
+            this.notifications.warning('The assistant is not available on this session.');
+            return;
+        }
         this.characterState.noteActivity();
-        this._assistantPanel.addTurn('user', trimmed);
-        this._assistantPanel.setBusy(true);
-        this._assistantPanel.setStatus('Thinking…');
+        this._assistantPanel?.addTurn('user', trimmed);
+        this._assistantPanel?.setBusy(true);
+        this._assistantPanel?.setStatus('Thinking…');
         this.characterState.setState('thinking', {reason: trimmed});
-        this._bubble.say('Let me work on that.', {wave: false});
+        this._bubble?.say('Let me work on that.', {wave: false});
 
         this.assistant.ask(trimmed, {
             onPhase: (phase, statusText) => {
                 this.characterState.adoptPhase(phase, PHASE_TO_STATE, {statusText});
                 if (statusText)
-                    this._assistantPanel.setStatus(statusText);
+                    this._assistantPanel?.setStatus(statusText);
             },
             onReply: (reply, isError) => {
-                this._assistantPanel.addTurn('bunny', reply, {tone: isError ? 'error' : 'normal'});
-                this._bubble.say(reply, {tone: isError ? 'error' : 'normal', wave: !isError});
+                this._assistantPanel?.addTurn('bunny', reply, {tone: isError ? 'error' : 'normal'});
+                this._bubble?.say(reply, {tone: isError ? 'error' : 'normal', wave: !isError});
                 if (!isError) {
                     this.characterState.setState('talking', {reason: 'delivering the answer'});
                     this._returnToIdleAfterTalking();
                 }
             },
             onFinished: phase => {
-                this._assistantPanel.setBusy(false);
-                this._assistantPanel.setStatus('');
+                this._assistantPanel?.setBusy(false);
+                this._assistantPanel?.setStatus('');
                 if (phase === 'success')
                     this.characterState.setState('success', {reason: 'the task finished'});
             },
             onError: reason => {
-                this._assistantPanel.setBusy(false);
-                this._assistantPanel.setStatus(reason, {tone: 'error'});
-                this._assistantPanel.addTurn('bunny', reason, {tone: 'error'});
+                this._assistantPanel?.setBusy(false);
+                this._assistantPanel?.setStatus(reason, {tone: 'error'});
+                this._assistantPanel?.addTurn('bunny', reason, {tone: 'error'});
                 this.characterState.setState('error', {reason});
-                this._bubble.say(reason, {tone: 'error'});
+                this._bubble?.say(reason, {tone: 'error'});
                 this.notifications.error(`Bunny could not answer: ${reason}`);
             },
         });
@@ -681,7 +793,7 @@ export class DesktopShell {
      */
     _startVoice() {
         this.characterState.setState('listening', {reason: 'speech input requested'});
-        this._bubble.say('Listening…', {wave: true});
+        this._bubble?.say('Listening…', {wave: true});
         if (!this.launcher.spawn(['bunny-command', '--listen'])) {
             this.characterState.setState('warning', {reason: 'speech input is unavailable'});
             this.notifications.warning('Speech input is not available on this system.');
@@ -701,15 +813,16 @@ export class DesktopShell {
         // The bubble is dismissed when the character goes quiet, so a stale
         // answer does not hang beside an idle figure for the rest of the day.
         if (state === 'idle' || state === 'sleeping')
-            this._bubble.hide();
-        this._suggestions.actor.opacity = state === 'idle' ? 255 : 190;
+            this._bubble?.hide();
+        if (this._suggestions)
+            this._suggestions.actor.opacity = state === 'idle' ? 255 : 190;
     }
 
     _onHousekeeping() {
         // Media presence decides whether the card has a slot at all, so a
         // player starting or stopping is a layout change, not a refresh.
-        const wanted = this.cards.media.hasMedia;
-        if (wanted !== this.cards.media.live)
+        const media = this.cards.media;
+        if (media && media.hasMedia !== media.live)
             this._relayout();
     }
 
@@ -723,7 +836,7 @@ export class DesktopShell {
         this.characterState.noteActivity();
         this._renderSearch(this.search.immediate(text), []);
         this.search.files(text, 5, files => {
-            if (this.topBar.searchText.trim() === text.trim())
+            if ((this.topBar?.searchText.trim() ?? '') === text.trim())
                 this._renderSearch(this.search.immediate(text), files);
         });
     }
@@ -736,20 +849,20 @@ export class DesktopShell {
                 kind: 'file',
                 title: file.name,
                 subtitle: file.path,
-                iconName: 'text-x-generic-symbolic',
+                iconName: Icons.FILE_GENERIC,
                 activate: () => this.launcher.spawn(['gio', 'open', file.path]),
             });
         }
-        const query = this.topBar.searchText.trim();
+        const query = this.topBar?.searchText.trim() ?? '';
         if (query !== '') {
             rows.push({
                 kind: 'assistant',
                 title: `Ask Bunny: ${query}`,
                 subtitle: 'Send this to your assistant',
-                iconName: 'bunny-shell-symbolic',
+                iconName: Icons.BUNNY,
                 activate: () => {
                     this._closeSearch();
-                    this.topBar.clearSearch();
+                    this.topBar?.clearSearch();
                     this._ask(query);
                 },
             });
@@ -769,7 +882,7 @@ export class DesktopShell {
         if (row.gicon)
             icon.gicon = row.gicon;
         else
-            icon.icon_name = row.iconName ?? 'application-x-executable-symbolic';
+            icon.icon_name = resolveIconName(row.iconName ?? Icons.APP_GENERIC);
         actor.add_child(icon);
         const column = box({vertical: true, x_expand: true});
         const title = new St.Label({text: row.title, style_class: 'bunny-search-row-title'});
@@ -814,9 +927,23 @@ export class DesktopShell {
             this._closePowerMenu();
             return;
         }
+        if (this.power === null) {
+            this.notifications.warning('Power actions are not available on this session.');
+            return;
+        }
         this._powerMenu = new PowerMenu(this.power, {onClose: () => this._closePowerMenu()});
+        // `affectsStruts` and `trackFullscreen` only.
+        //
+        // This call still passed `affectsInputRegion` long after the same
+        // parameter had been removed from the one in _placeActors, where it
+        // aborted the desktop's construction on the first graphical boot.
+        // Params.parse refuses an unrecognised key rather than ignoring it, and
+        // addChrome parents the actor before it parses — so opening the power
+        // menu would have parented an unsized popup and thrown, on every
+        // machine, from the day the sidebar's Power row was written. It was
+        // never pressed. That is the whole reason criterion 9 mattered.
         Main.layoutManager.addChrome(this._powerMenu.actor, {
-            affectsStruts: false, affectsInputRegion: true, trackFullscreen: true,
+            affectsStruts: false, trackFullscreen: true,
         });
         const sidebarRect = this._solution.rects.sidebar;
         const monitor = Main.layoutManager.primaryMonitor;

@@ -22,6 +22,7 @@ import {Card} from './base.js';
 import {Rgb} from '../tokens.js';
 import {box, Meter, MetricRow, UNAVAILABLE} from '../widgets.js';
 import {formatRate, logError_} from '../util.js';
+import {Icons, themedIcon} from '../icons.js';
 
 /** Samples kept. At one every two seconds this is two minutes of history. */
 const WINDOW = 60;
@@ -45,12 +46,20 @@ export class SystemMonitor extends Card {
         this._down = new Array(WINDOW).fill(0);
         this._haveSample = false;
 
+        // The direction arrows are icons, not `↑` and `↓` in the label text.
+        // Which way a figure points is the whole meaning of these two rows, and
+        // carrying it in a codepoint makes it a property of the installed font
+        // set rather than of the desktop. The accessible name says "up" and
+        // "down" in words, which no arrow of either kind ever did.
         const rates = box({style_class: 'bunny-monitor-rates'});
-        this._upLabel = new St.Label({text: `↑ ${UNAVAILABLE}`, style_class: 'bunny-monitor-up'});
-        this._downLabel = new St.Label({text: `↓ ${UNAVAILABLE}`, style_class: 'bunny-monitor-down'});
+        this._upLabel = new St.Label({text: UNAVAILABLE, style_class: 'bunny-monitor-up'});
+        this._downLabel = new St.Label({text: UNAVAILABLE, style_class: 'bunny-monitor-down'});
+        rates.add_child(themedIcon(Icons.UPLOAD, {size: 14, styleClass: 'bunny-monitor-arrow-up'}));
         rates.add_child(this._upLabel);
         rates.add_child(new St.Widget({x_expand: true}));
+        rates.add_child(themedIcon(Icons.DOWNLOAD, {size: 14, styleClass: 'bunny-monitor-arrow-down'}));
         rates.add_child(this._downLabel);
+        rates.accessible_name = 'Network throughput';
         this.content.add_child(rates);
 
         this._graph = new St.DrawingArea({style_class: 'bunny-monitor-graph', height: 46, reactive: false});
@@ -71,18 +80,19 @@ export class SystemMonitor extends Card {
             this._down.push(rates.downBytesPerSecond);
             this._up.shift();
             this._down.shift();
-            this._upLabel.text = `↑ ${formatRate(rates.upBytesPerSecond)}`;
-            this._downLabel.text = `↓ ${formatRate(rates.downBytesPerSecond)}`;
+            this._upLabel.text = formatRate(rates.upBytesPerSecond);
+            this._downLabel.text = formatRate(rates.downBytesPerSecond);
         } else if (!this._haveSample) {
             // Before the second sample there is genuinely no rate to report.
-            this._upLabel.text = `↑ ${UNAVAILABLE}`;
-            this._downLabel.text = `↓ ${UNAVAILABLE}`;
+            this._upLabel.text = UNAVAILABLE;
+            this._downLabel.text = UNAVAILABLE;
         }
         this._graph.queue_repaint();
 
         const connection = this._network.connection();
         this._graph.accessible_name =
-            `Network ${connection.state}, up ${this._upLabel.text}, down ${this._downLabel.text}`;
+            `Network ${connection.state}, upload ${this._upLabel.text}, ` +
+            `download ${this._downLabel.text}`;
 
         this._refreshBattery();
     }

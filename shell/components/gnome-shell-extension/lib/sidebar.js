@@ -23,6 +23,7 @@ import {box, glass} from './widgets.js';
 import {ease} from './animation.js';
 import {makeActivatable} from './util.js';
 import {Motion} from './tokens.js';
+import {Icons, themedIcon} from './icons.js';
 
 /**
  * The item table. `kind` decides what pressing it means; see the module note.
@@ -30,14 +31,14 @@ import {Motion} from './tokens.js';
  * contract, so renaming one is a change to the shell, not to a label.
  */
 export const SIDEBAR_ITEMS = [
-    {id: 'home', label: 'Home', icon: 'go-home-symbolic', kind: 'destination'},
-    {id: 'assistant', label: 'AI Assistant', icon: 'bunny-shell-symbolic', kind: 'destination'},
-    {id: 'files', label: 'Files', icon: 'folder-symbolic', kind: 'destination'},
-    {id: 'apps', label: 'Apps', icon: 'view-app-grid-symbolic', kind: 'destination'},
-    {id: 'settings', label: 'Settings', icon: 'preferences-system-symbolic', kind: 'destination'},
+    {id: 'home', label: 'Home', icon: Icons.HOME, kind: 'destination'},
+    {id: 'assistant', label: 'AI Assistant', icon: Icons.BUNNY, kind: 'destination'},
+    {id: 'files', label: 'Files', icon: Icons.FILES, kind: 'destination'},
+    {id: 'apps', label: 'Apps', icon: Icons.APPS, kind: 'destination'},
+    {id: 'settings', label: 'Settings', icon: Icons.SETTINGS, kind: 'destination'},
     {id: 'divider', kind: 'divider'},
-    {id: 'terminal', label: 'Terminal', icon: 'utilities-terminal-symbolic', kind: 'launch'},
-    {id: 'store', label: 'Store', icon: 'shop-symbolic', kind: 'launch'},
+    {id: 'terminal', label: 'Terminal', icon: Icons.TERMINAL, kind: 'launch'},
+    {id: 'store', label: 'Store', icon: Icons.STORE, kind: 'launch'},
 ];
 
 export class Sidebar {
@@ -68,7 +69,7 @@ export class Sidebar {
         this._column.add_child(new St.Widget({y_expand: true}));
 
         this._power = this._buildRow({
-            id: 'power', label: 'Power', icon: 'system-shutdown-symbolic', kind: 'power',
+            id: 'power', label: 'Power', icon: Icons.POWER, kind: 'power',
         });
         this._power.actor.add_style_class_name('bunny-sidebar-power');
         this._column.add_child(this._power.actor);
@@ -129,11 +130,7 @@ export class Sidebar {
 
     _buildRow(item) {
         const row = box({style_class: 'bunny-sidebar-row'});
-        const icon = new St.Icon({
-            icon_name: item.icon,
-            icon_size: 18,
-            style_class: 'bunny-sidebar-icon',
-        });
+        const icon = themedIcon(item.icon, {size: 18, styleClass: 'bunny-sidebar-icon'});
         const label = new St.Label({text: item.label, style_class: 'bunny-sidebar-label'});
         row.add_child(icon);
         row.add_child(label);
@@ -178,16 +175,14 @@ export class PowerMenu {
         this.actor.add_child(column);
 
         const actions = [
-            {label: 'Suspend', icon: 'weather-clear-night-symbolic', run: () => power.suspend()},
-            {label: 'Restart', icon: 'system-reboot-symbolic', run: () => power.restart()},
-            {label: 'Shut Down', icon: 'system-shutdown-symbolic', run: () => power.shutdown()},
-            {label: 'Log Out', icon: 'system-log-out-symbolic', run: () => power.logOut()},
+            {label: 'Suspend', icon: Icons.SUSPEND, run: () => power.suspend()},
+            {label: 'Restart', icon: Icons.RESTART, run: () => power.restart()},
+            {label: 'Shut Down', icon: Icons.SHUT_DOWN, run: () => power.shutdown()},
+            {label: 'Log Out', icon: Icons.LOG_OUT, run: () => power.logOut()},
         ];
         for (const action of actions) {
             const row = box({style_class: 'bunny-power-row'});
-            row.add_child(new St.Icon({
-                icon_name: action.icon, icon_size: 16, style_class: 'bunny-sidebar-icon',
-            }));
+            row.add_child(themedIcon(action.icon, {size: 16, styleClass: 'bunny-sidebar-icon'}));
             row.add_child(new St.Label({text: action.label, style_class: 'bunny-sidebar-label'}));
             makeActivatable(row, () => {
                 this._onClose?.();

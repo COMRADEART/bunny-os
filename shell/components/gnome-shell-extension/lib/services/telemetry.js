@@ -18,6 +18,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
 import {logOnce, readText, listDirectory, readInt} from '../util.js';
+import {parseMountinfo, selectStorageMount} from './storage.js';
 
 export class SystemTelemetry {
     constructor() {
@@ -77,43 +78,98 @@ export class SystemTelemetry {
     }
 
     /**
-     * {usedBytes, totalBytes, path} for the filesystem the user's files are on.
+     * The capacity of the filesystem the user's files actually live on, or null.
      *
      * Not `/`. On this image `/` is an ostree composefs mount and statfs on it
-     * reports the overlay, not the disk — measured in the VM, where the card
-     * read "14.2 MB / 14.2 MB" on a machine with a 14 GB partition. The number
-     * was real; it was a true statement about the wrong filesystem, which is
-     * the failure mode this class of reader is most prone to and the hardest to
-     * notice, because it looks like a measurement.
+     * reports the composed image, not the disk — measured in the VM, where the
+     * card read "14.2 MB / 14.2 MB" on a machine with a 14 GB partition. The
+     * number was real; it was a true statement about the wrong filesystem,
+     * which is the failure mode this class of reader is most prone to and the
+     * hardest to notice, because it looks like a measurement.
      *
-     * The home directory is the right question anyway: "Storage" on a desktop
-     * means the space the user's files can grow into. It resolves to the same
-     * device as `/` on an ordinary installation, and to the stateroot's
-     * partition on this one.
+     * *Which* filesystem is a decision, and it is made in storage.js from the
+     * mount table rather than by trying paths until one answers. The earlier
+     * fix here — statfs on the home directory — got the right figure on the
+     * image it was tried on and would have got a tmpfs's capacity on a live
+     * session without saying anything was different.
+     *
+     * @param {string|null} path force a filesystem, for callers that have one
+     * @returns {{usedBytes, totalBytes, freeBytes, path, filesystemType,
+     *            persistent, role}|null}
      */
     storage(path = null) {
-        const candidates = path !== null
-            ? [path]
-            : [GLib.get_home_dir(), '/sysroot', '/'];
-        for (const candidate of candidates) {
-            if (!candidate)
-                continue;
-            try {
-                const info = Gio.File.new_for_path(candidate).query_filesystem_info(
-                    'filesystem::size,filesystem::used', null);
-                const total = info.get_attribute_uint64('filesystem::size');
-                const used = info.get_attribute_uint64('filesystem::used');
-                if (!total)
-                    continue;
-                logOnce('statfs-target', `storage is reported for ${candidate}`);
-                return {usedBytes: used, totalBytes: total, path: candidate};
-            } catch (_error) {
-                continue;
-            }
+        if (path !== null) {
+            const forced = this._query(path);
+            return forced === null ? null : {
+                ...forced,
+                filesystemType: null,
+                persistent: null,
+                role: 'requested',
+            };
         }
-        logOnce('statfs', `no filesystem among ${candidates.join(', ')} could be queried; ` +
-            'storage reports Unavailable');
-        return null;
+
+        const mountinfo = readText('/proc/self/mountinfo');
+        if (mountinfo === null) {
+            logOnce('mountinfo', '/proc/self/mountinfo is unreadable; storage reports Unavailable');
+            return null;
+        }
+        const selection = selectStorageMount(parseMountinfo(mountinfo), {
+            homeDirectory: GLib.get_home_dir(),
+        });
+        if (selection.mount === null) {
+            logOnce('storage-selection',
+                `no persistent filesystem to report: ${
+                    selection.rejected.map(entry => `${entry.path} (${entry.reason})`).join('; ')}`);
+            return null;
+        }
+
+        // statfs the mount point rather than the candidate path. They are the
+        // same filesystem by construction, and the mount point is the thing the
+        // figure is about, so it is the thing named in the accessible
+        // description and in the log line.
+        const measured = this._query(selection.mount.mountPoint);
+        if (measured === null) {
+            logOnce('storage-statfs',
+                `${selection.mount.mountPoint} was selected but could not be queried; ` +
+                'storage reports Unavailable');
+            return null;
+        }
+
+        logOnce('storage-selection',
+            `storage is ${selection.mount.mountPoint} ` +
+            `(${selection.mount.filesystemType} on ${selection.mount.source}), ` +
+            `chosen as ${selection.description}` +
+            (selection.rejected.length > 0
+                ? `; skipped ${selection.rejected.map(
+                    entry => `${entry.path} — ${entry.reason}`).join(', ')}`
+                : ''));
+
+        return {
+            ...measured,
+            filesystemType: selection.mount.filesystemType,
+            persistent: true,
+            role: selection.role,
+        };
+    }
+
+    /** statfs, as {usedBytes, totalBytes, freeBytes, path}, or null. */
+    _query(path) {
+        if (!path)
+            return null;
+        try {
+            const info = Gio.File.new_for_path(path).query_filesystem_info(
+                'filesystem::size,filesystem::used,filesystem::free', null);
+            const total = info.get_attribute_uint64('filesystem::size');
+            const used = info.get_attribute_uint64('filesystem::used');
+            const free = info.get_attribute_uint64('filesystem::free');
+            // A filesystem reporting no capacity has not been measured; it has
+            // refused. Returning it as "0 of 0" would put a full disk on screen.
+            if (!total)
+                return null;
+            return {usedBytes: used, totalBytes: total, freeBytes: free, path};
+        } catch (_error) {
+            return null;
+        }
     }
 
     /**

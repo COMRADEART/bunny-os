@@ -20,6 +20,14 @@
 // are already reachable from the sidebar or dock are allowed to be one — a
 // suggestion chip is not a route to something the interface does not otherwise
 // offer.
+//
+// Each row used to be led by an emoji — 💡, 📝, 🧹, 📁 — and on the first
+// booted image every one of them was a tofu box, because the image shipped no
+// emoji font. The font is installed now and these are still icons rather than
+// emoji, because the reason has nothing to do with that image: a control whose
+// meaning is carried by a codepoint the font set is not required to have is a
+// control that can lose its meaning to a packaging change. The label carries
+// the meaning; the icon decorates it.
 
 import St from 'gi://St';
 
@@ -27,6 +35,7 @@ import {box, glass} from '../widgets.js';
 import {ease} from '../animation.js';
 import {makeActivatable} from '../util.js';
 import {Motion} from '../tokens.js';
+import {Icons, themedIcon} from '../icons.js';
 
 const MAX_SHOWN = 4;
 
@@ -75,7 +84,7 @@ export class SuggestedActions {
 
     _buildRow(item) {
         const row = box({style_class: 'bunny-suggestion-row'});
-        row.add_child(new St.Label({text: item.glyph, style_class: 'bunny-suggestion-glyph'}));
+        row.add_child(themedIcon(item.icon, {size: 16, styleClass: 'bunny-suggestion-glyph'}));
         const label = new St.Label({text: item.label, style_class: 'bunny-suggestion-label'});
         label.clutter_text.ellipsize = 3;
         row.add_child(label);
@@ -105,15 +114,15 @@ export class SuggestedActions {
 
         if (assistant?.available !== false) {
             items.push({
-                glyph: '💡',
+                icon: Icons.EXPLAIN,
                 label: 'Explain something to me',
                 prompt: 'Explain a topic I am curious about, and ask me which one.',
             });
             items.push(hour < 12
-                ? {glyph: '📝', label: 'Plan my day', prompt: 'Help me plan my day.'}
-                : {glyph: '📝', label: 'Summarise what I worked on', prompt: 'Summarise what I worked on today.'});
+                ? {icon: Icons.PLAN, label: 'Plan my day', prompt: 'Help me plan my day.'}
+                : {icon: Icons.PLAN, label: 'Summarise what I worked on', prompt: 'Summarise what I worked on today.'});
             items.push({
-                glyph: '🧹',
+                icon: Icons.DISK_SPACE,
                 label: 'Free up disk space',
                 prompt: 'Find what is using disk space on this machine and suggest what to remove.',
             });
@@ -121,18 +130,18 @@ export class SuggestedActions {
             // No runtime. Saying so once, as a row, beats four chips that all
             // fail the moment they are pressed.
             items.push({
-                glyph: '⚠',
+                icon: Icons.WARNING,
                 label: 'Assistant offline — open Settings',
                 action: 'settings',
             });
         }
 
         if (launcher?.available('terminal'))
-            items.push({glyph: '▣', label: 'Open Terminal', action: 'terminal'});
+            items.push({icon: Icons.TERMINAL, label: 'Open Terminal', action: 'terminal'});
         if (launcher?.available('files'))
-            items.push({glyph: '📁', label: 'Browse my files', action: 'files'});
+            items.push({icon: Icons.FILES, label: 'Browse my files', action: 'files'});
         if (launcher?.available('software'))
-            items.push({glyph: '🛍', label: 'Find new apps', action: 'store'});
+            items.push({icon: Icons.STORE, label: 'Find new apps', action: 'store'});
 
         return items;
     }

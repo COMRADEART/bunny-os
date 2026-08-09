@@ -28,7 +28,11 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import time
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import desktop_interaction  # noqa: E402
 
 EXTENSION_UUID = "bunny-shell@bunny-os.org"
 EXTENSION_ROOT = Path("/usr/share/gnome-shell/extensions") / EXTENSION_UUID
@@ -235,6 +239,82 @@ def assistant_bridge(user: str) -> dict:
     return {"call": result, "health": document}
 
 
+def serve_interaction(user: str, environment: list[str]) -> dict:
+    """Answer the host's requests until it says the interaction is finished.
+
+    The protocol is four verbs and it is deliberately dumb — the host holds the
+    script, and this end only measures. Anything else would mean two programs
+    that both believe they know what the test is.
+
+      controls      every named control the shell exposes, with its rectangle
+      state <name>  the four signals for `files` or `terminal`
+      shell         is GNOME Shell answering, is the extension still enabled
+      done          stop serving; the run is over
+
+    A missing control channel is recorded and is not fatal. The rest of the
+    probe's answers are still worth having, and a harness that failed the whole
+    run because one virtio device did not appear would be reporting a defect in
+    itself as a defect in the product.
+    """
+    channel = desktop_interaction.ControlChannel()
+    transcript: list[dict] = []
+    result: dict = {
+        "channel": {"path": str(desktop_interaction.CONTROL_PORT),
+                    "available": channel.available, "error": channel.error},
+        "transcript": transcript,
+    }
+    if not channel.available:
+        print("interaction: no control port; the pointer test cannot run", flush=True)
+        return result
+
+    result["accessibility"] = desktop_interaction.enable_accessibility(user, environment)
+    controls = desktop_interaction.locate_controls(user, environment)
+    result["controls"] = controls
+    targets = {}
+    for logical, label in (("files", "Files"), ("terminal", "Terminal"),
+                           ("assistant", "AI Assistant"), ("home", "Home")):
+        found = desktop_interaction.find_control(controls, label)
+        if found is not None:
+            targets[logical] = found
+    result["targets"] = targets
+
+    # The host is waiting for this before it touches the pointer.
+    channel.send({"event": "ready", "targets": targets,
+                  "controlCount": len(controls.get("controls", []))})
+
+    deadline = time.monotonic() + 900
+    while time.monotonic() < deadline:
+        request = channel.receive(timeout=deadline - time.monotonic())
+        if request is None:
+            transcript.append({"note": "the host stopped talking"})
+            break
+        verb = request.get("command")
+        label = request.get("label", "")
+        answer: dict = {"command": verb, "label": label}
+        if verb == "controls":
+            fresh = desktop_interaction.locate_controls(user, environment)
+            answer["controls"] = fresh
+        elif verb == "state":
+            name = request.get("application")
+            if name in desktop_interaction.APPLICATIONS:
+                answer["state"] = desktop_interaction.application_state(name, user, environment)
+            else:
+                answer["error"] = f"unknown application {name!r}"
+        elif verb == "shell":
+            answer["shell"] = desktop_interaction.shell_alive(user, environment)
+        elif verb == "done":
+            transcript.append(answer)
+            channel.send({"reply": answer})
+            break
+        else:
+            answer["error"] = f"unknown command {verb!r}"
+        transcript.append(answer)
+        channel.send({"reply": answer})
+
+    channel.close()
+    return result
+
+
 def main() -> int:
     user = session_user()
     environment = user_bus_environment(user)
@@ -258,6 +338,13 @@ def main() -> int:
     record["installedModules"] = installed_modules()
     record["background"] = background_setting(user, environment)
     record["assistantBridge"] = assistant_bridge(user)
+
+    # The pointer test. Everything above is a question this probe asks itself;
+    # this is the one thing it cannot do alone, because the pointer lives in
+    # QEMU. The guest finds the controls and reports what happened; the host
+    # presses them. See desktop_interaction.ControlChannel.
+    record["interaction"] = serve_interaction(user, environment)
+
     record["journal"] = desktop_journal(user)
 
     RECORD.parent.mkdir(parents=True, exist_ok=True)

@@ -604,6 +604,14 @@ _EXPORT_DECLARATION = re.compile(
 )
 _EXPORT_LIST = re.compile(r"^export\s*\{([^}]*)\}", re.MULTILINE)
 _EXPORT_DEFAULT = re.compile(r"^export\s+default\b", re.MULTILINE)
+#: A star re-export: `export * from './iconNames.js';`.
+#:
+#: The desktop splits three modules into a data half that imports nothing — so
+#: the tests can evaluate it under node — and a runtime half that needs St, and
+#: the runtime half re-exports the data so callers import one module. Without
+#: this pattern the resolver reported every one of those callers as importing a
+#: symbol that does not exist, which is a false FAIL on correct ES.
+_EXPORT_STAR = re.compile(r"^export\s*\*\s*from\s*['\"](\.[^'\"]+)['\"]", re.MULTILINE)
 
 
 def _gnome_extension(root: Path) -> ValidatorOutcome:
@@ -644,6 +652,7 @@ def _gnome_extension(root: Path) -> ValidatorOutcome:
     outcome.checked = len(modules)
 
     exports: dict[Path, set[str]] = {}
+    stars: dict[Path, list[Path]] = {}
     for path in modules:
         text = path.read_text(encoding="utf-8", errors="replace")
         names = set(_EXPORT_DECLARATION.findall(text))
@@ -652,6 +661,25 @@ def _gnome_extension(root: Path) -> ValidatorOutcome:
         if _EXPORT_DEFAULT.search(text):
             names.add("default")
         exports[path.resolve()] = names
+        stars[path.resolve()] = [
+            (path.parent / specifier).resolve() for specifier in _EXPORT_STAR.findall(text)
+        ]
+
+    # Fold the star re-exports in. Iterated to a fixed point rather than done in
+    # one pass, because a re-export chain is legal ES and one pass would resolve
+    # only its last link. `default` is deliberately not propagated: `export *`
+    # does not re-export a default, and treating it as though it did would let a
+    # genuinely missing default import through.
+    for _ in range(len(modules)):
+        changed = False
+        for path, targets in stars.items():
+            for target in targets:
+                inherited = exports.get(target, set()) - {"default"}
+                if not inherited.issubset(exports[path]):
+                    exports[path].update(inherited)
+                    changed = True
+        if not changed:
+            break
 
     for path in modules:
         # A wrapped import list is one statement; join its continuation lines

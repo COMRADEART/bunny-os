@@ -26,6 +26,8 @@ set -euo pipefail
 
 disk="${1:?usage: desktop-inject.sh <disk.qcow2> <probe.py> [user] [session]}"
 probe="${2:?usage: desktop-inject.sh <disk.qcow2> <probe.py> [user] [session]}"
+# The probe imports this from beside itself; see desktop-probe.py.
+interaction="$(dirname "${probe}")/desktop_interaction.py"
 user="${3:-bunny}"
 session="${4:-bunny}"
 work="$(mktemp -d)"
@@ -103,6 +105,8 @@ commands=(
   # -- the probe -----------------------------------------------------------
   : upload "${probe}" "${deployment}/etc/bunny-desktop-probe.py"
   : chmod 0755 "${deployment}/etc/bunny-desktop-probe.py"
+  : upload "${interaction}" "${deployment}/etc/desktop_interaction.py"
+  : chmod 0644 "${deployment}/etc/desktop_interaction.py"
   : upload "${work}/bunny-desktop-probe.service" "${deployment}/etc/systemd/system/bunny-desktop-probe.service"
   : mkdir-p "${deployment}/etc/systemd/system/graphical.target.wants"
   : ln-sf /etc/systemd/system/bunny-desktop-probe.service
@@ -230,6 +234,7 @@ apply_label "${stateroot}/var/home/${user}" user_home_dir_t 'user_home_dir_t'
 # they were unlabeled — but a file left unlabeled is a denial waiting for a
 # policy that is one release stricter.
 apply_label "${deployment}/etc/bunny-desktop-probe.py" etc_t '^/etc/\.\*'
+apply_label "${deployment}/etc/desktop_interaction.py" etc_t '^/etc/\.\*'
 apply_label "${deployment}/etc/systemd/system/bunny-desktop-probe.service" \
   systemd_unit_file_t 'systemd_unit_file_t'
 

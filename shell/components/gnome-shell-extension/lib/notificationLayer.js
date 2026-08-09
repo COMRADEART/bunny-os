@@ -28,15 +28,10 @@ import {box, glass} from './widgets.js';
 import {ease, enter} from './animation.js';
 import {log_, makeActivatable, setAccessibleRole, timeout} from './util.js';
 import {Motion} from './tokens.js';
+import {NOTIFICATION_ICONS, resolveIconName} from './icons.js';
 
 const DISMISS_AFTER_MS = {info: 4500, warning: 7000, error: 9000};
 const MAX_VISIBLE = 3;
-
-const ICONS = {
-    info: 'dialog-information-symbolic',
-    warning: 'dialog-warning-symbolic',
-    error: 'dialog-error-symbolic',
-};
 
 export class NotificationLayer {
     constructor({blur = false} = {}) {
@@ -60,7 +55,7 @@ export class NotificationLayer {
         toast.add_style_class_name(`bunny-toast-${level}`);
         const row = box({style_class: 'bunny-toast-row'});
         row.add_child(new St.Icon({
-            icon_name: ICONS[level] ?? ICONS.info,
+            icon_name: resolveIconName(NOTIFICATION_ICONS[level] ?? NOTIFICATION_ICONS.info),
             icon_size: 16,
             style_class: 'bunny-toast-icon',
         }));

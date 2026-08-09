@@ -20,6 +20,9 @@ import GLib from 'gi://GLib';
 import St from 'gi://St';
 
 import {Metric} from './tokens.js';
+import {
+    Icons, NETWORK_ICONS, VOLUME_ICONS, batteryIcon, setIconName, themedIcon,
+} from './icons.js';
 import {box, glass} from './widgets.js';
 import {interval, makeActivatable, timeout, logError_} from './util.js';
 
@@ -74,11 +77,7 @@ export class TopBar {
 
     _buildIdentity() {
         const identity = box({style_class: 'bunny-top-identity'});
-        identity.add_child(new St.Icon({
-            icon_name: 'bunny-shell-symbolic',
-            icon_size: 18,
-            style_class: 'bunny-top-logo',
-        }));
+        identity.add_child(themedIcon(Icons.BUNNY, {size: 18, styleClass: 'bunny-top-logo'}));
         identity.add_child(new St.Label({text: 'Bunny OS', style_class: 'bunny-top-wordmark'}));
         makeActivatable(identity, () => this._context.onHome?.(), {accessibleName: 'Bunny OS home'});
         return identity;
@@ -92,11 +91,8 @@ export class TopBar {
             can_focus: true,
             x_expand: true,
         });
-        this._search.set_primary_icon(new St.Icon({
-            icon_name: 'system-search-symbolic',
-            style_class: 'bunny-search-icon',
-            icon_size: 16,
-        }));
+        this._search.set_primary_icon(
+            themedIcon(Icons.SEARCH, {size: 16, styleClass: 'bunny-search-icon'}));
         this._search.accessible_name = 'Search applications, files, settings and Bunny';
 
         this._search.clutter_text.connect('text-changed', () => {
@@ -119,20 +115,20 @@ export class TopBar {
     _buildIndicators() {
         const indicators = box({style_class: 'bunny-top-indicators'});
 
-        this._volumeIcon = this._indicatorButton('audio-volume-high-symbolic', 'Volume', () => {
+        this._volumeIcon = this._indicatorButton(VOLUME_ICONS.high, 'Volume', () => {
             this._context.audio?.toggleMute();
             this._refreshVolume();
         });
         this._volumeIcon.connect('scroll-event', (_actor, event) => this._onVolumeScroll(event));
         indicators.add_child(this._volumeIcon);
 
-        this._brightnessIcon = this._indicatorButton('display-brightness-symbolic', 'Brightness', () => {
+        this._brightnessIcon = this._indicatorButton(Icons.BRIGHTNESS, 'Brightness', () => {
             this._context.launcher?.spawn(['gnome-control-center', 'display']);
         });
         this._brightnessIcon.connect('scroll-event', (_actor, event) => this._onBrightnessScroll(event));
         indicators.add_child(this._brightnessIcon);
 
-        this._networkIcon = this._indicatorButton('network-wireless-signal-none-symbolic', 'Network', () => {
+        this._networkIcon = this._indicatorButton(NETWORK_ICONS.unknown, 'Network', () => {
             this._context.network?.openSettings();
         });
         indicators.add_child(this._networkIcon);
@@ -168,11 +164,7 @@ export class TopBar {
     }
 
     _indicatorButton(iconName, accessibleName, onActivate) {
-        const button = new St.Icon({
-            icon_name: iconName,
-            icon_size: 16,
-            style_class: 'bunny-top-indicator-icon',
-        });
+        const button = themedIcon(iconName, {size: 16, styleClass: 'bunny-top-indicator-icon'});
         makeActivatable(button, onActivate, {accessibleName});
         return button;
     }
@@ -228,13 +220,13 @@ export class TopBar {
         const volume = audio.volume();
         const muted = audio.muted();
         if (volume === null) {
-            this._volumeIcon.icon_name = 'audio-volume-muted-symbolic';
+            setIconName(this._volumeIcon, VOLUME_ICONS.muted);
             this._volumeIcon.accessible_name = 'Volume: Unavailable';
             return;
         }
         const level = muted ? 'muted' : volume < 0.01 ? 'muted'
             : volume < 0.34 ? 'low' : volume < 0.67 ? 'medium' : 'high';
-        this._volumeIcon.icon_name = `audio-volume-${level}-symbolic`;
+        setIconName(this._volumeIcon, VOLUME_ICONS[level]);
         this._volumeIcon.accessible_name = muted
             ? 'Volume muted'
             : `Volume ${Math.round(volume * 100)} percent`;
@@ -258,11 +250,11 @@ export class TopBar {
         }
         const {state, kind} = connection;
         const iconName = kind === 'wired'
-            ? (state === 'connected' ? 'network-wired-symbolic' : 'network-wired-disconnected-symbolic')
-            : state === 'connected' ? 'network-wireless-signal-excellent-symbolic'
-                : state === 'limited' ? 'network-wireless-acquiring-symbolic'
-                    : 'network-wireless-offline-symbolic';
-        this._networkIcon.icon_name = iconName;
+            ? (state === 'connected' ? NETWORK_ICONS.wiredConnected : NETWORK_ICONS.wiredDisconnected)
+            : state === 'connected' ? NETWORK_ICONS.wirelessConnected
+                : state === 'limited' ? NETWORK_ICONS.wirelessLimited
+                    : NETWORK_ICONS.wirelessOffline;
+        setIconName(this._networkIcon, iconName);
         this._networkIcon.accessible_name = `Network ${state}`;
     }
 
@@ -276,22 +268,19 @@ export class TopBar {
         if (!battery.present) {
             // The brief is explicit: a desktop says AC Power, it does not
             // invent a percentage.
-            this._batteryIcon.icon_name = 'ac-adapter-symbolic';
+            setIconName(this._batteryIcon, Icons.AC_ADAPTER);
             this._batteryLabel.text = 'AC';
             this._batteryBox.accessible_name = 'Running on AC power';
             return;
         }
         if (battery.percentage === null) {
-            this._batteryIcon.icon_name = 'battery-missing-symbolic';
+            setIconName(this._batteryIcon, Icons.BATTERY_UNKNOWN);
             this._batteryLabel.text = '';
             this._batteryBox.accessible_name = 'Battery level Unavailable';
             return;
         }
         const charging = battery.state === 'charging' || battery.state === 'full';
-        const step = Math.max(0, Math.min(100, Math.round(battery.percentage / 10) * 10));
-        this._batteryIcon.icon_name = charging
-            ? `battery-level-${step}-charging-symbolic`
-            : `battery-level-${step}-symbolic`;
+        setIconName(this._batteryIcon, batteryIcon(battery.percentage, charging));
         this._batteryLabel.text = `${battery.percentage}%`;
         this._batteryBox.accessible_name = charging
             ? `Battery ${battery.percentage} percent, charging`

@@ -285,9 +285,15 @@
 .bunny-agenda-empty-secondary { font-size: 10px; color: #8f96a4; }
 .bunny-agenda-more { font-size: 10px; color: #b4bac6; padding-left: 7px; }
 
-.bunny-monitor-rates { spacing: 8px; }
+.bunny-monitor-rates { spacing: 5px; }
 .bunny-monitor-up { font-size: 11px; font-weight: 600; color: #22c55e; }   /* Colour.SUCCESS */
 .bunny-monitor-down { font-size: 11px; font-weight: 600; color: #a78bfa; }
+/* The direction arrows. A symbolic icon takes its colour from `color`, so
+   each arrow is tinted to match the figure beside it. Two classes rather
+   than a positional selector: St's CSS has :first-child but no
+   :nth-child, and the download arrow is neither first nor last. */
+.bunny-monitor-arrow-up { icon-size: 14px; color: #22c55e; }
+.bunny-monitor-arrow-down { icon-size: 14px; color: #a78bfa; }
 .bunny-monitor-graph { border-radius: 8px; background-color: rgba(255, 255, 255, 0.03); }
 
 /* --------------------------------------------------------------- assistant */
@@ -344,7 +350,7 @@
 .bunny-suggestion-row { spacing: 9px; padding: 7px 9px; border-radius: 11px; }
 .bunny-suggestion-row:hover { background-color: rgba(255, 255, 255, 0.08); }
 .bunny-suggestion-row:focus { outline: 2px solid #a78bfa; outline-offset: -1px; }
-.bunny-suggestion-glyph { font-size: 12px; }
+.bunny-suggestion-glyph { icon-size: 16px; color: #a78bfa; }
 .bunny-suggestion-label { font-size: 11px; color: #f7f8fa; }
 .bunny-suggestions-more { font-size: 10px; color: #a78bfa; padding: 6px 9px; border-radius: 9px; }
 .bunny-suggestions-more:hover { background-color: rgba(139, 92, 246, 0.18); }

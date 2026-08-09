@@ -173,8 +173,14 @@ export class CharacterViewport {
         const name = GLib.get_real_name();
         const first = (name && name !== 'Unknown' ? name : GLib.get_user_name() ?? '')
             .trim().split(/\s+/)[0] || 'there';
+        // No emoji. The greeting is the first line of text on the desktop and
+        // it read "Good evening, Bunny □" on the first booted image, because
+        // the wave was a codepoint the installed fonts did not have. The font
+        // is installed now; the greeting still does not depend on it, because
+        // the sentence was never improved by the wave and a first impression
+        // is the worst place to find out a font is missing.
         this._hello = new St.Label({
-            text: `${timeOfDayGreeting()}, ${first} 👋`,
+            text: `${timeOfDayGreeting()}, ${first}`,
             style_class: 'bunny-greeting-primary',
         });
         this._prompt = new St.Label({

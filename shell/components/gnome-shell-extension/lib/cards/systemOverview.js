@@ -95,8 +95,14 @@ export class SystemOverview extends Card {
         this._storage.set(storage === null
             ? null
             : `${formatBytes(storage.usedBytes)} / ${formatBytes(storage.totalBytes)}`);
-        if (storage !== null)
-            this._storage.actor.accessible_description = `measured on ${storage.path}`;
+        // Which filesystem the figure is about, for a screen reader and for
+        // anyone who wonders why a 14 GB machine reports 8 GB. "Storage" is the
+        // only metric on this card whose subject is a choice rather than the
+        // machine, so it is the only one that has to name its subject.
+        this._storage.actor.accessible_description = storage === null
+            ? 'no persistent filesystem could be measured'
+            : `${formatBytes(storage.freeBytes)} free on ${storage.path}` +
+              (storage.filesystemType ? ` (${storage.filesystemType})` : '');
 
         const temperature = this._telemetry.temperature();
         this._temperature.set(temperature === null ? null : `${Math.round(temperature)}°C`);

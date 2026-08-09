@@ -34,6 +34,7 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {DesktopShell} from './lib/desktopShell.js';
+import {Icons} from './lib/icons.js';
 
 const FIXED_ACTIONS = new Map([
     ['launcher', ['/usr/bin/bunny-launcher']],
@@ -134,7 +135,7 @@ export default class BunnyShellExtension extends Extension {
     _enableIndicator() {
         this._indicator = new PanelMenu.Button(0.0, 'Bunny Shell', false);
         this._indicator.add_child(new St.Icon({
-            icon_name: 'bunny-shell-symbolic',
+            icon_name: Icons.BUNNY,
             style_class: 'system-status-icon bunny-shell-icon',
         }));
         this._statusItem = new PopupMenu.PopupMenuItem('Bunny OS · status not yet verified', {reactive: false});

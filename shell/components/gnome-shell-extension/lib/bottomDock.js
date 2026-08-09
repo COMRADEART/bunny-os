@@ -28,19 +28,20 @@ import {box, glass, iconTile} from './widgets.js';
 import {ease} from './animation.js';
 import {interval} from './util.js';
 import {Motion} from './tokens.js';
+import {Icons} from './icons.js';
 
 /**
  * `app` is a logical name understood by ApplicationLauncher; `command` is a
  * shell surface run directly. Exactly one of the two is set.
  */
 export const DOCK_ITEMS = [
-    {id: 'assistant', label: 'Bunny Assistant', icon: 'bunny-shell-symbolic', command: ['bunny-command']},
+    {id: 'assistant', label: 'Bunny Assistant', icon: Icons.BUNNY, command: ['bunny-command']},
     {id: 'files', label: 'Files', app: 'files'},
     {id: 'browser', label: 'Browser', app: 'browser'},
     {id: 'vscode', label: 'VS Code', app: 'vscode'},
     {id: 'terminal', label: 'Terminal', app: 'terminal'},
     {id: 'spotify', label: 'Spotify', app: 'spotify'},
-    {id: 'applications', label: 'Applications', icon: 'view-app-grid-symbolic', overview: true},
+    {id: 'applications', label: 'Applications', icon: Icons.APPS, overview: true},
 ];
 
 export class BottomDock {

@@ -38,13 +38,13 @@
 // Nothing else. createRenderer() is the only place that knows which
 // implementations exist.
 
-import Cairo from 'cairo';
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
 
 import {DEFAULT_CHARACTER} from './definition.js';
+import {drawFigure} from './figure.js';
 import {animationsEnabled} from '../animation.js';
 import {clamp, logOnce, logError_} from '../util.js';
 
@@ -91,6 +91,7 @@ class PoseAnimator {
         this._blink = 1;
         this._level = 0;
         this._talkPhase = 0;
+        this._indicatorPhase = 0;
     }
 
     setState(state) {
@@ -111,10 +112,14 @@ class PoseAnimator {
             this._current[key] = from + (to - from) * k;
         }
         this._current.accent = this._target.accent;
+        this._current.indicator = this._target.indicator ?? 'none';
 
         const period = (this._target.period ?? 4000) / 1000;
         this._phase = (this._phase + deltaSeconds / period) % 1;
         this._talkPhase = (this._talkPhase + deltaSeconds * 7.5) % 1;
+        // The indicator runs on its own slow clock rather than the body's, so a
+        // thinking figure's dots do not pulse in lockstep with its breathing.
+        this._indicatorPhase = (this._indicatorPhase + deltaSeconds / 1.6) % 1;
 
         this._advanceBlink(deltaSeconds);
     }
@@ -162,6 +167,8 @@ class PoseAnimator {
             mouthOpen: mouth,
             glow: this._current.glow,
             accent: this._current.accent ?? 'rimLight',
+            indicator: this._current.indicator ?? 'none',
+            indicatorPhase: this._indicatorPhase,
         };
     }
 }
@@ -299,391 +306,3 @@ export class ImageCharacterRenderer {
     }
 }
 
-// --------------------------------------------------------------------------
-// The drawing itself. Pure functions of (context, definition, pose, size), so
-// nothing here holds state and the same code draws any definition.
-// --------------------------------------------------------------------------
-
-const BOX_WIDTH = 100;
-const BOX_HEIGHT = 150;
-
-function setColour(cr, palette, name, alpha = 1) {
-    const [r, g, b] = palette[name] ?? [1, 0, 1];
-    cr.setSourceRGBA(r, g, b, alpha);
-}
-
-/** A vertical capsule: the shape every limb and the torso are built from. */
-function capsule(cr, x, yTop, yBottom, topHalf, bottomHalf) {
-    cr.newPath();
-    cr.arc(x, yTop, topHalf, Math.PI, 0);
-    cr.lineTo(x + bottomHalf, yBottom);
-    cr.arc(x, yBottom, bottomHalf, 0, Math.PI);
-    cr.closePath();
-}
-
-function drawFigure(cr, definition, pose, width, height) {
-    const palette = definition.palette;
-    const g = definition.geometry;
-
-    // Fit the 100x150 box into the allocation, centred, with the feet a little
-    // above the bottom edge so the floor glow has room.
-    const scale = Math.min(width / BOX_WIDTH, height / BOX_HEIGHT);
-    cr.save();
-    cr.translate((width - BOX_WIDTH * scale) / 2, (height - BOX_HEIGHT * scale) / 2);
-    cr.scale(scale, scale);
-
-    const bob = pose.bob;
-    const lean = pose.lean;
-
-    // Ground shadow first, and it does not bob with the figure — it tightens
-    // instead. A shadow that moved with the body would look like the floor was
-    // moving.
-    const shadowTightness = 1 - bob * 0.04;
-    cr.save();
-    cr.translate(BOX_WIDTH / 2, g.groundShadow.y);
-    cr.scale(g.groundShadow.radiusX * shadowTightness, g.groundShadow.radiusY * shadowTightness);
-    cr.arc(0, 0, 1, 0, Math.PI * 2);
-    cr.restore();
-    cr.setSourceRGBA(0, 0, 0, 0.42);
-    cr.fill();
-
-    cr.save();
-    // The lean pivots at the feet, not the centre, or the figure slides.
-    cr.translate(BOX_WIDTH / 2, g.groundShadow.y);
-    cr.rotate((lean * Math.PI) / 180);
-    cr.translate(-BOX_WIDTH / 2, -g.groundShadow.y + bob);
-
-    drawHood(cr, palette, g);
-    drawLegs(cr, palette, g);
-    drawTorso(cr, palette, g, pose);
-    drawArms(cr, palette, g, pose);
-    drawNeck(cr, palette, g);
-    drawHead(cr, palette, g, pose);
-    drawLogo(cr, palette, g, pose);
-    drawRimLight(cr, palette, g, pose);
-
-    cr.restore();
-    cr.restore();
-}
-
-function drawHood(cr, palette, g) {
-    // The hood sits behind the head and shoulders: a wide arc that reads as
-    // fabric bunched at the neck.
-    cr.newPath();
-    cr.moveTo(50 - g.hood.halfWidth, g.shoulder.y + 2);
-    cr.curveTo(
-        50 - g.hood.halfWidth - 2, g.hood.y - g.hood.depth,
-        50 + g.hood.halfWidth + 2, g.hood.y - g.hood.depth,
-        50 + g.hood.halfWidth, g.shoulder.y + 2);
-    cr.closePath();
-    setColour(cr, palette, 'hood');
-    cr.fill();
-}
-
-function drawLegs(cr, palette, g) {
-    const half = g.leg.separation / 2;
-    for (const side of [-1, 1]) {
-        const x = 50 + side * half;
-        capsule(cr, x, g.hip.y + 2, g.hip.y + g.leg.length,
-            g.leg.thighWidth / 2, g.leg.ankleWidth / 2);
-        const gradient = new Cairo.LinearGradient(x - 6, 0, x + 6, 0);
-        const [r, gg, b] = palette.trousers;
-        const [hr, hg, hb] = palette.trousersHighlight;
-        gradient.addColorStopRGBA(0, hr, hg, hb, 1);
-        gradient.addColorStopRGBA(0.55, r, gg, b, 1);
-        gradient.addColorStopRGBA(1, r * 0.8, gg * 0.8, b * 0.8, 1);
-        cr.setSource(gradient);
-        cr.fill();
-    }
-
-    // Sneakers. Both point outwards from the centre line, so the toe direction
-    // is the side sign and the whole shape is drawn once in a mirrored frame
-    // rather than twice with a sign scattered through every coordinate.
-    for (const side of [-1, 1]) {
-        const x = 50 + side * half;
-        const top = g.hip.y + g.leg.length - 1;
-        const upper = g.shoe.height - g.shoe.soleHeight;
-        const heel = g.leg.ankleWidth / 2 + 1.5;
-        const toe = g.shoe.length - heel;
-
-        cr.save();
-        cr.translate(x, top);
-        cr.scale(side, 1);
-
-        cr.newPath();
-        cr.moveTo(-heel, 0);
-        cr.lineTo(g.leg.ankleWidth / 2, -1.2);
-        cr.curveTo(toe * 0.55, 0.4, toe * 0.92, upper * 0.45, toe, upper);
-        cr.lineTo(-heel, upper);
-        cr.closePath();
-        setColour(cr, palette, 'shoe');
-        cr.fill();
-
-        cr.newPath();
-        cr.rectangle(-heel, upper, heel + toe, g.shoe.soleHeight);
-        setColour(cr, palette, 'shoeSole');
-        cr.fill();
-
-        cr.newPath();
-        cr.rectangle(-1.0, 1.0, 1.7, upper - 2.0);
-        setColour(cr, palette, 'shoeAccent');
-        cr.fill();
-        cr.restore();
-    }
-}
-
-function drawTorso(cr, palette, g, pose) {
-    const breathe = pose.breathe * 0.5;
-    capsule(cr, 50, g.torso.top + 4, g.torso.bottom,
-        g.torso.topHalfWidth + breathe, g.torso.bottomHalfWidth);
-    const gradient = new Cairo.LinearGradient(50 - g.torso.topHalfWidth, 0, 50 + g.torso.topHalfWidth, 0);
-    const [r, gg, b] = palette.hoodie;
-    const [hr, hg, hb] = palette.hoodieHighlight;
-    const [sr, sg, sb] = palette.hoodieShadow;
-    gradient.addColorStopRGBA(0, hr, hg, hb, 1);
-    gradient.addColorStopRGBA(0.42, r, gg, b, 1);
-    gradient.addColorStopRGBA(1, sr, sg, sb, 1);
-    cr.setSource(gradient);
-    cr.fill();
-
-    // Pocket seam and the two drawstrings: the details that make it read as a
-    // hoodie rather than a jumper, at three paths.
-    cr.newPath();
-    cr.moveTo(50 - 11, g.torso.bottom - 12);
-    cr.curveTo(50 - 5, g.torso.bottom - 8, 50 + 5, g.torso.bottom - 8, 50 + 11, g.torso.bottom - 12);
-    setColour(cr, palette, 'hoodieShadow');
-    cr.setLineWidth(0.9);
-    cr.stroke();
-
-    setColour(cr, palette, 'drawstring');
-    cr.setLineWidth(0.8);
-    for (const side of [-1, 1]) {
-        cr.newPath();
-        cr.moveTo(50 + side * 3.2, g.torso.top + 5);
-        cr.curveTo(
-            50 + side * 3.6, g.torso.top + 10,
-            50 + side * 2.4, g.torso.top + 13,
-            50 + side * 3.0, g.torso.top + 16);
-        cr.stroke();
-    }
-}
-
-function drawArms(cr, palette, g, pose) {
-    const lift = pose.armLift;
-    for (const side of [-1, 1]) {
-        const shoulderX = 50 + side * (g.shoulder.halfWidth - g.arm.shoulderInset);
-        const shoulderY = g.shoulder.y + 1;
-        // Lift swings the hand outwards and upwards around the shoulder.
-        const angle = side * (0.10 + lift * 0.75);
-        const handX = shoulderX + Math.sin(angle) * g.arm.length;
-        const handY = shoulderY + Math.cos(angle) * g.arm.length;
-
-        cr.save();
-        cr.setLineCap(Cairo.LineCap.ROUND);
-        cr.newPath();
-        cr.moveTo(shoulderX, shoulderY);
-        // One control point at the elbow, offset against the swing so the arm
-        // bends rather than pivoting like a stick.
-        cr.curveTo(
-            shoulderX + Math.sin(angle) * g.arm.length * 0.35 - side * 1.5,
-            shoulderY + g.arm.length * 0.42,
-            handX - side * 1.0, handY - g.arm.length * 0.22,
-            handX, handY);
-        setColour(cr, palette, 'hoodie');
-        cr.setLineWidth(g.sleeve.width);
-        cr.strokePreserve();
-        setColour(cr, palette, side < 0 ? 'hoodieHighlight' : 'hoodieShadow', 0.55);
-        cr.setLineWidth(g.sleeve.width - 3.2);
-        cr.stroke();
-        cr.restore();
-
-        cr.newPath();
-        cr.arc(handX, handY + 1.4, g.arm.handRadius, 0, Math.PI * 2);
-        setColour(cr, palette, side < 0 ? 'skin' : 'skinShadow');
-        cr.fill();
-    }
-}
-
-function drawNeck(cr, palette, g) {
-    capsule(cr, g.neck.x, g.neck.top, g.neck.bottom, g.neck.width / 2, g.neck.width / 2);
-    setColour(cr, palette, 'skinShadow');
-    cr.fill();
-}
-
-function drawHead(cr, palette, g, pose) {
-    const [cx, cy] = g.headCentre;
-    const radius = g.headRadius;
-
-    cr.save();
-    cr.translate(cx, cy);
-    cr.rotate((pose.headTilt * Math.PI) / 180);
-    cr.translate(-cx, -cy);
-
-    // Hair, behind: a slightly larger dome so it shows as an outline.
-    cr.newPath();
-    cr.arc(cx, cy - 1.2, radius + 1.4, Math.PI, Math.PI * 2);
-    cr.lineTo(cx + radius + 1.4, cy + 3);
-    cr.lineTo(cx - radius - 1.4, cy + 3);
-    cr.closePath();
-    setColour(cr, palette, 'hair');
-    cr.fill();
-
-    // Face: a circle narrowed towards the jaw.
-    cr.save();
-    cr.translate(cx, cy);
-    cr.scale(1, 1.06);
-    cr.newPath();
-    cr.arc(0, 0, radius, 0, Math.PI * 2);
-    cr.restore();
-    const faceGradient = new Cairo.LinearGradient(cx - radius, 0, cx + radius, 0);
-    const [kr, kg, kb] = palette.skin;
-    const [dr, dg, db] = palette.skinShadow;
-    faceGradient.addColorStopRGBA(0, Math.min(1, kr * 1.06), Math.min(1, kg * 1.06), Math.min(1, kb * 1.06), 1);
-    faceGradient.addColorStopRGBA(0.6, kr, kg, kb, 1);
-    faceGradient.addColorStopRGBA(1, dr, dg, db, 1);
-    cr.setSource(faceGradient);
-    cr.fill();
-
-    // Fringe, in front of the face.
-    cr.newPath();
-    cr.moveTo(cx - radius - 0.6, cy - 2.4);
-    cr.curveTo(cx - radius * 0.6, cy - radius - 2.2, cx + radius * 0.5, cy - radius - 2.6,
-        cx + radius + 0.4, cy - 3.6);
-    cr.curveTo(cx + radius * 0.5, cy - radius * 0.42, cx - radius * 0.2, cy - radius * 0.30,
-        cx - radius - 0.6, cy - 2.4);
-    cr.closePath();
-    setColour(cr, palette, 'hair');
-    cr.fill();
-    cr.newPath();
-    cr.moveTo(cx - radius * 0.42, cy - radius * 0.86);
-    cr.curveTo(cx - radius * 0.10, cy - radius * 1.06, cx + radius * 0.24, cy - radius * 1.00,
-        cx + radius * 0.46, cy - radius * 0.78);
-    setColour(cr, palette, 'hairHighlight', 0.75);
-    cr.setLineWidth(1.1);
-    cr.stroke();
-
-    drawFace(cr, palette, g, pose, cx, cy);
-    cr.restore();
-}
-
-function drawFace(cr, palette, g, pose, cx, cy) {
-    const open = pose.eyeOpen;
-    for (const side of [-1, 1]) {
-        const ex = cx + side * g.eyes.offsetX;
-        const ey = cy + g.eyes.offsetY;
-        if (open < 0.12) {
-            // A closed eye is a line, not a squashed circle: a 0.1-tall ellipse
-            // renders as a grey smudge at this scale.
-            cr.newPath();
-            cr.moveTo(ex - g.eyes.radius, ey);
-            cr.lineTo(ex + g.eyes.radius, ey);
-            setColour(cr, palette, 'eye');
-            cr.setLineWidth(0.85);
-            cr.stroke();
-            continue;
-        }
-        cr.save();
-        cr.translate(ex, ey);
-        cr.scale(1, Math.max(0.12, open));
-        cr.newPath();
-        cr.arc(0, 0, g.eyes.radius, 0, Math.PI * 2);
-        cr.restore();
-        setColour(cr, palette, 'eye');
-        cr.fill();
-
-        // Catchlight. One pixel of white is the difference between an eye and a
-        // dot, and it is the cheapest thing in this file.
-        cr.newPath();
-        cr.arc(ex + 0.6, ey - 0.6 * open, g.eyes.radius * 0.32, 0, Math.PI * 2);
-        cr.setSourceRGBA(1, 1, 1, 0.85 * open);
-        cr.fill();
-
-        cr.newPath();
-        cr.moveTo(ex - g.brow.length / 2, ey + g.brow.offsetY);
-        cr.lineTo(ex + g.brow.length / 2, ey + g.brow.offsetY - side * 0.35);
-        setColour(cr, palette, 'hair');
-        cr.setLineWidth(0.95);
-        cr.stroke();
-    }
-
-    const mouthY = cy + g.mouth.offsetY;
-    const opening = pose.mouthOpen;
-    cr.newPath();
-    if (opening < 0.10) {
-        cr.moveTo(cx - g.mouth.width / 2, mouthY);
-        cr.curveTo(cx - g.mouth.width / 6, mouthY + 0.9,
-            cx + g.mouth.width / 6, mouthY + 0.9,
-            cx + g.mouth.width / 2, mouthY);
-        setColour(cr, palette, 'mouth');
-        cr.setLineWidth(0.9);
-        cr.stroke();
-    } else {
-        cr.save();
-        cr.translate(cx, mouthY);
-        cr.scale(g.mouth.width / 2, Math.max(0.6, opening * 3.0));
-        cr.arc(0, 0, 1, 0, Math.PI * 2);
-        cr.restore();
-        setColour(cr, palette, 'mouth');
-        cr.fill();
-    }
-}
-
-/** The Bunny mark on the chest: two ears and a head, in the accent colour. */
-function drawLogo(cr, palette, g, pose) {
-    const [lx, ly] = g.logo.centre;
-    const size = g.logo.size;
-    const breathe = pose.breathe * 0.25;
-    cr.save();
-    cr.translate(lx, ly + breathe);
-    cr.scale(size / 12, size / 12);
-    setColour(cr, palette, 'logo', 0.95);
-    for (const side of [-1, 1]) {
-        cr.save();
-        cr.translate(side * 2.4, -3.4);
-        cr.rotate((side * 12 * Math.PI) / 180);
-        cr.scale(1, 2.6);
-        cr.newPath();
-        cr.arc(0, 0, 1.45, 0, Math.PI * 2);
-        cr.restore();
-        cr.fill();
-    }
-    cr.newPath();
-    cr.arc(0, 2.6, 3.5, 0, Math.PI * 2);
-    cr.fill();
-    cr.restore();
-}
-
-/**
- * The violet edge light.
- *
- * Drawn last, as a stroke down the figure's left silhouette. It is what makes
- * a flat vector figure sit in the scene rather than on it, and it is the one
- * place the character picks up the state colour — success turns the rim green,
- * error turns it red — so the state is legible from across the room without
- * reading the bubble.
- */
-function drawRimLight(cr, palette, g, pose) {
-    const colour = palette[pose.accent] ?? palette.rimLight;
-    const [r, gg, b] = colour;
-    const strength = clamp(0.34 * pose.glow, 0, 0.8);
-    cr.save();
-    cr.setLineCap(Cairo.LineCap.ROUND);
-    cr.setSourceRGBA(r, gg, b, strength);
-    cr.setLineWidth(1.5);
-
-    cr.newPath();
-    cr.arc(g.headCentre[0], g.headCentre[1], g.headRadius + 0.4,
-        Math.PI * 0.62, Math.PI * 1.30);
-    cr.stroke();
-
-    cr.newPath();
-    cr.moveTo(50 - g.torso.topHalfWidth + 0.6, g.torso.top + 6);
-    cr.lineTo(50 - g.torso.bottomHalfWidth + 0.4, g.torso.bottom - 2);
-    cr.stroke();
-
-    cr.newPath();
-    cr.moveTo(50 - g.leg.separation / 2 - g.leg.thighWidth / 2 + 0.4, g.hip.y + 4);
-    cr.lineTo(50 - g.leg.separation / 2 - g.leg.ankleWidth / 2 + 0.4, g.hip.y + g.leg.length - 2);
-    cr.stroke();
-    cr.restore();
-}

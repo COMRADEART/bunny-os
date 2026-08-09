@@ -22,6 +22,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
 import {logError_, logOnce} from '../util.js';
+import {Icons} from '../icons.js';
 
 const FILE_SEARCH = 'bunny-search';
 
@@ -147,7 +148,7 @@ export class UniversalSearch {
                 kind: 'setting',
                 title: entry.name,
                 subtitle: 'Settings',
-                iconName: 'preferences-system-symbolic',
+                iconName: Icons.SETTINGS,
                 activate: () => this._launcher.spawn(['gnome-control-center', entry.panel]),
             });
             if (results.filter(row => row.kind === 'setting').length >= 3)

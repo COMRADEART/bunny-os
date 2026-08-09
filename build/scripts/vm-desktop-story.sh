@@ -55,6 +55,9 @@ mkdir -p "${work}/screens"
 disk="${work}/disk.qcow2"
 log="${work}/serial.log"
 qmp="${work}/qmp.sock"
+control="${work}/control.sock"
+#: Set to 0 to photograph only, without pressing anything.
+interact="${BUNNY_DESKTOP_INTERACT:-1}"
 
 echo "source image: ${source_image}"
 echo "work:         ${work}"
@@ -73,7 +76,7 @@ fi
 cat "${work}/inject.log"
 
 firmware="$(bunny_firmware)" || exit 3
-rm -f "${qmp}"
+rm -f "${qmp}" "${control}"
 : >"${log}"
 
 echo "--- booting (${seconds}s budget) ---"
@@ -83,6 +86,19 @@ echo "--- booting (${seconds}s budget) ---"
 #
 # -display none keeps QEMU headless on a machine with no X; the framebuffer is
 # still emulated, which is all screendump needs.
+#
+# Two devices exist for the interaction test and are the reason it can be
+# performed at all:
+#
+#   virtio-tablet-pci  an *absolute* pointer. QMP `input-send-event` can only
+#                      send absolute coordinates to a device that has absolute
+#                      axes, and without one the guest has no pointer at all —
+#                      which is why every earlier run of this harness could
+#                      photograph the dock and never press it.
+#   virtserialport     a two-way channel to the injected probe. The host holds
+#                      the interaction script and the guest holds the evidence,
+#                      and neither can do the other's half; see
+#                      build/scripts/desktop-drive.py.
 qemu-system-x86_64 \
   -machine q35,accel=kvm:tcg \
   -cpu max \
@@ -92,6 +108,10 @@ qemu-system-x86_64 \
   -drive "file=${disk},format=qcow2,if=virtio" \
   -device virtio-net-pci,netdev=net0 -netdev user,id=net0 \
   -device "virtio-vga,xres=${width},yres=${height}" \
+  -device virtio-tablet-pci \
+  -device virtio-serial-pci \
+  -chardev "socket,id=bunnyctl,path=${control},server=on,wait=off" \
+  -device virtserialport,chardev=bunnyctl,name=org.bunny-os.control \
   -display none \
   -serial "file:${log}" \
   -qmp "unix:${qmp},server,nowait" \
@@ -140,6 +160,23 @@ for at in ${shots}; do
     echo "screendump failed at t=${at}s" >&2
   fi
 done
+
+interaction_status=skipped
+if [[ "${interact}" == "1" ]]; then
+  echo "--- interaction (clicking the Bunny UI) ---"
+  # The driver blocks until the guest's probe announces itself on the control
+  # channel, so it is started after the screenshots rather than racing them.
+  if python3 build/scripts/desktop-drive.py \
+      --qmp "${qmp}" --control "${control}" \
+      --width "${width}" --height "${height}" \
+      --screens "${work}/screens" \
+      --output "${work}/interaction.json"; then
+    interaction_status=complete
+  else
+    interaction_status=failed
+    echo "the interaction driver reported a failure; see ${work}/interaction.json" >&2
+  fi
+fi
 
 echo "--- shutting down ---"
 python3 build/scripts/qmp-screendump.py --socket "${qmp}" --powerdown || true
@@ -191,10 +228,60 @@ else
   python3 build/scripts/ppm-to-png.py "${work}/screens" || true
 fi
 
+# The file the terminal was told to write, read out of the guest's disk.
+#
+# This is the one piece of evidence in the run that cannot be produced by
+# anything except a keystroke arriving in a focused terminal window. A mapped
+# window that never took focus, or a terminal that opened without a shell, both
+# look exactly like success in a photograph and neither can create this file.
+typed_marker="${work}/terminal-typed.txt"
+rm -f "${typed_marker}"
+if [[ -n "${deployment}" ]]; then
+  if guestfish --ro -a "${disk}" run : mount "${root_partition}" / \
+       : download "${stateroot}/var/home/${user}/bunny-terminal-typed.txt" \
+         "${typed_marker}" 2>/dev/null; then
+    echo "the terminal wrote: $(tr -d '\r\n' <"${typed_marker}")"
+  else
+    echo "no file was written by the terminal" >&2
+  fi
+fi
+
 echo
 echo "serial log:   ${log}"
 echo "screenshots:  ${work}/screens"
 echo "probe record: ${probe_json}"
+if [[ "${interact}" == "1" ]]; then
+  echo "interaction:  ${work}/interaction.json (${interaction_status})"
+  if [[ -s "${work}/interaction.json" ]]; then
+    python3 - "${work}/interaction.json" "${typed_marker}" <<'PYTHON'
+import json, sys, pathlib
+report = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+marker = pathlib.Path(sys.argv[2])
+
+
+def verdict(name):
+    opened = report.get(name) or {}
+    closed = report.get(f"{name}Closed") or {}
+    return (
+        f"  {name:9s} launched={opened.get('launched')} "
+        f"window={opened.get('windowVisible')} "
+        f"closed={closed.get('windowVisible') is False}"
+    )
+
+
+print(f"  status:   {report.get('status')}")
+print(f"  baseline clean: {report.get('baselineClean')}")
+print(f"  targets found:  {', '.join(sorted(report.get('targets', {}))) or 'none'}")
+print(verdict("files"))
+print(verdict("terminal"))
+print(f"  keyboard reached the terminal: {marker.is_file() and marker.stat().st_size > 0}")
+for key in ("shellAfterFiles", "shellAfterTerminal"):
+    state = report.get(key) or {}
+    print(f"  {key}: responded={state.get('responded')} "
+          f"extensionEnabled={state.get('extensionEnabled')}")
+PYTHON
+  fi
+fi
 [[ -s "${probe_json}" ]] || exit 6
 python3 - "${probe_json}" <<'PYTHON'
 import json, sys, pathlib

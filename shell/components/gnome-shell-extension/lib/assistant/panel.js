@@ -23,6 +23,7 @@ import {Card} from '../cards/base.js';
 import {box} from '../widgets.js';
 import {enter} from '../animation.js';
 import {makeActivatable} from '../util.js';
+import {Icons, themedIcon} from '../icons.js';
 
 /** Transcript entries kept in the card. Older ones live in the companion store. */
 const MAX_TURNS = 6;
@@ -66,11 +67,11 @@ export class AssistantPanel extends Card {
         this._entry.clutter_text.connect('activate', () => this._submit());
         inputRow.add_child(this._entry);
 
-        this._microphone = this._iconButton('audio-input-microphone-symbolic', 'Speak to Bunny',
+        this._microphone = this._iconButton(Icons.MICROPHONE, 'Speak to Bunny',
             () => this._context.onVoice?.());
         inputRow.add_child(this._microphone);
 
-        this._send = this._iconButton('go-next-symbolic', 'Send', () => this._submit());
+        this._send = this._iconButton(Icons.SEND, 'Send', () => this._submit());
         inputRow.add_child(this._send);
         this.content.add_child(inputRow);
     }
@@ -148,7 +149,7 @@ export class AssistantPanel extends Card {
 
     _iconButton(iconName, accessibleName, onActivate) {
         const button = box({style_class: 'bunny-assistant-icon-button'});
-        button.add_child(new St.Icon({icon_name: iconName, icon_size: 16}));
+        button.add_child(themedIcon(iconName, {size: 16}));
         button.y_align = Clutter.ActorAlign.CENTER;
         makeActivatable(button, onActivate, {accessibleName});
         return button;

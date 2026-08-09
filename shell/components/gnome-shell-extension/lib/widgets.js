@@ -19,6 +19,7 @@ import St from 'gi://St';
 import Shell from 'gi://Shell';
 
 import {Colour} from './tokens.js';
+import {resolveIconName} from './icons.js';
 import {logOnce, makeActivatable} from './util.js';
 
 export const UNAVAILABLE = 'Unavailable';
@@ -179,7 +180,7 @@ export function iconTile({gicon = null, iconName = null, iconSize = 28, label = 
     if (gicon)
         icon.gicon = gicon;
     else if (iconName)
-        icon.icon_name = iconName;
+        icon.icon_name = resolveIconName(iconName);
     tile.add_child(icon);
     if (label !== null)
         tile.add_child(new St.Label({text: label, style_class: 'bunny-tile-label'}));

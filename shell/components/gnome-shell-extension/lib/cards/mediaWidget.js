@@ -21,6 +21,7 @@ import St from 'gi://St';
 import {Card} from './base.js';
 import {box, Meter} from '../widgets.js';
 import {makeActivatable, logOnce} from '../util.js';
+import {Icons, MEDIA_ICONS, setIconName, themedIcon} from '../icons.js';
 
 export class MediaWidget extends Card {
     constructor({media, blur}) {
@@ -29,7 +30,7 @@ export class MediaWidget extends Card {
 
         const row = box({style_class: 'bunny-media-row'});
         this._art = new St.Icon({
-            icon_name: 'audio-x-generic-symbolic',
+            icon_name: Icons.MEDIA_GENERIC,
             icon_size: 44,
             style_class: 'bunny-media-art',
         });
@@ -46,11 +47,11 @@ export class MediaWidget extends Card {
         this.content.add_child(row);
 
         const controls = box({style_class: 'bunny-media-controls'});
-        this._previous = this._control('media-skip-backward-symbolic', 'Previous track',
+        this._previous = this._control(MEDIA_ICONS.previous, 'Previous track',
             () => this._media.previous());
-        this._playPause = this._control('media-playback-start-symbolic', 'Play or pause',
+        this._playPause = this._control(MEDIA_ICONS.play, 'Play or pause',
             () => this._media.playPause());
-        this._next = this._control('media-skip-forward-symbolic', 'Next track',
+        this._next = this._control(MEDIA_ICONS.next, 'Next track',
             () => this._media.next());
         controls.add_child(this._previous);
         controls.add_child(this._playPause);
@@ -88,9 +89,8 @@ export class MediaWidget extends Card {
         this._setArt(track.artUrl);
 
         const playing = track.status === 'Playing';
-        this._playPause.iconActor.icon_name = playing
-            ? 'media-playback-pause-symbolic'
-            : 'media-playback-start-symbolic';
+        setIconName(this._playPause.iconActor,
+            playing ? MEDIA_ICONS.pause : MEDIA_ICONS.play);
         this._playPause.accessible_name = playing ? 'Pause' : 'Play';
         this._previous.visible = track.canGoPrevious;
         this._next.visible = track.canGoNext;
@@ -119,7 +119,7 @@ export class MediaWidget extends Card {
 
     _control(iconName, accessibleName, onActivate) {
         const button = box({style_class: 'bunny-media-button'});
-        const icon = new St.Icon({icon_name: iconName, icon_size: 16});
+        const icon = themedIcon(iconName, {size: 16});
         button.add_child(icon);
         button.iconActor = icon;
         makeActivatable(button, onActivate, {accessibleName});
@@ -129,7 +129,7 @@ export class MediaWidget extends Card {
     _setArt(artUrl) {
         if (!artUrl) {
             this._art.gicon = null;
-            this._art.icon_name = 'audio-x-generic-symbolic';
+            setIconName(this._art, Icons.MEDIA_GENERIC);
             return;
         }
         // file: only. See the module note: this process does not fetch.
@@ -137,14 +137,14 @@ export class MediaWidget extends Card {
             logOnce('media-art-remote',
                 'a media player published remote album art; it is not fetched and the placeholder is shown');
             this._art.gicon = null;
-            this._art.icon_name = 'audio-x-generic-symbolic';
+            setIconName(this._art, Icons.MEDIA_GENERIC);
             return;
         }
         try {
             this._art.gicon = Gio.FileIcon.new(Gio.File.new_for_uri(artUrl));
         } catch (_error) {
             this._art.gicon = null;
-            this._art.icon_name = 'audio-x-generic-symbolic';
+            setIconName(this._art, Icons.MEDIA_GENERIC);
         }
     }
 }
