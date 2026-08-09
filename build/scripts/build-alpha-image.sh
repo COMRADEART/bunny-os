@@ -35,10 +35,6 @@ echo "  profile      beta (the installed desktop payload; see the comment in thi
 BUNNY_RELEASE_CHANNEL=alpha "${BASH:-/usr/bin/bash}" build/scripts/build-image.sh beta
 
 output="${repository_root}/build/out/beta"
-python3 build/scripts/write-media-manifest.py \
-  --root "${output}" \
-  --source-commit "${source_commit}" \
-  --image-version "${version}-alpha.${source_commit:0:12}"
 
 # §39: the image filename carries the identity. Derived from the same fields the
 # running system reports through `bunny-os companion identity`, so a downloaded
@@ -58,6 +54,28 @@ while IFS= read -r artifact; do
   echo "  artifact     ${target}"
 done < <(find "${output}" -type f \( -name '*.qcow2' -o -name '*.raw' -o -name '*.iso' \) \
            -not -path '*/alpha-story/*' | sort)
+
+# build-image writes provenance for image-builder's generic filenames. The
+# Alpha wrapper gives the media its public identity above, so regenerate both
+# records only after those final paths exist. This keeps provenance.json,
+# SHA256SUMS and BUNNY-MANIFEST.json bound to the files a user actually gets.
+base_image="${BUNNY_BASE_IMAGE:-quay.io/fedora/fedora-bootc:44}"
+provenance_arguments=(
+  --profile beta
+  --output "${output}"
+  --source-commit "${source_commit}"
+  --source-date-epoch "${source_epoch}"
+  --base-image "${base_image}"
+  --image-reference "localhost/bunny-os-beta:${source_commit:0:12}"
+)
+if [[ "${BUNNY_ARCHIVE_ONLY:-0}" == "1" ]]; then
+  provenance_arguments+=(--archive-only)
+fi
+python3 build/scripts/write-build-provenance.py "${provenance_arguments[@]}"
+python3 build/scripts/write-media-manifest.py \
+  --root "${output}" \
+  --source-commit "${source_commit}" \
+  --image-version "${version}-alpha.${source_commit:0:12}"
 
 echo
 echo "This is an Alpha build. It is not a release candidate and this branch makes"

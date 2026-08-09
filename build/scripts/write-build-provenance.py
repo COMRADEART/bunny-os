@@ -52,7 +52,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    DISK_SUFFIXES = {".qcow2", ".raw", ".iso", ".vmdk"}
+    DISK_SUFFIXES = {".qcow2", ".raw", ".iso", ".img", ".vmdk"}
     artifacts = []
     disk_images = []
     for path in sorted(args.output.rglob("*")):

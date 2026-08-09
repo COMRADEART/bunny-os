@@ -5,9 +5,9 @@
 - Bunny Shell push-to-talk uses the canonical companion capture, recognition,
   assistant-action and TTS path. The Alpha image definition now declares
   Fedora's native Vosk runtime and bundles the reviewed small English model;
-  the build has not yet run on a Fedora image builder, so installed-package and
-  model discovery remain artifact-validation blockers. No model is downloaded
-  automatically.
+  Fedora image composition completed with the package/model postconditions
+  satisfied. Artifact boot and graphical-session model discovery remain
+  acceptance blockers. No model is downloaded automatically.
 - This Windows run could not boot GNOME/Mutter/Wayland or exercise a physical
   microphone/speaker. Spoken `Open Files`, offline voice, TTS audibility and
   speech interruption remain graphical acceptance blockers.
@@ -15,8 +15,10 @@
   screenshot acceptance run exists.
 - Wake-word capture is deliberately disabled and cannot be enabled by settings.
 
-- No OCI/disk artifact was built in this Windows environment: Podman/Docker, unified `image-builder`, QEMU, OVMF, libguestfs, systemd tooling, Syft, ShellCheck, Cosign, and a Linux/KVM executor were unavailable.
-- Consequently boot, first-login, GNOME, networking, audio, suspend, broker/systemd runtime, update staging, rollback, recovery boot, Secure Boot, disk encryption, SBOM generation, and hardware behavior are unvalidated.
+- An unsigned Alpha OCI, QCOW2 and raw artifact has been composed with Fedora's
+  unified `image-builder` under WSL. It has not been installed or accepted as
+  release media.
+- Consequently boot, first-login, GNOME, networking, physical audio, suspend, broker/systemd runtime, update staging, rollback, recovery boot, Secure Boot, disk encryption, and hardware behavior are unvalidated.
 - The Bunny 0.2.0 integration is an explicit schema-described placeholder. Upstream reports did not qualify a signed Linux desktop artifact.
 - Release base digest, Fedora repository snapshots, update public keys, registry signature policy, key ceremony, and artifact signing are not provisioned. Developer updates are disabled.
 - Repeated builds and bit-for-bit/semantic reproducibility comparison have not run.
