@@ -108,8 +108,8 @@ from gi.repository import Atspi
 
 Atspi.init()
 
-def describe(node, depth=0, limit=4):
-    """A node, its role, name and screen extents."""
+def describe(node, ancestors=()):
+    """A node, its role, name, screen extents and where it sits in the tree."""
     try:
         component = node.get_component_iface()
         extents = component.get_extents(Atspi.CoordType.SCREEN) if component else None
@@ -118,6 +118,10 @@ def describe(node, depth=0, limit=4):
     entry = {
         "name": node.get_name() or "",
         "role": node.get_role_name(),
+        # The named ancestors, outermost first. Two different controls are
+        # called "Files" — the sidebar row and the dock tile — and nothing about
+        # either one distinguishes them except where they are.
+        "path": list(ancestors),
         "extents": None if extents is None else {
             "x": extents.x, "y": extents.y,
             "width": extents.width, "height": extents.height,
@@ -125,7 +129,7 @@ def describe(node, depth=0, limit=4):
     }
     return entry
 
-def walk(node, depth, out, maximum_depth):
+def walk(node, depth, out, maximum_depth, ancestors=()):
     if depth > maximum_depth:
         return
     try:
@@ -139,8 +143,11 @@ def walk(node, depth, out, maximum_depth):
             continue
         if child is None:
             continue
-        out.append(describe(child))
-        walk(child, depth + 1, out, maximum_depth)
+        entry = describe(child, ancestors)
+        out.append(entry)
+        name = entry["name"]
+        walk(child, depth + 1, out, maximum_depth,
+             ancestors + (name,) if name else ancestors)
 
 mode = sys.argv[1]
 desktop = Atspi.get_desktop(0)
@@ -272,14 +279,27 @@ def windows(user: str, environment: list[str]) -> dict:
     return _atspi(user, environment, "applications")
 
 
-def find_control(controls: dict, name: str) -> dict | None:
-    """The smallest control whose accessible name matches, with real extents.
+#: Roles that can be pressed. A label named "Files" is the text *inside* the
+#: sidebar row, not the row; clicking it happens to work, because Clutter picks
+#: the reactive ancestor, but recording it as the control that was pressed
+#: misreports what the test did.
+ACTIVATABLE_ROLES = ("push button", "button", "toggle button", "menu item", "list item")
 
-    Smallest, because accessible names repeat up a container chain: the dock
-    tile is called "Files" and so, in some themes, is the box around it. The
-    tile is the one to press, and it is the smaller of the two. A control with
-    no extents, or with zero area, is not a thing on screen and is skipped —
-    that is what an actor that was built and never allocated looks like.
+
+def find_control(controls: dict, name: str, *, within: str | None = None) -> dict | None:
+    """The control to press, by accessible name and optionally by container.
+
+    Two things in this desktop are called "Files" — the sidebar row and the dock
+    tile — and the acceptance criterion names the dock. `within` is matched
+    against the control's ancestor names, which is why the tree walk records
+    them: nothing about the two controls differs except where they are.
+
+    A pressable role is preferred over any other, and among equals the smallest,
+    because an accessible name propagates up a container chain and the innermost
+    match is the control rather than the box around it. A control with no
+    extents, or with zero area, is skipped: that is what an actor that was built
+    and never allocated looks like, and pressing its centre would press the
+    top-left corner of the screen.
     """
     candidates = []
     for entry in controls.get("controls", []):
@@ -288,11 +308,16 @@ def find_control(controls: dict, name: str) -> dict | None:
         extents = entry.get("extents")
         if not extents or extents["width"] <= 0 or extents["height"] <= 0:
             continue
+        if within is not None and not any(
+                within.lower() in ancestor.lower() for ancestor in entry.get("path", [])):
+            continue
         candidates.append(entry)
     if not candidates:
         return None
-    return min(candidates, key=lambda entry:
-               entry["extents"]["width"] * entry["extents"]["height"])
+    pressable = [entry for entry in candidates
+                 if entry.get("role") in ACTIVATABLE_ROLES]
+    return min(pressable or candidates,
+               key=lambda entry: entry["extents"]["width"] * entry["extents"]["height"])
 
 
 # --------------------------------------------------------------------------

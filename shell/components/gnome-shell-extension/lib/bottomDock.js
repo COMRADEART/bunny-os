@@ -53,6 +53,11 @@ export class BottomDock {
         this._tiles = new Map();
 
         this.actor = glass('bunny-dock', {blur: context.blur, radius: 22});
+        // Named, because two controls on this desktop are called "Files" — this
+        // dock tile and the sidebar row — and until the container had a name
+        // there was nothing to tell a screen-reader user, or anything else,
+        // which one they had landed on.
+        this.actor.accessible_name = 'Bunny dock';
         this._row = box({style_class: 'bunny-dock-row'});
         this.actor.add_child(this._row);
 

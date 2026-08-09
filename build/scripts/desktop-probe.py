@@ -302,12 +302,24 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
     result["accessibility"] = desktop_interaction.enable_accessibility(user, environment)
     controls = desktop_interaction.locate_controls(user, environment)
     result["controls"] = controls
+    # The dock first, because that is the control the acceptance criterion
+    # names; the sidebar as the fallback, because both are the Bunny UI and a
+    # run that pressed the sidebar row is still a run that pressed a Bunny
+    # control. Which one was used is recorded either way.
     targets = {}
-    for logical, label in (("files", "Files"), ("terminal", "Terminal"),
-                           ("assistant", "AI Assistant"), ("home", "Home")):
-        found = desktop_interaction.find_control(controls, label)
+    for logical, label, within in (
+        ("files", "Files", "Bunny dock"),
+        ("terminal", "Terminal", "Bunny dock"),
+        ("assistant", "AI Assistant", "Bunny sidebar"),
+        ("home", "Home", "Bunny sidebar"),
+    ):
+        found = desktop_interaction.find_control(controls, label, within=within)
+        source = within
+        if found is None:
+            found = desktop_interaction.find_control(controls, label)
+            source = "anywhere"
         if found is not None:
-            targets[logical] = found
+            targets[logical] = {**found, "foundIn": source}
     result["targets"] = targets
 
     # The host is waiting for this before it touches the pointer.

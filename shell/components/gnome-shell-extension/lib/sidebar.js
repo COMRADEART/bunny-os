@@ -53,6 +53,7 @@ export class Sidebar {
         this._collapsed = false;
 
         this.actor = glass('bunny-sidebar', {blur: context.blur, radius: 22});
+        this.actor.accessible_name = 'Bunny sidebar';
         this._column = box({vertical: true, style_class: 'bunny-sidebar-column'});
         this.actor.add_child(this._column);
 

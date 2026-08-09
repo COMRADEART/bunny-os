@@ -207,9 +207,48 @@ def main() -> int:
         x, y = centre(target["extents"])
         pointer.click(x, y)
         step(f"click-{target_name}", pressed=True, at={"x": x, "y": y},
-             extents=target["extents"], role=target.get("role"))
+             extents=target["extents"], role=target.get("role"),
+             within=target.get("path", [])[-3:])
         return target
 
+    def close_focused(what: str) -> None:
+        """Close the front window, and try the application's own accelerator too.
+
+        Alt+F4 is the window manager's close and is the right first choice: it
+        exercises the unmap path a user's close button takes. It is not enough
+        on its own, though — a terminal traps Ctrl+D at the shell and Nautilus
+        answers Ctrl+W, and a window that ignored Alt+F4 because focus was
+        somewhere else would otherwise be reported as a desktop that cannot
+        close its own applications.
+        """
+        pointer.key("alt", "f4")
+        time.sleep(4)
+        pointer.key("ctrl", "w")
+        time.sleep(3)
+        step(f"close-{what}", keys=["alt+f4", "ctrl+w"])
+
+    try:
+        return interact(control, qmp, pointer, targets, arguments,
+                        report, steps, step, screenshot, wait_for, press,
+                        close_focused, save)
+    except Exception as exc:  # noqa: BLE001 - the report matters more
+        # Whatever went wrong, the transcript up to that point is the evidence
+        # this run exists to produce. The first version let a ValueError out of
+        # the middle of the interaction and lost every step before it, including
+        # the two that had already succeeded.
+        report["error"] = f"{type(exc).__name__}: {exc}"
+        import traceback
+        report["traceback"] = traceback.format_exc().splitlines()[-8:]
+        try:
+            control.close()
+            qmp.close()
+        except Exception:  # noqa: BLE001
+            pass
+        return save("driver-failed")
+
+
+def interact(control, qmp, pointer, targets, arguments,
+             report, steps, step, screenshot, wait_for, press, close_focused, save):
     # ---- baseline ---------------------------------------------------------
     before_files = control.ask({"command": "state", "application": "files",
                                 "label": "before"}, timeout=120)
@@ -237,8 +276,7 @@ def main() -> int:
         report["files"] = state
         screenshot("01-files-open")
 
-        pointer.key("alt", "f4")
-        time.sleep(4)
+        close_focused("files")
         closed = wait_for("files", False, "after-close")
         step("files-closed", windowVisible=closed.get("windowVisible"),
              windows=closed.get("windows", {}).get("count"), state=closed)
@@ -272,8 +310,7 @@ def main() -> int:
             step("terminal-typed", command=f"date > {arguments.marker}",
                  note="the file is read from the guest disk after shutdown")
 
-        pointer.key("alt", "f4")
-        time.sleep(4)
+        close_focused("terminal")
         closed = wait_for("terminal", False, "after-close")
         step("terminal-closed", windowVisible=closed.get("windowVisible"),
              windows=closed.get("windows", {}).get("count"), state=closed)

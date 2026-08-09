@@ -54,7 +54,19 @@ QCODE = {
     " ": "spc", "-": "minus", "_": ("shift", "minus"), ".": "dot", "/": "slash",
     ":": ("shift", "semicolon"), ";": "semicolon", ",": "comma",
     "=": "equal", "+": ("shift", "equal"), "'": "apostrophe",
-    "~": ("shift", "grave_accent"), "$": ("shift", "4"),
+    "~": ("shift", "grave_accent"), "`": "grave_accent",
+    # The shell metacharacters. `>` was missing and the run that found out had
+    # already opened the terminal: the driver raised in the middle of the
+    # interaction and took its own report with it, which is why the report is
+    # now written from a finally block.
+    ">": ("shift", "dot"), "<": ("shift", "comma"), "|": ("shift", "backslash"),
+    "\\": "backslash", "?": ("shift", "slash"), "!": ("shift", "1"),
+    "@": ("shift", "2"), "#": ("shift", "3"), "$": ("shift", "4"),
+    "%": ("shift", "5"), "^": ("shift", "6"), "&": ("shift", "7"),
+    "*": ("shift", "8"), "(": ("shift", "9"), ")": ("shift", "0"),
+    "[": "bracket_left", "]": "bracket_right",
+    "{": ("shift", "bracket_left"), "}": ("shift", "bracket_right"),
+    '"': ("shift", "apostrophe"),
 }
 for _letter in "abcdefghijklmnopqrstuvwxyz":
     QCODE[_letter] = _letter
