@@ -377,3 +377,8 @@
 .bunny-toast-error { border-left: 3px solid #ef4444; }
 .bunny-toast:hover { background-color: rgba(27, 31, 45, 0.9); }
 .bunny-toast:focus { outline: 2px solid #a78bfa; outline-offset: 1px; }
+
+/* The System card below the compact breakpoint: the dial above the figures
+   rather than beside them, so each row has the card's full width. */
+.bunny-overview-body-stacked { spacing: 8px; }
+.bunny-overview-body-stacked .bunny-dial-column { padding-bottom: 2px; }

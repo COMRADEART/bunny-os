@@ -18,7 +18,7 @@ import St from 'gi://St';
 
 import {Card} from './base.js';
 import {Rgb} from '../tokens.js';
-import {box, MetricRow, UNAVAILABLE} from '../widgets.js';
+import {box, setOrientation, MetricRow, UNAVAILABLE} from '../widgets.js';
 import {clamp, formatBytes, formatPair, logError_} from '../util.js';
 
 /** The dial's diameter, wide and narrow. */
@@ -41,7 +41,8 @@ export class SystemOverview extends Card {
         this._telemetry = telemetry;
         this._fraction = null;
 
-        const body = box({style_class: 'bunny-overview-body'});
+        this._body = box({style_class: 'bunny-overview-body'});
+        const body = this._body;
         this.content.add_child(body);
 
         this._dial = new St.DrawingArea({
@@ -70,13 +71,15 @@ export class SystemOverview extends Card {
         });
         dialStack.add_child(this._dialLabel);
 
-        const dialColumn = box({vertical: true, style_class: 'bunny-dial-column'});
+        this._dialColumn = box({vertical: true, style_class: 'bunny-dial-column'});
+        const dialColumn = this._dialColumn;
         dialColumn.add_child(dialStack);
         this._dialCaption = new St.Label({text: 'CPU Usage', style_class: 'bunny-dial-caption'});
         dialColumn.add_child(this._dialCaption);
         body.add_child(dialColumn);
 
-        const rows = box({vertical: true, style_class: 'bunny-overview-rows', x_expand: true});
+        this._rows = box({vertical: true, style_class: 'bunny-overview-rows', x_expand: true});
+        const rows = this._rows;
         this._memory = new MetricRow('RAM');
         this._storage = new MetricRow('Storage');
         this._temperature = new MetricRow('Temp');
@@ -98,12 +101,30 @@ export class SystemOverview extends Card {
      * beside would have lost its second half.
      */
     resize(width) {
-        const size = width >= COMPACT_CARD_WIDTH ? DIAL_WIDE : DIAL_NARROW;
-        if (this._dial.width === size)
+        const narrow = width < COMPACT_CARD_WIDTH;
+        const size = narrow ? DIAL_NARROW : DIAL_WIDE;
+        if (this._dial.width !== size) {
+            this._dial.set_size(size, size);
+            this._dialStack.set_size(size, size);
+            this._dial.queue_repaint();
+        }
+
+        // Stack, rather than sit beside.
+        //
+        // Shrinking the dial was not enough on its own and the booted image
+        // said so: "RAM 1.0/5.8 GB" fitted beside a 72-pixel dial and
+        // "Storage 3.9/8.3 GB" did not, because the label is four characters
+        // longer. Below the dial each row has the card's full width, which is
+        // 220 pixels rather than 136, and no arithmetic about label lengths is
+        // needed at all.
+        if (this._stacked === narrow)
             return;
-        this._dial.set_size(size, size);
-        this._dialStack.set_size(size, size);
-        this._dial.queue_repaint();
+        this._stacked = narrow;
+        setOrientation(this._body, narrow);
+        this._body.remove_style_class_name('bunny-overview-body-stacked');
+        if (narrow)
+            this._body.add_style_class_name('bunny-overview-body-stacked');
+        this._dialColumn.x_expand = narrow;
     }
 
     refresh() {

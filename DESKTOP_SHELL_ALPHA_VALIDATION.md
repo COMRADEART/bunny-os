@@ -6,9 +6,19 @@ SPDX-License-Identifier: GPL-3.0-or-later
 # Bunny desktop shell — Alpha validation
 
 Branch: `feature/bunny-desktop-shell`
-Candidate: `a4d45905484c67706107c35fc6b2f022ab22b6fb`
+Candidate: `e440b496082939c701541fad6aa8d0b757dd5b33`
 Base: `6eeda81ec8cd` (the desktop shell phase)
 Date: 2026-08-09
+
+Three Alpha images were built on this branch and each one was booted. The first
+two are reported here as well as the last, because each was built to answer a
+question the previous one had raised on screen and the sequence is the evidence:
+
+| Candidate | Built | What its boot showed |
+| --- | --- | --- |
+| `a4d45905484c` | yes | Everything in §8 passed. The System card's figures were ellipsised at 1366×768 |
+| `520dfa2a6f50` | yes | `formatPair` fixed RAM and not Storage — the dial was taking the room |
+| `e440b4960829` | yes | The candidate |
 
 ## What this phase was for
 
@@ -46,7 +56,7 @@ or compare the name against the thing it names.
 | | |
 | --- | --- |
 | Branch | `feature/bunny-desktop-shell` |
-| Commit | `a4d45905484c67706107c35fc6b2f022ab22b6fb` |
+| Commit | `e440b496082939c701541fad6aa8d0b757dd5b33` |
 | Working tree | clean at the candidate commit |
 | Reference host | Fedora 44, as user `bunny`, from the ext4 checkout |
 
@@ -490,3 +500,76 @@ Under `build/out/` on the reference host, copied into `build/out/alpha-a1/`,
 | `alpha-a2/*.png` | 1366×768 — sheared by the capture path; see §10 |
 | `alpha-a3/*.png` | 1360×768 — the small layout, viewable |
 | `build/out/character/contact-sheet.png` | the ten character states, rendered offline |
+
+---
+
+## 12. Against the acceptance criteria
+
+| # | Criterion | Result |
+| --- | --- | --- |
+| 1 | Working tree clean at the candidate commit | yes |
+| 2 | Source gate passes | PASS, exit 0, on the reference host as `bunny` from ext4 |
+| 3 | Real Alpha artifact builds | yes, `make build-alpha-image`, exit 0 |
+| 4 | SHA-256 recorded | yes, §6 |
+| 5 | The exact built artifact boots | yes, both resolutions |
+| 6 | Bunny Shell appears automatically | yes, extension `ENABLED`, no error |
+| 7 | No plain fallback desktop | never appeared |
+| 8 | No fatal GNOME Shell exception | none; no component failed to build |
+| 9 | **Files launches by clicking the Bunny UI** | yes — dock tile, `role: button`, inside `Bunny dock` |
+| 10 | **Terminal launches by clicking the Bunny UI** | yes — same, and it accepted typed input |
+| 11 | Closing either does not crash Bunny Shell | shell responded and stayed `ENABLED` after both |
+| 12 | Storage reports useful persistent storage | `/var`, ext4, `/dev/vda4` |
+| 13 | No tofu glyphs in critical UI | none; no icon failed to resolve |
+| 14 | Character reads as a human in a hoodie | yes — see §3.4 and the contact sheet |
+| 15 | Character states still work | ten states, each with a pose and an accent that is a real colour |
+| 16 | 1920×1080 has no major overlap | 0 controls off-screen, no panel pair overlapping |
+| 17 | 1366×768 remains usable | same, sidebar collapsed, no clipping |
+| 18 | No fabricated telemetry | none; `Unavailable` where the machine cannot answer |
+| 19 | All required tests pass | §4 |
+| 20 | Final source gate passes | PASS |
+
+---
+
+## 13. Known limitations
+
+Carried forward from the previous phase and still true:
+
+1. **The in-shell character is 2D vector, not 3D.** It cannot be otherwise
+   inside the compositor: a Wayland client's surface cannot be reparented into
+   the shell's scene graph. The 3D renderer remains the companion window's.
+2. **Measured only on llvmpipe.** Every run reported software rendering, so
+   `desktop-blur` has still never been exercised in its enabled state.
+3. **One monitor.** The layout solves for the primary monitor; a second gets the
+   wallpaper and nothing else.
+4. **Two palettes.** GTK surfaces are evergreen and mint; the desktop is violet.
+   St cannot read the JSON token file.
+5. **`_backgroundGroup` is private API**, with a logged fallback.
+6. **The companion window opens over the character.** It autostarts and is an
+   ordinary window, so it covers the desktop the way any window does. It is the
+   first thing on screen after login, over the middle of the dashboard, and the
+   interaction between it and the in-shell figure is still an unanswered product
+   question rather than a defect.
+
+Found or clarified in this phase:
+
+7. **The desktop is disabled at the lock screen.** GNOME switches to the
+   `unlock-dialog` session mode when the screen locks, which disables every
+   extension that does not declare that mode. The Bunny desktop does not declare
+   it deliberately — a dashboard drawing behind a lock screen would show a
+   locked machine's agenda and notifications — so the desktop is torn down and
+   rebuilt across a lock. That rebuild has not been exercised deliberately; it
+   was observed happening and then configured away in the harness.
+8. **The 1366×768 framebuffer capture is sheared.** virtio-vga's scanout stride
+   against a width that is not a multiple of eight. The session is unaffected;
+   §10 measures the layout from the accessibility tree instead, and a 1360×768
+   capture is provided for looking at.
+9. **The assistant has still never answered a real request through the
+   interface.** The bridge is reachable and the panel is wired to it, but no
+   query has been typed into the desktop and answered end to end. This phase
+   pressed the launcher tiles; it did not converse.
+10. **The Quick Access card draws uninstalled applications with a generic
+    icon.** They are correctly marked unavailable and are not launchable, but a
+    row of identical generic marks is not informative.
+11. **No test covers the desktop at more than one scale factor.** Text scaling
+    is an input to the layout solver and is exercised in the unit tests, but no
+    booted run has used a HiDPI scale.

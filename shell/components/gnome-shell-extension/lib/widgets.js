@@ -46,6 +46,23 @@ export function box({vertical = false, ...properties} = {}) {
 }
 
 /**
+ * Change a box's orientation after construction.
+ *
+ * Same two-property dance as `box`, for the same reason: `orientation` is the
+ * property GNOME 50 has and `vertical` is the one older builds have. A card
+ * that reflows when it narrows needs this; nothing else does.
+ */
+export function setOrientation(widget, vertical) {
+    try {
+        widget.orientation = vertical
+            ? Clutter.Orientation.VERTICAL
+            : Clutter.Orientation.HORIZONTAL;
+    } catch (_error) {
+        widget.vertical = vertical;
+    }
+}
+
+/**
  * A translucent panel, blurred behind if this session can afford it.
  *
  * Shell.BlurEffect samples what is behind the actor every frame. On a GPU that

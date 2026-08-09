@@ -778,6 +778,26 @@ class CompactFigureTests(unittest.TestCase):
         self.assertIn("this.resize(rect.width);", base,
                       "Card.show must pass its width to the card")
 
+    def test_the_card_stacks_when_it_is_too_narrow_to_sit_side_by_side(self) -> None:
+        """The third attempt, and the one that stopped depending on arithmetic.
+
+        A shorter string fixed RAM. A smaller dial fixed nothing else, because
+        "Storage" is four characters longer than "RAM". Putting the figures
+        below the dial gives every row the card's full width and removes the
+        question of how long a label may be.
+        """
+        text = module_text("lib/cards/systemOverview.js")
+        self.assertIn("setOrientation(this._body, narrow)", text)
+        self.assertIn("bunny-overview-body-stacked", text)
+        self.assertIn(".bunny-overview-body-stacked", module_text("stylesheet.css"))
+
+    def test_the_orientation_helper_handles_both_shell_versions(self) -> None:
+        """`vertical` was removed in favour of `orientation`; both are tried."""
+        text = module_text("lib/widgets.js")
+        block = text.split("export function setOrientation")[1][:500]
+        self.assertIn("Clutter.Orientation.VERTICAL", block)
+        self.assertIn("widget.vertical = vertical", block)
+
     def test_the_narrow_dial_is_smaller_than_the_wide_one(self) -> None:
         text = module_text("lib/cards/systemOverview.js")
         wide = int(re.search(r"const DIAL_WIDE = (\d+);", text).group(1))
