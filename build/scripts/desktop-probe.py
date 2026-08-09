@@ -353,6 +353,11 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 answer["error"] = f"unknown application {name!r}"
         elif verb == "shell":
             answer["shell"] = desktop_interaction.shell_alive(user, environment)
+        elif verb == "ask":
+            # The backend half of the end-to-end claim, through the exact
+            # program the shell spawns. See desktop_interaction.ask_through_the_bridge.
+            answer["ask"] = desktop_interaction.ask_through_the_bridge(
+                str(request.get("request", "")), user, environment)
         elif verb == "character":
             # What the figure is doing and what the bubble says, both read out
             # of the accessibility tree. This is how the host watches the state

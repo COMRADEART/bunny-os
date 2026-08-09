@@ -446,6 +446,52 @@ def character_state(user: str, environment: list[str]) -> dict:
             "controlCount": len(controls.get("controls", []))}
 
 
+def ask_through_the_bridge(request: str, user: str, environment: list[str]) -> dict:
+    """Submit a request through the exact program the desktop spawns.
+
+    `/usr/bin/bunny-shell-assistant` is what `AssistantService` runs; this runs
+    it the same way, as the same user, against the same socket, and parses the
+    same newline-delimited events. What it proves is everything from the shell's
+    process boundary inwards: the protocol, the runtime, executor selection,
+    planning, the approval derivation, the tool allowlist, the desktop broker
+    and the adapter that opens the application.
+
+    What it does not prove is the GJS half — a keystroke reaching the entry
+    widget and `_ask` being called. That is a separate claim and is reported
+    separately, because collapsing the two would let a working backend stand in
+    for a working interface.
+    """
+    if not environment:
+        return {"ran": False, "error": "no user session environment"}
+    result = _run(
+        ["/usr/bin/env", *environment, "/usr/bin/bunny-shell-assistant", "ask", request],
+        user=user, timeout=240, limit=60_000)
+    events = []
+    for line in result.get("stdout", "").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    phases = [str(item.get("phase", "")) for item in events if item.get("event") == "phase"]
+    replies = [str(item.get("text", "")) for item in events if item.get("event") == "reply"]
+    errors = [str(item.get("reason", "")) for item in events if item.get("event") == "error"]
+    finished = [str(item.get("phase", "")) for item in events if item.get("event") == "finished"]
+    return {
+        "ran": True,
+        "request": request,
+        "returncode": result.get("returncode"),
+        "accepted": any(item.get("event") == "accepted" for item in events),
+        "phases": phases,
+        "reply": replies[-1] if replies else "",
+        "errors": errors,
+        "finishedPhase": finished[-1] if finished else "",
+        "eventCount": len(events),
+    }
+
+
 def shell_alive(user: str, environment: list[str]) -> dict:
     """Is GNOME Shell still answering, and is the Bunny extension still enabled?
 

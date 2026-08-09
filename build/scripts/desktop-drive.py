@@ -282,6 +282,37 @@ def interact(control, qmp, pointer, targets, arguments,
         (before_files or {}).get("state", {}).get("launched") or
         (before_terminal or {}).get("state", {}).get("launched"))
 
+    # ---- the assistant's backend, through the shell's own bridge ----------
+    #
+    # Run first and reported separately from the interface half. This is the
+    # claim "a request reaches the real backend, is planned as a structured
+    # action, executes and returns an answer"; the scenario below it is the
+    # claim "a person can type that request into the desktop". They are
+    # different claims and one must not be allowed to stand for the other.
+    for label, request in (("factual", arguments.ask), ("action", arguments.ask_action)):
+        if not request:
+            continue
+        answer = control.ask({"command": "ask", "request": request,
+                              "label": f"bridge-{label}"}, timeout=300)
+        outcome = (answer or {}).get("ask") or {}
+        step(f"bridge-{label}", request=request,
+             accepted=outcome.get("accepted"), phases=outcome.get("phases"),
+             finished=outcome.get("finishedPhase"),
+             reply=(outcome.get("reply") or "")[:200],
+             errors=outcome.get("errors"))
+        report[f"bridge_{label}"] = outcome
+        if label == "action":
+            # An answer is not an opened window. Ask the guest whether Files is
+            # actually running, the same four ways the click test does.
+            state = wait_for("files", True, "after-assistant-launch")
+            step("bridge-action-opened-files",
+                 launched=state.get("launched"),
+                 startedByTheShell=state.get("startedByTheShell"),
+                 windowVisible=state.get("windowVisible"))
+            report["bridge_action_files"] = state
+            screenshot("05-assistant-opened-files")
+            close_focused("files-after-assistant")
+
     # ---- the assistant, end to end ----------------------------------------
     #
     # The milestone's central claim: a person types a request, the character
