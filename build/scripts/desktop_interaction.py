@@ -429,11 +429,17 @@ def character_state(user: str, environment: list[str]) -> dict:
     says = ""
     for entry in controls.get("controls", []):
         name = str(entry.get("name", ""))
-        description = str(entry.get("description", ""))
-        if name == "Bunny, your assistant" and description.startswith("Bunny is "):
-            body = description[len("Bunny is "):]
-            state, _, reason = body.partition(". ")
-            state = state.strip().rstrip(".")
+        # The state is in the *name*, after an em dash. It was in the
+        # accessible description for two releases and no assistive technology
+        # ever saw it: St has no accessible-description, so the assignment
+        # created a JavaScript property and nothing more. Every control in the
+        # tree reported an empty description, which is how that was found.
+        if name.startswith("Bunny, your assistant"):
+            _, _, body = name.partition("—")
+            body = body.strip()
+            if body:
+                state, _, reason = body.partition(". ")
+                state = state.strip().rstrip(".")
         elif name.startswith("Bunny says: "):
             says = name[len("Bunny says: "):]
     return {"state": state, "reason": reason, "says": says,

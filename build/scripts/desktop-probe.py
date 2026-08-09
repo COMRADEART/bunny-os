@@ -315,7 +315,10 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
         # The assistant's text field. Named by the entry's accessible name, and
         # it is the control the whole end-to-end test is typed into.
         ("ask", "Ask Bunny", None),
-        ("character", "Bunny, your assistant", None),
+        # The character's accessible name now carries its state, so an exact
+        # match no longer finds it; the driver reads it through the
+        # `character` command instead and does not need it as a click target.
+        ("ask_send", "Send", None),
     ):
         found = desktop_interaction.find_control(controls, label, within=within)
         source = within
