@@ -47,6 +47,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import os
+import stat
 import threading
 from typing import Any, Mapping, Sequence
 
@@ -67,6 +68,7 @@ __all__ = [
     "DesktopAdapters",
     "DesktopEnvironmentReport",
     "ServiceStanding",
+    "adopt_graphical_environment",
     "graphical_session",
     "probe_environment",
     "session_type",
@@ -107,6 +109,60 @@ def session_type() -> str:
 
 def graphical_session() -> bool:
     return session_type() != "none"
+
+
+def adopt_graphical_environment() -> dict[str, str]:
+    """Find the display this process was started too early to be told about.
+
+    Measured on a booted system, not anticipated. `bunny-companion.service` is
+    `WantedBy=graphical-session.target` and ordered only after
+    `graphical-session-pre.target`, so it starts *while* the target is being
+    reached — two seconds before gnome-session imports `WAYLAND_DISPLAY` and
+    `DISPLAY` into the user manager's environment. Its own environment
+    therefore has `XDG_SESSION_TYPE=wayland` and neither display variable, and
+    every adapter that asks for one refuses for the life of the session:
+
+        there is no graphical session, so a launched application would have
+        nowhere to appear
+
+    A spoken "Open Files" reached the launcher, was approved, and was answered
+    with that sentence on a machine with a desktop plainly on screen. The
+    defect hid for a long time because *restarting* the service — which any
+    development iteration does — picks the variables up and makes it work.
+
+    The unit ordering is fixed as well; this exists because ordering is a
+    promise about start time and this is a fact about the machine. The socket
+    is the evidence: `$XDG_RUNTIME_DIR` is the user's own directory, 0700, and
+    a `wayland-N` socket in it is a display this user can use. Nothing is
+    invented — if there is no socket, nothing is adopted and the refusal
+    stands.
+
+    Returns what it set, for the record. Idempotent.
+    """
+    adopted: dict[str, str] = {}
+    if os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY"):
+        return adopted
+    runtime = os.environ.get("XDG_RUNTIME_DIR", "")
+    if not runtime:
+        return adopted
+    try:
+        entries = sorted(os.listdir(runtime))
+    except OSError:
+        return adopted
+    for entry in entries:
+        # `wayland-0`, not `wayland-0.lock`: the socket, not its lock file.
+        if not entry.startswith("wayland-") or entry.endswith(".lock"):
+            continue
+        candidate = os.path.join(runtime, entry)
+        try:
+            if not stat.S_ISSOCK(os.stat(candidate).st_mode):
+                continue
+        except OSError:
+            continue
+        os.environ["WAYLAND_DISPLAY"] = entry
+        adopted["WAYLAND_DISPLAY"] = entry
+        return adopted
+    return adopted
 
 
 @dataclass(frozen=True)

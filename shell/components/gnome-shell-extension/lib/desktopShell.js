@@ -264,10 +264,58 @@ export class DesktopShell {
                     {tone: 'warning'});
             }
         });
-        this.voice?.checkHealth((available, reason) => {
-            this._assistantPanel?.setVoiceAvailable(available, reason);
-            if (!available)
+        this._watchVoiceAvailability();
+    }
+
+    /**
+     * Ask whether voice input is available until it is, or until it clearly is not.
+     *
+     * Asking once is what this used to do, and once is wrong because of who
+     * starts first. GNOME Shell — and therefore this desktop — is the session;
+     * `bunny-companion.service` is a user unit pulled in by
+     * `graphical-session.target`, which is reached *after* the shell is up. So
+     * the first check regularly runs before the companion has bound its socket,
+     * gets "the companion runtime is unreachable", and disables the microphone
+     * button for the rest of the session. Measured: the button read
+     * "Speak to Bunny. Unavailable: the companion runtime is unreachable" with
+     * `sensitive=false`, on a session whose companion was answering perfectly
+     * well by the time anyone pressed it.
+     *
+     * So it is asked again, on a bounded schedule, and the schedule stops the
+     * moment the answer is yes. A companion that is genuinely absent — not
+     * installed, failed to start — is reported after the attempts run out, with
+     * the reason from the last one, which is the same message as before and
+     * still true.
+     */
+    _watchVoiceAvailability() {
+        if (!this.voice)
+            return;
+        //: Every two seconds for a minute. A cold companion on this image binds
+        //: its socket in under ten; a minute is the point past which "it is
+        //: still starting" stops being the likely explanation.
+        let attemptsLeft = 30;
+        const ask = () => {
+            this.voice.checkHealth((available, reason) => {
+                this._assistantPanel?.setVoiceAvailable(available, reason);
+                if (available) {
+                    this._voiceHealthTimer?.stop();
+                    this._voiceHealthTimer = null;
+                    log_('push-to-talk is available');
+                    return;
+                }
+                attemptsLeft -= 1;
+                if (attemptsLeft > 0)
+                    return;
+                this._voiceHealthTimer?.stop();
+                this._voiceHealthTimer = null;
                 log_(`push-to-talk unavailable: ${reason}`);
+            });
+        };
+        ask();
+        this._voiceHealthTimer = interval(2, () => {
+            if (this._destroyed || attemptsLeft <= 0)
+                return;
+            ask();
         });
     }
 
@@ -590,13 +638,87 @@ export class DesktopShell {
         // the work area grows by its height instead of leaving a 32px band that
         // maximised windows refuse to use.
         const panelBox = Main.layoutManager.panelBox;
-        panelBox.hide();
+
+        // Watch first, hide later, and do neither until GNOME has finished
+        // starting up. See `_takeThePanelWhenStartupIsOver` for what hiding it
+        // early cost.
+        this._panelMayHide = false;
         this._panelVisibilityId = panelBox.connect('notify::visible', () => {
-            if (this._destroyed || !panelBox.visible)
+            if (this._destroyed || !this._panelMayHide || !panelBox.visible)
                 return;
             panelBox.hide();
         });
         this._signals.push([panelBox, this._panelVisibilityId]);
+        this._takeThePanelWhenStartupIsOver();
+    }
+
+    /**
+     * Hide GNOME's panel, but only once its startup animation has finished.
+     *
+     * This is the fix for a defect that made the entire session unclickable,
+     * and the mechanism is worth stating exactly because nothing about the
+     * symptom pointed at the panel.
+     *
+     * LayoutManager keeps a `_coverPane`: a full-screen, fully transparent,
+     * *reactive* Clutter actor whose only job is to swallow input while the
+     * startup animation runs. It is disposed of by `_startupAnimationComplete`,
+     * which runs when the animation that eases `panelBox` into place finishes.
+     * Hiding `panelBox` before that — which this desktop did, at enable(), and
+     * then re-hid on every `notify::visible` — stops the animation ever
+     * finishing. The cover pane is then left shown for the life of the session,
+     * sitting in uiGroup above `window_group`, and it takes every pointer event
+     * that is not over an actor stacked above it.
+     *
+     * The measured effect: the top bar, the sidebar and the dock worked, because
+     * they are chrome added after the pane; the character, every dashboard card,
+     * the Quick Access tiles, the suggestion chips, the assistant's text field
+     * and its microphone button did not, because the content layer is below it —
+     * *and neither did any application window*. `get_actor_at_pos` at each of
+     * those points returned `Main.layoutManager._coverPane`. With this desktop
+     * switched off, the same session picks ordinary actors.
+     *
+     * So the panel is left alone until the animation is over. The cost is
+     * GNOME's bar being visible for the fraction of a second the animation
+     * lasts; the alternative is a desktop on which nothing can be pressed.
+     *
+     * The fallback timer is not decoration: if the signal has already fired by
+     * the time this desktop enables — a later enable, a re-enable from the
+     * extensions tool — it will never fire again, and the panel would stay.
+     */
+    _takeThePanelWhenStartupIsOver() {
+        let taken = false;
+        const take = reason => {
+            if (taken || this._destroyed)
+                return;
+            taken = true;
+            this._panelMayHide = true;
+            Main.layoutManager.panelBox.hide();
+            this._releaseTheCoverPane();
+            log_(`GNOME's panel hidden ${reason}`);
+        };
+        this._signals.push([
+            Main.layoutManager,
+            Main.layoutManager.connect('startup-complete', () => take('after startup-complete')),
+        ]);
+        this._panelTimer = timeout(5000, () => take('after the startup deadline'));
+    }
+
+    /**
+     * Make sure GNOME's input-swallowing pane is not left over the desktop.
+     *
+     * Belt and braces for `_takeThePanelWhenStartupIsOver`. Not hiding it is
+     * the difference between a desktop and a photograph, and the cost of hiding
+     * one that GNOME still wanted is a few hundred milliseconds during which an
+     * animation can be clicked through. GNOME shows it again whenever it needs
+     * it — a monitor change, the next startup — so this is not a permanent
+     * removal, and the line is logged because it should never be needed twice.
+     */
+    _releaseTheCoverPane() {
+        const pane = Main.layoutManager._coverPane;
+        if (!pane || !pane.visible)
+            return;
+        pane.hide();
+        log_('the shell left its cover pane over the desktop; hidden, so pointer input reaches it');
     }
 
     _connectSession() {
@@ -645,9 +767,23 @@ export class DesktopShell {
     _installKeybindings() {
         this._keybindings = [];
         const bind = (key, handler) => {
-            Main.wm.addKeybinding(
+            // The return value, not just the absence of a throw. Mutter reports
+            // a refused accelerator by returning Meta.KeyBindingAction.NONE —
+            // it does not raise — so a shortcut that is already taken, or whose
+            // schema Mutter cannot see, registers "successfully" and then never
+            // fires. Push-to-talk did exactly that, and the session looked
+            // entirely healthy while the only keyboard route into voice was
+            // dead.
+            const action = Main.wm.addKeybinding(
                 key, this._settings, Meta.KeyBindingFlags.NONE,
                 Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW, handler);
+            const accelerator = this._settings.get_strv(key).join(', ') || '(none)';
+            if (action === Meta.KeyBindingAction.NONE) {
+                this.degraded.push(`keybinding ${key}`);
+                log_(`the ${key} shortcut (${accelerator}) was refused; it will never fire`);
+                return;
+            }
+            log_(`${key} is bound to ${accelerator}`);
             this._keybindings.push(key);
         };
         try {
@@ -1609,6 +1745,8 @@ export class DesktopShell {
             this._housekeeping?.stop();
             this._greetTimer?.stop();
             this._talkTimer?.stop();
+            this._panelTimer?.stop();
+            this._voiceHealthTimer?.stop();
         });
 
         attempt('keybindings', () => {

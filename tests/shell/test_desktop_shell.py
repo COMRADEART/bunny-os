@@ -1341,6 +1341,94 @@ class CharacterStateVisualisationTests(unittest.TestCase):
         self.assertIn("import Cairo from 'cairo';", text)
 
 
+class PointerOwnershipTests(unittest.TestCase):
+    """Nothing on the dashboard could be pressed, and the cause was not ours.
+
+    `Main.layoutManager._coverPane` is a full-screen, fully transparent,
+    *reactive* actor that GNOME shows to swallow input while its startup
+    animation runs, and disposes of when the animation finishes. That animation
+    eases `panelBox` into place. This desktop hid `panelBox` at enable() and
+    re-hid it on every `notify::visible`, so the animation never finished, the
+    cover pane was never disposed of, and it sat in uiGroup above
+    `window_group` taking every pointer event for the life of the session.
+
+    Measured with `global.stage.get_actor_at_pos`, which is the compositor's own
+    picking: a press at the Quick Access tile, at the microphone button, at a
+    suggestion chip, at the assistant's entry and at empty desktop all returned
+    `Main.layoutManager._coverPane`. The dock and the sidebar worked because
+    they are chrome added *after* the pane. With the Bunny desktop switched off
+    in the same image, the same points picked ordinary actors — which is how
+    "GNOME does this to everyone" was ruled out.
+
+    These assertions are on the source, because the failure is a sequence — hide
+    the panel, then the animation never completes — and no widget is wrong at
+    any point in it.
+    """
+
+    MODULE = "lib/desktopShell.js"
+
+    def setUp(self) -> None:
+        self.text = module_text(self.MODULE)
+
+    def test_the_panel_is_not_hidden_before_startup_finishes(self) -> None:
+        """The regression: an *unguarded* hide() as soon as the box is in hand.
+
+        The guarded hide inside the `notify::visible` handler is the point of
+        the handler and must stay; what may not come back is a hide between
+        taking the panelBox and arming that handler, which is what ran during
+        GNOME's animation.
+        """
+        body = self.text.split("_hidePanel() {", 1)[1].split("\n    }", 1)[0]
+        preamble = body.split("connect('notify::visible'", 1)[0]
+        self.assertNotIn(
+            "hide()", preamble,
+            "hiding the panel before the watcher is armed is what stopped GNOME's "
+            "startup animation completing and left the cover pane over the desktop")
+        self.assertIn("_takeThePanelWhenStartupIsOver", body)
+
+    def test_the_panel_is_taken_only_after_startup_or_a_deadline(self) -> None:
+        body = self.text.split("_takeThePanelWhenStartupIsOver() {", 1)[1].split("\n    }", 1)[0]
+        self.assertIn("'startup-complete'", body)
+        self.assertIn("_panelTimer", body, "a signal that already fired never fires again")
+        self.assertIn("_releaseTheCoverPane()", body)
+
+    def test_the_visibility_watcher_is_inert_until_then(self) -> None:
+        body = self.text.split("_hidePanel() {", 1)[1].split("\n    }", 1)[0]
+        self.assertIn("_panelMayHide", body)
+        self.assertIn("!this._panelMayHide", body,
+                      "the watcher must not re-hide the panel mid-animation")
+
+    def test_the_cover_pane_is_released_rather_than_assumed_gone(self) -> None:
+        body = self.text.split("_releaseTheCoverPane() {", 1)[1].split("\n    }", 1)[0]
+        self.assertIn("Main.layoutManager._coverPane", body)
+        self.assertIn("pane.hide()", body)
+        self.assertIn("if (!pane || !pane.visible)", body,
+                      "hiding a pane GNOME is legitimately using would be worse than the bug")
+
+    def test_no_decorative_layer_is_made_reactive_to_win_the_pick(self) -> None:
+        """The fix must not be "make the desktop swallow input too".
+
+        Reactivity belongs to controls. `makeActivatable` is the one place that
+        grants it, and the content layer itself must stay non-reactive so that a
+        press on empty desktop reaches whatever is behind it.
+        """
+        self.assertNotIn("_desktopLayer.reactive = true", self.text)
+        self.assertNotIn("_desktopLayer.reactive=true", self.text)
+
+    def test_voice_availability_is_asked_again_rather_than_once(self) -> None:
+        """The companion starts after the session; one question is one race.
+
+        The microphone button read "Speak to Bunny. Unavailable: the companion
+        runtime is unreachable" with sensitive=false, for the whole session, on
+        a machine whose companion was answering by the time anyone pressed it.
+        """
+        self.assertIn("_watchVoiceAvailability", self.text)
+        body = self.text.split("_watchVoiceAvailability() {", 1)[1].split("\n    }", 1)[0]
+        self.assertIn("attemptsLeft", body, "the retry has to be bounded")
+        self.assertIn("_voiceHealthTimer", body)
+        self.assertIn("setVoiceAvailable", body)
+
+
 class FailureIsolationTests(unittest.TestCase):
     """One widget's failure must not be every widget's failure.
 

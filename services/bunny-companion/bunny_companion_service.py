@@ -136,6 +136,22 @@ def _options() -> ServiceOptions:
 
 
 def main() -> int:
+    # Before anything probes the desktop. This service is started while
+    # graphical-session.target is being reached, which on a measured boot was
+    # two seconds before gnome-session imported WAYLAND_DISPLAY — so without
+    # this it spends the whole session believing there is no display and
+    # refusing every action that needs one. See
+    # companion.desktop.environment.adopt_graphical_environment.
+    from companion.desktop.environment import adopt_graphical_environment
+
+    adopted = adopt_graphical_environment()
+    if adopted:
+        print(
+            "bunny-companion-service: adopted the session's display from "
+            f"{', '.join(f'{key}={value}' for key, value in sorted(adopted.items()))}",
+            file=sys.stderr,
+        )
+
     try:
         service = CompanionService(_options()).start()
     except DuplicateRuntime as exc:
