@@ -50,7 +50,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
 import re
 import threading
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 from .execution import (
     CancellationSignal,
@@ -61,6 +61,7 @@ from .execution import (
     run as run_command,
 )
 from .pcm import PcmError, probe_wav
+from .neural import KittenTTSProvider, PocketTTSProvider
 from .provider import (
     ProviderDeclaration,
     ProviderHealth,
@@ -74,6 +75,8 @@ from .request import VoiceRequest
 
 __all__ = [
     "EspeakNgProvider",
+    "KittenTTSProvider",
+    "PocketTTSProvider",
     "SpeechDispatcherProvider",
     "local_providers",
 ]
@@ -322,6 +325,8 @@ class _CommandProvider:
         request: VoiceRequest,
         cancellation: CancellationSignal | None,
         spec: CommandSpec,
+        *,
+        on_started: Callable[[], None] | None = None,
     ) -> CommandOutcome:
         refusal = self.verify_invocation(spec)
         if refusal:
@@ -338,7 +343,9 @@ class _CommandProvider:
         signal = cancellation or CancellationSignal(name=request.request_id)
         self._register(request.request_id, signal)
         try:
-            return run_command(spec, cancellation=signal)
+            if on_started is None:
+                return run_command(spec, cancellation=signal)
+            return run_command(spec, cancellation=signal, on_started=on_started)
         finally:
             # Unregistered whatever happened. A signal left in the table is a
             # cancel that would apply to whichever utterance next reused the id.
@@ -397,6 +404,7 @@ class EspeakNgProvider(_CommandProvider):
         locales = tuple(sorted({voice.locale for voice in self.inventory()}))
         return ProviderDeclaration(
             provider_id="espeak-ng",
+            display_name="eSpeak NG",
             implementation_id=self._implementation_id(),
             languages=languages,
             locales=locales,
@@ -652,6 +660,7 @@ class EspeakNgProvider(_CommandProvider):
         request: VoiceRequest,
         *,
         cancellation: CancellationSignal | None = None,
+        on_started: Callable[[], None] | None = None,
     ) -> StreamOutcome:
         """Speak through eSpeak NG's own audio output, producing no artifact.
 
@@ -681,7 +690,9 @@ class EspeakNgProvider(_CommandProvider):
             touches_audio=True,
             timeout_seconds=_playback_timeout(request),
         )
-        outcome = self._guarded(request, cancellation, spec)
+        outcome = self._guarded(
+            request, cancellation, spec, on_started=on_started,
+        )
         succeeded = outcome.succeeded
         self._record(succeeded or outcome.cancelled)
         return StreamOutcome(
@@ -792,6 +803,7 @@ class SpeechDispatcherProvider(_CommandProvider):
         languages = tuple(sorted({item.language for item in voices})) or ("en",)
         return ProviderDeclaration(
             provider_id="speech-dispatcher",
+            display_name="Speech Dispatcher",
             implementation_id=f"speech-dispatcher/{self._version}" if self._version
             else ("speech-dispatcher/spd-say" if self._executable else "speech-dispatcher/absent"),
             languages=languages,
@@ -932,6 +944,7 @@ class SpeechDispatcherProvider(_CommandProvider):
         request: VoiceRequest,
         *,
         cancellation: CancellationSignal | None = None,
+        on_started: Callable[[], None] | None = None,
     ) -> StreamOutcome:
         declaration = self.declaration
         if not self.available:
@@ -972,7 +985,9 @@ class SpeechDispatcherProvider(_CommandProvider):
             touches_audio=True,
             timeout_seconds=_playback_timeout(request),
         )
-        outcome = self._guarded(request, cancellation, spec)
+        outcome = self._guarded(
+            request, cancellation, spec, on_started=on_started,
+        )
         succeeded = outcome.succeeded
         self._record(succeeded or outcome.cancelled)
         return StreamOutcome(
@@ -1029,12 +1044,10 @@ def _volume_percent(value: float) -> int:
 def local_providers(*, resolver=None) -> ProviderRegistry:
     """Every local provider, in preference order.
 
-    eSpeak NG first, and the reason is not audio quality — Speech Dispatcher
-    usually *is* eSpeak NG underneath on a Linux desktop. It is that eSpeak NG
-    hands us the samples, and the samples are what make amplitude visemes, a
-    measured caption-to-audio offset, pause, resume and a mid-playback device
-    change possible. §12's ladder therefore descends from "the provider that
-    gives us the audio" to "the provider that keeps the audio" to captions.
+    Pocket is the normal local CPU voice. Kitten is the lower-resource neural
+    option, eSpeak NG is the system synthesis fallback, and Speech Dispatcher is
+    the final provider-owned playback fallback. Every successful synthesis path
+    still hands its samples to Bunny AudioRouter.
 
     A provider whose program is absent is still constructed and still listed. It
     reports itself unavailable, which is what ``voice_health`` shows a user
@@ -1042,6 +1055,8 @@ def local_providers(*, resolver=None) -> ProviderRegistry:
     synthesiser indistinguishable from one that was never supported.
     """
     return ProviderRegistry([
+        PocketTTSProvider(resolver=resolver),
+        KittenTTSProvider(resolver=resolver),
         EspeakNgProvider(resolver=resolver),
         SpeechDispatcherProvider(resolver=resolver),
     ])

@@ -1,0 +1,107 @@
+{
+  "latencies": {
+    "application-present": {
+      "reason": "UNSUPPORTED for every entry that does not declare DBusActivatable, and activation of one that does is the launch path the slice already measures",
+      "result": "NOT_RUN"
+    },
+    "clipboard-ownership": {
+      "maximum": 0.153293,
+      "median": 0.15215,
+      "minimum": 0.151016,
+      "p95": 0.153293,
+      "samples": 10
+    },
+    "clipboard-release": {
+      "maximum": 0.001561,
+      "median": 0.001332,
+      "minimum": 0.001207,
+      "p95": 0.001561,
+      "samples": 10
+    },
+    "do-not-disturb-set": {
+      "maximum": 0.056164,
+      "median": 0.055088,
+      "minimum": 0.034571,
+      "p95": 0.056164,
+      "samples": 10,
+      "states": {
+        "confirmed": 10
+      }
+    },
+    "file-reveal": {
+      "maximum": 0.125649,
+      "median": 0.08015,
+      "minimum": 0.073467,
+      "p95": 0.125649,
+      "samples": 10,
+      "states": {
+        "failed": 10
+      }
+    },
+    "notification-dispatch": {
+      "maximum": 0.022183,
+      "median": 0.006374,
+      "minimum": 0.003769,
+      "p95": 0.022183,
+      "samples": 10,
+      "states": {
+        "accepted-not-confirmed": 10
+      }
+    },
+    "proposal-to-approval": {
+      "reason": "dominated by how long a person takes to answer, which is not a property of this build. The machine's share of it \u2014 building the request, digesting the binding, persisting the question \u2014 is inside the slice's per-run figures",
+      "result": "NOT_RUN"
+    },
+    "settings-open": {
+      "maximum": 0.201789,
+      "median": 0.201228,
+      "minimum": 0.201137,
+      "p95": 0.201789,
+      "samples": 10,
+      "states": {
+        "accepted-not-confirmed": 10
+      }
+    },
+    "uri-open": {
+      "reason": "this host has no handler installed for any allowlisted scheme, so the portal would raise an application-chooser dialog. The figure would be the time to show a dialog somebody then has to dismiss, which is neither this build's latency nor a thing to do to a desk ten times",
+      "result": "NOT_RUN"
+    },
+    "volume-read-back": {
+      "maximum": 0.005488,
+      "median": 0.004904,
+      "minimum": 0.004306,
+      "p95": 0.005488,
+      "samples": 10
+    },
+    "volume-set": {
+      "maximum": 0.044047,
+      "median": 0.041522,
+      "minimum": 0.03972,
+      "p95": 0.044047,
+      "samples": 10,
+      "states": {
+        "confirmed": 10
+      }
+    }
+  },
+  "note": "Approvals are constructed rather than asked for, so these are dispatch latencies: normalisation, ledger write, adapter call, observation. Every action that changed something was restored in the same run.",
+  "posture": "desktop-actions-available",
+  "resourceCountsBeforeStop": {
+    "clipboardOwners": 0,
+    "dbusConnections": 1,
+    "notificationsTracked": 10,
+    "portalHandles": 0
+  },
+  "restoredState": {
+    "clipboardOwnersAfter": 0,
+    "doNotDisturbBefore": false,
+    "doNotDisturbRestored": false,
+    "volumeBefore": {
+      "outputId": "RDPSink",
+      "percent": 100
+    },
+    "volumeRestored": 100
+  },
+  "samplesRequested": 10,
+  "schemaVersion": "bunny-os/desktop-action-latency/1"
+}

@@ -10,7 +10,20 @@ After=graphical-session-pre.target
 Description=Bunny Companion runtime
 Documentation=file:///usr/share/doc/bunny-os/COMPANION_INTEGRATION.md
 PartOf=graphical-session.target
-After=graphical-session-pre.target
+# After the target, not after graphical-session-pre.target. Ordering only after
+# `-pre` starts this service *while* the session is coming up: measured on a
+# booted system, it started at 14:00:23 and graphical-session.target was reached
+# at 14:00:25, two seconds after — and gnome-session imports WAYLAND_DISPLAY and
+# DISPLAY into the user manager somewhere in that gap. The service therefore had
+# XDG_SESSION_TYPE=wayland and no display variable at all, and every desktop
+# adapter refused for the life of the session with "there is no graphical
+# session". A spoken "Open Files" was approved and then answered with that
+# sentence on a machine with a desktop on screen.
+#
+# The service also adopts the display from the runtime directory if it is still
+# missing, because ordering is a promise about start time and that is a fact
+# about the machine; see companion.desktop.environment.
+After=graphical-session.target
 # The companion imports the capability runtime to decide where a task may run.
 # Without it there is no capability authority and the service must not start and
 # improvise one; the condition names the missing dependency in the journal
@@ -74,13 +87,23 @@ RestrictNamespaces=yes
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
-MemoryDenyWriteExecute=yes
+# Deliberately absent: Pocket's CPU-only PyTorch/oneDNN kernels may create
+# executable code pages just as Mesa does in the separate window unit. Enabling
+# systemd's write/execute denial makes the kernel kill valid local inference. The
+# process remains offline (AF_UNIX only), unprivileged, read-only outside its
+# private state, syscall-filtered and bounded by MemoryHigh/MemoryMax below.
 SystemCallArchitectures=native
 SystemCallFilter=@system-service
 SystemCallErrorNumber=EPERM
-# Sized for the runtime alone; the window is a separate process with its own
-# budget. Measured idle usage is recorded in COMPANION_INTEGRATION_REPORT.md.
-MemoryMax=128M
+# The smallest validated Vosk model brings the companion process to roughly
+# 175 MiB while recognition is active. Pocket TTS adds a persistent, isolated
+# CPU-only PyTorch worker with a 1 GiB conservative provider estimate. These
+# are enforcement budgets, not benchmark claims: MemoryHigh asks the kernel to
+# reclaim before the hard limit, while MemoryMax still contains a runaway
+# worker. Low-resource mode starts at the much smaller Kitten provider. The
+# graphical window remains a separate process and cgroup.
+MemoryHigh=1536M
+MemoryMax=2G
 TasksMax=64
 StandardOutput=journal
 StandardError=journal

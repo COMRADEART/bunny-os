@@ -1,0 +1,128 @@
+{
+  "allPassed": true,
+  "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+  "gates": [
+    {
+      "absoluteViolations": {},
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "consecutive": 100,
+      "duration": {
+        "maximum": 0.531,
+        "median": 0.222,
+        "minimum": 0.219,
+        "p95": 0.224,
+        "samples": 100
+      },
+      "failedIterations": [],
+      "file": "gate-desktop-100.json",
+      "finalConsecutive": 100,
+      "firstIterationWarmUp": {
+        "childProcesses": 1,
+        "descriptors": 4
+      },
+      "gainedAcrossIterations": {
+        "childProcesses": 3,
+        "descriptors": 3,
+        "zombies": 3
+      },
+      "ledgerInconsistentIterations": [],
+      "liveObjectsBetweenIterations": {},
+      "passed": true,
+      "passedIterations": 100,
+      "postures": {},
+      "releasedAcrossIterations": {
+        "childProcesses": -3,
+        "descriptors": -3,
+        "zombies": -3
+      },
+      "resourceGrowth": {},
+      "runs": 100,
+      "target": "desktop",
+      "transientOnly": {
+        "childProcesses": {
+          "gained": 3,
+          "released": -3
+        },
+        "descriptors": {
+          "gained": 3,
+          "released": -3
+        },
+        "zombies": {
+          "gained": 3,
+          "released": -3
+        }
+      }
+    },
+    {
+      "absoluteViolations": {},
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "consecutive": 50,
+      "duration": {
+        "maximum": 51.676,
+        "median": 50.79,
+        "minimum": 50.105,
+        "p95": 51.417,
+        "samples": 50
+      },
+      "failedIterations": [],
+      "file": "gate-suite-50.json",
+      "finalConsecutive": 50,
+      "firstIterationWarmUp": {
+        "descriptors": 3,
+        "liveDesktopBrokers": 1,
+        "liveRuntimes": 1,
+        "liveServices": 1,
+        "threads": 1
+      },
+      "gainedAcrossIterations": {},
+      "ledgerInconsistentIterations": [],
+      "liveObjectsBetweenIterations": {
+        "activeExecutors": [
+          "agents.local-provider",
+          "local.deterministic"
+        ]
+      },
+      "passed": true,
+      "passedIterations": 50,
+      "postures": {},
+      "releasedAcrossIterations": {},
+      "resourceGrowth": {},
+      "runs": 50,
+      "target": "suite",
+      "transientOnly": {}
+    },
+    {
+      "absoluteViolations": {},
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "consecutive": 20,
+      "duration": {
+        "maximum": 1.257,
+        "median": 1.061,
+        "minimum": 1.0,
+        "p95": 1.1,
+        "samples": 20
+      },
+      "failedIterations": [],
+      "file": "gate-desktop-slice-20.json",
+      "finalConsecutive": 20,
+      "firstIterationWarmUp": {
+        "descriptors": 7,
+        "socketDescriptors": 2
+      },
+      "gainedAcrossIterations": {},
+      "ledgerInconsistentIterations": [],
+      "liveObjectsBetweenIterations": {},
+      "passed": true,
+      "passedIterations": 20,
+      "postures": {
+        "desktop-actions-available": 20
+      },
+      "releasedAcrossIterations": {},
+      "resourceGrowth": {},
+      "runs": 20,
+      "target": "desktop-slice",
+      "transientOnly": {}
+    }
+  ],
+  "schemaVersion": "bunny-os/desktop-action-gates/1"
+}

@@ -52,7 +52,14 @@ from .policy import (
     signals_from_capability,
 )
 from .recognizer import RecognizerRegistry
-from .recognizers import local_recognizers
+from .recognizers import (
+    STT_MODEL_CORRUPT,
+    STT_MODEL_MISSING,
+    STT_PROVIDER_FAILED,
+    STT_READY,
+    STT_RUNTIME_MISSING,
+    local_recognizers,
+)
 from .recovery import SpeechJournal, SpeechRecoveryReport, recover
 from .request import (
     ACTIVATION_SOURCES,
@@ -71,6 +78,17 @@ __all__ = [
 #: begun. An activation is a moment; ten seconds is generous for a loaded
 #: machine and far too short for a stored one to be replayed usefully.
 ACTIVATION_LIFETIME_SECONDS = 10.0
+
+_READINESS_MESSAGES = {
+    STT_READY: "Voice input is ready.",
+    STT_MODEL_MISSING: "Voice recognition isn't installed yet.",
+    STT_MODEL_CORRUPT: "Voice recognition needs repair before it can be used.",
+    STT_RUNTIME_MISSING: "Voice recognition isn't installed yet.",
+    STT_PROVIDER_FAILED: "Voice recognition stopped working. Try again in a moment.",
+    "AUDIO_UNAVAILABLE": "No microphone is available.",
+    "VOICE_INPUT_DISABLED": "Voice input is turned off in Bunny Settings.",
+    "VOICE_RESOURCE_UNAVAILABLE": "Voice input is temporarily unavailable on this machine.",
+}
 
 
 @dataclass
@@ -111,7 +129,8 @@ class SpeechInputService:
             CaptureRouter() if self.options.router is None else self.options.router
         )
         self.registry = (
-            local_recognizers() if self.options.registry is None else self.options.registry
+            local_recognizers(preferred_model_id=self.options.preferences.model_id)
+            if self.options.registry is None else self.options.registry
         )
         self.indicator = (
             ListeningIndicator(clock=self.clock)
@@ -198,6 +217,18 @@ class SpeechInputService:
         self.policy.observe(signals, monotonic=now)
 
     def set_preferences(self, preferences: SpeechInputPreferences) -> None:
+        # Turning Voice Input off is an immediate privacy boundary, not a
+        # preference for the next capture. Release an active microphone before
+        # publishing the disabled policy.
+        if not preferences.enabled:
+            current = self.worker.status().get("current")
+            if isinstance(current, Mapping):
+                request_id = str(current.get("requestId") or "")
+                request = self._requests.get(request_id)
+                self.worker.cancel(
+                    request_id,
+                    token=request.cancellation_token if request is not None else "",
+                )
         self.options.preferences = preferences
         self.policy.set_preferences(preferences)
         self.router.prefer_device(preferences.input_device)
@@ -391,16 +422,62 @@ class SpeechInputService:
     def speech_input_health(self) -> dict[str, Any]:
         """Everything about whether this machine can listen, and why not."""
         now = self.clock.monotonic()
+        recognizers = []
+        for recognizer in self.registry:
+            health = recognizer.health(monotonic=now)
+            recognizers.append({
+                **recognizer.declaration.to_json(),
+                **health.to_json(),
+            })
+        capture = self.router.describe()
+        backends = capture.get("backends", [])
+        audio_ready = any(
+            isinstance(item, Mapping) and item.get("ready") is True
+            for item in backends
+        ) if isinstance(backends, list) else False
+        ready_recognizers = [
+            item for item in recognizers if item.get("ready") is True
+        ]
+        if ready_recognizers:
+            stt_state = STT_READY
+            stt_detail = ""
+        else:
+            selected = recognizers[0] if recognizers else {}
+            stt_state = str(selected.get("statusCode") or STT_PROVIDER_FAILED)
+            stt_detail = str(selected.get("detail") or "no local recognizer is ready")
+
+        policy = self.policy.describe()
+        decision = policy.get("decision", {})
+        may_capture = bool(decision.get("mayCapture")) if isinstance(decision, Mapping) else False
+        if not self.policy.preferences.enabled:
+            state = "VOICE_INPUT_DISABLED"
+        elif stt_state != STT_READY:
+            state = stt_state
+        elif not audio_ready:
+            state = "AUDIO_UNAVAILABLE"
+        elif not may_capture:
+            state = "VOICE_RESOURCE_UNAVAILABLE"
+        else:
+            state = STT_READY
+        message = _READINESS_MESSAGES.get(state, "Voice input is unavailable.")
+        detail = stt_detail if stt_state != STT_READY else ""
+        if state == "VOICE_RESOURCE_UNAVAILABLE" and isinstance(decision, Mapping):
+            reasons = decision.get("reasons")
+            if isinstance(reasons, list) and reasons:
+                detail = str(reasons[0])
         return {
-            "recognizers": [
-                {
-                    **recognizer.declaration.to_json(),
-                    **recognizer.health(monotonic=now).to_json(),
-                }
-                for recognizer in self.registry
-            ],
-            "capture": self.router.describe(),
-            "policy": self.policy.describe(),
+            "readinessState": state,
+            "readiness": {
+                "state": state,
+                "ready": state == STT_READY,
+                "sttState": stt_state,
+                "audioState": "AUDIO_READY" if audio_ready else "AUDIO_UNAVAILABLE",
+                "message": message,
+                "detail": detail,
+            },
+            "recognizers": recognizers,
+            "capture": capture,
+            "policy": policy,
             "indicator": self.indicator.describe(),
             "confirmation": self.ledger.describe(),
             "coordination": self.coordinator.describe(),

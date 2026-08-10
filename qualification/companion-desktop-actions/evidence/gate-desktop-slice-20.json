@@ -1,0 +1,3957 @@
+{
+  "baseline": {
+    "agents": {
+      "activeStreams": 0,
+      "agentChildNames": [],
+      "agentChildren": 0,
+      "httpConnections": 0,
+      "liveAgentServices": 0,
+      "liveAgentWorkers": 0,
+      "providerQueueDepth": 0,
+      "runningAgentWorkers": 0,
+      "toolProposalsHeld": 0
+    },
+    "descriptors": {
+      "companionFiles": [
+        "/root/bunny-desktop-evidence/gate-desktop-slice-20.log",
+        "/root/bunny-desktop-evidence/gate-desktop-slice-20.log"
+      ],
+      "files": 3,
+      "other": 0,
+      "sockets": 0,
+      "total": 4
+    },
+    "desktop": {
+      "approvalsSpent": 0,
+      "clipboardOwners": 0,
+      "dbusConnections": 0,
+      "desktopChildNames": [],
+      "desktopChildren": 0,
+      "ledgerConsistent": true,
+      "liveDesktopBrokers": 0,
+      "notificationsTracked": 0,
+      "pendingActions": 0,
+      "portalHandles": 0,
+      "preparedActions": 0,
+      "startedActions": 0,
+      "unknownActions": 0
+    },
+    "label": "baseline",
+    "memory": {
+      "rssBytes": 24092672
+    },
+    "runtime": {
+      "activeExecutors": [],
+      "consentWaiters": [],
+      "executorLeases": [],
+      "heldAnswers": [],
+      "liveRuntimes": 0,
+      "liveServices": 0,
+      "lockedStores": [],
+      "pendingApprovals": []
+    },
+    "sockets": {
+      "tcpListen": 5,
+      "tcpTimeWait": 0,
+      "unixCompanionCount": 0,
+      "unixCompanionPaths": []
+    },
+    "speech": {
+      "activeCaptures": 0,
+      "audioInputHandles": 0,
+      "bufferedBytes": 0,
+      "captureChildren": 0,
+      "captureNames": [],
+      "listeningIndicator": false,
+      "liveCaptureWorkers": 0,
+      "liveSpeechServices": 0,
+      "openRecognizerSessions": 0,
+      "pendingTranscripts": 0,
+      "temporarySpeechWorkspaces": 0
+    },
+    "tempDirectories": 27,
+    "threads": {
+      "count": 1,
+      "names": [
+        "MainThread"
+      ],
+      "nonDaemon": 1
+    },
+    "voice": {
+      "activeRequests": 0,
+      "audioHandles": 0,
+      "audioNames": [],
+      "childNames": [],
+      "childProcesses": 0,
+      "liveVoiceServices": 0,
+      "liveVoiceWorkers": 0,
+      "queueDepth": 0,
+      "temporaryFiles": 0,
+      "temporaryWorkspaces": 0,
+      "zombies": 0
+    }
+  },
+  "failed": 0,
+  "final": {
+    "agents": {
+      "activeStreams": 0,
+      "agentChildNames": [],
+      "agentChildren": 0,
+      "httpConnections": 0,
+      "liveAgentServices": 0,
+      "liveAgentWorkers": 0,
+      "providerQueueDepth": 0,
+      "runningAgentWorkers": 0,
+      "toolProposalsHeld": 0
+    },
+    "descriptors": {
+      "companionFiles": [
+        "/root/bunny-desktop-evidence/gate-desktop-slice-20.log",
+        "/root/bunny-desktop-evidence/gate-desktop-slice-20.log"
+      ],
+      "files": 4,
+      "other": 4,
+      "sockets": 2,
+      "total": 11
+    },
+    "desktop": {
+      "approvalsSpent": 0,
+      "clipboardOwners": 0,
+      "dbusConnections": 0,
+      "desktopChildNames": [],
+      "desktopChildren": 0,
+      "ledgerConsistent": true,
+      "liveDesktopBrokers": 0,
+      "notificationsTracked": 0,
+      "pendingActions": 0,
+      "portalHandles": 0,
+      "preparedActions": 0,
+      "startedActions": 0,
+      "unknownActions": 0
+    },
+    "label": "final",
+    "memory": {
+      "rssBytes": 88543232
+    },
+    "runtime": {
+      "activeExecutors": [],
+      "consentWaiters": [],
+      "executorLeases": [],
+      "heldAnswers": [],
+      "liveRuntimes": 0,
+      "liveServices": 0,
+      "lockedStores": [],
+      "pendingApprovals": []
+    },
+    "sockets": {
+      "tcpListen": 5,
+      "tcpTimeWait": 60,
+      "unixCompanionCount": 0,
+      "unixCompanionPaths": []
+    },
+    "speech": {
+      "activeCaptures": 0,
+      "audioInputHandles": 0,
+      "bufferedBytes": 0,
+      "captureChildren": 0,
+      "captureNames": [],
+      "listeningIndicator": false,
+      "liveCaptureWorkers": 0,
+      "liveSpeechServices": 0,
+      "openRecognizerSessions": 0,
+      "pendingTranscripts": 0,
+      "temporarySpeechWorkspaces": 0
+    },
+    "tempDirectories": 27,
+    "threads": {
+      "count": 1,
+      "names": [
+        "MainThread"
+      ],
+      "nonDaemon": 1
+    },
+    "voice": {
+      "activeRequests": 0,
+      "audioHandles": 0,
+      "audioNames": [],
+      "childNames": [],
+      "childProcesses": 0,
+      "liveVoiceServices": 0,
+      "liveVoiceWorkers": 0,
+      "queueDepth": 0,
+      "temporaryFiles": 0,
+      "temporaryWorkspaces": 0,
+      "zombies": 0
+    }
+  },
+  "finalConsecutivePass": 20,
+  "firstFailure": null,
+  "iterations": [
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 60055552,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0204,
+      "iteration": 1,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.070254,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.000787
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.075851,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.050996
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.119014,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005562
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.146438,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.159663
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.228909,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.060044,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.066961,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000253
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.150289
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.257,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 61108224,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 2207744,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0143,
+      "iteration": 2,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.07235,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.001159
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.078577,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.051521
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.124059,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.006994
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.143884,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.156075
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.229293,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.044145,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.071167,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000188
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.067323
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.068,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64348160,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 6,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 57344,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0134,
+      "iteration": 3,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.049899,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.000988
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.073423,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.048988
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.123797,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.007356
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.145962,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.158853
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.229095,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.061187,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.070559,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000246
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.057183
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.058,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64405504,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 9,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 45056,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.013,
+      "iteration": 4,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.073229,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.0011
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.076374,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.051047
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.125464,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.006373
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.14474,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.158163
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.228849,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.039782,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.067649,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000167
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.058191
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.059,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64860160,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 12,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": -610304,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0146,
+      "iteration": 5,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.070365,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.000881
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.073423,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.047895
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.125811,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005507
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.139278,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.150813
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.227724,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.058488,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.068434,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000181
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.059731
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.06,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64249856,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 15,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 585728,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0163,
+      "iteration": 6,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.048919,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.001029
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.073393,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.049358
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.121139,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005729
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.139586,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.151797
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.227292,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.060962,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.064758,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000184
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.031367
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.032,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64835584,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 18,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 86016,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0139,
+      "iteration": 7,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.071698,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.001222
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.071489,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.048285
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.122537,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005439
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.140128,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.152002
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.229089,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.060478,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.067935,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000182
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.061672
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.062,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64921600,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 21,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": -577536,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0132,
+      "iteration": 8,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.074374,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.000842
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.071325,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.047004
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.125048,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.007494
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.138792,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.151198
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.228549,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.039089,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.099354,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000239
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.080281
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.081,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64344064,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 24,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 20480,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0134,
+      "iteration": 9,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.069883,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.000701
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.053148,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.02594
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.13074,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005352
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.140028,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.151598
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.228833,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.060928,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.067387,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000119
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.04474
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.045,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64364544,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 27,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 700416,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0141,
+      "iteration": 10,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.072504,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.00123
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.07489,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.048959
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.126525,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005311
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.144395,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.157468
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.228508,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.061588,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.068739,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000187
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.077464
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.078,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 65064960,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 30,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": -86016,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0127,
+      "iteration": 11,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.074633,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.001896
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.074692,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.048039
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.127541,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.006182
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.146123,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.158073
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.229761,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.037197,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.098661,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000218
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.090903
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.091,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64983040,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 33,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": -692224,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0158,
+      "iteration": 12,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.071139,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.00095
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.073493,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.046868
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.126086,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005302
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.140765,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.152057
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.227768,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.038909,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.09548,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000162
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.068911
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.069,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64290816,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 36,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 753664,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0168,
+      "iteration": 13,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.071167,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.000949
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.05148,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.025716
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.124179,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005061
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.138194,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.150509
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.226925,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.062226,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.069807,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000183
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.04638
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.047,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 65044480,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 39,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 106496,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.015,
+      "iteration": 14,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.072913,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.000969
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.074383,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.048337
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.128151,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.00549
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.145455,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.159049
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.230872,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.040793,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.103294,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000159
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.099852
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.1,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 65150976,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 42,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": -643072,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0137,
+      "iteration": 15,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.071805,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.000692
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.050752,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.025157
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.124527,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005394
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.143695,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.156446
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.228812,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.05692,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.067731,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.00024
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.038499
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.039,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64507904,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 45,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 745472,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0137,
+      "iteration": 16,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.072494,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.00108
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.071878,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.047197
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.125299,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.00571
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.141772,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.153565
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.229324,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.058889,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.066089,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000126
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.064657
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.065,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 65253376,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 48,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": -811008,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0152,
+      "iteration": 17,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.072154,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.001251
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.051687,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.026432
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.124971,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005459
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.140091,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.152105
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.227543,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.035934,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.094741,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000389
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.053498
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.054,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64442368,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 51,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 0,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0147,
+      "iteration": 18,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.049151,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.000942
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.052064,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.027106
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.125678,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005315
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.140185,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.151885
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.227974,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.03992,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.068341,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000216
+        },
+        {
+          "name": "slice-total",
+          "seconds": 0.999298
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.0,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64442368,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 54,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 0,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0158,
+      "iteration": 19,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.049922,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.001256
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.050396,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.025462
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.121442,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.005349
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.140059,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.151522
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.227231,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.038693,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.098302,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000139
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.028791
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.029,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64442368,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 57,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    },
+    {
+      "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+      "delta": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 0,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 8192,
+        "socketDescriptors": 0,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 3,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      },
+      "errors": [],
+      "failures": [],
+      "gcSeconds": 0.0116,
+      "iteration": 20,
+      "measurements": [
+        {
+          "name": "run-notify",
+          "seconds": 0.049447,
+          "state": "completed"
+        },
+        {
+          "name": "approval-to-dispatch",
+          "seconds": 0.001344
+        },
+        {
+          "name": "run-launch",
+          "seconds": 0.075232,
+          "state": "completed"
+        },
+        {
+          "name": "application-launch",
+          "seconds": 0.048481
+        },
+        {
+          "name": "run-volume",
+          "seconds": 0.127588,
+          "state": "completed"
+        },
+        {
+          "name": "volume-read-back",
+          "seconds": 0.006109
+        },
+        {
+          "name": "run-undo",
+          "seconds": 0.150344,
+          "state": "completed"
+        },
+        {
+          "name": "undo",
+          "seconds": 0.162925
+        },
+        {
+          "name": "run-clipboard",
+          "seconds": 0.234744,
+          "state": "completed"
+        },
+        {
+          "name": "run-clipboard-cancelled",
+          "seconds": 0.037077,
+          "state": "cancelled"
+        },
+        {
+          "name": "run-hostile",
+          "seconds": 0.103671,
+          "state": "completed"
+        },
+        {
+          "name": "broker-restart",
+          "seconds": 0.000136
+        },
+        {
+          "name": "slice-total",
+          "seconds": 1.076372
+        }
+      ],
+      "notRun": [
+        "3. discover a genuine local agent provider: no local agent provider is installed on this host; the slice's proposals come from a canonical local executor, which exercises the same pipeline"
+      ],
+      "ok": true,
+      "pid": 590636,
+      "posture": "desktop-actions-available",
+      "ran": 30,
+      "resourceDelta": {
+        "clipboardOwners": 0,
+        "dbusConnections": 0,
+        "notificationsTracked": 1,
+        "portalHandles": 0
+      },
+      "seconds": 1.077,
+      "sinceBaseline": {
+        "activeCaptures": 0,
+        "activeExecutors": [],
+        "activeRequests": 0,
+        "activeStreams": 0,
+        "agentChildren": 0,
+        "audioHandles": 0,
+        "audioInputHandles": 0,
+        "bufferedBytes": 0,
+        "captureChildren": 0,
+        "childProcesses": 0,
+        "clipboardOwners": 0,
+        "consentWaiters": [],
+        "dbusConnections": 0,
+        "descriptors": 7,
+        "desktopChildren": 0,
+        "executorLeases": [],
+        "heldAnswers": [],
+        "httpConnections": 0,
+        "ledgerConsistent": true,
+        "listeningIndicator": false,
+        "liveAgentServices": 0,
+        "liveAgentWorkers": 0,
+        "liveCaptureWorkers": 0,
+        "liveDesktopBrokers": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveSpeechServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "lockedStores": [],
+        "nonDaemonThreads": 0,
+        "notificationsTracked": 0,
+        "openRecognizerSessions": 0,
+        "pendingActions": 0,
+        "pendingApprovals": [],
+        "portalHandles": 0,
+        "preparedActions": 0,
+        "providerQueueDepth": 0,
+        "queueDepth": 0,
+        "rssBytes": 64450560,
+        "socketDescriptors": 2,
+        "startedActions": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 60,
+        "tempDirectories": 0,
+        "temporarySpeechWorkspaces": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "unknownActions": 0,
+        "zombies": 0
+      }
+    }
+  ],
+  "longestConsecutivePass": 20,
+  "mode": "in-process",
+  "order": "declared",
+  "passed": 20,
+  "runs": 20,
+  "target": "desktop-slice"
+}

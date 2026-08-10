@@ -444,6 +444,7 @@ class CaptureWorker:
                 device_id=request.device_preference,
                 backend_id="",
                 provider_id=recognizer.declaration.provider_id,
+                presentation_revision=request.presentation_revision,
             )
             if not raised:
                 # §4's sentence as a branch: no indicator, no microphone.
@@ -495,6 +496,8 @@ class CaptureWorker:
             self._emit(session, "microphone_opened", {
                 "backendId": backend.backend_id,
                 "deviceId": device.device_id,
+                "audioFormat": request.audio_format,
+                "sampleFormat": "S16LE",
                 "sampleRate": request.sample_rate,
                 "channels": request.channels,
                 "openLatencySeconds": round(handle.open_latency_seconds, 6),
@@ -520,8 +523,19 @@ class CaptureWorker:
             handle.close()
             measurement.microphone_closed_at = self.clock.monotonic()
             measurement.bytes_captured = handle.bytes_captured
+            duration_seconds = (
+                handle.bytes_captured / request.bytes_per_second
+                if request.bytes_per_second else 0.0
+            )
             self._emit(session, "capture_stopped", {
                 "reason": ending,
+                "backendId": handle.backend_id,
+                "deviceId": handle.device_id,
+                "audioFormat": request.audio_format,
+                "sampleFormat": "S16LE",
+                "sampleRate": request.sample_rate,
+                "channels": request.channels,
+                "durationSeconds": round(duration_seconds, 6),
                 "bytesCaptured": handle.bytes_captured,
                 "droppedBytes": handle.buffer.dropped_bytes,
             })

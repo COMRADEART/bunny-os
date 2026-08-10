@@ -50,6 +50,7 @@ __all__ = [
     "AUDIENCES",
     "AUDIENCE_CEILING",
     "DATA_CLASSES",
+    "DIAGNOSTIC_REDACTIONS",
     "MAX_PAYLOAD_BYTES",
     "MAX_REQUEST_LENGTH",
     "MAX_STRING_LENGTH",
@@ -61,6 +62,7 @@ __all__ = [
     "project",
     "normalise_key",
     "rank",
+    "redact_diagnostic_text",
     "router_privacy",
     "sanitize",
     "scrub_text",
@@ -402,3 +404,44 @@ def display_summary(text: str, *, limit: int = MAX_SUMMARY_LENGTH) -> str:
     if len(scrubbed) <= limit:
         return scrubbed
     return scrubbed[: max(0, limit - 1)].rstrip() + "…"
+
+
+#: What must come out of free text before it is written to a log, a fault
+#: record or a diagnostics bundle. Declared here rather than beside any one of
+#: its three callers, because three copies of a redaction list is three places
+#: for one of them to fall behind, and the one that falls behind is the one
+#: that leaks.
+#:
+#: The list has grown from real leaks: a home directory in a stack trace names
+#: the user; a bare hex run is usually a token or a content digest; anything
+#: that describes itself as a secret is one.
+DIAGNOSTIC_REDACTIONS: tuple[tuple["re.Pattern[str]", str], ...] = (
+    # Windows and POSIX user directories. The fault is identifiable from the
+    # basename; the path to somebody's home directory is not needed to fix it.
+    (re.compile(r"(?i)[a-z]:\\+users\\+[^\\\s]+"), "<user-path>"),
+    (re.compile(r"/(?:home|Users)/[^/\s]+"), "<user-path>"),
+    (re.compile(r"(?i)\b/tmp/[^\s]+"), "<temp-path>"),
+    # Anything self-describing as a secret, with its value.
+    (re.compile(r"(?i)\b(token|secret|password|passphrase|api[_-]?key|bearer)"
+                r"\s*[:=]?\s*\S+"), r"\1=<redacted>"),
+    # Long hex or base64-ish runs: request tokens, keys, digests of content.
+    (re.compile(r"\b[A-Fa-f0-9]{32,}\b"), "<hex>"),
+)
+
+
+def redact_diagnostic_text(value: str, *, limit: int = 400) -> str:
+    """One line of free text, safe to write down. Collapsed, redacted, bounded.
+
+    Used for an exception message on its way into a fault record and for a
+    journal line on its way into a diagnostics bundle. Both are text this
+    project did not write in full — a third-party adapter's exception carries
+    whatever that adapter put in it — and both are read by somebody who is not
+    the person the text is about.
+    """
+    message = str(value)
+    for pattern, replacement in DIAGNOSTIC_REDACTIONS:
+        message = pattern.sub(replacement, message)
+    message = " ".join(message.split())
+    if len(message) > limit:
+        message = message[: max(0, limit - 1)] + "…"
+    return message

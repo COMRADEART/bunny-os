@@ -356,8 +356,11 @@ directory, `StateDirectory=` the 0700 store, `UMask=0077`,
 `RestrictAddressFamilies=AF_UNIX` (the companion makes no outbound connection,
 so a provider adapter added later has to change this file, in a review, rather
 than simply starting to work), plus `NoNewPrivileges`, `ProtectSystem=strict`,
-`MemoryDenyWriteExecute`, a `@system-service` syscall filter and bounded
-restart.
+a `@system-service` syscall filter, bounded restart and a 2 GiB hard memory
+limit. `MemoryDenyWriteExecute` is deliberately absent because Pocket's local
+CPU inference runtime generates optimized executable kernels; the child still
+has no network address family, privilege, writable system tree or unbounded
+memory.
 
 There is exactly one service. The desktop entry launches `/usr/bin/bunny-companion`,
 which is a *client*: if no runtime is listening it says how to start one and

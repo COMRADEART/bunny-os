@@ -40,9 +40,31 @@ import time
 import unittest
 from typing import Any
 
-for _candidate in (Path("/usr/lib/bunny-os/python"), Path(__file__).resolve().parents[1]):
-    if _candidate.is_dir() and str(_candidate) not in sys.path:
-        sys.path.insert(0, str(_candidate))
+# Where the code under test comes from, and the order is the whole of it.
+#
+# The checkout this script lives in wins, always. The installed tree is a
+# fallback for running the harness on a machine that has no checkout.
+#
+# The obvious version of this loop was wrong in a way that produced a *silent
+# wrong answer* rather than an error. It inserted each candidate at the front
+# only if it was not already in ``sys.path`` — so with ``PYTHONPATH`` pointing at
+# the checkout, the checkout was skipped as already-present and the installed
+# tree went in ahead of it. Every gate then measured
+# ``/usr/lib/bunny-os/python``: a build from some earlier phase, without the
+# package under test in it. A hundred iterations reported
+# ``ModuleNotFoundError`` and, had the module happened to exist there, would
+# have reported a hundred clean passes for code nobody had changed.
+#
+# So the checkout is *moved* to the front rather than conditionally inserted.
+_REPOSITORY = Path(__file__).resolve().parents[1]
+_INSTALLED = Path("/usr/lib/bunny-os/python")
+for _candidate in (_INSTALLED, _REPOSITORY):
+    if not _candidate.is_dir():
+        continue
+    name = str(_candidate)
+    while name in sys.path:
+        sys.path.remove(name)
+    sys.path.insert(0, name)
 
 #: The service-driven subset — every module that starts a real runtime, binds a
 #: socket or drives a slice. These are the tests the flake lives in; the other
@@ -536,6 +558,223 @@ def agents_inventory() -> dict[str, Any]:
     }
 
 
+#: Programs the desktop broker may start. A child of one of these names between
+#: iterations is a clipboard owner that was not released or a settings window
+#: this process is still waiting on.
+_DESKTOP_CHILDREN = frozenset({
+    "wl-copy", "xclip", "pactl", "gsettings", "notify-send",
+    "gnome-control-center", "systemsettings", "systemsettings5",
+})
+
+
+def desktop_inventory() -> dict[str, Any]:
+    """What the desktop broker holds: handles, owners, connections, ledger.
+
+    §23's columns. Every one names something this process *owns* and must give
+    up: a portal request it opened, a selection a child of ours is holding, a
+    bus connection, an attempt still in flight, an approval it has spent.
+
+    ``ledgerConsistent`` is the odd one out and is the most useful. It is not a
+    count but a *property*: every entry in every live ledger is either settled
+    or unknown, and none is left in ``started`` with nothing running. A ledger
+    that failed this between iterations would mean an attempt was begun and the
+    process forgot about it — which is precisely the state §20 turns into
+    ``unknown`` on the next start-up, and which should never exist while the
+    process is still alive.
+    """
+    import gc as _gc
+
+    children: list[str] = []
+    proc = Path("/proc")
+    if proc.is_dir():
+        own = os.getpid()
+        for entry in proc.iterdir():
+            if not entry.name.isdigit():
+                continue
+            try:
+                status = (entry / "status").read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            parent = 0
+            name = ""
+            for line in status.splitlines():
+                if line.startswith("PPid:"):
+                    parent = int(line.split()[1])
+                elif line.startswith("Name:"):
+                    name = line.split(maxsplit=1)[1].strip() if len(line.split()) > 1 else ""
+                if parent and name:
+                    break
+            if parent == own and name in _DESKTOP_CHILDREN:
+                children.append(name)
+
+    brokers = 0
+    portal_handles = 0
+    clipboard_owners = 0
+    notifications = 0
+    bus_connections = 0
+    inflight = 0
+    approvals_spent = 0
+    unknown_actions = 0
+    started_actions = 0
+    prepared_actions = 0
+    for item in _gc.get_objects():
+        try:
+            name = type(item).__name__
+        except Exception:  # pragma: no cover - exotic proxies
+            continue
+        if name == "DesktopActionBroker":
+            brokers += 1
+            try:
+                counts = item.adapters.resource_counts()
+                portal_handles += int(counts.get("portalHandles", 0))
+                clipboard_owners += int(counts.get("clipboardOwners", 0))
+                notifications += int(counts.get("notificationsTracked", 0))
+                bus_connections += int(counts.get("dbusConnections", 0))
+                inflight += len(item._inflight)  # noqa: SLF001 - the harness measures internals
+                approvals_spent += len(item.consumed)
+                for entry in item.ledger.entries.values():
+                    if entry.state == "unknown":
+                        unknown_actions += 1
+                    elif entry.state == "started":
+                        started_actions += 1
+            except Exception:
+                continue
+        elif name == "DesktopSupport":
+            try:
+                prepared_actions += len(item._prepared)  # noqa: SLF001
+            except Exception:
+                continue
+    return {
+        "desktopChildren": len(children),
+        "desktopChildNames": sorted(set(children)),
+        "liveDesktopBrokers": brokers,
+        "portalHandles": portal_handles,
+        "clipboardOwners": clipboard_owners,
+        "notificationsTracked": notifications,
+        "dbusConnections": bus_connections,
+        "pendingActions": inflight,
+        "approvalsSpent": approvals_spent,
+        "unknownActions": unknown_actions,
+        "startedActions": started_actions,
+        "preparedActions": prepared_actions,
+        # See the docstring: a property, not a count.
+        "ledgerConsistent": started_actions == 0,
+    }
+
+
+def renderer3d_inventory() -> dict[str, Any]:
+    """§34's 3D counters: contexts, GL objects, models, timers, workers.
+
+    Read from live Python objects rather than from the driver, because OpenGL
+    has no way to enumerate what a process owns — which is exactly why
+    :class:`companion.character.three_d.gpu.GpuResources` exists. Every GL name
+    this build creates passes through that ledger, so counting the ledgers is
+    counting the objects, and a name created outside one would be invisible
+    here *and* would never be released, which is what the leak columns are for.
+
+    ``glTable`` is a property rather than a count and is the §30 assertion in
+    counter form: a suite that never selected a 3D presentation must leave the
+    entry-point table unloaded, and a run where it is loaded when it should not
+    be is a run that opened ``libGL`` for nothing.
+    """
+    import gc as _gc
+
+    contexts = 0
+    live_contexts = 0
+    renderers = 0
+    models = 0
+    gl_objects = 0
+    textures = 0
+    buffers = 0
+    vertex_arrays = 0
+    programs = 0
+    framebuffers = 0
+    estimated_bytes = 0
+    behaviours = 0
+    state_machines = 0
+    gtk_areas = 0
+    leak_suspicions: list[str] = []
+    for item in _gc.get_objects():
+        try:
+            name = type(item).__name__
+        except Exception:  # pragma: no cover - exotic proxies
+            continue
+        if name in {"SurfacelessContext", "AdoptedContext"}:
+            contexts += 1
+            try:
+                # Whether it still *holds* a driver context, not whether the
+                # Python object exists. A released context has had
+                # ``eglDestroyContext`` and ``eglTerminate`` called on it and
+                # holds nothing; the object survives only because whoever made
+                # it still has a reference — a unittest class attribute, in the
+                # case that found this. Counting those as live GPU contexts
+                # made a fifty-run suite gate report two leaked contexts when
+                # the leak was a fixture and the driver had been told twice.
+                #
+                # ``lost`` is not the same question and must not be reused for
+                # it: §23 gives that word a specific meaning (the compositor or
+                # the driver took the context away) and a released context is
+                # not a lost one.
+                held = getattr(item, "_context", None) or getattr(item, "_gl", None)
+                if held is not None and not item.lost:
+                    live_contexts += 1
+            except Exception:
+                pass
+        elif name == "ThreeDRenderer":
+            renderers += 1
+            try:
+                if item.model is not None:
+                    models += 1
+            except Exception:
+                pass
+        elif name == "GpuResources":
+            try:
+                payload = item.to_json()
+            except Exception:
+                continue
+            gl_objects += int(payload.get("live", 0))
+            textures += int(payload.get("textures", 0))
+            buffers += int(payload.get("buffers", 0))
+            vertex_arrays += int(payload.get("vertexArrays", 0))
+            programs += int(payload.get("programs", 0))
+            framebuffers += int(payload.get("framebuffers", 0))
+            estimated_bytes += int(payload.get("estimatedBytes", 0))
+            leak_suspicions.extend(payload.get("leakSuspicions", ()))
+        elif name == "ProceduralBehaviour":
+            behaviours += 1
+        elif name == "AnimationStateMachine":
+            state_machines += 1
+        elif name == "ThreeDCharacterArea":
+            gtk_areas += 1
+
+    table_loaded = False
+    module = sys.modules.get("companion.character.three_d.gl")
+    if module is not None:
+        table_loaded = getattr(module, "_LOADED", None) is not None
+    workers = sum(
+        1 for thread in threading.enumerate()
+        if any(marker in thread.name.casefold() for marker in ("renderer", "gl-", "three-d"))
+    )
+    return {
+        "gpuContexts": contexts,
+        "liveGpuContexts": live_contexts,
+        "renderers": renderers,
+        "activeModels": models,
+        "glObjects": gl_objects,
+        "textures": textures,
+        "buffers": buffers,
+        "vertexArrays": vertex_arrays,
+        "shaderPrograms": programs,
+        "framebuffers": framebuffers,
+        "estimatedGpuBytes": estimated_bytes,
+        "animationTimers": behaviours + state_machines,
+        "gtkGlAreas": gtk_areas,
+        "rendererWorkers": workers,
+        "glTable": table_loaded,
+        "leakSuspicions": sorted(set(leak_suspicions)),
+    }
+
+
 def memory_inventory() -> dict[str, Any]:
     """RSS from /proc, or NOT_RUN. Never a substitute measurement."""
     try:
@@ -598,6 +837,20 @@ def _commit() -> str:
     return value
 
 
+def _temporary_directory_count() -> int:
+    """How many directories are sitting in the temporary directory right now.
+
+    Counted rather than matched on a prefix. The absolute number is not the
+    interesting part — a shared /tmp has other things in it — the *delta* across
+    one iteration is, and a delta is only meaningful if the count includes the
+    directories that actually accumulate.
+    """
+    try:
+        return sum(1 for item in Path(tempfile.gettempdir()).iterdir() if item.is_dir())
+    except OSError:
+        return 0
+
+
 def snapshot(label: str) -> dict[str, Any]:
     return {
         "label": label,
@@ -608,8 +861,20 @@ def snapshot(label: str) -> dict[str, Any]:
         "voice": voice_inventory(),
         "speech": speech_inventory(),
         "agents": agents_inventory(),
+        "desktop": desktop_inventory(),
+        "renderer3d": renderer3d_inventory(),
         "memory": memory_inventory(),
-        "tempDirectories": len(list(Path(tempfile.gettempdir()).glob("bunny-*"))),
+        # Every directory in the temporary directory, not only the ones this
+        # project names.
+        #
+        # This globbed ``bunny-*`` and reported 0 -> 0 for every gate ever run,
+        # while the suite gate filled a 7.8 GB tmpfs with **10,591** directories
+        # and died with ENOSPC at iteration 12. They were all bare
+        # ``tempfile.mkdtemp()`` — no prefix — each holding a companion store
+        # and an agents journal, left behind by tests that never removed them.
+        # A counter that only sees the well-named ones reports a clean run in
+        # exactly the case it exists to catch.
+        "tempDirectories": _temporary_directory_count(),
     }
 
 
@@ -652,6 +917,29 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
         ("liveAgentWorkers", ("agents", "liveAgentWorkers")),
         ("liveAgentServices", ("agents", "liveAgentServices")),
         ("httpConnections", ("agents", "httpConnections")),
+        # §23's desktop columns.
+        ("desktopChildren", ("desktop", "desktopChildren")),
+        ("liveDesktopBrokers", ("desktop", "liveDesktopBrokers")),
+        ("portalHandles", ("desktop", "portalHandles")),
+        ("clipboardOwners", ("desktop", "clipboardOwners")),
+        ("notificationsTracked", ("desktop", "notificationsTracked")),
+        ("dbusConnections", ("desktop", "dbusConnections")),
+        # §34's 3D columns. Each names something the renderer *holds*: a GPU
+        # context, a driver object, an uploaded model, a behaviour with a timer,
+        # a widget with a tick callback.
+        ("gpuContexts", ("renderer3d", "gpuContexts")),
+        ("liveGpuContexts", ("renderer3d", "liveGpuContexts")),
+        ("renderers", ("renderer3d", "renderers")),
+        ("activeModels", ("renderer3d", "activeModels")),
+        ("glObjects", ("renderer3d", "glObjects")),
+        ("textures", ("renderer3d", "textures")),
+        ("buffers", ("renderer3d", "buffers")),
+        ("vertexArrays", ("renderer3d", "vertexArrays")),
+        ("shaderPrograms", ("renderer3d", "shaderPrograms")),
+        ("framebuffers", ("renderer3d", "framebuffers")),
+        ("animationTimers", ("renderer3d", "animationTimers")),
+        ("gtkGlAreas", ("renderer3d", "gtkGlAreas")),
+        ("rendererWorkers", ("renderer3d", "rendererWorkers")),
     ):
         start, end = _get(before, *path), _get(after, *path)
         if isinstance(start, int) and isinstance(end, int):
@@ -674,6 +962,15 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
     # iterations is wrong whatever the baseline held.
     for name in ("providerQueueDepth", "activeStreams"):
         result[name] = _get(after, "agents", name) or 0
+    # §23's desktop absolutes: an attempt in flight, a prepared action nobody
+    # spent, or an entry still `started` between iterations is wrong whatever
+    # the baseline held. `approvalsSpent` is *not* absolute — a spent approval
+    # is a record of consent that was used, and clearing it between iterations
+    # would be the replay guard forgetting.
+    for name in ("pendingActions", "preparedActions", "startedActions"):
+        result[name] = _get(after, "desktop", name) or 0
+    result["ledgerConsistent"] = bool(_get(after, "desktop", "ledgerConsistent"))
+    result["unknownActions"] = _get(after, "desktop", "unknownActions") or 0
     # Absolute rather than differenced. A lease, a waiter, a held answer, an
     # outstanding question or a held store lock should be *empty* between
     # iterations, not merely unchanged — a delta of zero against a baseline that
@@ -1162,8 +1459,436 @@ def _run_agent_slice() -> dict[str, Any]:
     }
 
 
+def _run_desktop_lifecycle() -> dict[str, Any]:
+    """One complete desktop-broker lifecycle, against whatever desk this is.
+
+    Six things happen, in the order a real task would meet them, and each is a
+    property the gate is *for* rather than a step towards one:
+
+    1. **prepare and execute an approved action.** The whole route: schema,
+       normalisation, binding, ledger-before-effect, adapter, observation,
+       result. Where the machine can perform it the effect is real; where it
+       cannot the result is a typed ``unsupported`` and the run continues,
+       because the authority half must hold on a headless runner too.
+    2. **refuse the same approval a second time.** The replay guard.
+    3. **refuse a changed act.** The binding, with one parameter moved.
+    4. **cancel one in flight.** The scope is claimed and released, and the
+       result says what it prevented.
+    5. **release every resource.** The counters this gate reads must return to
+       where they were, which is the leak assertion.
+    6. **reopen the ledger.** Completed stays completed; nothing in flight is
+       left ``started``.
+
+    A hundred of these is the §23 gate, and what it measures is that none of the
+    six leaves anything behind.
+    """
+    from companion.desktop.broker import BrokerOptions, DesktopActionBroker
+    from companion.desktop.ledger import OperationLedger
+
+    problems: list[str] = []
+    performed: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-desktop-") as directory:
+        ledger_path = Path(directory) / "ledger.json"
+        broker = DesktopActionBroker(BrokerOptions(ledger_path=ledger_path))
+        broker.start()
+        before = broker.adapters.resource_counts()
+        try:
+            report = broker.environment()
+            # 1. An action the environment permits, or the least-effect one it
+            # does not — a settings page opens a window and changes nothing.
+            action_id = "desktop.settings.open"
+            prepared = broker.prepare(
+                action_id, {"page": "sound"},
+                request_id="dreq-stress-1", session_id="stress-session",
+                task_id="stress-task", lifecycle_epoch=0, plan_id="stress-plan",
+                operation_id="stress-op-1", cancellation_token="stress-cancel-1",
+            )
+            result = broker.execute(
+                prepared.request.with_approval("stress-approval-1"),
+                approved_binding=prepared.binding,
+            )
+            performed.append(result.state)
+            if result.state not in (
+                "confirmed", "accepted-not-confirmed", "unsupported", "failed",
+            ):
+                problems.append(f"the first action reported {result.state!r}")
+            if result.state == "confirmed" and not result.observation.verifies:
+                problems.append("a confirmed result carried no verifying observation")
+
+            # 2. The replay guard.
+            replay = broker.execute(
+                prepared.request.with_approval("stress-approval-1"),
+                approved_binding=prepared.binding,
+            )
+            if replay.state not in ("refused", "accepted-not-confirmed", "confirmed", "unsupported"):
+                problems.append(f"a replayed approval reported {replay.state!r}")
+
+            # 3. A changed act, with the same approval.
+            changed = broker.prepare(
+                action_id, {"page": "display"},
+                request_id="dreq-stress-2", session_id="stress-session",
+                task_id="stress-task", lifecycle_epoch=0, plan_id="stress-plan",
+                operation_id="stress-op-2", cancellation_token="stress-cancel-2",
+            )
+            mismatched = broker.execute(
+                changed.request.with_approval("stress-approval-1"),
+                approved_binding=prepared.binding,
+            )
+            if mismatched.state != "refused":
+                problems.append(
+                    f"an act that changed after approval reported {mismatched.state!r}"
+                )
+
+            # 4. A cancellation that lands before the backend.
+            third = broker.prepare(
+                action_id, {"page": "power"},
+                request_id="dreq-stress-3", session_id="stress-session",
+                task_id="stress-task", lifecycle_epoch=0, plan_id="stress-plan",
+                operation_id="stress-op-3", cancellation_token="stress-cancel-3",
+            )
+            cancelled = broker.execute(
+                third.request.with_approval("stress-approval-3"),
+                approved_binding=third.binding,
+                cancelled=lambda: True,
+            )
+            if cancelled.state != "cancelled":
+                problems.append(f"a cancelled attempt reported {cancelled.state!r}")
+            if cancelled.effect_prevented is not True:
+                problems.append("a pre-dispatch cancellation did not claim prevention")
+
+            # 6a. The ledger, while the process still holds it.
+            still_started = [
+                item for item in broker.ledger.entries.values() if item.state == "started"
+            ]
+            if still_started:
+                problems.append(f"{len(still_started)} attempt(s) left in flight")
+            if not broker.environment().posture:
+                problems.append("the environment reported no posture")
+            if report.posture not in (
+                "desktop-actions-available", "limited-desktop-actions",
+                "notification-only", "headless-no-desktop-actions",
+            ):
+                problems.append(f"an unknown posture: {report.posture!r}")
+        finally:
+            # 5. Release, and check that it released.
+            released = broker.stop()
+            after = broker.adapters.resource_counts()
+            for key, start in before.items():
+                if int(after.get(key, 0)) > int(start):
+                    problems.append(
+                        f"{key} went from {start} to {after.get(key)} across one lifecycle"
+                    )
+
+        # 6b. Reopen. Completed stays completed; nothing is repeatable.
+        reopened = OperationLedger.load(ledger_path)
+        for entry in reopened.entries.values():
+            if entry.state == "started":
+                problems.append(f"{entry.key} reloaded as started rather than unknown")
+            if entry.state in ("completed", "undone") and entry.repeatable:
+                problems.append(f"{entry.key} reloaded as repeatable")
+
+    return {
+        "ok": not problems,
+        "failures": problems,
+        "ran": 6,
+        "states": performed,
+        "released": dict(released),
+    }
+
+
+def _run_desktop_slice() -> dict[str, Any]:
+    from companion.desktop.vertical_slice import run_desktop_slice
+
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-dslice-") as directory:
+        report = run_desktop_slice(Path(directory)).to_json()
+    return {
+        "ok": report["passed"],
+        "failures": [item["name"] for item in report["failed"]],
+        "notRun": report["notRun"],
+        "ran": report["stepCount"],
+        "posture": report["posture"],
+        # §24's latencies, per iteration. Carried out of the slice rather than
+        # measured separately: a figure taken once says what one run did, and
+        # twenty of them say what the thing does.
+        "measurements": report["measurements"],
+        "resourceDelta": report["resourceDelta"],
+        "detail": [item["detail"] for item in report["failed"]][:2],
+    }
+
+
+def _run_renderer3d_lifecycle() -> dict[str, Any]:
+    """One complete 3D renderer lifecycle. §34's first gate, one iteration.
+
+    Eight things happen, in the order a session meets them, and each is a
+    property the gate is *for* rather than a step towards one:
+
+    1. **create a context.** The one operation that can fail for reasons that
+       have nothing to do with this code — no libEGL, no driver, no display —
+       and the one the report must therefore not confuse with a leak.
+    2. **validate a package.** The whole model validator, on the shipped
+       character, every iteration. A validator that grew a cache would show up
+       as a memory trend rather than a correctness failure, so it is run rather
+       than skipped after the first time.
+    3. **upload it.** Buffers, textures, the morph texture, three programs.
+    4. **draw every canonical state.** Each one through the mapper, so the
+       animation state machine, the face rig and the procedural behaviour all
+       run; and offscreen, so the pixels can be *read* rather than assumed.
+    5. **move the mouth.** The viseme path to the geometry.
+    6. **degrade and recover.** The rung change, including the renderer being
+       rebuilt at the lightweight quality.
+    7. **restart.** Release everything and build it again inside the same
+       context, which is the operation §23 requires after a fault.
+    8. **release.** The ledger must reach zero, and the counters this gate
+       reads must return to where they started.
+
+    A hundred of these is the gate, and what it measures is that none of the
+    eight leaves anything behind.
+    """
+    from companion.character.defaults import default_3d_character_path
+    from companion.character.mapper import (
+        CharacterState,
+        StateMapperInput,
+        map_character_state,
+    )
+    from companion.character.package import validate_package_directory
+    from companion.character.schema import PackageTrustState
+    from companion.character.three_d.context import SurfacelessContext, offscreen_available
+    from companion.character.three_d.renderer import ThreeDRenderer
+
+    problems: list[str] = []
+    available, reason = offscreen_available()
+    root = default_3d_character_path()
+    if not available or not root.is_dir():
+        return {
+            "ok": False, "ran": 0,
+            "failures": [
+                "no offscreen graphics context: " + reason if not available
+                else "the built-in 3D package is not installed"
+            ],
+            "notRun": ["the 3D renderer lifecycle needs a graphics stack and the 3D package"],
+        }
+
+    context = SurfacelessContext()
+    renderer = None
+    coverage = 0.0
+    states: list[str] = []
+    try:
+        package = validate_package_directory(root, trust_state=PackageTrustState.BUILT_IN)
+        if package.model is None:
+            problems.append("the built-in package carried no validated model")
+            return {"ok": False, "ran": 2, "failures": problems}
+        section = package.manifest.three_dimensional
+
+        def build(quality: str) -> Any:
+            item = ThreeDRenderer(context=context, quality=quality, seed=0x9E)
+            item.load_package(package)
+            item.upload(
+                package.model,
+                animation_map=section.animation_map,
+                expression_map=section.expression_map,
+                viseme_map=section.viseme_map,
+                native_scale=section.native_scale,
+                floor_offset=section.floor_offset,
+                now=0.0,
+            )
+            item.begin_offscreen(160, 200)
+            return item
+
+        renderer = build("full-3d")
+        before = renderer.resources.to_json()["live"]
+
+        for index, phase in enumerate((
+            "idle", "understanding", "planning", "working", "reviewing",
+            "waiting_for_approval", "speaking", "success", "error",
+        )):
+            mapped = map_character_state(
+                package.manifest,
+                StateMapperInput(presentation_phase=phase, status_text="Bunny is here."),
+            )
+            renderer.display_state(mapped, now_ms=index * 400)
+            states.append(mapped.character_state.value)
+        _width, _height, pixels = renderer.read_pixels()
+        opaque = sum(1 for index in range(3, len(pixels), 4) if pixels[index] > 12)
+        coverage = opaque / max(1, len(pixels) // 4)
+        if coverage <= 0.01:
+            problems.append(f"the character covered {coverage:.3%} of the surface")
+
+        for shape in ("open-small", "open-wide", "rounded", "neutral"):
+            renderer.set_mouth_shape(shape)
+            renderer.draw(now_ms=4000)
+        if renderer.face is not None and renderer.face.mouth_shape != "neutral":
+            problems.append("the mouth did not return to neutral")
+
+        renderer.set_quality("lightweight-3d")
+        renderer.draw(now_ms=4500)
+        if renderer.renderer_name != "lightweight-3d":
+            problems.append("the lightweight rung did not take effect")
+        renderer.set_quality("full-3d")
+
+        renderer.release()
+        if renderer.resources.to_json()["live"]:
+            problems.append("a released renderer still held GPU objects")
+        renderer = build("full-3d")
+        after = renderer.resources.to_json()["live"]
+        if after != before:
+            problems.append(f"a restart changed the live object count from {before} to {after}")
+    except Exception as exc:  # noqa: BLE001 - a fault is data
+        problems.append(f"{type(exc).__name__}: {exc}")
+    finally:
+        if renderer is not None:
+            try:
+                renderer.release()
+                if renderer.resources.to_json()["live"]:
+                    problems.append("the final release left GPU objects live")
+                problems.extend(renderer.resources.leak_suspicions)
+            except Exception as exc:  # noqa: BLE001
+                problems.append(f"release failed: {type(exc).__name__}: {exc}")
+        context.release()
+
+    return {
+        "ok": not problems,
+        "failures": problems,
+        "ran": 8,
+        "states": states,
+        "coverage": round(coverage, 5),
+    }
+
+
+def _run_renderer3d_slice() -> dict[str, Any]:
+    from companion.character.three_d_slice import run_three_d_slice
+
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-3dslice-") as directory:
+        report = run_three_d_slice(Path(directory)).to_json()
+    return {
+        "ok": report["passed"],
+        "failures": report["failures"],
+        "notRun": report["notRun"],
+        "ran": report["ran"],
+        "measurements": report["measurements"],
+        "environment": report["environment"],
+    }
+
+
+def _run_alpha_lifecycle() -> dict[str, Any]:
+    """One complete Public Alpha session-surface lifecycle.
+
+    Seven things, in the order a login meets them, each chosen because it is a
+    property the gate is *for* rather than a step towards one:
+
+    1. **the default-character policy decides and acts.** The first-boot case:
+       nothing selected, a rung chosen, a package selected, a claim recorded.
+    2. **it declines to act a second time.** The idempotence that stops a
+       machine re-selecting on every login.
+    3. **it preserves a user selection.** The one rule §3 exists for, exercised
+       rather than asserted about — the policy is asked again, with a
+       user-selected package in place, and must not move it.
+    4. **safe mode arms, is consumed, and clears.** Including the launcher's
+       three-failure counter, which is §34's crash-loop breaker.
+    5. **settings persist across a read.** Written, re-read, projected into the
+       three preference types the subsystems take.
+    6. **the recovery report answers.** On a machine with no session, no
+       runtime and no desk, because that is when it is wanted.
+    7. **a diagnostics bundle is written and holds no credential.**
+
+    A hundred of these is the §42 companion-lifecycle gate. What it measures is
+    that none of the seven leaves a thread, a descriptor or a temporary file
+    behind — the surfaces added by this phase open sockets to probe providers
+    and start helper processes to enumerate audio, and both are things that
+    accumulate silently.
+    """
+    from companion.character.defaults import default_character_paths
+    from companion.character.importer import PackageRegistry
+    from companion.character.policy import apply_default_character_policy, read_policy_state
+    from companion.settings import load_settings, update_settings
+    from companion.support.diagnose import diagnose
+    from companion.support.export import build_bundle
+    from companion.support.safemode import (
+        FAILURE_THRESHOLD, clear_safe_mode, consume_safe_mode, read_safe_mode,
+        record_launch_outcome, request_safe_mode, safe_mode_environment,
+    )
+
+    problems: list[str] = []
+    performed: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="bunny-stress-alpha-") as directory:
+        root = Path(directory)
+        registry = PackageRegistry(root / "characters", built_in_paths=default_character_paths())
+
+        # 1 and 2: decide, act, then decline.
+        first = apply_default_character_policy(registry, eligible="full-3d")
+        if not first.package_id:
+            problems.append("the character policy chose no package at the full-3d rung")
+        performed.append(f"policy:{first.rung}:{first.package_id or 'none'}")
+        second = apply_default_character_policy(registry, eligible="full-3d")
+        if second.applied:
+            problems.append("the character policy acted twice for one machine")
+
+        # 3: a user selection outranks it.
+        chosen = registry.built_ins()[0].package_id
+        registry.select(chosen)
+        third = apply_default_character_policy(registry, eligible="full-3d")
+        if third.applied or not third.preserved_user_choice:
+            problems.append(f"the character policy overrode a user selection of {chosen}")
+        if registry.selected().package_id != chosen:
+            problems.append("the selected package changed under a policy that should not act")
+        performed.append("policy:preserved-user-choice")
+
+        # 4: safe mode, including the crash-loop breaker.
+        request_safe_mode(reason="stress", origin="cli", root=root)
+        if not consume_safe_mode(root).enabled:
+            problems.append("a one-shot safe-mode request was not seen by the launch that spends it")
+        if read_safe_mode(root).enabled:
+            problems.append("a one-shot safe-mode request survived the launch that spends it")
+        for _ in range(FAILURE_THRESHOLD):
+            record_launch_outcome(succeeded=False, root=root)
+        armed = read_safe_mode(root)
+        if not (armed.enabled and armed.automatic):
+            problems.append(f"{FAILURE_THRESHOLD} failed launches did not arm safe mode")
+        if not safe_mode_environment(root=root):
+            problems.append("armed safe mode produced no environment")
+        clear_safe_mode(root)
+        if read_safe_mode(root).enabled:
+            problems.append("safe mode survived being cleared")
+        performed.append("safe-mode:armed-and-cleared")
+
+        # 5: settings persist.
+        update_settings(root, "voice", {"enabled": False, "volume": 0.5})
+        reloaded = load_settings(root)
+        if reloaded.voice.enabled or abs(reloaded.voice.volume - 0.5) > 1e-6:
+            problems.append("a written setting did not survive a re-read")
+        if reloaded.voice_preferences().enabled:
+            problems.append("the voice projection disagreed with the setting")
+        performed.append("settings:persisted")
+
+        # 6 and 7: the recovery report, and a bundle with nothing secret in it.
+        report = diagnose(root=root, include_failures=False)
+        if not report.sections:
+            problems.append("the recovery report produced no sections")
+        performed.append(f"diagnose:{len(report.sections)}-sections")
+        bundle = build_bundle(root=root, report=report, generated_at="stress")
+        if bundle.get("uploaded") is not False:
+            problems.append("the diagnostics bundle did not declare that it uploaded nothing")
+        from companion.settings import _refuse_secrets
+
+        try:
+            _refuse_secrets(bundle)
+        except Exception as error:
+            problems.append(f"the diagnostics bundle held something credential-shaped: {error}")
+        performed.append("export:clean")
+
+        if read_policy_state(registry).user_package_id != chosen:
+            problems.append("the policy did not record the user's selection for recovery")
+
+    return {
+        "ok": not problems,
+        "failures": problems,
+        "ran": len(performed),
+        "measurements": {"performed": performed},
+    }
+
+
 TARGETS = {
     "service": lambda order, seed: _run_modules(SERVICE_MODULES, order=order, seed=seed),
+    "alpha": lambda order, seed: _run_alpha_lifecycle(),
     "suite": lambda order, seed: _run_modules(SUITE_MODULES, order=order, seed=seed),
     "protocol": lambda order, seed: _run_modules(
         ("tests.companion.test_protocol_ipc",), order=order, seed=seed
@@ -1177,6 +1902,10 @@ TARGETS = {
     "speech-slice": lambda order, seed: _run_speech_slice(),
     "agents": lambda order, seed: _run_agents_lifecycle(),
     "agent-slice": lambda order, seed: _run_agent_slice(),
+    "desktop": lambda order, seed: _run_desktop_lifecycle(),
+    "desktop-slice": lambda order, seed: _run_desktop_slice(),
+    "renderer3d": lambda order, seed: _run_renderer3d_lifecycle(),
+    "renderer3d-slice": lambda order, seed: _run_renderer3d_slice(),
 }
 
 
@@ -1222,6 +1951,25 @@ def run_in_process(target: str, runs: int, *, order: str, verbose: bool) -> dict
             record["mode"] = outcome["mode"]
         if outcome.get("notRun"):
             record["notRun"] = outcome["notRun"]
+        # Anything else the target measured, kept rather than dropped.
+        #
+        # An earlier version copied only the fields listed above, so a target
+        # that reported its posture and its latencies had both silently
+        # discarded — and the collector, reading the gate file afterwards, saw
+        # twenty iterations with no posture and no figures. A harness that
+        # decides which of a target's measurements are interesting is a harness
+        # that will one day discard the interesting one.
+        for name in (
+            "posture", "measurements", "resourceDelta", "states", "released",
+            # The 3D targets' own: how much of the surface the character
+            # covered, and what graphics stack drew it. Added when the 3D gates
+            # landed, for exactly the reason the paragraph above gives — the
+            # first run of the 3D lifecycle gate reported a null coverage for
+            # all hundred iterations because this list did not name it.
+            "coverage", "environment",
+        ):
+            if outcome.get(name) is not None:
+                record[name] = outcome[name]
         if not record["ok"]:
             record["detail"] = outcome.get("detail", [])
             record["order"] = outcome.get("order")
@@ -1267,7 +2015,7 @@ def run_isolated(target: str, runs: int, *, order: str) -> dict[str, Any]:
         completed = subprocess.run(
             [sys.executable, __file__, "--target", target, "--runs", "1",
              "--order", order, "--json"],
-            capture_output=True, text=True,
+            capture_output=True, text=True, cwd=str(_REPOSITORY),
         )
         ok = completed.returncode == 0
         iterations.append({

@@ -2039,7 +2039,20 @@ def source_gate() -> int:
     """The source gate. Runs the repository's own checks and nothing else."""
     def suite(command: list[str]) -> bool:
         result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
-        return result.returncode == 0
+        if result.returncode == 0:
+            return True
+        # Say which test failed. This used to swallow the output entirely, and
+        # the cost was paid twice in one session: `sourceSuitesPass` reported
+        # FAIL while the same command run by hand a minute later passed 4,665
+        # tests, and there was nothing anywhere to say what had gone wrong. A
+        # gate that can fail without naming a reason cannot be acted on — the
+        # only options are to re-run it and hope, or to distrust it.
+        print(f"\n{' '.join(command)} exited {result.returncode}; its last lines were:")
+        for stream, text in (("stderr", result.stderr), ("stdout", result.stdout)):
+            lines = [line for line in (text or "").splitlines() if line.strip()]
+            for line in lines[-25:]:
+                print(f"  {stream}: {line}")
+        return False
 
     licence_document = load_optional(DATA / "licence-decision.json", None)
     licence_passed = False

@@ -20,6 +20,8 @@
         "cancel_task",
         "pause_task",
         "resume_task",
+        "settings_voice_get",
+        "settings_voice_set",
         "voice_health",
         "voice_list",
         "voice_status",
@@ -43,7 +45,13 @@
         "provider_health",
         "provider_test_local",
         "task_provider_status",
-        "task_provider_cancel"
+        "task_provider_cancel",
+        "desktop_actions_list",
+        "desktop_actions_status",
+        "desktop_action_explain",
+        "desktop_action_cancel",
+        "desktop_action_undo",
+        "desktop_action_history"
       ]
     },
     "request": {

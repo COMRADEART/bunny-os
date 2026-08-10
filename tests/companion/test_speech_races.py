@@ -17,6 +17,7 @@ import unittest
 from companion.speech.recovery import CAPTURE_DISPOSITIONS
 
 from .speech_support import (
+
     FrameScript,
     RecordingSink,
     ScriptedCaptureBackend,
@@ -28,6 +29,7 @@ from .speech_support import (
     speech_pcm,
     wait_for,
 )
+from .support import temporary_root
 
 
 def _dispositions(harness) -> list[str]:
@@ -233,7 +235,7 @@ class RestartRaces(unittest.TestCase):
 
         from companion.speech.recovery import SpeechJournal
 
-        journal = SpeechJournal(Path(tempfile.mkdtemp()) / "journal.jsonl")
+        journal = SpeechJournal(temporary_root(self) / "journal.jsonl")
         script = FrameScript()
         script.hold.set()
         harness = build_worker(
@@ -256,7 +258,7 @@ class RestartRaces(unittest.TestCase):
 
         from companion.speech.recovery import SpeechJournal, recover
 
-        directory = Path(tempfile.mkdtemp())
+        directory = temporary_root(self)
         journal = SpeechJournal(directory / "journal.jsonl")
         # A start line with no settle: the crash shape.
         journal.record_start(make_request(request_id="speechreq-crashed"), monotonic=1.0)

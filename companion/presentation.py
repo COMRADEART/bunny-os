@@ -257,7 +257,14 @@ _KIND_RANK = {name: index for index, name in enumerate(PRESENTATION_KINDS)}
 #: makes every consumer start believing animation is available — so it moves
 #: only when there is a renderer behind it, which is why the previous phase left
 #: it out and said so.
-IMPLEMENTED_PRESENTATIONS = frozenset({"animated-2d", "static-image", "audio-only", "text-only"})
+#: ``full-3d`` and ``lightweight-3d`` joined this set in the 3D renderer phase,
+#: and — like ``animated-2d`` before them — only once there was a renderer
+#: behind them that had drawn a frame in a test. ``tests/companion/
+#: test_three_d_render.py`` reads pixels out of a real GL context and asserts a
+#: character appeared; that test is what this line is standing on.
+IMPLEMENTED_PRESENTATIONS = frozenset({
+    "full-3d", "lightweight-3d", "animated-2d", "static-image", "audio-only", "text-only",
+})
 
 #: Where the surface may sit. Naming only; a Wayland compositor decides actual
 #: placement and :func:`window_directive` says so rather than pretending.
@@ -1493,8 +1500,13 @@ def select_presentation(
     Two answers come out of this, and keeping them apart is the whole point.
     ``eligible`` is what the machine could support; ``implementation`` is what
     this build will actually draw, and it is filtered through
-    :data:`IMPLEMENTED_PRESENTATIONS` at the end. This build has no animated 2D
-    and no 3D renderer, so it never selects one — however capable the machine.
+    :data:`IMPLEMENTED_PRESENTATIONS` at the end.
+
+    Since the 3D renderer landed the two are equal for every rung this function
+    can produce, which is what ``limited_by_implementation`` records when they
+    are not. The distinction is kept rather than collapsed because it has been
+    load-bearing twice — once for animated 2D and once for 3D — and it will be
+    again for whatever is above ``full-3d``.
     """
     preferences = preferences or AccessibilityPreferences()
     reasons: list[str] = []
@@ -1517,6 +1529,9 @@ def select_presentation(
         elif memory < 2 * _GIB:
             eligible = _degrade(eligible, "animated-2d")
             reasons.append("available memory limits presentation to animated 2D")
+        elif memory < 3 * _GIB:
+            eligible = _degrade(eligible, "lightweight-3d")
+            reasons.append("available memory limits presentation to lightweight 3D")
     if signals.thermal_throttled:
         eligible = _degrade(eligible, "static-image")
         reasons.append("the machine is thermally throttled; decorative animation is off")

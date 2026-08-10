@@ -373,8 +373,14 @@ class CancellationTests(CrashHarness):
         original = runtime.broker.invoke
         marked: list[str] = []
 
-        def cancel_after_the_first_call(tool_id, arguments, *, caller, classification="internal"):
-            outcome = original(tool_id, arguments, caller=caller, classification=classification)
+        # ``**extra`` rather than a fixed signature: the runtime also passes the
+        # desktop invocation context, and a stand-in that had to be edited every
+        # time the broker gained a keyword would be testing the signature rather
+        # than the cancellation.
+        def cancel_after_the_first_call(tool_id, arguments, *, caller, classification="internal", **extra):
+            outcome = original(
+                tool_id, arguments, caller=caller, classification=classification, **extra
+            )
             if not marked:
                 marked.append(tool_id)
                 # Another process marks the task cancelled, mid-plan.
@@ -435,8 +441,12 @@ class CancellationTests(CrashHarness):
         original = runtime.broker.invoke
         fired: list[str] = []
 
-        def cancel_during_the_first_operation(tool_id, arguments, *, caller, classification="internal"):
-            outcome = original(tool_id, arguments, caller=caller, classification=classification)
+        def cancel_during_the_first_operation(
+            tool_id, arguments, *, caller, classification="internal", **extra
+        ):
+            outcome = original(
+                tool_id, arguments, caller=caller, classification=classification, **extra
+            )
             if not fired:
                 fired.append(tool_id)
                 cancel_task(runtime, session.session_id, task.task_id, cause="user")

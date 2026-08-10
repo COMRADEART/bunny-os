@@ -1,0 +1,2 @@
+stress: target=alpha runs=100 order=declared mode=in-process pid=92137
+stress: 100/100 passed, longest consecutive 100

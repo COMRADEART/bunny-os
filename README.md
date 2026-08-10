@@ -6,19 +6,32 @@ Phase 1 selected Fedora 44 bootc, GNOME on Wayland, SELinux, firewalld, a versio
 
 The current checkout has source definitions and passing host gates, but this Windows host has no Podman, unified `image-builder`, Linux systemd, or QEMU/KVM. No Phase 1 or Phase 2 disk artifact, graphical boot, VM interaction, or hardware result is claimed. The signed upstream Bunny Linux artifact also remains unavailable, so Bunny/Core end-to-end surfaces correctly degrade to unavailable.
 
-## Release state — 2026-07-30
+## Release state — 2026-08-08
 
 **Bunny OS is not releasable and no pilot may begin.** Read this before anything
 else in this repository.
 
 ```text
-Source gate:               PASS
-Qualification candidate:   BLOCKED   (2 of 14 prerequisites satisfied)
+Source gate:               PASS at 85dead7 (Fedora 44 reference host)
+Qualification candidate:   BLOCKED   (3 of 14 prerequisites satisfied)
 Stable release:            NO-GO
 OEM pilot:                 BLOCKED
 Enterprise pilot:          BLOCKED
 Encrypted-sync pilot:      BLOCKED
 ```
+
+The source gate result binds to commit `85dead7`, measured by
+`python scripts/release.py gate --kind source` on the Fedora 44 reference host
+as unprivileged user `bunny` from an ext4 checkout — exit code 0, all six
+requirements satisfied. It is not a claim about any later commit.
+
+Two earlier statements it replaces. The previous `PASS` was the assertion added
+in `9dc7e33` with no `gate-source.json` committed beside it, so nothing bound it
+to a tree. And a Windows run of the same gate cannot stand in for this one:
+ShellCheck is absent there, so that validator skips and a real fail-open defect
+in `build/scripts/vm-alpha-story.sh` was invisible. Run it as `root` and an
+eighth test fails that should not — a read-only directory is writable for root —
+so the account is part of the measurement too.
 
 | Closed | State |
 |---|---|
@@ -26,11 +39,11 @@ Encrypted-sync pilot:      BLOCKED
 | Package minimisation | **complete** — `toolbox` removed from four consumer profiles with a fail-closed protected-package check. **It changed no scan number**, and no claim is made that it reduced security risk |
 | Development signing drill | **PASS — 9/9** against real 1.85 GB and 1.33 GB artifacts, including four refusals |
 | Two-person development signing drill | **PASS — 9/9** with two separate Ed25519 keys, including two refusals |
+| Independent reproducibility | **established at the archive stage, 2026-08-01.** Three builders across two administrator boundaries — local Fedora WSL, hosted `H1` run `30714175121`, hosted `H2` run `30714176083` — built candidate `b9c317d` and presented the same bytes: raw `29e54aaf…`, normalised `68c12c71…`, 17 of 17 dimensions MATCH on all three pairwise comparisons. `verify-builder-independence` returns PASS from real environment evidence. **Scope: archive-only.** `BUNNY_ARCHIVE_ONLY=1`, so no disk image was built and this is not a candidate build; `appliedSelinuxContexts` stays NOT_COLLECTED and belongs to installed-system qualification |
 
 | Open | State |
 |---|---|
 | Vulnerability position | **59 fixable, 8 Critical, 28 High, 23 Medium — unchanged.** All 24 unique Critical/High findings are dispositioned `Unknown`, which blocks. Every one comes from the digest-pinned Fedora bootc base, and a base rebuild on 2026-07-29 did not move the counts |
-| Independent reproducibility | **not established.** Same-host repeatability is; two workspaces on one host are not two builders. A hosted CI workflow is committed and **has not been executed** |
 | Physical hardware | **zero reports.** No physical machine has ever run Bunny OS |
 | Accessibility | **0 of 17 runtime flows driven.** Static tests pass and are explicitly not sufficient |
 | Independent reviews | **four requests ready to send, zero commissioned, zero delivered** |

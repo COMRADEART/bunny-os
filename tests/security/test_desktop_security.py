@@ -18,6 +18,12 @@ class DesktopSecurityTests(unittest.TestCase):
             for directive in ("NoNewPrivileges=yes", "ProtectSystem=strict", "MemoryMax=", "TasksMax="):
                 self.assertIn(directive, unit)
 
+    def test_companion_budget_can_contain_the_neural_voice_worker(self) -> None:
+        unit = (ROOT / "systemd/user/bunny-companion.service").read_text(encoding="utf-8")
+        self.assertIn("MemoryHigh=1536M", unit)
+        self.assertIn("MemoryMax=2G", unit)
+        self.assertNotIn("MemoryDenyWriteExecute=yes", unit)
+
     def test_clipboard_history_and_telemetry_default_off(self) -> None:
         source = (ROOT / "shell/services/bunny_shell/settings.py").read_text(encoding="utf-8")
         self.assertIn('"clipboardHistory": {"default": False', source)

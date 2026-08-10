@@ -39,6 +39,8 @@ from companion.voice.service import VoiceService, VoiceServiceOptions
 
 from .voice_support import BARRIER_TIMEOUT, ScriptedBackend, ScriptedProvider, make_request, presentation
 
+from .support import temporary_root
+
 VOICE_PACKAGE = Path(__file__).resolve().parents[2] / "companion" / "voice"
 
 
@@ -187,7 +189,7 @@ class ImportBoundaryTests(unittest.TestCase):
 
 class ServiceBoundaryTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.directory = Path(tempfile.mkdtemp())
+        self.directory = temporary_root(self)
         self.service = VoiceService(VoiceServiceOptions(
             runtime_directory=self.directory,
             registry=ProviderRegistry([ScriptedProvider()]),
@@ -206,6 +208,33 @@ class ServiceBoundaryTests(unittest.TestCase):
                 ("CompanionRuntime", "CompanionStore", "CompanionSession", "CompanionApprovalStore"),
                 f"VoiceService.{attribute} is a {type(value).__name__}",
             )
+
+    def test_preparing_neural_provider_keeps_fallback_speech_available(self) -> None:
+        """Cold Pocket startup must not turn a working fallback into captions."""
+        from companion.voice.provider import ProviderHealth
+
+        for status in ("INITIALIZING", "MODEL_VERIFIED"):
+            with self.subTest(status=status):
+                provider = ScriptedProvider(provider_id="pocket")
+                provider.health = lambda **_kwargs: ProviderHealth(
+                    provider_id="pocket",
+                    available=False,
+                    healthy=True,
+                    status=status,
+                    detail="Pocket TTS is preparing its local model",
+                )
+                service = VoiceService(VoiceServiceOptions(
+                    runtime_directory=temporary_root(self),
+                    registry=ProviderRegistry([provider]),
+                    router=__import__(
+                        "companion.voice.audio", fromlist=["AudioRouter"]
+                    ).AudioRouter([ScriptedBackend()]),
+                    start_worker=False,
+                ))
+                self.addCleanup(service.close)
+                self.assertTrue(service.policy.decision.speaks)
+                self.assertTrue(service.voice_status()["signals"]["localProviderAvailable"])
+                self.assertTrue(service.voice_status()["signals"]["synthesisProviderAvailable"])
 
     def test_every_boundary_claim_is_answered_and_answered_no(self) -> None:
         boundaries = self.service.boundaries()
@@ -319,7 +348,7 @@ class ServiceConstructionTests(unittest.TestCase):
         from companion.protocol import DuplicateRuntime
         from companion.service import CompanionService, ServiceOptions
 
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         endpoint = root / "runtime.sock"
         first = CompanionService(ServiceOptions(
             root=root, endpoint=endpoint, machine="laptop",
@@ -343,8 +372,10 @@ class ServiceConstructionTests(unittest.TestCase):
         from companion.service import CompanionService, ServiceOptions
 
         before = self._voice_threads()
+        root = temporary_root(self)
         service = CompanionService(ServiceOptions(
-            root=Path(tempfile.mkdtemp()), machine="laptop", voice_enabled=False,
+            root=root, endpoint=root / "runtime.sock", machine="laptop",
+            voice_enabled=False,
         ))
         try:
             self.assertIsNone(service.voice)
@@ -359,7 +390,7 @@ class ServiceConstructionTests(unittest.TestCase):
 
 class JournalTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.directory = Path(tempfile.mkdtemp())
+        self.directory = temporary_root(self)
         self.journal = VoiceJournal(self.directory / "voice-journal.jsonl")
 
     def test_a_settled_utterance_is_not_uncertain(self) -> None:
@@ -435,7 +466,7 @@ class JournalTests(unittest.TestCase):
 
 class SweepTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.parent = Path(tempfile.mkdtemp())
+        self.parent = temporary_root(self)
 
     def _stale_workspace(self, *, age: float = STALE_AFTER_SECONDS * 2) -> PrivateWorkspace:
         workspace = PrivateWorkspace(parent=self.parent)
@@ -495,7 +526,7 @@ class SweepTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "posix", "symbolic links are a POSIX arrangement")
     def test_a_symlink_named_like_a_workspace_is_not_followed(self) -> None:
-        elsewhere = Path(tempfile.mkdtemp())
+        elsewhere = temporary_root(self)
         (elsewhere / "precious.txt").write_text("keep me", encoding="utf-8")
         link = self.parent / f"{PrivateWorkspace.PREFIX}link"
         link.symlink_to(elsewhere)
@@ -513,8 +544,8 @@ class SweepTests(unittest.TestCase):
 
 class RecoveryTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.directory = Path(tempfile.mkdtemp())
-        self.parent = Path(tempfile.mkdtemp())
+        self.directory = temporary_root(self)
+        self.parent = temporary_root(self)
         self.journal = VoiceJournal(self.directory / "voice-journal.jsonl")
 
     def test_recovery_reconciles_and_sweeps_and_truncates(self) -> None:

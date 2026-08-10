@@ -162,7 +162,7 @@ The constitution and accepted ADRs establish these binding constraints:
 - Linux remains the upstream kernel; no kernel fork or new kernel is permitted.
 - Bunny OS is an image layer on an existing atomic base, not a package-archive distribution.
 - The base pattern is Fedora/bootc with an OCI image, transactional deployments and rollback.
-- User data, Bunny state and models live outside the OS image.
+- User data, Bunny state and general assistant models live outside the OS image. The Alpha image makes one narrow exception for its immutable, byte-manifested offline speech-recognition model; see `docs/VOICE_IMAGE_PACKAGING.md`.
 - Bunny Core remains the intelligence/application layer and cannot replace systemd, the bootloader, kernel, drivers, network stack or mandatory access control.
 - A trusted, narrow Broker owns OS authority; model-directed processes receive no root, generic shell, unrestricted sudo, container socket, arbitrary D-Bus forwarding or arbitrary filesystem-write capability.
 - SELinux remains enabled for the selected Fedora base.

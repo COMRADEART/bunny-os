@@ -742,18 +742,67 @@ class SourceInspectionCannotSubstituteForActivation(unittest.TestCase):
         ]
         self.assertTrue(raises, "install-root.py raises no SystemExit at all")
 
+        # Whether the SystemExit is the *consequence* of the activation check is
+        # a structural question, not a distance. This was a line count — the
+        # raise had to fall within 30 lines of the anchor — and every unit added
+        # to the table pushed it further away, so the Public Alpha pass broke
+        # this test by strengthening the very check it defends: seven units
+        # asserted where there had been four. A test that fails when the check
+        # gets stronger is measuring the wrong thing, and raising the constant
+        # would only postpone the next false failure.
+        #
+        # The chain that actually matters is anchor -> table -> list -> guard ->
+        # raise, and each link is asserted below.
         anchor = INSTALL_ROOT_SOURCE.index(f"sysinit.target.wants/{UNIT_NAME}")
         anchor_line = INSTALL_ROOT_SOURCE[:anchor].count("\n") + 1
-        following = [node.lineno for node in raises if node.lineno > anchor_line]
-        self.assertTrue(
-            following,
-            "the activation assertion is not followed by a SystemExit; a build that "
-            "detects a missing enablement and continues is the defect, not the fix",
+
+        def assignment_to(name: str) -> ast.Assign | None:
+            return next(
+                (
+                    node
+                    for node in ast.walk(INSTALL_ROOT_TREE)
+                    if isinstance(node, ast.Assign)
+                    and any(
+                        isinstance(target, ast.Name) and target.id == name
+                        for target in node.targets
+                    )
+                ),
+                None,
+            )
+
+        # The anchor is inside the table the check reads, not merely somewhere
+        # above the raise.
+        table = assignment_to("required_activation")
+        self.assertIsNotNone(table, "install-root.py has no required_activation table")
+        self.assertLessEqual(table.lineno, anchor_line)
+        self.assertGreaterEqual(table.end_lineno, anchor_line)
+
+        # The missing list is computed from that table.
+        missing = assignment_to("missing_activation")
+        self.assertIsNotNone(missing, "install-root.py computes no missing_activation list")
+        self.assertIn(
+            "required_activation",
+            ast.dump(missing),
+            "missing_activation is not derived from required_activation, so the "
+            "refusal is not about the units the table requires",
         )
-        self.assertLess(
-            min(following) - anchor_line,
-            30,
-            "the SystemExit is too far from the activation check to be its consequence",
+
+        # And the raise is guarded by that list rather than merely near it.
+        guard = next(
+            (
+                node
+                for node in ast.walk(INSTALL_ROOT_TREE)
+                if isinstance(node, ast.If)
+                and isinstance(node.test, ast.Name)
+                and node.test.id == "missing_activation"
+            ),
+            None,
+        )
+        self.assertIsNotNone(guard, "nothing acts on missing_activation")
+        self.assertTrue(
+            [node for node in ast.walk(guard) if node in raises],
+            "the missing-activation branch does not raise SystemExit; a build that "
+            "detects a missing enablement and continues is the defect, not the fix",
         )
 
     def test_the_refusal_names_the_units_it_found_missing(self) -> None:

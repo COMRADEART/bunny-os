@@ -19,6 +19,6 @@
 | `/run/bunny` | volatile socket/token/runtime directory; recreated each boot |
 | `/recovery` | reserved future encrypted/removable recovery-data mount; not created or trusted by Phase 1 |
 
-Upstream Bunny 0.2.0 currently uses per-user XDG paths. Bunny OS does not silently relocate or duplicate that data. Models live under the user's Bunny data area, outside the OS image, with future quota controls. Plugins, model files, checkpoints, and OS deployment snapshots are different namespaces: a Bunny checkpoint never claims to roll back an OS image.
+Upstream Bunny 0.2.0 currently uses per-user XDG paths. Bunny OS does not silently relocate or duplicate that data. General assistant models live under the user's Bunny data area, outside the OS image, with future quota controls. The one explicit exception is the Alpha offline speech-recognition model under `/usr/share/bunny-os/speech-models`: it is immutable OS feature data, byte-manifested and updated with the image. Plugins, model files, checkpoints, and OS deployment snapshots are different namespaces: a Bunny checkpoint never claims to roll back an OS image.
 
 Application binaries are mode `0555`/`0444` and verified against `bunny-artifact.json`. User credentials use libsecret/Secret Service references. No provider token, static broker password, signing private key, prompt history, or user document enters an image or support bundle.

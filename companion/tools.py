@@ -39,6 +39,7 @@ __all__ = [
     "LOCAL_TEST_TOOLS",
     "ToolBroker",
     "ToolDeclaration",
+    "ToolInvocationContext",
     "ToolOutcome",
 ]
 
@@ -66,6 +67,15 @@ class ToolDeclaration:
     interrupts_user: bool = False
     #: The most sensitive data this tool may be given.
     maximum_classification: str = "secret"
+    #: Whether this tool may only be called with the task's authority facts —
+    #: which task, which lifecycle epoch, which plan, which operation, which
+    #: approval. The tools in :data:`LOCAL_TEST_TOOLS` are pure functions over
+    #: their arguments and need none of it; a desktop action needs all of it,
+    #: because §8's binding is a comparison against facts an argument list does
+    #: not carry. Declared rather than inferred, and :meth:`ToolBroker.invoke`
+    #: refuses a context-requiring tool that is called without one — so the
+    #: failure of a caller that forgot is a refusal, not an unauthorised act.
+    requires_context: bool = False
 
     def __post_init__(self) -> None:
         if self.maximum_classification not in DATA_CLASSES:
@@ -90,6 +100,7 @@ class ToolDeclaration:
             "interruptsUser": self.interrupts_user,
             "maximumClassification": self.maximum_classification,
             "sensitive": self.sensitive,
+            "requiresContext": self.requires_context,
         }
 
 
@@ -104,6 +115,29 @@ class ToolOutcome:
 
     def to_json(self) -> dict[str, Any]:
         return {"toolId": self.tool_id, "ok": self.ok, "value": self.value, "detail": self.detail}
+
+
+@dataclass(frozen=True)
+class ToolInvocationContext:
+    """Canonical task identity for a local tool that needs bounded context.
+
+    Most tools are pure functions of validated arguments and receive no
+    context.  A few safe local tools need to associate short-lived state with
+    the *actual* session (for example a numbered file-search result set).  The
+    runtime constructs this value; an executor or model cannot provide or
+    override it through operation arguments.
+
+    Desktop actions continue to receive ``DesktopToolContext``, which extends
+    this idea with approval bindings and path references.  This smaller type is
+    intentionally insufficient for a desktop broker action.
+    """
+
+    session_id: str
+    task_id: str
+    lifecycle_epoch: int
+    plan_id: str
+    operation_id: str
+    classification: str
 
 
 def _count_words(arguments: Mapping[str, Any]) -> ToolOutcome:
@@ -177,7 +211,12 @@ LOCAL_TEST_TOOLS: Mapping[str, tuple[ToolDeclaration, Callable[[Mapping[str, Any
 class ToolBroker:
     """The allowlist, and the only door through it."""
 
-    tools: Mapping[str, tuple[ToolDeclaration, Callable[[Mapping[str, Any]], ToolOutcome]]] = field(
+    #: The allowlist. An implementation takes the arguments alone, or the
+    #: arguments and the invocation context when its declaration says
+    #: ``requires_context``; :meth:`invoke` chooses from the declaration rather
+    #: than by inspecting the callable, so a tool that changed its mind about
+    #: needing a context has to say so where the approval logic can see it.
+    tools: Mapping[str, tuple[ToolDeclaration, Callable[..., ToolOutcome]]] = field(
         default_factory=lambda: dict(LOCAL_TEST_TOOLS)
     )
     #: Every invocation, in order, for the tests and for the audit view.
@@ -199,6 +238,7 @@ class ToolBroker:
         *,
         caller: str,
         classification: str = "internal",
+        context: Any = None,
     ) -> ToolOutcome:
         """Perform one operation, or refuse and say why.
 
@@ -207,6 +247,16 @@ class ToolBroker:
         against the reviewer's identity and raised, never merely returned as a
         failed outcome, because a failure looks like a tool that did not work
         and this is a component that tried to exceed its role.
+
+        ``context`` carries the task's authority facts for tools that declare
+        :attr:`ToolDeclaration.requires_context`. It is supplied by the runtime
+        and by nothing else: an executor proposes a
+        :class:`~companion.executor.PlannedOperation` and has no channel to this
+        parameter, which is what keeps a provider from naming the task, the
+        epoch or the approval its own operation would run under. A
+        context-requiring tool called without one is refused here rather than
+        left to discover the absence, because the tools that need a context are
+        exactly the ones whose checks are made *from* it.
         """
         kind = caller.split(":", 1)[0]
         if kind == "reviewer":
@@ -236,8 +286,24 @@ class ToolBroker:
                     f"and this task is {classification}"
                 ),
             )
+        if declaration.requires_context and context is None:
+            self.refusals.append({
+                "toolId": tool_id, "caller": caller,
+                "reason": "the tool requires the task's authority facts and none were supplied",
+            })
+            return ToolOutcome(
+                tool_id, False,
+                detail=(
+                    f"{tool_id!r} may only be called with the task's authority facts — which "
+                    "task, which lifecycle epoch, which plan, which operation, which approval — "
+                    "and none were supplied"
+                ),
+            )
         try:
-            outcome = implementation(arguments)
+            outcome = (
+                implementation(arguments, context) if declaration.requires_context
+                else implementation(arguments)
+            )
         except Exception as exc:  # a tool is third-party code; its faults are data
             self.invocations.append({"toolId": tool_id, "caller": caller, "ok": False})
             return ToolOutcome(tool_id, False, detail=f"{type(exc).__name__}: {exc}")

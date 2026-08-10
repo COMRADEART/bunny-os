@@ -479,10 +479,40 @@ class DeterministicLocalExecutor:
     def health(self) -> ExecutorHealth:
         return self.reported_health
 
+    # -- the desktop-intent path -------------------------------------------
+    #
+    # A request that names one of the assistant's bounded acts — "Open Files",
+    # "what is in my Downloads folder" — is planned as that act, through
+    # :mod:`companion.local_intent`. Everything else keeps the word-counting
+    # plan below, unchanged.
+    #
+    # Delegated to rather than placed beside. Capability selection picks exactly
+    # one local executor and the first eligible one wins, so a second executor
+    # in front of this one took *every* task away from it — which the
+    # integration slice caught by asserting that this executor is selected and
+    # that its plan raises an approval. Neither remained true. Routing through
+    # one executor keeps selection, the audit record and the slice exactly as
+    # they were, and adds the acts.
+    #
+    # The import is deferred because local_intent imports this module.
+
+    def _intent(self, request: str):
+        from .intents import recognise
+
+        return recognise(request)
+
+    @staticmethod
+    def _intent_executor():
+        from .local_intent import LocalIntentExecutor
+
+        return LocalIntentExecutor()
+
     def plan(self, context: TaskContext) -> TaskPlan:
         if self.malformed:
             return "this is not a plan"  # type: ignore[return-value]
         request = str(context.task.get("originalRequest", ""))
+        if self._intent(request) is not None:
+            return self._intent_executor().plan(context)
         revision = max(1, context.plan_revision)
         plan_id = "plan-" + hashlib.sha256(
             f"{context.task.get('taskId', '')}\x1f{revision}".encode("utf-8")
@@ -538,6 +568,9 @@ class DeterministicLocalExecutor:
         )
 
     def result(self, context: TaskContext) -> TaskResult:
+        request = str(context.task.get("originalRequest", ""))
+        if self._intent(request) is not None:
+            return self._intent_executor().result(context)
         counted = ""
         validated = ""
         for outcome in context.operation_results:
@@ -548,11 +581,24 @@ class DeterministicLocalExecutor:
         body = f"words={counted}"
         if validated:
             body += f"; validation={validated}"
+        # What the record keeps and what the user is told are different things.
+        #
+        # The body stays `words=N`: it is the audit record, the determinism
+        # comparison across a restart is written against it, and the recovery
+        # tests use its shape. The *summary* is what reaches a speech bubble on
+        # a desktop, and "words=6; validation=consistent" is not an answer to
+        # "write me a poem" — it is the executor describing its own internals to
+        # somebody who asked a question. So the summary says what this assistant
+        # can actually do, which is the true and useful answer to a request it
+        # did not understand.
+        from .intents import capability_sentence
+
+        summary = capability_sentence()
         return TaskResult(
             result_id="result-" + hashlib.sha256(
                 f"{context.task.get('taskId', '')}\x1f{body}".encode("utf-8")
             ).hexdigest()[:16],
-            summary=display_summary(body),
+            summary=display_summary(summary),
             outputs=(
                 ProducedOutput(
                     output_id="output-1",

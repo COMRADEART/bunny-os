@@ -22,7 +22,12 @@ from .errors import (
     CharacterSecurityError,
 )
 from .package import MANIFEST_NAME, ValidatedPackage, ValidationLimits, validate_package_directory
-from .schema import MAX_PACKAGE_BYTES, MAX_PACKAGE_FILES, PackageTrustState
+from .schema import (
+    IMPLEMENTED_PRESENTATIONS,
+    MAX_PACKAGE_BYTES,
+    MAX_PACKAGE_FILES,
+    PackageTrustState,
+)
 
 MAX_ARCHIVE_BYTES = 64 * 1024 * 1024
 MAX_COMPRESSION_RATIO = 100
@@ -89,7 +94,12 @@ class InstalledPackage:
                 raise ValueError("packageDigest is invalid")
             if not isinstance(character_name, str) or not character_name.strip():
                 raise ValueError("characterName is invalid")
-            if presentation_type not in {"static-image", "animated-2d"}:
+            if presentation_type not in set(IMPLEMENTED_PRESENTATIONS):
+                # Read from the schema's own list rather than repeated here. It
+                # was a literal pair until the 3D renderer landed, at which point
+                # every 3D package in the registry became unreadable — a second
+                # copy of a vocabulary, drifting on the first day the first one
+                # changed.
                 raise ValueError("presentationType is invalid")
             if not isinstance(stored_path, str) or not stored_path or "\x00" in stored_path:
                 raise ValueError("path is invalid")

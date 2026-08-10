@@ -1872,3 +1872,18 @@ def run(socket_path: Path) -> int:
     return BunnyCompanionApplication(socket_path).run()
 def run(endpoint: Path | None = None) -> int:  # pragma: no cover - requires a display
     return BunnyCompanionApplication(endpoint).run()
+def run(
+    endpoint: Path | None = None,
+    *,
+    preferences: AccessibilityPreferences | None = None,
+) -> int:  # pragma: no cover - requires a display
+    """Open the window.
+
+    ``preferences`` used to be missing here, and ``cli._shell`` built an
+    :class:`AccessibilityPreferences` from ``--text-only`` and then dropped it on
+    the floor — so ``bunny-os companion shell --text-only`` opened an ordinary
+    window with a character in it. That flag is what the recovery surface's
+    *Start text-only* action runs and what a user with a broken renderer is told
+    to use, so it was the one path that had to work and the one that did not.
+    """
+    return BunnyCompanionApplication(endpoint, preferences=preferences).run()

@@ -218,7 +218,18 @@ class DeterministicLocalReviewer:
                 suggested_action="Treat this review as partial.",
             ))
 
-        wants_validation = "validat" in request.lower() or context.context_withheld
+        # Withheld context alone does not mean the user asked for a validation
+        # operation.  The shipped count-words plan is the one known exception:
+        # it deliberately begins without the validation step so the review and
+        # revision loop can exercise a real objection even when personal text
+        # is redacted.  Applying that inference to every plan made a personal
+        # desktop action revise after it had already run.  A launch acknowledged
+        # by Gio then planned the same irreversible act again, where the one-use
+        # approval gate correctly refused it.
+        wants_validation = (
+            "validat" in request.lower()
+            or (context.context_withheld and "count-words" in operations)
+        )
         has_validation = any("validate" in name for name in operations)
         if wants_validation and not has_validation:
             observations.append(ReviewObservation(

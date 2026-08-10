@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Name=Bunny Companion
+GenericName=Local-first AI companion
+Comment=Talk to Bunny. Everything runs on this machine unless you say otherwise.
+# The launcher, not the window: it waits for the runtime, applies the character
+# policy and honours safe mode. A desktop entry that ran the window directly
+# would be a second, weaker way to start the same thing.
+Exec=/usr/libexec/bunny-companion-window
+Icon=art.comrade.BunnyCompanion
+Terminal=false
+Categories=Utility;
+Keywords=bunny;companion;assistant;ai;
+StartupNotify=true
+StartupWMClass=art.comrade.BunnyCompanion
+DBusActivatable=false
+X-GNOME-UsesNotifications=true

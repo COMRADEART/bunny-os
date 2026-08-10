@@ -47,7 +47,7 @@ from .adaptation import (
 )
 from .bubble import BubbleKind, BubbleLayout, BubbleState, SpeechBubbleController, layout_bubble
 from .controller import CharacterRendererController, CharacterRendererSnapshot
-from .diagnostics import registry_for, selected_package, signals_from_assessment
+from .diagnostics import registry_for, selected_package, signals_from_assessment, three_d_signals
 from .errors import CharacterError
 from .integration import bubble_request_for, mapper_input_for
 from .lipsync import LipSyncEvent, LipSyncStatus
@@ -134,6 +134,8 @@ class CharacterPresenter:
         assessment: Any = None,
         display: Display | None = None,
         placement: Placement = Placement.BOTTOM_RIGHT,
+        three_d_context: Any = None,
+        three_d_seed: int | None = None,
     ) -> None:
         self.root = Path(root)
         self.registry = registry_for(self.root)
@@ -145,9 +147,28 @@ class CharacterPresenter:
 
             assessment = assess_current_machine()
         self.assessment = assessment
-        self.base_signals = signals_from_assessment(assessment)
-        self.controller = CharacterRendererController()
+        self.base_signals = replace(
+            signals_from_assessment(assessment), **three_d_signals(package)
+        )
+        #: A callable returning a graphics context, or ``None``.
+        #:
+        #: ``None`` is not "3D is broken" — it is "nobody offered this presenter
+        #: a way to draw in 3D", which is the correct state for a headless
+        #: client, a text-only client, and every caller written before this
+        #: phase. The 3D rungs are then unreachable and no graphics library is
+        #: opened, which is §30.
+        self.three_d_context = three_d_context
+        self.controller = CharacterRendererController(
+            three_d_context=three_d_context, three_d_seed=three_d_seed
+        )
         self.controller.load_package(package)
+        #: Sustained-slowness tracking, so §22's frame-time trigger fires on a
+        #: trend rather than on one frame.
+        from .three_d.budget import DEFAULT_BUDGET, FrameHealth
+
+        self.three_d_budget = DEFAULT_BUDGET
+        self.frame_health = FrameHealth(DEFAULT_BUDGET)
+        self.controller.selector.budget = DEFAULT_BUDGET
         if fallback_event is not None:
             self.controller.events.append(fallback_event)
         self.bubbles = SpeechBubbleController()
@@ -222,6 +243,7 @@ class CharacterPresenter:
             "no_animation": accessibility.no_animation,
             "renderer_healthy": self._healthy,
         }
+        derived.update(self._three_d_health())
         derived.update(signal_overrides or {})
         signals = replace(self.base_signals, **derived)
 
@@ -325,6 +347,35 @@ class CharacterPresenter:
                 "explanation": explanation,
                 "taskContinues": True,
             })
+
+    def _three_d_health(self) -> dict[str, Any]:
+        """The 3D signals that change per frame: context loss and frame timing.
+
+        Read from the renderer that is actually running rather than measured
+        here. A presenter that timed its own frames would be a second clock
+        disagreeing with the renderer's, and the renderer is the one that knows
+        when a draw began.
+        """
+        renderer = self.controller.renderer
+        if renderer is None or renderer.renderer_name not in {"full-3d", "lightweight-3d"}:
+            self.frame_health.reset()
+            return {}
+        statistics = renderer.frame_statistics()
+        p95 = statistics.get("p95Ms")
+        # Frames are only meaningful once there are enough of them to have a
+        # 95th percentile that is not just the shader-compile frame.
+        sample = p95 if statistics.get("frames", 0) >= 20 else None
+        sustained = self.frame_health.observe(sample, renderer.quality)
+        frames = max(1, int(statistics.get("frames", 0)))
+        dropped = int(statistics.get("droppedFrames", 0))
+        context = getattr(renderer, "context", None)
+        return {
+            "frame_p95_ms": sample,
+            "sustained_slow_frames": sustained,
+            "dropped_frame_ratio": min(1.0, dropped / (frames + dropped)) if dropped else 0.0,
+            "gpu_context_lost": bool(context is not None and context.lost),
+            "three_d_healthy": self._healthy and not (context is not None and context.lost),
+        }
 
     def _recover_health(self, now: float) -> None:
         if self._healthy or self._unhealthy_since is None:
@@ -442,9 +493,31 @@ class CharacterPresenter:
             },
             "scale": self.scale,
             "implementedPresentations": [
+                Presentation.FULL_3D.value,
+                Presentation.LIGHTWEIGHT_3D.value,
                 Presentation.ANIMATED_2D.value,
                 Presentation.STATIC_IMAGE.value,
                 Presentation.TEXT_ONLY.value,
             ],
-            "threeDimensionalRenderer": None,
+            "threeDimensionalRenderer": self._describe_three_d(),
+        }
+
+    def _describe_three_d(self) -> dict[str, Any] | None:
+        """What the 3D subsystem is doing, or why it is not doing anything.
+
+        Never ``None`` for "not implemented" any more — that is what this field
+        said for two phases and it was true then. It is ``None`` now only when
+        this presenter was given no context provider at all, which is a
+        statement about the caller rather than about the build.
+        """
+        renderer = self.controller.renderer
+        if renderer is not None and renderer.renderer_name in {"full-3d", "lightweight-3d"}:
+            return renderer.describe()
+        return {
+            "renderer": None,
+            "contextProviderConfigured": self.three_d_context is not None,
+            "packageSupports3d": self.package.model is not None,
+            "available": self.base_signals.three_d_available,
+            "frameHealth": self.frame_health.to_json(),
+            "budget": self.three_d_budget.to_json(),
         }

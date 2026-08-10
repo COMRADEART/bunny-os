@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=Bunny Diagnostics
+GenericName=Recovery and diagnostics for Bunny
+Comment=See what is wrong, restart Bunny, start in Safe Mode, or export a diagnostics file.
+# Reachable from the applications list, because the moment it is wanted is the
+# moment the companion window is not there to offer it. §18: user-accessible
+# diagnostics when Bunny fails — which means not inside Bunny.
+Exec=/usr/libexec/bunny-companion-recovery
+Icon=art.comrade.BunnyCompanion
+Terminal=false
+Categories=Utility;System;
+Keywords=bunny;diagnostics;recovery;safe mode;support;
+StartupNotify=true
+DBusActivatable=false

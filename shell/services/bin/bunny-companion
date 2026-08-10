@@ -24,7 +24,20 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
-for _candidate in (Path("/usr/lib/bunny-os/python"), Path(__file__).resolve().parents[3]):
+# The candidate list is built rather than written as a tuple literal, because
+# a tuple literal evaluates both entries before the loop sees either. Installed,
+# this program is /usr/bin/bunny-companion, whose resolved path has three
+# parents, so `parents[3]` raises IndexError during construction and the
+# installed tree — the entry that would actually have worked — is never tried.
+#
+# Found on a booted image through the identical line in bunny-shell-assistant,
+# which produced `IndexError: 3` from /usr/bin. This command has carried the
+# same defect since it was written; nothing had run it from /usr/bin.
+_candidates = [Path("/usr/lib/bunny-os/python")]
+_here = Path(__file__).resolve()
+if len(_here.parents) > 3:
+    _candidates.append(_here.parents[3])
+for _candidate in _candidates:
     if _candidate.is_dir() and str(_candidate) not in sys.path:
         sys.path.insert(0, str(_candidate))
 

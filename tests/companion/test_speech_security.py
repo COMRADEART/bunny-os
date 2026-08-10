@@ -23,6 +23,7 @@ from companion.speech.request import SpeechInputRequestError
 from companion.speech.activity import SpeechActivityDetector
 from companion.voice.execution import ExecutableRefused
 
+from .support import temporary_root
 from .speech_support import (
     FrameScript,
     ScriptedCaptureBackend,
@@ -83,7 +84,7 @@ class PathTraversalAndSymlinks(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "posix", "symlink semantics are POSIX")
     def test_the_sweep_refuses_a_symlink_wearing_the_prefix(self) -> None:
-        parent = Path(tempfile.mkdtemp())
+        parent = temporary_root(self)
         target = parent / "victim"
         target.mkdir()
         (target / "precious.txt").write_text("do not delete", encoding="utf-8")
@@ -97,7 +98,7 @@ class PathTraversalAndSymlinks(unittest.TestCase):
         self.assertTrue((target / "precious.txt").exists())
 
     def test_the_sweep_leaves_young_and_foreign_directories(self) -> None:
-        parent = Path(tempfile.mkdtemp())
+        parent = temporary_root(self)
         fresh = parent / f"{SpeechWorkspace.PREFIX}fresh"
         fresh.mkdir()
         removed, skipped, _files = sweep_workspaces(parent=parent)
@@ -172,7 +173,7 @@ class EventHygiene(unittest.TestCase):
         import json
         from companion.speech.recovery import SpeechJournal
 
-        journal = SpeechJournal(Path(tempfile.mkdtemp()) / "journal.jsonl")
+        journal = SpeechJournal(temporary_root(self) / "journal.jsonl")
         journal.record_start(make_request(), monotonic=1.0)
         journal.record_settle("speechreq-1", "completed", monotonic=2.0)
         raw = journal.path.read_text(encoding="utf-8")

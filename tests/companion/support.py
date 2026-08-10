@@ -12,7 +12,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from pathlib import Path
+import shutil
 import tempfile
+import threading
 from typing import Any, Mapping, Sequence
 import unittest
 
@@ -47,6 +49,27 @@ SIMPLE_REQUEST = "Count the words in this note and validate the count."
 
 def machine(name: str = "laptop") -> Assessment:
     return assess(simulate(name))
+
+
+def temporary_root(test: unittest.TestCase) -> Path:
+    """A temporary directory that is removed when the test that made it ends.
+
+    ``temporary_root(self)`` was written out at 58 call sites and none of
+    them removed the directory. Each one holds a companion store and an agents
+    journal, so the suite leaves **130 directories** behind per run — invisible
+    on a developer's disk-backed /tmp, and fatal to a fifty-iteration gate: the
+    suite gate filled a 7.8 GB tmpfs with 10,591 of them and died at iteration
+    12 with ENOSPC.
+
+    The stress runner's own counter did not see it. It globbed ``bunny-*`` and
+    these have no prefix, so it reported ``tempDirectories 0 -> 0`` for every
+    gate ever run — a clean result in exactly the case it exists to catch.
+    Both halves are fixed: the counter counts every directory now, and this
+    exists so a call site cannot forget.
+    """
+    directory = tempfile.mkdtemp()
+    test.addCleanup(shutil.rmtree, directory, ignore_errors=True)
+    return Path(directory)
 
 
 @dataclass
@@ -255,16 +278,39 @@ class ToolCallingReviewer:
 
 @dataclass
 class SlowReviewer:
-    """A reviewer that never answers."""
+    """A reviewer that never answers — and can be let go afterwards.
+
+    The runtime runs a reviewer in a thread with a timeout, and when the timeout
+    fires it *abandons* the thread: Python cannot kill one, and waiting for a
+    reviewer that never answers is precisely the behaviour under test. So the
+    thread outlives the test, which is correct and, with a plain
+    ``time.sleep(30)``, also invisible for thirty seconds.
+
+    The suite gate measures thread deltas, and it reported ``threads 1 -> 2``
+    with ``review-local.slow-reviewer`` still alive at the end of fifty runs.
+    Nothing was leaking — the thread is a daemon and exits on its own — but a
+    fixture that always shows up in that column is a fixture that would hide a
+    real leak behind itself.
+
+    :meth:`release` cuts the wait short, so a test can let the thread go at
+    teardown *after* asserting that the runtime did not wait for it. The
+    reviewer still never answers inside the timeout, which is the whole of what
+    the test is about.
+    """
 
     reviewer_id: str = "local.slow-reviewer"
     seconds: float = 30.0
+    _released: threading.Event = field(default_factory=threading.Event, repr=False)
 
     def observe(self, context: ReviewContext) -> Sequence[ReviewObservation]:
-        import time
-
-        time.sleep(self.seconds)
+        # Waiting on an Event rather than sleeping: same "never answers in
+        # time", and interruptible from outside.
+        self._released.wait(self.seconds)
         return ()  # pragma: no cover - the timeout fires first
+
+    def release(self) -> None:
+        """Let the abandoned thread finish now instead of in thirty seconds."""
+        self._released.set()
 
 
 @dataclass
@@ -313,6 +359,7 @@ __all__ = [
     "RemoteExecutor",
     "SIMPLE_REQUEST",
     "SlowReviewer",
+    "temporary_root",
     "ToolCallingReviewer",
     "UnavailableExecutor",
     "machine",

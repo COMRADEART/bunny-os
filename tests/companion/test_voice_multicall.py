@@ -48,6 +48,8 @@ from companion.voice.execution import CommandSpec, resolve_executable
 from companion.voice.pcm import AudioProbe
 from companion.voice.providers import EspeakNgProvider, SpeechDispatcherProvider
 
+from .support import temporary_root
+
 POSIX = os.name == "posix"
 
 #: The measured case, to the numbers in the record. eSpeak NG wrote 2.799 s at
@@ -85,7 +87,7 @@ class ResolutionKeepsTheRequestedIdentity(unittest.TestCase):
     def test_both_multicall_pairs_resolve_to_the_requested_name(self) -> None:
         for requested, target in (("paplay", "pacat"), ("pw-play", "pw-cat")):
             with self.subTest(requested=requested):
-                directory = Path(tempfile.mkdtemp())
+                directory = temporary_root(self)
                 real = _plant(directory, target)
                 (directory / requested).symlink_to(real)
                 found, trusted = resolve_executable(requested, directories=(str(directory),))
@@ -363,7 +365,7 @@ class BehaviourIsNotInferredFromTheResolvedBasename(unittest.TestCase):
         runtime must run it, under the name ``paplay``. A check that refused
         anything whose target was a sibling would refuse the working case.
         """
-        directory = Path(tempfile.mkdtemp())
+        directory = temporary_root(self)
         real = _plant(directory, "pacat")
         (directory / "paplay").symlink_to(real)
         backend = PulseAudioBackend(resolver=_resolver_for(directory))

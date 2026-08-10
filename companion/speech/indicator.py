@@ -12,11 +12,12 @@ which is what this module is for.
 Both rules are properties of this type:
 
 * :meth:`ListeningIndicator.raise_for` returns whether the indicator is
-  *actually showing* — at least one attached sink accepted it. A surface that
-  cannot display the indicator makes the raise fail, and the worker reads a
+  *actually showing* — either an attached in-process sink accepted it, or the
+  out-of-process Bunny Shell supplied the positive presentation revision of
+  the persistent MIC surface it raised before the request. A surface that
+  cannot establish either fact makes the raise fail, and the worker reads a
   failed raise as "do not open the microphone", which is §4's sentence as a
-  branch. There is no way to mark the indicator raised without a sink saying
-  so.
+  branch. Revision zero is never a surface attestation.
 * :meth:`ListeningIndicator.clear` refuses to clear while the capture handle
   reports itself open. The worker passes the handle's own ``closed`` fact; a
   clear attempted early is refused and *counted*, because an ordering
@@ -58,6 +59,11 @@ class IndicatorState:
     #: the day a remote path existed, the indicator could not fail to say so.
     locality: str = "local"
     provider_id: str = ""
+    #: A positive revision is an attestation from an out-of-process Bunny
+    #: surface that it made the persistent listening indicator visible before
+    #: requesting capture. In-process surfaces instead attach an
+    #: :class:`IndicatorSink` and may leave this at zero.
+    presentation_revision: int = 0
     started_at_monotonic: float = 0.0
     #: Always ``False`` in this build: audio is retained only for active
     #: recognition and deleted after (§8). Shown, not implied.
@@ -77,6 +83,7 @@ class IndicatorState:
             "backendId": self.backend_id,
             "locality": self.locality,
             "providerId": self.provider_id,
+            "presentationRevision": self.presentation_revision,
             "elapsedSeconds": round(self.elapsed_seconds(monotonic_now), 3),
             "audioRetained": self.audio_retained,
             "stopControl": "speech_input_stop",
@@ -102,7 +109,8 @@ class ListeningIndicator:
 
     The *text-side* authority, precisely: §18 makes the renderer's animation
     decorative and this indicator authoritative, so a renderer failure changes
-    nothing here. Sinks are attached by surfaces; the worker raises and
+    nothing here. In-process surfaces attach sinks; Bunny Shell attests the
+    positive revision it rendered before crossing IPC. The worker raises and
     clears; everything else reads.
     """
 
@@ -113,6 +121,7 @@ class ListeningIndicator:
         self._observers: list[Callable[[IndicatorState], None]] = []
         self._early_clears = 0
         self._raise_failures = 0
+        self._attested_raises = 0
         self._guard = threading.RLock()
 
     # ----------------------------------------------------------------- #
@@ -154,12 +163,14 @@ class ListeningIndicator:
         device_id: str,
         backend_id: str,
         provider_id: str,
+        presentation_revision: int = 0,
     ) -> tuple[bool, str]:
         """Show the indicator, before anything touches a device.
 
         Returns ``(raised, reason)``. ``raised`` is ``True`` only when at
-        least one sink reported the state displayed; ``reason`` is what the
-        caller tells the user when it is not. A worker that opened the
+        least one sink reported the state displayed or a positive revision
+        attests the already-rendered Bunny Shell surface; ``reason`` is what
+        the caller tells the user when it is not. A worker that opened the
         microphone after a ``False`` here would be violating §4 knowingly —
         which is why the worker's own test asserts the branch, not this
         module's.
@@ -178,16 +189,18 @@ class ListeningIndicator:
                 device_id=device_id,
                 backend_id=backend_id,
                 provider_id=provider_id,
+                presentation_revision=presentation_revision,
                 started_at_monotonic=self.clock.monotonic(),
             )
-        if not sinks:
+        externally_presented = presentation_revision > 0
+        if not sinks and not externally_presented:
             with self._guard:
                 self._raise_failures += 1
             return False, (
                 "no surface is attached to display the listening indicator; the "
                 "microphone is not opened without one"
             )
-        shown = False
+        shown = externally_presented
         for sink in sinks:
             try:
                 shown = bool(sink.show(state)) or shown
@@ -201,6 +214,8 @@ class ListeningIndicator:
                 "microphone is not opened while listening would be invisible"
             )
         with self._guard:
+            if externally_presented:
+                self._attested_raises += 1
             self._state = state
             observers = list(self._observers)
         for observer in observers:
@@ -259,6 +274,7 @@ class ListeningIndicator:
                 "sinksAttached": len(self._sinks),
                 "earlyClearAttempts": self._early_clears,
                 "raiseFailures": self._raise_failures,
+                "attestedRaises": self._attested_raises,
                 "indicatorBeforeOpen": True,
                 "clearedOnlyAfterClose": True,
             }

@@ -1,0 +1,16 @@
+/usr/lib64/python3.14/site-packages/gi/overrides/__init__.py:159: PyGIDeprecationWarning: GLib.unix_signal_add_full is deprecated; use GLibUnix.signal_add_full instead
+  value = getattr(proxy, attr)
+======================================================================
+FAIL: test_a_read_only_directory_fails_before_any_replacement (tests.companion.test_store_durability.PermanentFailureTests.test_a_read_only_directory_fails_before_any_replacement)
+The temporary cannot be created, so no rename is ever attempted.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/bunny3d/gate/tests/companion/test_store_durability.py", line 199, in test_a_read_only_directory_fails_before_any_replacement
+    with self.assertRaises((StoreError, OSError)):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (<class 'companion.errors.StoreError'>, <class 'OSError'>) not raised
+
+----------------------------------------------------------------------
+Ran 1748 tests in 53.589s
+
+FAILED (failures=1, skipped=2)
