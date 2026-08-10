@@ -138,17 +138,27 @@ class LaunchTests(unittest.TestCase):
         self.assertGreater(remount, last_bind, "the root is remounted before a bind is in place")
         self.assertLess(remount, argv.index("--clearenv"))
 
-    def test_the_launcher_environment_is_two_keys_and_is_not_the_applications(self) -> None:
+    def test_the_launcher_environment_is_two_keys_and_never_reaches_the_application(self) -> None:
         """systemd-run --user needs the session bus to create a scope. bwrap's
         --clearenv between the two is what stops the launcher's environment
-        reaching the application."""
+        reaching the application.
+
+        The assertion is on *values*, not on key names. XDG_RUNTIME_DIR is a key
+        in both — the launcher gets the session's /run/user/N and the application
+        gets the capsule's own runtime directory — and an earlier version of this
+        test asserted the key was absent, which passed on a developer host only
+        because nothing had set it there. A key in common with a different value
+        is the design; a value in common is the leak."""
         from capsules.isolation import LAUNCHER_ENVIRONMENT_KEYS
 
         plan = self.world.runtime.build_plan(self.world.runtime.open("org.example.PhotoEditor"))
         self.assertTrue(set(plan.launcher_environment) <= set(LAUNCHER_ENVIRONMENT_KEYS))
         self.assertEqual(set(LAUNCHER_ENVIRONMENT_KEYS), {"XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS"})
-        for key in plan.launcher_environment:
-            self.assertNotIn(key, plan.environment)
+        for key, value in plan.launcher_environment.items():
+            self.assertNotEqual(
+                plan.environment.get(key), value,
+                f"the launcher's {key} reached the application unchanged",
+            )
 
     def test_a_capsule_whose_process_exited_can_be_launched_again(self) -> None:
         """Nothing moves a capsule out of `running` when an ordinary application
