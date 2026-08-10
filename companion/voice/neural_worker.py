@@ -160,8 +160,25 @@ class _PocketEngine:
     provider_id = "pocket"
 
     def __init__(self, root: Path, voice_path: Path) -> None:
+        import torch
         from pocket_tts import TTSModel
 
+        # Stated here rather than inherited. Pocket's own tts_model.py happens
+        # to call this at import time, but Bunny's speech latency should not
+        # rest on an upstream module's import side effect, and the direction is
+        # the opposite of the intuitive one. Measured on this 22-core host,
+        # synthesising a four-second utterance:
+        #
+        #     1 thread   10.8s   RTF  2.6
+        #     4 threads  39.0s   RTF  9.8
+        #     8 threads  64.0s   RTF 14.3
+        #    16 threads  90.0s   RTF 23.4
+        #
+        # The model is autoregressive over very small tensors, so each extra
+        # thread adds more synchronisation than it removes work. Anything that
+        # "helpfully" raises this — OMP_NUM_THREADS in a unit file, a future
+        # torch default — costs a factor of nine, silently and only at runtime.
+        torch.set_num_threads(1)
         config = root / "config.yaml"
         if not config.is_file():
             raise FileNotFoundError("Pocket config.yaml is absent")
@@ -220,6 +237,15 @@ class _TextCleaner:
 
     def __call__(self, text: str) -> list[int]:
         return [self._indices[character] for character in text if character in self._indices]
+
+    def tokens(self, phonemes: str) -> list[int]:
+        """The whole phonemes-to-indices path, in one place so it can be tested.
+
+        Kept as a single step deliberately. Split across the call site, the
+        cleanup below can be dropped without anything failing: the helper still
+        passes its own unit test while the caller quietly stops using it.
+        """
+        return self(" ".join(_TEXT_TOKENS.findall(self.retain_known(phonemes))))
 
     def retain_known(self, text: str) -> str:
         """Drop characters the model has no index for, *before* tokenization.
@@ -307,8 +333,7 @@ class _KittenEngine:
         if key not in self.voices.files:
             raise ValueError("the selected Kitten voice is absent")
         effective_rate = float(rate) * float(self.speed_priors.get(key, 1.0))
-        phonemes = " ".join(_TEXT_TOKENS.findall(self.cleaner.retain_known(self._phonemize(text))))
-        tokens = self.cleaner(phonemes)
+        tokens = self.cleaner.tokens(self._phonemize(text))
         if not tokens:
             raise ValueError("Kitten phonemization returned no tokens")
         tokens.insert(0, 0)

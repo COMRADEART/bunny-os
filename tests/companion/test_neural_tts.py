@@ -14,6 +14,7 @@ import unittest
 from companion.settings import Settings, SettingsError, VoiceSettings
 from companion.voice.chunking import MAX_CHUNK_CHARACTERS, sentence_chunks
 from companion.voice.execution import CancellationSignal, ExecutableRefused, PrivateWorkspace
+from companion.voice import neural_worker
 from companion.voice.neural import KittenTTSProvider, PocketTTSProvider, _read_installation
 from companion.voice.provider import ProviderRegistry
 
@@ -436,6 +437,85 @@ class BundledAssetTests(unittest.TestCase):
         )
         self.assertFalse(provenance["automaticDownload"])
         self.assertFalse(provenance["networkRequiredAtRuntime"])
+
+
+class KittenPhonemizationTests(unittest.TestCase):
+    """The token path, which fails by sounding fine rather than by raising.
+
+    Every defect these cover shipped audio that was fluent, confident, loudly
+    non-silent and simply not the requested sentence. Amplitude assertions pass
+    on all of them, which is why each check here is about *identity* of tokens
+    rather than presence of sound.
+    """
+
+    def test_symbol_table_matches_the_trained_vocabulary(self) -> None:
+        # The model was trained against this exact ordering. Dropping a
+        # character does not raise; it shifts every index after it, and the
+        # model reads its neighbour's phoneme. The curly quotes are the pair
+        # most easily lost when the table is copied through an editor.
+        cleaner = neural_worker._TextCleaner()
+        self.assertEqual(len(cleaner._indices), 177)
+        self.assertEqual(cleaner._indices["$"], 0)
+        for character in ("“", "”"):
+            self.assertIn(character, cleaner._indices, "a curly quote is missing from the vocabulary")
+        # Anchors either side of the punctuation block, so a shift is caught
+        # wherever it is introduced.
+        self.assertEqual(cleaner._indices["a"], 43)
+        self.assertEqual(cleaner._indices["ɑ"], 69)
+        self.assertEqual(cleaner._indices["ə"], 83)
+
+    def test_tie_characters_do_not_become_word_boundaries(self) -> None:
+        # `--ipa=3` joins diphthongs with U+200D. It is not in the vocabulary,
+        # but the tokenizer treats any non-word non-space character as its own
+        # token and the tokens are rejoined with spaces — and space *is* in the
+        # vocabulary. Left alone this puts a word boundary inside every
+        # diphthong, which is what turned "your" into "you are".
+        # Asserted through `tokens`, the entry point synthesis actually calls.
+        # Checking `retain_known` alone passes even when the caller has stopped
+        # using it, which is the failure this whole class exists to prevent.
+        cleaner = neural_worker._TextCleaner()
+        space = cleaner._indices[" "]
+        tied = cleaner.tokens("həlˈo‍ʊ a‍ɪm bˈʌni")
+        untied = cleaner.tokens("həlˈoʊ aɪm bˈʌni")
+        self.assertEqual(tied, untied)
+        # Three words, so two spaces — not one per diphthong.
+        self.assertEqual(tied.count(space), 2)
+
+    def test_retain_known_keeps_spacing_between_real_words(self) -> None:
+        cleaner = neural_worker._TextCleaner()
+        self.assertEqual(cleaner.retain_known("bˈʌni ænd"), "bˈʌni ænd")
+
+    def test_phonemizer_arguments_are_the_forms_espeak_accepts(self) -> None:
+        # eSpeak NG exits zero when it rejects an option and zero when an
+        # option makes it print its voice table, so neither mistake shows up as
+        # a failure at runtime. `--quiet` does not exist (it is `-q`), and
+        # `--voice=en-us` is prefix matched to `--voices`.
+        source = Path(neural_worker.__file__).read_text(encoding="utf-8")
+        invocation = source[source.index("_phonemize"):]
+        invocation = invocation[:invocation.index("input=text")]
+        self.assertNotIn('"--quiet"', invocation)
+        self.assertNotIn('"--voice=', invocation)
+        self.assertIn('"-q"', invocation)
+        self.assertIn('"-v", "en-us"', invocation)
+
+    def test_a_voice_listing_is_refused_rather_than_spoken(self) -> None:
+        listing = (
+            " Pty Language       Age/Gender VoiceName          File\n"
+            " 2  en-us           --/M      English_(America)  gmw/en-US\n"
+        )
+        self.assertIsNotNone(neural_worker._VOICE_TABLE.search(listing))
+        self.assertIsNone(neural_worker._VOICE_TABLE.search("həlˈoʊ aɪm bˈʌni"))
+
+
+class PocketRuntimeTests(unittest.TestCase):
+    def test_pocket_pins_single_threaded_inference(self) -> None:
+        # Measured on the reference host: one thread synthesises a four-second
+        # utterance in 10.8s, sixteen threads take 90.0s. The pin is stated in
+        # Bunny's own worker rather than inherited from an upstream import side
+        # effect, because losing it costs a factor of nine and nothing fails.
+        source = Path(neural_worker.__file__).read_text(encoding="utf-8")
+        engine = source[source.index("class _PocketEngine"):source.index("class _TextCleaner")]
+        self.assertIn("torch.set_num_threads(1)", engine)
 
 
 if __name__ == "__main__":

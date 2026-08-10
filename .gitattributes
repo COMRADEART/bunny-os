@@ -69,5 +69,20 @@ assets/voice/models/** -text -diff
 # verifies the outer wheel SHA-256 and every RECORD entry inside it.
 assets/voice/tts/** -text -diff
 assets/voice/runtime/** -text -diff
+
+# Two of those payloads are past GitHub's 100 MB per-file limit — the Pocket
+# weights at 209 MB and the torch wheel at 176 MB — so the blob lives in Git LFS
+# and the tree carries a pointer. The content is unchanged either way: an LFS
+# object is addressed by the SHA-256 of the file itself, which is the same digest
+# manifest.json and install-root.py already verify. These lines must stay *after*
+# the two rules above, because the last matching pattern wins and dropping -text
+# here would put the CRLF hazard back.
 assets/voice/tts/pocket/english/model.safetensors filter=lfs diff=lfs merge=lfs -text
 assets/voice/runtime/wheels/*.whl filter=lfs diff=lfs merge=lfs -text
+
+# The notices are counted too. PROVENANCE.json declares the exact number of
+# bytes Bunny selected from upstream, and a test asserts the tree still sums to
+# it, so a licence file that is 200 bytes longer in a Windows checkout than in a
+# Linux one makes that accounting platform-dependent — the figure was right on
+# whichever machine happened to produce it and wrong on the other.
+assets/voice/licenses/** -text
