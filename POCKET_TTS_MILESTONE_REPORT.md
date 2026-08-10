@@ -16,25 +16,58 @@ on ext4, unless a line says otherwise.
 ## Result
 
 ```text
-TTS milestone            PARTIAL - the engine work is complete and proved on
-                         the built image; the booted end-to-end run is not
-Default engine           Pocket TTS - PASS, on the image itself
-Pocket real audio        PASS  on the built image, recognised back at WER 0.00
-Kitten real audio        PASS  on the built image, recognised back at WER 0.00
+TTS milestone            PARTIAL - the engine works on a booted Bunny OS
+                         system; the spoken end-to-end run is not done
+Default engine           Pocket TTS - PASS, on the booted system
+Pocket real audio        PASS  on the built image and in the booted VM;
+                               recognised back at WER 0.00
+Kitten real audio        PASS  same
 eSpeak fallback          PASS
 Automatic fallback       PASS
 Interruption             PASS  (0.06s to stop a running utterance)
 Image built              PASS  shell-test at 4d7e9a4, 543-package snapshot
+Image boots to desktop   PASS  Bunny desktop drawn at 1920x1080
 Tests                    4620 passed, 0 failed, 7 skipped
 Source gate              PASS, exit 0
-Spoken "Open Files"      NOT RUN in a booted session
+Spoken "Open Files"      NOT RUN
 Settings UI at 2 sizes   NOT VALIDATED
+Character TALKING sync   NOT OBSERVED
 ```
 
-The honest headline: **Pocket TTS is the default engine and it really speaks
-inside a Bunny OS image that was built from this source.** What has not been
-done is drive it from a microphone through a booted graphical session. The
-section "What is not proved" says exactly what that leaves open.
+The honest headline: **Pocket TTS is the default engine, and inside a booted
+Bunny OS system built from this source it reports READY, is the provider the
+registry selects, and produces audio that a recogniser reads back as the
+requested sentence.** What has not been done is drive it from a microphone
+through the assistant. "What is not proved" says exactly what that leaves open.
+
+## Proved on a booted system
+
+The image was booted under QEMU/KVM with the voice probe injected as a system
+unit at `graphical.target`. It reported over the serial console, 66 seconds
+in, **11 of 11 checks passed**:
+
+```text
+Pocket reports READY on the installed image    worker, english model and
+                                               Bunny Default (Caro Davy) loaded
+registry selects Pocket, no preference given   selected=pocket
+pocket synthesises real audio                  36480 frames @24kHz, RTF 1.86
+kitten synthesises real audio                  67000 frames @24kHz, RTF 0.25
+health: pocket READY, kitten READY, espeak-ng ready, speech-dispatcher ready
+```
+
+The Bunny desktop itself drew correctly at 1920×1080 — top bar and clock,
+search field, workspace cards and the dock with Files and the app grid.
+
+Two things in that record deserve to be said rather than glossed:
+
+- **RTF 1.86, not 0.56.** In the VM the probe runs at `graphical.target` on 4
+  vCPUs while GDM and the session are still starting, so it is competing with
+  the whole boot. It is a real number for a real machine under load and it is
+  not the steady-state figure; pinned to two idle cores on the host the same
+  engine measures 0.56.
+- **`sinks: []`.** The probe runs as root and PipeWire runs in the user
+  session, so it saw no output device. Synthesis is proved; *audibility
+  through a speaker is not*.
 
 ## Proved on the built image, not on a staging host
 
@@ -265,21 +298,31 @@ Two, both of the class where a checkout's platform changes a recorded fact:
 
 Stated as flatly as the passes:
 
-1. **Nothing has been driven through a booted graphical session.** The image
-   exists and its voice stack works when exercised directly; GDM, the Bunny
-   session, the companion service starting on its own and the shell talking to
-   it have not been observed in this session.
+1. **Nothing was driven through the assistant.** The desktop drew and the
+   voice stack works on the booted system, but the probe exercised the
+   provider registry directly. The companion service answering the shell, and
+   the shell asking it to speak, were not observed. The interaction half of
+   the harness did not run at all in this session: the run injected the voice
+   probe *instead of* `desktop-probe.py`, which is the file that implements
+   the pointer and control-channel protocol, so `interaction.json` reports
+   `guest-never-ready` as a consequence of that substitution and not as a
+   finding about the product.
 2. **The spoken "Open Files" acceptance (criterion 20) has not been run.** No
    real microphone, real STT, real launch action and real Pocket audio have
-   been exercised end to end inside Bunny OS in this session. A VM also cannot
-   supply a real microphone without a null-sink/loopback arrangement, which is
-   the technique this project has used before and which was not set up here.
-3. **The settings UI has not been validated at 1920×1080 or 1366×768.** The
+   been exercised end to end. A VM also cannot supply a real microphone
+   without the null-sink and loopback arrangement this project has used
+   before, which was not set up here.
+3. **Audibility is not proved.** Every check above ends at a WAV file with the
+   right samples in it. Nothing has been played through PipeWire to a device;
+   the probe saw no sinks at all because it runs as root and PipeWire runs in
+   the user session.
+4. **The settings UI has not been validated at 1920×1080 or 1366×768.** The
    Voice Output page is implemented and provider-neutral by inspection, and
-   has not been rendered and looked at.
-4. **Character TALKING synchronisation is not confirmed against playback.**
-   The provider returns audio and the audio path is unchanged, but the
-   state transition was not observed in a running session.
+   has not been rendered and looked at. The desktop *shell* was photographed
+   at 1920×1080 and is correct; the settings page within it was not opened.
+5. **Character TALKING synchronisation is not confirmed against playback.**
+   The provider returns audio and the audio path is unchanged, but the state
+   transition was not observed in a running session.
 5. **Streaming is not implemented.** Pocket synthesises complete utterances;
    `supports_streaming` is declared `False` rather than simulated by cutting a
    finished WAV into pieces. Time to first audio is therefore whole-utterance
