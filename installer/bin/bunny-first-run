@@ -1,9 +1,32 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Entry point for the Bunny OS first-run experience.
+
+Two import roots, not one. The wizard is ``installer.first_run`` and lives under
+/usr/lib/bunny-installer; the surveys it shows are ``companion.onboarding`` and
+live under /usr/lib/bunny-os/python. Before the Alpha branch the first run had
+no surveys and needed only the first root, so adding the second is what makes a
+page able to say what is on *this* machine.
+
+Both are added only when the package is not already importable. Inserting an
+installed tree in front of a checkout that is already on the path makes every
+later import come from whatever build happens to be installed, which fails
+loudly when that build lacks a module and silently when it does not.
+"""
+
+import importlib.util
 import sys
 from pathlib import Path
 
-installed = Path("/usr/lib/bunny-installer")
-sys.path.insert(0, str(installed if installed.is_dir() else Path(__file__).resolve().parents[2]))
+_root = Path(__file__).resolve().parents[2]
+if importlib.util.find_spec("installer") is None:
+    for _candidate in (Path("/usr/lib/bunny-installer"), _root):
+        if _candidate.is_dir() and str(_candidate) not in sys.path:
+            sys.path.insert(0, str(_candidate))
+if importlib.util.find_spec("companion") is None:
+    for _candidate in (Path("/usr/lib/bunny-os/python"), _root):
+        if _candidate.is_dir() and str(_candidate) not in sys.path:
+            sys.path.append(str(_candidate))
 
 from installer.first_run.cli import main
 

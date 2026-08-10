@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bunny-os.org/schemas/companion-character-package-v1.schema.json",
   "title": "Bunny Companion character package manifest",
-  "description": "Version 1 data-only contract. Only static-image and frame-sequence animated-2d are implemented; future presentation identifiers are reserved but deliberately not accepted as presentationType.",
+  "description": "Version 1 data-only contract. static-image, animated-2d, lightweight-3d and full-3d are implemented; sprite-sheet, vector-animation, skeletal-2d and remote-rendered are reserved and deliberately not accepted as presentationType. A 3D package is a 2D package with a threeDimensional section: it keeps the raster inventory, the animations, the stateMap and the fallbackAsset, so the rungs below it need no second package.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -39,7 +39,7 @@
       }
     },
     "minimumBunnyOsVersion": {"$ref": "#/$defs/version"},
-    "presentationType": {"enum": ["static-image", "animated-2d"]},
+    "presentationType": {"enum": ["static-image", "animated-2d", "lightweight-3d", "full-3d"]},
     "assetInventory": {
       "type": "array",
       "minItems": 1,
@@ -115,7 +115,8 @@
       }
     },
     "generationProvenance": {"type": "object", "maxProperties": 128},
-    "sourcePromptMetadata": {"type": "object", "maxProperties": 128}
+    "sourcePromptMetadata": {"type": "object", "maxProperties": 128},
+    "threeDimensional": {"$ref": "#/$defs/threeDimensional"}
   },
   "$defs": {
     "identifier": {
@@ -139,12 +140,12 @@
           "maxLength": 240,
           "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*://)[^\\\\\\u0000]+$"
         },
-        "mediaType": {"enum": ["image/png", "image/webp", "text/plain", "text/markdown", "application/json"]},
+        "mediaType": {"enum": ["image/png", "image/webp", "text/plain", "text/markdown", "application/json", "model/gltf-binary"]},
         "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "sizeBytes": {"type": "integer", "minimum": 1, "maximum": 67108864},
         "width": {"type": "integer", "minimum": 0, "maximum": 4096},
         "height": {"type": "integer", "minimum": 0, "maximum": 4096},
-        "purpose": {"enum": ["render", "thumbnail", "license", "metadata"]}
+        "purpose": {"enum": ["render", "thumbnail", "license", "metadata", "model", "provenance"]}
       }
     },
     "frame": {
@@ -187,6 +188,129 @@
         },
         "playbackSpeed": {"type": "number", "minimum": 0.25, "maximum": 4}
       }
+    },
+    "threeDimensional": {
+      "description": "The versioned 3D section. Present exactly when the package carries a validated GLB; required when presentationType is lightweight-3d or full-3d. Every maximum declared here becomes the model validator's limit for this package, clamped to the build's own hard ceiling - so a manifest can make validation stricter and can never make it looser.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion", "rendererApiVersion", "modelFile", "modelDigest", "modelSizeBytes",
+        "gltfVersion", "skeletonProfile", "rootBone", "headBone", "neckBone",
+        "eyeBones", "handBones", "animationMap", "expressionMap", "visemeMap",
+        "morphTargets", "textureInventory", "materialInventory", "modelBounds",
+        "nativeScale", "floorOffset", "bubbleAnchor", "cameraAnchor",
+        "maximumTriangles", "maximumVertices", "maximumJoints", "maximumMorphTargets",
+        "maximumTextures", "maximumTextureDimensions", "declaredGpuBytes",
+        "declaredDecodedBytes", "requiredRendererFeatures", "staticFallbackAsset",
+        "animatedFallbackState", "accessibilityStates"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "rendererApiVersion": {"type": "string", "pattern": "^1[.][0-9]+$"},
+        "modelFile": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*[.]glb$", "maxLength": 240},
+        "modelDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "modelSizeBytes": {"type": "integer", "minimum": 1, "maximum": 100663296},
+        "gltfVersion": {"const": "2.0"},
+        "skeletonProfile": {"const": "bunny-humanoid-1"},
+        "boneMap": {"type": "object", "maxProperties": 128, "additionalProperties": {"type": "string", "maxLength": 128}},
+        "rootBone": {"type": "string", "minLength": 1, "maxLength": 128},
+        "headBone": {"type": "string", "minLength": 1, "maxLength": 128},
+        "neckBone": {"type": "string", "minLength": 1, "maxLength": 128},
+        "eyeBones": {"type": "array", "items": {"type": "string", "maxLength": 128}, "maxItems": 2},
+        "handBones": {"type": "array", "items": {"type": "string", "maxLength": 128}, "maxItems": 2},
+        "animationMap": {
+          "description": "Animation state -> clip name. idle, working, speaking and error are mandatory; every other state falls back through the renderer's candidate chains.",
+          "type": "object",
+          "minProperties": 4,
+          "maxProperties": 64,
+          "propertyNames": {"$ref": "#/$defs/animationState"},
+          "additionalProperties": {"type": "string", "minLength": 1, "maxLength": 128}
+        },
+        "expressionMap": {
+          "type": "object",
+          "maxProperties": 16,
+          "propertyNames": {"enum": ["neutral", "happy", "focused", "thinking", "concerned", "warning", "error", "surprised", "sleepy"]},
+          "additionalProperties": {"$ref": "#/$defs/morphWeights"}
+        },
+        "visemeMap": {
+          "type": "object",
+          "maxProperties": 8,
+          "propertyNames": {"enum": ["neutral", "closed", "open-small", "open-medium", "open-wide", "rounded", "smile"]},
+          "additionalProperties": {"$ref": "#/$defs/morphWeights"}
+        },
+        "morphTargets": {"type": "array", "maxItems": 32, "items": {"$ref": "#/$defs/identifier"}},
+        "textureInventory": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "width", "height", "mediaType"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1, "maxLength": 128},
+              "width": {"type": "integer", "minimum": 1, "maximum": 2048},
+              "height": {"type": "integer", "minimum": 1, "maximum": 2048},
+              "mediaType": {"const": "image/png"}
+            }
+          }
+        },
+        "materialInventory": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"type": "string", "maxLength": 128}},
+        "modelBounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["min", "max"],
+          "properties": {
+            "min": {"$ref": "#/$defs/vector3"},
+            "max": {"$ref": "#/$defs/vector3"}
+          }
+        },
+        "nativeScale": {"type": "number", "minimum": 0.01, "maximum": 100},
+        "floorOffset": {"type": "number", "minimum": -10, "maximum": 10},
+        "bubbleAnchor": {"$ref": "#/$defs/vector3"},
+        "cameraAnchor": {"$ref": "#/$defs/vector3"},
+        "maximumTriangles": {"type": "integer", "minimum": 1, "maximum": 200000},
+        "maximumVertices": {"type": "integer", "minimum": 1, "maximum": 200000},
+        "maximumJoints": {"type": "integer", "minimum": 1, "maximum": 128},
+        "maximumMorphTargets": {"type": "integer", "minimum": 1, "maximum": 32},
+        "maximumTextures": {"type": "integer", "minimum": 1, "maximum": 16},
+        "maximumTextureDimensions": {"type": "integer", "minimum": 1, "maximum": 2048},
+        "declaredGpuBytes": {"type": "integer", "minimum": 1, "maximum": 536870912},
+        "declaredDecodedBytes": {"type": "integer", "minimum": 1, "maximum": 134217728},
+        "requiredRendererFeatures": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {"enum": ["skeletal-animation", "morph-targets", "alpha-blending", "double-sided", "vertex-colours", "base-colour-texture", "unlit-materials"]}
+        },
+        "staticFallbackAsset": {"$ref": "#/$defs/identifier"},
+        "animatedFallbackState": {"type": "string", "minLength": 1, "maxLength": 64},
+        "previewAsset": {"$ref": "#/$defs/identifier"},
+        "accessibilityStates": {
+          "description": "One description per mapped animation state. A package that does not describe a state it can draw is refused.",
+          "type": "object",
+          "maxProperties": 64,
+          "propertyNames": {"$ref": "#/$defs/animationState"},
+          "additionalProperties": {"type": "string", "minLength": 1, "maxLength": 240}
+        }
+      }
+    },
+    "animationState": {
+      "enum": [
+        "idle", "greeting", "listening", "transcribing", "understanding", "planning",
+        "working", "researching", "typing", "reviewing", "waiting-for-user",
+        "waiting-for-approval", "speaking", "presenting-result", "success", "warning",
+        "blocked", "error", "paused", "cancelled", "sleeping", "repositioning"
+      ]
+    },
+    "morphWeights": {
+      "type": "object",
+      "maxProperties": 16,
+      "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+    },
+    "vector3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"type": "number", "minimum": -1000, "maximum": 1000}
     },
     "rect": {
       "type": "object",

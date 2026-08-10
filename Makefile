@@ -261,6 +261,16 @@ build-live-image:
 build-beta-image:
 	bash build/scripts/build-beta-image.sh
 
+# The Public Alpha image: the installed desktop payload, labelled alpha in
+# release.json, /usr/lib/os-release, the OCI configuration and the filename.
+build-alpha-image:
+	bash build/scripts/build-alpha-image.sh
+
+# The bootable installation medium for the Alpha. Needs build-alpha-image first:
+# the ISO embeds the payload image the installer writes to disk.
+build-alpha-iso:
+	BUNNY_RELEASE_CHANNEL=alpha bash build/scripts/build-live-image.sh
+
 build-recovery-image:
 	bash build/scripts/build-image.sh recovery
 

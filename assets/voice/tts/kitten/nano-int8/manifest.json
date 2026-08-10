@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "providerId": "kitten",
+  "modelId": "nano-int8",
+  "sampleRate": 24000,
+  "upstream": {
+    "runtimeRepository": "https://github.com/KittenML/KittenTTS",
+    "runtimeRevision": "f0282f0198d497b7256535b755f9f3e339c1baa7",
+    "modelRepository": "https://huggingface.co/KittenML/kitten-tts-nano-0.8-int8",
+    "modelRevision": "84781d74e29ee25217551556398b42f80593a813"
+  },
+  "files": [
+    {
+      "path": "config.json",
+      "sizeBytes": 688,
+      "sha256": "b66006ccbeccd4de5fc3c9272059c47f5725df7215fd889785c03602652fab64"
+    },
+    {
+      "path": "kitten_tts_nano_v0_8.onnx",
+      "sizeBytes": 24369971,
+      "sha256": "f7b0afcbee92870b32b8e0276d855b954dc25470c9f051b376ac7eee537c76fc"
+    },
+    {
+      "path": "voices.npz",
+      "sizeBytes": 3278902,
+      "sha256": "8aa7cee235abb0739cb51e6559685f65a4dacd95568833d05699b1633f519b3f"
+    },
+    {
+      "path": "UPSTREAM_MODEL_CARD.md",
+      "sizeBytes": 741,
+      "sha256": "ff39adbcb653e9beaa612b405c4e301ee62eb4201b32dd77ae36f4078537b8ef"
+    }
+  ],
+  "voices": [
+    {"voiceId": "Bella", "name": "Bella", "path": "voices.npz", "preference": 1.0, "default": true},
+    {"voiceId": "Jasper", "name": "Jasper", "path": "voices.npz", "preference": 0.9, "default": false},
+    {"voiceId": "Luna", "name": "Luna", "path": "voices.npz", "preference": 0.8, "default": false},
+    {"voiceId": "Bruno", "name": "Bruno", "path": "voices.npz", "preference": 0.7, "default": false},
+    {"voiceId": "Rosie", "name": "Rosie", "path": "voices.npz", "preference": 0.6, "default": false},
+    {"voiceId": "Hugo", "name": "Hugo", "path": "voices.npz", "preference": 0.5, "default": false},
+    {"voiceId": "Kiki", "name": "Kiki", "path": "voices.npz", "preference": 0.4, "default": false},
+    {"voiceId": "Leo", "name": "Leo", "path": "voices.npz", "preference": 0.3, "default": false}
+  ]
+}

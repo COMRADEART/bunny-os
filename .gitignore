@@ -28,3 +28,6 @@ qualification/installed-system/evidence/*/work/
 # record.json and work-manifest.json, and never evidence in themselves.
 qualification/tpm/evidence/*/work/
 qualification/tpm/evidence/*/state/
+
+# Session ops scripts: host-specific paths, not part of the repository.
+.ops-*

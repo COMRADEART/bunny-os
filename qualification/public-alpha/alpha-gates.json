@@ -1,0 +1,114 @@
+{
+  "allPassed": true,
+  "commit": "b4379eb512f5646d17985a8bc4f8b3fb1852a921",
+  "complete": false,
+  "gates": {
+    "alpha-100": {
+      "achieved": 100,
+      "commitsObserved": [
+        "b4379eb512f5646d17985a8bc4f8b3fb1852a921"
+      ],
+      "description": "Alpha session-surface lifecycle runs",
+      "detail": "",
+      "gate": "alpha-100",
+      "heldResources": null,
+      "iterations": 100,
+      "longestConsecutive": 0,
+      "netGrowth": null,
+      "required": 100,
+      "status": "passed"
+    },
+    "install-10": {
+      "achieved": 0,
+      "asked": 0,
+      "description": "install to boot to first-run stories",
+      "detail": "asked for 0 of the 10 the brief requires",
+      "gate": "install-10",
+      "required": 10,
+      "status": "notRun"
+    },
+    "service-100": {
+      "achieved": 100,
+      "commitsObserved": [
+        "b4379eb512f5646d17985a8bc4f8b3fb1852a921"
+      ],
+      "description": "companion service lifecycle runs",
+      "detail": "",
+      "gate": "service-100",
+      "heldResources": null,
+      "iterations": 100,
+      "longestConsecutive": 0,
+      "netGrowth": null,
+      "required": 100,
+      "status": "passed"
+    },
+    "suite-50": {
+      "achieved": 50,
+      "commitsObserved": [
+        "b4379eb512f5646d17985a8bc4f8b3fb1852a921"
+      ],
+      "description": "complete companion suites",
+      "detail": "",
+      "gate": "suite-50",
+      "heldResources": null,
+      "iterations": 50,
+      "longestConsecutive": 0,
+      "netGrowth": null,
+      "required": 50,
+      "status": "passed"
+    },
+    "vm-story-20": {
+      "achieved": 5,
+      "asked": 5,
+      "description": "booted VM Alpha stories",
+      "detail": "5/5 stories held; the brief asks for 20",
+      "gate": "vm-story-20",
+      "meetsBriefCount": false,
+      "required": 20,
+      "runs": [
+        {
+          "assertionCount": 18,
+          "failed": [],
+          "file": "gate-vm-offline-001.json",
+          "held": true,
+          "heldCount": 18
+        },
+        {
+          "assertionCount": 18,
+          "failed": [],
+          "file": "gate-vm-offline-002.json",
+          "held": true,
+          "heldCount": 18
+        },
+        {
+          "assertionCount": 17,
+          "failed": [],
+          "file": "gate-vm-online-001.json",
+          "held": true,
+          "heldCount": 17
+        },
+        {
+          "assertionCount": 17,
+          "failed": [],
+          "file": "gate-vm-online-002.json",
+          "held": true,
+          "heldCount": 17
+        },
+        {
+          "assertionCount": 17,
+          "failed": [],
+          "file": "gate-vm-online-003.json",
+          "held": true,
+          "heldCount": 17
+        }
+      ],
+      "status": "passed"
+    }
+  },
+  "notRun": [
+    "install-10"
+  ],
+  "note": "A gate that did not run is NOT_RUN and is never counted as passed. allPassed describes only the gates this run was asked for; complete describes whether that was all of them.",
+  "phase": "public-alpha-integration",
+  "schemaVersion": 1
+}

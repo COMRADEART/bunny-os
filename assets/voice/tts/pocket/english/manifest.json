@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "providerId": "pocket",
+  "modelId": "english",
+  "sampleRate": 24000,
+  "upstream": {
+    "runtimeRepository": "https://github.com/kyutai-labs/pocket-tts",
+    "runtimeRevision": "058886528d0b6f2f2d4022de2e244a5260729e6e",
+    "modelRepository": "https://huggingface.co/kyutai/pocket-tts-without-voice-cloning",
+    "modelRevision": "e041936c75475d350b405bc870bcf7c22da4e9e6"
+  },
+  "files": [
+    {
+      "path": "config.yaml",
+      "sizeBytes": 1201,
+      "sha256": "deba91b0a965b60e9f4f90aae589c9768f2d87d84f252329c0d1be8de009eda0"
+    },
+    {
+      "path": "model.safetensors",
+      "sizeBytes": 219029196,
+      "sha256": "be9c6b4876d3f30740a8225dfcaa2e43dc4aeb753c15272735bee16bbb4abb0a"
+    },
+    {
+      "path": "tokenizer.model",
+      "sizeBytes": 59339,
+      "sha256": "d461765ae179566678c93091c5fa6f2984c31bbe990bf1aa62d92c64d91bc3f6"
+    },
+    {
+      "path": "voices/caro_davy.safetensors",
+      "sizeBytes": 5260536,
+      "sha256": "a5961b63a2e7a5cfd7edc383aa9042fb70fd14a9dee6310cdc633881a7f2449a"
+    }
+  ],
+  "voices": [
+    {
+      "voiceId": "caro_davy",
+      "name": "Bunny Default (Caro Davy)",
+      "path": "voices/caro_davy.safetensors",
+      "preference": 1.0,
+      "default": true,
+      "source": "Voice-Zero / LibriVox",
+      "license": "CC0-1.0"
+    }
+  ]
+}

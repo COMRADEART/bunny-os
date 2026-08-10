@@ -41,6 +41,8 @@ from companion.service import (
 )
 from companion.voice.policy import VoicePreferences
 
+from .support import temporary_root
+
 POSIX = os.name == "posix"
 
 
@@ -177,7 +179,7 @@ class StartupOrder(unittest.TestCase):
         self.assertEqual(order[-1], "publish-readiness")
 
     def test_a_service_that_starts_records_every_step(self) -> None:
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         service = CompanionService(ServiceOptions(
             root=root / "store", endpoint=root / "run" / "runtime.sock", machine="laptop",
         ))
@@ -192,7 +194,7 @@ class StartupOrder(unittest.TestCase):
 
     def test_every_held_resource_is_named_in_the_release_order(self) -> None:
         """A resource nobody ordered is released, and this is what says so."""
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         service = CompanionService(ServiceOptions(
             root=root / "store", endpoint=root / "run" / "runtime.sock", machine="laptop",
         )).start()
@@ -219,7 +221,7 @@ class FailureAtEachBoundary(unittest.TestCase):
     """Break the service after each step; assert it owns nothing afterwards."""
 
     def setUp(self) -> None:
-        self.root = Path(tempfile.mkdtemp())
+        self.root = temporary_root(self)
         self.endpoint = self.root / "run" / "runtime.sock"
         self.resources = Resources(self.root / "store", self.endpoint)
         self.baseline = self.resources.take()
@@ -293,7 +295,7 @@ class ConfigurationIsRefusedBeforeAnythingExists(unittest.TestCase):
     """Step 1 owns no resource, which is the point of it being step 1."""
 
     def setUp(self) -> None:
-        self.root = Path(tempfile.mkdtemp())
+        self.root = temporary_root(self)
 
     def test_a_root_that_is_a_file_is_refused(self) -> None:
         occupied = self.root / "store"
@@ -335,7 +337,7 @@ class TheSingletonClaim(unittest.TestCase):
     """Step 2, on its own."""
 
     def setUp(self) -> None:
-        self.root = Path(tempfile.mkdtemp())
+        self.root = temporary_root(self)
         self.endpoint = self.root / "run" / "runtime.sock"
 
     def test_a_second_claim_is_refused_while_the_first_is_held(self) -> None:
@@ -390,7 +392,7 @@ class TheEndpointIsBoundBeforeThereIsAnythingToServe(unittest.TestCase):
     """Step 3, and the deferral that makes the order possible."""
 
     def setUp(self) -> None:
-        self.root = Path(tempfile.mkdtemp())
+        self.root = temporary_root(self)
         self.endpoint = self.root / "run" / "runtime.sock"
 
     def test_the_socket_exists_before_the_voice_worker_does(self) -> None:

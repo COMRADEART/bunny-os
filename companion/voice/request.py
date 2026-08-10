@@ -66,7 +66,7 @@ __all__ = [
 #: Bumped when a field is added, removed or reinterpreted. A worker that read a
 #: version it does not know refuses the request rather than guessing which
 #: fields it can still trust.
-VOICE_REQUEST_SCHEMA_VERSION = 1
+VOICE_REQUEST_SCHEMA_VERSION = 2
 
 #: The character bound, matching :data:`companion.voice.system.MAX_SPEECH_CHARACTERS`
 #: so that the two ways into a synthesiser agree. A caption is bounded at
@@ -271,6 +271,13 @@ class VoiceRequest:
     presentation_revision: int = 0
     language: str = "en"
     locale: str = "en-GB"
+    #: The user's preferred local provider for this generation.  It is a
+    #: preference, never an executable or module name; the registry only accepts
+    #: ids it already owns and descends its fixed fallback order on failure.
+    provider_id: str = "pocket"
+    #: A provider-owned, installed model id.  It is data, not a path, and is
+    #: validated with the same identifier grammar as a voice.
+    model_id: str = ""
     voice_id: str = ""
     speaking_rate: float = 1.0
     #: ``None`` means "the provider's own". A provider that cannot change pitch
@@ -344,6 +351,12 @@ class VoiceRequest:
             )
         if self.voice_id and not _VOICE_ID.match(self.voice_id):
             raise VoiceRequestError(f"voiceId is not a usable voice identifier: {self.voice_id!r}")
+        if self.provider_id and not _VOICE_ID.match(self.provider_id):
+            raise VoiceRequestError(
+                f"providerId is not a usable provider identifier: {self.provider_id!r}"
+            )
+        if self.model_id and not _VOICE_ID.match(self.model_id):
+            raise VoiceRequestError(f"modelId is not a usable model identifier: {self.model_id!r}")
         if not 0.25 <= self.speaking_rate <= 4.0:
             raise VoiceRequestError("speakingRate is outside the supported range (0.25 to 4.0)")
         if self.pitch is not None and not 0.5 <= self.pitch <= 2.0:
@@ -429,6 +442,8 @@ class VoiceRequest:
             "textBytes": self.byte_length,
             "privacyClassification": self.privacy_classification,
             "priority": self.priority.wire,
+            "providerId": self.provider_id,
+            "modelId": self.model_id,
             "voiceId": self.voice_id,
             "language": self.language,
         }
@@ -454,6 +469,8 @@ class VoiceRequest:
             "textBytes": self.byte_length,
             "language": self.language,
             "locale": self.locale,
+            "providerId": self.provider_id,
+            "modelId": self.model_id,
             "voiceId": self.voice_id,
             "speakingRate": self.speaking_rate,
             "pitch": self.pitch,
@@ -506,6 +523,8 @@ class VoiceRequest:
             presentation_revision=int(take("presentationRevision", 0)),
             language=str(take("language", "en")),
             locale=str(take("locale", "en-GB")),
+            provider_id=str(take("providerId", "pocket")),
+            model_id=str(take("modelId", "")),
             voice_id=str(take("voiceId", "")),
             speaking_rate=float(take("speakingRate", 1.0)),
             pitch=None if document.get("pitch") is None else float(document["pitch"]),
@@ -540,7 +559,8 @@ class VoiceRequest:
 #: is a field that survives a round trip in only one direction.
 _WIRE_FIELDS = (
     "schemaVersion", "requestId", "sessionId", "taskId", "captionReference",
-    "presentationRevision", "language", "locale", "voiceId", "speakingRate", "pitch",
+    "presentationRevision", "language", "locale", "providerId", "modelId", "voiceId",
+    "speakingRate", "pitch",
     "volume", "audioFormat", "sampleRate", "preferStreaming", "privacyClassification",
     "localityRequirement", "costCeilingUnits", "createdAtWall", "createdAtMonotonic",
     "expiresAtMonotonic", "cancellationToken", "priority", "interruptionPolicy",

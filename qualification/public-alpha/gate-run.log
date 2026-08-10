@@ -1,0 +1,494 @@
+=== gates started 2026-08-07T22:23:56-04:00 ===
+worktree HEAD: b4379eb512f5646d17985a8bc4f8b3fb1852a921
+gate commit:   b4379eb512f5646d17985a8bc4f8b3fb1852a921
+image:         /root/bunny-os/build/out/beta/bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64.qcow2
+image commit:  00adf30ed10f
+image provenance: built from 00adf30ed10f; checking the range is not build-affecting
+Build-input closure
+
+  build context roots: ARCHITECTURE.md, README.md, assets, build, capability, companion, config, desktop-integration, docs, installer, schemas, scripts, selinux, services, shell, systemd, tools
+  declared install routes: 72
+
+  examined 23 path(s): 0 installed, 5 context-only, 18 unreachable
+
+  BUILD-AFFECTING: no installed path found
+
+  In the build context, not installed by a declared route:
+    build/scripts/alpha-probe.py
+    build/scripts/alpha-record.py
+    build/scripts/vm-alpha-story.sh
+    scripts/companion_stress.py
+    scripts/ops/alpha-gates.sh
+
+  Unreachable from the build:
+    PUBLIC_ALPHA_INTEGRATION_REPORT.md
+    tests/companion/desktop_support.py
+    tests/companion/support.py
+    tests/companion/test_agents_authority.py
+    tests/companion/test_desktop_broker.py
+    tests/companion/test_desktop_schema.py
+    tests/companion/test_desktop_security.py
+    tests/companion/test_executors_reviewers.py
+    tests/companion/test_service_startup_order.py
+    tests/companion/test_speech_races.py
+    tests/companion/test_speech_recognizers.py
+    tests/companion/test_speech_security.py
+    tests/companion/test_speech_service_protocol.py
+    tests/companion/test_speech_worker.py
+    tests/companion/test_voice_authority.py
+    tests/companion/test_voice_captions.py
+    tests/companion/test_voice_multicall.py
+    tests/companion/test_voice_providers.py
+
+  Every commit changes the OCI configuration digest through the revision label and /usr/lib/bunny-os/release.json. An unchanged layer digest is not an unchanged image.
+image provenance: 00adf30ed10f..b4379eb512f5646d17985a8bc4f8b3fb1852a921 touches no installed path; the image stands
+########## in-process gates ##########
+character packages: 3 present
+  /usr/share/bunny-os/companion/characters/default-bunny
+  /root/alpha-vm/assets/companion/characters/default-bunny
+  /root/alpha-vm/assets/companion/characters/default-bunny-3d
+== gate 1: 100 consecutive companion service lifecycles ==
+stress: target=service runs=100 order=declared mode=in-process pid=545
+     1 ok   20.23s threads+0 fd+2 rss+65784K
+     2 ok   18.80s threads+0 fd+0 rss+68420K
+     3 ok   19.36s threads+0 fd+0 rss+68464K
+     4 ok   19.01s threads+0 fd+0 rss+68488K
+     5 ok   19.04s threads+0 fd+0 rss+68564K
+     6 ok   19.25s threads+0 fd+0 rss+68604K
+     7 ok   19.08s threads+0 fd+0 rss+68612K
+     8 ok   19.10s threads+0 fd+0 rss+68644K
+     9 ok   19.22s threads+0 fd+0 rss+68648K
+    10 ok   18.99s threads+0 fd+0 rss+69544K
+    11 ok   19.09s threads+0 fd+0 rss+69556K
+    12 ok   18.64s threads+0 fd+0 rss+69556K
+    13 ok   19.02s threads+0 fd+0 rss+69552K
+    14 ok   18.79s threads+0 fd+0 rss+69556K
+    15 ok   19.22s threads+0 fd+0 rss+69104K
+    16 ok   19.03s threads+0 fd+0 rss+69560K
+    17 ok   19.07s threads+0 fd+0 rss+66340K
+    18 ok   19.21s threads+0 fd+0 rss+66344K
+    19 ok   19.02s threads+0 fd+0 rss+66344K
+    20 ok   19.06s threads+0 fd+0 rss+66344K
+    21 ok   19.24s threads+0 fd+0 rss+66348K
+    22 ok   19.23s threads+0 fd+0 rss+66360K
+    23 ok   18.96s threads+0 fd+0 rss+66368K
+    24 ok   18.77s threads+0 fd+0 rss+66368K
+    25 ok   19.09s threads+0 fd+0 rss+66376K
+    26 ok   19.07s threads+0 fd+0 rss+66376K
+    27 ok   19.08s threads+0 fd+0 rss+66560K
+    28 ok   19.04s threads+0 fd+0 rss+66388K
+    29 ok   19.02s threads+0 fd+0 rss+66392K
+    30 ok   19.20s threads+0 fd+0 rss+66576K
+    31 ok   19.20s threads+0 fd+0 rss+66396K
+    32 ok   18.70s threads+0 fd+0 rss+66580K
+    33 ok   19.14s threads+0 fd+0 rss+66592K
+    34 ok   18.90s threads+0 fd+0 rss+66424K
+    35 ok   18.93s threads+0 fd+0 rss+66428K
+    36 ok   19.26s threads+0 fd+0 rss+66420K
+    37 ok   18.55s threads+0 fd+0 rss+66412K
+    38 ok   19.10s threads+0 fd+0 rss+66408K
+    39 ok   19.19s threads+0 fd+0 rss+66408K
+    40 ok   19.04s threads+0 fd+0 rss+66420K
+    41 ok   18.95s threads+0 fd+0 rss+66600K
+    42 ok   18.85s threads+0 fd+0 rss+66420K
+    43 ok   19.27s threads+0 fd+0 rss+66412K
+    44 ok   19.30s threads+0 fd+0 rss+66408K
+    45 ok   19.22s threads+0 fd+0 rss+66408K
+    46 ok   19.04s threads+0 fd+0 rss+66408K
+    47 ok   19.35s threads+0 fd+0 rss+66408K
+    48 ok   19.51s threads+0 fd+0 rss+66604K
+    49 ok   19.44s threads+0 fd+0 rss+66608K
+    50 ok   19.43s threads+0 fd+0 rss+66444K
+    51 ok   19.35s threads+0 fd+0 rss+66624K
+    52 ok   19.07s threads+0 fd+0 rss+66624K
+    53 ok   19.09s threads+0 fd+0 rss+66640K
+    54 ok   19.32s threads+0 fd+0 rss+66468K
+    55 ok   18.66s threads+0 fd+0 rss+66468K
+    56 ok   19.14s threads+0 fd+0 rss+66464K
+    57 ok   19.30s threads+0 fd+0 rss+66472K
+    58 ok   19.17s threads+0 fd+0 rss+66628K
+    59 ok   19.24s threads+0 fd+0 rss+66636K
+    60 ok   19.05s threads+0 fd+0 rss+66448K
+    61 ok   19.31s threads+0 fd+0 rss+66456K
+    62 ok   19.28s threads+0 fd+0 rss+66628K
+    63 ok   19.04s threads+0 fd+0 rss+66628K
+    64 ok   19.10s threads+0 fd+0 rss+66456K
+    65 ok   19.25s threads+0 fd+0 rss+66444K
+    66 ok   18.83s threads+0 fd+0 rss+66632K
+    67 ok   19.10s threads+0 fd+0 rss+66444K
+    68 ok   19.10s threads+0 fd+0 rss+66632K
+    69 ok   19.04s threads+0 fd+0 rss+66448K
+    70 ok   19.10s threads+0 fd+0 rss+66448K
+    71 ok   18.97s threads+0 fd+0 rss+66628K
+    72 ok   19.23s threads+0 fd+0 rss+66976K
+    73 ok   19.25s threads+0 fd+0 rss+66988K
+    74 ok   19.25s threads+0 fd+0 rss+67008K
+    75 ok   19.06s threads+0 fd+0 rss+67020K
+    76 ok   19.18s threads+0 fd+0 rss+66848K
+    77 ok   19.30s threads+0 fd+0 rss+66860K
+    78 ok   19.27s threads+0 fd+0 rss+67040K
+    79 ok   19.02s threads+0 fd+0 rss+66868K
+    80 ok   19.07s threads+0 fd+0 rss+66860K
+    81 ok   19.06s threads+0 fd+0 rss+67048K
+    82 ok   19.33s threads+0 fd+0 rss+67056K
+    83 ok   19.63s threads+0 fd+0 rss+67068K
+    84 ok   19.18s threads+0 fd+0 rss+66896K
+    85 ok   19.33s threads+0 fd+0 rss+66892K
+    86 ok   19.08s threads+0 fd+0 rss+66892K
+    87 ok   19.07s threads+0 fd+0 rss+66888K
+    88 ok   19.12s threads+0 fd+0 rss+66844K
+    89 ok   19.11s threads+0 fd+0 rss+66852K
+    90 ok   19.30s threads+0 fd+0 rss+66860K
+    91 ok   19.32s threads+0 fd+0 rss+66864K
+    92 ok   19.13s threads+0 fd+0 rss+66832K
+    93 ok   19.32s threads+0 fd+0 rss+66840K
+    94 ok   19.14s threads+0 fd+0 rss+66840K
+    95 ok   19.20s threads+0 fd+0 rss+66840K
+    96 ok   28.96s threads+1 fd+0 rss+66932K
+    97 ok   19.04s threads+0 fd+0 rss+67200K
+    98 ok   19.20s threads+0 fd+0 rss+67220K
+    99 ok   19.29s threads+0 fd+0 rss+67396K
+   100 ok   19.34s threads-1 fd+0 rss+67728K
+stress: 100/100 passed, longest consecutive 100
+== gate 2: 100 consecutive Alpha session-surface lifecycles ==
+stress: target=alpha runs=100 order=declared mode=in-process pid=92137
+     1 ok    0.41s threads+0 fd+2 rss+32592K
+     2 ok    0.20s threads+0 fd+0 rss+33420K
+     3 ok    0.20s threads+0 fd+0 rss+33480K
+     4 ok    0.20s threads+0 fd+0 rss+33528K
+     5 ok    0.20s threads+0 fd+0 rss+33556K
+     6 ok    0.20s threads+0 fd+0 rss+33588K
+     7 ok    0.20s threads+0 fd+0 rss+33616K
+     8 ok    0.20s threads+0 fd+0 rss+33652K
+     9 ok    0.19s threads+0 fd+0 rss+33680K
+    10 ok    0.20s threads+0 fd+0 rss+33708K
+    11 ok    0.20s threads+0 fd+0 rss+33740K
+    12 ok    0.20s threads+0 fd+0 rss+33768K
+    13 ok    0.20s threads+0 fd+0 rss+33804K
+    14 ok    0.20s threads+0 fd+0 rss+33848K
+    15 ok    0.20s threads+0 fd+0 rss+33880K
+    16 ok    0.20s threads+0 fd+0 rss+33908K
+    17 ok    0.20s threads+0 fd+0 rss+33940K
+    18 ok    0.20s threads+0 fd+0 rss+33968K
+    19 ok    0.20s threads+0 fd+0 rss+34000K
+    20 ok    0.20s threads+0 fd+0 rss+34028K
+    21 ok    0.21s threads+0 fd+0 rss+34060K
+    22 ok    0.21s threads+0 fd+0 rss+34088K
+    23 ok    0.20s threads+0 fd+0 rss+34120K
+    24 ok    0.20s threads+0 fd+0 rss+34148K
+    25 ok    0.21s threads+0 fd+0 rss+34180K
+    26 ok    0.20s threads+0 fd+0 rss+34224K
+    27 ok    0.20s threads+0 fd+0 rss+34256K
+    28 ok    0.20s threads+0 fd+0 rss+34284K
+    29 ok    0.20s threads+0 fd+0 rss+34312K
+    30 ok    0.19s threads+0 fd+0 rss+34352K
+    31 ok    0.20s threads+0 fd+0 rss+34372K
+    32 ok    0.20s threads+0 fd+0 rss+34392K
+    33 ok    0.20s threads+0 fd+0 rss+34412K
+    34 ok    0.21s threads+0 fd+0 rss+34432K
+    35 ok    0.20s threads+0 fd+0 rss+34452K
+    36 ok    0.21s threads+0 fd+0 rss+34472K
+    37 ok    0.21s threads+0 fd+0 rss+34492K
+    38 ok    0.21s threads+0 fd+0 rss+34512K
+    39 ok    0.21s threads+0 fd+0 rss+34548K
+    40 ok    0.22s threads+0 fd+0 rss+34564K
+    41 ok    0.21s threads+0 fd+0 rss+34588K
+    42 ok    0.20s threads+0 fd+0 rss+34604K
+    43 ok    0.22s threads+0 fd+0 rss+34628K
+    44 ok    0.22s threads+0 fd+0 rss+34644K
+    45 ok    0.21s threads+0 fd+0 rss+34660K
+    46 ok    0.21s threads+0 fd+0 rss+34668K
+    47 ok    0.21s threads+0 fd+0 rss+34680K
+    48 ok    0.21s threads+0 fd+0 rss+34688K
+    49 ok    0.21s threads+0 fd+0 rss+34716K
+    50 ok    0.21s threads+0 fd+0 rss+34724K
+    51 ok    0.22s threads+0 fd+0 rss+34736K
+    52 ok    0.20s threads+0 fd+0 rss+34744K
+    53 ok    0.21s threads+0 fd+0 rss+34756K
+    54 ok    0.21s threads+0 fd+0 rss+34768K
+    55 ok    0.21s threads+0 fd+0 rss+34780K
+    56 ok    0.21s threads+0 fd+0 rss+34788K
+    57 ok    0.21s threads+0 fd+0 rss+34800K
+    58 ok    0.22s threads+0 fd+0 rss+34808K
+    59 ok    0.21s threads+0 fd+0 rss+34820K
+    60 ok    0.21s threads+0 fd+0 rss+34828K
+    61 ok    0.21s threads+0 fd+0 rss+34840K
+    62 ok    0.21s threads+0 fd+0 rss+34880K
+    63 ok    0.21s threads+0 fd+0 rss+34892K
+    64 ok    0.21s threads+0 fd+0 rss+34900K
+    65 ok    0.23s threads+0 fd+0 rss+34912K
+    66 ok    0.21s threads+0 fd+0 rss+34920K
+    67 ok    0.21s threads+0 fd+0 rss+34948K
+    68 ok    0.21s threads+0 fd+0 rss+34956K
+    69 ok    0.21s threads+0 fd+0 rss+34968K
+    70 ok    0.22s threads+0 fd+0 rss+34992K
+    71 ok    0.21s threads+0 fd+0 rss+35004K
+    72 ok    0.21s threads+0 fd+0 rss+35012K
+    73 ok    0.21s threads+0 fd+0 rss+35024K
+    74 ok    0.20s threads+0 fd+0 rss+35032K
+    75 ok    0.22s threads+0 fd+0 rss+35060K
+    76 ok    0.22s threads+0 fd+0 rss+35068K
+    77 ok    0.22s threads+0 fd+0 rss+35080K
+    78 ok    0.21s threads+0 fd+0 rss+35088K
+    79 ok    0.22s threads+0 fd+0 rss+35100K
+    80 ok    0.21s threads+0 fd+0 rss+35108K
+    81 ok    0.22s threads+0 fd+0 rss+35120K
+    82 ok    0.22s threads+0 fd+0 rss+35128K
+    83 ok    0.21s threads+0 fd+0 rss+35136K
+    84 ok    0.22s threads+0 fd+0 rss+35148K
+    85 ok    0.21s threads+0 fd+0 rss+35156K
+    86 ok    0.22s threads+0 fd+0 rss+35168K
+    87 ok    0.21s threads+0 fd+0 rss+35192K
+    88 ok    0.21s threads+0 fd+0 rss+35204K
+    89 ok    0.21s threads+0 fd+0 rss+35212K
+    90 ok    0.21s threads+0 fd+0 rss+35224K
+    91 ok    0.22s threads+0 fd+0 rss+35232K
+    92 ok    0.21s threads+0 fd+0 rss+35244K
+    93 ok    0.22s threads+0 fd+0 rss+35252K
+    94 ok    0.22s threads+0 fd+0 rss+35264K
+    95 ok    0.22s threads+0 fd+0 rss+35272K
+    96 ok    0.21s threads+0 fd+0 rss+35284K
+    97 ok    0.21s threads+0 fd+0 rss+35292K
+    98 ok    0.21s threads+0 fd+0 rss+35320K
+    99 ok    0.22s threads+0 fd+0 rss+35328K
+   100 ok    0.21s threads+0 fd+0 rss+35340K
+stress: 100/100 passed, longest consecutive 100
+   (as bunny: a suite run as root cannot observe a read-only refusal)
+== gate 3: 50 consecutive complete companion suites ==
+stress: target=suite runs=50 order=declared mode=in-process pid=93747
+     1 ok   51.32s threads+0 fd+2 rss+229952K
+     2 ok   49.36s threads+0 fd+0 rss+250640K
+     3 ok   49.69s threads+0 fd+0 rss+253896K
+     4 ok   49.41s threads+0 fd+0 rss+257436K
+     5 ok   50.06s threads+0 fd+0 rss+260164K
+     6 ok   50.02s threads+0 fd+0 rss+258640K
+     7 ok   50.26s threads+0 fd+0 rss+260520K
+     8 ok   49.70s threads+0 fd+0 rss+260192K
+     9 ok   50.16s threads+0 fd+0 rss+262156K
+    10 ok   49.77s threads+0 fd+0 rss+262940K
+    11 ok   50.19s threads+0 fd+0 rss+263276K
+    12 ok   50.45s threads+0 fd+0 rss+263540K
+    13 ok   59.68s threads+1 fd+0 rss+265340K
+    14 ok   50.01s threads-1 fd+0 rss+267944K
+    15 ok   50.14s threads+0 fd+0 rss+267352K
+    16 ok   49.67s threads+0 fd+0 rss+268992K
+    17 ok   49.80s threads+0 fd+0 rss+270380K
+    18 ok   49.68s threads+0 fd+0 rss+272400K
+    19 ok   49.46s threads+0 fd+0 rss+271168K
+    20 ok   49.79s threads+0 fd+0 rss+272460K
+    21 ok   49.77s threads+0 fd+0 rss+272388K
+    22 ok   50.33s threads+0 fd+0 rss+272760K
+    23 ok   49.39s threads+0 fd+0 rss+271532K
+    24 ok   49.36s threads+0 fd+0 rss+271988K
+    25 ok   49.81s threads+0 fd+0 rss+269276K
+    26 ok   49.76s threads+0 fd+0 rss+270076K
+    27 ok   50.46s threads+0 fd+0 rss+270496K
+    28 ok   49.56s threads+0 fd+0 rss+270376K
+    29 ok   49.61s threads+0 fd+0 rss+272960K
+    30 ok   50.03s threads+0 fd+0 rss+272032K
+    31 ok   49.71s threads+0 fd+0 rss+275212K
+    32 ok   49.70s threads+0 fd+0 rss+274324K
+    33 ok   50.19s threads+0 fd+0 rss+274080K
+    34 ok   50.22s threads+0 fd+0 rss+274740K
+    35 ok   49.71s threads+0 fd+0 rss+272800K
+    36 ok   49.74s threads+0 fd+0 rss+274672K
+    37 ok   49.91s threads+0 fd+0 rss+271564K
+    38 ok   50.32s threads+0 fd+0 rss+271848K
+    39 ok   50.37s threads+0 fd+0 rss+272824K
+    40 ok   50.08s threads+0 fd+0 rss+272984K
+    41 ok   49.32s threads+0 fd+0 rss+274256K
+    42 ok   50.19s threads+0 fd+0 rss+274840K
+    43 ok   49.98s threads+0 fd+0 rss+275456K
+    44 ok   49.81s threads+0 fd+0 rss+275592K
+    45 ok   49.76s threads+0 fd+0 rss+275552K
+    46 ok   50.08s threads+0 fd+0 rss+274536K
+    47 ok   49.86s threads+0 fd+0 rss+274692K
+    48 ok   50.05s threads+0 fd+0 rss+274924K
+    49 ok   49.49s threads+0 fd+0 rss+273780K
+    50 ok   49.19s threads+0 fd+0 rss+274140K
+stress: 50/50 passed, longest consecutive 50
+== gate 4: booted VM Alpha stories NOT RUN (asked for 0) ==
+== gate 5: install stories NOT RUN (asked for 0) ==
+  [ok] service-100    100/100 companion service lifecycle runs
+  [ok] alpha-100      100/100 Alpha session-surface lifecycle runs
+  [ok] suite-50       50/50 complete companion suites
+  [--] vm-story-20    0/20 booted VM Alpha stories  — asked for 0 of the 20 the brief requires. A booted-VM gate costs minutes per iteration and was run separately; this record does not claim it.
+  [--] install-10     0/10 install to boot to first-run stories  — asked for 0 of the 10 the brief requires
+allPassed=True complete=False
+NOT_RUN: vm-story-20, install-10
+record: /root/alpha-evidence/alpha-gates.json
+in-process rc=0
+########## VM stories ##########
+--------------- online-001 (offline=0) ---------------
+source image: /root/bunny-os/build/out/beta/bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64.qcow2
+work:         /root/alpha-vm-work/online-001
+network:      user-mode NAT (§14)
+--- injecting ---
+deployment: /ostree/deploy/default/deploy/6dc0e22fdc7aa56f372cd9e6947a9b34a1c8cb005e92e98a24d7158a103d3431.0
+stateroot:  /ostree/deploy/default
+injected: probe, bunny, autologin, linger
+--- booting (600s budget) ---
+qemu-system-x86_64: terminating on signal 15 from pid 240438 (timeout)
+--- extracting ---
+record read from the guest filesystem: /ostree/deploy/default/var/log/bunny-alpha-record.json
+  [ok] boot.graphical-target-reached: graphical.target ActiveEnterTimestampMonotonic=9003989
+  [ok] boot.is-a-virtual-machine: systemd-detect-virt='kvm'
+  [ok] session.runtime-started: bunny-companion.service ActiveState=active
+  [ok] session.runtime-not-restart-looping: bunny-companion.service NRestarts=0
+  [ok] session.window-unit-installed: bunny-companion-window.service LoadState=loaded
+  [ok] session.both-units-enabled: is-enabled: 'enabled\nenabled'
+  [ok] session.no-duplicate-process: runtime processes=1, window processes=1
+  [ok] session.no-terminal-opened: gnome-terminal-server processes=0
+  [ok] provenance.every-subsystem-from-the-image: 10/10 imported from /usr/lib/bunny-os/python
+  [ok] provenance.no-checkout-or-pythonpath: 0 rejection(s): 
+  [ok] capability.facts-and-probes-both-present: hardware present=True, operational probes=7
+  [ok] network.no-unexplained-outbound: 0 established non-loopback connection(s): []
+  [ok] onboarding.offline-completable: 10 steps, 2 required, 0 of those ask for something
+  [ok] recovery.diagnostics-answered: 12 diagnostic section(s)
+  [ok] providers.state-is-stated: provider line: 'No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answ'
+  [ok] character.policy-decided: rung=text-only, summary='This machine draws no character; Bunny uses the text-only presentation.'
+  [ok] identity.one-build-identity: channel='alpha', PRETTY_NAME='Bunny OS Alpha 0.1', buildId='00adf30ed10f.1786122963'
+17/17 assertions held
+record: /root/alpha-vm-work/online-001/alpha-record.json
+rc=0
+--------------- online-002 (offline=0) ---------------
+source image: /root/bunny-os/build/out/beta/bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64.qcow2
+work:         /root/alpha-vm-work/online-002
+network:      user-mode NAT (§14)
+--- injecting ---
+deployment: /ostree/deploy/default/deploy/6dc0e22fdc7aa56f372cd9e6947a9b34a1c8cb005e92e98a24d7158a103d3431.0
+stateroot:  /ostree/deploy/default
+injected: probe, bunny, autologin, linger
+--- booting (600s budget) ---
+qemu-system-x86_64: terminating on signal 15 from pid 240992 (timeout)
+--- extracting ---
+record read from the guest filesystem: /ostree/deploy/default/var/log/bunny-alpha-record.json
+  [ok] boot.graphical-target-reached: graphical.target ActiveEnterTimestampMonotonic=9106967
+  [ok] boot.is-a-virtual-machine: systemd-detect-virt='kvm'
+  [ok] session.runtime-started: bunny-companion.service ActiveState=active
+  [ok] session.runtime-not-restart-looping: bunny-companion.service NRestarts=0
+  [ok] session.window-unit-installed: bunny-companion-window.service LoadState=loaded
+  [ok] session.both-units-enabled: is-enabled: 'enabled\nenabled'
+  [ok] session.no-duplicate-process: runtime processes=1, window processes=1
+  [ok] session.no-terminal-opened: gnome-terminal-server processes=0
+  [ok] provenance.every-subsystem-from-the-image: 10/10 imported from /usr/lib/bunny-os/python
+  [ok] provenance.no-checkout-or-pythonpath: 0 rejection(s): 
+  [ok] capability.facts-and-probes-both-present: hardware present=True, operational probes=7
+  [ok] network.no-unexplained-outbound: 0 established non-loopback connection(s): []
+  [ok] onboarding.offline-completable: 10 steps, 2 required, 0 of those ask for something
+  [ok] recovery.diagnostics-answered: 12 diagnostic section(s)
+  [ok] providers.state-is-stated: provider line: 'No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answ'
+  [ok] character.policy-decided: rung=text-only, summary='This machine draws no character; Bunny uses the text-only presentation.'
+  [ok] identity.one-build-identity: channel='alpha', PRETTY_NAME='Bunny OS Alpha 0.1', buildId='00adf30ed10f.1786122963'
+17/17 assertions held
+record: /root/alpha-vm-work/online-002/alpha-record.json
+rc=0
+--------------- online-003 (offline=0) ---------------
+source image: /root/bunny-os/build/out/beta/bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64.qcow2
+work:         /root/alpha-vm-work/online-003
+network:      user-mode NAT (§14)
+--- injecting ---
+deployment: /ostree/deploy/default/deploy/6dc0e22fdc7aa56f372cd9e6947a9b34a1c8cb005e92e98a24d7158a103d3431.0
+stateroot:  /ostree/deploy/default
+injected: probe, bunny, autologin, linger
+--- booting (600s budget) ---
+qemu-system-x86_64: terminating on signal 15 from pid 241595 (timeout)
+--- extracting ---
+record read from the guest filesystem: /ostree/deploy/default/var/log/bunny-alpha-record.json
+  [ok] boot.graphical-target-reached: graphical.target ActiveEnterTimestampMonotonic=7877459
+  [ok] boot.is-a-virtual-machine: systemd-detect-virt='kvm'
+  [ok] session.runtime-started: bunny-companion.service ActiveState=active
+  [ok] session.runtime-not-restart-looping: bunny-companion.service NRestarts=0
+  [ok] session.window-unit-installed: bunny-companion-window.service LoadState=loaded
+  [ok] session.both-units-enabled: is-enabled: 'enabled\nenabled'
+  [ok] session.no-duplicate-process: runtime processes=1, window processes=1
+  [ok] session.no-terminal-opened: gnome-terminal-server processes=0
+  [ok] provenance.every-subsystem-from-the-image: 10/10 imported from /usr/lib/bunny-os/python
+  [ok] provenance.no-checkout-or-pythonpath: 0 rejection(s): 
+  [ok] capability.facts-and-probes-both-present: hardware present=True, operational probes=7
+  [ok] network.no-unexplained-outbound: 0 established non-loopback connection(s): []
+  [ok] onboarding.offline-completable: 10 steps, 2 required, 0 of those ask for something
+  [ok] recovery.diagnostics-answered: 12 diagnostic section(s)
+  [ok] providers.state-is-stated: provider line: 'No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answ'
+  [ok] character.policy-decided: rung=text-only, summary='This machine draws no character; Bunny uses the text-only presentation.'
+  [ok] identity.one-build-identity: channel='alpha', PRETTY_NAME='Bunny OS Alpha 0.1', buildId='00adf30ed10f.1786122963'
+17/17 assertions held
+record: /root/alpha-vm-work/online-003/alpha-record.json
+rc=0
+--------------- offline-001 (offline=1) ---------------
+source image: /root/bunny-os/build/out/beta/bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64.qcow2
+work:         /root/alpha-vm-work/offline-001
+network:      disconnected (§13)
+--- injecting ---
+deployment: /ostree/deploy/default/deploy/6dc0e22fdc7aa56f372cd9e6947a9b34a1c8cb005e92e98a24d7158a103d3431.0
+stateroot:  /ostree/deploy/default
+injected: probe, bunny, autologin, linger, offline
+--- booting (600s budget) ---
+qemu-system-x86_64: terminating on signal 15 from pid 242152 (timeout)
+--- extracting ---
+record read from the guest filesystem: /ostree/deploy/default/var/log/bunny-alpha-record.json
+  [ok] boot.graphical-target-reached: graphical.target ActiveEnterTimestampMonotonic=7939260
+  [ok] boot.is-a-virtual-machine: systemd-detect-virt='kvm'
+  [ok] session.runtime-started: bunny-companion.service ActiveState=active
+  [ok] session.runtime-not-restart-looping: bunny-companion.service NRestarts=0
+  [ok] session.window-unit-installed: bunny-companion-window.service LoadState=loaded
+  [ok] session.both-units-enabled: is-enabled: 'enabled\nenabled'
+  [ok] session.no-duplicate-process: runtime processes=1, window processes=1
+  [ok] session.no-terminal-opened: gnome-terminal-server processes=0
+  [ok] provenance.every-subsystem-from-the-image: 10/10 imported from /usr/lib/bunny-os/python
+  [ok] provenance.no-checkout-or-pythonpath: 0 rejection(s): 
+  [ok] capability.facts-and-probes-both-present: hardware present=True, operational probes=7
+  [ok] network.no-unexplained-outbound: 0 established non-loopback connection(s): []
+  [ok] network.offline-has-no-default-route: default route=''
+  [ok] onboarding.offline-completable: 10 steps, 2 required, 0 of those ask for something
+  [ok] recovery.diagnostics-answered: 12 diagnostic section(s)
+  [ok] providers.state-is-stated: provider line: 'No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answ'
+  [ok] character.policy-decided: rung=text-only, summary='This machine draws no character; Bunny uses the text-only presentation.'
+  [ok] identity.one-build-identity: channel='alpha', PRETTY_NAME='Bunny OS Alpha 0.1', buildId='00adf30ed10f.1786122963'
+18/18 assertions held
+record: /root/alpha-vm-work/offline-001/alpha-record.json
+rc=0
+--------------- offline-002 (offline=1) ---------------
+source image: /root/bunny-os/build/out/beta/bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64.qcow2
+work:         /root/alpha-vm-work/offline-002
+network:      disconnected (§13)
+--- injecting ---
+deployment: /ostree/deploy/default/deploy/6dc0e22fdc7aa56f372cd9e6947a9b34a1c8cb005e92e98a24d7158a103d3431.0
+stateroot:  /ostree/deploy/default
+injected: probe, bunny, autologin, linger, offline
+--- booting (600s budget) ---
+qemu-system-x86_64: terminating on signal 15 from pid 242704 (timeout)
+--- extracting ---
+record read from the guest filesystem: /ostree/deploy/default/var/log/bunny-alpha-record.json
+  [ok] boot.graphical-target-reached: graphical.target ActiveEnterTimestampMonotonic=7889478
+  [ok] boot.is-a-virtual-machine: systemd-detect-virt='kvm'
+  [ok] session.runtime-started: bunny-companion.service ActiveState=active
+  [ok] session.runtime-not-restart-looping: bunny-companion.service NRestarts=0
+  [ok] session.window-unit-installed: bunny-companion-window.service LoadState=loaded
+  [ok] session.both-units-enabled: is-enabled: 'enabled\nenabled'
+  [ok] session.no-duplicate-process: runtime processes=1, window processes=1
+  [ok] session.no-terminal-opened: gnome-terminal-server processes=0
+  [ok] provenance.every-subsystem-from-the-image: 10/10 imported from /usr/lib/bunny-os/python
+  [ok] provenance.no-checkout-or-pythonpath: 0 rejection(s): 
+  [ok] capability.facts-and-probes-both-present: hardware present=True, operational probes=7
+  [ok] network.no-unexplained-outbound: 0 established non-loopback connection(s): []
+  [ok] network.offline-has-no-default-route: default route=''
+  [ok] onboarding.offline-completable: 10 steps, 2 required, 0 of those ask for something
+  [ok] recovery.diagnostics-answered: 12 diagnostic section(s)
+  [ok] providers.state-is-stated: provider line: 'No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answ'
+  [ok] character.policy-decided: rung=text-only, summary='This machine draws no character; Bunny uses the text-only presentation.'
+  [ok] identity.one-build-identity: channel='alpha', PRETTY_NAME='Bunny OS Alpha 0.1', buildId='00adf30ed10f.1786122963'
+18/18 assertions held
+record: /root/alpha-vm-work/offline-002/alpha-record.json
+rc=0
+########## collect ##########
+  [ok] service-100    100/100 companion service lifecycle runs
+  [ok] alpha-100      100/100 Alpha session-surface lifecycle runs
+  [ok] suite-50       50/50 complete companion suites
+  [ok] vm-story-20    5/20 booted VM Alpha stories  — 5/5 stories held; the brief asks for 20
+  [--] install-10     0/10 install to boot to first-run stories  — asked for 0 of the 10 the brief requires
+allPassed=True complete=False
+NOT_RUN: install-10
+record: /root/alpha-evidence/alpha-gates.json
+collect rc=0
+=== gates ended 2026-08-08T00:29:32-04:00 ===

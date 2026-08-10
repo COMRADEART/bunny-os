@@ -60,6 +60,7 @@ __all__ = [
     "MAX_RESPONSE_BYTES",
     "OPERATIONS",
     "PROTOCOL_SCHEMA_VERSION",
+    "DESKTOP_OPERATIONS",
     "PROVIDER_OPERATIONS",
     "SPEECH_OPERATIONS",
     "CompanionClient",
@@ -170,8 +171,8 @@ class Parameter:
     required: bool = False
     default: Any = None
     maximum_length: int = 8192
-    minimum: int = 0
-    maximum: int = 1 << 31
+    minimum: float = 0
+    maximum: float = 1 << 31
 
     def coerce(self, value: Any) -> Any:
         if self.kind == "string":
@@ -194,6 +195,14 @@ class Parameter:
                     f"{self.name} must be between {self.minimum} and {self.maximum}"
                 )
             return value
+        if self.kind == "number":
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise ProtocolError(f"{self.name} must be a number")
+            if not self.minimum <= float(value) <= self.maximum:
+                raise ProtocolError(
+                    f"{self.name} must be between {self.minimum} and {self.maximum}"
+                )
+            return float(value)
         if self.kind == "boolean":
             if not isinstance(value, bool):
                 raise ProtocolError(f"{self.name} must be true or false")
@@ -346,6 +355,29 @@ OPERATIONS: Mapping[str, Operation] = {
             ),
             mutating=True,
         ),
+        # Focused voice preferences. A complete document is written in one
+        # operation so omitted fields can never silently reset an unrelated
+        # preference, and no credential-shaped field exists on the surface.
+        Operation("settings_voice_get"),
+        Operation(
+            "settings_voice_set",
+            (
+                Parameter("voiceInput", "boolean", required=True),
+                Parameter("speechResponses", "boolean", required=True),
+                Parameter("responseMode", "string", required=True, maximum_length=16),
+                Parameter("deviceId", "string", default="", maximum_length=128),
+                Parameter("modelId", "string", default="", maximum_length=128),
+                Parameter("language", "string", required=True, maximum_length=16),
+                Parameter("shortcut", "string", required=True, maximum_length=64),
+                Parameter("wakeWord", "string", required=True, maximum_length=16),
+                Parameter("ttsProviderId", "string", default=None, maximum_length=32),
+                Parameter("ttsModelId", "string", default=None, maximum_length=64),
+                Parameter("ttsVoiceId", "string", default=None, maximum_length=64),
+                Parameter("speakingRate", "number", default=None, minimum=0.5, maximum=2.0),
+                Parameter("performanceMode", "string", default=None, maximum_length=16),
+            ),
+            mutating=True,
+        ),
         # -- speech ------------------------------------------------------
         #
         # §17's eight, and deliberately no ninth. Note what none of them takes:
@@ -401,8 +433,10 @@ OPERATIONS: Mapping[str, Operation] = {
         # set the request schema enforces, and every free string it accepts is
         # bounded here and validated again, more narrowly, at construction of
         # the request. A client cannot make the runtime record to a path,
-        # load a model, or open a microphone silently — the operations have
-        # nowhere to put any of those asks.
+        # load a model, or name an executable. A zero presentation revision
+        # cannot open a microphone without an attached service-side surface;
+        # Bunny Shell sends a positive revision only after raising its
+        # persistent MIC indicator.
         Operation("speech_input_health"),
         Operation("speech_input_devices"),
         Operation(
@@ -491,6 +525,50 @@ OPERATIONS: Mapping[str, Operation] = {
             (Parameter("taskId", "identifier", required=True),),
             mutating=True,
         ),
+        # -- desktop actions (§21). Note the shape of what is absent. There is
+        # no operation here that performs an action: a client can list, explain,
+        # inspect, stop and undo, and the only way to *cause* a desktop effect
+        # is a task whose plan proposes one and a person who approves it. An
+        # operation that took an action id and parameters would be a generic
+        # tool invocation with a narrow name, and it would let a client bypass
+        # the whole of §2's pipeline.
+        #
+        # Nor is there a parameter anywhere below that names an application, a
+        # path, a URI, a command, a D-Bus destination or a backend. Every
+        # identifier here refers to something the runtime already holds.
+        Operation("desktop_actions_list"),
+        Operation("desktop_actions_status"),
+        Operation(
+            "desktop_action_explain",
+            (Parameter("actionId", "string", required=True, maximum_length=64),),
+        ),
+        Operation(
+            "desktop_action_cancel",
+            (
+                Parameter("requestId", "identifier", required=True),
+                Parameter("cancellationToken", "identifier", default=""),
+            ),
+            mutating=True,
+        ),
+        Operation(
+            "desktop_action_undo",
+            (
+                # The idempotency key of the action to undo. It names an entry
+                # in the ledger; it cannot name anything else, and an undo is
+                # derived from what that entry recorded rather than from
+                # anything the caller supplies.
+                Parameter("idempotencyKey", "string", required=True, maximum_length=64),
+                Parameter("sessionId", "identifier", default=None),
+            ),
+            mutating=True,
+        ),
+        Operation(
+            "desktop_action_history",
+            (
+                Parameter("taskId", "identifier", default=None),
+                Parameter("limit", "integer", default=25, minimum=1, maximum=200),
+            ),
+        ),
     )
 }
 
@@ -516,6 +594,15 @@ PROVIDER_OPERATIONS: Mapping[str, Operation] = {
     if name.startswith(("providers_", "provider_", "task_provider_"))
 }
 
+#: The desktop-action subset, derived for the same reason:
+#: :mod:`companion.desktop.service` validates against exactly these objects, so
+#: the schema a client is checked against and the schema the service serves are
+#: one table read twice.
+DESKTOP_OPERATIONS: Mapping[str, Operation] = {
+    name: item for name, item in OPERATIONS.items()
+    if name.startswith(("desktop_actions_", "desktop_action_"))
+}
+
 
 class RuntimeGateway(TypingProtocol):
     """What the transport is allowed to call.
@@ -539,6 +626,8 @@ class RuntimeGateway(TypingProtocol):
     def cancel_task(self, **params: Any) -> Mapping[str, Any]: ...
     def pause_task(self, **params: Any) -> Mapping[str, Any]: ...
     def resume_task(self, **params: Any) -> Mapping[str, Any]: ...
+    def settings_voice_get(self, **params: Any) -> Mapping[str, Any]: ...
+    def settings_voice_set(self, **params: Any) -> Mapping[str, Any]: ...
     def voice_health(self, **params: Any) -> Mapping[str, Any]: ...
     def voice_list(self, **params: Any) -> Mapping[str, Any]: ...
     def voice_status(self, **params: Any) -> Mapping[str, Any]: ...

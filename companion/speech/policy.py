@@ -84,6 +84,7 @@ class SpeechInputPreferences:
     language: str = "en"
     locale: str = "en-GB"
     provider_preference: str = ""
+    model_id: str = ""
     partial_transcripts: bool = True
     #: §13: off by default, and turning it on is an explicit user act the
     #: surface must accompany with a clear warning. Even on, every capture
@@ -116,6 +117,7 @@ class SpeechInputPreferences:
             "language": self.language,
             "locale": self.locale,
             "providerPreference": self.provider_preference,
+            "modelId": self.model_id,
             "partialTranscripts": self.partial_transcripts,
             "allowImmediateSubmission": self.allow_immediate_submission,
             "latencyPreference": self.latency_preference,

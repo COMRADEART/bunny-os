@@ -418,6 +418,7 @@ class RefusalTests(ServiceTestCase):
             "health", "create_session", "list_sessions", "get_session", "submit_task",
             "list_tasks", "get_task", "get_events", "get_presentation_state",
             "resolve_approval", "cancel_task", "pause_task", "resume_task",
+            "settings_voice_get", "settings_voice_set",
             # §17's speech operations. Listed here rather than derived from
             # OPERATIONS on purpose: this test exists to notice an operation
             # being *added*, and a test that computed its own expectation from
@@ -434,6 +435,12 @@ class RefusalTests(ServiceTestCase):
             "providers_list", "providers_status", "providers_explain",
             "provider_models", "provider_health", "provider_test_local",
             "task_provider_status", "task_provider_cancel",
+            # The desktop-action operations, listed for the same reason. Note
+            # what is not in this list: anything that *performs* an action. A
+            # client lists, explains, inspects, stops and undoes; causing a
+            # desktop effect needs a task, a plan and an approval.
+            "desktop_actions_list", "desktop_actions_status", "desktop_action_explain",
+            "desktop_action_cancel", "desktop_action_undo", "desktop_action_history",
         )))
 
     @unittest.skipIf(hasattr(socket, "AF_UNIX"), "the token guards the loopback fallback only")

@@ -2,6 +2,157 @@
 
 This root report mirrors the maintained detail in `docs/KNOWN_LIMITATIONS.md`.
 
+## Added by the spoken end-to-end pass — 2026-08-10
+
+**The voice settings page has not been seen working.** It could not reach the
+companion on any installed system — `/usr/bin/bunny-settings` puts
+`/usr/lib/bunny-shell` on `sys.path` and nothing put `/usr/lib/bunny-os/python`
+there, so the page always rendered "Voice settings are unavailable because Bunny
+Companion is not reachable: No module named 'companion'". That is fixed in
+source and covered by a test; the page was photographed at 1920×1080 and
+1366×768 still showing the old build, because the iteration overlay does not
+reach `/usr/lib/bunny-shell`. The provider list, the readiness states and the
+engine selector have therefore still not been looked at.
+
+**A screendump taken after a resolution change is sheared.** The 1366×768
+photographs tear diagonally; the accessibility measurement at that size is sound
+(62 controls, none off-screen) but the images are not presentable. The same
+artefact is described in DESKTOP_SHELL_ALPHA_VALIDATION.md.
+
+**This harness cannot send Super.** Neither GNOME's own overlay-key nor any
+`<Super>` accelerator fires, while ordinary typing into a focused terminal works
+and creates a file. All four extension keybindings now report successful
+registration in the journal — which is itself new, because `addKeybinding`
+signals refusal by return value rather than by raising — but the push-to-talk
+shortcut has not been exercised end to end. The microphone button was used
+instead, which is the stronger claim.
+
+**Worker RSS is not reported.** The reader matched a 13 MiB process, which
+cannot be the worker holding a PyTorch model. A number known to be wrong is
+worse than no number; the same rule already applies to CPU-seconds on this host.
+
+**The shipped wallpaper does not load.** `bunny-nocturne.svg` fails with
+"Unknown image format: application/xml" — the image has no SVG pixbuf loader —
+so GNOME paints the dconf gradient behind the desktop's own contrast scrim.
+
+**The search results panel is drawn empty.** A 560×13 strip sits under the top
+bar with no rows in it.
+
+**The exact image has not been built from this candidate.** The host ran out of
+disk: Windows C: reached zero free, the WSL virtual disk could not grow, and
+podman failed with block-layer I/O errors. `df` inside the guest still reported
+hundreds of free gigabytes, so the first symptom was not about space at all.
+
+## Added by the voice interaction milestone — 2026-08-09
+
+The source now connects explicit Bunny Shell push-to-talk to the existing
+companion speech-input service, canonical AssistantService task submission,
+validated local actions, and the existing local speech-output service. The
+shell displays transcription, microphone state, safe file results and the full
+character lifecycle; it never captures audio or runs inference itself.
+
+This is **not yet a graphical voice acceptance pass**. The locked Bunny image
+contains PipeWire/PulseAudio capture tools and real eSpeak NG/Speech Dispatcher
+TTS, but it still contains neither the `vosk` Python library nor a reviewed Vosk
+model. The genuine adapter therefore reports unavailable and typed interaction
+remains the fallback. The prior speech-input validation used a manually
+installed `vosk-model-small-en-us-0.15` model (68 MiB); that model was not added
+to the image and no automatic download path was introduced.
+
+This development host is Windows and cannot boot the GNOME/Mutter/Wayland
+session or present a physical microphone/speaker to Bunny OS. Consequently:
+
+* no spoken `Open Files` transcription was captured on this candidate;
+* no physical-speaker TTS or end-user speech interruption was observed here;
+* the offline network-disconnect voice scenario was not run;
+* 1920×1080 and 1366×768 pass the source/layout solver tests, but received no
+  current visual screenshot acceptance run.
+
+Wake-word support remains an intentionally disabled interface seam. There is no
+continuous capture and no setting can enable it in this milestone.
+
+## Added by the Public Alpha integration pass — 2026-08-07
+
+Full detail in `PUBLIC_ALPHA_INTEGRATION_REPORT.md`.
+
+### The installation medium cannot be built
+
+**Superseded 2026-08-08 — the mechanism is fixed at `0e6b346`.** The account
+below is kept because the conclusion it drew was wrong and the correction is
+the useful part.
+
+What was recorded: `make build-alpha-iso` fails in `image-builder`'s
+`bootc-generic-iso` pipeline with
+`FileNotFoundError: /boot/efi/EFI/fedora/shimx64.efi`, because
+`quay.io/fedora/fedora-bootc:44` ships an empty `/boot` and
+`dnf reinstall shim-x64` does not repopulate it.
+
+Both observations were right. The conclusion — that the file is absent from the
+image — was not. It is at
+`/usr/lib/efi/shim/16.1-5/EFI/fedora/shimx64.efi`, and rpm marks the
+`/boot/efi` path `g` for **%ghost**: owned, never written. `reinstall` was
+never going to write it, and `rpm -V shim-x64` reports nothing about those
+paths for the same reason. Fedora moved the boot binaries to versioned
+directories under `/usr/lib/efi` and has bootupd copy them onto the ESP at
+deployment; `/usr/lib/bootupd/updates/EFI.json` names the two packages it
+installs. That is why every disk image is already correct, and why only the
+ISO path failed: `org.osbuild.grub2.iso` and `org.osbuild.bootiso.mono` read
+the buildroot's `/boot/efi/EFI/<vendor>/` by absolute path.
+
+The mismatch is upstream, between `osbuild 185` and Fedora 44's shim/grub2
+packaging. The repository-local correction places Fedora's own binaries at
+Fedora's own %ghost paths in the live profile only, verified against the
+rpm-owned originals with `cmp`.
+
+Measured end to end: `image-builder 76.0.0`, `osbuild 185`, exit 0, a 2.0 GB
+bootable ISO whose `BOOTX64.EFI`, `grubx64.efi` and `mmx64.efi` are
+byte-identical to `shim-x64-16.1-5` and `grub2-efi-x64-cdboot-2.12-60.fc44`.
+Secure Boot is unchanged.
+
+**Still outstanding:** that build used the cached *beta* live image. **No Alpha
+ISO has been produced**, because the Alpha payload is not built on any current
+builder. Exit criteria 2, 3 and 28 stay unmet until one exists and installs.
+
+### The window was never seen
+
+Every statement about the companion window in the Alpha report is a statement
+about units, processes and files. The harness boots headless and reads a serial
+console, so:
+
+* GTK-visible and first-character-frame timestamps are NOT_RUN;
+* "the character appears" is NOT_RUN — the *decision* is measured, the drawing
+  is not;
+* the approval dialog, the transcript and the speech bubble are NOT_RUN.
+
+§21's rule applies to more than GPUs. A headless boot proves a window process
+started; it does not prove anything appeared in it.
+
+### Neither half of the AI path exists on the shipped image
+
+No local provider is installed, and `vosk` is not in the Fedora repositories so
+speech recognition has no library. Both are reported correctly — the provider
+survey says plainly that nothing is installed and that typed input works, and
+the speech survey names the missing layer — and both are §9's and §32's
+supported branches. But it means the provider and speech halves of the success
+path are **structurally unexercised** on the artifact, not merely untested.
+
+### The Speech Dispatcher log bound is not re-measured
+
+An unbounded `speech-dispatcher.log` reached 1,656,115,200 bytes in
+`/run/user/$UID`, which is RAM, and filled the tmpfs. It is bounded by a
+drop-in setting `LogLevel 1`. The fix has not been re-measured on a machine
+that has run the voice runtime for a day, which is what would confirm the bound
+holds rather than merely being configured.
+
+### mDNS and LLMNR remain
+
+`avahi-daemon` on 5353 and `systemd-resolved` on 5355 still listen on all
+interfaces after this pass. They are pre-existing, they are not update or
+telemetry paths, and disabling them is a change to name resolution that belongs
+in its own review rather than in a network-posture fix. Recorded so that a
+network audit reading "no unexplained outbound traffic" is not read as "nothing
+listens".
+
 ## Added by the first-login correction pass — 2026-08-02
 
 ### The archive digest is a function of the commit built

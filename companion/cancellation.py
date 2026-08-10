@@ -178,6 +178,35 @@ def _cancel_task_locked(
         ))
     runtime.store.save_task(task)
 
+    # 3b. Stop desktop actions in flight, and drop the preparations behind them.
+    #
+    # Ordered before the consent withdrawal deliberately. Withdrawing an approval
+    # while a backend call is still running would leave the act to finish under
+    # consent that had just been taken back; stopping the attempt first means the
+    # withdrawal lands on questions that no longer authorise anything, which is
+    # what it says.
+    #
+    # A stopped attempt that had already reached the backend records `unknown`
+    # rather than `cancelled` — see the desktop broker — so the ledger keeps the
+    # same honesty the operation references above do.
+    if getattr(runtime, "desktop", None) is not None:
+        stopped_actions = runtime.desktop.broker.cancel_task(task_id)
+        runtime.desktop.forget_plan(task_id)
+        if stopped_actions:
+            runtime._emit(
+                session_id, task_id, "operation_progress",
+                {
+                    "operationKey": "desktop-cancel",
+                    "progress": 1.0,
+                    "skipped": True,
+                    "reason": (
+                        f"{len(stopped_actions)} desktop action(s) in flight were stopped; any "
+                        "whose effect could not be verified as prevented are recorded as unknown"
+                    ),
+                },
+                classification=task.classification,
+            )
+
     # 4. Withdraw consent that is no longer about anything.
     withdrawn = runtime.gate.invalidate_for_task(
         task,

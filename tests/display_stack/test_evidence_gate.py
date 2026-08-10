@@ -9,6 +9,7 @@ slips through — demonstrating each check is load-bearing, not decorative."""
 
 from __future__ import annotations
 
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -409,11 +410,14 @@ class MutationTests(unittest.TestCase):
         for run in sorted(self.root.iterdir()):
             single = Path(self.tmp.name) / "single"
             single.mkdir(exist_ok=True)
-            link = single / run.name
-            if not link.exists():
-                link.symlink_to(run)
+            isolated = single / run.name
+            # The property under test is that each run is loaded alone, not
+            # symbolic-link handling.  Copying keeps that mutation test live
+            # on Windows hosts where creating an NTFS symlink requires an
+            # unrelated developer-mode privilege.
+            shutil.copytree(run, isolated)
             import_results.load_records(single, problems_isolated)
-            link.unlink()
+            shutil.rmtree(isolated)
         self.assertEqual(import_results.RUN_DIR_RE, original)
         self.assertFalse([p for p in problems_isolated
                           if "cannot fill two" in p])

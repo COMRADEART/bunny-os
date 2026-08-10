@@ -1,0 +1,72 @@
+[Unit]
+# The window, as a unit, because "Bunny appears when you log in" is a property
+# of the session and not of a desktop entry somebody might have removed. The
+# runtime has been a unit since the integration branch; nothing started the
+# *window*, so a freshly installed machine ran an invisible companion and the
+# only way to see it was a terminal.
+Description=Bunny Companion window
+Documentation=file:///usr/share/doc/bunny-os/PUBLIC_ALPHA_SCOPE.md
+PartOf=graphical-session.target
+After=graphical-session.target bunny-companion.service
+# Wants, not Requires. A window that refused to start because the runtime was
+# not up yet would be a window nobody sees on a slow first boot; the launcher
+# waits for the socket and produces a reason if it never arrives, which is a
+# better failure than a unit that never ran.
+Wants=bunny-companion.service
+# No graphical session, no window. Stated as a condition so the journal says
+# "condition failed" rather than showing a GTK import traceback on every
+# headless machine.
+ConditionEnvironment=|WAYLAND_DISPLAY
+ConditionEnvironment=|DISPLAY
+# Bounded. Three failed starts arm safe mode inside the launcher; the burst
+# limit here stops the fourth, fifth and sixth from happening at all. A unit
+# that respawned for ever would hide a broken renderer behind a flicker.
+StartLimitIntervalSec=120s
+StartLimitBurst=4
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/bunny-companion-window
+Restart=on-failure
+RestartSec=5s
+# The window holds no durable state, so there is nothing to flush; this is the
+# time GTK needs to tear a surface down.
+TimeoutStopSec=10s
+
+# The launcher writes the session timeline and the safe-mode flag into the
+# runtime's state directory, which systemd creates for the runtime unit and
+# leaves in place for the session.
+StateDirectory=bunny-companion
+StateDirectoryMode=0700
+UMask=0077
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+# Read-only rather than inaccessible: the window reads the user's character
+# packages and settings out of the home directory and writes neither.
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+# AF_UNIX for the runtime socket, and the two the display server needs. No
+# AF_INET: the window makes no outbound connection, and an adapter that wanted
+# one would have to change this file in a review rather than simply working.
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+# MemoryDenyWriteExecute is deliberately absent. The runtime unit sets it and
+# should; a GTK client cannot, because Mesa's shader compilers and the JIT in
+# llvmpipe map executable pages, and a window that is killed the moment it
+# draws in 3D is not a hardened window, it is a broken one.
+MemoryMax=768M
+TasksMax=96
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target

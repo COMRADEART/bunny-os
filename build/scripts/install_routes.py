@@ -107,6 +107,18 @@ SYSTEM_SCRIPTS: tuple[str, ...] = (
     "bunny-recovery",
     "bunny-safe-graphics",
     "bunny-live-session",
+    # The Public Alpha session programs. The window launcher is what makes
+    # "Bunny appears when you log in" true — the runtime has been a unit since
+    # the integration branch and nothing started the *window* — and the
+    # diagnostics program is deliberately outside the companion, because the
+    # moment it is wanted is the moment the companion is not there to offer it.
+    #
+    # Installed on every profile rather than only the desktop ones: the units
+    # that run them carry their own conditions, and a profile that has no
+    # graphical session simply never starts them. A profile that had the unit
+    # and not the program would be a unit that fails at every login.
+    "bunny-companion-window",
+    "bunny-companion-recovery",
 )
 
 #: The one system script that is a systemd generator rather than a libexec
@@ -239,6 +251,63 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "capability-service-manifests", "tree",
         "capability/services", "/usr/share/bunny-os/capability/services", 0o444,
     ),
+    # The Alpha speech model is immutable image data, not first-run mutable
+    # state. Shipping the reviewed bytes here makes push-to-talk work offline
+    # on a fresh installation and avoids any silent boot-time download.
+    InstallRoute(
+        "speech-recognition-models", "tree",
+        "assets/voice/models", "/usr/share/bunny-os/speech-models", 0o444,
+        profiles=DESKTOP_PROFILES,
+        note="pinned local Vosk models with per-file Bunny integrity manifests",
+    ),
+    # Neural speech is immutable image data as well. Pocket is the default;
+    # Kitten nano INT8 is the explicit low-resource option. Both trees carry a
+    # manifest with every runtime file's size and SHA-256, and neither worker
+    # has a download path at runtime.
+    #
+    # One route per engine, not one route for "the voice assets". The
+    # destinations and the bytes are unchanged; what changes is that the
+    # boundary is now stated where the build can act on it. Pocket costs about
+    # 1.1 GiB uncompressed against Kitten's ~107 MiB, and a future image that
+    # wants the small engine has to be able to leave the large one out by
+    # dropping a route from a profile — not by editing a tree that mixes them,
+    # and certainly not by changing SpeechSynthesisService, which selects by
+    # provider id and descends a fixed fallback order whatever is installed.
+    #
+    # Conceptually: `bunny-voice-core` is the runtime, the recogniser model and
+    # the licences; `bunny-tts-pocket` is the two routes below marked pocket;
+    # `bunny-tts-kitten` is the kitten route; `bunny-tts-espeak` is a package
+    # dependency rather than an asset, because eSpeak NG and Speech Dispatcher
+    # come from Fedora.
+    InstallRoute(
+        "speech-synthesis-model-pocket", "tree",
+        "assets/voice/tts/pocket", "/usr/share/bunny-os/voice/pocket", 0o444,
+        profiles=DESKTOP_PROFILES,
+        note="bunny-tts-pocket: the default engine's English model and prepared voice",
+    ),
+    InstallRoute(
+        "speech-synthesis-model-kitten", "tree",
+        "assets/voice/tts/kitten", "/usr/share/bunny-os/voice/kitten", 0o444,
+        profiles=DESKTOP_PROFILES,
+        note="bunny-tts-kitten: the low-resource engine's nano INT8 model and voices",
+    ),
+    InstallRoute(
+        "speech-synthesis-runtime", "tree",
+        "assets/voice/runtime", "/usr/lib/bunny-os/voice-runtime", 0o444,
+        profiles=DESKTOP_PROFILES,
+        note="bunny-tts-pocket: Pocket TTS v2.1.0 pure-Python runtime from an "
+             "immutable upstream tag, plus the CPU PyTorch wheel it expands",
+    ),
+    InstallRoute(
+        "speech-recognition-licenses", "tree",
+        "assets/voice/licenses", "/usr/share/licenses/bunny-os-voice", 0o444,
+        profiles=DESKTOP_PROFILES,
+    ),
+    _file_route(
+        "speech-recognition-provenance", "assets/voice/PROVENANCE.json",
+        "/usr/share/doc/bunny-os/voice-provenance.json", 0o444,
+        profiles=DESKTOP_PROFILES,
+    ),
     _file_route(
         "companion-service-executable",
         "services/bunny-companion/bunny_companion_service.py",
@@ -298,6 +367,17 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "firewalld-zone", "config/firewalld/bunny-default.xml",
         "/usr/lib/firewalld/zones/bunny-default.xml", 0o644,
     ),
+    # A Speech Dispatcher drop-in, read through the `Include "clients/*.conf"`
+    # that its own speechd.conf ends with. A drop-in rather than an edit,
+    # because the RPM owns speechd.conf and an image that rewrote it would
+    # report a modified configuration file for ever after. Desktop profiles
+    # only: a profile with no voice runtime has no Speech Dispatcher to
+    # configure.
+    _file_route(
+        "speech-dispatcher-log-bound", "config/speech-dispatcher/bunny-os.conf",
+        "/etc/speech-dispatcher/clients/bunny-os.conf", 0o644,
+        profiles=DESKTOP_PROFILES,
+    ),
     _file_route(
         "system-preset", "config/systemd/60-bunny-os.preset",
         "/usr/lib/systemd/system-preset/60-bunny-os.preset", 0o644,
@@ -313,6 +393,21 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
     _file_route(
         "desktop-entry", "desktop-integration/art.comrade.Bunny.desktop",
         "/usr/share/applications/art.comrade.Bunny.desktop", 0o644,
+    ),
+    # Two entries the Public Alpha adds, both on the desktop profiles only
+    # because an applications list is a thing a desktop has. The companion
+    # entry re-opens a window the user closed; the diagnostics entry is the
+    # §18 surface, reachable when there is no companion window to reach it from.
+    _file_route(
+        "companion-desktop-entry", "desktop-integration/art.comrade.BunnyCompanion.desktop",
+        "/usr/share/applications/art.comrade.BunnyCompanion.desktop", 0o644,
+        profiles=DESKTOP_PROFILES,
+    ),
+    _file_route(
+        "companion-diagnostics-desktop-entry",
+        "desktop-integration/art.comrade.BunnyDiagnostics.desktop",
+        "/usr/share/applications/art.comrade.BunnyDiagnostics.desktop", 0o644,
+        profiles=DESKTOP_PROFILES,
     ),
     _file_route(
         "desktop-launcher", "desktop-integration/bunny-desktop-launch.py",
@@ -488,6 +583,21 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
 #: is never an unchanged image.
 GENERATED_ROUTES: tuple[Mapping[str, Any], ...] = (
     {
+        "destination": (
+            "/usr/lib/bunny-os/voice-runtime/site-packages/"
+            "{torch,functorch,torchgen,torch-2.9.1+cpu.dist-info}/**"
+        ),
+        "derivedFrom": (
+            "assets/voice/runtime/wheels/torch-2.9.1+cpu-cp314-cp314-"
+            "manylinux_2_28_x86_64.whl and its pinned MANIFEST.json"
+        ),
+        "producer": "install-root.py:expand_vendored_voice_wheels",
+        "note": (
+            "official PyTorch CPU wheel; outer SHA-256 and every wheel RECORD entry "
+            "are verified before the build-time staging wheel is removed"
+        ),
+    },
+    {
         "destination": "OCI config label org.opencontainers.image.revision",
         "derivedFrom": "the git commit being built (BUNNY_SOURCE_COMMIT)",
         "producer": "build/Containerfile",
@@ -502,6 +612,20 @@ GENERATED_ROUTES: tuple[Mapping[str, Any], ...] = (
         "derivedFrom": "the git commit being built (sourceCommit field)",
         "producer": "install-root.py:write_release_metadata",
         "note": "changes on every commit",
+    },
+    {
+        "destination": "/usr/lib/os-release",
+        "derivedFrom": (
+            "the base image's own os-release, plus the version, channel, build id, "
+            "commit and profile of this build"
+        ),
+        "producer": "install-root.py:write_os_release",
+        "note": (
+            "extended, not rewritten. ID, VERSION_ID, PLATFORM_ID and CPE_NAME are kept "
+            "exactly as the base image wrote them because dnf, SELinux and bootc key off "
+            "them; NAME, PRETTY_NAME and VARIANT are display strings and are replaced. "
+            "Changes on every commit, like release.json"
+        ),
     },
     {
         "destination": "/usr/lib/bunny-os/packages.txt",
@@ -574,6 +698,7 @@ COPY_HELPERS: Mapping[str, str] = {
 #: different answers — the arrangement that makes ``main`` unable to install
 #: anything the table has not declared.
 INSTALL_STAGES: frozenset[str] = frozenset({
+    "expand_vendored_voice_wheels",
     "install_all_routes",
     "install_release_payload",
     "install_activation",
@@ -586,6 +711,7 @@ INSTALL_STAGES: frozenset[str] = frozenset({
 GENERATOR_FUNCTIONS: frozenset[str] = frozenset({
     "write_release_metadata",
     "write_package_inventory",
+    "write_os_release",
 })
 
 #: Everything the installer is permitted to do that puts bytes in the image.

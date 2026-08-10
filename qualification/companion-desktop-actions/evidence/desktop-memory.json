@@ -1,0 +1,83 @@
+{
+  "companionStack": {
+    "pssBytes": 37266432,
+    "rssBytes": 49922048,
+    "samples": 3
+  },
+  "companionStackWithoutDesktop": {
+    "pssBytes": 27934720,
+    "rssBytes": 35594240,
+    "samples": 3
+  },
+  "desktopBrokerCost": {
+    "pssBytes": 21662720,
+    "rssBytes": 29818880
+  },
+  "desktopBrokerIdle": {
+    "pssBytes": 28587008,
+    "rssBytes": 40906752,
+    "samples": 3
+  },
+  "desktopCostInStack": {
+    "pssBytes": 9331712,
+    "rssBytes": 14327808
+  },
+  "interpreterBaseline": {
+    "pssBytes": 6924288,
+    "rssBytes": 11087872,
+    "samples": 3
+  },
+  "notes": [
+    "Every figure is taken in a fresh interpreter; a measurement made after something else has imported is a measurement of the import order.",
+    "Per-adapter figures are not additive: the adapters share a session-bus connection and the GObject typelib, so the sum of the nine exceeds the set.",
+    "A launched application's memory is not counted. It is a separate process this build started and does not own."
+  ],
+  "perAdapter": {
+    "ApplicationLaunchAdapter": {
+      "pssBytes": 21512192,
+      "rssBytes": 31969280,
+      "samples": 2
+    },
+    "ApplicationPresentAdapter": {
+      "pssBytes": 21493760,
+      "rssBytes": 31924224,
+      "samples": 2
+    },
+    "AudioControlAdapter": {
+      "pssBytes": 18167808,
+      "rssBytes": 25300992,
+      "samples": 2
+    },
+    "ClipboardAdapter": {
+      "pssBytes": 18061312,
+      "rssBytes": 25088000,
+      "samples": 2
+    },
+    "FileRevealAdapter": {
+      "pssBytes": 22852608,
+      "rssBytes": 34828288,
+      "samples": 2
+    },
+    "NotificationAdapter": {
+      "pssBytes": 26976256,
+      "rssBytes": 39223296,
+      "samples": 2
+    },
+    "PortalAdapter": {
+      "pssBytes": 21220352,
+      "rssBytes": 32198656,
+      "samples": 2
+    },
+    "SettingsAdapter": {
+      "pssBytes": 18049024,
+      "rssBytes": 25030656,
+      "samples": 2
+    },
+    "UriOpenAdapter": {
+      "pssBytes": 21201920,
+      "rssBytes": 32116736,
+      "samples": 2
+    }
+  },
+  "schemaVersion": "bunny-os/desktop-action-memory/1"
+}

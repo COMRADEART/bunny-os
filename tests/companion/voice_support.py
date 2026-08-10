@@ -417,6 +417,7 @@ class ScriptedProvider:
         request: VoiceRequest,
         *,
         cancellation: CancellationSignal | None = None,
+        on_started: Any = None,
     ) -> StreamOutcome:
         with self._guard:
             self.stream_calls += 1
@@ -424,6 +425,8 @@ class ScriptedProvider:
                 self._active[request.request_id] = cancellation
         if self.stream_entered is not None:
             self.stream_entered.set()
+        if on_started is not None and self.failure_mode not in ("crash", "timeout"):
+            on_started()
         if self.stream_gate is not None:
             while not self.stream_gate.wait(0.01):
                 if cancellation is not None and cancellation.cancelled:

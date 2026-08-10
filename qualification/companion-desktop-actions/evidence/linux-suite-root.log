@@ -1,0 +1,65 @@
+......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................s................................................................................................................................................/usr/lib64/python3.14/site-packages/gi/overrides/__init__.py:159: PyGIDeprecationWarning: GLib.unix_signal_add_full is deprecated; use GLibUnix.signal_add_full instead
+  value = getattr(proxy, attr)
+........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................s.........................................................................................................................................................................................................................................................................F......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................bunny-config-dir: /tmp/tmpuv8_ddzc/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmpvl5oyjsp/.config/bunny-os: is owned by uid 12345, not by uid 0 who is logging in. Refused: this service does not take ownership of another account's directory, and systemd-tmpfiles in --user mode does not correct it either — it accepts such a directory silently and reports success, which is why this check exists.
+.bunny-config-dir: /tmp/tmp5_yrqq6p/.config/bunny-os: is a symbolic link to '/tmp/tmp5_yrqq6p/elsewhere'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmp77g7_cuz/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+bunny-config-dir: /tmp/tmp77g7_cuz/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmpochocju9/.config/bunny-os: is a symbolic link to '/tmp/tmpochocju9/nowhere-at-all'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmp5wxjdyg2/.config/bunny-os: is owned by uid 12345, not by uid 0 who is logging in. Refused: this service does not take ownership of another account's directory, and systemd-tmpfiles in --user mode does not correct it either — it accepts such a directory silently and reports success, which is why this check exists.
+.sbunny-config-dir: /tmp/tmpl466qp_i/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmpcaeffb0o/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmpe2l19mi3/.config/bunny-os: is a symbolic link to '/tmp/tmpt2r2j8f6'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmpg3ohc3d5/.config/bunny-os: is a symbolic link to '/tmp/tmpg3ohc3d5/elsewhere'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+........................................................................................................................................................................................................................................................................................................BLOCKED: capture /tmp/tmpgqz51kt2/guest.pcap does not exist. A capture that never started is not evidence of silence.
+.BLOCKED: file is 10 bytes; a pcap global header is 24
+......BLOCKED: /tmp/tmp1zul4txh/expected.json entry 0 must be {kind: dns|tcp|udp, pattern: <glob>, reason: <non-empty>}
+................................................................................................................................................................................................................................................................................................................................................s.................................................................................................................................................................................s.........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+======================================================================
+FAIL: test_a_read_only_directory_fails_before_any_replacement (tests.companion.test_store_durability.PermanentFailureTests.test_a_read_only_directory_fails_before_any_replacement)
+The temporary cannot be created, so no rename is ever attempted.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/bunny-desktop/tests/companion/test_store_durability.py", line 199, in test_a_read_only_directory_fails_before_any_replacement
+    with self.assertRaises((StoreError, OSError)):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (<class 'companion.errors.StoreError'>, <class 'OSError'>) not raised
+
+----------------------------------------------------------------------
+Ran 4037 tests in 100.134s
+
+FAILED (failures=1, skipped=5)
+bunny-config-dir: /tmp/tmp4wlq9riq/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp4wlq9riq/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpuh9ocf2x/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpuh9ocf2x/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpyevett7k/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpyevett7k/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp0vlerrh9/.config/bunny-os: mode 0777 -> 0700
+bunny-config-dir: /tmp/tmp0vlerrh9/.config/systemd/user: created
+bunny-config-dir: /tmp/tmppxfm1cxp/.config/bunny-os: created
+bunny-config-dir: /tmp/tmppxfm1cxp/.config/systemd/user: created
+bunny-config-dir: /tmp/tmppxfm1cxp/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmppxfm1cxp/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpuv8_ddzc/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpuv8_ddzc/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpuv8_ddzc/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpvl5oyjsp/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpvl5oyjsp/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpvl5oyjsp/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmp5_yrqq6p/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp5_yrqq6p/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmp5_yrqq6p/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmp77g7_cuz/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp77g7_cuz/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpochocju9/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp5wxjdyg2/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpl466qp_i/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpcaeffb0o/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpe2l19mi3/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpg3ohc3d5/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp7pqkyjik/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp7pqkyjik/.config/systemd/user: created
+bunny-config-dir: /tmp/tmptkn89g1w/.config/bunny-os: created
+bunny-config-dir: /tmp/tmptkn89g1w/.config/systemd/user: created
+Verified explicit non-functional Bunny placeholder

@@ -1,0 +1,2 @@
+stress: target=suite runs=50 order=declared mode=in-process pid=93747
+stress: 50/50 passed, longest consecutive 50

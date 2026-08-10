@@ -84,7 +84,16 @@ from .recognizer import (
     RecognizerSelection,
     SpeechRecognizer,
 )
-from .recognizers import MODEL_DIRECTORIES, VoskRecognizer, local_recognizers
+from .recognizers import (
+    MODEL_DIRECTORIES,
+    STT_MODEL_CORRUPT,
+    STT_MODEL_MISSING,
+    STT_PROVIDER_FAILED,
+    STT_READY,
+    STT_RUNTIME_MISSING,
+    VoskRecognizer,
+    local_recognizers,
+)
 from .recovery import (
     CAPTURE_DISPOSITIONS,
     SpeechJournal,
@@ -119,6 +128,7 @@ from .worker import (
     CaptureWorker,
     MAX_PARTIALS_PER_CAPTURE,
 )
+from .wakeword import WakeWordService, WakeWordState
 
 __all__ = [
     # Request and transcripts
@@ -155,6 +165,11 @@ __all__ = [
     "SpeechActivityDetector",
     # Recognition
     "MODEL_DIRECTORIES",
+    "STT_MODEL_CORRUPT",
+    "STT_MODEL_MISSING",
+    "STT_PROVIDER_FAILED",
+    "STT_READY",
+    "STT_RUNTIME_MISSING",
     "RecognitionSession",
     "RecognizerDeclaration",
     "RecognizerHealth",
@@ -163,6 +178,8 @@ __all__ = [
     "RecognizerSelection",
     "SpeechRecognizer",
     "VoskRecognizer",
+    "WakeWordService",
+    "WakeWordState",
     "local_recognizers",
     # Policy, indicator, events
     "SPEECH_EVENT_KINDS",

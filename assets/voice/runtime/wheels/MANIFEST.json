@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "pythonTag": "cp314",
+  "platformTag": "manylinux_2_28_x86_64",
+  "wheels": [
+    {
+      "distribution": "torch",
+      "version": "2.9.1+cpu",
+      "fileName": "torch-2.9.1+cpu-cp314-cp314-manylinux_2_28_x86_64.whl",
+      "sizeBytes": 184378318,
+      "sha256": "88adf5157db5da1d54b1c9fe4a6c1d20ceef00e75d854e206a87dbf69e3037dc",
+      "sourceUrl": "https://download.pytorch.org/whl/cpu/torch-2.9.1%2Bcpu-cp314-cp314-manylinux_2_28_x86_64.whl",
+      "sourceIndex": "https://download.pytorch.org/whl/cpu/torch/",
+      "license": "BSD-3-Clause",
+      "installRoot": "/usr/lib/bunny-os/voice-runtime/site-packages"
+    }
+  ]
+}

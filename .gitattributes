@@ -4,7 +4,6 @@
 # exactly.
 qualification/** -text
 build/out/** -text
-
 # Image content. These files are copied verbatim into the image by
 # build/scripts/install-root.py and are then parsed by systemd, systemd-tmpfiles
 # and the shell, none of which treat a trailing CR as whitespace: a unit
@@ -15,7 +14,14 @@ build/out/** -text
 systemd/** -text
 config/** -text
 *.sh -text
-
+# The same hazard, one directory further on, and it bites harder. Every file in
+# shell/services/bin is installed to /usr/bin with mode 0555 and starts with
+# `#!/usr/bin/python3`. A CRLF checkout makes the interpreter path
+# `/usr/bin/python3\r`, which does not exist, so the kernel refuses the exec and
+# the program reports "no such file or directory" while naming a file that is
+# plainly there. These have no extension, so no `*.sh` rule reaches them.
+shell/services/bin/** -text
+installer/bin/** -text
 # Byte-attested evidence must bypass content filters.
 #
 # release/evidence.py verifies each record by hashing the file at its
@@ -35,7 +41,6 @@ operations/data/hardware-evidence.json          -text
 operations/data/pilot-requirements.json         -text
 operations/data/qualification-matrices.json     -text
 operations/data/signing-keys.json               -text
-
 # Character package assets are attested by the package's own manifest.
 #
 # companion/character/package.py verifies every declared asset against the
@@ -50,3 +55,34 @@ operations/data/signing-keys.json               -text
 # own integrity check in 23 tests. The PNGs were unaffected because git already
 # treats them as binary; it is the one text file in the package that broke it.
 assets/companion/characters/** -text
+# The bundled speech model has its own per-file SHA-256 inventory. Preserve
+# those exact bytes across Windows and Linux checkouts just like character
+# packages and qualification evidence.
+assets/voice/models/** -text -diff
+# The speech *synthesis* payloads are pinned the same way and include text
+# members — Pocket's config.yaml, Kitten's config.json and UPSTREAM_MODEL_CARD.md
+# are all carried in manifest.json with a byte size and a SHA-256. Left to
+# git's own guess, a Windows checkout rewrites exactly those three to CRLF,
+# which changes both the size and the digest, which makes _read_installation
+# report MODEL_CORRUPT for a tree that was never modified. The wheels and the
+# vendored runtime are held byte-exact for the same reason: install-root.py
+# verifies the outer wheel SHA-256 and every RECORD entry inside it.
+assets/voice/tts/** -text -diff
+assets/voice/runtime/** -text -diff
+
+# Two of those payloads are past GitHub's 100 MB per-file limit — the Pocket
+# weights at 209 MB and the torch wheel at 176 MB — so the blob lives in Git LFS
+# and the tree carries a pointer. The content is unchanged either way: an LFS
+# object is addressed by the SHA-256 of the file itself, which is the same digest
+# manifest.json and install-root.py already verify. These lines must stay *after*
+# the two rules above, because the last matching pattern wins and dropping -text
+# here would put the CRLF hazard back.
+assets/voice/tts/pocket/english/model.safetensors filter=lfs diff=lfs merge=lfs -text
+assets/voice/runtime/wheels/*.whl filter=lfs diff=lfs merge=lfs -text
+
+# The notices are counted too. PROVENANCE.json declares the exact number of
+# bytes Bunny selected from upstream, and a test asserts the tree still sums to
+# it, so a licence file that is 200 bytes longer in a Windows checkout than in a
+# Linux one makes that accounting platform-dependent — the figure was right on
+# whichever machine happened to produce it and wrong on the other.
+assets/voice/licenses/** -text

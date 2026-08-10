@@ -194,8 +194,14 @@ class ReviewerBoundaryTests(CompanionTestCase):
             broker.invoke("text.count_words", {"text": "x"}, caller="reviewer:anybody")
 
     def test_a_reviewer_that_never_answers_is_left_behind_and_recorded(self) -> None:
+        slow = SlowReviewer()
+        # Released at teardown, after the assertions below. The runtime abandons
+        # the thread — it cannot kill one, and not waiting is the behaviour under
+        # test — so without this it stays alive for thirty seconds and shows up
+        # in the suite gate's thread delta as a leak that is not one.
+        self.addCleanup(slow.release)
         runtime = self.started(
-            reviewers=(SlowReviewer(),),
+            reviewers=(slow,),
             policy=CoordinationPolicy(reviewer_timeout_seconds=0.05),
         )
         session, task = self.completed_task(runtime)
@@ -264,6 +270,31 @@ class ReviewerBoundaryTests(CompanionTestCase):
         self.assertTrue(operations)
         self.assertEqual(operations[0]["name"], "count-words")
         self.assertEqual(set(operations[0]["arguments"].values()), {"[redacted]"})
+
+    def test_withheld_context_does_not_invent_a_validation_requirement(self) -> None:
+        reviewer = DeterministicLocalReviewer()
+        context = reviewer_context(
+            task_view={"originalRequest": "[withheld: personal]"},
+            plan_view={
+                "operations": [{
+                    "name": "launch-application",
+                    "tool": "desktop.application.launch",
+                    "destination": "local",
+                }],
+            },
+            event_views=[],
+            classification="personal",
+            policy=CoordinationPolicy(),
+            round_number=1,
+        )
+
+        outcome = run_review_round(
+            (reviewer,), context, CoordinationPolicy(), round_number=1,
+        )
+
+        self.assertTrue(outcome.observations)
+        self.assertEqual(outcome.disagreements, ())
+        self.assertIn("withheld", outcome.observations[0].summary.lower())
 
     def test_reviewers_do_not_see_each_other(self) -> None:
         first = ChattyReviewer(reviewer_id="local.first")

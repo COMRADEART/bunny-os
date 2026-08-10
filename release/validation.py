@@ -269,10 +269,36 @@ def _shell_paths(root: Path) -> list[Path]:
     return _walk(root, "*.sh")
 
 
+def _bash_executable() -> str | None:
+    """Find Bash on PATH or in the two standard Windows distributions.
+
+    Git for Windows and MSYS2 both ship a real Bash, but their installer does
+    not necessarily add it to the Windows process PATH.  Repository validation
+    should use that installed parser instead of reporting it as absent.  This
+    is only tool discovery: every script is still checked with ``bash -n``.
+    """
+    found = shutil.which("bash")
+    if found:
+        return found
+    if os.name != "nt":
+        return None
+
+    candidates: list[Path] = []
+    program_files = os.environ.get("ProgramFiles")
+    if program_files:
+        candidates.append(Path(program_files) / "Git" / "bin" / "bash.exe")
+    system_drive = os.environ.get("SystemDrive", "C:")
+    candidates.append(Path(system_drive + "\\") / "msys64" / "usr" / "bin" / "bash.exe")
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
 def _shell_syntax(root: Path) -> ValidatorOutcome:
     outcome = ValidatorOutcome("Shell syntax")
     paths = _shell_paths(root)
-    bash = shutil.which("bash")
+    bash = _bash_executable()
     if not bash:
         outcome.result = "SKIP"
         outcome.skipReason = "bash unavailable on this host"
@@ -594,22 +620,136 @@ def _committed_evidence_consistency(root: Path) -> ValidatorOutcome:
     return outcome
 
 
+#: An ES module import that names a file inside the extension.
+_RELATIVE_IMPORT = re.compile(
+    r"^import\s+([^;]+?)\s+from\s+['\"](\.[^'\"]+)['\"]", re.MULTILINE
+)
+#: A named export. Enough for the resolution check; not a JavaScript parser.
+_EXPORT_DECLARATION = re.compile(
+    r"^export\s+(?:async\s+)?(?:class|function|const|let|var)\s+(\w+)", re.MULTILINE
+)
+_EXPORT_LIST = re.compile(r"^export\s*\{([^}]*)\}", re.MULTILINE)
+_EXPORT_DEFAULT = re.compile(r"^export\s+default\b", re.MULTILINE)
+#: A star re-export: `export * from './iconNames.js';`.
+#:
+#: The desktop splits three modules into a data half that imports nothing — so
+#: the tests can evaluate it under node — and a runtime half that needs St, and
+#: the runtime half re-exports the data so callers import one module. Without
+#: this pattern the resolver reported every one of those callers as importing a
+#: symbol that does not exist, which is a false FAIL on correct ES.
+_EXPORT_STAR = re.compile(r"^export\s*\*\s*from\s*['\"](\.[^'\"]+)['\"]", re.MULTILINE)
+
+
 def _gnome_extension(root: Path) -> ValidatorOutcome:
+    """Parse every module in the extension, and resolve the imports between them.
+
+    This checked exactly one file until the desktop shell arrived and made the
+    extension thirty-five. Parsing only ``extension.js`` after that would have
+    been a check reporting PASS for a tree it had looked at 3% of.
+
+    The second half is the one that earns its place. GNOME Shell resolves an
+    extension's imports at enable() time, inside the compositor, and a typo in a
+    relative path or a symbol that was renamed in one file and not in its
+    importer produces a session with no shell and a stack trace in the journal
+    — the failure this desktop most needs not to have. ``node --check`` cannot
+    catch it, because it parses a module without resolving anything, and the
+    modules cannot simply be imported here because every one of them imports
+    ``gi://`` URIs that only exist inside GJS. So the import graph is resolved
+    statically: each relative specifier must name a file that exists, and each
+    named import must appear as an export in it.
+
+    The export scan is a regular expression and not a parser, which makes it
+    capable of one kind of false positive — an export written in a form it does
+    not recognise is reported as missing. That is the safe direction: it fails
+    a valid file rather than passing an invalid one, and the fix is to write
+    the export in the ordinary form.
+    """
     outcome = ValidatorOutcome("GNOME extension syntax")
-    target = root / "shell/components/gnome-shell-extension/extension.js"
-    if not target.is_file():
+    base = root / "shell/components/gnome-shell-extension"
+    if not (base / "extension.js").is_file():
         outcome.result = "SKIP"
         outcome.skipReason = "extension.js absent"
         return outcome
+
+    modules = sorted(
+        path for path in base.rglob("*.js")
+        if not _SKIP_PARTS.intersection(path.parts)
+    )
+    outcome.checked = len(modules)
+
+    exports: dict[Path, set[str]] = {}
+    stars: dict[Path, list[Path]] = {}
+    for path in modules:
+        text = path.read_text(encoding="utf-8", errors="replace")
+        names = set(_EXPORT_DECLARATION.findall(text))
+        for group in _EXPORT_LIST.findall(text):
+            names.update(name.strip().split(" as ")[-1] for name in group.split(",") if name.strip())
+        if _EXPORT_DEFAULT.search(text):
+            names.add("default")
+        exports[path.resolve()] = names
+        stars[path.resolve()] = [
+            (path.parent / specifier).resolve() for specifier in _EXPORT_STAR.findall(text)
+        ]
+
+    # Fold the star re-exports in. Iterated to a fixed point rather than done in
+    # one pass, because a re-export chain is legal ES and one pass would resolve
+    # only its last link. `default` is deliberately not propagated: `export *`
+    # does not re-export a default, and treating it as though it did would let a
+    # genuinely missing default import through.
+    for _ in range(len(modules)):
+        changed = False
+        for path, targets in stars.items():
+            for target in targets:
+                inherited = exports.get(target, set()) - {"default"}
+                if not inherited.issubset(exports[path]):
+                    exports[path].update(inherited)
+                    changed = True
+        if not changed:
+            break
+
+    for path in modules:
+        # A wrapped import list is one statement; join its continuation lines
+        # before matching, or the clause reads as though it began an import ago.
+        text = re.sub(r",\s*\n\s*", ", ", path.read_text(encoding="utf-8", errors="replace"))
+        for clause, specifier in _RELATIVE_IMPORT.findall(text):
+            target = (path.parent / specifier).resolve()
+            if not target.is_file():
+                outcome.failures.append(
+                    Failure(_name(root, path), f"imports {specifier}, which does not exist")
+                )
+                continue
+            wanted: set[str] = set()
+            for group in re.findall(r"\{([^}]*)\}", clause):
+                wanted.update(
+                    name.strip().split(" as ")[0] for name in group.split(",") if name.strip()
+                )
+            if re.sub(r"\{[^}]*\}", "", clause).replace(",", " ").strip():
+                wanted.add("default")
+            missing = sorted(wanted - exports.get(target, set()))
+            if missing:
+                outcome.failures.append(
+                    Failure(
+                        _name(root, path),
+                        f"imports {', '.join(missing)} from {specifier}, which does not export them",
+                    )
+                )
+
     if not shutil.which("node"):
-        outcome.result = "SKIP"
-        outcome.skipReason = "node unavailable on this host"
+        # The resolution half ran; the syntax half did not. Reported as a pass
+        # with a narrowed summary rather than a skip, because skipping would
+        # discard a result that was produced.
+        outcome.summary = (
+            f"{len(modules)} modules: imports resolved; node unavailable, so nothing was parsed"
+        )
+        outcome.result = "FAIL" if outcome.failures else "PASS"
         return outcome
-    result = subprocess.run(["node", "--check", str(target)], capture_output=True, text=True)
-    if result.returncode != 0:
-        outcome.failures.append(Failure(_name(root, target), result.stderr.strip()))
-    outcome.checked = 1
-    outcome.summary = "extension.js parsed by node --check"
+
+    for path in modules:
+        result = subprocess.run(["node", "--check", str(path)], capture_output=True, text=True)
+        if result.returncode != 0:
+            outcome.failures.append(Failure(_name(root, path), result.stderr.strip()[:1000]))
+
+    outcome.summary = f"{len(modules)} modules parsed by node --check, imports resolved"
     outcome.result = "FAIL" if outcome.failures else "PASS"
     return outcome
 

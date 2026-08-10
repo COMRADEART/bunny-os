@@ -1,0 +1,98 @@
+{
+  "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+  "latencies": {
+    "application-launch": {
+      "maximum": 0.051521,
+      "median": 0.047967,
+      "minimum": 0.025157,
+      "p95": 0.051047,
+      "samples": 20
+    },
+    "approval-to-dispatch": {
+      "maximum": 0.001896,
+      "median": 0.001008,
+      "minimum": 0.000692,
+      "p95": 0.001344,
+      "samples": 20
+    },
+    "broker-restart": {
+      "maximum": 0.000389,
+      "median": 0.000184,
+      "minimum": 0.000119,
+      "p95": 0.000253,
+      "samples": 20
+    },
+    "run-clipboard": {
+      "maximum": 0.234744,
+      "median": 0.228822,
+      "minimum": 0.226925,
+      "p95": 0.230872,
+      "samples": 20
+    },
+    "run-clipboard-cancelled": {
+      "maximum": 0.062226,
+      "median": 0.050532,
+      "minimum": 0.035934,
+      "p95": 0.061588,
+      "samples": 20
+    },
+    "run-hostile": {
+      "maximum": 0.103671,
+      "median": 0.069273,
+      "minimum": 0.064758,
+      "p95": 0.103294,
+      "samples": 20
+    },
+    "run-launch": {
+      "maximum": 0.078577,
+      "median": 0.073408,
+      "minimum": 0.050396,
+      "p95": 0.076374,
+      "samples": 20
+    },
+    "run-notify": {
+      "maximum": 0.074633,
+      "median": 0.071432,
+      "minimum": 0.048919,
+      "p95": 0.074374,
+      "samples": 20
+    },
+    "run-undo": {
+      "maximum": 0.150344,
+      "median": 0.141269,
+      "minimum": 0.138194,
+      "p95": 0.146438,
+      "samples": 20
+    },
+    "run-volume": {
+      "maximum": 0.13074,
+      "median": 0.125173,
+      "minimum": 0.119014,
+      "p95": 0.128151,
+      "samples": 20
+    },
+    "slice-total": {
+      "maximum": 1.150289,
+      "median": 1.060701,
+      "minimum": 0.999298,
+      "p95": 1.099852,
+      "samples": 20
+    },
+    "undo": {
+      "maximum": 0.162925,
+      "median": 0.152835,
+      "minimum": 0.150509,
+      "p95": 0.159663,
+      "samples": 20
+    },
+    "volume-read-back": {
+      "maximum": 0.007494,
+      "median": 0.005498,
+      "minimum": 0.005061,
+      "p95": 0.007356,
+      "samples": 20
+    }
+  },
+  "schemaVersion": "bunny-os/desktop-action-measurements/1",
+  "source": "gate-desktop-slice-20.json"
+}

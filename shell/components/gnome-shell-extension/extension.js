@@ -1,3 +1,27 @@
+// SPDX-FileCopyrightText: 2026 ComradeArt
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// The Bunny Shell extension: a panel indicator, and the Bunny desktop.
+//
+// Both halves are here because they answer to the same session mode and the
+// same settings, but they are independent. The indicator is the small, safe
+// thing that has always worked: a menu of entry points that needs no services
+// and cannot fail in a way that costs the user their session. The desktop is
+// the whole interface — top bar, sidebar, dock, dashboard and character.
+//
+// The desktop is behind a setting and behind a try/catch, and the order matters.
+// If constructing it throws — a missing icon theme, a Shell API that moved, a
+// service that refuses on unusual hardware — the catch tears down whatever was
+// built, restores GNOME's own panel and leaves the indicator running. The user
+// gets a normal GNOME session with a Bunny menu and a journal line naming the
+// fault, rather than a black screen and no way to reach a terminal. That is the
+// difference between a bug and an unbootable desktop, and it is worth the
+// clumsiness of a top-level catch.
+//
+// BUNNY_SHELL_MODE is set by /usr/libexec/bunny-shell-session. Safe Shell sets
+// it to "safe" and neither half runs, which is what makes the safe session a
+// recovery path rather than the same code with fewer features.
+
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
@@ -8,6 +32,9 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+
+import {DesktopShell} from './lib/desktopShell.js';
+import {Icons} from './lib/icons.js';
 
 const FIXED_ACTIONS = new Map([
     ['launcher', ['/usr/bin/bunny-launcher']],
@@ -39,9 +66,76 @@ export default class BunnyShellExtension extends Extension {
         if (GLib.getenv('BUNNY_SHELL_MODE') !== 'normal')
             return;
 
+        this._settings = this.getSettings();
+        this._enableIndicator();
+        this._enableDesktop();
+    }
+
+    disable() {
+        this._disableDesktop();
+        this._disableIndicator();
+        this._settings = null;
+    }
+
+    // ------------------------------------------------------------- desktop
+
+    _enableDesktop() {
+        if (!this._settings.get_boolean('desktop-enabled')) {
+            console.log('bunny-desktop: disabled by setting; the GNOME desktop is left in place');
+            return;
+        }
+        try {
+            this._desktop = new DesktopShell({settings: this._settings});
+            console.log('bunny-desktop: the Bunny desktop is up');
+        } catch (error) {
+            this._desktop = null;
+            console.error(`bunny-desktop: failed to start (${error.message})\n${error.stack}`);
+            // Whatever was half-built has to go, and the panel has to come back,
+            // or the user is left with fragments over a hidden GNOME top bar.
+            this._recoverToGnomeDesktop();
+        }
+    }
+
+    _disableDesktop() {
+        if (!this._desktop)
+            return;
+        try {
+            this._desktop.destroy();
+        } catch (error) {
+            console.error(`bunny-desktop: teardown failed (${error.message})`);
+            this._recoverToGnomeDesktop();
+        }
+        this._desktop = null;
+    }
+
+    /**
+     * Put the session back the way GNOME expects it.
+     *
+     * Called only on a failure path. Every step is individually guarded because
+     * this runs when something has already gone wrong and a second exception
+     * here would leave the session in the state this method exists to escape.
+     */
+    _recoverToGnomeDesktop() {
+        try {
+            Main.layoutManager.panelBox.show();
+        } catch (error) {
+            console.error(`bunny-desktop: could not restore the GNOME panel: ${error.message}`);
+        }
+        for (const key of ['focus-desktop-search', 'focus-desktop-sidebar', 'focus-desktop-assistant']) {
+            try {
+                Main.wm.removeKeybinding(key);
+            } catch (_error) {
+                // Never registered, or already gone.
+            }
+        }
+    }
+
+    // ----------------------------------------------------------- indicator
+
+    _enableIndicator() {
         this._indicator = new PanelMenu.Button(0.0, 'Bunny Shell', false);
         this._indicator.add_child(new St.Icon({
-            icon_name: 'bunny-shell-symbolic',
+            icon_name: Icons.BUNNY,
             style_class: 'system-status-icon bunny-shell-icon',
         }));
         this._statusItem = new PopupMenu.PopupMenuItem('Bunny OS · status not yet verified', {reactive: false});
@@ -77,7 +171,6 @@ export default class BunnyShellExtension extends Extension {
             return GLib.SOURCE_CONTINUE;
         });
 
-        this._settings = this.getSettings();
         for (const [key, action] of [
             ['open-launcher', 'launcher'], ['open-bunny', 'command'], ['open-terminal', 'terminal'],
             ['open-files', 'files'], ['open-approvals', 'approvals'], ['open-tasks', 'tasks'],
@@ -93,7 +186,7 @@ export default class BunnyShellExtension extends Extension {
         }
     }
 
-    disable() {
+    _disableIndicator() {
         for (const key of ['open-launcher', 'open-bunny', 'open-terminal', 'open-files', 'open-approvals', 'open-tasks', 'open-workspaces'])
             Main.wm.removeKeybinding(key);
         this._indicator?.destroy();
@@ -104,7 +197,6 @@ export default class BunnyShellExtension extends Extension {
         this._activityItem = null;
         this._systemItem = null;
         this._indicator = null;
-        this._settings = null;
     }
 
     _refreshStatus() {

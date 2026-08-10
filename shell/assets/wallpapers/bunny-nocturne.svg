@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2026 ComradeArt -->
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!--
+  The Bunny OS desktop wallpaper.
+
+  Drawn rather than photographed, for three reasons that are all practical. A
+  vector file is 4 KB against the 6 MB a 4K photograph costs on a read-only
+  root that ships in every image. It resamples cleanly to 1366x768 and to
+  5120x1440 from one file, so there is no per-resolution set to keep in step.
+  And it carries no third-party licence, no model release and no embedded
+  colour profile, which is what LICENCE_COMPLIANCE_REPORT.md has to be able to
+  say about every byte in the artifact.
+
+  The composition is built around where the interface goes. The ridge line sits
+  at 62% height so it passes behind the character rather than through the head;
+  the brightest part of the sky is upper-right, away from the top-left greeting;
+  and the lower third is darkened past the point a landscape would naturally be,
+  because the dock and the card columns sit on it and 4.5:1 text contrast is not
+  negotiable. It is a picture arranged around a layout, not a landscape that the
+  layout was placed on afterwards.
+
+  preserveAspectRatio is xMidYMid slice: GNOME scales a background to fill, and
+  a wallpaper that letterboxed on an ultrawide would show the page behind it.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160"
+     viewBox="0 0 3840 2160" preserveAspectRatio="xMidYMid slice"
+     role="img" aria-label="A dark violet night horizon with layered ridges beneath a soft glow">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#141033"/>
+      <stop offset="0.45" stop-color="#0E0D24"/>
+      <stop offset="1" stop-color="#080B12"/>
+    </linearGradient>
+
+    <radialGradient id="aurora" cx="0.72" cy="0.26" r="0.62">
+      <stop offset="0" stop-color="#8B5CF6" stop-opacity="0.34"/>
+      <stop offset="0.45" stop-color="#7C4DE0" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="horizonGlow" cx="0.62" cy="0.63" r="0.44">
+      <stop offset="0" stop-color="#A78BFA" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#A78BFA" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- The contrast scrim. Everything below the ridge fades to the background
+         colour so panels sit on a near-uniform field whatever the ridges do. -->
+    <linearGradient id="floor" x1="0" y1="0.52" x2="0" y2="1">
+      <stop offset="0" stop-color="#080B12" stop-opacity="0"/>
+      <stop offset="0.55" stop-color="#080B12" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#080B12" stop-opacity="0.96"/>
+    </linearGradient>
+
+    <linearGradient id="ridgeFar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2A2350"/>
+      <stop offset="1" stop-color="#171436"/>
+    </linearGradient>
+    <linearGradient id="ridgeMid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B1740"/>
+      <stop offset="1" stop-color="#0F0D26"/>
+    </linearGradient>
+    <linearGradient id="ridgeNear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#100E22"/>
+      <stop offset="1" stop-color="#08090F"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="3840" height="2160" fill="url(#sky)"/>
+  <rect width="3840" height="2160" fill="url(#aurora)"/>
+
+  <!-- A scatter of stars, thinned towards the glow so they do not read as noise
+       over the brightest part of the sky. Hand-placed; a generated field would
+       be a build input nobody could reproduce byte for byte. -->
+  <g fill="#CFC6FF">
+    <circle cx="212" cy="188" r="2.6" opacity=".70"/>
+    <circle cx="486" cy="372" r="1.8" opacity=".50"/>
+    <circle cx="742" cy="146" r="2.2" opacity=".62"/>
+    <circle cx="968" cy="430" r="1.6" opacity=".42"/>
+    <circle cx="1284" cy="228" r="2.4" opacity=".58"/>
+    <circle cx="1520" cy="536" r="1.7" opacity=".36"/>
+    <circle cx="1806" cy="164" r="2.0" opacity=".52"/>
+    <circle cx="2140" cy="392" r="1.5" opacity=".32"/>
+    <circle cx="2468" cy="212" r="2.1" opacity=".40"/>
+    <circle cx="2894" cy="470" r="1.6" opacity=".26"/>
+    <circle cx="3216" cy="268" r="2.3" opacity=".34"/>
+    <circle cx="3540" cy="150" r="1.9" opacity=".44"/>
+    <circle cx="3702" cy="512" r="1.5" opacity=".28"/>
+    <circle cx="352" cy="644" r="1.7" opacity=".38"/>
+    <circle cx="1096" cy="702" r="1.5" opacity=".30"/>
+    <circle cx="2712" cy="122" r="1.8" opacity=".38"/>
+  </g>
+
+  <rect width="3840" height="2160" fill="url(#horizonGlow)"/>
+
+  <!-- Three ridges. The far one catches the glow, the near one is almost the
+       background colour: depth from value, not from detail, so the file stays
+       small and nothing competes with the character for attention. -->
+  <path d="M0 1420 L360 1300 L640 1372 L980 1204 L1290 1330 L1610 1236 L1900 1348
+           L2230 1250 L2560 1352 L2900 1268 L3230 1372 L3520 1300 L3840 1386
+           L3840 2160 L0 2160 Z"
+        fill="url(#ridgeFar)" opacity="0.92"/>
+  <path d="M0 1596 L300 1516 L620 1604 L940 1470 L1250 1580 L1580 1498 L1880 1592
+           L2210 1502 L2540 1596 L2860 1520 L3180 1608 L3500 1540 L3840 1618
+           L3840 2160 L0 2160 Z"
+        fill="url(#ridgeMid)" opacity="0.95"/>
+  <path d="M0 1798 L420 1730 L780 1806 L1140 1712 L1500 1794 L1860 1724 L2220 1802
+           L2580 1734 L2940 1810 L3300 1744 L3660 1812 L3840 1780
+           L3840 2160 L0 2160 Z"
+        fill="url(#ridgeNear)"/>
+
+  <rect width="3840" height="2160" fill="url(#floor)"/>
+</svg>

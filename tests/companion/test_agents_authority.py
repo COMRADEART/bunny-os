@@ -29,6 +29,8 @@ from companion.agents.request import GenerationRequest
 
 from .agents_support import build_worker
 
+from .support import temporary_root
+
 #: Modules that hold task authority. Nothing under companion/agents/ may
 #: import any of them — the same proof-by-import-graph voice and speech carry.
 _FORBIDDEN_IMPORTS = (
@@ -126,7 +128,7 @@ class SchemaSurfaces(unittest.TestCase):
 
 class ObjectGraph(unittest.TestCase):
     def test_the_worker_holds_nothing_with_task_authority(self) -> None:
-        root = Path(tempfile.mkdtemp())
+        root = temporary_root(self)
         worker, registry, ledger, journal, clock = build_worker(root)
         self.addCleanup(worker.stop)
         for attribute in vars(worker).values():

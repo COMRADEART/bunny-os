@@ -107,6 +107,7 @@ from .provider import (
     VoiceDescriptor,
     VoiceProvider,
 )
+from .neural import DEFAULT_TTS_PROVIDER, KittenTTSProvider, PocketTTSProvider
 from .providers import EspeakNgProvider, SpeechDispatcherProvider, local_providers
 from .queue import QueueOutcome, SpeechQueue
 from .recovery import RecoveryReport, VoiceJournal, recover, sweep_workspaces
@@ -183,7 +184,10 @@ __all__ = [
     "redacted_argv",
     "resolve_executable",
     # Providers
+    "DEFAULT_TTS_PROVIDER",
     "EspeakNgProvider",
+    "KittenTTSProvider",
+    "PocketTTSProvider",
     "ProviderDeclaration",
     "ProviderHealth",
     "ProviderRegistry",

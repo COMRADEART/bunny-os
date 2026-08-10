@@ -1,0 +1,38 @@
+{
+  "creationSource": "scripts/build_default_character_3d.py",
+  "creator": "ComradeArt",
+  "derivedFrom": "nothing",
+  "generated": true,
+  "generationWorkflow": "Geometry, rig, skin weights, morph targets, animation clips, texture and 2D fallback frames are computed arithmetically by the named script and written directly to GLB and PNG. No modelling, sculpting or animation tool is involved.",
+  "handCreated": false,
+  "licence": "GPL-3.0-or-later",
+  "modelSummary": {
+    "bounds": {
+      "max": [
+        0.758,
+        1.68948,
+        0.152
+      ],
+      "min": [
+        -0.758,
+        -0.001,
+        -0.152
+      ]
+    },
+    "clips": 22,
+    "joints": 23,
+    "morphTargets": 11,
+    "textureBytes": 16516,
+    "triangles": 2452,
+    "vertices": 1568
+  },
+  "modificationHistory": [
+    {
+      "change": "created",
+      "description": "Initial reference character for the Bunny Companion 3D renderer phase: 23 joints on the bunny-humanoid-1 profile, 11 face morph targets, 22 animation clips, one 64x64 generated texture."
+    }
+  ],
+  "note": "Generated, not hand-created. Every asset in this package is the output of scripts/build_default_character_3d.py at the recorded commit; re-running that script reproduces each file byte for byte, which is what the digests in manifest.json are checked against.",
+  "thirdPartyContent": "none",
+  "tool": "python3 (standard library only)"
+}

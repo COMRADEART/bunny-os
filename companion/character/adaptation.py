@@ -17,9 +17,17 @@ class Presentation(str, Enum):
     TEXT_ONLY = "text-only"
     STATIC_IMAGE = "static-image"
     ANIMATED_2D = "animated-2d"
+    LIGHTWEIGHT_3D = "lightweight-3d"
+    FULL_3D = "full-3d"
 
 
-_RANK = {Presentation.TEXT_ONLY: 0, Presentation.STATIC_IMAGE: 1, Presentation.ANIMATED_2D: 2}
+_RANK = {
+    Presentation.TEXT_ONLY: 0,
+    Presentation.STATIC_IMAGE: 1,
+    Presentation.ANIMATED_2D: 2,
+    Presentation.LIGHTWEIGHT_3D: 3,
+    Presentation.FULL_3D: 4,
+}
 _IMPLEMENTATIONS = {
     "text-only": Presentation.TEXT_ONLY,
     # The canonical projection has an audio-only rung this renderer does not:
@@ -30,14 +38,16 @@ _IMPLEMENTATIONS = {
     "static-avatar": Presentation.STATIC_IMAGE,
     "static-image": Presentation.STATIC_IMAGE,
     "animated-2d": Presentation.ANIMATED_2D,
-    # A higher allowance authorises at most what this phase implements; it does
-    # not make the unimplemented renderer exist. The canonical projection
-    # already refuses to *select* these, so reaching them here means somebody
-    # constructed a recommendation by hand — and the answer is still no.
-    "lightweight-3d": Presentation.ANIMATED_2D,
-    "full-3d": Presentation.ANIMATED_2D,
+    "lightweight-3d": Presentation.LIGHTWEIGHT_3D,
+    "full-3d": Presentation.FULL_3D,
+    # Still not a rung. ``animated-3d`` is a name that has appeared in
+    # recommendations built by hand; there is no renderer behind it and the
+    # honest ceiling for it is the highest thing that does exist below it.
     "animated-3d": Presentation.ANIMATED_2D,
 }
+
+#: The two 3D rungs, for the checks that treat them together.
+THREE_D = (Presentation.LIGHTWEIGHT_3D, Presentation.FULL_3D)
 
 
 @dataclass(frozen=True)
@@ -101,11 +111,39 @@ class RendererSignals:
     renderer_healthy: bool = True
     static_renderer_healthy: bool = True
 
+    # -- the 3D rungs' own signals -----------------------------------------
+    #: Whether a graphics context can be created at all here. Read from the
+    #: environment once at start-up, never probed per frame.
+    three_d_available: bool = False
+    #: Whether the 3D renderer is currently working. False after a crash, a
+    #: shader failure, an upload failure or a model that would not load.
+    three_d_healthy: bool = True
+    #: §23's context loss, distinct from a mere failure: everything the context
+    #: held is already gone, so releasing is different and recovery is slower.
+    gpu_context_lost: bool = False
+    #: The 95th-percentile frame time observed at the current rung, or ``None``
+    #: before enough frames exist to have one.
+    frame_p95_ms: float | None = None
+    #: True only after :class:`companion.character.three_d.budget.FrameHealth`
+    #: has seen the ceiling exceeded for its sustained-sample count. A single
+    #: slow frame must never reach this field.
+    sustained_slow_frames: bool = False
+    #: Dropped frames as a fraction of the frames that should have been drawn.
+    dropped_frame_ratio: float | None = None
+    #: Whether the graphics stack has the features the package requires.
+    graphics_features_supported: bool = True
+    #: Whether the selected package carries a validated model at all.
+    package_supports_3d: bool = False
+    #: What the validated model would hold on the GPU.
+    model_gpu_bytes: int | None = None
+
     def __post_init__(self) -> None:
         if self.available_memory_bytes is not None and self.available_memory_bytes < 0:
             raise ValueError("available memory cannot be negative")
         if self.battery_percent is not None and not 0 <= self.battery_percent <= 100:
             raise ValueError("battery percentage is outside 0-100")
+        if self.dropped_frame_ratio is not None and not 0 <= self.dropped_frame_ratio <= 1:
+            raise ValueError("dropped-frame ratio must be normalized")
 
 
 @dataclass(frozen=True)
@@ -153,11 +191,22 @@ class RendererDegradationEvent:
 
 
 class AdaptiveRendererSelector:
-    def __init__(self, *, recovery_samples: int = 3, recovery_delay_seconds: float = 2.0) -> None:
+    def __init__(
+        self,
+        *,
+        recovery_samples: int = 3,
+        recovery_delay_seconds: float = 2.0,
+        budget: Any = None,
+    ) -> None:
         if recovery_samples < 1 or recovery_delay_seconds < 0:
             raise ValueError("invalid renderer hysteresis policy")
+        from .three_d.budget import DEFAULT_BUDGET
+
         self.recovery_samples = recovery_samples
         self.recovery_delay_seconds = recovery_delay_seconds
+        #: §21's thresholds. Configuration, not policy baked into this class —
+        #: see :mod:`companion.character.three_d.budget`.
+        self.budget = budget or DEFAULT_BUDGET
         self.current: Presentation | None = None
         self._healthy_samples = 0
         self._last_degraded_at = float("-inf")
@@ -177,6 +226,15 @@ class AdaptiveRendererSelector:
         if package.manifest.presentation_type.value == "static-image":
             requested = Presentation.STATIC_IMAGE if _RANK[requested] >= 1 else Presentation.TEXT_ONLY
             reasons.append("the selected package is static-image")
+        if requested in THREE_D and not signals.package_supports_3d:
+            # The allowance is for the machine; the package is what there is to
+            # draw. A 2D character on a machine that could run 3D is drawn in
+            # 2D, and that is not a degradation — nothing was lost.
+            requested = Presentation.ANIMATED_2D
+            reasons.append("the selected character package carries no validated 3D model")
+        if requested in THREE_D and not signals.three_d_available:
+            requested = Presentation.ANIMATED_2D
+            reasons.append("this machine's graphics stack cannot provide a 3D context")
         if signals.user_preference is not None and _RANK[signals.user_preference] < _RANK[requested]:
             requested = signals.user_preference
             reasons.append("the user's renderer preference is a stricter ceiling")
@@ -203,14 +261,87 @@ class AdaptiveRendererSelector:
                 throttle_code = reason_code
                 throttle_explanation = reason
 
+        # §22's 3D triggers, applied before the rules that were already here so
+        # that a 3D failure lands on animated-2D and is then subject to every
+        # 2D rule as well. A machine that loses its GPU context *and* has no
+        # memory ends up at the right rung in one pass rather than two.
+        if target in THREE_D:
+            if signals.gpu_context_lost:
+                degrade(Presentation.ANIMATED_2D, "gpu-context-lost",
+                        "the graphics context was lost; 2D presentation continues")
+            elif not signals.three_d_healthy:
+                degrade(Presentation.ANIMATED_2D, "renderer-3d-failed",
+                        "the 3D renderer failed; 2D presentation continues")
+            elif not signals.graphics_features_supported:
+                degrade(Presentation.ANIMATED_2D, "graphics-feature-unsupported",
+                        "this graphics stack lacks a feature the character model requires")
+            if signals.on_battery and signals.battery_percent is not None and (
+                signals.battery_percent < self.budget.battery_floor_percent
+            ):
+                degrade(Presentation.ANIMATED_2D, "battery-3d-floor",
+                        f"the battery is below {self.budget.battery_floor_percent:g}%; 3D is not drawn")
+        if target in THREE_D:
+            level = target.value
+            if signals.available_memory_bytes is not None and (
+                signals.available_memory_bytes < self.budget.memory_floor(level)
+            ):
+                degrade(
+                    Presentation.LIGHTWEIGHT_3D if target is Presentation.FULL_3D else Presentation.ANIMATED_2D,
+                    "memory-below-3d-floor",
+                    f"available memory is below the {level} floor",
+                )
+            if signals.model_gpu_bytes is not None and signals.model_gpu_bytes > self.budget.gpu_ceiling(level):
+                degrade(
+                    Presentation.LIGHTWEIGHT_3D if target is Presentation.FULL_3D else Presentation.ANIMATED_2D,
+                    "model-above-gpu-ceiling",
+                    f"the model needs more GPU memory than the {level} ceiling permits",
+                )
+            if signals.sustained_slow_frames:
+                degrade(
+                    Presentation.LIGHTWEIGHT_3D if target is Presentation.FULL_3D else Presentation.ANIMATED_2D,
+                    "sustained-frame-time",
+                    (
+                        f"frame time stayed above the {level} ceiling of "
+                        f"{self.budget.frame_ceiling(level):g} ms for "
+                        f"{self.budget.sustained_samples} consecutive samples"
+                    ),
+                )
+            if signals.dropped_frame_ratio is not None and (
+                signals.dropped_frame_ratio > self.budget.dropped_frame_ratio
+            ):
+                degrade(
+                    Presentation.LIGHTWEIGHT_3D if target is Presentation.FULL_3D else Presentation.ANIMATED_2D,
+                    "dropped-frames",
+                    f"{signals.dropped_frame_ratio:.0%} of frames were dropped at {level}",
+                )
+            if signals.thermal_pressure:
+                degrade(Presentation.LIGHTWEIGHT_3D, "thermal-pressure-3d",
+                        "thermal pressure reduced the 3D presentation")
+            if signals.memory_pressure:
+                degrade(Presentation.ANIMATED_2D, "memory-pressure-3d",
+                        "memory pressure ended 3D presentation")
         if not signals.display_available:
             degrade(Presentation.TEXT_ONLY, "display-unavailable", "no display is available; presentation is text-only")
         if not signals.static_renderer_healthy:
             degrade(Presentation.TEXT_ONLY, "static-renderer-failed", "the guaranteed static renderer failed")
         elif not signals.renderer_healthy:
             degrade(Presentation.STATIC_IMAGE, "renderer-failed", "the animated renderer failed; static fallback is active")
-        if signals.reduced_motion or signals.no_animation:
-            degrade(Presentation.STATIC_IMAGE, "reduced-motion", "animation is disabled by the accessibility preference")
+        if signals.no_animation:
+            degrade(Presentation.STATIC_IMAGE, "no-animation", "animation is disabled by the accessibility preference")
+        elif signals.reduced_motion:
+            if target in THREE_D:
+                # §9's reduced motion is a *mode of the animation system*, not a
+                # rung: the character still changes when the task changes, it
+                # simply arrives without a crossfade and without procedural
+                # movement. Dropping to a static image here would remove the
+                # state information along with the motion, which is the opposite
+                # of what the preference asks for.
+                reasons.append(
+                    "reduced motion is applied inside the 3D renderer: no crossfades, "
+                    "no procedural movement, state changes still drawn"
+                )
+            else:
+                degrade(Presentation.STATIC_IMAGE, "reduced-motion", "animation is disabled by the accessibility preference")
         if not signals.graphics_ready:
             degrade(Presentation.STATIC_IMAGE, "graphics-not-ready", "graphics acceleration is not ready; a static image is used")
         elif target is Presentation.ANIMATED_2D and not signals.gpu_available:
@@ -267,7 +398,13 @@ class AdaptiveRendererSelector:
         else:
             self._healthy_samples = 0
         effective = self.current or target
-        if effective is Presentation.ANIMATED_2D and throttle_code:
+        if effective in THREE_D:
+            # A 3D rung's frame rate comes from the budget rather than from the
+            # package: ``declaredFrameRate`` describes a frame *sequence*, which
+            # a skeletal renderer does not have. Accessibility and thermal caps
+            # still apply on top, because they are ceilings rather than targets.
+            frame_rate = min(frame_rate if throttle_code else 60, self.budget.target_fps(effective.value))
+        if (effective in THREE_D or effective is Presentation.ANIMATED_2D) and throttle_code:
             signature = (throttle_code, frame_rate)
             if signature != self._throttle_signature:
                 self.events.append(RendererDegradationEvent(

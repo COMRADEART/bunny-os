@@ -77,11 +77,55 @@ def inspect_image(path: Path) -> ImageInfo:
     raise CharacterSecurityError("asset is not a supported PNG or WebP image")
 
 
+@dataclass(frozen=True)
+class DecodedImage:
+    """Straight-line RGBA8 pixels, produced only after the container validated."""
+
+    width: int
+    height: int
+    rgba: bytes
+
+    def to_json(self) -> dict[str, int]:
+        return {"width": self.width, "height": self.height, "decodedBytes": len(self.rgba)}
+
+
+@dataclass(frozen=True)
+class _PngPayload:
+    """What one validated PNG holds, before any pixel is reconstructed."""
+
+    width: int
+    height: int
+    bit_depth: int
+    color_type: int
+    palette: bytes
+    transparency: bytes
+    scanlines: bytes
+
+
 def _inspect_png(data: bytes) -> ImageInfo:
+    payload = _read_png(data)
+    return ImageInfo(
+        "image/png", payload.width, payload.height,
+        _bounded_dimensions(payload.width, payload.height),
+    )
+
+
+def _read_png(data: bytes) -> _PngPayload:
+    """Walk, checksum and bounded-inflate a PNG. The only PNG reader here.
+
+    Both :func:`inspect_image` and :func:`decode_png_rgba` go through this, and
+    that is the point: a decoder that validated on one path and not the other
+    would be a decoder with a way in. The bounded inflate, the filter check and
+    the chunk rules below are the ones the character package validator has
+    always applied; reconstructing pixels happens *after* they pass, never
+    beside them.
+    """
     offset = len(PNG_SIGNATURE)
     width = height = bit_depth = color_type = 0
     interlace = -1
     saw_ihdr = saw_iend = saw_palette = False
+    palette = b""
+    transparency = b""
     compressed = bytearray()
     chunk_count = 0
 
@@ -124,7 +168,14 @@ def _inspect_png(data: bytes) -> ImageInfo:
         elif kind == b"PLTE":
             if not saw_ihdr or saw_iend or length == 0 or length % 3 or length > 768:
                 raise CharacterSecurityError("PNG palette is invalid")
+            palette = bytes(payload)
             saw_palette = True
+        elif kind == b"tRNS":
+            if not saw_ihdr or saw_iend or transparency:
+                raise CharacterSecurityError("PNG transparency chunk is misplaced or repeated")
+            if color_type in {4, 6} or length > 256:
+                raise CharacterSecurityError("PNG transparency chunk is invalid for its colour type")
+            transparency = bytes(payload)
         elif kind == b"IDAT":
             if not saw_ihdr or saw_iend:
                 raise CharacterSecurityError("PNG image data is out of order")
@@ -168,7 +219,148 @@ def _inspect_png(data: bytes) -> ImageInfo:
     for row in range(height):
         if raw[row * (row_bytes + 1)] > 4:
             raise CharacterSecurityError("PNG uses an invalid scanline filter")
-    return ImageInfo("image/png", width, height, _bounded_dimensions(width, height))
+    _bounded_dimensions(width, height)
+    return _PngPayload(width, height, bit_depth, color_type, palette, transparency, bytes(raw))
+
+
+def _unfilter(payload: _PngPayload) -> bytearray:
+    """Reverse the five PNG scanline filters. Bounded by the inflate above."""
+    channels = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}[payload.color_type]
+    bits = channels * payload.bit_depth
+    row_bytes = (payload.width * bits + 7) // 8
+    step = max(1, bits // 8)
+    output = bytearray(row_bytes * payload.height)
+    previous = bytearray(row_bytes)
+    source = payload.scanlines
+    for row in range(payload.height):
+        base = row * (row_bytes + 1)
+        filter_type = source[base]
+        line = bytearray(source[base + 1:base + 1 + row_bytes])
+        if filter_type == 1:
+            for index in range(step, row_bytes):
+                line[index] = (line[index] + line[index - step]) & 0xFF
+        elif filter_type == 2:
+            for index in range(row_bytes):
+                line[index] = (line[index] + previous[index]) & 0xFF
+        elif filter_type == 3:
+            for index in range(row_bytes):
+                left = line[index - step] if index >= step else 0
+                line[index] = (line[index] + ((left + previous[index]) >> 1)) & 0xFF
+        elif filter_type == 4:
+            for index in range(row_bytes):
+                left = line[index - step] if index >= step else 0
+                upper_left = previous[index - step] if index >= step else 0
+                above = previous[index]
+                estimate = left + above - upper_left
+                distance_left = abs(estimate - left)
+                distance_above = abs(estimate - above)
+                distance_corner = abs(estimate - upper_left)
+                if distance_left <= distance_above and distance_left <= distance_corner:
+                    predictor = left
+                elif distance_above <= distance_corner:
+                    predictor = above
+                else:
+                    predictor = upper_left
+                line[index] = (line[index] + predictor) & 0xFF
+        output[row * row_bytes:(row + 1) * row_bytes] = line
+        previous = line
+    return output
+
+
+def decode_png_rgba(data: bytes, *, maximum_dimension: int = MAX_IMAGE_DIMENSION) -> DecodedImage:
+    """Validate a PNG and return straight RGBA8 bytes.
+
+    Added for the 3D renderer, which needs pixels rather than a description of
+    them, and deliberately placed beside the validator rather than in the
+    renderer: a second PNG reader in this repository would be a second set of
+    the bugs this one has already been hardened against.
+
+    ``maximum_dimension`` is the *caller's* ceiling and is applied on top of the
+    module's own. The 3D validator passes its texture limit, which is smaller
+    than the 2D one because a texture is uploaded to a GPU rather than blitted.
+    """
+    payload = _read_png(data)
+    if payload.width > maximum_dimension or payload.height > maximum_dimension:
+        raise CharacterSecurityError(
+            f"texture is {payload.width}x{payload.height}; the limit is {maximum_dimension} per side"
+        )
+    if payload.color_type == 3:
+        if payload.bit_depth not in {1, 2, 4, 8}:
+            raise CharacterSecurityError("indexed PNG bit depth is unsupported")
+    elif payload.bit_depth not in {8, 16}:
+        raise CharacterSecurityError("PNG bit depth is unsupported for decoding")
+
+    raw = _unfilter(payload)
+    width, height = payload.width, payload.height
+    channels = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}[payload.color_type]
+    row_bytes = (width * channels * payload.bit_depth + 7) // 8
+    rgba = bytearray(width * height * 4)
+
+    def _sample(row: int, column: int) -> tuple[int, ...]:
+        if payload.bit_depth == 16:
+            base = row * row_bytes + column * channels * 2
+            return tuple(raw[base + component * 2] for component in range(channels))
+        if payload.bit_depth == 8:
+            base = row * row_bytes + column * channels
+            return tuple(raw[base + component] for component in range(channels))
+        per_byte = 8 // payload.bit_depth
+        mask = (1 << payload.bit_depth) - 1
+        index = row * row_bytes + column // per_byte
+        shift = 8 - payload.bit_depth * (column % per_byte + 1)
+        return ((raw[index] >> shift) & mask,)
+
+    transparent_grey = None
+    transparent_rgb = None
+    if payload.transparency and payload.color_type == 0 and len(payload.transparency) >= 2:
+        transparent_grey = int.from_bytes(payload.transparency[:2], "big")
+    if payload.transparency and payload.color_type == 2 and len(payload.transparency) >= 6:
+        transparent_rgb = tuple(
+            int.from_bytes(payload.transparency[item * 2:item * 2 + 2], "big") for item in range(3)
+        )
+
+    maximum = (1 << payload.bit_depth) - 1
+    for row in range(height):
+        for column in range(width):
+            sample = _sample(row, column)
+            if payload.color_type == 0:
+                value = sample[0] if payload.bit_depth != 16 else sample[0]
+                alpha = 0 if transparent_grey is not None and sample[0] == (
+                    transparent_grey >> 8 if payload.bit_depth == 16 else transparent_grey
+                ) else 255
+                pixel = (value, value, value, alpha)
+            elif payload.color_type == 2:
+                alpha = 255
+                if transparent_rgb is not None:
+                    scaled = tuple(
+                        component >> 8 if payload.bit_depth == 16 else component
+                        for component in transparent_rgb
+                    )
+                    if tuple(sample) == scaled:
+                        alpha = 0
+                pixel = (sample[0], sample[1], sample[2], alpha)
+            elif payload.color_type == 3:
+                entry = sample[0]
+                if entry * 3 + 2 >= len(payload.palette):
+                    raise CharacterSecurityError("indexed PNG references a palette entry that does not exist")
+                alpha = payload.transparency[entry] if entry < len(payload.transparency) else 255
+                pixel = (
+                    payload.palette[entry * 3],
+                    payload.palette[entry * 3 + 1],
+                    payload.palette[entry * 3 + 2],
+                    alpha,
+                )
+            elif payload.color_type == 4:
+                pixel = (sample[0], sample[0], sample[0], sample[1])
+            else:
+                pixel = (sample[0], sample[1], sample[2], sample[3])
+            if payload.color_type == 3 and payload.bit_depth < 8:
+                pixel = pixel  # palette entries are already eight-bit
+            elif payload.bit_depth == 1 or payload.bit_depth == 2 or payload.bit_depth == 4:
+                scale = 255 // maximum
+                pixel = tuple(component * scale for component in pixel[:3]) + (pixel[3],)
+            base = (row * width + column) * 4
+            rgba[base:base + 4] = bytes(pixel)
+    return DecodedImage(width, height, bytes(rgba))
 
 
 def _inspect_webp(data: bytes) -> ImageInfo:

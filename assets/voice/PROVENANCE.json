@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-08-09",
+  "purpose": "Bunny OS Alpha offline English push-to-talk speech recognition",
+  "runtime": {
+    "component": "Vosk C API",
+    "distributionPackage": "vosk-api-devel",
+    "distribution": "Fedora 44",
+    "expectedVersionAtReview": "0.3.50-3.fc44",
+    "license": "Apache-2.0",
+    "upstream": "https://github.com/alphacep/vosk-api"
+  },
+  "models": [
+    {
+      "modelId": "vosk-model-small-en-us-0.15",
+      "language": "en",
+      "locale": "en-US",
+      "license": "Apache-2.0",
+      "catalogUrl": "https://alphacephei.com/vosk/models",
+      "sourceUrl": "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip",
+      "sourceArchiveSizeBytes": 41205931,
+      "sourceArchiveSha256": "30f26242c4eb449f948e42cb302dd7a686cb29a3423a8367f99ff41780942498",
+      "extractedFileCount": 14,
+      "extractedSizeBytes": 70898967,
+      "integrityManifest": "models/vosk-model-small-en-us-0.15/.bunny-model.json"
+    }
+  ],
+  "textToSpeech": {
+    "defaultProvider": "pocket",
+    "fallbackOrder": ["pocket", "kitten", "espeak-ng", "speech-dispatcher"],
+    "persistentInferenceWorker": true,
+    "workerNetworkAccess": false,
+    "cpuRuntime": {
+      "component": "PyTorch CPU",
+      "version": "2.9.1+cpu",
+      "pythonTag": "cp314",
+      "platformTag": "manylinux_2_28_x86_64",
+      "sourceIndex": "https://download.pytorch.org/whl/cpu/torch/",
+      "wheelSizeBytes": 184378318,
+      "wheelSha256": "88adf5157db5da1d54b1c9fe4a6c1d20ceef00e75d854e206a87dbf69e3037dc",
+      "expandedSizeBytes": 682347734,
+      "license": "BSD-3-Clause",
+      "reasonNotFedoraPackage": "Fedora 44 python3-torch has a hard ROCm/GPU dependency closure unsuitable for Bunny's CPU-only voice worker."
+    },
+    "providers": [
+      {
+        "providerId": "pocket",
+        "role": "default",
+        "runtimeVersion": "2.1.0",
+        "runtimeRepository": "https://github.com/kyutai-labs/pocket-tts",
+        "runtimeRevision": "058886528d0b6f2f2d4022de2e244a5260729e6e",
+        "runtimeLicense": "MIT",
+        "runtimePath": "runtime/site-packages/pocket_tts",
+        "modelId": "english",
+        "modelRepository": "https://huggingface.co/kyutai/pocket-tts-without-voice-cloning",
+        "modelRevision": "e041936c75475d350b405bc870bcf7c22da4e9e6",
+        "modelLicense": "CC-BY-4.0",
+        "modelPath": "tts/pocket/english",
+        "modelManifest": "tts/pocket/english/manifest.json",
+        "preparedVoice": "caro_davy",
+        "preparedVoiceSource": "Kyutai tts-voices/voice-zero/caro_davy.wav",
+        "preparedVoiceLicense": "CC0-1.0",
+        "voiceCloningIncluded": false,
+        "payloadSizeBytes": 224351600
+      },
+      {
+        "providerId": "kitten",
+        "role": "optional-low-resource",
+        "runtimeVersion": "0.8.1",
+        "runtimeRepository": "https://github.com/KittenML/KittenTTS",
+        "runtimeRevision": "f0282f0198d497b7256535b755f9f3e339c1baa7",
+        "runtimeLicense": "Apache-2.0",
+        "runtimeImplementation": "Bunny isolated ONNX adapter following the pinned 0.8.1 model contract",
+        "modelId": "nano-int8",
+        "modelRepository": "https://huggingface.co/KittenML/kitten-tts-nano-0.8-int8",
+        "modelRevision": "84781d74e29ee25217551556398b42f80593a813",
+        "modelLicense": "Apache-2.0",
+        "modelPath": "tts/kitten/nano-int8",
+        "modelManifest": "tts/kitten/nano-int8/manifest.json",
+        "payloadSizeBytes": 27652174
+      }
+    ],
+    "vendoredRuntimeSizeBytes": 184551465,
+    "selectedAssetAndNoticeSizeBytes": 436603718,
+    "unselectedUpstreamPayload": "The approximately 9.8 GB full Pocket model repository and non-English/unused voices are not bundled."
+  },
+  "automaticDownload": false,
+  "networkRequiredAtRuntime": false
+}

@@ -1,0 +1,8 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# A fixed entry point for the allowlisted child. Python isolated mode ignores
+# user site packages and PYTHON* environment variables; the worker itself adds
+# only Bunny's immutable vendored Pocket runtime directory.
+exec /usr/bin/python3 -I /usr/lib/bunny-os/python/companion/voice/neural_worker.py "$@"

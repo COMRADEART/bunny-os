@@ -1,0 +1,76 @@
+{
+  "commit": "d0442fb2d4ca4ae7ec306c5bf22dda3abaff113c",
+  "files": [
+    {
+      "bytes": 3143,
+      "name": "desktop-latency.json",
+      "sha256": "caf56a551442e88e2a824051ffea96d07278f508cb2c677d29628f5d53614707"
+    },
+    {
+      "bytes": 2170,
+      "name": "desktop-measurements.json",
+      "sha256": "5b0c3373c1cff7aea49a3936dd5fc783a69ac6e7450b3b625cb00eb69fac2d00"
+    },
+    {
+      "bytes": 2069,
+      "name": "desktop-memory.json",
+      "sha256": "ab4aa1b105bce7750a2ccde566899cf848e2807c789511255d5345ba3d285012"
+    },
+    {
+      "bytes": 4227,
+      "name": "env.json",
+      "sha256": "53dc985e8351d738b33c94666f0858ccf30166d7ea446138d0ffa17b9e15d600"
+    },
+    {
+      "bytes": 41,
+      "name": "gate-commit",
+      "sha256": "0ba80221899b906f789d91090dee3c24865b82f2aab320bfc7f6ca6ec57e79e2"
+    },
+    {
+      "bytes": 359352,
+      "name": "gate-desktop-100.json",
+      "sha256": "26b2c71b54d6b89d8c5d81eb39bf45ee904b0bb70de80f4beb72aa2e1daa0f3f"
+    },
+    {
+      "bytes": 4622,
+      "name": "gate-desktop-100.log",
+      "sha256": "b59bdbdeddc45e18640c574158d51e1ab3de0b276ac5633a2cced69b33c1f377"
+    },
+    {
+      "bytes": 108058,
+      "name": "gate-desktop-slice-20.json",
+      "sha256": "5d57146ffb5bd108e4a6195c0a0a275f95861ee0f5b7e719c046b4a15d72b11b"
+    },
+    {
+      "bytes": 1024,
+      "name": "gate-desktop-slice-20.log",
+      "sha256": "5503d905a93bf64a5b55ed850b8f0a71aae6281bf58017ec8f83c04914a51e0d"
+    },
+    {
+      "bytes": 181078,
+      "name": "gate-suite-50.json",
+      "sha256": "f81d3c9aa1f05ba10a24b4d16db84d4ae0d84609b2a78f781ac533832081c5ae"
+    },
+    {
+      "bytes": 2370,
+      "name": "gate-suite-50.log",
+      "sha256": "25744eca25d05fce0c487c20582e8476ed88fa694b3654473e4dff59e6166177"
+    },
+    {
+      "bytes": 3245,
+      "name": "gate-verdicts.json",
+      "sha256": "32e23b84aedb31edc697eb849bc6cd9d71c53bb46c114f86690922c31ca142d3"
+    },
+    {
+      "bytes": 10206,
+      "name": "linux-suite-root.log",
+      "sha256": "c70c0ce2c08ca1dc93791dfc113aad2153626c8f934b3e087ef9daab28277b61"
+    },
+    {
+      "bytes": 8815,
+      "name": "linux-suite.log",
+      "sha256": "4c5e84a5d6ff4c0c96641cfca526e62d2c403aac30e6347fe8c835a1c133c9a5"
+    }
+  ],
+  "schemaVersion": "bunny-os/desktop-action-evidence-manifest/1"
+}

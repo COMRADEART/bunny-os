@@ -38,7 +38,7 @@ a result, because none of those were ever attached to a socket.
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import os
 from pathlib import Path
 import queue
@@ -53,6 +53,7 @@ from .cancellation import cancel_task
 from .clock import Clock, SystemClock, iso8601
 from .errors import CompanionError, StoreError
 from .events import TaskEvent
+from .privacy import DIAGNOSTIC_REDACTIONS, redact_diagnostic_text
 from .presentation import (
     AccessibilityPreferences,
     PresentationProjector,
@@ -71,6 +72,7 @@ from .protocol import (
 )
 from .recovery import recover
 from .runtime import CompanionRuntime
+from .states import TERMINAL_STATES
 # The *preferences* type only. The service reaches the voice runtime through
 # :meth:`CompanionService._build_voice`, which imports it inside the function —
 # so a build with no voice package still imports this module, and the dependency
@@ -122,18 +124,12 @@ MAX_FAULT_MESSAGE = 400
 #: Anything shaped like a secret or a private path is replaced rather than
 #: truncated, because truncation keeps the prefix and the prefix is the
 #: interesting part of a token.
-_FAULT_REDACTIONS: tuple[tuple["re.Pattern[str]", str], ...] = (
-    # Windows and POSIX user directories. The fault is identifiable from the
-    # basename; the path to somebody's home directory is not needed to fix it.
-    (re.compile(r"(?i)[a-z]:\\+users\\+[^\\\s]+"), "<user-path>"),
-    (re.compile(r"/(?:home|Users)/[^/\s]+"), "<user-path>"),
-    (re.compile(r"(?i)\b/tmp/[^\s]+"), "<temp-path>"),
-    # Anything self-describing as a secret, with its value.
-    (re.compile(r"(?i)\b(token|secret|password|passphrase|api[_-]?key|bearer)"
-                r"\s*[:=]?\s*\S+"), r"\1=<redacted>"),
-    # Long hex or base64-ish runs: request tokens, keys, digests of content.
-    (re.compile(r"\b[A-Fa-f0-9]{32,}\b"), "<hex>"),
-)
+#:
+#: The patterns themselves live in :data:`companion.privacy.DIAGNOSTIC_REDACTIONS`
+#: because the diagnostics export needs exactly the same list, and a second copy
+#: is a second thing to keep current. This alias is kept for readers who come
+#: looking for it here.
+_FAULT_REDACTIONS = DIAGNOSTIC_REDACTIONS
 
 
 def _sanitise_fault_message(error: BaseException) -> str:
@@ -145,13 +141,7 @@ def _sanitise_fault_message(error: BaseException) -> str:
     whatever that executor put in it. Redacting on the way *in* is the only
     point at which that is still under this module's control.
     """
-    message = f"{error}"
-    for pattern, replacement in _FAULT_REDACTIONS:
-        message = pattern.sub(replacement, message)
-    message = " ".join(message.split())
-    if len(message) > MAX_FAULT_MESSAGE:
-        message = message[: MAX_FAULT_MESSAGE - 1] + "…"
-    return message
+    return redact_diagnostic_text(f"{error}", limit=MAX_FAULT_MESSAGE)
 
 
 @dataclass
@@ -509,6 +499,7 @@ class CompanionGateway:
         clock: Clock | None = None,
         voice: "VoiceService | None" = None,
         agents: "AgentProviderService | None" = None,
+        settings_root: Path | None = None,
     ) -> None:
         self.runtime = runtime
         self.consent = consent
@@ -531,6 +522,13 @@ class CompanionGateway:
         #: operation answers "no agent-provider runtime" and the deterministic
         #: executor carries every task.
         self.agents = agents
+        self.settings_root = Path(settings_root) if settings_root is not None else None
+        #: Attached by the service after the runtime exists, through
+        #: :meth:`attach_desktop`. Absent means every ``desktop_action*``
+        #: operation answers "no desktop action broker" — and, unlike the other
+        #: three, means the tools are not on the allowlist at all.
+        self.desktop: Any = None
+        self._desktop_service: Any = None
         self._work: "queue.Queue[str | None]" = queue.Queue()
         self._running: set[str] = set()
         self._queued: set[str] = set()
@@ -592,6 +590,14 @@ class CompanionGateway:
                 # write before it unwound.
                 self._record_fault(item, exc, classified=False, state_before=state_before)
             finally:
+                if self._task_state(item) in TERMINAL_STATES:
+                    try:
+                        self._release_desktop_context(item)
+                    except Exception as exc:  # noqa: BLE001 - cleanup must not kill the worker
+                        self._record_fault(
+                            item, exc, classified=False,
+                            state_before=self._task_state(item),
+                        )
                 with self._guard:
                     self._running.discard(item)
 
@@ -805,8 +811,11 @@ class CompanionGateway:
         costLimitUnits: int | None,
         run: bool,
     ) -> dict[str, Any]:
-        task = self.runtime.submit_task(
-            sessionId, request, classification=classification, cost_limit_units=costLimitUnits
+        task = self._submit_runtime_task(
+            sessionId,
+            request,
+            classification=classification,
+            cost_limit_units=costLimitUnits,
         )
         scheduled = self._schedule(task.task_id) if run else "not-scheduled"
         return {
@@ -814,6 +823,94 @@ class CompanionGateway:
             "sessionId": sessionId,
             "scheduled": scheduled,
         }
+
+    def _path_context_for_request(self, session_id: str, request: str) -> Any:
+        """Canonical local-path authority implied by one closed local intent.
+
+        A request can select only an XDG directory key or a numbered result in
+        the service-owned, session-bound search ledger. The returned object is
+        consumed by :class:`DesktopSupport`; it never enters a task document,
+        executor plan, model prompt or protocol response.
+        """
+        binder = getattr(self.desktop, "bind_path_context", None)
+        if not callable(binder):
+            return None
+
+        from .desktop.paths import PathContext
+        from .intents import recognise
+        from .local_files import (
+            SEARCH_DIRECTORY_KEYS,
+            resolve_search_result,
+        )
+        from .local_intent import user_directory
+
+        intent = recognise(request)
+        if intent is None:
+            return None
+        reference = ""
+        path: Path | None = None
+        root: Path | None = None
+        origin = ""
+        if intent.kind == "show_folder":
+            key = str(intent.parameters.get("directory", ""))
+            if key not in SEARCH_DIRECTORY_KEYS:
+                return None
+            selected = user_directory(key)
+            if selected is None:
+                return None
+            path = Path(os.path.realpath(selected))
+            root = path
+            reference = "requested-directory"
+            origin = "closed-user-directory"
+        elif intent.kind == "open_search_result":
+            selector = str(intent.parameters.get("selector", ""))
+            authority, _reason = resolve_search_result(session_id, selector)
+            if authority is None:
+                return None
+            path = authority.path
+            root = authority.root
+            reference = "search-result"
+            origin = "earlier-search-result"
+        else:
+            return None
+
+        context = PathContext.build(
+            {reference: str(path)},
+            roots=(root,),
+            origin=origin,
+        )
+        # Establish every invariant now, then establish it again when the
+        # desktop broker prepares the action. The second check catches a file
+        # moved or replaced after submission and before approval.
+        try:
+            context.resolve(reference)
+        except CompanionError:
+            return None
+        return context
+
+    def _submit_runtime_task(
+        self,
+        session_id: str,
+        request: str,
+        *,
+        classification: str | None = None,
+        cost_limit_units: int | None = None,
+    ) -> Any:
+        path_context = self._path_context_for_request(session_id, request)
+        task = self.runtime.submit_task(
+            session_id,
+            request,
+            classification=classification,
+            cost_limit_units=cost_limit_units,
+        )
+        if path_context is not None:
+            self.desktop.bind_path_context(task.task_id, path_context)
+        return task
+
+    def _release_desktop_context(self, task_id: str) -> None:
+        release = getattr(self.desktop, "release_task_context", None)
+        if callable(release):
+            release(task_id)
 
     def list_tasks(self, *, sessionId: str | None) -> dict[str, Any]:
         session_ids = [sessionId] if sessionId else list(self.runtime.store.session_ids())
@@ -1047,6 +1144,14 @@ class CompanionGateway:
                 )
             except Exception:  # noqa: BLE001 - a voice fault must not fail a cancellation
                 silenced = ()
+        if outcome.task.state in TERMINAL_STATES:
+            try:
+                self._release_desktop_context(task.task_id)
+            except Exception as exc:  # noqa: BLE001 - cancellation itself already succeeded
+                self._record_fault(
+                    task.task_id, exc, classified=False,
+                    state_before=outcome.task.state,
+                )
         return {
             "sessionId": session_id,
             "cancellation": outcome.to_json(),
@@ -1087,6 +1192,157 @@ class CompanionGateway:
         task = self.runtime.resume_task(session_id, taskId)
         self._schedule(task.task_id)
         return {"sessionId": session_id, "task": task.view(PRESENTATION_AUDIENCE), "scheduled": "queued"}
+
+    # -- focused voice settings -------------------------------------------
+
+    def _voice_settings_document(self, settings: Any) -> dict[str, Any]:
+        devices: list[dict[str, Any]] = []
+        recognizers: list[dict[str, Any]] = []
+        readiness: dict[str, Any] = {}
+        tts_providers: list[dict[str, Any]] = []
+        tts_voices: list[dict[str, Any]] = []
+        fallback_warning = ""
+        if self.speech is not None:
+            try:
+                devices = list(self.speech.speech_input_devices().get("devices", []))
+                speech_health = self.speech.speech_input_health()
+                recognizers = list(speech_health.get("recognizers", []))
+                readiness = dict(speech_health.get("readiness", {}))
+            except Exception:  # noqa: BLE001 - inventory never blocks settings
+                devices, recognizers, readiness = [], [], {}
+        if self.voice is not None:
+            try:
+                health = self.voice.voice_health()
+                by_id = {
+                    str(item.get("providerId") or ""): dict(item)
+                    for item in health.get("providers", [])
+                    if isinstance(item, Mapping)
+                }
+                for provider in self.voice.registry:
+                    provider_id = provider.declaration.provider_id
+                    report = by_id.get(provider_id, provider.declaration.to_json())
+                    model_health = getattr(provider, "model_health", None)
+                    report["modelHealth"] = (
+                        list(model_health()) if callable(model_health) else []
+                    )
+                    tts_providers.append(report)
+                tts_voices = list(self.voice.voice_list(language="en", limit=128).get("voices", []))
+                recent = self.voice.voice_status().get("recentEvents", [])
+                for event in reversed(recent if isinstance(recent, list) else []):
+                    if isinstance(event, Mapping) and event.get("kind") == "speech_provider_fallback":
+                        payload = event.get("payload")
+                        if isinstance(payload, Mapping):
+                            fallback_warning = str(payload.get("detail") or "")
+                        break
+            except Exception:  # noqa: BLE001 - an unavailable TTS never blocks settings
+                tts_providers, tts_voices, fallback_warning = [], [], ""
+        return {
+            "voiceInput": settings.speech_input.enabled,
+            "speechResponses": settings.voice.enabled,
+            "responseMode": settings.voice.response_mode,
+            "ttsProviderId": settings.voice.provider_id,
+            "ttsModelId": settings.voice.model_id,
+            "ttsVoiceId": settings.voice.voice_id,
+            "speakingRate": settings.voice.speaking_rate,
+            "performanceMode": settings.voice.performance_mode,
+            "deviceId": settings.speech_input.device_id,
+            "modelId": settings.speech_input.model_id,
+            "language": settings.speech_input.language,
+            "shortcut": settings.speech_input.shortcut,
+            "wakeWord": settings.speech_input.wake_word,
+            "devices": devices[:64],
+            "recognizers": recognizers,
+            "readiness": readiness,
+            "ttsProviders": tts_providers,
+            "ttsVoices": tts_voices,
+            "ttsFallbackWarning": fallback_warning,
+            "modelDownloadAutomatic": False,
+            "wakeWordAvailable": False,
+        }
+
+    def settings_voice_get(self) -> dict[str, Any]:
+        from .settings import Settings, load_settings
+
+        settings = load_settings(self.settings_root) if self.settings_root is not None else Settings()
+        return self._voice_settings_document(settings)
+
+    def settings_voice_set(
+        self,
+        *,
+        voiceInput: bool,
+        speechResponses: bool,
+        responseMode: str,
+        deviceId: str,
+        modelId: str,
+        language: str,
+        shortcut: str,
+        wakeWord: str,
+        ttsProviderId: str | None = None,
+        ttsModelId: str | None = None,
+        ttsVoiceId: str | None = None,
+        speakingRate: float | None = None,
+        performanceMode: str | None = None,
+    ) -> dict[str, Any]:
+        if self.settings_root is None:
+            raise CompanionError("this runtime has no writable settings root")
+        from .settings import (
+            SpeechInputSettings,
+            VoiceSettings,
+            load_settings,
+            save_settings,
+        )
+
+        current = load_settings(self.settings_root)
+        voice = VoiceSettings(
+            enabled=bool(speechResponses),
+            response_mode=responseMode,
+            provider_id=ttsProviderId if ttsProviderId is not None else current.voice.provider_id,
+            model_id=ttsModelId if ttsModelId is not None else current.voice.model_id,
+            voice_id=ttsVoiceId if ttsVoiceId is not None else current.voice.voice_id,
+            speaking_rate=(
+                float(speakingRate) if speakingRate is not None else current.voice.speaking_rate
+            ),
+            volume=current.voice.volume,
+            performance_mode=(
+                performanceMode if performanceMode is not None else current.voice.performance_mode
+            ),
+        )
+        speech = SpeechInputSettings(
+            enabled=bool(voiceInput),
+            device_id=deviceId,
+            shortcut=shortcut,
+            model_id=modelId,
+            language=language,
+            wake_word=wakeWord,
+        )
+        updated = replace(current, voice=voice, speech_input=speech)
+        save_settings(self.settings_root, updated)
+
+        applied_live = True
+        model_changed = current.speech_input.model_id != updated.speech_input.model_id
+        if self.speech is not None:
+            self.speech.set_preferences(updated.speech_preferences())
+            if model_changed:
+                applied_live = False
+        elif voiceInput:
+            applied_live = False
+        if self.voice is not None:
+            preferences = updated.voice_preferences()
+            if not speechResponses or responseMode == "never":
+                preferences = replace(preferences, enabled=False)
+                status = self.voice.worker.status()
+                current_voice = status.get("current")
+                if isinstance(current_voice, Mapping):
+                    self.voice.worker.cancel(str(current_voice.get("requestId") or ""))
+            self.voice.set_preferences(preferences)
+        elif speechResponses and responseMode != "never":
+            applied_live = False
+        return {
+            **self._voice_settings_document(updated),
+            "saved": True,
+            "appliedLive": applied_live,
+            "restartRequired": not applied_live,
+        }
 
     # -- internals ---------------------------------------------------------
 
@@ -1189,9 +1445,21 @@ class CompanionGateway:
         self.speech = speech
         speech.set_submission_hook(self._submit_confirmed_transcript)
 
+    def attach_desktop(self, desktop: Any) -> None:
+        """Wire the desktop action broker's *read* surface in.
+
+        Only the read surface. The gateway gains six operations that list,
+        explain, inspect, stop and undo; it gains no way to perform an action,
+        because the way to perform one is a task, a plan and an approval. See
+        :mod:`companion.desktop.service` for why that is a design and not an
+        omission.
+        """
+        self.desktop = desktop
+        self._desktop_service = None
+
     def _submit_confirmed_transcript(self, submission: Any) -> str:
         session_id = submission.transcript.session_id
-        task = self.runtime.submit_task(session_id, submission.text)
+        task = self._submit_runtime_task(session_id, submission.text)
         self._schedule(task.task_id)
         return task.task_id
 
@@ -1301,7 +1569,7 @@ class CompanionGateway:
                 "typedInputPreserved": True,
             }
         try:
-            task = self.runtime.submit_task(sessionId, submission.text)
+            task = self._submit_runtime_task(sessionId, submission.text)
         except CompanionError as exc:
             # Confirmed and refused downstream — a transcript over the task
             # bound, a session that lapsed. The record says both facts; the
@@ -1344,6 +1612,72 @@ class CompanionGateway:
         return {"available": True, **self.speech.speech_input_retry(
             requestId=requestId, activationSource=activationSource,
         )}
+
+    # -- desktop actions (§21) ----------------------------------------------
+
+    def _desktop_unavailable(self, operation: str) -> dict[str, Any]:
+        return {
+            "available": False,
+            "operation": operation,
+            "reason": (
+                "this companion service is running without a desktop action broker; no "
+                "desktop action is registered as a tool, so a plan naming one is refused "
+                "at the allowlist"
+            ),
+            "taskAffected": False,
+        }
+
+    def _desktop(self, operation: str, params: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        """One desktop operation, or the absence, said the same way every time.
+
+        The service object is built lazily and cached on first use: it is a thin
+        view over the broker, and constructing one per call would be free but
+        would also make ``self.desktop_service`` a thing that might not exist,
+        which is one more state for the tests to cover.
+        """
+        if self.desktop is None:
+            return self._desktop_unavailable(operation)
+        service = getattr(self, "_desktop_service", None)
+        if service is None:
+            from .desktop.service import DesktopActionService
+
+            service = DesktopActionService(self.desktop.broker)
+            self._desktop_service = service
+        return {"available": True, **service.serve(operation, params or {})}
+
+    def desktop_actions_list(self) -> dict[str, Any]:
+        return self._desktop("desktop_actions_list")
+
+    def desktop_actions_status(self) -> dict[str, Any]:
+        return self._desktop("desktop_actions_status")
+
+    def desktop_action_explain(self, *, actionId: str) -> dict[str, Any]:
+        return self._desktop("desktop_action_explain", {"actionId": actionId})
+
+    def desktop_action_cancel(
+        self, *, requestId: str, cancellationToken: str = ""
+    ) -> dict[str, Any]:
+        return self._desktop(
+            "desktop_action_cancel",
+            {"requestId": requestId, "cancellationToken": cancellationToken},
+        )
+
+    def desktop_action_undo(
+        self, *, idempotencyKey: str, sessionId: str | None = None
+    ) -> dict[str, Any]:
+        return self._desktop(
+            "desktop_action_undo",
+            {"idempotencyKey": idempotencyKey, "sessionId": sessionId} if sessionId
+            else {"idempotencyKey": idempotencyKey},
+        )
+
+    def desktop_action_history(
+        self, *, taskId: str | None = None, limit: int = 25
+    ) -> dict[str, Any]:
+        params: dict[str, Any] = {"limit": limit}
+        if taskId:
+            params["taskId"] = taskId
+        return self._desktop("desktop_action_history", params)
 
     # -- agent providers (§21) ----------------------------------------------
 
@@ -1514,6 +1848,25 @@ class ServiceOptions:
     #: Injected configuration for tests and slices. ``None`` loads
     #: ``<root>/agents/providers.json`` or the local-only defaults.
     agent_configuration: "AgentConfiguration | None" = None
+    #: Register the desktop actions as tools. The same shape as the three
+    #: subsystems above, with one difference worth stating: turning this off
+    #: does not leave the operations answering "no desktop runtime" and the
+    #: tools present-but-refusing — it leaves the tools **absent from the
+    #: allowlist**, so a plan naming one fails exactly as a plan naming
+    #: ``shell.run`` does. A capability that can be removed entirely should be
+    #: removable entirely.
+    desktop_enabled: bool = True
+    #: §17: permit opening a URI with no graphical session. Off by default and
+    #: deliberately a service option rather than a runtime one — it is a
+    #: deployment's decision about a headless machine, not a task's.
+    desktop_headless_uri_policy: bool = False
+    #: Executors to offer *before* the shipped ones. The vertical slices use it
+    #: to register an executor that proposes the operations under test; nothing
+    #: in production sets it. An executor here is a canonical executor with no
+    #: extra authority — it returns plans, the runtime decides what may run, and
+    #: the tool broker performs — so the slice exercises the same refusals an
+    #: ordinary task does rather than a path around them.
+    extra_executors: tuple[Any, ...] = ()
 
 
 #: The order a companion service comes up in, and the whole of it.
@@ -1593,6 +1946,20 @@ RELEASE_ORDER: tuple[str, ...] = (
     # voice, so a task settling out of a cancelled generation still has its
     # caption path while it records the interruption.
     "agent-providers",
+    # The desktop broker before the task worker, and for a sharper version of
+    # the same reason. A task blocked inside a portal dialog holds the worker
+    # until the dialog is answered or the attempt's deadline runs out, and
+    # stopping the broker cancels the pending call so the worker returns. It
+    # also releases the two resources that outlive a process badly: a clipboard
+    # selection held by a child, and any portal request still open. Releasing
+    # those *after* the worker join would mean the join waited for the very
+    # thing the release would have unblocked.
+    #
+    # After agent providers rather than before: a task that is generating and
+    # about to propose a desktop action should have the generation cancelled
+    # first, so the proposal never arrives and the broker has nothing new to
+    # refuse on the way down.
+    "desktop",
     "voice-runtime",
     "task-worker",
     "durable-state",
@@ -1649,6 +2016,10 @@ class CompanionService:
         self.voice: "VoiceService | None" = None
         self.speech: "SpeechInputService | None" = None
         self.agents: "AgentProviderService | None" = None
+        #: The desktop action broker and its bridge, when this build has one.
+        #: Absent means no desktop tool is registered at all, so a plan naming
+        #: one fails at the allowlist rather than somewhere deeper.
+        self.desktop: Any = None
         self.gateway: CompanionGateway | None = None
         self.server: CompanionServer | None = None
         self.singleton: RuntimeSingleton | None = None
@@ -1826,7 +2197,14 @@ class CompanionService:
             clock=self.runtime.clock,
             voice=self.voice,
             agents=self.agents,
+            settings_root=self.root,
         )
+        # The desktop broker was built with the runtime, two steps ago, because
+        # registering its tools has to happen before the runtime holds the
+        # allowlist. The gateway gains only its read surface, and gains it here
+        # because this is where the gateway first exists.
+        if self.desktop is not None:
+            self.gateway.attach_desktop(self.desktop)
         self.gateway.endpoint_description = self.server.describe()
 
     def _step_start_voice_worker(self) -> None:
@@ -1897,13 +2275,21 @@ class CompanionService:
         The captions are unaffected and every ``voice_*`` operation reports the
         absence.
         """
+        from .settings import load_settings
         from .voice.service import VoiceService, VoiceServiceOptions
 
         assert self.runtime is not None
         try:
+            preferences = self.options.voice_preferences
+            if preferences is None:
+                # The settings surface writes into the same durable root that
+                # owns the companion store.  An explicit ServiceOptions value
+                # remains the test/deployment override; the normal login path
+                # must restore the user's last saved choice after a restart.
+                preferences = load_settings(self.root).voice_preferences()
             return VoiceService(VoiceServiceOptions(
                 runtime_directory=self.root / "voice",
-                preferences=self.options.voice_preferences or VoicePreferences(),
+                preferences=preferences,
                 clock=self.runtime.clock,
                 # Constructed here, started at step 6. The split is the whole
                 # point of having two steps: a constructed worker owns no
@@ -1923,13 +2309,17 @@ class CompanionService:
         speech input load-bearing for tasks. Typed input is unaffected and
         every ``speech_input_*`` operation reports the absence.
         """
+        from .settings import load_settings
         from .speech.service import SpeechInputService, SpeechInputServiceOptions
 
         assert self.runtime is not None
         try:
+            preferences = self.options.speech_preferences
+            if preferences is None:
+                preferences = load_settings(self.root).speech_preferences()
             return SpeechInputService(SpeechInputServiceOptions(
                 runtime_directory=self.root / "speech",
-                preferences=self.options.speech_preferences or SpeechInputPreferences(),
+                preferences=preferences,
                 clock=self.runtime.clock,
                 # A live proxy rather than the worker object: the voice
                 # service replaces its worker on restart, and a coordinator
@@ -1970,6 +2360,8 @@ class CompanionService:
         from .coordination import CoordinationPolicy
         from .executor import DeterministicLocalExecutor
         from .ids import RandomIds
+        from .local_files import LOCAL_FILE_TOOLS
+        from .local_system import LOCAL_SYSTEM_TOOLS
         from .reviewer import DeterministicLocalReviewer
         from .runtime import RuntimeOptions
         from .store import CompanionStore
@@ -1981,6 +2373,20 @@ class CompanionService:
             else assess_current_machine()
         )
         broker = ToolBroker()
+        # The folder-listing tool, merged into the allowlist before anything can
+        # plan it. `ToolBroker.tools` defaults to the shipped table and a plan
+        # naming a tool that is not in it is refused at the door, so a build
+        # that skipped this line would refuse `files.list_directory` exactly as
+        # it refuses an invented one — which is the correct failure, just not
+        # the intended one.
+        broker.tools = {**broker.tools, **LOCAL_FILE_TOOLS, **LOCAL_SYSTEM_TOOLS}
+        # One local executor, as before. The desktop intents are reached
+        # through it rather than beside it — see DeterministicLocalExecutor's
+        # `_intent` — because capability selection picks exactly one local
+        # executor and adding a second in front of this one changed which
+        # executor every existing task chose. The integration slice noticed:
+        # it asserts that the deterministic executor is selected and that its
+        # plan raises an approval, and both stopped being true.
         executors: tuple[Any, ...] = (DeterministicLocalExecutor(),)
         reviewers: tuple[Any, ...] = (DeterministicLocalReviewer(),)
         router_destinations: tuple[Any, ...] = ()
@@ -2028,6 +2434,22 @@ class CompanionService:
             router_destinations = router_providers(
                 agent_configuration, authenticated_ids=authenticated,
             )
+        # The desktop action broker, and the nine tools it registers. Built
+        # after the broker exists and before the runtime does, because
+        # registration mutates the allowlist and a runtime holding the old one
+        # would refuse every desktop action at the door.
+        #
+        # Swallowed like voice and speech are: a companion whose service would
+        # not start because a portal was unreachable would have made the desk
+        # load-bearing for the service itself. A build that gets no desktop
+        # support registers no desktop tools, so a plan naming one fails at the
+        # allowlist exactly as a plan naming `shell.run` does.
+        desktop = self._build_desktop(broker)
+        if self.options.extra_executors:
+            # First in the tuple is first in capability selection's preference
+            # order, so a slice executor that handles the task class it was
+            # written for takes the task and the shipped ones stay behind it.
+            executors = (*self.options.extra_executors, *executors)
         return CompanionRuntime(RuntimeOptions(
             store=CompanionStore(self.root / "store"),
             assessment=assessment,
@@ -2040,7 +2462,34 @@ class CompanionService:
             policy=CoordinationPolicy(),
             clock=SystemClock(),
             ids=RandomIds(),
+            desktop=desktop,
         ))
+
+    def _build_desktop(self, broker: Any) -> Any:
+        """Construct the desktop broker and register its tools, or carry on.
+
+        The ledger lives beside the store rather than inside it: it is written
+        by the desktop broker and read at start-up before any task exists, and
+        putting it under the event store would make a subsystem that must be
+        readable on its own depend on one that is opened later.
+        """
+        if not self.options.desktop_enabled:
+            return None
+        from .desktop_bridge import DesktopSupport, register_desktop_tools
+
+        try:
+            support = DesktopSupport.create(
+                ledger_path=self.root / "desktop-ledger.json",
+                accessibility=self.options.preferences,
+                headless_uri_policy=self.options.desktop_headless_uri_policy,
+            )
+            support.start()
+        except Exception:  # noqa: BLE001 - the desk is never a reason not to start
+            return None
+        register_desktop_tools(broker, support)
+        self.desktop = support
+        self._unwind.append(("desktop", support.stop))
+        return support
 
     # -- lifecycle ---------------------------------------------------------
 

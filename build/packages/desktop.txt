@@ -21,3 +21,100 @@ mousetweaks
 mesa-dri-drivers
 mesa-vulkan-drivers
 vulkan-tools
+
+# category: audio, so that Bunny can be heard and can hear
+#
+# Every line below was missing from the image and the omission was invisible,
+# because the *libraries* arrived transitively and the *programs* did not.
+# Measured on the beta image built from 339b629: pipewire, wireplumber,
+# pulseaudio-libs and alsa-lib were all installed, and `paplay`, `pactl`,
+# `pw-play`, `pw-cat`, `aplay`, `arecord`, `parecord` and `spd-say` were all
+# absent. The companion drives players by name — see the multi-call player
+# contract in companion/voice/audio.py — so a sound server with no player is a
+# companion that reports "no audio backend answered" on a machine with working
+# speakers. §1's "the result is spoken" could not happen on the shipped image.
+#
+# pipewire-pulseaudio is the PulseAudio-compatible server. Without it the
+# PulseAudio socket does not exist, and the primary backend has nothing to
+# connect to however installed `paplay` is.
+pipewire-pulseaudio
+# paplay, pactl, parec, parecord — the primary playback and capture backend.
+pulseaudio-utils
+# pw-play, pw-cat, pw-dump — the second rung of the backend ladder.
+pipewire-utils
+# aplay, arecord — the last rung, which needs no sound server at all.
+alsa-utils
+
+# category: local speech recognition
+#
+# Fedora ships the Vosk native runtime as libvosk.so in this package. Despite
+# the -devel suffix it is Fedora 44's only vosk-api binary subpackage; Bunny uses
+# the stable public C API through Python's standard-library ctypes and therefore
+# does not need the upstream Python wheel or its HTTP/download dependencies.
+vosk-api-devel
+
+# category: fonts the desktop actually draws with
+#
+# Measured on the first booted desktop, not anticipated. The greeting renders
+# "Good evening, Bunny 👋" and the suggestion chips carry 💡 📝 🧹 ▣; every one
+# of them came out as a tofu box, because this image has sans, CJK and nothing
+# else. The screenshot is in DESKTOP_SHELL_REPORT.md.
+#
+# The alternative was to remove the emoji from the interface, and that is the
+# wrong trade: an operating system whose desktop cannot draw an emoji cannot
+# draw one in a chat message, a file name, a calendar entry or an assistant
+# reply either. The font is ~10 MB and fixes all of those at once.
+google-noto-emoji-fonts
+google-noto-color-emoji-fonts
+
+# category: local text to speech
+#
+# Declared rather than inherited. All three were in the image already, pulled in
+# by `orca`: espeak-ng was required by nothing at all, and speech-dispatcher was
+# required only by the screen reader. Removing Orca would have silently removed
+# Bunny's voice, and an input that arrives as a side effect of an unrelated
+# package is exactly what §41 means by an unrecorded build input.
+espeak-ng
+speech-dispatcher
+speech-dispatcher-espeak-ng
+# spd-say, which is what the Speech Dispatcher voice provider actually executes.
+# It lives in -utils, which nothing pulled in, so that provider could never have
+# been selected on the shipped image.
+speech-dispatcher-utils
+
+# category: local neural text to speech
+#
+# Pocket TTS 2.1.0 is Bunny's default response voice. Its inference process is
+# isolated from GNOME Shell and remains resident between utterances. Kitten nano
+# INT8 is the explicit low-resource alternative and uses ONNX Runtime. These are
+# named inputs, not transitive accidents: install-root.py imports every module
+# under the image interpreter and refuses the image if any one is unusable.
+#
+# Fedora's python3-torch package is intentionally not used: its hard dependency
+# closure is the ROCm build (MIOpen, rocBLAS, MAGMA and related GPU libraries),
+# even on a CPU-only installation. Bunny instead expands the pinned official
+# PyTorch 2.9.1 CPU wheel at image build time. Its compressed input is
+# 184,378,318 bytes and expands to 682,347,734 bytes. The selected models,
+# Pocket source runtime and notices add about 252 MB more. This deliberate Alpha
+# image cost is recorded in voice provenance and the candidate artifact report;
+# no first-run or boot-time download replaces it.
+python3-onnxruntime
+python3-numpy
+python3-scipy
+python3-sentencepiece
+python3-safetensors
+python3-beartype
+python3-pydantic
+python3-einops
+python3-huggingface-hub
+python3-requests
+python3-pyyaml
+python3-typing-extensions
+# Declared dependencies of the pinned PyTorch CPU wheel. Naming them here keeps
+# the transaction in the signed Fedora snapshot while avoiding the ROCm build.
+python3-filelock
+python3-fsspec
+python3-jinja2
+python3-networkx
+python3-setuptools
+python3-sympy

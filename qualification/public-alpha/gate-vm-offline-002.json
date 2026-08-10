@@ -1,0 +1,2695 @@
+{
+  "allHeld": true,
+  "assertionCount": 18,
+  "assertions": [
+    {
+      "assertion": "boot.graphical-target-reached",
+      "evidence": "graphical.target ActiveEnterTimestampMonotonic=7889478",
+      "held": true,
+      "section": "boot"
+    },
+    {
+      "assertion": "boot.is-a-virtual-machine",
+      "evidence": "systemd-detect-virt='kvm'",
+      "held": true,
+      "section": "boot"
+    },
+    {
+      "assertion": "session.runtime-started",
+      "evidence": "bunny-companion.service ActiveState=active",
+      "held": true,
+      "section": "units"
+    },
+    {
+      "assertion": "session.runtime-not-restart-looping",
+      "evidence": "bunny-companion.service NRestarts=0",
+      "held": true,
+      "section": "units"
+    },
+    {
+      "assertion": "session.window-unit-installed",
+      "evidence": "bunny-companion-window.service LoadState=loaded",
+      "held": true,
+      "section": "units"
+    },
+    {
+      "assertion": "session.both-units-enabled",
+      "evidence": "is-enabled: 'enabled\\nenabled'",
+      "held": true,
+      "section": "units"
+    },
+    {
+      "assertion": "session.no-duplicate-process",
+      "evidence": "runtime processes=1, window processes=1",
+      "held": true,
+      "section": "session"
+    },
+    {
+      "assertion": "session.no-terminal-opened",
+      "evidence": "gnome-terminal-server processes=0",
+      "held": true,
+      "section": "session"
+    },
+    {
+      "assertion": "provenance.every-subsystem-from-the-image",
+      "evidence": "10/10 imported from /usr/lib/bunny-os/python",
+      "held": true,
+      "section": "provenance"
+    },
+    {
+      "assertion": "provenance.no-checkout-or-pythonpath",
+      "evidence": "0 rejection(s): ",
+      "held": true,
+      "section": "provenance"
+    },
+    {
+      "assertion": "capability.facts-and-probes-both-present",
+      "evidence": "hardware present=True, operational probes=7",
+      "held": true,
+      "section": "capability"
+    },
+    {
+      "assertion": "network.no-unexplained-outbound",
+      "evidence": "0 established non-loopback connection(s): []",
+      "held": true,
+      "section": "network"
+    },
+    {
+      "assertion": "network.offline-has-no-default-route",
+      "evidence": "default route=''",
+      "held": true,
+      "section": "network"
+    },
+    {
+      "assertion": "onboarding.offline-completable",
+      "evidence": "10 steps, 2 required, 0 of those ask for something",
+      "held": true,
+      "section": "surveys"
+    },
+    {
+      "assertion": "recovery.diagnostics-answered",
+      "evidence": "12 diagnostic section(s)",
+      "held": true,
+      "section": "surveys"
+    },
+    {
+      "assertion": "providers.state-is-stated",
+      "evidence": "provider line: 'No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answ'",
+      "held": true,
+      "section": "surveys"
+    },
+    {
+      "assertion": "character.policy-decided",
+      "evidence": "rung=text-only, summary='This machine draws no character; Bunny uses the text-only presentation.'",
+      "held": true,
+      "section": "surveys"
+    },
+    {
+      "assertion": "identity.one-build-identity",
+      "evidence": "channel='alpha', PRETTY_NAME='Bunny OS Alpha 0.1', buildId='00adf30ed10f.1786122963'",
+      "held": true,
+      "section": "identity"
+    }
+  ],
+  "commit": "b4379eb512f5646d17985a8bc4f8b3fb1852a921",
+  "extractionChannel": "guest-filesystem",
+  "extractionFailure": "",
+  "heldCount": 18,
+  "label": "offline-002",
+  "offline": true,
+  "probe": {
+    "probe": "bunny-alpha-probe",
+    "schemaVersion": 1,
+    "sections": {
+      "boot": {
+        "analyze": "",
+        "blame": "3.278s dev-cdrom.device\n3.278s dev-disk-by\\x2ddiskseq-3.device\n3.278s dev-disk-by\\x2dpath-pci\\x2d0000:00:1f.2\\x2data\\x2d3.device\n3.278s dev-disk-by\\x2did-ata\\x2dQEMU_DVD\\x2dROM_QM00005.device\n3.278s dev-disk-by\\x2dpath-pci\\x2d0000:00:1f.2\\x2data\\x2d3.0.device\n3.278s sys-devices-pci0000:00-0000:00:1f.2-ata3-host2-target2:0:0-2:0:0:0-block-sr0.device\n3.278s dev-sr0.device\n3.252s sys-devices-platform-serial8250-serial8250:0-serial8250:0.1-tty-ttyS1.device\n3.252s dev-ttyS1.device\n3.244s dev-ttyS0.device\n3.244s sys-devices-pnp0-00:03-00:03:0-00:03:0.0-tty-ttyS0.device\n3.240s sys-devices-platform-serial8250-serial8250:0-serial8250:0.3-tty-ttyS3.device\n3.240s dev-ttyS3.device\n3.233s dev-ttyS2.device\n3.233s sys-devices-platform-serial8250-serial8250:0-serial8250:0.2-tty-ttyS2.device",
+        "kernel": "7.1.5-200.fc44.x86_64",
+        "unitTimestamps": {
+          "basic.target:ActiveEnterTimestamp": "Sat 2026-08-08 04:19:39 UTC",
+          "basic.target:ActiveEnterTimestampMonotonic": "7324609",
+          "gdm.service:ActiveEnterTimestamp": "Sat 2026-08-08 04:19:39 UTC",
+          "gdm.service:ActiveEnterTimestampMonotonic": "7752057",
+          "graphical.target:ActiveEnterTimestamp": "Sat 2026-08-08 04:19:39 UTC",
+          "graphical.target:ActiveEnterTimestampMonotonic": "7889478",
+          "multi-user.target:ActiveEnterTimestamp": "Sat 2026-08-08 04:19:39 UTC",
+          "multi-user.target:ActiveEnterTimestampMonotonic": "7888081",
+          "sysinit.target:ActiveEnterTimestamp": "Sat 2026-08-08 04:19:39 UTC",
+          "sysinit.target:ActiveEnterTimestampMonotonic": "7229188",
+          "systemd-journald.service:ActiveEnterTimestamp": "Sat 2026-08-08 04:19:36 UTC",
+          "systemd-journald.service:ActiveEnterTimestampMonotonic": "5027825"
+        },
+        "virtualisation": "kvm"
+      },
+      "capability": {
+        "effect": "MEASURED this machine's hardware and, separately, what works on it",
+        "hardware": {
+          "architecture": "x86_64",
+          "audio": {
+            "inputs": 0,
+            "outputs": 0,
+            "soundCards": []
+          },
+          "battery": {
+            "onBattery": false,
+            "percent": null,
+            "present": false
+          },
+          "cpu": {
+            "count": 4,
+            "model": "Intel(R) Core(TM) Ultra 9 185H"
+          },
+          "display": {
+            "protocol": "none",
+            "server": ""
+          },
+          "driNodes": [
+            "by-path",
+            "card1",
+            "renderD128"
+          ],
+          "gpus": [
+            {
+              "deviceId": "0x1050",
+              "driver": "virtio-pci",
+              "node": "card1",
+              "vendor": "virtio",
+              "vendorId": "0x1af4"
+            }
+          ],
+          "hasDri": true,
+          "kernel": "7.1.5-200.fc44.x86_64",
+          "memory": {
+            "availableBytes": 5048217600,
+            "totalBytes": 6193754112
+          },
+          "network": {
+            "interfaces": [
+              {
+                "name": "lo",
+                "operstate": "unknown",
+                "wireless": "no"
+              }
+            ],
+            "up": false
+          },
+          "thermalZones": [],
+          "virtualizationDetail": "kvm",
+          "virtualized": true
+        },
+        "operational": [
+          {
+            "available": false,
+            "capability": "local-model",
+            "detail": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself.",
+            "wouldHaveBeenInferredFrom": "system memory and GPU presence"
+          },
+          {
+            "available": false,
+            "capability": "speech-model",
+            "detail": "the vosk library is not importable: No module named 'vosk'",
+            "wouldHaveBeenInferredFrom": "a microphone being present"
+          },
+          {
+            "available": true,
+            "capability": "audio-output",
+            "detail": "2 device(s) from pipewire",
+            "wouldHaveBeenInferredFrom": "a sound card existing in /proc/asound"
+          },
+          {
+            "available": false,
+            "capability": "portal",
+            "detail": "desktop.open_uri is not available in this session",
+            "wouldHaveBeenInferredFrom": "a Wayland or X11 session being present"
+          },
+          {
+            "available": false,
+            "capability": "file-manager",
+            "detail": "desktop.reveal_file is not available in this session",
+            "wouldHaveBeenInferredFrom": "a file manager package being installed"
+          },
+          {
+            "available": false,
+            "capability": "uri-handler",
+            "detail": "desktop.open_uri is not available in this session",
+            "wouldHaveBeenInferredFrom": "a browser being installed"
+          },
+          {
+            "available": true,
+            "capability": "three-d-renderer",
+            "detail": "libEGL is present; no WAYLAND_DISPLAY or DISPLAY is set; there is no graphical session",
+            "wouldHaveBeenInferredFrom": "/dev/dri existing"
+          }
+        ],
+        "rule": "Hardware facts and operational capability are measured separately. No entry under 'operational' is derived from an entry under 'hardware'.",
+        "schemaVersion": 1
+      },
+      "identity": {
+        "companionIdentity": {
+          "effect": "READ the build identity of this system",
+          "identity": {
+            "architecture": "x86_64",
+            "baseImageReference": "quay.io/fedora/fedora-bootc:44",
+            "buildId": "00adf30ed10f.1786122963",
+            "buildTimestamp": "2026-08-07T17:16:03Z",
+            "channel": "alpha",
+            "displayName": "Bunny OS Alpha 0.1",
+            "imageDigest": "",
+            "imageFilename": "bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64",
+            "imageVersion": "0.1.0-beta.00adf30ed10f",
+            "installed": true,
+            "product": "Bunny OS",
+            "profile": "beta",
+            "schemaVersion": 1,
+            "sourceCommit": "00adf30ed10fca3166ca6b031c2d308820be5800",
+            "version": "0.1.0"
+          },
+          "lines": [
+            "Bunny OS Alpha 0.1",
+            "Build 00adf30ed10f.1786122963",
+            "Commit 00adf30ed10f",
+            "Channel alpha",
+            "Architecture x86_64",
+            "Built 2026-08-07T17:16:03Z"
+          ]
+        },
+        "osRelease": {
+          "ANSI_COLOR": "0;38;2;60;110;180",
+          "BUG_REPORT_URL": "file:///usr/share/doc/bunny-os/REPORTING_BUGS.md",
+          "BUNNY_OS_BUILD_ID": "00adf30ed10f.1786122963",
+          "BUNNY_OS_CHANNEL": "alpha",
+          "BUNNY_OS_COMMIT": "00adf30ed10fca3166ca6b031c2d308820be5800",
+          "BUNNY_OS_PROFILE": "beta",
+          "BUNNY_OS_VERSION": "0.1.0",
+          "CPE_NAME": "cpe:/o:fedoraproject:fedora:44",
+          "DEFAULT_HOSTNAME": "fedora",
+          "DOCUMENTATION_URL": "file:///usr/share/doc/bunny-os/README.md",
+          "HOME_URL": "https://bunny-os.org/",
+          "ID": "fedora",
+          "LOGO": "fedora-logo-icon",
+          "NAME": "Bunny OS",
+          "PRETTY_NAME": "Bunny OS Alpha 0.1",
+          "REDHAT_BUGZILLA_PRODUCT": "Fedora",
+          "REDHAT_BUGZILLA_PRODUCT_VERSION": "44",
+          "REDHAT_SUPPORT_PRODUCT": "Fedora",
+          "REDHAT_SUPPORT_PRODUCT_VERSION": "44",
+          "RELEASE_TYPE": "stable",
+          "SUPPORT_END": "2027-05-19",
+          "SUPPORT_URL": "file:///usr/share/doc/bunny-os/TROUBLESHOOTING.md",
+          "VARIANT": "Bunny OS Alpha 0.1",
+          "VARIANT_ID": "alpha",
+          "VERSION": "44 (Forty Four)",
+          "VERSION_CODENAME": "",
+          "VERSION_ID": "44"
+        },
+        "release": {
+          "architecture": "x86_64",
+          "baseDistribution": "Fedora",
+          "baseImageReference": "quay.io/fedora/fedora-bootc:44",
+          "baseVersion": "44",
+          "brokerVersion": "0.1.0",
+          "buildId": "00adf30ed10f.1786122963",
+          "buildTimestamp": "2026-08-07T17:16:03Z",
+          "buildTool": "OCI Containerfile + unified image-builder",
+          "bunnyArtifactStatus": "placeholder",
+          "bunnyProtocolVersion": 3,
+          "bunnyVersion": "0.2.0",
+          "contractVersion": "1.0.0",
+          "imageVersion": "0.1.0-beta.00adf30ed10f",
+          "osVersion": "0.1.0",
+          "profile": "beta",
+          "recoveryVersion": "0.1.0",
+          "releaseChannel": "alpha",
+          "schemaVersion": 1,
+          "sourceCommit": "00adf30ed10fca3166ca6b031c2d308820be5800",
+          "sourceDateEpoch": 1786122963
+        }
+      },
+      "network": {
+        "defaultRoute": "",
+        "established": "Recv-Q Send-Q Local Address:Port Peer Address:PortProcess\n",
+        "listening": "Netid State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                                   \nudp   UNCONN 0      0          127.0.0.1:323       0.0.0.0:*    users:((\"chronyd\",pid=977,fd=4))         \nudp   UNCONN 0      0            0.0.0.0:5353      0.0.0.0:*    users:((\"avahi-daemon\",pid=839,fd=12))   \nudp   UNCONN 0      0            0.0.0.0:5355      0.0.0.0:*    users:((\"systemd-resolve\",pid=690,fd=12))\nudp   UNCONN 0      0         127.0.0.54:53        0.0.0.0:*    users:((\"systemd-resolve\",pid=690,fd=20))\nudp   UNCONN 0      0      127.0.0.53%lo:53        0.0.0.0:*    users:((\"systemd-resolve\",pid=690,fd=18))\nudp   UNCONN 0      0              [::1]:323          [::]:*    users:((\"chronyd\",pid=977,fd=5))         \nudp   UNCONN 0      0               [::]:5353         [::]:*    users:((\"avahi-daemon\",pid=839,fd=13))   \nudp   UNCONN 0      0               [::]:5355         [::]:*    users:((\"systemd-resolve\",pid=690,fd=14))\ntcp   LISTEN 0      4096         0.0.0.0:5355      0.0.0.0:*    users:((\"systemd-resolve\",pid=690,fd=13))\ntcp   LISTEN 0      4096      127.0.0.54:53        0.0.0.0:*    users:((\"systemd-resolve\",pid=690,fd=21))\ntcp   LISTEN 0      4096       127.0.0.1:631       0.0.0.0:*    users:((\"cupsd\",pid=1539,fd=8))          \ntcp   LISTEN 0      128          0.0.0.0:22        0.0.0.0:*    users:((\"sshd\",pid=985,fd=6))            \ntcp   LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*    users:((\"systemd-resolve\",pid=690,fd=19))\ntcp   LISTEN 0      4096            [::]:5355         [::]:*    users:((\"systemd-resolve\",pid=690,fd=15))\ntcp   LISTEN 0      128             [::]:22           [::]:*    users:((\"sshd\",pid=985,fd=7))            \ntcp   LISTEN 0      4096           [::1]:631          [::]:*    users:((\"cupsd\",pid=1539,fd=7))          \n",
+        "outboundConnections": [],
+        "outboundCount": 0,
+        "resolvConf": "# This is /run/systemd/resolve/stub-resolv.conf managed by man:systemd-resolved(8).\n# Do not edit.\n#\n# This file might be symlinked as /etc/resolv.conf. If you're looking at\n# /etc/resolv.conf and seeing this text, you have followed the symlink.\n#\n# This is a dynamic resolv.conf file for connecting local clients to the\n# internal DNS stub resolver of systemd-resolved. This file lists all\n# configured search domains.\n#\n# Run \"resolvectl status\" to see details about the uplink DNS servers\n# currently in use.\n#\n# Third party programs should typically not access this file directly, but only\n# through the symlink at /etc/resolv.conf. To manage man:resolv.conf(5) in a\n# different way, replace this symlink by a static file or a different symlink.\n#\n# See man:systemd-resolved.service(8) for details about the supported modes of\n# operation for /etc/resolv.conf.\n\nnameserver 127.0.0.53\noptions edns0 trust-ad\nsearch .\n"
+      },
+      "provenance": {
+        "imageDigest": "{\"apiVersion\":\"org.containers.bootc/v1\",\"kind\":\"BootcHost\",\"metadata\":{\"name\":\"host\"},\"spec\":{\"bootOrder\":\"default\",\"image\":{\"image\":\"localhost/bunny-os-beta:00adf30ed10f\",\"transport\":\"registry\"}},\"status\":{\"booted\":{\"cachedUpdate\":null,\"composefs\":null,\"downloadOnly\":false,\"image\":{\"architecture\":\"amd64\",\"image\":{\"image\":\"localhost/bunny-os-beta:00adf30ed10f\",\"transport\":\"registry\"},\"imageDigest\":\"sha256:03c5b2f1f9066f5d47073f7bae8a76aa7fa88a7cf15877a6703ce2b6e62e406a\",\"timestamp\":\"2026-08-07T17:16:03Z\",\"version\":\"0.1.0\"},\"incompatible\":false,\"ostree\":{\"checksum\":\"6dc0e22fdc7aa56f372cd9e6947a9b34a1c8cb005e92e98a24d7158a103d3431\",\"deploySerial\":0,\"stateroot\":\"default\"},\"pinned\":false,\"softRebootCapable\":true,\"store\":\"ostreeContainer\"},\"rollback\":null,\"rollbackQueued\":false,\"staged\":null,\"type\":\"bootcHost\",\"usrOverlay\":null}}",
+        "modules": {
+          "2D renderer": {
+            "file": "/usr/lib/bunny-os/python/companion/character/animated_renderer.py",
+            "installed": true,
+            "module": "companion.character.animated_renderer",
+            "sha256": "c929097c110bac3e7533c4064ea5c6cb22f22a67049df977783fc880a802ae82"
+          },
+          "3D renderer": {
+            "file": "/usr/lib/bunny-os/python/companion/character/three_d/renderer.py",
+            "installed": true,
+            "module": "companion.character.three_d.renderer",
+            "sha256": "807c62d8eeae0505677343e11214961835cda0577d6a69e3b1f88a75335b839e"
+          },
+          "ToolBroker": {
+            "file": "/usr/lib/bunny-os/python/companion/tools.py",
+            "installed": true,
+            "module": "companion.tools",
+            "sha256": "8d1cd4c1303082b59d472e23f30f4099f5e90d07e2a1526d24ac07805b622651"
+          },
+          "agents": {
+            "file": "/usr/lib/bunny-os/python/companion/agents/service.py",
+            "installed": true,
+            "module": "companion.agents.service",
+            "sha256": "415b631ef3bedd53a7ad810b8ce355dfc6f9b356c9191f6104b967f649b1768d"
+          },
+          "capability runtime": {
+            "file": "/usr/lib/bunny-os/python/capability/runtime.py",
+            "installed": true,
+            "module": "capability.runtime",
+            "sha256": "1039fc0eda78266a4773563492662d4a0ba90460c6aff099b5eae7e86a4ed812"
+          },
+          "companion runtime": {
+            "file": "/usr/lib/bunny-os/python/companion/runtime.py",
+            "installed": true,
+            "module": "companion.runtime",
+            "sha256": "c9a6af92bd6a872201ca8f132eb4af3c9f7b921d7dfbcfef62be69c91f18bb04"
+          },
+          "desktop actions": {
+            "file": "/usr/lib/bunny-os/python/companion/desktop/broker.py",
+            "installed": true,
+            "module": "companion.desktop.broker",
+            "sha256": "85a7d6a394363932687ba38b1f93bacdc59250ab9cb52229484735d91a675113"
+          },
+          "presentation": {
+            "file": "/usr/lib/bunny-os/python/companion/presentation.py",
+            "installed": true,
+            "module": "companion.presentation",
+            "sha256": "099ce28d892be1a2b4359d2bd5a1bb8c81a80be3e86ddcfab5fda99fc5c19637"
+          },
+          "speech input": {
+            "file": "/usr/lib/bunny-os/python/companion/speech/service.py",
+            "installed": true,
+            "module": "companion.speech.service",
+            "sha256": "5c91a860c698a438701d490111dfe0ea678659f3076730cf4dacd351d40d5f18"
+          },
+          "voice": {
+            "file": "/usr/lib/bunny-os/python/companion/voice/service.py",
+            "installed": true,
+            "module": "companion.voice.service",
+            "sha256": "f1b898fa6e7b2b724d10172a0f042dc4f13a7934dee9648845ab73fdeb993153"
+          }
+        },
+        "mounts": "",
+        "pythonpath": "",
+        "rejections": [],
+        "sysPath": [
+          "/usr/lib/bunny-os/python",
+          "/tmp",
+          "/usr/lib64/python314.zip",
+          "/usr/lib64/python3.14",
+          "/usr/lib64/python3.14/lib-dynload",
+          "/usr/lib64/python3.14/site-packages",
+          "/usr/lib/python3.14/site-packages"
+        ],
+        "userSite": "/var/home/bunny/.local/lib/python3.14/site-packages",
+        "userSiteExists": false
+      },
+      "session": {
+        "journal": "Started bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion-window.service - Bunny Companion window.\n/usr/lib/bunny-os/python/companion/gtk_shell.py:925: PyGIWarning: Gdk was imported without specifying a version first. Use gi.require_version('Gdk', '4.0') before import to ensure that the right version gets loaded.\n  from gi.repository import Gdk, Gio, GLib, Gtk\nlibEGL warning: failed to get driver name for fd -1\nlibEGL warning: MESA-LOADER: failed to retrieve device information\nlibEGL warning: failed to get driver name for fd -1\nMESA: error: ZINK: failed to choose pdev\nlibEGL warning: egl: failed to create dri2 screen\nFailed to create pipeline cache directory\n",
+        "loginctl": "1 1000 bunny seat0 1044 user    tty2 no -\n2 1000 bunny -     1053 manager -    no -\n",
+        "mainPids": "Id=bunny-companion.service\nMainPID=1151\nNRestarts=0\n\nId=bunny-companion-window.service\nMainPID=1515\nNRestarts=0\n",
+        "processCounts": {
+          "0": "",
+          "runtime": "1",
+          "terminals": "0",
+          "window": "1"
+        },
+        "seat": "ActiveSession=1\n",
+        "socket": "total 0\ndrwx------.  2 bunny bunny  80 Aug  8 04:19 .\ndrwx------. 13 bunny bunny 460 Aug  8 04:19 ..\nsrw-------.  1 bunny bunny   0 Aug  8 04:19 runtime.sock\n-rw-------.  1 bunny bunny   0 Aug  8 04:19 runtime.sock.lock\n",
+        "timeline": "{\n  \"characterPolicy\": {\n    \"applied\": true,\n    \"eligibleRung\": \"full-3d\",\n    \"error\": \"\",\n    \"packageId\": \"bunny-default-3d\",\n    \"preservedUserChoice\": false,\n    \"reasons\": [\n      \"the machine and policy permit full-3d\",\n      \"bunny-default-3d validated and declares full-3d\"\n    ],\n    \"rung\": \"full-3d\",\n    \"schemaVersion\": 1,\n    \"selectedPackageId\": \"bunny-default-3d\",\n    \"summary\": \"Bunny is using the bundled bunny-default-3d character (full-3d).\",\n    \"wouldApply\": true\n  },\n  \"characterReadyMs\": 432.313,\n  \"companionReadyMs\": 0.309,\n  \"endpoint\": \"/run/user/1000/bunny-companion/runtime.sock\",\n  \"runtimeReachable\": true,\n  \"runtimeWaitSeconds\": 0.0,\n  \"safeMode\": {\n    \"automatic\": false,\n    \"consecutiveFailures\": 0,\n    \"enabled\": false,\n    \"origin\": \"\",\n    \"reason\": \"\",\n    \"restrictions\": [\n      {\n        \"effect\": \"3D rendering is off; the character is drawn in 2D or as text\",\n        \"id\": \"three-d\",\n        \"variable\": \"BUNNY_COMPANION_DISABLE_3D\"\n      },\n      {\n        \"effect\": \"the microphone is not opened, and push-to-talk is unavailable\",\n        \"id\": \"microphone\",\n        \"variable\": \"BUNNY_COMPANION_DISABLE_MICROPHONE\"\n      },\n      {\n        \"effect\": \"no remote provider is contacted, whatever is configured\",\n        \"id\": \"remote-ai\",\n        \"variable\": \"BUNNY_COMPANION_DISABLE_REMOTE\"\n      },\n      {\n        \"effect\": \"Bunny cannot act on the desktop\",\n        \"id\": \"desktop-actions\",\n        \"variable\": \"BUNNY_COMPANION_DISABLE_DESKTOP_ACTIONS\"\n      },\n      {\n        \"effect\": \"animation is reduced to the minimum\",\n        \"id\": \"animation\",\n        \"variable\": \"BUNNY_COMPANION_MINIMAL_ANIMATION\"\n      },\n      {\n        \"effect\": \"spoken output is off; captions remain\",\n        \"id\": \"voice\",\n        \"variable\": \"BUNNY_COMPANION_DISABLE_VOICE\"\n      }\n    ],\n    \"retained\": [\n      \"typed input and typed replies\",\n      \"the task history that already exists\",\n      \"settings, including character selection\",\n      \"diagnostics and diagnostics export\",\n      \"a local AI provider, when one is explicitly selected\"\n    ],\n    \"schemaVersion\": 1,\n    \"sticky\": false\n  },\n  \"schemaVersion\": 1,\n  \"windowStartMs\": 521.324\n}\n"
+      },
+      "story": {
+        "steps": [
+          {
+            "result": "0\n0\n",
+            "returncode": 0,
+            "step": "no terminal is running"
+          },
+          {
+            "result": {
+              "accessibility": {
+                "captionsAlways": true,
+                "highContrast": false,
+                "noAnimation": false,
+                "preferTextOnly": false,
+                "reducedMotion": false,
+                "textScale": 1.0
+              },
+              "agentProvidersAvailable": true,
+              "audioOutputAvailable": true,
+              "awaitingApproval": [],
+              "displayAvailable": false,
+              "effect": "read-only",
+              "endpoint": {
+                "endpoint": "/run/user/1000/bunny-companion/runtime.sock",
+                "maximumRequestBytes": 65536,
+                "maximumResponseBytes": 4194304,
+                "peerUserValidated": true,
+                "protocolSchemaVersion": 1,
+                "tokenRequired": false,
+                "transport": "unix-socket"
+              },
+              "executors": [
+                "agents.local-provider",
+                "local.deterministic"
+              ],
+              "microphoneActive": false,
+              "microphonePolicy": "explicit activation only; never at service start",
+              "ok": true,
+              "paidProviderConfigured": false,
+              "protocolSchemaVersion": 1,
+              "queuedTasks": [],
+              "recentWorkerFaults": [],
+              "remoteProviders": [],
+              "reviewers": [
+                "local.test-reviewer"
+              ],
+              "runningTasks": [],
+              "servedBy": "service",
+              "sessions": 0,
+              "speechInputAvailable": true,
+              "storeDetail": "",
+              "storeReadable": true,
+              "storeRoot": "/var/home/bunny/.local/state/bunny-companion/store"
+            },
+            "returncode": 0,
+            "step": "companion health"
+          },
+          {
+            "result": {
+              "boundaries": {
+                "controlsDesktop": false,
+                "createsTasks": false,
+                "executesTools": false,
+                "hiddenRemoteFallback": false,
+                "mutatesConfiguration": false,
+                "readsArbitraryFiles": false,
+                "resolvesApprovals": false,
+                "storesCredentials": false
+              },
+              "effect": "REPORTED the configured model providers, their standing ladders and health; probed loopback endpoints only; started no generation",
+              "health": {},
+              "providers": [
+                {
+                  "adapterId": "ollama",
+                  "availabilityDetail": "could not reach 127.0.0.1:11434: ConnectionRefusedError: [Errno 111] Connection refused",
+                  "availableAuthentication": [
+                    "none"
+                  ],
+                  "contextLimitTokens": 4096,
+                  "costClass": "free",
+                  "endpoint": {
+                    "fingerprint": "245c3c18f9300fac01dc3fdc82384123",
+                    "kind": "loopback-http",
+                    "locator": "127.0.0.1:11434"
+                  },
+                  "fullyDeclared": false,
+                  "inputModalities": [
+                    "text"
+                  ],
+                  "licenseReference": "runtime MIT; model licenses per model",
+                  "local": true,
+                  "maximumOutputTokens": 1024,
+                  "maximumPrivacyClass": "secret",
+                  "modelId": "",
+                  "modelRevision": "",
+                  "outputModalities": [
+                    "text"
+                  ],
+                  "providerId": "local.ollama",
+                  "providerType": "text-generation",
+                  "remoteTransmission": false,
+                  "resourceEstimate": {
+                    "expectedFirstTokenSeconds": 0.0,
+                    "memoryBytes": 0,
+                    "startupSeconds": 0.0
+                  },
+                  "schemaVersion": 1,
+                  "standing": {
+                    "authenticated": true,
+                    "available": false,
+                    "configured": true,
+                    "detail": "could not reach 127.0.0.1:11434: ConnectionRefusedError: [Errno 111] Connection refused",
+                    "healthy": false,
+                    "rung": "authenticated"
+                  },
+                  "supportedLanguages": [
+                    "en"
+                  ],
+                  "supportedTaskClasses": [
+                    "question",
+                    "summarise",
+                    "transform",
+                    "compute"
+                  ],
+                  "supportsAudioInput": false,
+                  "supportsCancellation": true,
+                  "supportsImageInput": false,
+                  "supportsStreaming": true,
+                  "supportsStructuredOutput": true,
+                  "supportsToolProposals": true
+                },
+                {
+                  "adapterId": "llamacpp",
+                  "availabilityDetail": "could not reach 127.0.0.1:8080: ConnectionRefusedError: [Errno 111] Connection refused",
+                  "availableAuthentication": [
+                    "none"
+                  ],
+                  "contextLimitTokens": 4096,
+                  "costClass": "free",
+                  "endpoint": {
+                    "fingerprint": "f33b31e6057f56ad2ae52c0024441300",
+                    "kind": "loopback-http",
+                    "locator": "127.0.0.1:8080"
+                  },
+                  "fullyDeclared": false,
+                  "inputModalities": [
+                    "text"
+                  ],
+                  "licenseReference": "runtime MIT; model licenses per model",
+                  "local": true,
+                  "maximumOutputTokens": 1024,
+                  "maximumPrivacyClass": "secret",
+                  "modelId": "",
+                  "modelRevision": "",
+                  "outputModalities": [
+                    "text"
+                  ],
+                  "providerId": "local.llamacpp",
+                  "providerType": "text-generation",
+                  "remoteTransmission": false,
+                  "resourceEstimate": {
+                    "expectedFirstTokenSeconds": 0.0,
+                    "memoryBytes": 0,
+                    "startupSeconds": 0.0
+                  },
+                  "schemaVersion": 1,
+                  "standing": {
+                    "authenticated": true,
+                    "available": false,
+                    "configured": true,
+                    "detail": "could not reach 127.0.0.1:8080: ConnectionRefusedError: [Errno 111] Connection refused",
+                    "healthy": false,
+                    "rung": "authenticated"
+                  },
+                  "supportedLanguages": [
+                    "en"
+                  ],
+                  "supportedTaskClasses": [
+                    "question",
+                    "summarise",
+                    "transform",
+                    "compute"
+                  ],
+                  "supportsAudioInput": false,
+                  "supportsCancellation": true,
+                  "supportsImageInput": false,
+                  "supportsStreaming": true,
+                  "supportsStructuredOutput": true,
+                  "supportsToolProposals": true
+                },
+                {
+                  "adapterId": "llamacli",
+                  "availabilityDetail": "llama-cli is not present in ('/usr/bin', '/bin')",
+                  "availableAuthentication": [
+                    "none"
+                  ],
+                  "contextLimitTokens": 4096,
+                  "costClass": "free",
+                  "endpoint": {
+                    "fingerprint": "f61cb820c49da4d199c35268e5364973",
+                    "kind": "subprocess",
+                    "locator": "llama-cli"
+                  },
+                  "fullyDeclared": false,
+                  "inputModalities": [
+                    "text"
+                  ],
+                  "licenseReference": "runtime MIT; model licenses per model",
+                  "local": true,
+                  "maximumOutputTokens": 1024,
+                  "maximumPrivacyClass": "secret",
+                  "modelId": "",
+                  "modelRevision": "",
+                  "outputModalities": [
+                    "text"
+                  ],
+                  "providerId": "local.llamacli",
+                  "providerType": "text-generation",
+                  "remoteTransmission": false,
+                  "resourceEstimate": {
+                    "expectedFirstTokenSeconds": 0.0,
+                    "memoryBytes": 0,
+                    "startupSeconds": 0.0
+                  },
+                  "schemaVersion": 1,
+                  "standing": {
+                    "authenticated": true,
+                    "available": false,
+                    "configured": true,
+                    "detail": "llama-cli is not present in ('/usr/bin', '/bin')",
+                    "healthy": false,
+                    "rung": "authenticated"
+                  },
+                  "supportedLanguages": [
+                    "en"
+                  ],
+                  "supportedTaskClasses": [
+                    "question",
+                    "summarise",
+                    "transform",
+                    "compute"
+                  ],
+                  "supportsAudioInput": false,
+                  "supportsCancellation": true,
+                  "supportsImageInput": false,
+                  "supportsStreaming": true,
+                  "supportsStructuredOutput": false,
+                  "supportsToolProposals": false
+                }
+              ],
+              "recovery": {
+                "interrupted": [],
+                "interruptedCount": 0,
+                "paidInterrupted": 0
+              },
+              "remoteActive": false,
+              "remoteConfigured": false,
+              "usage": {
+                "sessionsTracked": 0,
+                "tasksTracked": 0
+              },
+              "worker": {
+                "activeProviderId": "",
+                "activeRequestId": "",
+                "generationsServed": 0,
+                "queueDepth": 0,
+                "running": false,
+                "threadName": "companion-agents",
+                "trackedJobs": 0
+              },
+              "workerEvents": []
+            },
+            "returncode": 0,
+            "step": "providers"
+          },
+          {
+            "result": {
+              "effect": "READ the recovery report; nothing was changed and nothing was uploaded",
+              "lines": [
+                "One thing is not working: Task store.",
+                "",
+                "[ok] bunny-companion.service: active/running",
+                "[ok] bunny-companion-window.service: active/running",
+                "[ok] Runtime socket: /run/user/1000/bunny-companion contains runtime.sock, runtime.sock.lock",
+                "[!!] Task store: /var/home/bunny/.local/state/bunny-os/companion does not exist",
+                "[ok] Safe mode: Bunny starts normally.",
+                "[ok] 3D renderer: available: libEGL is present; no WAYLAND_DISPLAY or DISPLAY is set; there is no graphical session",
+                "[ok] Selected character: org.bunny-os.default-bunny 1.0.0",
+                "[ok] AI providers: No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself.",
+                "[ok] Audio output: Bunny can speak through PipeWire. Spoken output can be turned off at any time; captions always appear.",
+                "[ok] Microphone: 1 device(s): 1 capture device(s) from pulse",
+                "[ok] Speech recognition: Install the vosk Python package to enable speech recognition, then choose Check again. Typing works without it.",
+                "[ok] Desktop actions: notification-only: 0 action(s) available"
+              ],
+              "report": {
+                "actions": [
+                  {
+                    "actionId": "restart",
+                    "changesState": true,
+                    "effect": "Stops and starts the companion runtime. Tasks that were running are recovered; nothing is deleted.",
+                    "label": "Restart Bunny"
+                  },
+                  {
+                    "actionId": "disable-3d",
+                    "changesState": true,
+                    "effect": "The next start uses the 2D character. Your selected character is not changed.",
+                    "label": "Disable 3D for the next start"
+                  },
+                  {
+                    "actionId": "reset-presentation",
+                    "changesState": true,
+                    "effect": "Clears presentation preferences so the machine's own capability decides again. Your character choice, tasks and settings are untouched.",
+                    "label": "Reset how Bunny appears"
+                  },
+                  {
+                    "actionId": "safe-mode",
+                    "changesState": true,
+                    "effect": "The next start turns off 3D, the microphone, remote providers and desktop actions. Typed conversation and diagnostics still work.",
+                    "label": "Start in Safe Mode"
+                  },
+                  {
+                    "actionId": "text-only",
+                    "changesState": true,
+                    "effect": "Starts a companion window with no character and no audio. Use this when the graphical character will not draw.",
+                    "label": "Start text-only"
+                  },
+                  {
+                    "actionId": "export",
+                    "changesState": false,
+                    "effect": "Writes a file you can read before sending it to anyone. Nothing is uploaded.",
+                    "label": "Export diagnostics"
+                  }
+                ],
+                "healthy": false,
+                "identity": {
+                  "architecture": "x86_64",
+                  "baseImageReference": "quay.io/fedora/fedora-bootc:44",
+                  "buildId": "00adf30ed10f.1786122963",
+                  "buildTimestamp": "2026-08-07T17:16:03Z",
+                  "channel": "alpha",
+                  "displayName": "Bunny OS Alpha 0.1",
+                  "imageDigest": "",
+                  "imageFilename": "bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64",
+                  "imageVersion": "0.1.0-beta.00adf30ed10f",
+                  "installed": true,
+                  "product": "Bunny OS",
+                  "profile": "beta",
+                  "schemaVersion": 1,
+                  "sourceCommit": "00adf30ed10fca3166ca6b031c2d308820be5800",
+                  "version": "0.1.0"
+                },
+                "recentFailures": [],
+                "schemaVersion": 1,
+                "secretsIncluded": false,
+                "sections": [
+                  {
+                    "detail": "active/running",
+                    "facts": {
+                      "activeState": "active",
+                      "detail": "",
+                      "loadState": "loaded",
+                      "queried": true,
+                      "restarts": 0,
+                      "result": "success",
+                      "subState": "running",
+                      "unit": "bunny-companion.service"
+                    },
+                    "ok": true,
+                    "sectionId": "unit:bunny-companion.service",
+                    "title": "bunny-companion.service"
+                  },
+                  {
+                    "detail": "active/running",
+                    "facts": {
+                      "activeState": "active",
+                      "detail": "",
+                      "loadState": "loaded",
+                      "queried": true,
+                      "restarts": 0,
+                      "result": "success",
+                      "subState": "running",
+                      "unit": "bunny-companion-window.service"
+                    },
+                    "ok": true,
+                    "sectionId": "unit:bunny-companion-window.service",
+                    "title": "bunny-companion-window.service"
+                  },
+                  {
+                    "detail": "/run/user/1000/bunny-companion contains runtime.sock, runtime.sock.lock",
+                    "facts": {
+                      "entries": [
+                        "runtime.sock",
+                        "runtime.sock.lock"
+                      ],
+                      "path": "/run/user/1000/bunny-companion"
+                    },
+                    "ok": true,
+                    "sectionId": "socket",
+                    "title": "Runtime socket"
+                  },
+                  {
+                    "detail": "/var/home/bunny/.local/state/bunny-os/companion does not exist",
+                    "facts": {
+                      "path": "/var/home/bunny/.local/state/bunny-os/companion"
+                    },
+                    "ok": false,
+                    "sectionId": "store",
+                    "title": "Task store"
+                  },
+                  {
+                    "detail": "Bunny starts normally.",
+                    "facts": {
+                      "automatic": false,
+                      "consecutiveFailures": 0,
+                      "enabled": false,
+                      "origin": "",
+                      "reason": "",
+                      "restrictions": [
+                        {
+                          "effect": "3D rendering is off; the character is drawn in 2D or as text",
+                          "id": "three-d",
+                          "variable": "BUNNY_COMPANION_DISABLE_3D"
+                        },
+                        {
+                          "effect": "the microphone is not opened, and push-to-talk is unavailable",
+                          "id": "microphone",
+                          "variable": "BUNNY_COMPANION_DISABLE_MICROPHONE"
+                        },
+                        {
+                          "effect": "no remote provider is contacted, whatever is configured",
+                          "id": "remote-ai",
+                          "variable": "BUNNY_COMPANION_DISABLE_REMOTE"
+                        },
+                        {
+                          "effect": "Bunny cannot act on the desktop",
+                          "id": "desktop-actions",
+                          "variable": "BUNNY_COMPANION_DISABLE_DESKTOP_ACTIONS"
+                        },
+                        {
+                          "effect": "animation is reduced to the minimum",
+                          "id": "animation",
+                          "variable": "BUNNY_COMPANION_MINIMAL_ANIMATION"
+                        },
+                        {
+                          "effect": "spoken output is off; captions remain",
+                          "id": "voice",
+                          "variable": "BUNNY_COMPANION_DISABLE_VOICE"
+                        }
+                      ],
+                      "retained": [
+                        "typed input and typed replies",
+                        "the task history that already exists",
+                        "settings, including character selection",
+                        "diagnostics and diagnostics export",
+                        "a local AI provider, when one is explicitly selected"
+                      ],
+                      "schemaVersion": 1,
+                      "sticky": false
+                    },
+                    "ok": true,
+                    "sectionId": "safe-mode",
+                    "title": "Safe mode"
+                  },
+                  {
+                    "detail": "available: libEGL is present; no WAYLAND_DISPLAY or DISPLAY is set; there is no graphical session",
+                    "facts": {
+                      "graphicalSession": false,
+                      "libraryInitialised": false,
+                      "offscreenAvailable": true,
+                      "reasons": [
+                        "libEGL is present",
+                        "no WAYLAND_DISPLAY or DISPLAY is set; there is no graphical session"
+                      ],
+                      "threeDAvailable": true,
+                      "waylandDisplay": false,
+                      "windowedThreeDAvailable": false,
+                      "x11Display": false
+                    },
+                    "ok": true,
+                    "sectionId": "renderer",
+                    "title": "3D renderer"
+                  },
+                  {
+                    "detail": "org.bunny-os.default-bunny 1.0.0",
+                    "facts": {
+                      "chosenBy": "user",
+                      "packageDigest": "5494218e66c9d5cf022105213727614d9793eb2ec403e593e56ae76628a23986",
+                      "packageId": "org.bunny-os.default-bunny",
+                      "packageVersion": "1.0.0",
+                      "trustState": "built-in"
+                    },
+                    "ok": true,
+                    "sectionId": "character",
+                    "title": "Selected character"
+                  },
+                  {
+                    "detail": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself.",
+                    "facts": {
+                      "anyEligible": false,
+                      "anyModelPresent": false,
+                      "availableMemoryBytes": 5024452608,
+                      "error": "",
+                      "providers": [
+                        {
+                          "adapterId": "ollama",
+                          "availableMemoryBytes": 5024452608,
+                          "eligible": false,
+                          "estimatedResidentBytes": 0,
+                          "installed": false,
+                          "installedEvidence": "none of ollama is on PATH and no packaged install marker was found",
+                          "kind": "server",
+                          "layer": "absent",
+                          "modelCount": 0,
+                          "models": [],
+                          "providerId": "local.ollama",
+                          "reason": "Ollama is not installed and nothing is answering for it.",
+                          "remedy": "Install Ollama from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                          "running": false,
+                          "runningEvidence": "127.0.0.1:11434 did not answer: could not reach 127.0.0.1:11434: ConnectionRefusedError: [Errno 111] Connection refused"
+                        },
+                        {
+                          "adapterId": "llamacpp",
+                          "availableMemoryBytes": 5024452608,
+                          "eligible": false,
+                          "estimatedResidentBytes": 0,
+                          "installed": false,
+                          "installedEvidence": "none of llama-server, llama-cpp-server, llamacpp-server is on PATH and no packaged install marker was found",
+                          "kind": "server",
+                          "layer": "absent",
+                          "modelCount": 0,
+                          "models": [],
+                          "providerId": "local.llamacpp",
+                          "reason": "llama.cpp server is not installed and nothing is answering for it.",
+                          "remedy": "Install llama.cpp server from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                          "running": false,
+                          "runningEvidence": "127.0.0.1:8080 did not answer: could not reach 127.0.0.1:8080: ConnectionRefusedError: [Errno 111] Connection refused"
+                        },
+                        {
+                          "adapterId": "llamacli",
+                          "availableMemoryBytes": 5024452608,
+                          "eligible": false,
+                          "estimatedResidentBytes": 0,
+                          "installed": false,
+                          "installedEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found",
+                          "kind": "subprocess",
+                          "layer": "absent",
+                          "modelCount": 0,
+                          "models": [],
+                          "providerId": "local.llamacli",
+                          "reason": "llama-cli is not installed on this machine.",
+                          "remedy": "Install llama-cli from your usual software source, then return to this page and choose Check again. Bunny does not download AI runtimes or models for you.",
+                          "running": false,
+                          "runningEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found"
+                        }
+                      ],
+                      "schemaVersion": 1,
+                      "summary": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself."
+                    },
+                    "ok": true,
+                    "sectionId": "providers",
+                    "title": "AI providers"
+                  },
+                  {
+                    "detail": "Bunny can speak through PipeWire. Spoken output can be turned off at any time; captions always appear.",
+                    "facts": {
+                      "canSpeak": true,
+                      "inputAvailable": true,
+                      "inputBackend": "pulse",
+                      "inputDetail": "1 device(s) from pulse",
+                      "inputs": [
+                        {
+                          "backendId": "pulse",
+                          "default": false,
+                          "description": "PipeWire",
+                          "deviceId": "auto_null.monitor",
+                          "name": "auto_null.monitor",
+                          "state": "SUSPENDED"
+                        }
+                      ],
+                      "outputAvailable": true,
+                      "outputBackend": "pipewire",
+                      "outputDetail": "2 device(s) from pipewire",
+                      "outputs": [
+                        {
+                          "backendId": "pipewire",
+                          "default": false,
+                          "description": "Dummy Output",
+                          "deviceId": "auto_null",
+                          "name": "auto_null",
+                          "state": "suspended"
+                        },
+                        {
+                          "backendId": "pulse",
+                          "default": true,
+                          "description": "PipeWire",
+                          "deviceId": "auto_null",
+                          "name": "auto_null",
+                          "state": "SUSPENDED"
+                        }
+                      ],
+                      "schemaVersion": 1,
+                      "summary": "Bunny can speak through PipeWire. Spoken output can be turned off at any time; captions always appear.",
+                      "voiceAvailable": true,
+                      "voiceDetail": "ready",
+                      "voiceId": "espeak-ng"
+                    },
+                    "ok": true,
+                    "sectionId": "audio",
+                    "title": "Audio output"
+                  },
+                  {
+                    "detail": "1 device(s): 1 capture device(s) from pulse",
+                    "facts": {
+                      "devices": [
+                        {
+                          "backendId": "pulse",
+                          "default": false,
+                          "description": "PipeWire",
+                          "deviceId": "auto_null.monitor",
+                          "name": "auto_null.monitor",
+                          "state": "SUSPENDED"
+                        }
+                      ]
+                    },
+                    "ok": true,
+                    "sectionId": "microphone",
+                    "title": "Microphone"
+                  },
+                  {
+                    "detail": "Install the vosk Python package to enable speech recognition, then choose Check again. Typing works without it.",
+                    "facts": {
+                      "available": false,
+                      "captureBackend": "pulse",
+                      "captureDetail": "1 capture device(s) from pulse",
+                      "languages": [],
+                      "libraryDetail": "the vosk library is not importable: No module named 'vosk'",
+                      "libraryPresent": false,
+                      "microphoneCount": 1,
+                      "microphonePresent": true,
+                      "microphones": [
+                        {
+                          "backendId": "pulse",
+                          "default": false,
+                          "description": "PipeWire",
+                          "deviceId": "auto_null.monitor",
+                          "name": "auto_null.monitor",
+                          "state": "SUSPENDED"
+                        }
+                      ],
+                      "modelBytes": 134217728,
+                      "modelName": "",
+                      "modelOrigin": "",
+                      "modelPresent": false,
+                      "pushToTalkEnabled": false,
+                      "reason": "the vosk library is not importable: No module named 'vosk'",
+                      "recognizerDetail": "the vosk library is not importable: No module named 'vosk'",
+                      "recognizerReady": false,
+                      "remedy": "Install the vosk Python package to enable speech recognition, then choose Check again. Typing works without it.",
+                      "schemaVersion": 1,
+                      "typedInputPreserved": true
+                    },
+                    "ok": true,
+                    "sectionId": "speech",
+                    "title": "Speech recognition"
+                  },
+                  {
+                    "detail": "notification-only: 0 action(s) available",
+                    "facts": {
+                      "availableActions": [
+                        "desktop.notification.show",
+                        "desktop.audio.set-volume"
+                      ],
+                      "capabilitySignals": {},
+                      "desktop": "",
+                      "graphical": false,
+                      "headlessUriPolicy": false,
+                      "posture": "notification-only",
+                      "probeSeconds": 0.077941,
+                      "reducedInterruption": false,
+                      "services": [
+                        {
+                          "adapterId": "NotificationAdapter",
+                          "available": true,
+                          "detail": "the daemon answered and offers 6 capabilities",
+                          "mechanism": "dbus",
+                          "probeSeconds": 0.0548,
+                          "service": "org.freedesktop.Notifications"
+                        },
+                        {
+                          "adapterId": "PortalAdapter",
+                          "available": true,
+                          "detail": "the portal answered and offers OpenURI",
+                          "mechanism": "xdg-desktop-portal",
+                          "probeSeconds": 0.001121,
+                          "service": "org.freedesktop.portal.Desktop"
+                        },
+                        {
+                          "adapterId": "ApplicationLaunchAdapter",
+                          "available": false,
+                          "detail": "there is no graphical session, so a launched application would have nowhere to appear",
+                          "mechanism": "gio",
+                          "probeSeconds": 0.000109,
+                          "service": "Gio.DesktopAppInfo"
+                        },
+                        {
+                          "adapterId": "ApplicationPresentAdapter",
+                          "available": false,
+                          "detail": "there is no graphical session, so there is no window to raise",
+                          "mechanism": "dbus",
+                          "probeSeconds": 5.3e-05,
+                          "service": "org.freedesktop.Application"
+                        },
+                        {
+                          "adapterId": "SettingsAdapter",
+                          "available": false,
+                          "detail": "there is no graphical session, so no settings window could appear",
+                          "mechanism": "",
+                          "probeSeconds": 5e-06,
+                          "service": "settings"
+                        },
+                        {
+                          "adapterId": "SettingsAdapter.doNotDisturb",
+                          "available": false,
+                          "detail": "this desktop does not keep do-not-disturb where this build can read it; the action is unsupported here rather than guessed at",
+                          "mechanism": "gsettings",
+                          "probeSeconds": 4e-06,
+                          "service": "org.gnome.desktop.notifications"
+                        },
+                        {
+                          "adapterId": "AudioControlAdapter",
+                          "available": true,
+                          "detail": "a sound server answered and an output sink is present",
+                          "mechanism": "pactl",
+                          "probeSeconds": 0.020596,
+                          "service": "pulseaudio-or-pipewire"
+                        },
+                        {
+                          "adapterId": "ClipboardAdapter",
+                          "available": false,
+                          "detail": "there is no graphical session, so there is no clipboard to take",
+                          "mechanism": "",
+                          "probeSeconds": 7e-06,
+                          "service": "selection"
+                        },
+                        {
+                          "adapterId": "FileRevealAdapter",
+                          "available": true,
+                          "detail": "a file manager is registered for activation and will be started on demand",
+                          "mechanism": "dbus",
+                          "probeSeconds": 0.001156,
+                          "service": "org.freedesktop.FileManager1"
+                        }
+                      ],
+                      "session": "none",
+                      "unavailableActions": {
+                        "desktop.application.launch": "launch an installed application needs a graphical session and there is none here",
+                        "desktop.application.present": "bring an application's window to the front needs a graphical session and there is none here",
+                        "desktop.clipboard.copy-text": "copy text to the clipboard needs a graphical session and there is none here",
+                        "desktop.file.reveal": "show a file or folder in the file manager needs a graphical session and there is none here",
+                        "desktop.notifications.set-do-not-disturb": "turn do-not-disturb on or off needs a graphical session and there is none here",
+                        "desktop.settings.open": "open a settings page needs a graphical session and there is none here",
+                        "desktop.uri.open": "opening a URI with no graphical session is disabled by default; it needs an explicitly supported headless policy"
+                      }
+                    },
+                    "ok": true,
+                    "sectionId": "desktop-actions",
+                    "title": "Desktop actions"
+                  }
+                ],
+                "summary": "One thing is not working: Task store."
+              }
+            },
+            "returncode": 0,
+            "step": "desktop actions available"
+          },
+          {
+            "result": "",
+            "returncode": 0,
+            "step": "submit a typed request"
+          },
+          {
+            "result": {
+              "effect": "read-only",
+              "sessions": []
+            },
+            "returncode": 0,
+            "step": "task history survives"
+          }
+        ]
+      },
+      "surveys": {
+        "characterPolicy": {
+          "decision": {
+            "applied": false,
+            "eligibleRung": "text-only",
+            "error": "",
+            "packageId": "",
+            "preservedUserChoice": false,
+            "reasons": [
+              "the machine and policy permit text-only",
+              "no bundled package is drawn at the text-only rung"
+            ],
+            "rung": "text-only",
+            "schemaVersion": 1,
+            "selectedPackageId": "org.bunny-os.default-bunny",
+            "summary": "This machine draws no character; Bunny uses the text-only presentation.",
+            "wouldApply": false
+          },
+          "effect": "READ the default-character decision; nothing was changed",
+          "eligible": "text-only"
+        },
+        "diagnose": {
+          "effect": "READ the recovery report; nothing was changed and nothing was uploaded",
+          "lines": [
+            "One thing is not working: Task store.",
+            "",
+            "[ok] bunny-companion.service: active/running",
+            "[ok] bunny-companion-window.service: active/running",
+            "[ok] Runtime socket: /run/user/1000/bunny-companion contains runtime.sock, runtime.sock.lock",
+            "[!!] Task store: /var/home/bunny/.local/state/bunny-os/companion does not exist",
+            "[ok] Safe mode: Bunny starts normally.",
+            "[ok] 3D renderer: available: libEGL is present; no WAYLAND_DISPLAY or DISPLAY is set; there is no graphical session",
+            "[ok] Selected character: org.bunny-os.default-bunny 1.0.0",
+            "[ok] AI providers: No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself.",
+            "[ok] Audio output: Bunny can speak through PipeWire. Spoken output can be turned off at any time; captions always appear.",
+            "[ok] Microphone: 1 device(s): 1 capture device(s) from pulse",
+            "[ok] Speech recognition: Install the vosk Python package to enable speech recognition, then choose Check again. Typing works without it.",
+            "[ok] Desktop actions: notification-only: 0 action(s) available"
+          ],
+          "report": {
+            "actions": [
+              {
+                "actionId": "restart",
+                "changesState": true,
+                "effect": "Stops and starts the companion runtime. Tasks that were running are recovered; nothing is deleted.",
+                "label": "Restart Bunny"
+              },
+              {
+                "actionId": "disable-3d",
+                "changesState": true,
+                "effect": "The next start uses the 2D character. Your selected character is not changed.",
+                "label": "Disable 3D for the next start"
+              },
+              {
+                "actionId": "reset-presentation",
+                "changesState": true,
+                "effect": "Clears presentation preferences so the machine's own capability decides again. Your character choice, tasks and settings are untouched.",
+                "label": "Reset how Bunny appears"
+              },
+              {
+                "actionId": "safe-mode",
+                "changesState": true,
+                "effect": "The next start turns off 3D, the microphone, remote providers and desktop actions. Typed conversation and diagnostics still work.",
+                "label": "Start in Safe Mode"
+              },
+              {
+                "actionId": "text-only",
+                "changesState": true,
+                "effect": "Starts a companion window with no character and no audio. Use this when the graphical character will not draw.",
+                "label": "Start text-only"
+              },
+              {
+                "actionId": "export",
+                "changesState": false,
+                "effect": "Writes a file you can read before sending it to anyone. Nothing is uploaded.",
+                "label": "Export diagnostics"
+              }
+            ],
+            "healthy": false,
+            "identity": {
+              "architecture": "x86_64",
+              "baseImageReference": "quay.io/fedora/fedora-bootc:44",
+              "buildId": "00adf30ed10f.1786122963",
+              "buildTimestamp": "2026-08-07T17:16:03Z",
+              "channel": "alpha",
+              "displayName": "Bunny OS Alpha 0.1",
+              "imageDigest": "",
+              "imageFilename": "bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64",
+              "imageVersion": "0.1.0-beta.00adf30ed10f",
+              "installed": true,
+              "product": "Bunny OS",
+              "profile": "beta",
+              "schemaVersion": 1,
+              "sourceCommit": "00adf30ed10fca3166ca6b031c2d308820be5800",
+              "version": "0.1.0"
+            },
+            "recentFailures": [],
+            "schemaVersion": 1,
+            "secretsIncluded": false,
+            "sections": [
+              {
+                "detail": "active/running",
+                "facts": {
+                  "activeState": "active",
+                  "detail": "",
+                  "loadState": "loaded",
+                  "queried": true,
+                  "restarts": 0,
+                  "result": "success",
+                  "subState": "running",
+                  "unit": "bunny-companion.service"
+                },
+                "ok": true,
+                "sectionId": "unit:bunny-companion.service",
+                "title": "bunny-companion.service"
+              },
+              {
+                "detail": "active/running",
+                "facts": {
+                  "activeState": "active",
+                  "detail": "",
+                  "loadState": "loaded",
+                  "queried": true,
+                  "restarts": 0,
+                  "result": "success",
+                  "subState": "running",
+                  "unit": "bunny-companion-window.service"
+                },
+                "ok": true,
+                "sectionId": "unit:bunny-companion-window.service",
+                "title": "bunny-companion-window.service"
+              },
+              {
+                "detail": "/run/user/1000/bunny-companion contains runtime.sock, runtime.sock.lock",
+                "facts": {
+                  "entries": [
+                    "runtime.sock",
+                    "runtime.sock.lock"
+                  ],
+                  "path": "/run/user/1000/bunny-companion"
+                },
+                "ok": true,
+                "sectionId": "socket",
+                "title": "Runtime socket"
+              },
+              {
+                "detail": "/var/home/bunny/.local/state/bunny-os/companion does not exist",
+                "facts": {
+                  "path": "/var/home/bunny/.local/state/bunny-os/companion"
+                },
+                "ok": false,
+                "sectionId": "store",
+                "title": "Task store"
+              },
+              {
+                "detail": "Bunny starts normally.",
+                "facts": {
+                  "automatic": false,
+                  "consecutiveFailures": 0,
+                  "enabled": false,
+                  "origin": "",
+                  "reason": "",
+                  "restrictions": [
+                    {
+                      "effect": "3D rendering is off; the character is drawn in 2D or as text",
+                      "id": "three-d",
+                      "variable": "BUNNY_COMPANION_DISABLE_3D"
+                    },
+                    {
+                      "effect": "the microphone is not opened, and push-to-talk is unavailable",
+                      "id": "microphone",
+                      "variable": "BUNNY_COMPANION_DISABLE_MICROPHONE"
+                    },
+                    {
+                      "effect": "no remote provider is contacted, whatever is configured",
+                      "id": "remote-ai",
+                      "variable": "BUNNY_COMPANION_DISABLE_REMOTE"
+                    },
+                    {
+                      "effect": "Bunny cannot act on the desktop",
+                      "id": "desktop-actions",
+                      "variable": "BUNNY_COMPANION_DISABLE_DESKTOP_ACTIONS"
+                    },
+                    {
+                      "effect": "animation is reduced to the minimum",
+                      "id": "animation",
+                      "variable": "BUNNY_COMPANION_MINIMAL_ANIMATION"
+                    },
+                    {
+                      "effect": "spoken output is off; captions remain",
+                      "id": "voice",
+                      "variable": "BUNNY_COMPANION_DISABLE_VOICE"
+                    }
+                  ],
+                  "retained": [
+                    "typed input and typed replies",
+                    "the task history that already exists",
+                    "settings, including character selection",
+                    "diagnostics and diagnostics export",
+                    "a local AI provider, when one is explicitly selected"
+                  ],
+                  "schemaVersion": 1,
+                  "sticky": false
+                },
+                "ok": true,
+                "sectionId": "safe-mode",
+                "title": "Safe mode"
+              },
+              {
+                "detail": "available: libEGL is present; no WAYLAND_DISPLAY or DISPLAY is set; there is no graphical session",
+                "facts": {
+                  "graphicalSession": false,
+                  "libraryInitialised": false,
+                  "offscreenAvailable": true,
+                  "reasons": [
+                    "libEGL is present",
+                    "no WAYLAND_DISPLAY or DISPLAY is set; there is no graphical session"
+                  ],
+                  "threeDAvailable": true,
+                  "waylandDisplay": false,
+                  "windowedThreeDAvailable": false,
+                  "x11Display": false
+                },
+                "ok": true,
+                "sectionId": "renderer",
+                "title": "3D renderer"
+              },
+              {
+                "detail": "org.bunny-os.default-bunny 1.0.0",
+                "facts": {
+                  "chosenBy": "user",
+                  "packageDigest": "5494218e66c9d5cf022105213727614d9793eb2ec403e593e56ae76628a23986",
+                  "packageId": "org.bunny-os.default-bunny",
+                  "packageVersion": "1.0.0",
+                  "trustState": "built-in"
+                },
+                "ok": true,
+                "sectionId": "character",
+                "title": "Selected character"
+              },
+              {
+                "detail": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself.",
+                "facts": {
+                  "anyEligible": false,
+                  "anyModelPresent": false,
+                  "availableMemoryBytes": 5075992576,
+                  "error": "",
+                  "providers": [
+                    {
+                      "adapterId": "ollama",
+                      "availableMemoryBytes": 5075992576,
+                      "eligible": false,
+                      "estimatedResidentBytes": 0,
+                      "installed": false,
+                      "installedEvidence": "none of ollama is on PATH and no packaged install marker was found",
+                      "kind": "server",
+                      "layer": "absent",
+                      "modelCount": 0,
+                      "models": [],
+                      "providerId": "local.ollama",
+                      "reason": "Ollama is not installed and nothing is answering for it.",
+                      "remedy": "Install Ollama from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                      "running": false,
+                      "runningEvidence": "127.0.0.1:11434 did not answer: could not reach 127.0.0.1:11434: ConnectionRefusedError: [Errno 111] Connection refused"
+                    },
+                    {
+                      "adapterId": "llamacpp",
+                      "availableMemoryBytes": 5075992576,
+                      "eligible": false,
+                      "estimatedResidentBytes": 0,
+                      "installed": false,
+                      "installedEvidence": "none of llama-server, llama-cpp-server, llamacpp-server is on PATH and no packaged install marker was found",
+                      "kind": "server",
+                      "layer": "absent",
+                      "modelCount": 0,
+                      "models": [],
+                      "providerId": "local.llamacpp",
+                      "reason": "llama.cpp server is not installed and nothing is answering for it.",
+                      "remedy": "Install llama.cpp server from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                      "running": false,
+                      "runningEvidence": "127.0.0.1:8080 did not answer: could not reach 127.0.0.1:8080: ConnectionRefusedError: [Errno 111] Connection refused"
+                    },
+                    {
+                      "adapterId": "llamacli",
+                      "availableMemoryBytes": 5075992576,
+                      "eligible": false,
+                      "estimatedResidentBytes": 0,
+                      "installed": false,
+                      "installedEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found",
+                      "kind": "subprocess",
+                      "layer": "absent",
+                      "modelCount": 0,
+                      "models": [],
+                      "providerId": "local.llamacli",
+                      "reason": "llama-cli is not installed on this machine.",
+                      "remedy": "Install llama-cli from your usual software source, then return to this page and choose Check again. Bunny does not download AI runtimes or models for you.",
+                      "running": false,
+                      "runningEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found"
+                    }
+                  ],
+                  "schemaVersion": 1,
+                  "summary": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself."
+                },
+                "ok": true,
+                "sectionId": "providers",
+                "title": "AI providers"
+              },
+              {
+                "detail": "Bunny can speak through PipeWire. Spoken output can be turned off at any time; captions always appear.",
+                "facts": {
+                  "canSpeak": true,
+                  "inputAvailable": true,
+                  "inputBackend": "pulse",
+                  "inputDetail": "1 device(s) from pulse",
+                  "inputs": [
+                    {
+                      "backendId": "pulse",
+                      "default": false,
+                      "description": "PipeWire",
+                      "deviceId": "auto_null.monitor",
+                      "name": "auto_null.monitor",
+                      "state": "SUSPENDED"
+                    }
+                  ],
+                  "outputAvailable": true,
+                  "outputBackend": "pipewire",
+                  "outputDetail": "2 device(s) from pipewire",
+                  "outputs": [
+                    {
+                      "backendId": "pipewire",
+                      "default": false,
+                      "description": "Dummy Output",
+                      "deviceId": "auto_null",
+                      "name": "auto_null",
+                      "state": "suspended"
+                    },
+                    {
+                      "backendId": "pulse",
+                      "default": true,
+                      "description": "PipeWire",
+                      "deviceId": "auto_null",
+                      "name": "auto_null",
+                      "state": "SUSPENDED"
+                    }
+                  ],
+                  "schemaVersion": 1,
+                  "summary": "Bunny can speak through PipeWire. Spoken output can be turned off at any time; captions always appear.",
+                  "voiceAvailable": true,
+                  "voiceDetail": "ready",
+                  "voiceId": "espeak-ng"
+                },
+                "ok": true,
+                "sectionId": "audio",
+                "title": "Audio output"
+              },
+              {
+                "detail": "1 device(s): 1 capture device(s) from pulse",
+                "facts": {
+                  "devices": [
+                    {
+                      "backendId": "pulse",
+                      "default": false,
+                      "description": "PipeWire",
+                      "deviceId": "auto_null.monitor",
+                      "name": "auto_null.monitor",
+                      "state": "SUSPENDED"
+                    }
+                  ]
+                },
+                "ok": true,
+                "sectionId": "microphone",
+                "title": "Microphone"
+              },
+              {
+                "detail": "Install the vosk Python package to enable speech recognition, then choose Check again. Typing works without it.",
+                "facts": {
+                  "available": false,
+                  "captureBackend": "pulse",
+                  "captureDetail": "1 capture device(s) from pulse",
+                  "languages": [],
+                  "libraryDetail": "the vosk library is not importable: No module named 'vosk'",
+                  "libraryPresent": false,
+                  "microphoneCount": 1,
+                  "microphonePresent": true,
+                  "microphones": [
+                    {
+                      "backendId": "pulse",
+                      "default": false,
+                      "description": "PipeWire",
+                      "deviceId": "auto_null.monitor",
+                      "name": "auto_null.monitor",
+                      "state": "SUSPENDED"
+                    }
+                  ],
+                  "modelBytes": 134217728,
+                  "modelName": "",
+                  "modelOrigin": "",
+                  "modelPresent": false,
+                  "pushToTalkEnabled": false,
+                  "reason": "the vosk library is not importable: No module named 'vosk'",
+                  "recognizerDetail": "the vosk library is not importable: No module named 'vosk'",
+                  "recognizerReady": false,
+                  "remedy": "Install the vosk Python package to enable speech recognition, then choose Check again. Typing works without it.",
+                  "schemaVersion": 1,
+                  "typedInputPreserved": true
+                },
+                "ok": true,
+                "sectionId": "speech",
+                "title": "Speech recognition"
+              },
+              {
+                "detail": "notification-only: 0 action(s) available",
+                "facts": {
+                  "availableActions": [
+                    "desktop.notification.show",
+                    "desktop.audio.set-volume"
+                  ],
+                  "capabilitySignals": {},
+                  "desktop": "",
+                  "graphical": false,
+                  "headlessUriPolicy": false,
+                  "posture": "notification-only",
+                  "probeSeconds": 0.072174,
+                  "reducedInterruption": false,
+                  "services": [
+                    {
+                      "adapterId": "NotificationAdapter",
+                      "available": true,
+                      "detail": "the daemon answered and offers 6 capabilities",
+                      "mechanism": "dbus",
+                      "probeSeconds": 0.05231,
+                      "service": "org.freedesktop.Notifications"
+                    },
+                    {
+                      "adapterId": "PortalAdapter",
+                      "available": true,
+                      "detail": "the portal answered and offers OpenURI",
+                      "mechanism": "xdg-desktop-portal",
+                      "probeSeconds": 0.001268,
+                      "service": "org.freedesktop.portal.Desktop"
+                    },
+                    {
+                      "adapterId": "ApplicationLaunchAdapter",
+                      "available": false,
+                      "detail": "there is no graphical session, so a launched application would have nowhere to appear",
+                      "mechanism": "gio",
+                      "probeSeconds": 7.2e-05,
+                      "service": "Gio.DesktopAppInfo"
+                    },
+                    {
+                      "adapterId": "ApplicationPresentAdapter",
+                      "available": false,
+                      "detail": "there is no graphical session, so there is no window to raise",
+                      "mechanism": "dbus",
+                      "probeSeconds": 2.7e-05,
+                      "service": "org.freedesktop.Application"
+                    },
+                    {
+                      "adapterId": "SettingsAdapter",
+                      "available": false,
+                      "detail": "there is no graphical session, so no settings window could appear",
+                      "mechanism": "",
+                      "probeSeconds": 2e-06,
+                      "service": "settings"
+                    },
+                    {
+                      "adapterId": "SettingsAdapter.doNotDisturb",
+                      "available": false,
+                      "detail": "this desktop does not keep do-not-disturb where this build can read it; the action is unsupported here rather than guessed at",
+                      "mechanism": "gsettings",
+                      "probeSeconds": 3e-06,
+                      "service": "org.gnome.desktop.notifications"
+                    },
+                    {
+                      "adapterId": "AudioControlAdapter",
+                      "available": true,
+                      "detail": "a sound server answered and an output sink is present",
+                      "mechanism": "pactl",
+                      "probeSeconds": 0.017309,
+                      "service": "pulseaudio-or-pipewire"
+                    },
+                    {
+                      "adapterId": "ClipboardAdapter",
+                      "available": false,
+                      "detail": "there is no graphical session, so there is no clipboard to take",
+                      "mechanism": "",
+                      "probeSeconds": 8e-06,
+                      "service": "selection"
+                    },
+                    {
+                      "adapterId": "FileRevealAdapter",
+                      "available": true,
+                      "detail": "a file manager is registered for activation and will be started on demand",
+                      "mechanism": "dbus",
+                      "probeSeconds": 0.00109,
+                      "service": "org.freedesktop.FileManager1"
+                    }
+                  ],
+                  "session": "none",
+                  "unavailableActions": {
+                    "desktop.application.launch": "launch an installed application needs a graphical session and there is none here",
+                    "desktop.application.present": "bring an application's window to the front needs a graphical session and there is none here",
+                    "desktop.clipboard.copy-text": "copy text to the clipboard needs a graphical session and there is none here",
+                    "desktop.file.reveal": "show a file or folder in the file manager needs a graphical session and there is none here",
+                    "desktop.notifications.set-do-not-disturb": "turn do-not-disturb on or off needs a graphical session and there is none here",
+                    "desktop.settings.open": "open a settings page needs a graphical session and there is none here",
+                    "desktop.uri.open": "opening a URI with no graphical session is disabled by default; it needs an explicitly supported headless policy"
+                  }
+                },
+                "ok": true,
+                "sectionId": "desktop-actions",
+                "title": "Desktop actions"
+              }
+            ],
+            "summary": "One thing is not working: Task store."
+          }
+        },
+        "firstRun": {
+          "schemaVersion": 2,
+          "steps": [
+            {
+              "answered": false,
+              "canSkip": false,
+              "detail": "",
+              "index": 0,
+              "progress": "Step 1 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Get started",
+                "body": "Bunny is a companion that lives on this machine. This takes a couple of minutes and everything in it can be changed later. You can close this window at any point and the desktop stays usable.",
+                "required": true,
+                "skip": "",
+                "stepId": "welcome",
+                "survey": "",
+                "title": "Welcome to Bunny OS"
+              },
+              "survey": null,
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": false,
+              "detail": "",
+              "index": 1,
+              "progress": "Step 2 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Continue",
+                "body": "Bunny answers using AI that runs on this machine whenever one is available. Nothing leaves this computer unless you configure a remote provider yourself and approve the transfer. There is no telemetry in Bunny OS: no usage counters, no crash uploads, nothing sent in the background. Diagnostics are exported to a file you read first.",
+                "required": false,
+                "skip": "",
+                "stepId": "privacy",
+                "survey": "",
+                "title": "Local first, and it means it"
+              },
+              "survey": null,
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": false,
+              "detail": "This machine will use the text-only presentation. Everything Bunny does is still available in words.",
+              "index": 2,
+              "progress": "Step 3 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Looks good",
+                "body": "This is how Bunny will appear on your machine. The presentation adapts to what your graphics can do, and everything Bunny says is also available as text.",
+                "required": false,
+                "skip": "",
+                "stepId": "character",
+                "survey": "character",
+                "title": "Meet Bunny"
+              },
+              "survey": {
+                "description": "Bunny has no picture on this machine; everything appears as text.",
+                "drawsCharacter": false,
+                "eligibleRung": "text-only",
+                "error": "",
+                "packageId": "",
+                "packageName": "",
+                "preservedUserChoice": false,
+                "reasons": [
+                  "the machine and policy permit text-only",
+                  "no bundled package is drawn at the text-only rung"
+                ],
+                "rung": "text-only",
+                "schemaVersion": 1,
+                "summary": "This machine will use the text-only presentation. Everything Bunny does is still available in words.",
+                "thumbnailPath": ""
+              },
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": true,
+              "detail": "Install the vosk Python package to enable speech recognition, then choose Check again. Typing works without it.",
+              "index": 3,
+              "progress": "Step 4 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Use this microphone",
+                "body": "Bunny listens only while you hold the push-to-talk key. There is no wake word and no continuous listening in this release \u2014 those are not switched off, they are not built. Choose a microphone, or skip this and type instead.",
+                "required": false,
+                "skip": "Skip \u2014 I'll type",
+                "stepId": "microphone",
+                "survey": "speech",
+                "title": "Microphone"
+              },
+              "survey": {
+                "available": false,
+                "captureBackend": "pulse",
+                "captureDetail": "1 capture device(s) from pulse",
+                "languages": [],
+                "libraryDetail": "the vosk library is not importable: No module named 'vosk'",
+                "libraryPresent": false,
+                "microphoneCount": 1,
+                "microphonePresent": true,
+                "microphones": [
+                  {
+                    "backendId": "pulse",
+                    "default": false,
+                    "description": "PipeWire",
+                    "deviceId": "auto_null.monitor",
+                    "name": "auto_null.monitor",
+                    "state": "SUSPENDED"
+                  }
+                ],
+                "modelBytes": 134217728,
+                "modelName": "",
+                "modelOrigin": "",
+                "modelPresent": false,
+                "pushToTalkEnabled": false,
+                "reason": "the vosk library is not importable: No module named 'vosk'",
+                "recognizerDetail": "the vosk library is not importable: No module named 'vosk'",
+                "recognizerReady": false,
+                "remedy": "Install the vosk Python package to enable speech recognition, then choose Check again. Typing works without it.",
+                "schemaVersion": 1,
+                "typedInputPreserved": true
+              },
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": true,
+              "detail": "Bunny can speak through PipeWire. Spoken output can be turned off at any time; captions always appear.",
+              "index": 4,
+              "progress": "Step 5 of 10",
+              "skipped": false,
+              "step": {
+                "action": "I heard it",
+                "body": "Bunny can read replies aloud. Play the test sound and tell us whether you heard it \u2014 nothing this program can measure tells us that for you. Captions always appear whether or not audio works.",
+                "required": false,
+                "skip": "Skip \u2014 no sound",
+                "stepId": "speaker",
+                "survey": "audio",
+                "title": "Speaker test"
+              },
+              "survey": {
+                "canSpeak": true,
+                "inputAvailable": true,
+                "inputBackend": "pulse",
+                "inputDetail": "1 device(s) from pulse",
+                "inputs": [
+                  {
+                    "backendId": "pulse",
+                    "default": false,
+                    "description": "PipeWire",
+                    "deviceId": "auto_null.monitor",
+                    "name": "auto_null.monitor",
+                    "state": "SUSPENDED"
+                  }
+                ],
+                "outputAvailable": true,
+                "outputBackend": "pipewire",
+                "outputDetail": "2 device(s) from pipewire",
+                "outputs": [
+                  {
+                    "backendId": "pipewire",
+                    "default": false,
+                    "description": "Dummy Output",
+                    "deviceId": "auto_null",
+                    "name": "auto_null",
+                    "state": "suspended"
+                  },
+                  {
+                    "backendId": "pulse",
+                    "default": true,
+                    "description": "PipeWire",
+                    "deviceId": "auto_null",
+                    "name": "auto_null",
+                    "state": "SUSPENDED"
+                  }
+                ],
+                "schemaVersion": 1,
+                "summary": "Bunny can speak through PipeWire. Spoken output can be turned off at any time; captions always appear.",
+                "voiceAvailable": true,
+                "voiceDetail": "ready",
+                "voiceId": "espeak-ng"
+              },
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": true,
+              "detail": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself.",
+              "index": 5,
+              "progress": "Step 6 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Continue",
+                "body": "Bunny needs an AI provider to answer questions. Local providers run on this machine and are preferred whenever one is available.",
+                "required": false,
+                "skip": "Set this up later",
+                "stepId": "providers",
+                "survey": "providers",
+                "title": "Where answers come from"
+              },
+              "survey": {
+                "anyEligible": false,
+                "anyModelPresent": false,
+                "availableMemoryBytes": 5036236800,
+                "error": "",
+                "providers": [
+                  {
+                    "adapterId": "ollama",
+                    "availableMemoryBytes": 5036236800,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of ollama is on PATH and no packaged install marker was found",
+                    "kind": "server",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.ollama",
+                    "reason": "Ollama is not installed and nothing is answering for it.",
+                    "remedy": "Install Ollama from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "127.0.0.1:11434 did not answer: could not reach 127.0.0.1:11434: ConnectionRefusedError: [Errno 111] Connection refused"
+                  },
+                  {
+                    "adapterId": "llamacpp",
+                    "availableMemoryBytes": 5036236800,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of llama-server, llama-cpp-server, llamacpp-server is on PATH and no packaged install marker was found",
+                    "kind": "server",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.llamacpp",
+                    "reason": "llama.cpp server is not installed and nothing is answering for it.",
+                    "remedy": "Install llama.cpp server from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "127.0.0.1:8080 did not answer: could not reach 127.0.0.1:8080: ConnectionRefusedError: [Errno 111] Connection refused"
+                  },
+                  {
+                    "adapterId": "llamacli",
+                    "availableMemoryBytes": 5036236800,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found",
+                    "kind": "subprocess",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.llamacli",
+                    "reason": "llama-cli is not installed on this machine.",
+                    "remedy": "Install llama-cli from your usual software source, then return to this page and choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found"
+                  }
+                ],
+                "schemaVersion": 1,
+                "summary": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself."
+              },
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": true,
+              "detail": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself.",
+              "index": 6,
+              "progress": "Step 7 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Continue",
+                "body": "This is what was found on your machine. Bunny does not download models: they are several gigabytes of your disk and your connection, and that is your decision to make.",
+                "required": false,
+                "skip": "Continue without a local model",
+                "stepId": "local_model",
+                "survey": "providers",
+                "title": "Local models"
+              },
+              "survey": {
+                "anyEligible": false,
+                "anyModelPresent": false,
+                "availableMemoryBytes": 5036236800,
+                "error": "",
+                "providers": [
+                  {
+                    "adapterId": "ollama",
+                    "availableMemoryBytes": 5036236800,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of ollama is on PATH and no packaged install marker was found",
+                    "kind": "server",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.ollama",
+                    "reason": "Ollama is not installed and nothing is answering for it.",
+                    "remedy": "Install Ollama from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "127.0.0.1:11434 did not answer: could not reach 127.0.0.1:11434: ConnectionRefusedError: [Errno 111] Connection refused"
+                  },
+                  {
+                    "adapterId": "llamacpp",
+                    "availableMemoryBytes": 5036236800,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of llama-server, llama-cpp-server, llamacpp-server is on PATH and no packaged install marker was found",
+                    "kind": "server",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.llamacpp",
+                    "reason": "llama.cpp server is not installed and nothing is answering for it.",
+                    "remedy": "Install llama.cpp server from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "127.0.0.1:8080 did not answer: could not reach 127.0.0.1:8080: ConnectionRefusedError: [Errno 111] Connection refused"
+                  },
+                  {
+                    "adapterId": "llamacli",
+                    "availableMemoryBytes": 5036236800,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found",
+                    "kind": "subprocess",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.llamacli",
+                    "reason": "llama-cli is not installed on this machine.",
+                    "remedy": "Install llama-cli from your usual software source, then return to this page and choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found"
+                  }
+                ],
+                "schemaVersion": 1,
+                "summary": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself."
+              },
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": true,
+              "detail": "",
+              "index": 7,
+              "progress": "Step 8 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Add a provider",
+                "body": "You can add a provider that runs somewhere else. It stays off until you configure it, Bunny shows an indicator before anything is transmitted, and content classified as secret is never sent. Most people should skip this.",
+                "required": false,
+                "skip": "Skip \u2014 local only",
+                "stepId": "remote_provider",
+                "survey": "",
+                "title": "Remote providers (optional)"
+              },
+              "survey": null,
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": false,
+              "detail": "",
+              "index": 8,
+              "progress": "Step 9 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Understood",
+                "body": "Bunny can open applications, change the volume, copy text, show notifications and open links \u2014 and every one of those stops and asks you first, showing exactly what will happen. Bunny cannot run shell commands, control your keyboard or mouse, or act on a web page. Those are not permissions you can grant; they do not exist in this release.",
+                "required": false,
+                "skip": "",
+                "stepId": "permissions",
+                "survey": "",
+                "title": "What Bunny may do to this computer"
+              },
+              "survey": null,
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": false,
+              "detail": "",
+              "index": 9,
+              "progress": "Step 10 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Finish",
+                "body": "Bunny starts automatically when you log in. If it ever fails to start you will get a recovery window rather than nothing, with a safe mode that turns off 3D, audio and desktop actions.",
+                "required": true,
+                "skip": "",
+                "stepId": "finish",
+                "survey": "",
+                "title": "Ready"
+              },
+              "survey": null,
+              "total": 10
+            }
+          ]
+        },
+        "onboarding": {
+          "effect": "READ what the first-run experience would show on this machine",
+          "offlineCompletable": true,
+          "steps": [
+            {
+              "answered": false,
+              "canSkip": false,
+              "detail": "",
+              "index": 0,
+              "progress": "Step 1 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Get started",
+                "body": "Bunny is a companion that lives on this machine. This takes a couple of minutes and everything in it can be changed later. You can close this window at any point and the desktop stays usable.",
+                "required": true,
+                "skip": "",
+                "stepId": "welcome",
+                "survey": "",
+                "title": "Welcome to Bunny OS"
+              },
+              "survey": null,
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": false,
+              "detail": "",
+              "index": 1,
+              "progress": "Step 2 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Continue",
+                "body": "Bunny answers using AI that runs on this machine whenever one is available. Nothing leaves this computer unless you configure a remote provider yourself and approve the transfer. There is no telemetry in Bunny OS: no usage counters, no crash uploads, nothing sent in the background. Diagnostics are exported to a file you read first.",
+                "required": false,
+                "skip": "",
+                "stepId": "privacy",
+                "survey": "",
+                "title": "Local first, and it means it"
+              },
+              "survey": null,
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": false,
+              "detail": "This machine will use the text-only presentation. Everything Bunny does is still available in words.",
+              "index": 2,
+              "progress": "Step 3 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Looks good",
+                "body": "This is how Bunny will appear on your machine. The presentation adapts to what your graphics can do, and everything Bunny says is also available as text.",
+                "required": false,
+                "skip": "",
+                "stepId": "character",
+                "survey": "character",
+                "title": "Meet Bunny"
+              },
+              "survey": {
+                "description": "Bunny has no picture on this machine; everything appears as text.",
+                "drawsCharacter": false,
+                "eligibleRung": "text-only",
+                "error": "",
+                "packageId": "",
+                "packageName": "",
+                "preservedUserChoice": false,
+                "reasons": [
+                  "the machine and policy permit text-only",
+                  "no bundled package is drawn at the text-only rung"
+                ],
+                "rung": "text-only",
+                "schemaVersion": 1,
+                "summary": "This machine will use the text-only presentation. Everything Bunny does is still available in words.",
+                "thumbnailPath": ""
+              },
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": true,
+              "detail": "Install the vosk Python package to enable speech recognition, then choose Check again. Typing works without it.",
+              "index": 3,
+              "progress": "Step 4 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Use this microphone",
+                "body": "Bunny listens only while you hold the push-to-talk key. There is no wake word and no continuous listening in this release \u2014 those are not switched off, they are not built. Choose a microphone, or skip this and type instead.",
+                "required": false,
+                "skip": "Skip \u2014 I'll type",
+                "stepId": "microphone",
+                "survey": "speech",
+                "title": "Microphone"
+              },
+              "survey": {
+                "available": false,
+                "captureBackend": "pulse",
+                "captureDetail": "1 capture device(s) from pulse",
+                "languages": [],
+                "libraryDetail": "the vosk library is not importable: No module named 'vosk'",
+                "libraryPresent": false,
+                "microphoneCount": 1,
+                "microphonePresent": true,
+                "microphones": [
+                  {
+                    "backendId": "pulse",
+                    "default": false,
+                    "description": "PipeWire",
+                    "deviceId": "auto_null.monitor",
+                    "name": "auto_null.monitor",
+                    "state": "SUSPENDED"
+                  }
+                ],
+                "modelBytes": 134217728,
+                "modelName": "",
+                "modelOrigin": "",
+                "modelPresent": false,
+                "pushToTalkEnabled": false,
+                "reason": "the vosk library is not importable: No module named 'vosk'",
+                "recognizerDetail": "the vosk library is not importable: No module named 'vosk'",
+                "recognizerReady": false,
+                "remedy": "Install the vosk Python package to enable speech recognition, then choose Check again. Typing works without it.",
+                "schemaVersion": 1,
+                "typedInputPreserved": true
+              },
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": true,
+              "detail": "Bunny can speak through PipeWire. Spoken output can be turned off at any time; captions always appear.",
+              "index": 4,
+              "progress": "Step 5 of 10",
+              "skipped": false,
+              "step": {
+                "action": "I heard it",
+                "body": "Bunny can read replies aloud. Play the test sound and tell us whether you heard it \u2014 nothing this program can measure tells us that for you. Captions always appear whether or not audio works.",
+                "required": false,
+                "skip": "Skip \u2014 no sound",
+                "stepId": "speaker",
+                "survey": "audio",
+                "title": "Speaker test"
+              },
+              "survey": {
+                "canSpeak": true,
+                "inputAvailable": true,
+                "inputBackend": "pulse",
+                "inputDetail": "1 device(s) from pulse",
+                "inputs": [
+                  {
+                    "backendId": "pulse",
+                    "default": false,
+                    "description": "PipeWire",
+                    "deviceId": "auto_null.monitor",
+                    "name": "auto_null.monitor",
+                    "state": "SUSPENDED"
+                  }
+                ],
+                "outputAvailable": true,
+                "outputBackend": "pipewire",
+                "outputDetail": "2 device(s) from pipewire",
+                "outputs": [
+                  {
+                    "backendId": "pipewire",
+                    "default": false,
+                    "description": "Dummy Output",
+                    "deviceId": "auto_null",
+                    "name": "auto_null",
+                    "state": "suspended"
+                  },
+                  {
+                    "backendId": "pulse",
+                    "default": true,
+                    "description": "PipeWire",
+                    "deviceId": "auto_null",
+                    "name": "auto_null",
+                    "state": "SUSPENDED"
+                  }
+                ],
+                "schemaVersion": 1,
+                "summary": "Bunny can speak through PipeWire. Spoken output can be turned off at any time; captions always appear.",
+                "voiceAvailable": true,
+                "voiceDetail": "ready",
+                "voiceId": "espeak-ng"
+              },
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": true,
+              "detail": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself.",
+              "index": 5,
+              "progress": "Step 6 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Continue",
+                "body": "Bunny needs an AI provider to answer questions. Local providers run on this machine and are preferred whenever one is available.",
+                "required": false,
+                "skip": "Set this up later",
+                "stepId": "providers",
+                "survey": "providers",
+                "title": "Where answers come from"
+              },
+              "survey": {
+                "anyEligible": false,
+                "anyModelPresent": false,
+                "availableMemoryBytes": 5052915712,
+                "error": "",
+                "providers": [
+                  {
+                    "adapterId": "ollama",
+                    "availableMemoryBytes": 5052915712,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of ollama is on PATH and no packaged install marker was found",
+                    "kind": "server",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.ollama",
+                    "reason": "Ollama is not installed and nothing is answering for it.",
+                    "remedy": "Install Ollama from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "127.0.0.1:11434 did not answer: could not reach 127.0.0.1:11434: ConnectionRefusedError: [Errno 111] Connection refused"
+                  },
+                  {
+                    "adapterId": "llamacpp",
+                    "availableMemoryBytes": 5052915712,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of llama-server, llama-cpp-server, llamacpp-server is on PATH and no packaged install marker was found",
+                    "kind": "server",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.llamacpp",
+                    "reason": "llama.cpp server is not installed and nothing is answering for it.",
+                    "remedy": "Install llama.cpp server from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "127.0.0.1:8080 did not answer: could not reach 127.0.0.1:8080: ConnectionRefusedError: [Errno 111] Connection refused"
+                  },
+                  {
+                    "adapterId": "llamacli",
+                    "availableMemoryBytes": 5052915712,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found",
+                    "kind": "subprocess",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.llamacli",
+                    "reason": "llama-cli is not installed on this machine.",
+                    "remedy": "Install llama-cli from your usual software source, then return to this page and choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found"
+                  }
+                ],
+                "schemaVersion": 1,
+                "summary": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself."
+              },
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": true,
+              "detail": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself.",
+              "index": 6,
+              "progress": "Step 7 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Continue",
+                "body": "This is what was found on your machine. Bunny does not download models: they are several gigabytes of your disk and your connection, and that is your decision to make.",
+                "required": false,
+                "skip": "Continue without a local model",
+                "stepId": "local_model",
+                "survey": "providers",
+                "title": "Local models"
+              },
+              "survey": {
+                "anyEligible": false,
+                "anyModelPresent": false,
+                "availableMemoryBytes": 5052915712,
+                "error": "",
+                "providers": [
+                  {
+                    "adapterId": "ollama",
+                    "availableMemoryBytes": 5052915712,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of ollama is on PATH and no packaged install marker was found",
+                    "kind": "server",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.ollama",
+                    "reason": "Ollama is not installed and nothing is answering for it.",
+                    "remedy": "Install Ollama from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "127.0.0.1:11434 did not answer: could not reach 127.0.0.1:11434: ConnectionRefusedError: [Errno 111] Connection refused"
+                  },
+                  {
+                    "adapterId": "llamacpp",
+                    "availableMemoryBytes": 5052915712,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of llama-server, llama-cpp-server, llamacpp-server is on PATH and no packaged install marker was found",
+                    "kind": "server",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.llamacpp",
+                    "reason": "llama.cpp server is not installed and nothing is answering for it.",
+                    "remedy": "Install llama.cpp server from your usual software source and start it, then choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "127.0.0.1:8080 did not answer: could not reach 127.0.0.1:8080: ConnectionRefusedError: [Errno 111] Connection refused"
+                  },
+                  {
+                    "adapterId": "llamacli",
+                    "availableMemoryBytes": 5052915712,
+                    "eligible": false,
+                    "estimatedResidentBytes": 0,
+                    "installed": false,
+                    "installedEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found",
+                    "kind": "subprocess",
+                    "layer": "absent",
+                    "modelCount": 0,
+                    "models": [],
+                    "providerId": "local.llamacli",
+                    "reason": "llama-cli is not installed on this machine.",
+                    "remedy": "Install llama-cli from your usual software source, then return to this page and choose Check again. Bunny does not download AI runtimes or models for you.",
+                    "running": false,
+                    "runningEvidence": "none of llama-cli, llama is on PATH and no packaged install marker was found"
+                  }
+                ],
+                "schemaVersion": 1,
+                "summary": "No local AI provider is installed on this machine. Bunny still starts, the character appears and typed input works; answers need a provider you install yourself."
+              },
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": true,
+              "detail": "",
+              "index": 7,
+              "progress": "Step 8 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Add a provider",
+                "body": "You can add a provider that runs somewhere else. It stays off until you configure it, Bunny shows an indicator before anything is transmitted, and content classified as secret is never sent. Most people should skip this.",
+                "required": false,
+                "skip": "Skip \u2014 local only",
+                "stepId": "remote_provider",
+                "survey": "",
+                "title": "Remote providers (optional)"
+              },
+              "survey": null,
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": false,
+              "detail": "",
+              "index": 8,
+              "progress": "Step 9 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Understood",
+                "body": "Bunny can open applications, change the volume, copy text, show notifications and open links \u2014 and every one of those stops and asks you first, showing exactly what will happen. Bunny cannot run shell commands, control your keyboard or mouse, or act on a web page. Those are not permissions you can grant; they do not exist in this release.",
+                "required": false,
+                "skip": "",
+                "stepId": "permissions",
+                "survey": "",
+                "title": "What Bunny may do to this computer"
+              },
+              "survey": null,
+              "total": 10
+            },
+            {
+              "answered": false,
+              "canSkip": false,
+              "detail": "",
+              "index": 9,
+              "progress": "Step 10 of 10",
+              "skipped": false,
+              "step": {
+                "action": "Finish",
+                "body": "Bunny starts automatically when you log in. If it ever fails to start you will get a recovery window rather than nothing, with a safe mode that turns off 3D, audio and desktop actions.",
+                "required": true,
+                "skip": "",
+                "stepId": "finish",
+                "survey": "",
+                "title": "Ready"
+              },
+              "survey": null,
+              "total": 10
+            }
+          ]
+        },
+        "settings": {
+          "effect": "READ the user settings. A setting is never a credential",
+          "settings": {
+            "accessibility": {
+              "captionsAlways": true,
+              "highContrast": false,
+              "noAnimation": false,
+              "reducedMotion": false,
+              "textOnly": false,
+              "uiScale": 1.0
+            },
+            "ai": {
+              "allowedRemoteAliases": [],
+              "costCeilingUnits": 0,
+              "preferredModelId": "",
+              "preferredProviderId": "",
+              "remoteEnabled": false
+            },
+            "character": {
+              "animation": "full",
+              "dock": "bottom-right",
+              "packageId": "",
+              "scale": 1.0,
+              "threeD": "auto"
+            },
+            "containsCredentials": false,
+            "privacy": {
+              "clipboardCeiling": "internal",
+              "desktopActionApproval": "always",
+              "historyRetentionDays": 0,
+              "remoteTransferCeiling": "public"
+            },
+            "schemaVersion": 1,
+            "speechInput": {
+              "deviceId": "",
+              "enabled": true,
+              "modelId": "",
+              "shortcut": "<Control><Alt>space"
+            },
+            "voice": {
+              "enabled": true,
+              "speakingRate": 1.0,
+              "voiceId": "",
+              "volume": 1.0
+            }
+          }
+        }
+      },
+      "units": {
+        "system": {
+          "bunny-health-check.service": {
+            "ActiveState": "inactive",
+            "LoadState": "loaded",
+            "NRestarts": "0",
+            "Result": "success",
+            "SubState": "dead"
+          },
+          "bunny-system-broker.socket": {
+            "ActiveState": "active",
+            "LoadState": "loaded",
+            "Result": "success",
+            "SubState": "running"
+          },
+          "gdm.service": {
+            "ActiveState": "active",
+            "LoadState": "loaded",
+            "NRestarts": "0",
+            "Result": "success",
+            "SubState": "running"
+          },
+          "graphical.target": {
+            "ActiveState": "active",
+            "LoadState": "loaded",
+            "SubState": "active"
+          },
+          "systemd-logind.service": {
+            "ActiveState": "active",
+            "LoadState": "loaded",
+            "NRestarts": "0",
+            "Result": "success",
+            "SubState": "running"
+          }
+        },
+        "user": {
+          "bunny-companion-window.service": {
+            "ActiveEnterTimestampMonotonic": "9710133",
+            "ActiveState": "active",
+            "After": "graphical-session.target basic.target -.mount var.mount bunny-companion.service app.slice",
+            "LoadState": "loaded",
+            "NRestarts": "0",
+            "PartOf": "graphical-session.target",
+            "Requires": "basic.target app.slice",
+            "Result": "success",
+            "SubState": "running",
+            "Wants": "bunny-companion.service"
+          },
+          "bunny-companion.service": {
+            "ActiveEnterTimestampMonotonic": "8224194",
+            "ActiveState": "active",
+            "After": "graphical-session-pre.target basic.target -.mount app.slice var.mount run-user-1000.mount",
+            "LoadState": "loaded",
+            "NRestarts": "0",
+            "PartOf": "graphical-session.target",
+            "Requires": "basic.target app.slice",
+            "Result": "success",
+            "SubState": "running",
+            "Wants": ""
+          },
+          "bunny-config-dir.service": {
+            "ActiveEnterTimestampMonotonic": "8238338",
+            "ActiveState": "active",
+            "After": "-.mount app.slice basic.target var.mount systemd-tmpfiles-setup.service",
+            "LoadState": "loaded",
+            "NRestarts": "0",
+            "PartOf": "graphical-session.target",
+            "Requires": "basic.target app.slice",
+            "Result": "success",
+            "SubState": "exited",
+            "Wants": "systemd-tmpfiles-setup.service"
+          },
+          "bunny-first-boot.service": {
+            "ActiveEnterTimestampMonotonic": "0",
+            "ActiveState": "inactive",
+            "After": "basic.target var.mount bunny-config-dir.service graphical-session.target -.mount app.slice",
+            "LoadState": "loaded",
+            "NRestarts": "0",
+            "PartOf": "graphical-session.target",
+            "Requires": "basic.target bunny-config-dir.service app.slice",
+            "Result": "success",
+            "SubState": "dead",
+            "Wants": ""
+          },
+          "bunny-first-run.service": {
+            "ActiveEnterTimestampMonotonic": "0",
+            "ActiveState": "failed",
+            "After": "basic.target app.slice -.mount var.mount graphical-session.target",
+            "LoadState": "loaded",
+            "NRestarts": "0",
+            "PartOf": "graphical-session.target",
+            "Requires": "basic.target app.slice",
+            "Result": "exit-code",
+            "SubState": "failed",
+            "Wants": ""
+          }
+        },
+        "userListing": "  bunny-companion-window.service loaded active   running Bunny Companion window\n  bunny-companion.service        loaded active   running Bunny Companion runtime\n  bunny-config-dir.service       loaded active   exited  Establish and verify the Bunny OS per-user configuration directory\n  bunny-first-boot.service       loaded inactive dead    Bunny OS per-user first-boot preferences\n\u25cf bunny-first-run.service        loaded failed   failed  Bunny OS first-run experience\n",
+        "userPreset": "enabled\nenabled\n"
+      }
+    }
+  },
+  "probeExtracted": true,
+  "profile": "beta",
+  "schemaVersion": 1,
+  "sourceImage": "/root/bunny-os/build/out/beta/bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-00adf30ed10f.1786122963-x86_64.qcow2"
+}

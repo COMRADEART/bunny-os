@@ -18,7 +18,7 @@ from companion.character.lipsync import MouthShape
 from companion.voice.audio import AudioRouter, DegradationRecord
 from companion.voice.captions import CaptionLedger, SpeechDisposition
 from companion.voice.policy import VoiceDecision, VoicePolicy, VoicePreferences, VoiceSignals
-from companion.voice.provider import ProviderRegistry
+from companion.voice.provider import ProviderRegistry, StreamOutcome
 from companion.voice.queue import SpeechQueue
 from companion.voice.request import InterruptionPolicy, Priority
 from companion.voice.worker import EVENT_KINDS, VoiceWorker
@@ -116,6 +116,25 @@ class LifecycleTests(unittest.TestCase):
         kinds = self.harness.kinds()
         for expected in ("speech_queued", "speech_started", "audio_started", "speech_finished", "mouth_neutral"):
             self.assertIn(expected, kinds)
+
+    def test_audio_started_names_the_provider_that_is_being_heard(self) -> None:
+        """Which engine spoke is a fact about playback, not about configuration.
+
+        The streaming path always carried `providerId`; the synthesise-and-play
+        path carried only the backend and the device, so a desktop — and the
+        acceptance harness — had to infer the engine from the *setting*. That
+        inference is wrong in exactly the case worth reporting: a fallback.
+        """
+        request = make_request()
+        self.assertTrue(self.harness.worker.submit(request).accepted)
+        self.assertTrue(self.harness.worker.drain(timeout=BARRIER_TIMEOUT))
+        started = [item for item in self.harness.events if item.kind == "audio_started"]
+        self.assertTrue(started, "no audio_started event was emitted")
+        payload = started[-1].payload
+        self.assertTrue(payload.get("providerId"),
+                        "audio_started did not name the provider that produced the audio")
+        self.assertIn("implementationId", payload)
+        self.assertIn("voiceId", payload)
 
     def test_only_one_utterance_holds_the_floor_at_a_time(self) -> None:
         gate = threading.Event()
@@ -641,6 +660,30 @@ class StreamingPathTests(unittest.TestCase):
         self.assertTrue(harness.worker.drain(timeout=BARRIER_TIMEOUT))
         self.assertTrue(harness.wait_for(lambda: threading.active_count() <= before))
 
+    def test_provider_success_without_start_evidence_never_announces_talking(self) -> None:
+        class SilentSuccess(ScriptedProvider):
+            def stream(self, request, *, cancellation=None, on_started=None):
+                del cancellation, on_started
+                self.stream_calls += 1
+                return StreamOutcome(
+                    request_id=request.request_id,
+                    provider_id=self.provider_id,
+                    implementation_id=self.declaration.implementation_id,
+                    voice_id="",
+                    succeeded=True,
+                    detail="claimed success without starting output",
+                )
+
+        provider = SilentSuccess("streaming-only", supports_synthesis=False)
+        harness = WorkerHarness(providers=[provider]).start()
+        self.addCleanup(harness.close)
+        harness.worker.submit(make_request(request_id="a", text="a silent sentence"))
+        self.assertTrue(harness.worker.drain(timeout=BARRIER_TIMEOUT))
+        self.assertEqual(
+            harness.dispositions()["a"], SpeechDisposition.DEGRADED_TO_CAPTIONS,
+        )
+        self.assertFalse(any(item.kind == "audio_started" for item in harness.events))
+
     def test_a_failed_synthesis_falls_back_to_streaming_once(self) -> None:
         broken = ScriptedProvider("broken", failure_mode="crash")
         streaming = ScriptedProvider("streaming", supports_synthesis=False)
@@ -650,6 +693,47 @@ class StreamingPathTests(unittest.TestCase):
         self.assertTrue(harness.worker.drain(timeout=BARRIER_TIMEOUT))
         self.assertEqual(harness.dispositions()["a"], SpeechDisposition.PLAYED)
         self.assertEqual(streaming.stream_calls, 1)
+
+    def test_unready_preference_emits_a_structured_fallback_reason(self) -> None:
+        pocket = ScriptedProvider("pocket", available=False)
+        kitten = ScriptedProvider("kitten")
+        harness = WorkerHarness(providers=[pocket, kitten]).start()
+        self.addCleanup(harness.close)
+        harness.worker.submit(make_request(
+            request_id="a", text="a sentence", provider_id="pocket",
+        ))
+        self.assertTrue(harness.worker.drain(timeout=BARRIER_TIMEOUT))
+        fallback = [item for item in harness.events if item.kind == "speech_provider_fallback"]
+        self.assertEqual(len(fallback), 1)
+        self.assertEqual(fallback[0].payload["requestedProviderId"], "pocket")
+        self.assertEqual(fallback[0].payload["providerId"], "kitten")
+        self.assertEqual(fallback[0].payload["failedProviderIds"], ["pocket"])
+        self.assertIn("unavailable", fallback[0].payload["failureReason"])
+
+    def test_fallback_descends_the_complete_provider_order_without_retrying(self) -> None:
+        pocket = ScriptedProvider("pocket", failure_mode="crash")
+        kitten = ScriptedProvider("kitten", failure_mode="crash")
+        espeak = ScriptedProvider("espeak-ng", failure_mode="crash")
+        dispatcher = ScriptedProvider("speech-dispatcher")
+        harness = WorkerHarness(
+            providers=[pocket, kitten, espeak, dispatcher],
+        ).start()
+        self.addCleanup(harness.close)
+        harness.worker.submit(make_request(
+            request_id="a", text="a sentence", provider_id="pocket",
+        ))
+        self.assertTrue(harness.worker.drain(timeout=BARRIER_TIMEOUT))
+        self.assertEqual(harness.dispositions()["a"], SpeechDisposition.PLAYED)
+        self.assertEqual(
+            [pocket.synthesise_calls, kitten.synthesise_calls,
+             espeak.synthesise_calls, dispatcher.synthesise_calls],
+            [1, 1, 1, 1],
+        )
+        fallback_ids = [
+            item.payload["providerId"] for item in harness.events
+            if item.kind == "speech_provider_fallback"
+        ]
+        self.assertEqual(fallback_ids, ["kitten", "espeak-ng", "speech-dispatcher"])
 
     def test_two_failures_end_in_captions_rather_than_a_third_attempt(self) -> None:
         first = ScriptedProvider("first", failure_mode="crash")

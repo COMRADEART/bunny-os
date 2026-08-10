@@ -41,7 +41,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
-from typing import Any, Mapping, Protocol, Sequence
+from typing import Any, Callable, Mapping, Protocol, Sequence
 
 from capability.apply.approval import (
     APPROVAL_DECISIONS,
@@ -178,6 +178,15 @@ class ApprovalRequirement:
     #: task-level approvals such as dispatching the whole task remotely.
     operation_name: str = ""
     destination_declaration: Mapping[str, Any] | None = None
+    #: Whether this destination is off the device.
+    #:
+    #: ``None`` infers it from ``destination != "local"``, which is right for a
+    #: provider — where the destination string *is* a provider id — and wrong
+    #: for a desktop action, whose destination is an application, a settings
+    #: page, an address or a file on this machine. The inference put the word
+    #: "remote" in front of a user for opening their own sound settings, which
+    #: is the opposite of what the field is there to tell them.
+    off_device: bool | None = None
 
     def __post_init__(self) -> None:
         if self.action not in SENSITIVE_ACTIONS:
@@ -188,6 +197,11 @@ class ApprovalRequirement:
             raise ApprovalMismatch(
                 f"{self.action!r} must state what the user gets if they decline"
             )
+
+    @property
+    def leaves_device(self) -> bool:
+        """Whether granting this would send something off the machine."""
+        return (self.destination != "local") if self.off_device is None else bool(self.off_device)
 
     @property
     def fingerprint(self) -> str:
@@ -201,6 +215,7 @@ class ApprovalRequirement:
             "action": self.action,
             "reason": self.reason,
             "destination": self.destination,
+            "leavesDevice": self.leaves_device,
             "providerId": self.provider_id,
             "estimatedCostUnits": self.estimated_cost_units,
             "dataAffected": self.data_affected,
@@ -220,6 +235,7 @@ def requirements_for(
     executor_cost_class: str = "free",
     broker: ToolBroker | None = None,
     provider_declaration: Mapping[str, Any] | None = None,
+    refine: Callable[[Any], "ApprovalRequirement | None"] | None = None,
 ) -> tuple[ApprovalRequirement, ...]:
     """Everything about this plan that needs a person to say yes.
 
@@ -227,6 +243,19 @@ def requirements_for(
     executor that set ``requires_approval=False`` on an operation whose tool
     declares itself destructive still produces a requirement here — §12 lists
     what must be asked about, and an executor is not a party to that decision.
+
+    ``refine`` lets a subsystem replace the generic requirements for one
+    operation with a *more specific* one. It exists for desktop actions, where
+    the generic sentence — "Operation 'copy' would interrupt what you are
+    doing" — is exactly the vague label the desktop brief forbids, and where the
+    binding has to cover the normalised parameters rather than a destination
+    string.
+
+    Two properties keep it from being a way to weaken consent. A refinement
+    **replaces** the generic requirements for its operation rather than
+    suppressing them — an operation that refines produces exactly one
+    requirement, never zero — and a refiner that returns ``None`` or raises
+    changes nothing, so the generic path is what a failure falls back to.
     """
     requirements: list[ApprovalRequirement] = []
 
@@ -274,6 +303,15 @@ def requirements_for(
             ))
 
     for operation in plan.operations:
+        if refine is not None:
+            refined = refine(operation)
+            if refined is not None:
+                # One requirement, and a stricter one: it names the exact target
+                # and binds the normalised parameters. The generic checks below
+                # would add a second question about the same act in vaguer
+                # words, which is worse for the person answering.
+                requirements.append(refined)
+                continue
         declaration = broker.declaration(operation.tool) if broker is not None else None
         external = operation.destination != "local" or (declaration is not None and declaration.external_destination)
         if declaration is not None and declaration.destructive:
@@ -687,7 +725,12 @@ class ApprovalGate:
             action=requirement.action,
             reason=requirement.reason,
             data_affected=requirement.data_affected,
-            destination="remote" if requirement.destination != "local" else "local",
+            # The coarse word the Approval Centre renders. Read from the
+            # requirement rather than inferred from its destination string: a
+            # desktop action's destination is an application on this machine,
+            # and inferring "remote" from "not the literal word local" told a
+            # user their own sound settings were somewhere else.
+            destination="remote" if requirement.leaves_device else "local",
             provider_id=requirement.provider_id,
             estimated_cost_units=requirement.estimated_cost_units,
             resource_impact={"planRevision": plan.revision, "planFingerprint": plan.fingerprint},

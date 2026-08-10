@@ -130,7 +130,13 @@ class CharacterCommandTests(unittest.TestCase):
         self.assertTrue(explained["integrityVerified"])
         # §4: integrity is not creator trust, and the diagnostic says so.
         self.assertIn("does not establish creator trust", explained["note"])
-        self.assertIn("animated-2d", explained["note"])
+        # This asserted that the note named ``animated-2d`` as the top of what
+        # the build implemented. Since the 3D renderer landed there is no rung
+        # above what is implemented, so the note says *that* instead — and the
+        # property worth keeping is that the note is about which rung is drawn
+        # and why, not that it names one particular rung for ever.
+        self.assertIn("capability projection", explained["note"])
+        self.assertIn("selected package", explained["note"])
 
     def test_renderer_demo_command_runs_all_steps(self) -> None:
         result = self.command("renderer", "demo", "--demo-root", str(self.root / "demo"))
