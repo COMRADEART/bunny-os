@@ -68,6 +68,11 @@ class _Job:
     cancellation: CancellationSignal = field(default_factory=CancellationSignal)
     outcome: GenerationOutcome | None = None
     provisional: str = ""
+    #: When the adapter was handed the request, and when its first output
+    #: delta arrived — the two stamps §25's time-to-first-token is the
+    #: difference of. Zero means it never happened.
+    dispatched_monotonic: float = 0.0
+    first_delta_monotonic: float = 0.0
 
 
 class AgentWorker:
@@ -94,6 +99,9 @@ class AgentWorker:
         self._events: deque[dict[str, Any]] = deque(maxlen=_EVENT_RING)
         self._jobs: dict[str, _Job] = {}
         self._generations = 0
+        #: The last settlement's timing note, so §25 can read time to first
+        #: token without the ring having to be scanned for it.
+        self._last_timing: dict[str, Any] = {}
 
     # -- lifecycle -----------------------------------------------------------
 
@@ -297,9 +305,15 @@ class AgentWorker:
             assembler.accept(event)
             if event.kind == "output_delta":
                 job.provisional = (job.provisional + str(event.payload["text"]))[-2048:]
+                if job.first_delta_monotonic == 0.0:
+                    job.first_delta_monotonic = event.monotonic
             self._note("stream", {
                 "kind": event.kind, "requestId": event.request_id,
                 "providerId": event.provider_id, "sequence": event.sequence,
+                # The event's own stamp, carried through so §25 can measure
+                # time to first token without the measurement inventing a
+                # clock the runtime does not otherwise consult.
+                "monotonic": event.monotonic,
             })
 
         self._journal.record_start(
@@ -309,6 +323,7 @@ class AgentWorker:
             paid=config.cost_class == "paid",
         )
         started = self._monotonic()
+        job.dispatched_monotonic = started
         try:
             outcome = adapter.generate(
                 request, config,
@@ -352,14 +367,21 @@ class AgentWorker:
         if outcome.usage is not None and request.task_id:
             self._ledger.record(request.session_id, request.task_id, outcome.usage)
         self._generations += 1
-        self._note("generation_settled", {
+        note: dict[str, Any] = {
             "requestId": request.request_id,
             "providerId": request.provider_id,
             "ok": outcome.ok,
             "cancelled": outcome.cancelled,
             "failureKind": outcome.failure_kind,
             "seconds": round(elapsed, 3),
-        })
+        }
+        if job.first_delta_monotonic:
+            note["firstTokenSeconds"] = round(
+                job.first_delta_monotonic - job.dispatched_monotonic, 4
+            )
+        self._note("generation_settled", note)
+        with self._guard:
+            self._last_timing = dict(note)
         return outcome
 
     def _settle(self, job: _Job, outcome: GenerationOutcome, *,
@@ -387,6 +409,11 @@ class AgentWorker:
         with self._guard:
             job = self._jobs.get(request_id)
         return job.provisional if job is not None else ""
+
+    def last_timing(self) -> dict[str, Any]:
+        """The most recent generation's own timings. Measurement, not state."""
+        with self._guard:
+            return dict(self._last_timing)
 
     def active_for_task(self, task_id: str) -> tuple[str, str]:
         """(request_id, provider_id) of this task's live generation, or ("", "")."""

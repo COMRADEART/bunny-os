@@ -632,11 +632,19 @@ class RemoteProviderExecutor(ProviderBackedExecutor):
             "detail": "remote plan is deterministic; generation follows approval",
         }
         self._service.record_task_selection(task_id, task_selection)
+        # The revision is *in the summary*, and therefore in the plan
+        # fingerprint, on purpose. A remote plan has no operations, so two
+        # attempts would otherwise fingerprint identically and the approval
+        # gate would refuse the second as a replay — which is the gate working
+        # correctly on a plan that lied about being the same act. Attempt two
+        # is a second dispatch to somebody else's computer; §8 says that needs
+        # its own approval, and this is how it gets one.
         return TaskPlan(
             plan_id=_plan_identifier(task_id, revision),
             revision=revision,
             summary=display_summary(
                 f"Answer the request using the remote provider {self._remote_id}"
+                + (f" (attempt {revision})" if revision > 1 else "")
             ),
             operations=(),
             response_to_review="" if revision == 1 else

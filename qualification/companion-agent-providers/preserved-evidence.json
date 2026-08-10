@@ -1,0 +1,234 @@
+{
+  "baseCommit": "65472aa2f43c78e3db16cb4b9f7ff5d244b52e10",
+  "phase": "companion-agent-providers",
+  "preservedEvidence": {
+    "qualification/companion-linux/evidence/environment.json": {
+      "bytes": 4815,
+      "sha256": "9ebde23d74b20d684481ea00a6b741846896d52c39d1924c3b2be742ce8cbe4c"
+    },
+    "qualification/companion-linux/evidence/gate-installed-slice-20.json": {
+      "bytes": 406,
+      "sha256": "b3b8d5aa0c86897df5b91ca3b77852eb70215626f76c0187bbd4e85e30471a0c"
+    },
+    "qualification/companion-linux/evidence/gate-service-100.json": {
+      "bytes": 98653,
+      "sha256": "3946c9cea2c32dec34d2ad998203ea5cda7504d57ba135471b3b85c6ab90fc11"
+    },
+    "qualification/companion-linux/evidence/gate-suite-50.json": {
+      "bytes": 65487,
+      "sha256": "24b0ff7bb5186b0abb107b6077b9aacf7b93d9909c5dd2b6560237949aaad4ed"
+    },
+    "qualification/companion-linux/evidence/gtk-animation.json": {
+      "bytes": 3123,
+      "sha256": "4d3dd76a528333b5fc63e815ac0b41a62ac8d2b1101250f72c5979aec228dc85"
+    },
+    "qualification/companion-linux/evidence/gtk-execution.json": {
+      "bytes": 2998,
+      "sha256": "6fbe06a7fb1d8275fea8a7288fcee97b955349720a622f69c8d680a6d56a8758"
+    },
+    "qualification/companion-linux/evidence/import-provenance-final.json": {
+      "bytes": 4445,
+      "sha256": "70ee92bcf9f542c5eae4f73fac2849a7d5fa7aa5014b8d0f4689eb3fba114b6a"
+    },
+    "qualification/companion-linux/evidence/import-provenance.json": {
+      "bytes": 4190,
+      "sha256": "c56d6ba993a9e629d02fe59e89051ebb97fca7505e9839377cd9a562ac161794"
+    },
+    "qualification/companion-linux/evidence/installed-artifact-final.json": {
+      "bytes": 854,
+      "sha256": "11434ed8c7477b23fb13de6a3ca7bc707e7ad4bd3de8adfb01545c8b779126bd"
+    },
+    "qualification/companion-linux/evidence/installed-artifact.json": {
+      "bytes": 27663,
+      "sha256": "e79cb2c1651ab5189db8bf9fb7762331f08d0d545033b87e4634599563b86dee"
+    },
+    "qualification/companion-linux/evidence/installed-slice.json": {
+      "bytes": 406,
+      "sha256": "a16109e31aa9e4987c888734b4e69f12c5a6525bf0048f2292db771090609731"
+    },
+    "qualification/companion-linux/evidence/linux-companion-suite.log": {
+      "bytes": 712,
+      "sha256": "ad2f920dd2b93ebd835599fdea3bf9b05d67a768123c97ca1b3f3f72d3eb1b1f"
+    },
+    "qualification/companion-linux/evidence/service-lifecycle.log": {
+      "bytes": 2652,
+      "sha256": "7c60a11cd92605b3006f2511b553939df40c16ec24d53734824a28832934edcf"
+    },
+    "qualification/companion-linux/evidence/stress/01-before-any-fix.json": {
+      "bytes": 28193,
+      "sha256": "40f19fdbdc6a94b72168bb0412de3b9047355370f98fa85b2e29d9c5dcece1dc"
+    },
+    "qualification/companion-linux/evidence/stress/02-before-store-fix-instrumented.json": {
+      "bytes": 28408,
+      "sha256": "2cf18fffbe046c9f1df77972f0c3b97e242935b3ed27c8743c790a8dba22a5b7"
+    },
+    "qualification/companion-linux/evidence/stress/03-after-both-fixes.json": {
+      "bytes": 70823,
+      "sha256": "78e7e441359a531308bb83e750c13b730771ad3a2f8edb47f0b40555fc3fe3fd"
+    },
+    "qualification/companion-linux/evidence/stress/06-final-service-100.json": {
+      "bytes": 98653,
+      "sha256": "3946c9cea2c32dec34d2ad998203ea5cda7504d57ba135471b3b85c6ab90fc11"
+    },
+    "qualification/companion-linux/evidence/stress/07-final-suite-50.json": {
+      "bytes": 65487,
+      "sha256": "24b0ff7bb5186b0abb107b6077b9aacf7b93d9909c5dd2b6560237949aaad4ed"
+    },
+    "qualification/companion-linux/evidence/stress/manifest.json": {
+      "bytes": 6754,
+      "sha256": "3532774d415a2e10a767a30abbcdc90ee17ba72a6dc190dd7ca2053e2384e7d5"
+    },
+    "qualification/companion-speech-input/evidence/env.json": {
+      "bytes": 1054,
+      "sha256": "8400231a8b53375e753146a36adc6c6d5739ec5db42e1a9a3d9731bd2f024845"
+    },
+    "qualification/companion-speech-input/evidence/gate-speech-100.json": {
+      "bytes": 236123,
+      "sha256": "b09ebf9a7a1fbe6847f0c4d84b0d838cab554d87ef5007a2b3051b55e0e03eda"
+    },
+    "qualification/companion-speech-input/evidence/gate-speech-slice-20.json": {
+      "bytes": 49924,
+      "sha256": "9319814df00b9b9f45adb748303e2e85cecdf613b71c7c8f060baaa635295941"
+    },
+    "qualification/companion-speech-input/evidence/gate-suite-50.json": {
+      "bytes": 124202,
+      "sha256": "9df0dfad5380bc17d54698fb5088beabd1f8aa47f11cb2d06d75aed02c31d8d8"
+    },
+    "qualification/companion-speech-input/evidence/gate-verdicts.json": {
+      "bytes": 2040,
+      "sha256": "9c955feaa3cf81a7ed964210eb663a8a4f3eaa9442764b3f15fee4aa113fc822"
+    },
+    "qualification/companion-speech-input/evidence/gates.log": {
+      "bytes": 8441,
+      "sha256": "3cc7081d1451c2e70b0fcf17be00976b251fadf02fcf215f8c394bc521284d35"
+    },
+    "qualification/companion-speech-input/evidence/gtk-speech-input.json": {
+      "bytes": 8946,
+      "sha256": "0002969901f81e757b1fcfcaf42117e6391806645539101fbdefbf7d3f041e22"
+    },
+    "qualification/companion-speech-input/evidence/manifest.json": {
+      "bytes": 1534,
+      "sha256": "924f91d8bad0e057025c68442a7f2ca968f06f252c624e192041e50f2baa2bfb"
+    },
+    "qualification/companion-speech-input/evidence/slice.json": {
+      "bytes": 7552,
+      "sha256": "830263ffa4c210a37d759db369fb7d330f97b85f2fda22ba19c3364ccd74f247"
+    },
+    "qualification/companion-speech-input/evidence/speech-measurements.json": {
+      "bytes": 3667,
+      "sha256": "0dd56e7c8fde55552f206fb8fd6fb82db031087325590b15c0ed5fad5ecc55af"
+    },
+    "qualification/companion-voice-closure/evidence/env.json": {
+      "bytes": 4606,
+      "sha256": "2f159f518f09e62fd6cf10723ec085800d4f5411b786df41a3a1fd86ea1e0d51"
+    },
+    "qualification/companion-voice-closure/evidence/gate-suite-50.json": {
+      "bytes": 89064,
+      "sha256": "9cb66c49b341f1b353ea39ee5f19577da55227e015bd3537ce5fe54f67dd010b"
+    },
+    "qualification/companion-voice-closure/evidence/gate-voice-100.json": {
+      "bytes": 175542,
+      "sha256": "46fb6b5471bcaf63e1eac0360a6e7460b92658c24938ea6fe36b7ddae28a763f"
+    },
+    "qualification/companion-voice-closure/evidence/gate-voice-renderer-slice-20.json": {
+      "bytes": 36945,
+      "sha256": "cf8d5b86397b799d763da51e80926f7c6701a6d73a2a4ca0e8c7ed993bf4ab34"
+    },
+    "qualification/companion-voice-closure/evidence/gate-voice-slice-20.json": {
+      "bytes": 36941,
+      "sha256": "ffa01e11d17ccb0a07ad45194e6d5d6ad5175ccf4cb13f885887571562a9a476"
+    },
+    "qualification/companion-voice-closure/evidence/gates.log": {
+      "bytes": 9450,
+      "sha256": "fc86b1e66fefe80fe135bd1c9f6df4898d21feb716e3186ee058dc41a1152c8b"
+    },
+    "qualification/companion-voice-closure/evidence/gtk-voice-viseme.json": {
+      "bytes": 15545,
+      "sha256": "b6d385d5686fb09ac4dc6af858033f2606608aa354374d815105f973febead74"
+    },
+    "qualification/companion-voice-closure/evidence/manifest.json": {
+      "bytes": 16704,
+      "sha256": "82e3c680c5f0670f36c2a1971086a1b9e089331eaca64c26df8013cc6587d6b1"
+    },
+    "qualification/companion-voice-closure/evidence/slice.json": {
+      "bytes": 6389,
+      "sha256": "8823cae60477ae38205ac06cf868beed6aaa66f7d259900d9a2698fc66c6d958"
+    },
+    "qualification/companion-voice-closure/evidence/voice-renderer-slice.json": {
+      "bytes": 7350,
+      "sha256": "e96988e22711a71484238a61e789bcc54a0cfddddcf42618689a0b650db832cd"
+    },
+    "qualification/companion-voice-closure/install-set-equivalence.json": {
+      "bytes": 2379,
+      "sha256": "09c61dd24c591eb27afac6f458ea0ec0b05f593ccbad0ea0555bc8c54f8a1581"
+    },
+    "qualification/companion-voice-closure/preserved-evidence.json": {
+      "bytes": 4876,
+      "sha256": "9d7af911c058a20bfc63e1247a083849a725ad1fead4531ba9084fb585d0f0eb"
+    },
+    "qualification/companion-voice/evidence/gate-suite-50.json": {
+      "bytes": 89048,
+      "sha256": "be10c7fd1bd163984559284db79d34b423e4ee9128e8265e9a4568a3bf17370e"
+    },
+    "qualification/companion-voice/evidence/gate-voice-100.json": {
+      "bytes": 175139,
+      "sha256": "7b7d5100246aacedc3f7da54b0b0a42656c6883866a48c7e0808b77a3035531e"
+    },
+    "qualification/companion-voice/evidence/gate-voice-slice-20.json": {
+      "bytes": 36924,
+      "sha256": "eeeef493c6cc779fc1401b4ac34b56ba8483c51d1e130b62d2142538ef4caefe"
+    },
+    "qualification/companion-voice/evidence/gates.log": {
+      "bytes": 6697,
+      "sha256": "78239d87ab07c97d5ed8f37c85b7b7f59de35de587f6a7f340705262efdcdb3a"
+    },
+    "qualification/companion-voice/evidence/manifest.json": {
+      "bytes": 9156,
+      "sha256": "8ff86390956d1c5259fceb93e9b9a201db6d5d5a8f4ae5edb0c995af2c4c4090"
+    },
+    "qualification/companion-voice/evidence/voice-measurements.json": {
+      "bytes": 5761,
+      "sha256": "a3bfdb78eeba64d5b44f95a22831ca4323309710e951db784a62d19188e75883"
+    }
+  },
+  "preservedReports": {
+    "COMPANION_CHARACTER_RENDERER_REPORT.md": {
+      "bytes": 28980,
+      "sha256": "43cdc9805751f704d6cabb2d7dba37e52473ec592035b323dabf13f3ca267de5"
+    },
+    "COMPANION_INTEGRATION_REPORT.md": {
+      "bytes": 26087,
+      "sha256": "a6935a9430b528aa6f52a0d6bf13e3151f93e1177e92e2299cd50e2343c2cbbc"
+    },
+    "COMPANION_LINUX_VALIDATION_REPORT.md": {
+      "bytes": 24121,
+      "sha256": "64eaa6e504eb8b56aea915a889f0d490c1f24e8f71ef75cdb01d345be903953b"
+    },
+    "COMPANION_PAUSE_APPROVAL_REPORT.md": {
+      "bytes": 27479,
+      "sha256": "0d249187e3ac1be99ff98f3b31e09b1399b1bbe07cbb7335a481b1235ecbacd2"
+    },
+    "COMPANION_RUNTIME_CORE_REPORT.md": {
+      "bytes": 41667,
+      "sha256": "216cd6e06af0d5fd733db7fe25026e2970effea318a0581247203ffd0e2227f0"
+    },
+    "COMPANION_SPEECH_INPUT_REPORT.md": {
+      "bytes": 34273,
+      "sha256": "b1d9f92bac231bfeec7b76e8667aa5e390aa7607e9961e7dc7103887f4639d06"
+    },
+    "COMPANION_VOICE_CLOSURE_REPORT.md": {
+      "bytes": 30890,
+      "sha256": "f475a9e3a2b67225c6a0b791846f8ce33845e54b2815ca2353b3bcef5103efb5"
+    },
+    "COMPANION_VOICE_RUNTIME_REPORT.md": {
+      "bytes": 51668,
+      "sha256": "258ccebd83a4602415bdd4006240fa18769a0134b6dc609c889a6abc418f3d3c"
+    }
+  },
+  "schemaVersion": 1,
+  "why": [
+    "This phase adds a capability; it corrects no earlier phase and supersedes no earlier claim.",
+    "Preservation is therefore the whole relationship: every prior evidence file and every prior report must round-trip byte-identically, and a test asserts it rather than a sentence promising it.",
+    "qualification/** is -text in .gitattributes, so a Windows checkout cannot renormalise these bytes; that rule is what makes a digest comparison meaningful across the two hosts this phase used."
+  ]
+}

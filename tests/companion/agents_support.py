@@ -95,6 +95,9 @@ class ScriptedAdapter:
     """
 
     adapter_identity: str = "scripted"
+    #: Declared like a real adapter's, so a double gets the capability it
+    #: implements rather than one the registry guessed from its name.
+    supports_structured_output: bool = True
     script: tuple[tuple[str, Any], ...] = (("delta", "scripted answer"),)
     probe_available: bool = True
     probe_detail: str = "scripted runtime"

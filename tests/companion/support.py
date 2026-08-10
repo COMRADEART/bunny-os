@@ -69,11 +69,13 @@ class Harness:
         broker: ToolBroker | None = None,
         clock: FrozenClock | None = None,
         assessment: Assessment | None = None,
+        providers: Sequence[Any] = (),
     ) -> CompanionRuntime:
         """Build a fresh runtime over the same store — that is what a restart is."""
         return CompanionRuntime(RuntimeOptions(
             store=CompanionStore(self.root / "store"),
             assessment=assessment or self.assessment,
+            providers=tuple(providers),
             executors=tuple(executors if executors is not None else (DeterministicLocalExecutor(),)),
             reviewers=tuple(reviewers if reviewers is not None else (DeterministicLocalReviewer(),)),
             broker=broker or ToolBroker(),

@@ -81,6 +81,12 @@ _ANTHROPIC_VERSION = "2023-06-01"
 class AnthropicAdapter:
     """One instance per service; connections are per-generation."""
 
+    #: The Messages API has no ``response_format``; structured requests rely
+    #: on instruction-following plus the local validation that always runs.
+    #: Declared ``True`` because the adapter *can* honour the request — the
+    #: enforcement is simply ours rather than the provider's.
+    supports_structured_output = True
+
     def __init__(self, *, session: WireSession | None = None) -> None:
         self._session = session if session is not None else WireSession()
 

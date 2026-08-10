@@ -1983,6 +1983,7 @@ class CompanionService:
         broker = ToolBroker()
         executors: tuple[Any, ...] = (DeterministicLocalExecutor(),)
         reviewers: tuple[Any, ...] = (DeterministicLocalReviewer(),)
+        router_destinations: tuple[Any, ...] = ()
         if self.agents is not None:
             from .agent_bridge import (
                 ProviderBackedExecutor,
@@ -2013,6 +2014,20 @@ class CompanionService:
                 reviewers += (ProviderBackedReviewer(
                     self.agents, provider_id=agent_configuration.reviewer_provider_id,
                 ),)
+            # The capability router decides whether work may leave the device
+            # and needs a declaration to decide against. Without this the
+            # router has no destination to name, so a configured remote
+            # provider is unreachable however the executors are wired.
+            from .agents.capability import router_providers
+
+            authenticated = tuple(
+                item.provider_id for item in agent_configuration.providers
+                if item.remote and item.enabled
+                and self.agents.registry.credential_status_for(item.provider_id).present
+            )
+            router_destinations = router_providers(
+                agent_configuration, authenticated_ids=authenticated,
+            )
         return CompanionRuntime(RuntimeOptions(
             store=CompanionStore(self.root / "store"),
             assessment=assessment,
@@ -2021,7 +2036,7 @@ class CompanionService:
             broker=broker,
             approvals=CompanionApprovalStore.load(self.root / "approvals.json"),
             consent=consent,
-            providers=(),
+            providers=router_destinations,
             policy=CoordinationPolicy(),
             clock=SystemClock(),
             ids=RandomIds(),

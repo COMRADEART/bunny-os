@@ -1,0 +1,128 @@
+{
+  "schema": "bunny-os/agent-provider-measurements/1",
+  "host": {
+    "platform": "linux",
+    "python": "3.14.3",
+    "pid": 367205
+  },
+  "series": [
+    {
+      "name": "provider-selection",
+      "unit": "seconds",
+      "count": 20,
+      "min": 0.0,
+      "median": 0.0,
+      "p95": 0.0001,
+      "max": 0.0027
+    },
+    {
+      "name": "context-construction",
+      "unit": "seconds",
+      "count": 20,
+      "min": 0.0001,
+      "median": 0.0001,
+      "p95": 0.0002,
+      "max": 0.0002
+    },
+    {
+      "name": "structured-validation",
+      "unit": "seconds",
+      "count": 50,
+      "min": 0.0,
+      "median": 0.0,
+      "p95": 0.0,
+      "max": 0.0001
+    },
+    {
+      "name": "stream-assembly-64-deltas",
+      "unit": "seconds",
+      "count": 50,
+      "min": 0.0002,
+      "median": 0.0002,
+      "p95": 0.0002,
+      "max": 0.0006
+    },
+    {
+      "name": "total-generation",
+      "unit": "seconds",
+      "count": 12,
+      "min": 0.5542,
+      "median": 0.5594,
+      "p95": 0.6668,
+      "max": 1.5542
+    },
+    {
+      "name": "output-rate",
+      "unit": "bytes-per-second",
+      "count": 12,
+      "min": 19.9464,
+      "median": 55.4207,
+      "p95": 55.6949,
+      "max": 55.9343
+    },
+    {
+      "name": "time-to-first-token",
+      "unit": "seconds",
+      "count": 12,
+      "min": 0.5536,
+      "median": 0.5588,
+      "p95": 0.6661,
+      "max": 1.5534
+    },
+    {
+      "name": "cancellation-latency",
+      "unit": "seconds",
+      "count": 6,
+      "min": 0.0006,
+      "median": 0.1119,
+      "p95": 1.252,
+      "max": 1.252
+    },
+    {
+      "name": "local-model-startup",
+      "unit": "seconds",
+      "count": 0,
+      "result": "NOT_RUN",
+      "reason": "no sample was taken on this host"
+    }
+  ],
+  "memory": {
+    "companionProcessBeforeAgents": {
+      "rssBytes": 27496448
+    },
+    "companionProcessWithAgentRuntimeIdle": {
+      "rssBytes": 28971008
+    },
+    "companionProcessPssIdle": {
+      "pssBytes": 23867392
+    },
+    "modelServerProcesses": [
+      {
+        "pid": 193162,
+        "name": "llama-server",
+        "rssBytes": 694685696,
+        "pssBytes": 688843776
+      }
+    ],
+    "note": "the model server's memory is the model's, measured separately by pid; it is never added to the companion's own figure",
+    "companionProcessAfterGenerations": {
+      "rssBytes": 29917184
+    },
+    "modelServerProcessesAfter": [
+      {
+        "pid": 193162,
+        "name": "llama-server",
+        "rssBytes": 694685696,
+        "pssBytes": 688844800
+      }
+    ]
+  },
+  "notes": [
+    "local model startup is NOT_RUN: the model server on this host was already running and starting one would measure a different act"
+  ],
+  "provider": {
+    "providerId": "local.llamacpp",
+    "modelId": "/home/bunny/.local/share/bunny-os/agent-models/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "adapterId": "llamacpp"
+  }
+}
