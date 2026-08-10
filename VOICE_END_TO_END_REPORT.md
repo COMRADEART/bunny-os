@@ -5,7 +5,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Bunny voice end-to-end and desktop visual acceptance
 
-Candidate: `feature/bunny-desktop-shell` at **`ce7f7a1`**.
+Candidate: `feature/bunny-desktop-shell` at **`fdab622`**. The spoken run and the
+desktop photographs below were taken at `ce7f7a1`, the commit that carries the
+three fixes; `fdab622` adds the packaging split, the settings round-trip test
+and this report, and changes nothing the run exercised.
 
 Measured on the Fedora 44 reference host, in a QEMU/KVM guest booted from the
 `shell-test` image, unless a line says otherwise.
@@ -27,8 +30,9 @@ PipeWire playback        PASS  the emulated speaker's own recording says
                                "files is open"
 Character lifecycle      NOT OBSERVED - the shell's own activation paths are
                                both blocked; see "What is not proved"
-Tests                    4646 run, 0 failed, 7 skipped
-Source gate              re-run pending
+Tests                    4649 run, 0 failed, 7 skipped
+Source gate              PASS, exit 0, clean tree
+Exact image              NOT BUILT - the host ran out of disk; see below
 ```
 
 ## What the screenshot actually showed
@@ -234,18 +238,64 @@ plainly rather than implied.
    source. See KNOWN_LIMITATIONS.md.
 2. **No human has heard any of this audio.**
 3. **The exact image was not built or booted from this candidate.** The
-   attempt failed on the host's disk: C: reached zero bytes free, the WSL
-   virtual disk could not grow, and the build died with block-layer I/O errors.
+   attempt failed on the host's disk, not on anything in the tree: Windows C:
+   reached zero bytes free, so the WSL `ext4.vhdx` could not grow, and writes
+   into never-allocated regions failed at the block layer. `df` inside the
+   guest still reported 421 GB free, which is why the first symptom was
+   `podman: reading boot ID from runtime alive file: input/output error` rather
+   than anything about space. The build reached step 20 of 32 and stopped.
 4. Settings UI at 1920×1080 and 1366×768, the spoken telemetry and file-search
    queries, the Pocket→Kitten fallback, the all-providers-unavailable case, the
    offline command and the interruption latency all have harnesses written and
    staged, and none of them has been run.
 
-## Tests
+## Package boundaries
+
+`assets/voice/tts` was one install route carrying both engines, which made
+"ship the small engine only" a source edit. It is now two:
 
 ```text
-4646 run, 0 failed, 7 skipped     (as bunny, on ext4, at ce7f7a1)
+bunny-voice-core     speech-synthesis-runtime, speech-recognition-models,
+                     speech-recognition-licenses, the companion package
+bunny-tts-pocket     speech-synthesis-model-pocket  + the runtime above
+                     ~1.1 GiB uncompressed, installed by default
+bunny-tts-kitten     speech-synthesis-model-kitten
+                     ~107 MiB including its ONNX runtime and numpy
+bunny-tts-espeak     a Fedora package dependency, not an asset route
 ```
+
+Same destinations, same bytes; the boundary is now where a profile can act on
+it. `SpeechSynthesisService` is untouched — it selects by provider id and
+descends a fixed fallback order over whatever is installed — and a test asserts
+neither engine's tree can reach through the other's route.
+
+## Settings contract
+
+`settings_voice_get` and `settings_voice_set` are in `OPERATIONS`, in
+`schemas/companion-protocol.schema.json`, and in the reachability test that
+notices an operation being added. What was missing was a test of what the
+listing is *for*, and it is there now: default Pocket → set Kitten → read back
+Kitten → set Pocket → read back Pocket, with every read taken from the file
+rather than from the object that wrote it. A provider id the registry does not
+own is refused with `SettingsError` and leaves the stored choice alone.
+
+## Tests and gate
+
+```text
+4649 run, 0 failed, 7 skipped     (as bunny, on ext4, at fdab622)
+
+source gate: PASS                 (as bunny, on ext4, at fdab622, clean tree)
+  ok  baselineRecorded          ok  qualificationSuitesPass
+  ok  licenceGatePassed         ok  repositoryValidation
+  ok  minimisationComplete      ok  sourceSuitesPass
+exit code 0
+```
+
+The gate failed once in between, on `sourceSuitesPass`, and that failure was the
+host rather than the source: `scripts/task.py test` re-run by hand at the same
+commit passed 4646 and then 60, and the run that failed overlapped the disk
+fault described below. A gate result taken while the block layer is returning
+I/O errors says nothing about the tree.
 
 Twenty-six new, in four groups: every extension module parsed as strict-mode ES
 with a planted-fault control; the ownership rule inside and outside a user
