@@ -386,7 +386,11 @@ class ThePackageRoute(unittest.TestCase):
         self.assertEqual(destinations.get("app-catalog-entries"), "/usr/share/bunny-os/catalog")
         from catalog.registry import INSTALLED_CATALOG_DIRECTORY
 
-        self.assertEqual(str(INSTALLED_CATALOG_DIRECTORY), "/usr/share/bunny-os/catalog")
+        # as_posix(), because a Windows checkout renders a PurePosixPath's
+        # separators its own way and the destination is a Linux path either way.
+        # as_posix(), because str() on a Windows checkout renders the
+        # separators its own way and the destination is a Linux path either way.
+        self.assertEqual(INSTALLED_CATALOG_DIRECTORY.as_posix(), "/usr/share/bunny-os/catalog")
 
 
 class TheAuditFailsClosed(unittest.TestCase):
