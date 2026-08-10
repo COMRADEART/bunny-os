@@ -15,6 +15,7 @@ evidence of runtime isolation.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import unittest
 
 import trust
@@ -117,6 +118,37 @@ class PlanShapeTests(unittest.TestCase):
         plan = self.plan()
         self.assertIn("/dev/dri", plan.devices)
         self.assertEqual(len(plan.devices), len(BASE_DEVICES) + 1)
+
+    def test_no_network_grant_means_no_resolver_in_the_sandbox(self) -> None:
+        """A capsule with no network has no use for a resolver, and no reason to
+        learn the addresses of this machine's DNS servers."""
+        plan = self.plan()
+        self.assertFalse([bind for bind in plan.binds if bind.target.startswith("/etc/")])
+
+    def test_a_network_grant_brings_the_resolver_with_it(self) -> None:
+        """Found on Linux: without this a capsule with network permission could
+        reach a raw address and could not resolve a name, which every real
+        application would have experienced as the permission not working."""
+        from capsules.isolation import NETWORK_SYSTEM_FILES
+
+        present = [name for name in NETWORK_SYSTEM_FILES if Path(name).exists()]
+        if not present:
+            # A developer host with no /etc. The rule is still asserted by the
+            # Linux qualification run, which is where it was found; recording a
+            # skip here is more honest than asserting something this machine
+            # cannot show.
+            self.skipTest("this host has none of the network system files")
+        manifest = manifest_for(optional=("network",), network_ceiling="internet")
+        self.world.install(manifest)
+        capsule = self.world.runtime.open("org.example.PhotoEditor")
+        self.world.answer(("network", "allow", "always"))
+        self.world.request(capsule, category="network", resource=trust.network_resource("internet"))
+        plan = self.world.runtime.build_plan(self.world.runtime.open("org.example.PhotoEditor"))
+        system_binds = {bind.target: bind for bind in plan.binds if bind.origin == "system" and bind.kind != "tmpfs"}
+        self.assertTrue(system_binds, "a network grant brought no system files")
+        for target, bind in system_binds.items():
+            self.assertIn(target, NETWORK_SYSTEM_FILES)
+            self.assertFalse(bind.writable, f"{target} is writable")
 
     def test_a_network_grant_sets_the_class_and_stops_unsharing_the_namespace(self) -> None:
         manifest = manifest_for(optional=("network",), network_ceiling="internet")

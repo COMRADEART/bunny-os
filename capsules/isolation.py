@@ -88,6 +88,29 @@ CREDENTIAL_DIRECTORIES = frozenset({
     ".git-credentials", ".netrc", ".authinfo", ".gnome2_private", "keyrings",
 })
 
+#: The system files a capsule needs before a network grant is usable, bound
+#: read-only and only when a network class other than ``none`` is granted.
+#:
+#: Found by the Linux qualification run. Without them a capsule with network
+#: permission could open a socket to a raw address and could not resolve a name,
+#: because nothing in the sandbox told it where a resolver was. Every real
+#: application would have failed, and the failure would have looked like the
+#: network permission not working rather than like a missing file.
+#:
+#: Read-only, individually named, and absent entirely when the network class is
+#: ``none`` — a capsule with no network has no use for a resolver and no reason
+#: to learn the addresses of the machine's DNS servers.
+NETWORK_SYSTEM_FILES = (
+    "/etc/resolv.conf",
+    "/etc/hosts",
+    "/etc/nsswitch.conf",
+    "/etc/host.conf",
+    "/etc/services",
+    "/etc/ssl/certs",
+    "/etc/pki/tls/certs",
+    "/etc/crypto-policies",
+)
+
 #: Where granted files appear inside the sandbox. A fixed, capsule-visible root
 #: rather than the file's original location: an application that receives
 #: ``/home/you/Pictures/cat.png`` at its real path learns your user name, your
@@ -423,6 +446,23 @@ def plan_isolation(
             continue
 
         raise CapsuleIsolationError(f"no isolation rule for category {category!r}")
+
+    # A usable network needs a resolver and a trust store. Added after the
+    # network class is known, so a capsule with no network grant gets neither.
+    if network != "none":
+        for path in NETWORK_SYSTEM_FILES:
+            resolved = Path(path)
+            if not resolved.exists():
+                continue
+            binds.append(
+                BindMount(
+                    source=str(resolved),
+                    target=path,
+                    writable=False,
+                    kind="directory" if resolved.is_dir() else "file",
+                    origin="system",
+                )
+            )
 
     unenforced = tuple(
         sorted(category for category in granted_categories if category not in backend.enforces)
