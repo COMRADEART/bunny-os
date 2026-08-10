@@ -11,8 +11,9 @@
   readiness. No model is downloaded automatically.
 - This host could not exercise a visible GNOME/Mutter/Wayland session or a
   physical microphone/speaker. The QEMU guest exposed only PipeWire's virtual
-  `auto_null.monitor`. Spoken `Open Files`, TTS audibility and speech
-  interruption remain graphical hardware-acceptance blockers.
+  `auto_null.monitor`, which Bunny classifies as an output monitor rather than
+  a microphone. Spoken `Open Files`, TTS audibility and speech interruption
+  remain graphical hardware-acceptance blockers.
 - 1920×1080 and 1366×768 pass static layout/source tests only; no current visual
   screenshot acceptance run exists.
 - Wake-word capture is deliberately disabled and cannot be enabled by settings.

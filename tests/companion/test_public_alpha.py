@@ -400,6 +400,34 @@ class SpeechSurveyTests(unittest.TestCase):
         self.assertTrue(ready.available)
         self.assertTrue(ready.push_to_talk_enabled)
 
+    def test_an_output_monitor_is_not_reported_as_a_microphone(self) -> None:
+        from companion.onboarding.speech import survey_speech
+        from tests.companion.speech_support import ScriptedCaptureBackend
+
+        backend = ScriptedCaptureBackend(
+            "pulse", devices=(), monitors=("auto_null.monitor",)
+        )
+        survey = survey_speech(capture_backends=(backend,), recognizers=())
+
+        self.assertFalse(survey.microphone_present)
+        self.assertFalse(survey.push_to_talk_enabled)
+        self.assertIn("not microphones", survey.capture_detail)
+
+    def test_audio_survey_excludes_output_monitors_from_inputs(self) -> None:
+        from companion.onboarding.audio import survey_audio
+        from tests.companion.speech_support import ScriptedCaptureBackend
+
+        backend = ScriptedCaptureBackend(
+            "pulse", devices=(), monitors=("auto_null.monitor",)
+        )
+        survey = survey_audio(
+            output_backends=(), input_backends=(backend,), voice_providers=()
+        )
+
+        self.assertFalse(survey.input_available)
+        self.assertEqual(survey.inputs, ())
+        self.assertIn("not microphones", survey.input_detail)
+
 
 class IdentityTests(unittest.TestCase):
     """§39 and §40."""

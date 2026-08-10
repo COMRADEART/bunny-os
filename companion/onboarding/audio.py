@@ -132,18 +132,23 @@ class AudioSurvey:
         }
 
 
-def _enumerate(backends: Sequence[Any]) -> tuple[tuple[AudioDeviceFinding, ...], str, str]:
+def _enumerate(
+    backends: Sequence[Any], *, exclude_monitors: bool = False
+) -> tuple[tuple[AudioDeviceFinding, ...], str, str]:
     findings: list[AudioDeviceFinding] = []
     chosen = ""
     failures: list[str] = []
     for backend in backends:
         backend_id = str(getattr(backend, "backend_id", "") or "")
         try:
-            devices = backend.discover()
+            devices = tuple(backend.discover())
         except Exception as error:
             failures.append(f"{backend_id}: {error}")
             continue
+        usable = 0
         for device in devices:
+            if exclude_monitors and bool(getattr(device, "monitor", False)):
+                continue
             findings.append(AudioDeviceFinding(
                 device_id=str(getattr(device, "device_id", "") or ""),
                 backend_id=backend_id,
@@ -152,8 +157,14 @@ def _enumerate(backends: Sequence[Any]) -> tuple[tuple[AudioDeviceFinding, ...],
                 default=bool(getattr(device, "default", False)),
                 state=str(getattr(device, "state", "") or ""),
             ))
-        if devices and not chosen:
+            usable += 1
+        if usable and not chosen:
             chosen = backend_id
+        elif exclude_monitors and devices and not usable:
+            failures.append(
+                f"{backend_id}: only output-monitor sources were found; "
+                "they are not microphones"
+            )
         if len(findings) >= 32:
             break
     detail = (
@@ -201,7 +212,7 @@ def _side(backends: Sequence[Any] | None, module: str) -> tuple[tuple[AudioDevic
             backends = discover()
         except Exception as error:
             return (), "", f"the {module} backends could not be built: {error}"
-    return _enumerate(backends)
+    return _enumerate(backends, exclude_monitors=module != "voice.audio")
 
 
 def _voice(providers: Any, *, monotonic: float) -> tuple[bool, str, str]:

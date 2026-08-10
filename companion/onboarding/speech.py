@@ -160,11 +160,17 @@ def _microphones(backends: Sequence[Any]) -> tuple[tuple[MicrophoneFinding, ...]
     for backend in backends:
         backend_id = str(getattr(backend, "backend_id", "") or "")
         try:
-            devices = backend.discover()
+            devices = tuple(backend.discover())
         except Exception as error:
             details.append(f"{backend_id}: {error}")
             continue
+        usable = 0
         for device in devices:
+            # A sink monitor is the machine's own playback, not a microphone.
+            # The controlled speech slice may explicitly select one by id, but
+            # onboarding and readiness must never offer it to a person as input.
+            if bool(getattr(device, "monitor", False)):
+                continue
             findings.append(MicrophoneFinding(
                 device_id=str(getattr(device, "device_id", "") or ""),
                 backend_id=backend_id,
@@ -173,8 +179,14 @@ def _microphones(backends: Sequence[Any]) -> tuple[tuple[MicrophoneFinding, ...]
                 default=bool(getattr(device, "default", False)),
                 state=str(getattr(device, "state", "") or ""),
             ))
-        if devices and not chosen:
+            usable += 1
+        if usable and not chosen:
             chosen = backend_id
+        elif devices and not usable:
+            details.append(
+                f"{backend_id}: only output-monitor sources were found; "
+                "they are not microphones"
+            )
         if len(findings) >= 32:
             break
     detail = (
