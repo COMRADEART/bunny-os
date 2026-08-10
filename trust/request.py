@@ -69,7 +69,12 @@ REASON_SOURCES = ("catalog", "application", "task", "unknown")
 PURPOSES = ("read", "write", "use")
 
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
-_CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
+#: Every control character, newline and tab included. A reason is one sentence
+#: on one line: an application that could put a newline in it could draw a second
+#: line under the real one — "Allow always (recommended)" is a convincing forgery
+#: when it appears in the same typeface directly below a genuine sentence. Tab is
+#: refused for the same reason in a surface that renders monospaced.
+_CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 
 
 def _identifier(value: object, what: str) -> str:

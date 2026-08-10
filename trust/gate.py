@@ -369,6 +369,51 @@ class TrustGate:
 
     # -- revocation ------------------------------------------------------
 
+    def block(
+        self,
+        *,
+        application_id: str,
+        category: str,
+        resource: Any = None,
+        purpose: str = "use",
+    ) -> Grant:
+        """Record a standing denial a person made in Settings.
+
+        The counterpart to :meth:`revoke`, and a different intention: revoking
+        removes an allow, blocking says *never*. Settings offers both, because
+        "stop letting it read my Documents" and "never let it read my Documents"
+        are different things to want and a system that only had the first would
+        re-prompt tomorrow.
+
+        This is the only way to create a grant without a prompt, and it can only
+        ever create a **deny**. There is deliberately no matching ``allow``: a
+        standing permission has to come from a question a person answered, and a
+        method that could write one would be a way around the gate.
+        """
+        from .resources import resource_for
+
+        checked = resource_for(category, resource)
+        grant = Grant(
+            grant_id=secrets.token_urlsafe(12),
+            application_id=application_id,
+            category=category,
+            resource=checked,
+            purpose=purpose,
+            scope="always",
+            verdict="deny",
+            source="user",
+            decided_at=utc_now(),
+        )
+        self.store.put(grant)
+        self.audit.record_revocation(
+            application_id=application_id,
+            category=category,
+            resource=checked,
+            revocation=descriptor(category).revocation,
+            at=utc_now(),
+        )
+        return grant
+
     def revoke(self, grant_id: str, *, application_id: str) -> bool:
         """Withdraw one standing permission and say how soon it stops mattering."""
         grants = {grant.grant_id: grant for grant in self.store.for_application(application_id)}

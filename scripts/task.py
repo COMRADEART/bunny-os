@@ -227,6 +227,7 @@ def main() -> int:
         "test-release-closure", "test-licensing", "test-reproducibility", "test-signing",
         "test-release", "test-hardware-evidence", "test-accessibility-evidence", "test-pilot-gates",
         "test-capability", "test-companion",
+        "test-trust", "test-capsules", "test-app-catalog", "test-capsule-task", "test-capsule-phase",
     ))
     args = parser.parse_args()
     if args.command == "audit":
@@ -298,6 +299,20 @@ def main() -> int:
         component_tests("accessibility_evidence")
     elif args.command == "test-pilot-gates":
         component_tests("pilot_gates")
+    elif args.command == "test-app-catalog":
+        component_tests("app_catalog")
+    elif args.command == "test-capsule-task":
+        component_tests("capsule_task")
+    elif args.command == "test-capsule-phase":
+        # The whole of the Companion/Capsule/Trust phase, in the order a failure
+        # is cheapest to read: the permission layer first, then what it is used
+        # to build, then the catalogue that feeds it, then the slice that joins
+        # all three, then the surfaces. A capsule failure caused by a trust
+        # regression should be reported by the trust suite, not by the slice.
+        for component in ("trust", "capsules", "app_catalog", "capsule_task"):
+            component_tests(component)
+        run([sys.executable, "-m", "unittest", "tests.shell.test_companion_surfaces"])
+        run([sys.executable, "-m", "unittest", "tests.installer.test_companion_flow"])
     elif args.command.startswith("test-"):
         component_tests(args.command.removeprefix("test-"))
     else:

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.comrade.art/schemas/capsule-task-workspace.schema.json",
+  "title": "Visible task workspace",
+  "description": "What a person sees while Bunny works inside an App Capsule. The shape is closed on purpose: there is no field for a model's reasoning, and a step's detail is either a fixed label or a file name. A surface that wanted to show why something was chosen would have nowhere to read it from.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["taskId", "title", "state", "steps", "authorisedFiles", "permissions", "warnings", "outputs", "actions", "summary", "startedAt"],
+  "properties": {
+    "taskId": {"type": "string", "minLength": 1, "maxLength": 128},
+    "title": {"type": "string", "maxLength": 240, "description": "The person's own request, echoed, or the fixed work label. Never a restatement written by a provider."},
+    "state": {"type": "string", "enum": ["preparing", "waiting_for_you", "working", "completed", "failed", "cancelled"]},
+    "applicationId": {"type": ["string", "null"], "maxLength": 255},
+    "applicationName": {"type": ["string", "null"], "maxLength": 128},
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "label", "state"],
+        "properties": {
+          "key": {"type": "string", "enum": ["choose", "install", "permission", "open", "work", "export", "done"]},
+          "label": {"type": "string", "maxLength": 120},
+          "state": {"type": "string", "enum": ["pending", "running", "done", "failed", "refused"]},
+          "detail": {"type": "string", "maxLength": 240}
+        }
+      }
+    },
+    "authorisedFiles": {
+      "type": "array",
+      "items": {"type": "string", "maxLength": 96},
+      "description": "Exactly what the person allowed, in the same words the prompt used. A folder appears here only if a folder was allowed."
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "verdict", "scope", "reasonCode"],
+        "properties": {
+          "category": {"$ref": "https://bunny-os.comrade.art/schemas/trust-permission.schema.json#/$defs/category"},
+          "resource": {"type": "string", "maxLength": 96},
+          "verdict": {"type": "string", "enum": ["allow", "deny"]},
+          "scope": {"type": "string", "enum": ["once", "session", "always"]},
+          "reasonCode": {"$ref": "https://bunny-os.comrade.art/schemas/trust-permission.schema.json#/$defs/reasonCode"}
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string", "maxLength": 400},
+      "description": "Includes the unenforced-permission notice and every isolation refusal. A warning here is a fact about the run, not advice."
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["destination", "display", "digest", "bytesWritten", "renamed", "originalPreserved"],
+        "properties": {
+          "destination": {"type": "string", "maxLength": 1024},
+          "display": {"type": "string", "maxLength": 96},
+          "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "bytesWritten": {"type": "integer", "minimum": 0},
+          "renamed": {"type": "boolean", "description": "True when a name collision produced a numbered name. A collision never silently replaces a file."},
+          "originalPreserved": {"type": "boolean", "description": "False whenever the input path now holds the result, even though a copy was kept aside, so the completion sentence cannot claim otherwise."},
+          "originalCopy": {"type": ["string", "null"], "maxLength": 1024}
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["watch", "minimise", "cancel", "inspect_permissions", "open_application", "view_result"]},
+      "description": "Pause is deliberately absent. It is permitted only when technically possible, and for work inside a third-party application it is not; offering a Pause that behaved like a Cancel would be worse than not offering it."
+    },
+    "summary": {"type": "string", "maxLength": 400},
+    "startedAt": {"type": "string", "format": "date-time"},
+    "finishedAt": {"type": ["string", "null"], "format": "date-time"}
+  }
+}

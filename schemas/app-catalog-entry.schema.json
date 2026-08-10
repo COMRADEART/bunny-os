@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.comrade.art/schemas/app-catalog-entry.schema.json",
+  "title": "Bunny App Catalogue collection",
+  "description": "A reviewed collection of application metadata that ships in the image. Nothing in this document causes a fetch or an install: a catalogue entry establishes a permission ceiling and supplies the facts a person needs to choose. There is no trust status meaning 'found on the internet', and the two package sources that are neither a distribution nor Flathub require a pinned signing identity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "entries"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "collection": {"type": "string", "maxLength": 64},
+    "note": {"type": "string", "maxLength": 800},
+    "entries": {"type": "array", "items": {"$ref": "#/$defs/entry"}}
+  },
+  "$defs": {
+    "slug": {"type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$", "maxLength": 128},
+    "category": {"$ref": "https://bunny-os.comrade.art/schemas/trust-permission.schema.json#/$defs/category"},
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entryId", "applicationId", "name", "publisher", "purpose", "capabilities",
+        "packageSource", "packageReference", "license", "cost", "trustStatus",
+        "updateMechanism", "optionKind", "preferredBackend"
+      ],
+      "properties": {
+        "entryId": {"$ref": "#/$defs/slug"},
+        "applicationId": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z_][A-Za-z0-9_-]*)+$",
+          "maxLength": 255
+        },
+        "name": {"type": "string", "minLength": 1, "maxLength": 128},
+        "publisher": {"type": "string", "minLength": 1, "maxLength": 128},
+        "purpose": {"type": "string", "minLength": 1, "maxLength": 400},
+        "capabilities": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/slug"}, "uniqueItems": true},
+        "packageSource": {"type": "string", "enum": ["fedora-rpm", "flatpak", "bunny-system", "vendor-rpm", "github-release", "web"]},
+        "packageReference": {"type": "string", "minLength": 1, "maxLength": 256},
+        "license": {"type": "string", "minLength": 1, "maxLength": 64},
+        "cost": {"type": "string", "enum": ["free", "freemium", "paid", "subscription"]},
+        "requiresAccount": {"type": "boolean"},
+        "trustStatus": {
+          "type": "string",
+          "enum": ["bunny-verified", "distribution", "flathub-verified", "vendor", "unverified"],
+          "description": "Where the assurance comes from. 'vendor' means the publisher's signing identity was checked, not the software. 'unverified' entries are listed and not installed, because omitting an application a person wants sends them to find it somewhere Bunny cannot see."
+        },
+        "updateMechanism": {"type": "string", "enum": ["bootc-image", "dnf", "flatpak", "vendor-updater", "none"]},
+        "optionKind": {"type": "string", "enum": ["commercial", "open-source", "web", "installed"]},
+        "preferredBackend": {"type": "string", "enum": ["flatpak", "bubblewrap", "systemd-scope"]},
+        "requiredPermissions": {"type": "array", "items": {"$ref": "#/$defs/category"}, "uniqueItems": true},
+        "optionalPermissions": {"type": "array", "items": {"$ref": "#/$defs/category"}, "uniqueItems": true},
+        "permissionReasons": {"type": "object", "additionalProperties": {"type": "string", "maxLength": 240}},
+        "networkCeiling": {"type": "string", "enum": ["none", "loopback", "local-network", "allowlisted", "internet"]},
+        "networkDomains": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "sandboxCompatible": {"type": "boolean"},
+        "sandboxNote": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Required whenever sandboxCompatible is false, so an incompatibility is always a stated reason rather than a silent exception."
+        },
+        "differences": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Written by the curator. The only place a comparison between options may come from; a surface may read it out and may not generate one. Absent renders as nothing, never as an invention."
+        },
+        "signingIdentity": {"type": "string", "maxLength": 256},
+        "hardware": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "memoryBytes": {"type": ["integer", "null"], "minimum": 0},
+            "diskBytes": {"type": ["integer", "null"], "minimum": 0},
+            "needsGpu": {"type": "boolean"},
+            "architectures": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"sandboxCompatible": {"const": false}}, "required": ["sandboxCompatible"]},
+          "then": {"required": ["sandboxNote"], "properties": {"sandboxNote": {"minLength": 1}}}
+        },
+        {
+          "if": {"properties": {"packageSource": {"enum": ["vendor-rpm", "github-release"]}}, "required": ["packageSource"]},
+          "then": {"required": ["signingIdentity"], "properties": {"signingIdentity": {"minLength": 1}}}
+        },
+        {
+          "if": {"properties": {"optionKind": {"const": "web"}}, "required": ["optionKind"]},
+          "then": {"properties": {"packageSource": {"const": "web"}}}
+        }
+      ]
+    }
+  }
+}

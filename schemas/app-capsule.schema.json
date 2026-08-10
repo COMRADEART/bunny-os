@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.comrade.art/schemas/app-capsule.schema.json",
+  "title": "App Capsule manifest, lifecycle state and isolation plan",
+  "description": "A capsule's two durable documents and the plan derived from them. The manifest is a ceiling, not a permission: it says what an application may ever be asked about, and what it actually holds lives in the trust store. Keeping grants out of this document is what makes revocation work without editing a description of an application.",
+  "type": "object",
+  "oneOf": [
+    {"$ref": "#/$defs/manifest"},
+    {"$ref": "#/$defs/state"},
+    {"$ref": "#/$defs/isolationPlan"}
+  ],
+  "$defs": {
+    "backend": {"type": "string", "enum": ["flatpak", "bubblewrap", "systemd-scope"]},
+    "category": {"$ref": "https://bunny-os.comrade.art/schemas/trust-permission.schema.json#/$defs/category"},
+    "networkClass": {"type": "string", "enum": ["none", "loopback", "local-network", "allowlisted", "internet"]},
+    "manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion", "applicationId", "directoryName", "displayName",
+        "packageSource", "packageReference", "preferredBackend", "limits"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "applicationId": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z_][A-Za-z0-9_-]*)+$",
+          "maxLength": 255
+        },
+        "directoryName": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*\\.[0-9a-f]{16}$",
+          "description": "A conservative slug plus sixteen hex of SHA-256 over the exact application id. Never contains a path separator, a dot-dot component or a leading dash; the digest is over the id as given, before sanitisation, so two ids that sanitise alike cannot collide."
+        },
+        "displayName": {"type": "string", "minLength": 1, "maxLength": 128},
+        "packageSource": {"type": "string", "enum": ["flatpak", "fedora-rpm", "bunny-system", "appimage", "web"]},
+        "packageReference": {"type": "string", "minLength": 1, "maxLength": 256},
+        "preferredBackend": {"$ref": "#/$defs/backend"},
+        "requiredPermissions": {"type": "array", "items": {"$ref": "#/$defs/category"}, "uniqueItems": true},
+        "optionalPermissions": {"type": "array", "items": {"$ref": "#/$defs/category"}, "uniqueItems": true},
+        "permissionReasons": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "maxLength": 240},
+          "description": "What the catalogue says each permission is for. The only citable source of a reason that is neither the application speaking for itself nor the user's own request."
+        },
+        "networkCeiling": {"$ref": "#/$defs/networkClass"},
+        "networkDomains": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["memoryHigh", "memoryMax", "tasksMax", "cpuWeight"],
+          "properties": {
+            "memoryHigh": {"type": "integer", "minimum": 1},
+            "memoryMax": {"type": "integer", "minimum": 1},
+            "tasksMax": {"type": "integer", "minimum": 1},
+            "cpuWeight": {"type": "integer", "minimum": 1, "maximum": 10000}
+          }
+        },
+        "installConsent": {
+          "type": "boolean",
+          "description": "Whether the person agreed to the install-time bundle. A boolean rather than a set, because the consent was one answer and recording it per category would suggest seventeen questions were asked."
+        },
+        "wantsBackground": {"type": "boolean"},
+        "catalogEntryId": {"type": ["string", "null"], "maxLength": 128}
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "state", "since"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "state": {
+          "type": "string",
+          "enum": ["absent", "provisioning", "ready", "starting", "running", "stopping", "stopped", "resetting", "unknown", "broken", "removed"],
+          "description": "A capsule found active from a previous session becomes unknown rather than running: the Bunny runtime restarting does not tell it whether the application is still there, and believing a stale running is how a second copy gets started on top of the first."
+        },
+        "since": {"type": "string", "format": "date-time"},
+        "launchCount": {"type": "integer", "minimum": 0},
+        "lastStartedAt": {"type": ["string", "null"], "format": "date-time"},
+        "lastStoppedAt": {"type": ["string", "null"], "format": "date-time"},
+        "lastExitCode": {"type": ["integer", "null"]},
+        "lastFailure": {"type": ["string", "null"], "maxLength": 512},
+        "backend": {"anyOf": [{"$ref": "#/$defs/backend"}, {"type": "null"}]},
+        "scopeName": {"type": ["string", "null"], "maxLength": 255},
+        "sessionId": {"type": ["string", "null"], "maxLength": 128}
+      }
+    },
+    "isolationPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applicationId", "backend", "binds", "devices", "network", "confining"],
+      "properties": {
+        "applicationId": {"type": "string", "maxLength": 255},
+        "backend": {"$ref": "#/$defs/backend"},
+        "binds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source", "target", "writable", "kind", "origin"],
+            "properties": {
+              "source": {"type": "string", "maxLength": 1024},
+              "target": {"type": "string", "pattern": "^/", "maxLength": 1024},
+              "writable": {"type": "boolean"},
+              "kind": {"type": "string", "enum": ["file", "directory", "tmpfs", "device"]},
+              "origin": {
+                "type": "string",
+                "enum": ["capsule", "grant", "system"],
+                "description": "Why the mount exists, so Settings can show a person what an application can reach and say which decision put each entry there."
+              },
+              "grantId": {"type": ["string", "null"], "maxLength": 128}
+            }
+          }
+        },
+        "devices": {"type": "array", "items": {"type": "string"}},
+        "network": {"$ref": "#/$defs/networkClass"},
+        "networkDomains": {"type": "array", "items": {"type": "string"}},
+        "environmentKeys": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "The complete key set the capsule receives. The environment is built, not inherited: LD_PRELOAD, PYTHONPATH, GIO_MODULE_DIR and the proxy variables are ways to change what runs inside a sandbox from outside it."
+        },
+        "dbusTalk": {"type": "array", "items": {"type": "string"}},
+        "portalAllow": {"type": "array", "items": {"$ref": "#/$defs/category"}},
+        "unshare": {"type": "array", "items": {"type": "string", "enum": ["user", "pid", "ipc", "uts", "cgroup", "net"]}},
+        "systemdProperties": {"type": "array", "items": {"type": "string"}},
+        "unenforced": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/category"},
+          "description": "Granted categories the selected backend cannot enforce. Never empty silently: recorded, shown in Settings, said at install."
+        },
+        "refusals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["grantId", "reason"],
+            "properties": {
+              "grantId": {"type": "string", "maxLength": 128},
+              "reason": {"type": "string", "maxLength": 240}
+            }
+          }
+        },
+        "confining": {
+          "type": "boolean",
+          "description": "False only for the systemd-scope backend, which applies limits and restricts nothing else. A launch with a non-confining plan requires an explicit caller opt-in; there is no silent downgrade."
+        }
+      }
+    }
+  }
+}
