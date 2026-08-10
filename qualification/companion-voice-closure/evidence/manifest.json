@@ -1,0 +1,599 @@
+{
+  "compositorProbe": {
+    "checks": {
+      "cancellation": {
+        "framesAfterCancel": 1,
+        "mouthChangesAfterNeutral": 0,
+        "rejectedAfterCancellation": 0,
+        "requestId": "speech-06e9fc3591bb449f9f4f411e39f7e7c9",
+        "returnedToNeutral": true
+      },
+      "fullUtterance": {
+        "distinctNonNeutralShapes": [
+          "closed",
+          "open-medium",
+          "open-small",
+          "open-wide"
+        ],
+        "endedNeutral": true,
+        "framesDrawn": 59,
+        "held": 108,
+        "requestId": "speech-6ed53781945b4c8784b37a788fa04144",
+        "requestIdsMatch": true,
+        "revisions": [
+          1
+        ],
+        "sampleCount": 91523,
+        "sequencesOrdered": true,
+        "timelineFrames": 58,
+        "timingMethod": "amplitude"
+      },
+      "presentationRevision": {
+        "framesDrawnAtOldRevision": 2,
+        "revisionAfter": 2,
+        "staleFramesRefused": 132
+      },
+      "rendererRestart": {
+        "decision": "degraded-to-neutral",
+        "degradedExplicitly": true,
+        "lastShape": "neutral",
+        "resumed": false
+      },
+      "teardown": {
+        "idleSourcesCreated": 67,
+        "idleSourcesSurviving": 0,
+        "lastShape": "neutral",
+        "timeoutSourcesCreated": 0,
+        "voiceThreadsRemaining": 0
+      },
+      "voiceWorkerRestart": {
+        "lastShape": "neutral",
+        "note": "restart_worker cancels the utterance in flight before it stops the worker, so the neutral usually arrives by the cancellation path rather than the worker-stopped one. Both end neutral, which is the property; the worker-stopped path is covered directly in tests/companion/test_voice_renderer_link.py",
+        "origin": "neutral-on-cancellation",
+        "workerRunning": true
+      }
+    },
+    "display": "wayland-wslg-remoted",
+    "failures": [],
+    "glibCriticals": 0,
+    "gtkVersion": "4.22.4",
+    "measurements": {
+      "cancellation": {
+        "cancelRequestedAtMs": 7691.978,
+        "cancellationToNeutralMs": 52.013,
+        "neutralAtMs": 7743.991
+      },
+      "fullUtterance": {
+        "audioStartedAtMs": 3469.104,
+        "finalNeutralAtMs": 7659.41,
+        "firstFrameDriftMs": 0.829,
+        "firstRenderedMouthFrameAtMs": 3469.933,
+        "firstVisemeAtMs": 3469.356,
+        "maximumDispatchLatencyMs": 5.51,
+        "maximumObservedDriftMs": 5.708,
+        "medianDispatchLatencyMs": 2.788,
+        "medianObservedDriftMs": 2.797,
+        "mouthChangesWhileAudioActive": 58,
+        "note": "Timing method is MEASURED AMPLITUDE over the synthesiser's own samples in 40 ms windows. No phoneme boundary was measured anywhere in this build, and no claim of phoneme-accurate lip sync is made. maximumObservedDriftMs is the presentation drift: how far a drawn mouth frame sat from the point in the audio it belongs to, from the audio start on this machine's clock.",
+        "schedulerDriftNote": "structurally zero on the file-playback path: a one-shot player exposes no clock, so the worker passes the playback handle's position as both the timeline position and the audio clock. It is not a measurement and is reported here so that nobody reads the zero as one.",
+        "schedulerReportedDriftMs": 0
+      }
+    },
+    "passed": true
+  },
+  "files": [
+    {
+      "bytes": 175542,
+      "description": "gate 1: 100 consecutive voice-worker lifecycle runs",
+      "file": "gate-voice-100.json",
+      "present": true,
+      "sha256": "46fb6b5471bcaf63e1eac0360a6e7460b92658c24938ea6fe36b7ddae28a763f"
+    },
+    {
+      "bytes": 89064,
+      "description": "gate 2: 50 consecutive complete companion-suite runs",
+      "file": "gate-suite-50.json",
+      "present": true,
+      "sha256": "9cb66c49b341f1b353ea39ee5f19577da55227e015bd3537ce5fe54f67dd010b"
+    },
+    {
+      "bytes": 36941,
+      "description": "gate 3: 20 consecutive installed voice vertical slices",
+      "file": "gate-voice-slice-20.json",
+      "present": true,
+      "sha256": "ffa01e11d17ccb0a07ad45194e6d5d6ad5175ccf4cb13f885887571562a9a476"
+    },
+    {
+      "bytes": 36945,
+      "description": "gate 4: 20 consecutive installed voice-to-renderer slices",
+      "file": "gate-voice-renderer-slice-20.json",
+      "present": true,
+      "sha256": "cf8d5b86397b799d763da51e80926f7c6701a6d73a2a4ca0e8c7ed993bf4ab34"
+    },
+    {
+      "bytes": 15545,
+      "description": "the compositor run: voice-produced visemes drawn by the real GTK renderer",
+      "file": "gtk-voice-viseme.json",
+      "present": true,
+      "sha256": "b6d385d5686fb09ac4dc6af858033f2606608aa354374d815105f973febead74"
+    },
+    {
+      "bytes": 6389,
+      "description": "one installed voice vertical slice, step by step",
+      "file": "slice.json",
+      "present": true,
+      "sha256": "8823cae60477ae38205ac06cf868beed6aaa66f7d259900d9a2698fc66c6d958"
+    },
+    {
+      "bytes": 7350,
+      "description": "one installed voice-to-renderer slice, step by step",
+      "file": "voice-renderer-slice.json",
+      "present": true,
+      "sha256": "e96988e22711a71484238a61e789bcc54a0cfddddcf42618689a0b650db832cd"
+    },
+    {
+      "bytes": 4606,
+      "description": "providers, backends, player contracts and resolved paths on the reference target",
+      "file": "env.json",
+      "present": true,
+      "sha256": "2f159f518f09e62fd6cf10723ec085800d4f5411b786df41a3a1fd86ea1e0d51"
+    },
+    {
+      "bytes": 9450,
+      "description": "the gate run's own transcript",
+      "file": "gates.log",
+      "present": true,
+      "sha256": "fc86b1e66fefe80fe135bd1c9f6df4898d21feb716e3186ee058dc41a1152c8b"
+    }
+  ],
+  "gateCommit": "60ba76e1176ca04ac44a9df158a1ad89776ec520",
+  "gates": {
+    "gate1-voice-lifecycle-100": {
+      "absoluteBetweenIterations": {
+        "activeRequests": 0,
+        "queueDepth": 0
+      },
+      "cleanupOfPriorResidue": {
+        "tempDirectories": -5,
+        "temporaryWorkspaces": -5
+      },
+      "commitsObserved": [
+        "60ba76e1176ca04ac44a9df158a1ad89776ec520"
+      ],
+      "durationSeconds": {
+        "max": 3.303,
+        "median": 3.019,
+        "min": 2.999,
+        "total": 304.6
+      },
+      "exitStatus": 0,
+      "expectedRuns": 100,
+      "failed": 0,
+      "firstFailure": null,
+      "gateMet": true,
+      "longestConsecutivePass": 100,
+      "outcomeClean": true,
+      "passed": 100,
+      "perIterationDelta": {
+        "audioHandles": {
+          "max": 0,
+          "min": 0
+        },
+        "childProcesses": {
+          "max": 0,
+          "min": 0
+        },
+        "descriptors": {
+          "max": 0,
+          "min": 0
+        },
+        "liveRuntimes": {
+          "max": 0,
+          "min": 0
+        },
+        "liveServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceWorkers": {
+          "max": 0,
+          "min": 0
+        },
+        "nonDaemonThreads": {
+          "max": 0,
+          "min": 0
+        },
+        "tempDirectories": {
+          "max": 0,
+          "min": -1
+        },
+        "temporaryWorkspaces": {
+          "max": 0,
+          "min": -1
+        },
+        "threads": {
+          "max": 0,
+          "min": 0
+        },
+        "zombies": {
+          "max": 0,
+          "min": 0
+        }
+      },
+      "present": true,
+      "queueResidueBetweenIterations": {},
+      "resourceGrowthSinceBaseline": {},
+      "resourcesClean": true,
+      "runs": 100,
+      "settledOnce": {},
+      "sinceBaseline": {
+        "activeRequests": 0,
+        "audioHandles": 0,
+        "childProcesses": 0,
+        "descriptors": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "nonDaemonThreads": 0,
+        "queueDepth": 0,
+        "rssBytes": 13422592,
+        "socketDescriptors": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 0,
+        "tempDirectories": -5,
+        "temporaryWorkspaces": -5,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "zombies": 0
+      },
+      "singleCommit": true,
+      "threadsAboveBaseline": []
+    },
+    "gate2-companion-suite-50": {
+      "absoluteBetweenIterations": {
+        "activeRequests": 0,
+        "queueDepth": 0
+      },
+      "cleanupOfPriorResidue": {},
+      "commitsObserved": [
+        "60ba76e1176ca04ac44a9df158a1ad89776ec520"
+      ],
+      "durationSeconds": {
+        "max": 37.427,
+        "median": 35.068,
+        "min": 34.78,
+        "total": 1763.0
+      },
+      "exitStatus": 0,
+      "expectedRuns": 50,
+      "failed": 0,
+      "firstFailure": null,
+      "gateMet": true,
+      "longestConsecutivePass": 50,
+      "outcomeClean": true,
+      "passed": 50,
+      "perIterationDelta": {
+        "audioHandles": {
+          "max": 0,
+          "min": 0
+        },
+        "childProcesses": {
+          "max": 0,
+          "min": 0
+        },
+        "descriptors": {
+          "max": 0,
+          "min": 0
+        },
+        "liveRuntimes": {
+          "max": 0,
+          "min": 0
+        },
+        "liveServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceWorkers": {
+          "max": 0,
+          "min": 0
+        },
+        "nonDaemonThreads": {
+          "max": 0,
+          "min": 0
+        },
+        "tempDirectories": {
+          "max": 0,
+          "min": 0
+        },
+        "temporaryWorkspaces": {
+          "max": 0,
+          "min": 0
+        },
+        "threads": {
+          "max": 1,
+          "min": 0
+        },
+        "zombies": {
+          "max": 0,
+          "min": 0
+        }
+      },
+      "present": true,
+      "queueResidueBetweenIterations": {},
+      "resourceGrowthSinceBaseline": {},
+      "resourcesClean": true,
+      "runs": 50,
+      "settledOnce": {
+        "threads": {
+          "iterationsThatMoved": 1,
+          "total": 1
+        }
+      },
+      "sinceBaseline": {
+        "activeRequests": 0,
+        "audioHandles": 0,
+        "childProcesses": 0,
+        "descriptors": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "nonDaemonThreads": 0,
+        "queueDepth": 0,
+        "rssBytes": 55726080,
+        "socketDescriptors": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 0,
+        "tempDirectories": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 1,
+        "unixCompanionSockets": 0,
+        "zombies": 0
+      },
+      "singleCommit": true,
+      "threadsAboveBaseline": [
+        "review-local.slow-reviewer"
+      ]
+    },
+    "gate3-voice-slice-20": {
+      "absoluteBetweenIterations": {
+        "activeRequests": 0,
+        "queueDepth": 0
+      },
+      "cleanupOfPriorResidue": {},
+      "commitsObserved": [
+        "60ba76e1176ca04ac44a9df158a1ad89776ec520"
+      ],
+      "durationSeconds": {
+        "max": 4.833,
+        "median": 4.728,
+        "min": 4.65,
+        "total": 94.5
+      },
+      "exitStatus": 0,
+      "expectedRuns": 20,
+      "failed": 0,
+      "firstFailure": null,
+      "gateMet": true,
+      "longestConsecutivePass": 20,
+      "outcomeClean": true,
+      "passed": 20,
+      "perIterationDelta": {
+        "audioHandles": {
+          "max": 0,
+          "min": 0
+        },
+        "childProcesses": {
+          "max": 0,
+          "min": 0
+        },
+        "descriptors": {
+          "max": 0,
+          "min": 0
+        },
+        "liveRuntimes": {
+          "max": 0,
+          "min": 0
+        },
+        "liveServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceWorkers": {
+          "max": 0,
+          "min": 0
+        },
+        "nonDaemonThreads": {
+          "max": 0,
+          "min": 0
+        },
+        "tempDirectories": {
+          "max": 0,
+          "min": 0
+        },
+        "temporaryWorkspaces": {
+          "max": 0,
+          "min": 0
+        },
+        "threads": {
+          "max": 0,
+          "min": 0
+        },
+        "zombies": {
+          "max": 0,
+          "min": 0
+        }
+      },
+      "present": true,
+      "queueResidueBetweenIterations": {},
+      "resourceGrowthSinceBaseline": {},
+      "resourcesClean": true,
+      "runs": 20,
+      "settledOnce": {},
+      "sinceBaseline": {
+        "activeRequests": 0,
+        "audioHandles": 0,
+        "childProcesses": 0,
+        "descriptors": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "nonDaemonThreads": 0,
+        "queueDepth": 0,
+        "rssBytes": 20074496,
+        "socketDescriptors": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 0,
+        "tempDirectories": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "zombies": 0
+      },
+      "singleCommit": true,
+      "threadsAboveBaseline": []
+    },
+    "gate4-voice-renderer-slice-20": {
+      "absoluteBetweenIterations": {
+        "activeRequests": 0,
+        "queueDepth": 0
+      },
+      "cleanupOfPriorResidue": {},
+      "commitsObserved": [
+        "60ba76e1176ca04ac44a9df158a1ad89776ec520"
+      ],
+      "durationSeconds": {
+        "max": 4.292,
+        "median": 4.184,
+        "min": 4.176,
+        "total": 83.8
+      },
+      "exitStatus": 0,
+      "expectedRuns": 20,
+      "failed": 0,
+      "firstFailure": null,
+      "gateMet": true,
+      "longestConsecutivePass": 20,
+      "outcomeClean": true,
+      "passed": 20,
+      "perIterationDelta": {
+        "audioHandles": {
+          "max": 0,
+          "min": 0
+        },
+        "childProcesses": {
+          "max": 0,
+          "min": 0
+        },
+        "descriptors": {
+          "max": 0,
+          "min": 0
+        },
+        "liveRuntimes": {
+          "max": 0,
+          "min": 0
+        },
+        "liveServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceWorkers": {
+          "max": 0,
+          "min": 0
+        },
+        "nonDaemonThreads": {
+          "max": 0,
+          "min": 0
+        },
+        "tempDirectories": {
+          "max": 0,
+          "min": 0
+        },
+        "temporaryWorkspaces": {
+          "max": 0,
+          "min": 0
+        },
+        "threads": {
+          "max": 0,
+          "min": 0
+        },
+        "zombies": {
+          "max": 0,
+          "min": 0
+        }
+      },
+      "present": true,
+      "queueResidueBetweenIterations": {},
+      "resourceGrowthSinceBaseline": {},
+      "resourcesClean": true,
+      "runs": 20,
+      "settledOnce": {},
+      "sinceBaseline": {
+        "activeRequests": 0,
+        "audioHandles": 0,
+        "childProcesses": 0,
+        "descriptors": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "nonDaemonThreads": 0,
+        "queueDepth": 0,
+        "rssBytes": 18817024,
+        "socketDescriptors": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 0,
+        "tempDirectories": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "zombies": 0
+      },
+      "singleCommit": true,
+      "threadsAboveBaseline": []
+    }
+  },
+  "host": {
+    "audioStack": "WSLg audio bridge: a PulseAudio-compatible socket at unix:/mnt/wslg/PulseServer onto one RDPSink. PipeWire runs for this user and reports zero Audio/Sink nodes; ALSA reports no soundcards.",
+    "display": "the WSLg Wayland compositor. NOT a GNOME session, NOT physical hardware.",
+    "filesystem": "ext4 under /home/bunny",
+    "os": "Fedora Linux 44 (WSL)",
+    "physicalSpeakerValidated": false,
+    "user": "bunny"
+  },
+  "notRun": [
+    "a physical speaker, anywhere",
+    "PipeWire playback (the graph has zero Audio/Sink nodes on this host)",
+    "ALSA playback (no soundcard on this host)",
+    "Speech Dispatcher as the selected provider (eSpeak NG wins selection here)",
+    "phoneme or provider-native viseme timing (no provider in this build returns either)",
+    "the voice-to-renderer path on a GNOME session",
+    "the mouth drawn from a streaming provider's utterance",
+    "two runtimes racing the singleton on one endpoint under load"
+  ],
+  "phase": "companion-voice-closure",
+  "schemaVersion": 1,
+  "supersedes": {
+    "gateCommit": "0cf81a135b24619f74bbecfcdd48d3a69f33c2fd",
+    "note": "The prior phase's evidence is unchanged and pinned by digest in ../preserved-evidence.json. These results stand beside it, never over it.",
+    "phase": "companion-voice-runtime"
+  }
+}

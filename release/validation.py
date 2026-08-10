@@ -655,6 +655,9 @@ _PROGRAM_SOURCES = (
 _PROGRAM_ALIASES = {
     "bunny-update-agent": "services/bunny-update-agent/bunny_update_agent.py",
     "bunny-capability-supervisor": "services/bunny-capability-supervisor/bunny_capability_supervisor.py",
+    # The companion runtime service. Installed by install-root.py from the
+    # module beside it; the name differs because the source is an importable
+    # Python file and the installed program is not.
     "bunny-companion-service": "services/bunny-companion/bunny_companion_service.py",
 }
 

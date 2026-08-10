@@ -1,0 +1,373 @@
+{
+  "files": [
+    {
+      "bytes": 175139,
+      "description": "gate 1: 100 consecutive voice-worker lifecycle runs",
+      "file": "gate-voice-100.json",
+      "present": true,
+      "sha256": "7b7d5100246aacedc3f7da54b0b0a42656c6883866a48c7e0808b77a3035531e"
+    },
+    {
+      "bytes": 89048,
+      "description": "gate 2: 50 consecutive complete companion-suite runs",
+      "file": "gate-suite-50.json",
+      "present": true,
+      "sha256": "be10c7fd1bd163984559284db79d34b423e4ee9128e8265e9a4568a3bf17370e"
+    },
+    {
+      "bytes": 36924,
+      "description": "gate 3: 20 consecutive installed voice vertical slices",
+      "file": "gate-voice-slice-20.json",
+      "present": true,
+      "sha256": "eeeef493c6cc779fc1401b4ac34b56ba8483c51d1e130b62d2142538ef4caefe"
+    },
+    {
+      "bytes": 5761,
+      "description": "section 24 memory, latency and CPU figures",
+      "file": "voice-measurements.json",
+      "present": true,
+      "sha256": "a3bfdb78eeba64d5b44f95a22831ca4323309710e951db784a62d19188e75883"
+    },
+    {
+      "description": "one installed voice vertical slice, step by step",
+      "file": "slice.json",
+      "present": false
+    },
+    {
+      "description": "the complete companion suite on Linux",
+      "file": "suite.json",
+      "present": false
+    },
+    {
+      "description": "providers, backends and the audio stack on the reference target",
+      "file": "env.json",
+      "present": false
+    },
+    {
+      "bytes": 6697,
+      "description": "the gate run's own transcript",
+      "file": "gates.log",
+      "present": true,
+      "sha256": "78239d87ab07c97d5ed8f37c85b7b7f59de35de587f6a7f340705262efdcdb3a"
+    }
+  ],
+  "gateCommit": "0cf81a135b24619f74bbecfcdd48d3a69f33c2fd",
+  "gates": {
+    "gate1-voice-lifecycle-100": {
+      "absoluteBetweenIterations": {
+        "activeRequests": 0,
+        "queueDepth": 0
+      },
+      "commitsObserved": [
+        "0cf81a135b24619f74bbecfcdd48d3a69f33c2fd"
+      ],
+      "durationSeconds": {
+        "max": 3.503,
+        "median": 3.002,
+        "min": 2.992,
+        "total": 300.9
+      },
+      "exitStatus": 0,
+      "failed": 0,
+      "gateMet": true,
+      "longestConsecutivePass": 100,
+      "outcomeClean": true,
+      "passed": 100,
+      "perIterationDelta": {
+        "audioHandles": {
+          "max": 0,
+          "min": 0
+        },
+        "childProcesses": {
+          "max": 0,
+          "min": 0
+        },
+        "descriptors": {
+          "max": 0,
+          "min": 0
+        },
+        "liveRuntimes": {
+          "max": 0,
+          "min": 0
+        },
+        "liveServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceWorkers": {
+          "max": 0,
+          "min": 0
+        },
+        "nonDaemonThreads": {
+          "max": 0,
+          "min": 0
+        },
+        "tempDirectories": {
+          "max": 0,
+          "min": 0
+        },
+        "temporaryWorkspaces": {
+          "max": 0,
+          "min": 0
+        },
+        "threads": {
+          "max": 0,
+          "min": 0
+        },
+        "zombies": {
+          "max": 0,
+          "min": 0
+        }
+      },
+      "present": true,
+      "queueResidueBetweenIterations": {},
+      "resourceGrowthSinceBaseline": {},
+      "resourcesClean": true,
+      "runs": 100,
+      "settledOnce": {},
+      "sinceBaseline": {
+        "activeRequests": 0,
+        "audioHandles": 0,
+        "childProcesses": 0,
+        "descriptors": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "nonDaemonThreads": 0,
+        "queueDepth": 0,
+        "rssBytes": 14340096,
+        "socketDescriptors": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 0,
+        "tempDirectories": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "zombies": 0
+      },
+      "singleCommit": true,
+      "threadsAboveBaseline": []
+    },
+    "gate2-companion-suite-50": {
+      "absoluteBetweenIterations": {
+        "activeRequests": 0,
+        "queueDepth": 0
+      },
+      "commitsObserved": [
+        "0cf81a135b24619f74bbecfcdd48d3a69f33c2fd"
+      ],
+      "durationSeconds": {
+        "max": 28.613,
+        "median": 28.109,
+        "min": 27.363,
+        "total": 1404.5
+      },
+      "exitStatus": 0,
+      "failed": 0,
+      "gateMet": true,
+      "longestConsecutivePass": 50,
+      "outcomeClean": true,
+      "passed": 50,
+      "perIterationDelta": {
+        "audioHandles": {
+          "max": 0,
+          "min": 0
+        },
+        "childProcesses": {
+          "max": 0,
+          "min": 0
+        },
+        "descriptors": {
+          "max": 0,
+          "min": 0
+        },
+        "liveRuntimes": {
+          "max": 0,
+          "min": 0
+        },
+        "liveServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceWorkers": {
+          "max": 0,
+          "min": 0
+        },
+        "nonDaemonThreads": {
+          "max": 0,
+          "min": 0
+        },
+        "tempDirectories": {
+          "max": 0,
+          "min": 0
+        },
+        "temporaryWorkspaces": {
+          "max": 0,
+          "min": 0
+        },
+        "threads": {
+          "max": 1,
+          "min": 0
+        },
+        "zombies": {
+          "max": 0,
+          "min": 0
+        }
+      },
+      "present": true,
+      "queueResidueBetweenIterations": {},
+      "resourceGrowthSinceBaseline": {},
+      "resourcesClean": true,
+      "runs": 50,
+      "settledOnce": {
+        "threads": {
+          "iterationsThatMoved": 1,
+          "total": 1
+        }
+      },
+      "sinceBaseline": {
+        "activeRequests": 0,
+        "audioHandles": 0,
+        "childProcesses": 0,
+        "descriptors": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "nonDaemonThreads": 0,
+        "queueDepth": 0,
+        "rssBytes": 51548160,
+        "socketDescriptors": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 0,
+        "tempDirectories": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 1,
+        "unixCompanionSockets": 0,
+        "zombies": 0
+      },
+      "singleCommit": true,
+      "threadsAboveBaseline": [
+        "review-local.slow-reviewer"
+      ]
+    },
+    "gate3-voice-slice-20": {
+      "absoluteBetweenIterations": {
+        "activeRequests": 0,
+        "queueDepth": 0
+      },
+      "commitsObserved": [
+        "0cf81a135b24619f74bbecfcdd48d3a69f33c2fd"
+      ],
+      "durationSeconds": {
+        "max": 4.748,
+        "median": 4.63,
+        "min": 4.617,
+        "total": 92.7
+      },
+      "exitStatus": 0,
+      "failed": 0,
+      "gateMet": true,
+      "longestConsecutivePass": 20,
+      "outcomeClean": true,
+      "passed": 20,
+      "perIterationDelta": {
+        "audioHandles": {
+          "max": 0,
+          "min": 0
+        },
+        "childProcesses": {
+          "max": 0,
+          "min": 0
+        },
+        "descriptors": {
+          "max": 0,
+          "min": 0
+        },
+        "liveRuntimes": {
+          "max": 0,
+          "min": 0
+        },
+        "liveServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceServices": {
+          "max": 0,
+          "min": 0
+        },
+        "liveVoiceWorkers": {
+          "max": 0,
+          "min": 0
+        },
+        "nonDaemonThreads": {
+          "max": 0,
+          "min": 0
+        },
+        "tempDirectories": {
+          "max": 0,
+          "min": 0
+        },
+        "temporaryWorkspaces": {
+          "max": 0,
+          "min": 0
+        },
+        "threads": {
+          "max": 0,
+          "min": 0
+        },
+        "zombies": {
+          "max": 0,
+          "min": 0
+        }
+      },
+      "present": true,
+      "queueResidueBetweenIterations": {},
+      "resourceGrowthSinceBaseline": {},
+      "resourcesClean": true,
+      "runs": 20,
+      "settledOnce": {},
+      "sinceBaseline": {
+        "activeRequests": 0,
+        "audioHandles": 0,
+        "childProcesses": 0,
+        "descriptors": 0,
+        "liveRuntimes": 0,
+        "liveServices": 0,
+        "liveVoiceServices": 0,
+        "liveVoiceWorkers": 0,
+        "nonDaemonThreads": 0,
+        "queueDepth": 0,
+        "rssBytes": 20602880,
+        "socketDescriptors": 0,
+        "tcpListen": 0,
+        "tcpTimeWait": 0,
+        "tempDirectories": 0,
+        "temporaryWorkspaces": 0,
+        "threads": 0,
+        "unixCompanionSockets": 0,
+        "zombies": 0
+      },
+      "singleCommit": true,
+      "threadsAboveBaseline": []
+    }
+  },
+  "host": {
+    "audioStack": "WSLg audio bridge: a PulseAudio-compatible socket at unix:/mnt/wslg/PulseServer onto one RDPSink. PipeWire runs for this user and reports zero Audio/Sink nodes; ALSA reports no soundcards.",
+    "filesystem": "ext4 under /home/bunny",
+    "os": "Fedora Linux 44 (WSL)",
+    "physicalSpeakerValidated": false,
+    "user": "bunny"
+  },
+  "phase": "companion-voice-runtime",
+  "schemaVersion": 1
+}

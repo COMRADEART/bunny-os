@@ -1,0 +1,577 @@
+{
+  "checks": {
+    "cancellation": {
+      "framesAfterCancel": 1,
+      "mouthChangesAfterNeutral": 0,
+      "rejectedAfterCancellation": 0,
+      "requestId": "speech-06e9fc3591bb449f9f4f411e39f7e7c9",
+      "returnedToNeutral": true
+    },
+    "captions": {
+      "cancellation": {
+        "captionPresent": true,
+        "matchesProjection": true
+      },
+      "fullUtterance": {
+        "captionPresent": true,
+        "matchesProjection": true
+      },
+      "rendererRestart": {
+        "captionPresent": true,
+        "matchesProjection": true
+      }
+    },
+    "fullUtterance": {
+      "distinctNonNeutralShapes": [
+        "closed",
+        "open-medium",
+        "open-small",
+        "open-wide"
+      ],
+      "endedNeutral": true,
+      "frameTrace": [
+        {
+          "asset": "speaking-open.png",
+          "atMs": 3469.933,
+          "positionMs": 0,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 3525.327,
+          "positionMs": 51,
+          "shape": "open-wide"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 3596.406,
+          "positionMs": 126,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 3648.572,
+          "positionMs": 177,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 3671.526,
+          "positionMs": 202,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-closed.png",
+          "atMs": 3725.263,
+          "positionMs": 252,
+          "shape": "closed"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 3773.65,
+          "positionMs": 303,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 3801.993,
+          "positionMs": 328,
+          "shape": "open-wide"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 3850.686,
+          "positionMs": 379,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 3950.827,
+          "positionMs": 480,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-closed.png",
+          "atMs": 4077.439,
+          "positionMs": 606,
+          "shape": "closed"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4126.806,
+          "positionMs": 656,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4206.611,
+          "positionMs": 732,
+          "shape": "open-wide"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4256.217,
+          "positionMs": 783,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4332.251,
+          "positionMs": 858,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4403.548,
+          "positionMs": 934,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4480.389,
+          "positionMs": 1010,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4631.184,
+          "positionMs": 1161,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4681.503,
+          "positionMs": 1212,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4757.628,
+          "positionMs": 1287,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4808.004,
+          "positionMs": 1338,
+          "shape": "open-wide"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4837.415,
+          "positionMs": 1363,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 4887.731,
+          "positionMs": 1413,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5035.761,
+          "positionMs": 1565,
+          "shape": "open-wide"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5086.531,
+          "positionMs": 1615,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5162.67,
+          "positionMs": 1691,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5286.383,
+          "positionMs": 1817,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5363.942,
+          "positionMs": 1892,
+          "shape": "open-wide"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5416.134,
+          "positionMs": 1943,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-closed.png",
+          "atMs": 5441.825,
+          "positionMs": 1968,
+          "shape": "closed"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5493.142,
+          "positionMs": 2019,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5565.555,
+          "positionMs": 2094,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5591.427,
+          "positionMs": 2120,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5642.733,
+          "positionMs": 2170,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5719.745,
+          "positionMs": 2246,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-closed.png",
+          "atMs": 5843.877,
+          "positionMs": 2372,
+          "shape": "closed"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 5970.602,
+          "positionMs": 2498,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6047.67,
+          "positionMs": 2574,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6120.212,
+          "positionMs": 2649,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6197.393,
+          "positionMs": 2725,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-closed.png",
+          "atMs": 6249.954,
+          "positionMs": 2776,
+          "shape": "closed"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6272.011,
+          "positionMs": 2801,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6375.3,
+          "positionMs": 2902,
+          "shape": "open-wide"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6447.671,
+          "positionMs": 2977,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6525.363,
+          "positionMs": 3053,
+          "shape": "open-wide"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6577.276,
+          "positionMs": 3104,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6675.076,
+          "positionMs": 3205,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6726.43,
+          "positionMs": 3255,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6804.071,
+          "positionMs": 3331,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6930.246,
+          "positionMs": 3457,
+          "shape": "open-wide"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 6956.405,
+          "positionMs": 3482,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 7054.925,
+          "positionMs": 3583,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 7080.984,
+          "positionMs": 3608,
+          "shape": "open-wide"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 7129.519,
+          "positionMs": 3659,
+          "shape": "open-medium"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 7207.325,
+          "positionMs": 3735,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-closed.png",
+          "atMs": 7233.425,
+          "positionMs": 3760,
+          "shape": "closed"
+        },
+        {
+          "asset": "speaking-open.png",
+          "atMs": 7284.812,
+          "positionMs": 3810,
+          "shape": "open-small"
+        },
+        {
+          "asset": "speaking-closed.png",
+          "atMs": 7331.017,
+          "positionMs": 3861,
+          "shape": "closed"
+        },
+        {
+          "asset": "speaking-closed.png",
+          "atMs": 7659.41,
+          "positionMs": 0,
+          "shape": "neutral"
+        }
+      ],
+      "framesDrawn": 59,
+      "held": 108,
+      "requestId": "speech-6ed53781945b4c8784b37a788fa04144",
+      "requestIdsMatch": true,
+      "revisions": [
+        1
+      ],
+      "sampleCount": 91523,
+      "sequencesOrdered": true,
+      "timelineFrames": 58,
+      "timingMethod": "amplitude"
+    },
+    "presentationRevision": {
+      "framesDrawnAtOldRevision": 2,
+      "revisionAfter": 2,
+      "staleFramesRefused": 132
+    },
+    "rendererRestart": {
+      "decision": "degraded-to-neutral",
+      "degradedExplicitly": true,
+      "lastShape": "neutral",
+      "resumed": false
+    },
+    "teardown": {
+      "idleSourcesCreated": 67,
+      "idleSourcesSurviving": 0,
+      "lastShape": "neutral",
+      "timeoutSourcesCreated": 0,
+      "voiceThreadsRemaining": 0
+    },
+    "voiceWorkerRestart": {
+      "lastShape": "neutral",
+      "note": "restart_worker cancels the utterance in flight before it stops the worker, so the neutral usually arrives by the cancellation path rather than the worker-stopped one. Both end neutral, which is the property; the worker-stopped path is covered directly in tests/companion/test_voice_renderer_link.py",
+      "origin": "neutral-on-cancellation",
+      "workerRunning": true
+    }
+  },
+  "display": {
+    "available": true,
+    "display": ":0",
+    "isGnomeSession": false,
+    "isPhysicalHardware": false,
+    "kind": "wayland-wslg-remoted",
+    "note": "A real Wayland compositor supplied by the WSLg system distribution and composited by the Windows host. Real enough to decode, draw and time frames. NOT a GNOME session, NOT physical hardware, and NOT a performance measurement for any target device.",
+    "physicalSpeakerValidated": false,
+    "pulseServer": "unix:/mnt/wslg/PulseServer",
+    "waylandDisplay": "wayland-0",
+    "xdgRuntimeDir": "/run/user/1000"
+  },
+  "gate": {
+    "failures": [],
+    "passed": true
+  },
+  "glib": {
+    "criticals": 0,
+    "examples": [],
+    "records": 0
+  },
+  "gtkVersion": "4.22.4",
+  "limitations": [],
+  "link": {
+    "active": false,
+    "captionsAuthoritative": true,
+    "closed": true,
+    "count": 2,
+    "frameRevision": 1,
+    "lastFrame": {
+      "atMonotonic": 3736.489076099,
+      "driftMs": 0,
+      "mouthShape": "neutral",
+      "origin": "neutral-on-completion",
+      "positionMs": 0,
+      "requestId": "speech-a46390f127114a798b09a5d2f6f6d9a9",
+      "revision": 1,
+      "sequence": -1,
+      "sourceMethod": ""
+    },
+    "maximumFrames": 4096,
+    "mouthMayChangeCaption": false,
+    "mouthMayChangeTask": false,
+    "rendererAttached": false,
+    "report": {
+      "accepted": 174,
+      "distinctNonNeutralShapes": [
+        "closed",
+        "open-medium",
+        "open-small",
+        "open-wide"
+      ],
+      "distinctShapes": [
+        "closed",
+        "neutral",
+        "open-medium",
+        "open-small",
+        "open-wide"
+      ],
+      "drawn": 67,
+      "held": 112,
+      "maximumDriftMs": 0,
+      "neutralReturns": 4,
+      "rejected": {
+        "after-renderer-restart": 148,
+        "stale-revision": 132
+      },
+      "rejectedTotal": 280,
+      "rendererFailures": 0,
+      "requests": [
+        "speech-6ed53781945b4c8784b37a788fa04144",
+        "speech-06e9fc3591bb449f9f4f411e39f7e7c9",
+        "speech-f3f5f04c09244ca2a6d32b649797cd25",
+        "speech-95ff78505d094eae9b51e223219aa04c",
+        "speech-a46390f127114a798b09a5d2f6f6d9a9"
+      ]
+    },
+    "requestId": "speech-a46390f127114a798b09a5d2f6f6d9a9",
+    "revision": 2,
+    "sequence": 1
+  },
+  "measurements": {
+    "cancellation": {
+      "cancelRequestedAtMs": 7691.978,
+      "cancellationToNeutralMs": 52.013,
+      "neutralAtMs": 7743.991
+    },
+    "fullUtterance": {
+      "audioStartedAtMs": 3469.104,
+      "finalNeutralAtMs": 7659.41,
+      "firstFrameDriftMs": 0.829,
+      "firstRenderedMouthFrameAtMs": 3469.933,
+      "firstVisemeAtMs": 3469.356,
+      "maximumDispatchLatencyMs": 5.51,
+      "maximumObservedDriftMs": 5.708,
+      "medianDispatchLatencyMs": 2.788,
+      "medianObservedDriftMs": 2.797,
+      "mouthChangesWhileAudioActive": 58,
+      "note": "Timing method is MEASURED AMPLITUDE over the synthesiser's own samples in 40 ms windows. No phoneme boundary was measured anywhere in this build, and no claim of phoneme-accurate lip sync is made. maximumObservedDriftMs is the presentation drift: how far a drawn mouth frame sat from the point in the audio it belongs to, from the audio start on this machine's clock.",
+      "schedulerDriftNote": "structurally zero on the file-playback path: a one-shot player exposes no clock, so the worker passes the playback handle's position as both the timeline position and the audio clock. It is not a measurement and is reported here so that nobody reads the zero as one.",
+      "schedulerReportedDriftMs": 0
+    }
+  },
+  "package": {
+    "assetsResolved": 7,
+    "id": "org.bunny-os.default-bunny",
+    "mouthShapes": [
+      "closed",
+      "neutral",
+      "open-medium",
+      "open-small",
+      "open-wide",
+      "rounded",
+      "smile"
+    ]
+  },
+  "provenance": {
+    "animatedRenderer": "companion.character.animated_renderer",
+    "speechLink": "/home/bunny/bunny-os-closure/companion/character/speech_link.py"
+  },
+  "schema": "bunny-os/gtk-voice-viseme-probe/1",
+  "voice": {
+    "audio": [
+      {
+        "backendId": "pipewire",
+        "detail": "the PipeWire graph contains no audio sink",
+        "ready": false
+      },
+      {
+        "backendId": "pulse",
+        "detail": "",
+        "ready": true
+      },
+      {
+        "backendId": "alsa",
+        "detail": "aplay: device_list:279: no soundcards found...",
+        "ready": false
+      }
+    ],
+    "providers": [
+      {
+        "detail": "",
+        "providerId": "espeak-ng",
+        "ready": true
+      },
+      {
+        "detail": "",
+        "providerId": "speech-dispatcher",
+        "ready": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-core-task.schema.json",
+  "title": "Bunny Companion task",
+  "description": "One request, from submission to history. Several fields exist only so that a crashed runtime can reach a safe decision without replaying the whole stream — the operation ledger above all, which is what makes \"do not repeat an operation merely because its completion event was missing\" implementable. Two things are absent by construction and have no field to occupy: credentials of any kind, and an executor's hidden reasoning. The former is removed before anything is written; the latter has no channel in the executor contract to arrive through.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "taskId", "sessionId", "originalRequest", "displaySummary",
+    "createdAt", "taskType", "requiredCapabilities", "classification", "dataLocality",
+    "requiresOffline", "state", "progress", "operations", "approvals", "outputs",
+    "errors", "cancellationState"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "taskId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "sessionId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "originalRequest": {
+      "type": "string",
+      "maxLength": 8192,
+      "description": "The user's own words, credential-scrubbed, kept in full. Kept because a task whose request was thrown away cannot be re-run, reviewed or explained. Bounded where it is accepted rather than truncated here, so a request that is too long is refused rather than half-answered."
+    },
+    "displaySummary": { "type": "string", "maxLength": 240 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string" },
+    "taskType": {
+      "enum": ["unclassified", "question", "summarise", "transform", "retrieve", "compute", "local_action"]
+    },
+    "requiredCapabilities": { "type": "array", "items": { "type": "string" } },
+    "classification": { "enum": ["public", "internal", "personal", "sensitive", "secret"] },
+    "dataLocality": { "enum": ["device-only", "trusted-remote", "any"] },
+    "requiresOffline": {
+      "type": "boolean",
+      "description": "A task that requires offline operation must also be device-only; declaring otherwise asks for a contradiction to be resolved silently."
+    },
+    "costLimitUnits": { "type": "integer", "minimum": 0 },
+    "spentCostUnits": { "type": "integer", "minimum": 0 },
+    "executionDeadlineSeconds": { "type": "number", "minimum": 0 },
+    "deadlineConsumedSeconds": {
+      "type": "number",
+      "minimum": 0,
+      "description": "A budget with a consumed amount rather than an instant. Monotonic time does not survive a reboot, so a deadline stored as an instant would be meaningless afterwards."
+    },
+    "executorId": { "type": "string" },
+    "reviewerIds": { "type": "array", "items": { "type": "string" } },
+    "state": {
+      "enum": [
+        "created", "classifying", "waiting_for_capability", "waiting_for_executor",
+        "waiting_for_approval", "planning", "executing", "reviewing", "presenting",
+        "completed", "blocked", "failed", "cancelled", "cancelling", "paused", "recovering"
+      ]
+    },
+    "pausedFrom": {
+      "type": "string",
+      "description": "The phase a pause interrupted, so resume returns to it rather than guessing. Empty whenever the task is not paused."
+    },
+    "lifecycleEpoch": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Which attempt at running this task is the current one, incremented on every resume. A resume that produces an identical plan produces identical plan and transition identifiers — deliberately, so that an answer which still applies is kept — which means an approval outcome recorded against the previous attempt would match the current one on every other field. This is the field that cannot match, and the presentation fold uses it to ignore outcomes belonging to an earlier attempt. Absent in tasks written before epochs existed; zero is the correct reading of a task that never had a second attempt."
+    },
+    "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+    "planRevision": { "type": "integer", "minimum": 0 },
+    "reviewRounds": { "type": "integer", "minimum": 0 },
+    "toolCallCount": { "type": "integer", "minimum": 0 },
+    "capabilityPlanReference": { "type": "string" },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requestId", "action", "decision"],
+        "properties": {
+          "requestId": { "type": "string" },
+          "action": { "type": "string" },
+          "decision": { "enum": ["pending", "granted", "denied", "expired"] },
+          "planId": { "type": "string" },
+          "planRevision": { "type": "integer", "minimum": 0 },
+          "transitionId": { "type": "string" },
+          "destinationFingerprint": {
+            "type": "string",
+            "description": "A digest of everything about the destination — provider, locality, retention, whether it trains on input — so that a provider whose declaration changed while its name did not is caught."
+          },
+          "resolvedSequence": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "description": "One reference per tool operation, keyed by a derived idempotency key. The key is derived rather than minted so that the same operation in a replan carries the same key and can be recognised after a crash.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "name", "status"],
+        "properties": {
+          "key": { "type": "string", "pattern": "^op-[0-9a-f]{32}$" },
+          "name": { "type": "string" },
+          "status": {
+            "enum": ["started", "completed", "failed", "unknown"],
+            "description": "\"unknown\" means the operation began and nothing settled it before the runtime stopped. It is not \"failed\": a failure is a claim about what happened, and nobody knows."
+          },
+          "startedSequence": { "type": "integer", "minimum": 0 },
+          "settledSequence": { "type": "integer", "minimum": 0 },
+          "recoveryNote": { "type": "string" }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "description": "Outputs by digest rather than by value. A task document that grew with its outputs would eventually be too large to read on the machines this is for, and a document that must be read to recover must stay small.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["outputId", "kind", "digest", "byteSize", "classification"],
+        "properties": {
+          "outputId": { "type": "string" },
+          "kind": { "type": "string" },
+          "digest": { "type": "string" },
+          "byteSize": { "type": "integer", "minimum": 0 },
+          "classification": { "enum": ["public", "internal", "personal", "sensitive", "secret"] },
+          "summary": { "type": "string", "maxLength": 240 },
+          "createdSequence": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code"],
+        "properties": {
+          "code": { "type": "string" },
+          "summary": { "type": "string", "maxLength": 600 },
+          "producer": { "type": "string" },
+          "sequence": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "cancellationState": { "enum": ["none", "requested", "in_progress", "complete"] },
+    "cancellationCause": {
+      "enum": ["", "user", "policy", "timeout", "capability_loss", "provider_loss", "supervisor_shutdown"],
+      "description": "Kept distinct so a user can tell \"I stopped this\" from \"the machine stopped this because the battery died\"."
+    }
+  }
+}

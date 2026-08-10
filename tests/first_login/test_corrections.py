@@ -16,9 +16,23 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
+import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
+
+# The install set is declared in build/scripts/install_routes.py and both the
+# installer and the closure analyser are driven by it. Tests that used to grep
+# install-root.py for a call ask the declaration instead: a route is a fact
+# about what gets installed, and a substring is a fact about how it is spelled.
+if str(ROOT / "build/scripts") not in sys.path:
+    sys.path.insert(0, str(ROOT / "build/scripts"))
+
+
+def install_routes():
+    from install_routes import INSTALL_ROUTES
+
+    return INSTALL_ROUTES
 
 USER_UNIT_DIR = ROOT / "systemd/user"
 FIRST_BOOT = USER_UNIT_DIR / "bunny-first-boot.service"
@@ -163,17 +177,18 @@ class TmpfilesRuleTests(unittest.TestCase):
     def test_rule_is_installed_to_a_path_systemd_reads(self):
         """A rule in /usr/lib/user-tmpfiles.d is never read, and nothing
         reports that it was skipped."""
-        install = code_of(INSTALL_ROOT)
-        if INSTALLED_RULE_PATH not in install:
-            self.fail("build/scripts/install-root.py does not install the "
-                      f"per-user tmpfiles rule to {INSTALLED_RULE_PATH}, the "
-                      "only user-tmpfiles.d directory systemd --user reads "
+        destinations = {route.destination for route in install_routes()}
+        if INSTALLED_RULE_PATH not in destinations:
+            self.fail("build/scripts/install_routes.py declares no route that "
+                      f"installs the per-user tmpfiles rule to {INSTALLED_RULE_PATH}, "
+                      "the only user-tmpfiles.d directory systemd --user reads "
                       "on this base image")
-        # A trailing slash distinguishes a destination from prose: the file
-        # names the wrong directory in a diagnostic message on purpose, and
-        # that message is not an installation.
-        if "/usr/lib/user-tmpfiles.d/" in install:
-            self.fail("build/scripts/install-root.py installs a file under "
+        # The wrong directory is named in a diagnostic message on purpose, and
+        # a message is not an installation — so this asks the route table rather
+        # than searching the installer's text for the string.
+        wrong = [item for item in destinations if item.startswith("/usr/lib/user-tmpfiles.d/")]
+        if wrong:
+            self.fail(f"a declared route installs {wrong} under "
                       "/usr/lib/user-tmpfiles.d/, which is not in the --user "
                       "search path; a rule placed there is never read and "
                       "nothing reports that it was skipped")
@@ -367,11 +382,23 @@ class ChronydOrderingTests(unittest.TestCase):
             "an ordering change closes a cycle")
 
     def test_drop_in_lands_in_the_image(self):
-        install = INSTALL_ROOT.read_text(encoding="utf-8")
-        self.assertIn('copy_tree(source / "systemd"', install,
-                      "install-root.py no longer copies the systemd tree "
-                      "wholesale, so the drop-in directory may not be "
-                      "installed at all")
+        """The drop-in directory reaches /usr/lib/systemd/system, by a route.
+
+        Asked of the shared install declaration and of the predicate that
+        selects files, so it answers about *this* drop-in rather than about the
+        continued existence of a line of code that might install something else.
+        """
+        from install_routes import installed_destination
+
+        relative = CHRONYD_DROPIN.relative_to(ROOT).as_posix()
+        landed = [
+            installed_destination(route, relative) for route in install_routes()
+        ]
+        landed = [item for item in landed if item is not None]
+        self.assertEqual(
+            landed, [f"/usr/lib/systemd/system/{relative[len('systemd/'):]}"],
+            "no declared install route carries the chronyd drop-in into the image",
+        )
 
 
 class GuardProgramSourceTests(unittest.TestCase):

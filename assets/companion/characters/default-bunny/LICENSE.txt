@@ -1,0 +1,6 @@
+SPDX-FileCopyrightText: 2026 ComradeArt
+SPDX-License-Identifier: GPL-3.0-or-later
+
+The original default Bunny character raster assets and their deterministic
+generator are licensed under GPL-3.0-or-later with the Bunny OS repository.
+No third-party model, image service, font, or external asset is required.

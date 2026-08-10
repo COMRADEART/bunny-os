@@ -36,6 +36,10 @@ Three classifications come out:
 ``context-only``
     Visible to the build, not installed by any route this script can see.
     Requires an empirical two-build comparison to call it non-affecting.
+    Visible to the build, not installed by any declared route. The Containerfile
+    deletes ``/tmp/bunny-os`` before committing, so these are *probably* absent
+    from the artifact — but "probably" is not the standard, and an empirical
+    two-build comparison is required to say so.
 ``unreachable``
     Absent from every COPY directive. Cannot affect the artifact.
 
@@ -44,6 +48,9 @@ Usage::
     build-input-closure.py --map
     build-input-closure.py --range 96ca61f..ff751ab
     build-input-closure.py --paths schemas/execution-plan.schema.json
+    build-input-closure.py --range 0cf81a1..b825dd4
+    build-input-closure.py --paths companion/voice/worker.py
+    build-input-closure.py --audit
 """
 
 from __future__ import annotations
@@ -89,6 +96,27 @@ _INDIRECT_ROUTES = (
     },
 )
 
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+from typing import Any, Iterable, Sequence
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from install_routes import (  # noqa: E402 - the path above is what makes this importable
+    GENERATED_ROUTES,
+    INSTALL_ROUTES,
+    MODELLED_HELPERS,
+    PROFILES,
+    InstallRoute,
+    audit_installer,
+    installed_destination,
+)
+
+ROOT = Path(__file__).resolve().parents[2]
+
 
 class ClosureError(RuntimeError):
     """The closure could not be computed, so no claim may be made from it."""
@@ -128,6 +156,7 @@ def build_context_roots(containerfile: Path) -> tuple[list[str], list[str]]:
             continue
         sources = parts[:-1]
         for item in sources:
+        for item in parts[:-1]:
             if item in (".", "./") or item.startswith(".."):
                 unresolved.append(line.strip())
                 continue
@@ -252,6 +281,18 @@ def classify(
     path: str, roots: Iterable[str], routes: Iterable[dict[str, Any]],
 ) -> dict[str, Any]:
     """Where one repository-relative path can reach, and how."""
+    path: str,
+    roots: Iterable[str],
+    routes: Sequence[InstallRoute] = INSTALL_ROUTES,
+) -> dict[str, Any]:
+    """Where one repository-relative path can reach, and how.
+
+    Every route is offered the path through the shared predicate. A path that
+    several routes carry — ``capability/services/*.json`` is installed as
+    manifest data and would also be caught by a package route if it were Python
+    — reports all of them, because "which copy of this file does the image use"
+    is a question a reader must be able to see the whole of.
+    """
     normalised = path.replace("\\", "/").lstrip("./")
 
     reachable = any(
@@ -298,6 +339,18 @@ def classify(
                 **route,
                 "installedAs": f"{route['destination'].rstrip('/')}/{remainder}" if remainder else route["destination"],
             })
+        destination = installed_destination(route, normalised)
+        if destination is None:
+            continue
+        matched.append({
+            "routeId": route.id,
+            "kind": route.kind,
+            "sourcePath": route.source,
+            "destination": route.destination,
+            "installedAs": destination,
+            "mode": oct(route.mode),
+            "profiles": sorted(route.profiles) if route.profiles is not None else list(PROFILES),
+        })
 
     if matched:
         classification = "installed"
@@ -310,6 +363,9 @@ def classify(
         "path": normalised,
         "classification": classification,
         "inBuildContext": reachable,
+        "profiles": sorted({
+            profile for item in matched for profile in item["profiles"]
+        }),
         "routes": matched,
     }
 
@@ -324,6 +380,13 @@ def changed_paths(revision_range: str) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def installer_audit() -> list[str]:
+    installer = ROOT / "build/scripts/install-root.py"
+    if not installer.is_file():
+        return ["build/scripts/install-root.py is missing"]
+    return audit_installer(installer)
+
+
 def build_closure(paths: list[str]) -> dict[str, Any]:
     containerfile = ROOT / "build/Containerfile"
     installer = ROOT / "build/scripts/install-root.py"
@@ -334,6 +397,22 @@ def build_closure(paths: list[str]) -> dict[str, Any]:
     routes, route_unresolved = install_routes(installer)
     classified = [classify(item, roots, routes) for item in paths]
 
+    complaints = installer_audit()
+    if complaints:
+        raise ClosureError(
+            "install-root.py installs something build/scripts/install_routes.py does "
+            "not model, so the install set this script would report is not the install "
+            "set the build produces:\n  " + "\n  ".join(complaints)
+        )
+
+    roots, copy_unresolved = build_context_roots(containerfile)
+    if copy_unresolved:
+        raise ClosureError(
+            "the Containerfile has COPY directives this script cannot resolve, so the "
+            "build context is not fully known:\n  " + "\n  ".join(copy_unresolved)
+        )
+
+    classified = [classify(item, roots) for item in paths]
     installed = [item for item in classified if item["classification"] == "installed"]
     context_only = [item for item in classified if item["classification"] == "context-only"]
     unreachable = [item for item in classified if item["classification"] == "unreachable"]
@@ -345,12 +424,23 @@ def build_closure(paths: list[str]) -> dict[str, Any]:
         "unresolvedInstallCalls": route_unresolved,
         "indirectRoutes": list(_INDIRECT_ROUTES),
         "closureComplete": not copy_unresolved,
+        "schemaVersion": 2,
+        "buildContextRoots": roots,
+        "unresolvedCopyDirectives": copy_unresolved,
+        "installerAuditComplaints": complaints,
+        "declaredRouteCount": len(INSTALL_ROUTES),
+        "modelledHelpers": dict(sorted(MODELLED_HELPERS.items())),
+        "generatedRoutes": [dict(item) for item in GENERATED_ROUTES],
+        "closureComplete": True,
         "summary": {
             "examined": len(classified),
             "installed": len(installed),
             "contextOnly": len(context_only),
             "unreachable": len(unreachable),
             "buildAffecting": bool(installed),
+            "affectedProfiles": sorted({
+                profile for item in installed for profile in item["profiles"]
+            }),
         },
         "installed": installed,
         "contextOnly": context_only,
@@ -360,6 +450,8 @@ def build_closure(paths: list[str]) -> dict[str, Any]:
             "contextOnly": (
                 "visible to the build but installed by no route this script can see. "
                 "The Containerfile deletes /tmp/bunny-os before committing, so these are "
+                "visible to the build but installed by no declared route. The "
+                "Containerfile deletes /tmp/bunny-os before committing, so these are "
                 "probably absent from the artifact — but 'probably' is not the standard, "
                 "and an empirical two-build comparison is required to say so."
             ),
@@ -382,6 +474,7 @@ def render(document: dict[str, Any]) -> str:
     if document["unresolvedInstallCalls"]:
         lines.append(f"  install calls this script could not resolve: {len(document['unresolvedInstallCalls'])}")
         lines.extend(f"    {item}" for item in document["unresolvedInstallCalls"][:8])
+    lines.append(f"  declared install routes: {document['declaredRouteCount']}")
     summary = document["summary"]
     lines.extend([
         "",
@@ -399,6 +492,16 @@ def render(document: dict[str, Any]) -> str:
                 lines.append(f"      -> {route['installedAs']}  (install-root.py:{route['line']})")
     if document["contextOnly"]:
         lines.extend(["", "  In the build context, not installed by a visible route:"])
+    if summary["affectedProfiles"]:
+        lines.append(f"  profiles affected: {', '.join(summary['affectedProfiles'])}")
+    if document["installed"]:
+        lines.extend(["", "  Installed into the artifact:"])
+        for item in document["installed"]:
+            lines.append(f"    {item['path']}")
+            for route in item["routes"]:
+                lines.append(f"      -> {route['installedAs']}  [{route['routeId']}, {route['kind']}]")
+    if document["contextOnly"]:
+        lines.extend(["", "  In the build context, not installed by a declared route:"])
         lines.extend(f"    {item['path']}" for item in document["contextOnly"])
     if document["unreachable"]:
         lines.extend(["", "  Unreachable from the build:"])
@@ -418,6 +521,33 @@ def main() -> int:
     group.add_argument("--range", help="a git revision range, e.g. 96ca61f..ff751ab")
     group.add_argument("--paths", nargs="+", help="repository-relative paths to classify")
     group.add_argument("--map", action="store_true", help="print the whole install route table")
+    lines.extend(["", "  " + document["interpretation"]["caveat"]])
+    return "\n".join(lines)
+
+
+def route_map() -> dict[str, Any]:
+    roots, copy_unresolved = build_context_roots(ROOT / "build/Containerfile")
+    return {
+        "schemaVersion": 2,
+        "buildContextRoots": roots,
+        "unresolvedCopyDirectives": copy_unresolved,
+        "installRoutes": [route.to_json() for route in INSTALL_ROUTES],
+        "generatedRoutes": [dict(item) for item in GENERATED_ROUTES],
+        "modelledHelpers": dict(sorted(MODELLED_HELPERS.items())),
+        "installerAuditComplaints": installer_audit(),
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--range", help="a git revision range, e.g. 0cf81a1..b825dd4")
+    group.add_argument("--paths", nargs="+", help="repository-relative paths to classify")
+    group.add_argument("--map", action="store_true", help="print the whole install route table")
+    group.add_argument(
+        "--audit", action="store_true",
+        help="check that install-root.py installs nothing the route table does not model",
+    )
     parser.add_argument("--json", action="store_true", help="emit JSON")
     parser.add_argument("--output", type=Path, help="write JSON to this path as well")
     args = parser.parse_args()
@@ -455,6 +585,51 @@ def main() -> int:
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
             return 0
+    def emit(document: dict[str, Any], text: str) -> None:
+        print(json.dumps(document, indent=2, sort_keys=True) if args.json else text)
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(
+                json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8",
+            )
+
+    try:
+        if args.audit:
+            complaints = installer_audit()
+            document = {
+                "schemaVersion": 2,
+                "installerAuditComplaints": complaints,
+                "modelled": bool(not complaints),
+                "modelledHelpers": dict(sorted(MODELLED_HELPERS.items())),
+            }
+            text = (
+                "install-root.py installs only what build/scripts/install_routes.py models"
+                if not complaints
+                else "BLOCKED: install-root.py installs something the route table does not "
+                     "model:\n  " + "\n  ".join(complaints)
+            )
+            emit(document, text)
+            return 0 if not complaints else 2
+
+        if args.map:
+            document = route_map()
+            lines = ["Build context roots:"]
+            lines.extend(f"  {item}" for item in document["buildContextRoots"])
+            lines.append("\nInstall routes (repository path -> installed path):")
+            for route in document["installRoutes"]:
+                lines.append(
+                    f"  {route['source']:52} -> {route['destination']}  "
+                    f"[{route['kind']}, {route['mode']}]"
+                )
+            lines.append("\nGenerated routes (not copies of a repository file):")
+            for item in document["generatedRoutes"]:
+                lines.append(f"  {item['destination']}")
+                lines.append(f"    from: {item['derivedFrom']}")
+            if document["installerAuditComplaints"]:
+                lines.append("\nBLOCKED: the installer does something this table does not model:")
+                lines.extend(f"  {item}" for item in document["installerAuditComplaints"])
+            emit(document, "\n".join(lines))
+            return 2 if document["installerAuditComplaints"] else 0
 
         paths = changed_paths(args.range) if args.range else list(args.paths)
         document = build_closure(paths)
@@ -464,6 +639,7 @@ def main() -> int:
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        emit(document, render(document))
         # Exit 1 when the change is build-affecting, so a gate can branch on it.
         return 1 if document["summary"]["buildAffecting"] else 0
     except ClosureError as exc:

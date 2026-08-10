@@ -33,6 +33,90 @@ validate:
 test:
 	$(PYTHON) scripts/task.py test
 
+test-companion:
+	$(PYTHON) scripts/task.py test-companion
+
+# The headless vertical slice, run against simulated hardware into a scratch
+# directory. No network, no provider, no credential; see docs/COMPANION_RUNTIME_CORE.md.
+companion-demo:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion --simulate laptop run-demo
+
+# The *integrated* slice: the service, the socket, a client, an approval
+# answered through the Approval Centre path, a client restart and a runtime
+# restart. Twenty-seven steps, still with no network, provider or credential.
+# See docs/COMPANION_INTEGRATION.md.
+companion-slice:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion run-integration-slice
+
+# §24's figures, for the host this is run on and no other. It will not produce a
+# Raspberry Pi, ARM, 64 MiB or GPU number, because it cannot take one.
+companion-measure:
+	$(PYTHON) scripts/companion_measure.py
+
+# The character renderer's own slice: a companion service, a validated package,
+# an approval, lip-sync, two degradations, hysteresis and a renderer restart.
+# See docs/COMPANION_CHARACTER_RENDERER.md.
+companion-character-slice:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion run-character-slice
+
+# The renderer demonstration, with no companion service at all.
+companion-character-demo:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion renderer demo --performance
+
+# §21's figures, for the host this runs on. Unmeasurable dimensions report
+# NOT_RUN rather than zero.
+# The voice runtime's own slice: a companion service, a real local synthesiser,
+# generic visemes, a cancellation, an audio loss and a worker restart. No
+# network and no commercial provider; a host with no synthesiser records the
+# steps that need one as NOT_RUN rather than failing.
+companion-voice-slice:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion run-voice-slice
+
+# What can speak on this machine, and why anything that cannot, cannot.
+companion-voice-renderer-slice:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion run-voice-renderer-slice
+
+# The pixels. Needs a compositor and refuses to run without one; see
+# scripts/gtk_voice_viseme_probe.py.
+companion-voice-viseme-probe:
+	$(PYTHON) scripts/gtk_voice_viseme_probe.py --package-root assets/companion/characters
+
+companion-voice-health:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion voice-health
+
+# §24's figures. Not Bunny OS memory usage; the voice runtime's own.
+companion-voice-measure:
+	$(PYTHON) scripts/voice_measure.py --runs 30
+
+# The §24 speech-input slice: push-to-talk to exactly one confirmed task.
+companion-speech-slice:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion run-speech-slice
+
+companion-speech-health:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion speech-input-health
+
+# The widgets. Needs a compositor and refuses to run without one.
+companion-speech-input-probe:
+	$(PYTHON) scripts/gtk_speech_input_probe.py --package-root assets/companion/characters
+
+# §25's figures. Not Bunny OS memory usage; the speech-input runtime's own.
+companion-speech-measure:
+	$(PYTHON) scripts/speech_measure.py
+
+# The §23 agent-provider slice: a real local model to exactly one canonical task.
+companion-agent-slice:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion run-agent-slice
+
+companion-agents-health:
+	$(PYTHON) tools/bunny-os/bin/bunny-os --json companion agents-health
+
+# §25's figures. The model server's memory is measured apart from ours.
+companion-agent-measure:
+	$(PYTHON) scripts/agent_measure.py
+
+companion-character-measure:
+	$(PYTHON) scripts/character_measure.py
+
 test-security:
 	$(PYTHON) scripts/task.py test-security
 

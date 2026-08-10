@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 1,
+  "packageId": "org.bunny-os.default-bunny",
+  "characterId": "default-bunny",
+  "characterName": "Bunny",
+  "packageVersion": "1.0.0",
+  "creator": "ComradeArt / Bunny OS contributors",
+  "license": "GPL-3.0-or-later",
+  "copyright": "Copyright 2026 ComradeArt",
+  "licenseAsset": "license",
+  "supportedRendererVersions": {
+    "static-image": "1.0",
+    "animated-2d": "1.0"
+  },
+  "minimumBunnyOsVersion": "0.1.0",
+  "presentationType": "animated-2d",
+  "assetInventory": [
+    {
+      "assetId": "error",
+      "path": "assets/error.png",
+      "mediaType": "image/png",
+      "sha256": "b8bc230994924bca7982d7a101946d6286ac2424de89fea72cb3af8683205c4b",
+      "sizeBytes": 722,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "idle-1",
+      "path": "assets/idle-1.png",
+      "mediaType": "image/png",
+      "sha256": "b6a0a0a7b55864b5d6dd5f5d957dc77718dd54c9aa512a6aa67a084f78789378",
+      "sizeBytes": 642,
+      "width": 96,
+      "height": 96,
+      "purpose": "thumbnail"
+    },
+    {
+      "assetId": "idle-2",
+      "path": "assets/idle-2.png",
+      "mediaType": "image/png",
+      "sha256": "323fded1ccd0c51c00795b69ddc279ca645bbffe8dde7bd666ccd9c1b4a24409",
+      "sizeBytes": 642,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "listening",
+      "path": "assets/listening.png",
+      "mediaType": "image/png",
+      "sha256": "7b64f60f579ffb68eecbf1cb8a9d8a9642041b35b798ca1951f984cf5fc47dd7",
+      "sizeBytes": 702,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "moving",
+      "path": "assets/moving.png",
+      "mediaType": "image/png",
+      "sha256": "325d0538f1bac986e2a89aa23d74619bd1d08cef4a0eeca4d5b5db93ed57f59e",
+      "sizeBytes": 644,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "sleeping",
+      "path": "assets/sleeping.png",
+      "mediaType": "image/png",
+      "sha256": "99a5e14a3fd76f7720cca3cc4f3c03aa6ee71b672fee5a1bddf273c5cb88cf38",
+      "sizeBytes": 616,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "speaking-closed",
+      "path": "assets/speaking-closed.png",
+      "mediaType": "image/png",
+      "sha256": "b6a0a0a7b55864b5d6dd5f5d957dc77718dd54c9aa512a6aa67a084f78789378",
+      "sizeBytes": 642,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "speaking-open",
+      "path": "assets/speaking-open.png",
+      "mediaType": "image/png",
+      "sha256": "e87cb77cc7a62f62d3c65743bf504aaa60fcf7829b02e8c1d1cb62e75bf2aac8",
+      "sizeBytes": 690,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "success",
+      "path": "assets/success.png",
+      "mediaType": "image/png",
+      "sha256": "e8fe928a0d9b20a5b5bb05632660dcee9aea48bba93c5c15f356393f7e553fe6",
+      "sizeBytes": 625,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "thinking",
+      "path": "assets/thinking.png",
+      "mediaType": "image/png",
+      "sha256": "1f684c0f643468e2437e380a125487cb4d2c267f6c303367ba670cbb93a2e99f",
+      "sizeBytes": 684,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "warning",
+      "path": "assets/warning.png",
+      "mediaType": "image/png",
+      "sha256": "0569b5a6f1d09a9a3caf9ee6f6f67ba1b41ff6e72f692ecd927fbba402678451",
+      "sizeBytes": 721,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "working-1",
+      "path": "assets/working-1.png",
+      "mediaType": "image/png",
+      "sha256": "be06605c02e07691c4cbfe3a144f1c3b147c06c1de244e7f86a5206b5c5d56cc",
+      "sizeBytes": 624,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "working-2",
+      "path": "assets/working-2.png",
+      "mediaType": "image/png",
+      "sha256": "38422a04f0f2909b05293698d742a3a46560bf7e4597220bc690a1df75a3c99c",
+      "sizeBytes": 637,
+      "width": 96,
+      "height": 96,
+      "purpose": "render"
+    },
+    {
+      "assetId": "license",
+      "path": "LICENSE.txt",
+      "mediaType": "text/plain",
+      "sha256": "b16b612229b335c5a2e9e65b8f21d68d2005bb4646dbd9b9b311afbc7f7b5b2f",
+      "sizeBytes": 308,
+      "purpose": "license"
+    }
+  ],
+  "fallbackAsset": "idle-1",
+  "thumbnailAsset": "idle-1",
+  "declaredDimensions": {
+    "width": 96,
+    "height": 96
+  },
+  "declaredFrameRate": 8,
+  "declaredMemoryEstimateBytes": 479232,
+  "animations": {
+    "idle": {
+      "kind": "frame-sequence",
+      "frames": [
+        {"assetId": "idle-1", "durationMs": 600},
+        {"assetId": "idle-2", "durationMs": 600}
+      ],
+      "loop": true,
+      "transition": "interruptible",
+      "playbackSpeed": 1
+    },
+    "listening": {
+      "kind": "static",
+      "frames": [{"assetId": "listening", "durationMs": 1000}],
+      "loop": false,
+      "transition": "immediate",
+      "playbackSpeed": 1
+    },
+    "thinking": {
+      "kind": "static",
+      "frames": [{"assetId": "thinking", "durationMs": 1000}],
+      "loop": false,
+      "transition": "interruptible",
+      "playbackSpeed": 1
+    },
+    "working": {
+      "kind": "frame-sequence",
+      "frames": [
+        {"assetId": "working-1", "durationMs": 250},
+        {"assetId": "working-2", "durationMs": 250}
+      ],
+      "loop": true,
+      "transition": "interruptible",
+      "playbackSpeed": 1
+    },
+    "speaking": {
+      "kind": "frame-sequence",
+      "frames": [
+        {"assetId": "speaking-closed", "durationMs": 140},
+        {"assetId": "speaking-open", "durationMs": 140}
+      ],
+      "loop": true,
+      "transition": "interruptible",
+      "playbackSpeed": 1
+    },
+    "speaking-closed": {
+      "kind": "static",
+      "frames": [{"assetId": "speaking-closed", "durationMs": 1000}],
+      "loop": false,
+      "transition": "immediate",
+      "playbackSpeed": 1
+    },
+    "speaking-open": {
+      "kind": "static",
+      "frames": [{"assetId": "speaking-open", "durationMs": 1000}],
+      "loop": false,
+      "transition": "immediate",
+      "playbackSpeed": 1
+    },
+    "success": {
+      "kind": "static",
+      "frames": [{"assetId": "success", "durationMs": 900}],
+      "loop": false,
+      "transition": "return-to-idle",
+      "playbackSpeed": 1
+    },
+    "warning": {
+      "kind": "static",
+      "frames": [{"assetId": "warning", "durationMs": 1000}],
+      "loop": false,
+      "transition": "immediate",
+      "playbackSpeed": 1
+    },
+    "error": {
+      "kind": "static",
+      "frames": [{"assetId": "error", "durationMs": 1000}],
+      "loop": false,
+      "transition": "immediate",
+      "playbackSpeed": 1
+    },
+    "sleeping": {
+      "kind": "static",
+      "frames": [{"assetId": "sleeping", "durationMs": 1000}],
+      "loop": false,
+      "transition": "complete-current",
+      "playbackSpeed": 1
+    },
+    "moving": {
+      "kind": "static",
+      "frames": [{"assetId": "moving", "durationMs": 1000}],
+      "loop": false,
+      "transition": "interruptible",
+      "playbackSpeed": 1
+    }
+  },
+  "stateMap": {
+    "unavailable": "warning",
+    "starting": "idle",
+    "idle": "idle",
+    "greeting": "idle",
+    "listening": "listening",
+    "transcribing": "listening",
+    "understanding": "thinking",
+    "waiting_for_user": "listening",
+    "waiting_for_approval": "warning",
+    "planning": "thinking",
+    "working": "working",
+    "researching": "thinking",
+    "typing": "working",
+    "reviewing": "thinking",
+    "speaking": "speaking",
+    "presenting_result": "speaking",
+    "success": "success",
+    "warning": "warning",
+    "blocked": "warning",
+    "degraded": "warning",
+    "error": "error",
+    "paused": "idle",
+    "cancelled": "warning",
+    "disconnected": "warning",
+    "sleeping": "sleeping",
+    "moving": "moving",
+    "repositioning": "moving"
+  },
+  "expressionMap": {
+    "neutral": "idle",
+    "listening": "listening",
+    "planning": "thinking",
+    "speaking": "speaking",
+    "success": "success",
+    "warning": "warning",
+    "error": "error",
+    "sleeping": "sleeping"
+  },
+  "mouthShapeMap": {
+    "closed": "speaking-closed",
+    "open-small": "speaking-open",
+    "open-medium": "speaking-open",
+    "open-wide": "speaking-open",
+    "rounded": "speaking-open",
+    "smile": "success",
+    "neutral": "speaking-closed"
+  },
+  "bubbleAnchor": {
+    "x": 0.76,
+    "y": 0.16,
+    "preferredSide": "auto"
+  },
+  "boundingBox": {
+    "x": 0.1,
+    "y": 0.01,
+    "width": 0.8,
+    "height": 0.94
+  },
+  "safeMargins": {
+    "top": 0.04,
+    "right": 0.04,
+    "bottom": 0.04,
+    "left": 0.04
+  }
+}

@@ -4,3 +4,8 @@ enable bunny-first-run.service
 enable bunny-companion.service
 disable bunny-desktop.service
 disable bunny-shell.target
+# The companion runtime starts with the graphical session and outlives every
+# window in it. Enabled rather than left to the desktop entry: the entry opens a
+# *client*, and a client that had to start the runtime would mean closing the
+# last window stopped whatever it was doing.
+enable bunny-companion.service

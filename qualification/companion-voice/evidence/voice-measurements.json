@@ -1,0 +1,205 @@
+{
+  "backendId": "pulse",
+  "caveats": [
+    "these are the voice runtime's figures and not Bunny OS memory usage",
+    "no physical speaker was validated; audio on the reference target reaches an RDP sink through the WSLg bridge",
+    "a p95 computed from fewer than 20 samples is the maximum"
+  ],
+  "cpu": [
+    {
+      "maximum": 3310.0,
+      "median": 785.0,
+      "metric": "process CPU during an utterance",
+      "minimum": 330.0,
+      "n": 30,
+      "note": "the parent's own user+system time across synthesis and playback together; the child's CPU is not in this figure and the two phases are not separable from the parent's accounting",
+      "p95": 3300.0,
+      "unit": "ms"
+    }
+  ],
+  "degradedToCaptions": 0,
+  "host": {
+    "commit": "0cf81a135b24619f74bbecfcdd48d3a69f33c2fd",
+    "machine": "x86_64",
+    "os": "Fedora Linux 44 (WSL)",
+    "platform": "linux",
+    "python": "3.14.3",
+    "release": "6.18.33.2-microsoft-standard-WSL2",
+    "tools": {
+      "aplay": "/usr/bin/aplay",
+      "espeak-ng": "/usr/bin/espeak-ng",
+      "pactl": "/usr/bin/pactl",
+      "paplay": "/usr/bin/paplay",
+      "pw-play": "/usr/bin/pw-play",
+      "spd-say": "/usr/bin/spd-say"
+    },
+    "wsl": true
+  },
+  "latency": [
+    {
+      "maximum": 25.0,
+      "median": 22.0,
+      "metric": "synthesis latency",
+      "minimum": 21.0,
+      "n": 30,
+      "p95": 25.0,
+      "unit": "ms"
+    },
+    {
+      "maximum": 51.0,
+      "median": 38.0,
+      "metric": "time to first audio",
+      "minimum": 29.0,
+      "n": 30,
+      "p95": 48.0,
+      "unit": "ms"
+    },
+    {
+      "maximum": 51.0,
+      "median": 38.5,
+      "metric": "caption to audio offset",
+      "minimum": 29.0,
+      "n": 30,
+      "note": "positive means the caption led the audio, which is the correct sign",
+      "p95": 48.0,
+      "unit": "ms"
+    },
+    {
+      "maximum": 0.0,
+      "median": 0.0,
+      "metric": "viseme to audio offset",
+      "minimum": 0.0,
+      "n": 30,
+      "p95": 0.0,
+      "unit": "ms"
+    },
+    {
+      "maximum": 1.7671,
+      "median": 1.4025,
+      "metric": "cancellation latency",
+      "minimum": 1.3495,
+      "n": 10,
+      "note": "from the cancel call returning to the utterance settling",
+      "p95": 1.7671,
+      "p95Note": "n=10 is below 20; the p95 is at or near the maximum by construction rather than by measurement",
+      "unit": "ms"
+    },
+    {
+      "maximum": 0.1913,
+      "median": 0.073,
+      "metric": "device loss degradation latency",
+      "minimum": 0.0679,
+      "n": 10,
+      "p95": 0.1913,
+      "p95Note": "n=10 is below 20; the p95 is at or near the maximum by construction rather than by measurement",
+      "unit": "ms"
+    },
+    {
+      "maximum": 0.7248,
+      "median": 0.1833,
+      "metric": "worker restart time",
+      "minimum": 0.1643,
+      "n": 10,
+      "p95": 0.7248,
+      "p95Note": "n=10 is below 20; the p95 is at or near the maximum by construction rather than by measurement",
+      "unit": "ms"
+    }
+  ],
+  "memory": [
+    {
+      "maximum": 29773824.0,
+      "median": 29773824.0,
+      "metric": "voice worker idle RSS",
+      "minimum": 29773824.0,
+      "n": 1,
+      "p95": 29773824.0,
+      "p95Note": "n=1 is below 20; the p95 is at or near the maximum by construction rather than by measurement",
+      "unit": "bytes"
+    },
+    {
+      "maximum": 22701056.0,
+      "median": 22701056.0,
+      "metric": "voice worker idle PSS",
+      "minimum": 22701056.0,
+      "n": 1,
+      "p95": 22701056.0,
+      "p95Note": "n=1 is below 20; the p95 is at or near the maximum by construction rather than by measurement",
+      "unit": "bytes"
+    },
+    {
+      "maximum": 8790016.0,
+      "median": 8607744.0,
+      "metric": "provider process RSS",
+      "minimum": 8396800.0,
+      "n": 4,
+      "note": "sampled while a synthesiser was running",
+      "p95": 8790016.0,
+      "p95Note": "n=4 is below 20; the p95 is at or near the maximum by construction rather than by measurement",
+      "unit": "bytes"
+    },
+    {
+      "maximum": 5755904.0,
+      "median": 5620736.0,
+      "metric": "provider process PSS",
+      "minimum": 5406720.0,
+      "n": 4,
+      "p95": 5755904.0,
+      "p95Note": "n=4 is below 20; the p95 is at or near the maximum by construction rather than by measurement",
+      "unit": "bytes"
+    },
+    {
+      "maximum": 6258688.0,
+      "median": 6004736.0,
+      "metric": "playback backend RSS",
+      "minimum": 5808128.0,
+      "n": 14098,
+      "note": "sampled while a player was running",
+      "p95": 6205440.0,
+      "unit": "bytes"
+    },
+    {
+      "maximum": 3438592.0,
+      "median": 3212288.0,
+      "metric": "playback backend PSS",
+      "minimum": 1681408.0,
+      "n": 14098,
+      "p95": 3282944.0,
+      "unit": "bytes"
+    },
+    {
+      "maximum": 33243136.0,
+      "median": 32759808.0,
+      "metric": "companion plus voice RSS",
+      "minimum": 30187520.0,
+      "n": 30,
+      "note": "this interpreter with the voice runtime in it; NOT the memory usage of Bunny OS, which includes a desktop this does not run",
+      "p95": 33243136.0,
+      "unit": "bytes"
+    },
+    {
+      "maximum": 26074112.0,
+      "median": 25591296.0,
+      "metric": "companion plus voice PSS",
+      "minimum": 22993920.0,
+      "n": 30,
+      "p95": 26074112.0,
+      "unit": "bytes"
+    },
+    {
+      "maximum": 645963.0,
+      "median": 160223.0,
+      "metric": "temporary storage peak",
+      "minimum": 62803.0,
+      "n": 30,
+      "note": "the largest total held in private voice workspaces during an utterance",
+      "p95": 643993.0,
+      "unit": "bytes"
+    }
+  ],
+  "providerId": "espeak-ng",
+  "runs": 30,
+  "schemaVersion": 1,
+  "spoken": 30,
+  "visemeSource": "amplitude",
+  "voiceOutcome": "local-neural-or-system-voice"
+}

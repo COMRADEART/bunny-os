@@ -1,32 +1,64 @@
 #!/usr/bin/python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Install Bunny OS-owned files into a bootc container filesystem."""
+"""Install Bunny OS-owned files into a bootc container filesystem.
+
+Every copy this makes comes from ``build/scripts/install_routes.py``, which is
+the same table ``build-input-closure.py`` reads to answer "is this change
+build-affecting?". That is not tidiness: the two used to hold separate ideas of
+the install set, the analyser modelled ``copy_tree`` and ``copy_file`` and not
+``copy_python_package``, and the entire ``companion`` package — installed by the
+call it did not model — was reported as not reaching the image.
+
+Because the table is shared, the file selection here and the classification
+there are literally the same function. There is nothing left to keep in step.
+
+What is still written by hand is written by a *declared generator*: the release
+metadata, the package inventory, the release payload and the activation
+symlinks. Each has an entry in ``GENERATED_ROUTES`` and each lives in a function
+the analyser's audit knows about. Anything else that copies or writes fails the
+audit, which fails the closure closed.
+"""
 
 from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
-import hashlib
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from install_routes import (  # noqa: E402 - the path above is what makes this importable
+    InstallRoute,
+    route_files,
+    routes_for_profile,
+)
 
 
 def copy_file(source: Path, destination: Path, mode: int) -> None:
+    """The one primitive. Everything installed goes through here."""
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source, destination)
     os.chmod(destination, mode)
 
 
-def copy_tree(source: Path, destination: Path, mode: int = 0o644) -> None:
-    destination.mkdir(parents=True, exist_ok=True)
-    for item in source.rglob("*"):
-        if item.is_file() and not any(part in {"__pycache__", "node_modules", "target"} for part in item.parts):
-            target = destination / item.relative_to(source)
-            copy_file(item, target, mode)
+def copy_route(route: InstallRoute, source_root: Path, root: Path) -> list[str]:
+    """Install one declared route, and report what it installed.
 
+    ``root`` is ``/`` in a build. A test passes a directory, which is the only
+    reason this function is testable at all — an installer that could only be
+    exercised by building an image is an installer nobody exercises.
+    """
+    installed: list[str] = []
+    for item, destination in route_files(route, source_root):
+        target = root / destination.lstrip("/")
+        copy_file(item, target, route.mode)
+        installed.append(destination)
+    return installed
 
 #: Install routes whose destination is computed rather than written literally.
 #:
@@ -238,11 +270,53 @@ def main() -> int:
     copy_file(source / "README.md", Path("/usr/share/doc/bunny-os/README.md"), 0o444)
 
     timestamp = datetime.fromtimestamp(args.source_date_epoch, timezone.utc).isoformat().replace("+00:00", "Z") if args.source_date_epoch else "unspecified"
+
+def install_all_routes(
+    source_root: Path, profile: str, *, root: Path = Path("/"),
+) -> dict[str, list[str]]:
+    """Every route that applies to this profile, in declared order."""
+    installed: dict[str, list[str]] = {}
+    for route in routes_for_profile(profile):
+        if route.id == "release-payload":
+            # Its destination is computed from the artifact manifest, so it is
+            # applied by install_release_payload rather than copied blind into a
+            # directory literally named "*".
+            continue
+        installed[route.id] = copy_route(route, source_root, root)
+    return installed
+
+
+def install_release_payload(
+    source_root: Path, artifact_manifest: dict, *, root: Path = Path("/"),
+) -> str:
+    """The verified release payload and the ``current`` symlink beside it."""
+    payload = source_root / "build/artifacts/bunny"
+    name = (
+        artifact_manifest["bunnyVersion"] if artifact_manifest["status"] == "verified"
+        else f'{artifact_manifest["bunnyVersion"]}-placeholder'
+    )
+    release_root = root / "opt/bunny/releases" / name
+    release_root.mkdir(parents=True, exist_ok=True)
+    if artifact_manifest["status"] == "verified":
+        for item in artifact_manifest["files"]:
+            copy_file(payload / item["path"], release_root / item["path"], int(item["mode"], 8))
+    current = root / "opt/bunny/current"
+    current.parent.mkdir(parents=True, exist_ok=True)
+    current.symlink_to(f"releases/{name}")
+    return name
+
+
+def write_release_metadata(arguments, artifact_manifest: dict, *, root: Path = Path("/")) -> dict:
+    timestamp = (
+        datetime.fromtimestamp(arguments.source_date_epoch, timezone.utc)
+        .isoformat().replace("+00:00", "Z")
+        if arguments.source_date_epoch else "unspecified"
+    )
     metadata = {
         "schemaVersion": 1,
-        "osVersion": args.os_version,
-        "imageVersion": args.image_version,
-        "profile": args.profile,
+        "osVersion": arguments.os_version,
+        "imageVersion": arguments.image_version,
+        "profile": arguments.profile,
         "contractVersion": "1.0.0",
         "brokerVersion": "0.1.0",
         "recoveryVersion": "0.1.0",
@@ -251,81 +325,85 @@ def main() -> int:
         "bunnyProtocolVersion": 3,
         "baseDistribution": "Fedora",
         "baseVersion": "44",
-        "baseImageReference": args.base_image,
-        "sourceCommit": args.source_commit,
-        "sourceDateEpoch": args.source_date_epoch,
+        "baseImageReference": arguments.base_image,
+        "sourceCommit": arguments.source_commit,
+        "sourceDateEpoch": arguments.source_date_epoch,
         "buildTimestamp": timestamp,
         "buildTool": "OCI Containerfile + unified image-builder",
     }
-    release = Path("/usr/lib/bunny-os/release.json")
+    release = root / "usr/lib/bunny-os/release.json"
     release.parent.mkdir(parents=True, exist_ok=True)
     release.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     os.chmod(release, 0o444)
-    inventory = subprocess.run(["/usr/bin/rpm", "-qa", "--qf", "%{NAME}\t%{EPOCHNUM}:%{VERSION}-%{RELEASE}\t%{ARCH}\n"], check=True, text=True, stdout=subprocess.PIPE).stdout
-    Path("/usr/lib/bunny-os/packages.txt").write_text("".join(sorted(inventory.splitlines(keepends=True))), encoding="utf-8")
-    os.chmod("/usr/lib/bunny-os/packages.txt", 0o444)
+    return metadata
 
-    release_name = artifact_manifest["bunnyVersion"] if artifact_manifest["status"] == "verified" else f'{artifact_manifest["bunnyVersion"]}-placeholder'
-    release_root = Path("/opt/bunny/releases") / release_name
-    release_root.mkdir(parents=True, exist_ok=True)
-    if artifact_manifest["status"] == "verified":
-        for item in artifact_manifest["files"]:
-            copy_file(artifact_payload / item["path"], release_root / item["path"], int(item["mode"], 8))
-    current = Path("/opt/bunny/current")
-    current.parent.mkdir(parents=True, exist_ok=True)
-    current.symlink_to(f"releases/{release_name}")
+
+def write_package_inventory(*, root: Path = Path("/")) -> None:
+    inventory = subprocess.run(
+        ["/usr/bin/rpm", "-qa", "--qf", "%{NAME}\t%{EPOCHNUM}:%{VERSION}-%{RELEASE}\t%{ARCH}\n"],
+        check=True, text=True, stdout=subprocess.PIPE,
+    ).stdout
+    packages = root / "usr/lib/bunny-os/packages.txt"
+    packages.parent.mkdir(parents=True, exist_ok=True)
+    packages.write_text("".join(sorted(inventory.splitlines(keepends=True))), encoding="utf-8")
+    os.chmod(packages, 0o444)
+
+
+def create_state_directories(*, root: Path = Path("/")) -> None:
     state_paths = {
-        Path("/var/lib/bunny"): 0o711,
-        Path("/var/cache/bunny"): 0o711,
-        Path("/var/log/bunny"): 0o750,
-        Path("/var/lib/bunny-os"): 0o711,
-        Path("/var/lib/bunny-os/update"): 0o700,
-        Path("/var/lib/bunny-os/recovery"): 0o700,
-        Path("/var/lib/bunny-os/health"): 0o700,
-        Path("/var/lib/bunny-os/support"): 0o711,
+        "var/lib/bunny": 0o711,
+        "var/cache/bunny": 0o711,
+        "var/log/bunny": 0o750,
+        "var/lib/bunny-os": 0o711,
+        "var/lib/bunny-os/update": 0o700,
+        "var/lib/bunny-os/recovery": 0o700,
+        "var/lib/bunny-os/health": 0o700,
+        "var/lib/bunny-os/support": 0o711,
     }
-    for path, mode in state_paths.items():
+    for relative, mode in state_paths.items():
+        path = root / relative
         path.mkdir(parents=True, exist_ok=True, mode=mode)
         os.chmod(path, mode)
 
-    # bunny-brlapi-key.service is enabled here because an installed system
-    # measured it never running: the unit ships with WantedBy=sysinit.target,
-    # nothing enabled it, and systemd's default preset policy disables what no
-    # preset names — so /etc/brlapi.key was never minted and BRLTTY had no
-    # authorisation key for the whole session. This is the second half of the
-    # same accessibility defect as the missing program: CI could see the
-    # ExecStart that pointed nowhere, and only booting an installed system
-    # could see the service that nothing started.
-    subprocess.run(["/usr/bin/systemctl", "enable", "NetworkManager.service", "firewalld.service", "bunny-system-broker.socket", "bunny-health-check.service", "bunny-brlapi-key.service"], check=True)
+
+def install_activation(profile: str) -> None:
+    """Enable the units, and assert the activation landed.
+
+    ``systemctl enable`` succeeding is a statement about a command; the symlink
+    existing is a statement about the artifact, and the artifact is what gets
+    installed. bunny-brlapi-key.service is here because an installed system
+    measured it never running: the unit shipped with WantedBy=sysinit.target,
+    nothing enabled it, and systemd disables what no preset names — so
+    /etc/brlapi.key was never minted and BRLTTY had no authorisation key for the
+    whole session.
+    """
+    subprocess.run([
+        "/usr/bin/systemctl", "enable",
+        "NetworkManager.service", "firewalld.service", "bunny-system-broker.socket",
+        "bunny-health-check.service", "bunny-brlapi-key.service",
+    ], check=True)
     subprocess.run(["/usr/bin/systemctl", "enable", "bunny-recovery-shell.service"], check=True)
     subprocess.run(["/usr/bin/systemctl", "--global", "enable", "bunny-first-boot.service", "bunny-config-dir.service", "bunny-companion.service"], check=True)
     if args.profile == "recovery":
+    subprocess.run([
+        "/usr/bin/systemctl", "--global", "enable",
+        "bunny-first-boot.service", "bunny-config-dir.service",
+    ], check=True)
+    if profile == "recovery":
         subprocess.run(["/usr/bin/systemctl", "set-default", "bunny-recovery.target"], check=True)
-    elif args.profile in {"developer", "desktop", "shell", "shell-test", "live", "beta"}:
+    elif profile in {"developer", "desktop", "shell", "shell-test", "live", "beta"}:
         subprocess.run(["/usr/bin/systemctl", "enable", "gdm.service"], check=True)
-        if args.profile == "live":
+        if profile == "live":
             subprocess.run(["/usr/bin/systemctl", "enable", "bunny-live-session.service"], check=True)
         subprocess.run(["/usr/bin/systemctl", "set-default", "graphical.target"], check=True)
     else:
         subprocess.run(["/usr/bin/systemctl", "set-default", "multi-user.target"], check=True)
     subprocess.run(["/usr/bin/firewall-offline-cmd", "--set-default-zone=bunny-default"], check=True)
 
-    # Assert the activation landed, rather than trusting that the command that
-    # was supposed to create it exited zero.
-    #
-    # The measured defect this closes was exactly this shape: the unit shipped,
-    # the enablement did not exist, and nothing between the build and a booted
-    # installed system noticed. `systemctl enable` succeeding is a statement
-    # about a command; the symlink existing is a statement about the artifact,
-    # and the artifact is what gets installed. A build that produced an image
-    # whose accessibility service is inert must fail here, where it is cheap,
-    # rather than on a device where it is silent.
-    # The user-tmpfiles rule has the same failure shape as an unactivated
-    # unit: it is read from one search path, systemd never reports that it
-    # looked, and a rule in the wrong directory is indistinguishable from no
-    # rule at all until a fresh home fails to get its directories. Resolved
-    # before the unit table so the refusal below stays adjacent to the check
-    # that produces it.
+    # The user-tmpfiles rule has the same failure shape as an unactivated unit:
+    # it is read from one search path, systemd never reports that it looked, and
+    # a rule in the wrong directory is indistinguishable from no rule at all
+    # until a fresh home fails to get its directories.
     user_tmpfiles_rule = Path("/usr/share/user-tmpfiles.d/bunny-os.conf")
     inert_rule = [] if user_tmpfiles_rule.is_file() else [
         f"the per-user tmpfiles rule (expected {user_tmpfiles_rule}; "
@@ -338,10 +416,10 @@ def main() -> int:
         "bunny-health-check.service": Path(
             "/etc/systemd/system/multi-user.target.wants/bunny-health-check.service"
         ),
-        # The two halves of the first-login correction. bunny-config-dir is
-        # what makes bunny-first-boot's sandbox constructible, and
-        # bunny-first-boot Requires= it, so an image where only one of them is
-        # activated starts no first-boot flow at all.
+        # The two halves of the first-login correction. bunny-config-dir is what
+        # makes bunny-first-boot's sandbox constructible, and bunny-first-boot
+        # Requires= it, so an image where only one of them is activated starts no
+        # first-boot flow at all.
         "bunny-config-dir.service": Path(
             "/etc/systemd/user/graphical-session.target.wants/bunny-config-dir.service"
         ),
@@ -365,6 +443,74 @@ def main() -> int:
             "never start, which is how /etc/brlapi.key came to be absent on every "
             "installed system."
         )
+
+
+def compile_desktop_assets(profile: str) -> None:
+    """Turn copied sources into the compiled forms the desktop reads.
+
+    Every product of this function is declared in ``GENERATED_ROUTES``. None of
+    it copies a repository file; each command reads what the routes already
+    installed and writes a compiled artefact beside it.
+    """
+    if profile not in {"developer", "desktop", "shell", "shell-test", "live", "beta"}:
+        return
+    extension_root = Path("/usr/share/gnome-shell/extensions/bunny-shell@bunny-os.org")
+    subprocess.run(["/usr/bin/glib-compile-schemas", str(extension_root / "schemas")], check=True)
+    subprocess.run(["/usr/bin/dconf", "update"], check=True)
+    subprocess.run(
+        ["/usr/bin/gtk-update-icon-cache", "--force", "/usr/share/icons/hicolor"], check=False,
+    )
+
+
+def assert_no_stray_user_units() -> None:
+    """``systemd/user`` is excluded from the system-unit route, and this proves it.
+
+    The installer used to copy ``systemd/**`` wholesale into
+    ``/usr/lib/systemd/system`` — user units included — and then delete the
+    ``user`` subdirectory it had just written. The route excludes it instead, so
+    the units are never written to the wrong place at all. This asserts the
+    outcome rather than trusting the exclusion, because the failure it guards
+    against is a user unit sitting in the system directory where systemd would
+    read it with the wrong manager.
+    """
+    stray = Path("/usr/lib/systemd/system/user")
+    if stray.exists():
+        raise SystemExit(
+            f"BLOCKED: {stray} exists. User units must reach /usr/lib/systemd/user "
+            "only; a unit in the system directory is run by the system manager."
+        )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--source", required=True, type=Path)
+    parser.add_argument("--profile", required=True, choices=(
+        "developer", "minimal", "desktop", "recovery", "shell", "shell-test", "live", "beta",
+    ))
+    parser.add_argument("--os-version", required=True)
+    parser.add_argument("--image-version", required=True)
+    parser.add_argument("--source-commit", required=True)
+    parser.add_argument("--source-date-epoch", required=True, type=int)
+    parser.add_argument("--base-image", required=True)
+    args = parser.parse_args()
+    source = args.source
+
+    artifact_manifest_path = source / "build/manifests/bunny-artifact.placeholder.json"
+    artifact_payload = source / "build/artifacts/bunny"
+    subprocess.run([
+        "/usr/bin/python3", str(source / "build/scripts/verify-bunny-artifact.py"),
+        str(artifact_manifest_path), str(artifact_payload),
+    ], check=True)
+    artifact_manifest = json.loads(artifact_manifest_path.read_text(encoding="utf-8"))
+
+    install_all_routes(source, args.profile)
+    assert_no_stray_user_units()
+    compile_desktop_assets(args.profile)
+    write_release_metadata(args, artifact_manifest)
+    write_package_inventory()
+    install_release_payload(source, artifact_manifest)
+    create_state_directories()
+    install_activation(args.profile)
     return 0
 
 

@@ -1,0 +1,147 @@
+{
+  "displaySurface": {
+    "compositor": "wslg-remoted",
+    "evidence": {
+      "display": ":0",
+      "waylandDisplay": "wayland-0",
+      "wslgPresent": true,
+      "xdgSessionType": null
+    },
+    "gnome": {
+      "gnomeShellProcessPresent": false,
+      "isGnomeSession": false,
+      "xdgCurrentDesktop": null
+    },
+    "isSessionCompositor": false,
+    "note": "Wayland is served by the WSLg system distribution and composited by the Windows host. Sufficient to run and observe a real GTK client; not a session compositor and not a desktop-session claim.",
+    "protocol": "wayland",
+    "socketPresent": true
+  },
+  "executionSurface": {
+    "detail": "hyper-v utility vm with a vendor kernel and a partly synthetic userspace",
+    "evidence": {
+      "procOsRelease": "6.18.33.2-microsoft-standard-WSL2",
+      "systemdDetectVirtContainer": "wsl",
+      "systemdDetectVirtVm": "microsoft",
+      "wslDistroName": "FedoraLinux-44"
+    },
+    "isNspawnContainer": false,
+    "isPhysicalHardware": false,
+    "note": "Surfaces are not interchangeable. A container shares the host kernel, a virtual machine and WSL2 do not, and only physical hardware exercises real firmware and drivers. A result proved here is proved for this surface (wsl2) and no other.",
+    "sharesHostKernel": false,
+    "surface": "wsl2"
+  },
+  "gate": {
+    "failures": [],
+    "passed": true,
+    "requireInstalled": true,
+    "requireSystemd": false
+  },
+  "hardware": {
+    "cpuCount": 22,
+    "memTotalBytes": 16561389568,
+    "note": "Host capacity only. It bounds what a measurement can mean; it is not a Bunny OS target-hardware figure."
+  },
+  "hostname": "comrade",
+  "importProvenance": {
+    "canonicalRuntime": {
+      "file": "/usr/lib/bunny-os/python/companion/runtime.py",
+      "imported": true,
+      "module": "companion.runtime",
+      "provenance": {
+        "accepted": true,
+        "class": "installed",
+        "mount": {
+          "filesystemType": "ext4",
+          "isBindMount": false,
+          "mountPoint": "/",
+          "rootWithinFilesystem": "/",
+          "source": "/dev/sdd"
+        },
+        "reason": "below /usr/lib/bunny-os/python"
+      }
+    },
+    "presentationLayer": {
+      "file": "/usr/lib/bunny-os/python/companion/presentation.py",
+      "imported": true,
+      "module": "companion.presentation",
+      "provenance": {
+        "accepted": true,
+        "class": "installed",
+        "mount": {
+          "filesystemType": "ext4",
+          "isBindMount": false,
+          "mountPoint": "/",
+          "rootWithinFilesystem": "/",
+          "source": "/dev/sdd"
+        },
+        "reason": "below /usr/lib/bunny-os/python"
+      }
+    },
+    "renderer": {
+      "file": "/usr/lib/bunny-os/python/companion/character/surface.py",
+      "imported": true,
+      "module": "companion.character.surface",
+      "provenance": {
+        "accepted": true,
+        "class": "installed",
+        "mount": {
+          "filesystemType": "ext4",
+          "isBindMount": false,
+          "mountPoint": "/",
+          "rootWithinFilesystem": "/",
+          "source": "/dev/sdd"
+        },
+        "reason": "below /usr/lib/bunny-os/python"
+      }
+    }
+  },
+  "initSystem": {
+    "cgroupHierarchy": "v2",
+    "isSystemd": true,
+    "pid1": "systemd",
+    "systemdVersion": "259"
+  },
+  "operatingSystem": {
+    "architecture": "x86_64",
+    "id": "fedora",
+    "kernelName": "Linux",
+    "kernelRelease": "6.18.33.2-microsoft-standard-WSL2",
+    "kernelVersion": "#1 SMP PREEMPT_DYNAMIC Thu Jun 18 21:54:43 UTC 2026",
+    "prettyName": "Fedora Linux 44 (WSL)",
+    "variantId": "wsl",
+    "versionId": "44"
+  },
+  "python": {
+    "executable": "/usr/sbin/python3",
+    "implementation": "CPython",
+    "prefix": "/usr",
+    "pythonPathEnvironment": null,
+    "sysPathHead": [
+      "/usr/lib/bunny-os/python",
+      "/root/lv-evidence",
+      "/usr/lib64/python314.zip",
+      "/usr/lib64/python3.14",
+      "/usr/lib64/python3.14/lib-dynload",
+      "/usr/lib64/python3.14/site-packages"
+    ],
+    "userSiteEnabled": true,
+    "version": "3.14.3"
+  },
+  "schema": "bunny-os/linux-environment-report/1",
+  "userContext": {
+    "gid": 0,
+    "isRoot": true,
+    "lingerEnabled": false,
+    "systemdUserManagerReachable": true,
+    "uid": 0,
+    "username": "root",
+    "xdgRuntimeDir": {
+      "exists": true,
+      "mode": "0o700",
+      "ownedByUser": true,
+      "ownerUid": 0,
+      "path": "/run/user/0"
+    }
+  }
+}

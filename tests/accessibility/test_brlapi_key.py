@@ -55,6 +55,31 @@ PRESET_SOURCE = PRESET_PATH.read_text(encoding="utf-8")
 INSTALL_ROOT_SOURCE = INSTALL_ROOT_PATH.read_text(encoding="utf-8")
 FINALISE_SOURCE = FINALISE_PATH.read_text(encoding="utf-8")
 
+# The install set is declared as data in build/scripts/install_routes.py, and
+# both install-root.py and build-input-closure.py are driven by it. That module
+# is pure standard library and imports cleanly on any platform, so the three
+# installation facts below are asserted against the declaration rather than
+# against the shape of a call inside a Linux-only script.
+if str(ROOT / "build/scripts") not in sys.path:
+    sys.path.insert(0, str(ROOT / "build/scripts"))
+
+
+def install_route_declaration():
+    import install_routes
+
+    return install_routes
+
+
+def installed_program_route():
+    """The single declared route that installs the key generator."""
+    declaration = install_route_declaration()
+    matches = [
+        route for route in declaration.INSTALL_ROUTES
+        if route.source == f"scripts/{PROGRAM_NAME}.py"
+    ]
+    assert len(matches) == 1, f"expected one install route for {PROGRAM_NAME}, found {matches}"
+    return matches[0]
+
 #: The install script and the generator are Linux-only modules — ``grp`` and
 #: absolute ``/usr`` paths — so they are parsed, never imported. A test that
 #: could only run on the target platform could not have caught a packaging
@@ -206,22 +231,27 @@ class HelperReachesTheInstalledRoot(unittest.TestCase):
         # Refuses: the unit ships, ExecStart names /usr/libexec/bunny-brlapi-key,
         # and nothing ever copies the program there — so the service fails with
         # status=203/EXEC on a device and the key is never minted.
-        script_names = assigned_literal(INSTALL_ROOT_TREE, "script_names")
-        self.assertIn(PROGRAM_NAME, script_names)
+        #
+        # Asked of build/scripts/install_routes.py, which is the declaration the
+        # installer is driven by and the closure analyser reads. It used to be
+        # asked of a list literal inside install-root.py, which is the same fact
+        # in a place only one of the two programs could see.
+        self.assertIn(PROGRAM_NAME, install_route_declaration().SYSTEM_SCRIPTS)
 
     def test_the_installed_path_is_the_one_the_unit_executes(self) -> None:
         # Refuses: the program is installed, but somewhere the unit does not
         # look. Shipping it to /usr/bin would satisfy the test above and still
         # leave ExecStart pointing at nothing.
-        self.assertIn('Path(f"/usr/libexec/{name}")', INSTALL_ROOT_SOURCE)
+        self.assertEqual(installed_program_route().destination, INSTALLED_PROGRAM)
         self.assertEqual(UNIT["Service"]["ExecStart"], [INSTALLED_PROGRAM])
         self.assertEqual(INSTALLED_PROGRAM, f"/usr/libexec/{PROGRAM_NAME}")
 
     def test_the_generator_is_installed_executable(self) -> None:
         # Refuses: the file lands at the right path with mode 0644, so systemd
         # cannot execute it — the same 203/EXEC failure, one bit away.
-        mode = copy_mode_in_loop_over(INSTALL_ROOT_TREE, "script_names")
-        self.assertEqual(mode, 0o555, "scripts must be installed executable")
+        self.assertEqual(
+            installed_program_route().mode, 0o555, "scripts must be installed executable",
+        )
 
     def test_the_service_is_enabled_by_the_build(self) -> None:
         # Refuses: the unit is installed but never enabled. systemd's default

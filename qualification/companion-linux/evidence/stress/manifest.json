@@ -1,0 +1,183 @@
+{
+  "entries": [
+    {
+      "bytes": 28193,
+      "caption": "Windows service target, 25 runs, before either fix. 18/25 (28% failure). Failures at 48-108s against a 19s baseline, every one with a flat thread and descriptor inventory.",
+      "commit": "3fb5eec^",
+      "file": "01-before-any-fix.json",
+      "name": "01-before-any-fix",
+      "sha256": "40f19fdbdc6a94b72168bb0412de3b9047355370f98fa85b2e29d9c5dcece1dc",
+      "summary": {
+        "failed": 7,
+        "failingIterations": [
+          13,
+          15,
+          17,
+          18,
+          20,
+          22,
+          23
+        ],
+        "finalDeltaVsBaseline": {
+          "consentWaiters": [],
+          "executorLeases": [],
+          "liveRuntimes": 0,
+          "liveServices": 0,
+          "tempDirectories": 0,
+          "threads": 0
+        },
+        "longestConsecutivePass": 12,
+        "order": "declared",
+        "passed": 18,
+        "runs": 25,
+        "secondsMax": 108.16,
+        "secondsMin": 18.731,
+        "target": "service"
+      }
+    },
+    {
+      "bytes": 28408,
+      "caption": "Windows service target, 20 runs, loaded, with worker-fault recording but before the store writer retry. 14/20. This is the run that captured the swallowed StoreError [WinError 5] naming the cause.",
+      "commit": "3fb5eec",
+      "file": "02-before-store-fix-instrumented.json",
+      "name": "02-before-store-fix-instrumented",
+      "sha256": "2cf18fffbe046c9f1df77972f0c3b97e242935b3ed27c8743c790a8dba22a5b7",
+      "summary": {
+        "failed": 6,
+        "failingIterations": [
+          4,
+          5,
+          7,
+          9,
+          13,
+          18
+        ],
+        "finalDeltaVsBaseline": {
+          "consentWaiters": [],
+          "executorLeases": [],
+          "liveRuntimes": 0,
+          "liveServices": 0,
+          "tempDirectories": 0,
+          "threads": 0
+        },
+        "longestConsecutivePass": 4,
+        "order": "declared",
+        "passed": 14,
+        "runs": 20,
+        "secondsMax": 79.64,
+        "secondsMin": 17.846,
+        "target": "service"
+      }
+    },
+    {
+      "bytes": 70823,
+      "caption": "Windows service target, 100 runs, after the store writer retry and the approval-holding fix. 98/100, longest consecutive 39. Both failures were test_pausing_a_task_waiting_for_consent_actually_stops_it at the normal 19s duration.",
+      "commit": "9b38b88",
+      "file": "03-after-both-fixes.json",
+      "name": "03-after-both-fixes",
+      "sha256": "78e7e441359a531308bb83e750c13b730771ad3a2f8edb47f0b40555fc3fe3fd",
+      "summary": {
+        "failed": 2,
+        "failingIterations": [
+          40,
+          63
+        ],
+        "finalDeltaVsBaseline": {
+          "consentWaiters": [],
+          "executorLeases": [],
+          "liveRuntimes": 0,
+          "liveServices": 0,
+          "tempDirectories": 0,
+          "threads": 0
+        },
+        "longestConsecutivePass": 39,
+        "order": "declared",
+        "passed": 98,
+        "runs": 100,
+        "secondsMax": 19.421,
+        "secondsMin": 18.498,
+        "target": "service"
+      }
+    },
+    {
+      "caption": "Controlled two-transport experiment on Linux: 20 integration slices over AF_UNIX and 20 over forced loopback TCP, one machine and one workload, only the transport differing. 40/40 passed, peak TIME_WAIT 0 for both. This refuted the ephemeral-port-exhaustion hypothesis.",
+      "commit": "3fb5eec",
+      "file": null,
+      "name": "04-transport-experiment",
+      "note": "No machine-readable artefact exists for this measurement; the run printed to a console. The caption is the record."
+    },
+    {
+      "caption": "Linux service target, 12 runs as user bunny on ext4. 12/12, with every inventory delta (threads, descriptors, sockets, leases, waiters, live services) exactly zero.",
+      "commit": "3fb5eec",
+      "file": null,
+      "name": "05-linux-service-stress",
+      "note": "No machine-readable artefact exists for this measurement; the run printed to a console. The caption is the record."
+    },
+    {
+      "bytes": 98653,
+      "caption": "SUPERSEDES 03. Windows service target, 100 runs, after all six fixes. 100/100, longest consecutive 100, and no non-zero delta against baseline on any iteration.",
+      "commit": "66652d048fa1eacd3fbdd05892750a73fa255c4e",
+      "file": "06-final-service-100.json",
+      "name": "06-final-service-100",
+      "sha256": "3946c9cea2c32dec34d2ad998203ea5cda7504d57ba135471b3b85c6ab90fc11",
+      "summary": {
+        "failed": 0,
+        "failingIterations": [],
+        "finalDeltaVsBaseline": {
+          "consentWaiters": [],
+          "executorLeases": [],
+          "liveRuntimes": 0,
+          "liveServices": 0,
+          "tempDirectories": 0,
+          "threads": 0
+        },
+        "longestConsecutivePass": 100,
+        "order": "declared",
+        "passed": 100,
+        "runs": 100,
+        "secondsMax": 19.65,
+        "secondsMin": 18.429,
+        "target": "service"
+      }
+    },
+    {
+      "bytes": 65487,
+      "caption": "The 50-run complete-suite gate, on Linux over AF_UNIX. 50/50, longest 50. This gate had never been executed before this branch; the last stress run of the same test module failed five times in fifty.",
+      "commit": "66652d048fa1eacd3fbdd05892750a73fa255c4e",
+      "file": "07-final-suite-50.json",
+      "name": "07-final-suite-50",
+      "sha256": "24b0ff7bb5186b0abb107b6077b9aacf7b93d9909c5dd2b6560237949aaad4ed",
+      "summary": {
+        "failed": 0,
+        "failingIterations": [],
+        "finalDeltaVsBaseline": {
+          "consentWaiters": [],
+          "descriptors": 0,
+          "executorLeases": [],
+          "liveRuntimes": 0,
+          "liveServices": 0,
+          "socketDescriptors": 0,
+          "tcpListen": 0,
+          "tcpTimeWait": 0,
+          "tempDirectories": 0,
+          "threads": 2
+        },
+        "longestConsecutivePass": 50,
+        "order": "declared",
+        "passed": 50,
+        "runs": 50,
+        "secondsMax": 17.481,
+        "secondsMin": 15.673,
+        "target": "suite"
+      }
+    },
+    {
+      "caption": "20 consecutive installed character vertical slices from /usr/lib/bunny-os/python, all 25 steps, 0.422-0.484s. Recorded in gate-installed-slice-20.json.",
+      "commit": "66652d048fa1eacd3fbdd05892750a73fa255c4e",
+      "file": null,
+      "name": "08-final-installed-slice-20",
+      "note": "No machine-readable artefact exists for this measurement; the run printed to a console. The caption is the record."
+    }
+  ],
+  "schema": "bunny-os/preserved-stress-evidence/1"
+}

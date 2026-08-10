@@ -1,0 +1,95 @@
+=== 0. give the unit its parent target ===
+Failed to start graphical-session.target: Operation refused, unit graphical-session.target may be requested by dependency only (it is configured to refuse manual start/stop).
+See user logs and 'systemctl --user status graphical-session.target' for details.
+  (target refused; continuing)
+active
+
+=== 1. systemd's accounting ===
+ActiveState=active
+MainPID=446
+NRestarts=0
+MemoryCurrent=31768576
+MemoryPeak=33492992
+TasksCurrent=3
+MemoryMax=134217728
+TasksMax=64
+
+=== 2. the cgroup and /proc, read directly ===
+  memory.current = 31555584
+  memory.peak = 33492992
+  pids.current = 3
+VmRSS:	   27984 kB
+  threads = 3
+  open fds = 4
+  socket mode: 600 bunny:bunny
+  dir mode:    700 bunny:bunny
+
+=== 3. a client over the installed socket ===
+{
+ "provenance": {
+  "protocol": "/usr/lib/bunny-os/python/companion/protocol.py",
+  "canonicalRuntime": "/usr/lib/bunny-os/python/companion/runtime.py",
+  "presentation": "/usr/lib/bunny-os/python/companion/presentation.py",
+  "renderer": "/usr/lib/bunny-os/python/companion/character/surface.py"
+ },
+ "endpoint": {
+  "endpoint": "/run/user/1000/bunny-companion/runtime.sock",
+  "maximumRequestBytes": 65536,
+  "maximumResponseBytes": 4194304,
+  "peerUserValidated": true,
+  "protocolSchemaVersion": 1,
+  "tokenRequired": false,
+  "transport": "unix-socket"
+ },
+ "protocolSchemaVersion": 1,
+ "executors": [
+  "local.deterministic"
+ ],
+ "recentWorkerFaults": []
+}
+{
+ "finalState": "completed",
+ "secondsToTerminal": 0.476,
+ "eventCount": 26,
+ "eventTypes": [
+  "capability_checked",
+  "execution_started",
+  "executor_selected",
+  "operation_completed",
+  "operation_progress",
+  "operation_started",
+  "planning_started",
+  "result_created",
+  "reviewer_disagreement",
+  "reviewer_observation",
+  "reviewer_selected",
+  "task_classified",
+  "task_completed",
+  "task_created",
+  "task_state_changed"
+ ],
+ "presentationPhase": "success",
+ "chainVerified": true
+}
+
+=== 4. a second instance must refuse rather than displace ===
+bunny-companion-service: another Bunny companion runtime is already listening on this endpoint; one runtime owns the session
+  exit=3 (3 is the documented duplicate-runtime refusal)
+
+=== 5. after the work: memory, threads, descriptors ===
+  memory.current = 32600064
+  memory.peak = 33492992
+  pids.current = 3
+VmRSS:	   28620 kB
+  threads = 3
+  open fds = 4
+
+=== 6. restart, and the endpoint returns ===
+ActiveState=active
+MainPID=522
+NRestarts=0
+  600 bunny:bunny /run/user/1000/bunny-companion/runtime.sock
+
+=== 7. stop, and the endpoint is released ===
+inactive
+ls: cannot access '/run/user/1000/bunny-companion/': No such file or directory

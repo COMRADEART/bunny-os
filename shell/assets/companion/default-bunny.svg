@@ -4,11 +4,24 @@
   <desc id="desc">A simple static white bunny face with violet accents.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+<!-- SPDX-FileCopyrightText: 2026 ComradeArt -->
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- The shipped static companion. Drawn for Bunny OS; no third-party asset, no
+     embedded font, no external reference, no script. Transparent background so
+     it composites onto whatever the shell puts behind it. Its accessible
+     description lives in companion/characters.py and is authoritative: the
+     text-only presentation says the same thing this picture does. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Bunny</title>
+  <desc id="desc">A white bunny with violet ears, drawn as a simple flat illustration.</desc>
+  <defs>
+    <linearGradient id="halo" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#6d5dfc"/>
       <stop offset="1" stop-color="#a168ff"/>
     </linearGradient>
   </defs>
   <circle cx="256" cy="270" r="210" fill="url(#bg)" opacity=".16"/>
+  <circle cx="256" cy="270" r="210" fill="url(#halo)" opacity=".16"/>
   <rect x="128" y="38" width="88" height="230" rx="44" fill="#f8f7ff" stroke="#5b4ce1" stroke-width="14" transform="rotate(-9 172 153)"/>
   <rect x="296" y="38" width="88" height="230" rx="44" fill="#f8f7ff" stroke="#5b4ce1" stroke-width="14" transform="rotate(9 340 153)"/>
   <rect x="156" y="70" width="34" height="148" rx="17" fill="#e5b8ff"/>

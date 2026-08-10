@@ -1,0 +1,239 @@
+{
+  "boundaries": {
+    "controlsDesktop": false,
+    "createsTasks": false,
+    "executesTools": false,
+    "hiddenRemoteFallback": false,
+    "mutatesConfiguration": false,
+    "readsArbitraryFiles": false,
+    "resolvesApprovals": false,
+    "storesCredentials": false
+  },
+  "effect": "REPORTED the configured model providers, their standing ladders and health; probed loopback endpoints only; started no generation",
+  "health": {
+    "local.llamacli": {
+      "circuit": {
+        "consecutiveFailures": 0,
+        "lastFailureKind": "",
+        "openUntilMonotonic": 0.0,
+        "requiresIntervention": false,
+        "state": "closed"
+      },
+      "failureCounts": {},
+      "lastFailureDetail": "",
+      "providerId": "local.llamacli"
+    },
+    "local.llamacpp": {
+      "circuit": {
+        "consecutiveFailures": 0,
+        "lastFailureKind": "",
+        "openUntilMonotonic": 0.0,
+        "requiresIntervention": false,
+        "state": "closed"
+      },
+      "failureCounts": {},
+      "lastFailureDetail": "",
+      "providerId": "local.llamacpp"
+    }
+  },
+  "providers": [
+    {
+      "adapterId": "ollama",
+      "availabilityDetail": "could not reach 127.0.0.1:11434: ConnectionRefusedError: [Errno 111] Connection refused",
+      "availableAuthentication": [
+        "none"
+      ],
+      "contextLimitTokens": 4096,
+      "costClass": "free",
+      "endpoint": {
+        "fingerprint": "245c3c18f9300fac01dc3fdc82384123",
+        "kind": "loopback-http",
+        "locator": "127.0.0.1:11434"
+      },
+      "fullyDeclared": false,
+      "inputModalities": [
+        "text"
+      ],
+      "licenseReference": "runtime MIT; model licenses per model",
+      "local": true,
+      "maximumOutputTokens": 1024,
+      "maximumPrivacyClass": "secret",
+      "modelId": "",
+      "modelRevision": "",
+      "outputModalities": [
+        "text"
+      ],
+      "providerId": "local.ollama",
+      "providerType": "text-generation",
+      "remoteTransmission": false,
+      "resourceEstimate": {
+        "expectedFirstTokenSeconds": 0.0,
+        "memoryBytes": 0,
+        "startupSeconds": 0.0
+      },
+      "schemaVersion": 1,
+      "standing": {
+        "authenticated": true,
+        "available": false,
+        "configured": true,
+        "detail": "could not reach 127.0.0.1:11434: ConnectionRefusedError: [Errno 111] Connection refused",
+        "healthy": false,
+        "rung": "authenticated"
+      },
+      "supportedLanguages": [
+        "en"
+      ],
+      "supportedTaskClasses": [
+        "question",
+        "summarise",
+        "transform",
+        "compute"
+      ],
+      "supportsAudioInput": false,
+      "supportsCancellation": true,
+      "supportsImageInput": false,
+      "supportsStreaming": true,
+      "supportsStructuredOutput": true,
+      "supportsToolProposals": true
+    },
+    {
+      "adapterId": "llamacpp",
+      "availabilityDetail": "llama-server/b0-unknown at 127.0.0.1:8080",
+      "availableAuthentication": [
+        "none"
+      ],
+      "contextLimitTokens": 4096,
+      "costClass": "free",
+      "endpoint": {
+        "fingerprint": "f33b31e6057f56ad2ae52c0024441300",
+        "kind": "loopback-http",
+        "locator": "127.0.0.1:8080"
+      },
+      "fullyDeclared": true,
+      "inputModalities": [
+        "text"
+      ],
+      "licenseReference": "runtime MIT; model licenses per model",
+      "local": true,
+      "maximumOutputTokens": 1024,
+      "maximumPrivacyClass": "secret",
+      "modelId": "/home/bunny/.local/share/bunny-os/agent-models/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "modelRevision": "llama-server/b0-unknown",
+      "outputModalities": [
+        "text"
+      ],
+      "providerId": "local.llamacpp",
+      "providerType": "text-generation",
+      "remoteTransmission": false,
+      "resourceEstimate": {
+        "expectedFirstTokenSeconds": 0.0,
+        "memoryBytes": 0,
+        "startupSeconds": 0.0
+      },
+      "schemaVersion": 1,
+      "standing": {
+        "authenticated": true,
+        "available": true,
+        "configured": true,
+        "detail": "llama-server/b0-unknown at 127.0.0.1:8080",
+        "healthy": true,
+        "rung": "healthy"
+      },
+      "supportedLanguages": [
+        "en"
+      ],
+      "supportedTaskClasses": [
+        "question",
+        "summarise",
+        "transform",
+        "compute"
+      ],
+      "supportsAudioInput": false,
+      "supportsCancellation": true,
+      "supportsImageInput": false,
+      "supportsStreaming": true,
+      "supportsStructuredOutput": true,
+      "supportsToolProposals": true
+    },
+    {
+      "adapterId": "llamacli",
+      "availabilityDetail": "/usr/bin/llama-cli with qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "availableAuthentication": [
+        "none"
+      ],
+      "contextLimitTokens": 4096,
+      "costClass": "free",
+      "endpoint": {
+        "fingerprint": "f61cb820c49da4d199c35268e5364973",
+        "kind": "subprocess",
+        "locator": "llama-cli"
+      },
+      "fullyDeclared": true,
+      "inputModalities": [
+        "text"
+      ],
+      "licenseReference": "runtime MIT; model licenses per model",
+      "local": true,
+      "maximumOutputTokens": 1024,
+      "maximumPrivacyClass": "secret",
+      "modelId": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "modelRevision": "/usr/bin/llama-cli",
+      "outputModalities": [
+        "text"
+      ],
+      "providerId": "local.llamacli",
+      "providerType": "text-generation",
+      "remoteTransmission": false,
+      "resourceEstimate": {
+        "expectedFirstTokenSeconds": 0.0,
+        "memoryBytes": 0,
+        "startupSeconds": 0.0
+      },
+      "schemaVersion": 1,
+      "standing": {
+        "authenticated": true,
+        "available": true,
+        "configured": true,
+        "detail": "/usr/bin/llama-cli with qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "healthy": true,
+        "rung": "healthy"
+      },
+      "supportedLanguages": [
+        "en"
+      ],
+      "supportedTaskClasses": [
+        "question",
+        "summarise",
+        "transform",
+        "compute"
+      ],
+      "supportsAudioInput": false,
+      "supportsCancellation": true,
+      "supportsImageInput": false,
+      "supportsStreaming": true,
+      "supportsStructuredOutput": false,
+      "supportsToolProposals": false
+    }
+  ],
+  "recovery": {
+    "interrupted": [],
+    "interruptedCount": 0,
+    "paidInterrupted": 0
+  },
+  "remoteActive": false,
+  "remoteConfigured": false,
+  "usage": {
+    "sessionsTracked": 0,
+    "tasksTracked": 0
+  },
+  "worker": {
+    "activeProviderId": "",
+    "activeRequestId": "",
+    "generationsServed": 0,
+    "queueDepth": 0,
+    "running": false,
+    "threadName": "companion-agents",
+    "trackedJobs": 0
+  },
+  "workerEvents": []
+}
