@@ -45,7 +45,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import re
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
 
 from trust.categories import CATEGORIES, descriptor
 from trust.declaration import PermissionDeclaration

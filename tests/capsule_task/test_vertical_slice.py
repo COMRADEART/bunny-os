@@ -20,7 +20,6 @@ from pathlib import Path
 import unittest
 
 import catalog
-import trust
 from companion.capsule_bridge import (
     STEP_LABELS,
     CapsuleTaskCoordinator,
@@ -124,6 +123,7 @@ class VerticalSliceTests(unittest.TestCase):
     def test_a_second_run_reuses_the_same_capsule(self) -> None:
         self.world.answer(("files", "allow", "always"))
         first = self.run_task()
+        self.assertEqual(first.decisions[0].reason_code, "user-allowed")
         second = self.run_task(task_id="task-2")
         self.assertTrue(second.succeeded, second.failure)
         capsules_now = self.world.runtime.list()

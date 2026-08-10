@@ -50,14 +50,13 @@ sandbox from outside it. The plan carries an explicit map with a fixed key set;
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import os
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
-from trust.categories import CATEGORIES
 from trust.decision import Grant
-from trust.resources import contains, real_path
+from trust.resources import real_path
 
 from .backends import BackendDescriptor
 from .errors import CapsuleContainmentError, CapsuleIsolationError, CapsuleSchemaError

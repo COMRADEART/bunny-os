@@ -30,7 +30,7 @@ import os
 from pathlib import Path
 import shutil
 import tempfile
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Iterable, Mapping, Sequence
 
 import capsules
 import catalog

@@ -53,7 +53,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Mapping, Protocol, Sequence
+from typing import Any, Mapping, Protocol, Sequence
 
 from capsules.errors import CapsuleError, CapsuleExportRefused
 from capsules.exchange import ExportResult, describe_import, export_artifact, user_destinations

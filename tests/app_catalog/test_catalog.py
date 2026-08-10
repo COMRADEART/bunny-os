@@ -16,7 +16,7 @@ from pathlib import Path
 import unittest
 
 import catalog
-from catalog.entry import CatalogEntry, HardwareRequirements
+from catalog.entry import CatalogEntry
 from catalog.errors import CatalogSchemaError, CatalogUnknown
 from catalog.registry import CatalogRegistry, default_catalog_directory
 from catalog.selection import COMMITMENTS, MachineFacts, choices_for

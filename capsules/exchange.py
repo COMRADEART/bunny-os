@@ -46,7 +46,7 @@ import hashlib
 import os
 from pathlib import Path
 import shutil
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
 
 from trust.persistence import private_directory
 from trust.resources import Resource, contains, real_path

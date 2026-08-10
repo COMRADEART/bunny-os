@@ -32,7 +32,7 @@ whether a camera was used.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
 
 from capsules.layout import CLEARABLE, DELETABLE, RESETTABLE
 from capsules.runtime import Capsule, CapsuleRuntime

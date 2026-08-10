@@ -45,7 +45,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import os
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping
 
 from .decision import Decision
 from .errors import TrustStoreUnreadable

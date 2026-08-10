@@ -11,8 +11,6 @@ the layout has seven directories rather than one.
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 import unittest
 
 import trust

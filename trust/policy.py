@@ -49,8 +49,6 @@ buggy surface from answering a question that was never asked.
 
 from __future__ import annotations
 
-from typing import Mapping
-
 from .categories import descriptor
 from .decision import Grant, Resolution
 from .declaration import PermissionDeclaration

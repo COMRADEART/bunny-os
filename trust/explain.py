@@ -37,8 +37,8 @@ screen reader is not handed entity references to read out loud.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any, Mapping
 
 from .categories import CategoryDescriptor, descriptor
 from .decision import Decision, Resolution

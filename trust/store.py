@@ -38,7 +38,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import os
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, Mapping, Sequence
+from typing import Iterator, Mapping, Sequence
 
 from .decision import Grant
 from .errors import TrustSchemaError, TrustStoreUnreadable

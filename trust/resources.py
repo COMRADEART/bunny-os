@@ -168,7 +168,6 @@ class Resource:
         if self.digest == other.digest:
             return True
         if self.kind == "path":
-            root = Path(self.identifier)
             # A file cannot contain anything. Checking is_dir() would be a race
             # and would also fail for a directory that has since been deleted, so
             # the widening rule is carried on the resource itself: only a

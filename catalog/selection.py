@@ -32,11 +32,10 @@ something to do a job the machine can already do, which is how a disk fills up.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 from .entry import CatalogEntry, HardwareRequirements
-from .errors import CatalogSchemaError
 from .registry import CatalogRegistry
 
 __all__ = [

@@ -15,14 +15,12 @@ evidence of runtime isolation.
 from __future__ import annotations
 
 import os
-from pathlib import Path
 import unittest
 
 import trust
 from capsules.backends import BACKENDS, backend as backend_descriptor
 from capsules.errors import CapsuleContainmentError, CapsuleIsolationError, CapsuleUnavailable
 from capsules.isolation import BASE_DEVICES, CREDENTIAL_DIRECTORIES, GRANT_TARGET_ROOT, plan_isolation
-from capsules.layout import CapsuleLayout
 
 from tests.capsule_support import World, manifest_for, unconfined_probe
 
@@ -189,8 +187,6 @@ class PlanShapeTests(unittest.TestCase):
         self.assertTrue(any("no longer declared" in reason for _gid, reason in plan.refusals))
 
     def test_a_grant_belonging_to_another_application_raises(self) -> None:
-        from capsules.manifest import CapsuleManifest
-
         manifest = self.capsule.manifest
         stray = trust.Grant(
             grant_id="g-stray",

@@ -25,7 +25,6 @@ from capsules.errors import (
     CapsuleSchemaError,
 )
 from capsules.exchange import describe_import, export_artifact
-from capsules.identity import capsule_identity
 from capsules.isolation import GRANT_TARGET_ROOT
 from capsules.layout import CapsuleLayout, is_capsule_private
 

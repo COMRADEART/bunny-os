@@ -43,7 +43,7 @@ from datetime import datetime, timezone
 import os
 from pathlib import Path
 import subprocess
-from typing import Any, Callable, Mapping, Protocol, Sequence
+from typing import Any, Mapping, Protocol, Sequence
 
 from trust.audit import TrustAudit
 from trust.decision import Decision, Grant

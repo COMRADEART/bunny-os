@@ -41,7 +41,7 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 import shutil
-from typing import Mapping, Sequence
+from typing import Mapping
 
 from .errors import CapsuleSchemaError, CapsuleUnavailable
 

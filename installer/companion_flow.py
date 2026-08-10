@@ -41,7 +41,7 @@ unusable by the people most able to help when it goes wrong.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 __all__ = [
