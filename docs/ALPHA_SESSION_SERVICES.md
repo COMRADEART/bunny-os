@@ -26,18 +26,20 @@ graphical-session.target                    (the desktop session, GNOME/GDM)
         │              ├── agent providers        agents_enabled
         │              └── desktop action broker  desktop_enabled
         │
-        ├── bunny-companion-window.service  the GTK client. Wants= the runtime.
-        │        │                          Waits for the socket, applies the
-        │        │                          default-character policy, opens a window.
+        ├── bunny-companion-window.service  optional GTK client; installed but
+        │        │                          not started at login. Wants= the runtime.
+        │        │                          An explicit user launch opens a window.
         │        └── ConditionEnvironment=|WAYLAND_DISPLAY |DISPLAY
         │
         └── bunny-first-run.service         oneshot, until the completion marker exists
 ```
 
-Two units, one process each, and the split is load-bearing: **closing the window
-must not stop a task**. The runtime outlives every window in the session, which
-is why it is a unit at all rather than something the GTK application starts for
-itself.
+The runtime starts at login; the GTK client does not. Bunny Shell renders the
+desktop character, bubble and input, so autostarting the client would create a
+second assistant window over the first. When a person explicitly opens that
+client, the split remains load-bearing: **closing the window must not stop a
+task**. The runtime outlives every window in the session, which is why it is a
+unit at all rather than something the GTK application starts for itself.
 
 ## What may fail
 

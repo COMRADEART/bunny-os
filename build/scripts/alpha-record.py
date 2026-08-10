@@ -189,29 +189,28 @@ def assertions(record: Mapping[str, Any], *, offline: bool) -> list[dict[str, An
 
     add("session.window-unit-installed", "units", window_unit_known)
 
-    def enabled_by_preset() -> tuple[bool, str]:
+    def runtime_enabled_without_companion_window() -> tuple[bool, str]:
         text = str(_at(record, "sections", "units", "userPreset") or "")
-        enabled = text.count("enabled") >= 2
-        return enabled, f"is-enabled: {text.strip()!r}"
+        states = [line.strip() for line in text.splitlines() if line.strip()]
+        expected = ["enabled", "disabled"]
+        return states == expected, (
+            "is-enabled runtime/window: "
+            f"{states!r}; expected {expected!r}"
+        )
 
-    add("session.both-units-enabled", "units", enabled_by_preset)
+    add(
+        "session.runtime-enabled-window-not-autostarted",
+        "units",
+        runtime_enabled_without_companion_window,
+    )
 
-    def one_runtime_one_window() -> tuple[bool, str]:
-        """One process per unit, counted from the unit's own cgroup.
+    def one_runtime_without_companion_window() -> tuple[bool, str]:
+        """One runtime and no legacy GTK window, counted from unit cgroups.
 
-        Not from ``pgrep``: a pattern that matches ``bunny-companion-window``
-        also matches the shell running the pgrep and the runuser running that,
-        and the first version of this reported three of each on a system where
-        neither unit was enabled.
-
-        ``TasksCurrent`` was the second wrong answer: it counts *threads*, and
-        8 for the runtime and 22 for a GTK window are normal and say nothing
-        about duplication. The count here is processes in the unit's
-        ``cgroup.procs``, which is exactly what systemd started for it.
-
-        One each. The window may briefly be two while a helper is reaped, so
-        the bound is two rather than one; anything above that is a second
-        window, which is the thing §11 forbids.
+        The GNOME Shell surface is the visible assistant. The GTK client remains
+        installed for an explicit Applications-grid launch, but autostarting it
+        would put a second Bunny over the desktop character. The runtime may
+        briefly have a helper while it is reaped; the window must have none.
         """
         counts = _at(record, "sections", "session", "processCounts") or {}
         if "runtime" not in counts or "window" not in counts:
@@ -219,12 +218,16 @@ def assertions(record: Mapping[str, Any], *, offline: bool) -> list[dict[str, An
         runtime = counts["runtime"]
         window = counts["window"]
         ok = (
-            runtime.isdigit() and int(runtime) <= 2
-            and window.isdigit() and int(window) <= 2
+            runtime.isdigit() and 1 <= int(runtime) <= 2
+            and window == "0"
         )
         return ok, f"runtime processes={runtime}, window processes={window}"
 
-    add("session.no-duplicate-process", "session", one_runtime_one_window)
+    add(
+        "session.runtime-only-no-companion-window",
+        "session",
+        one_runtime_without_companion_window,
+    )
 
     def no_terminal() -> tuple[bool, str]:
         counts = _at(record, "sections", "session", "processCounts") or {}

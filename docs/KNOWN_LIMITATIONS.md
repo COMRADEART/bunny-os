@@ -6,11 +6,13 @@
   assistant-action and TTS path. The Alpha image definition now declares
   Fedora's native Vosk runtime and bundles the reviewed small English model;
   Fedora image composition completed with the package/model postconditions
-  satisfied. Artifact boot and graphical-session model discovery remain
-  acceptance blockers. No model is downloaded automatically.
-- This Windows run could not boot GNOME/Mutter/Wayland or exercise a physical
-  microphone/speaker. Spoken `Open Files`, offline voice, TTS audibility and
-  speech interruption remain graphical acceptance blockers.
+  satisfied. A headless exact-artifact QEMU boot reached `graphical.target`,
+  started the companion runtime without restarts and reported local Vosk/TTS
+  readiness. No model is downloaded automatically.
+- This host could not exercise a visible GNOME/Mutter/Wayland session or a
+  physical microphone/speaker. The QEMU guest exposed only PipeWire's virtual
+  `auto_null.monitor`. Spoken `Open Files`, TTS audibility and speech
+  interruption remain graphical hardware-acceptance blockers.
 - 1920×1080 and 1366×768 pass static layout/source tests only; no current visual
   screenshot acceptance run exists.
 - Wake-word capture is deliberately disabled and cannot be enabled by settings.
@@ -18,7 +20,7 @@
 - An unsigned Alpha OCI, QCOW2 and raw artifact has been composed with Fedora's
   unified `image-builder` under WSL. It has not been installed or accepted as
   release media.
-- Consequently boot, first-login, GNOME, networking, physical audio, suspend, broker/systemd runtime, update staging, rollback, recovery boot, Secure Boot, disk encryption, and hardware behavior are unvalidated.
+- Consequently installation, visible first-login/GNOME interaction, physical audio, suspend, update staging, rollback, recovery boot, Secure Boot, disk encryption, and hardware behavior are unvalidated.
 - The Bunny 0.2.0 integration is an explicit schema-described placeholder. Upstream reports did not qualify a signed Linux desktop artifact.
 - Release base digest, Fedora repository snapshots, update public keys, registry signature policy, key ceremony, and artifact signing are not provisioned. Developer updates are disabled.
 - Repeated builds and bit-for-bit/semantic reproducibility comparison have not run.
