@@ -466,6 +466,63 @@ class VoiceSettingsTests(unittest.TestCase):
             self.assertFalse(load_settings(root, strict=True).speech_input.enabled)
             self.assertFalse(load_settings(root, strict=True).voice.enabled)
 
+    def test_the_engine_round_trips_through_the_wire_contract(self) -> None:
+        """get, set Kitten, get, set Pocket, get — through the operations only.
+
+        The two operations were absent from the validated wire schema for a
+        release: the protocol declared them, the service implemented them, and
+        the contract a peer checks against did not list them. They are listed
+        now, and this is the behaviour behind the listing — that the engine a
+        person chooses is the engine that comes back, and that it survives being
+        re-read from disk rather than from the object that wrote it.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            gateway = CompanionGateway(
+                SimpleNamespace(), consent=InteractiveConsent(maximum_wait_seconds=0.01),
+                settings_root=root,
+            )
+
+            def current() -> str:
+                return str(gateway.settings_voice_get()["ttsProviderId"])
+
+            def choose(provider: str) -> None:
+                answer = gateway.settings_voice_set(
+                    voiceInput=True, speechResponses=True, responseMode="voice-only",
+                    deviceId="", modelId="", language="automatic",
+                    shortcut="<Super><Alt>space", wakeWord="disabled",
+                    ttsProviderId=provider,
+                )
+                self.assertTrue(answer["saved"], provider)
+
+            self.assertEqual(current(), "pocket", "Pocket is the shipped default")
+            choose("kitten")
+            self.assertEqual(current(), "kitten")
+            # Read from the file rather than the gateway, so this is persistence
+            # and not a value held in memory by the object that stored it.
+            self.assertEqual(load_settings(root, strict=True).voice.provider_id, "kitten")
+            choose("pocket")
+            self.assertEqual(current(), "pocket")
+            self.assertEqual(load_settings(root, strict=True).voice.provider_id, "pocket")
+
+    def test_an_engine_the_registry_does_not_own_is_refused(self) -> None:
+        """A provider id is data from a client, and the fallback order is fixed."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            gateway = CompanionGateway(
+                SimpleNamespace(), consent=InteractiveConsent(maximum_wait_seconds=0.01),
+                settings_root=root,
+            )
+            with self.assertRaises(SettingsError):
+                gateway.settings_voice_set(
+                    voiceInput=True, speechResponses=True, responseMode="voice-only",
+                    deviceId="", modelId="", language="automatic",
+                    shortcut="<Super><Alt>space", wakeWord="disabled",
+                    ttsProviderId="../../../usr/bin/espeak-ng",
+                )
+            self.assertEqual(
+                load_settings(root, strict=True).voice.provider_id, "pocket")
+
     def test_service_restart_restores_saved_voice_and_input_preferences(self) -> None:
         """The login service must not replace saved settings with defaults."""
         with tempfile.TemporaryDirectory() as directory:

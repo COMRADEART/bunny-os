@@ -585,7 +585,8 @@ def assert_voice_image_payload(
     required_routes = (
         "companion-package",
         "speech-recognition-models",
-        "speech-synthesis-models",
+        "speech-synthesis-model-pocket",
+        "speech-synthesis-model-kitten",
         "speech-synthesis-runtime",
         "speech-recognition-licenses",
         "speech-recognition-provenance",

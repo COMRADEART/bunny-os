@@ -240,7 +240,8 @@ class TheInstalledVoicePayload(unittest.TestCase):
                 for route_id in (
                     "companion-package",
                     "speech-recognition-models",
-                    "speech-synthesis-models",
+                    "speech-synthesis-model-pocket",
+                    "speech-synthesis-model-kitten",
                     "speech-synthesis-runtime",
                     "speech-recognition-licenses",
                     "speech-recognition-provenance",
@@ -636,6 +637,32 @@ class ThePredicateItself(unittest.TestCase):
         """A deleted installed file is build-affecting, and must classify as one."""
         verdict = _classify("companion/voice/deleted_module.py")
         self.assertEqual(verdict["classification"], "installed")
+
+    def test_each_speech_engine_is_its_own_route(self) -> None:
+        """One route per engine, so a build can leave the large one out.
+
+        Pocket costs about 1.1 GiB uncompressed against Kitten's ~107 MiB. A
+        single `assets/voice/tts` route made "ship the small engine only" a
+        source edit; two routes make it a profile decision. Nothing about
+        SpeechSynthesisService changes either way — it selects by provider id
+        and descends a fixed fallback order over whatever is installed — and
+        this test exists so that stays true.
+        """
+        routes = {item.id: item for item in INSTALL_ROUTES}
+        pocket = routes["speech-synthesis-model-pocket"]
+        kitten = routes["speech-synthesis-model-kitten"]
+        self.assertEqual(pocket.source, "assets/voice/tts/pocket")
+        self.assertEqual(kitten.source, "assets/voice/tts/kitten")
+        self.assertEqual(pocket.destination, "/usr/share/bunny-os/voice/pocket")
+        self.assertEqual(kitten.destination, "/usr/share/bunny-os/voice/kitten")
+        # Neither engine's tree may reach through the other's route.
+        self.assertIsNone(
+            installed_destination(kitten, "assets/voice/tts/pocket/english/model.bin"))
+        self.assertIsNone(
+            installed_destination(pocket, "assets/voice/tts/kitten/nano-int8/model.onnx"))
+        self.assertNotIn(
+            "speech-synthesis-models", routes,
+            "the combined route is gone; a build that still names it installs nothing")
 
 
 if __name__ == "__main__":  # pragma: no cover

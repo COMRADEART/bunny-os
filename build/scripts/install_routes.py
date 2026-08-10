@@ -264,17 +264,39 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
     # Kitten nano INT8 is the explicit low-resource option. Both trees carry a
     # manifest with every runtime file's size and SHA-256, and neither worker
     # has a download path at runtime.
+    #
+    # One route per engine, not one route for "the voice assets". The
+    # destinations and the bytes are unchanged; what changes is that the
+    # boundary is now stated where the build can act on it. Pocket costs about
+    # 1.1 GiB uncompressed against Kitten's ~107 MiB, and a future image that
+    # wants the small engine has to be able to leave the large one out by
+    # dropping a route from a profile — not by editing a tree that mixes them,
+    # and certainly not by changing SpeechSynthesisService, which selects by
+    # provider id and descends a fixed fallback order whatever is installed.
+    #
+    # Conceptually: `bunny-voice-core` is the runtime, the recogniser model and
+    # the licences; `bunny-tts-pocket` is the two routes below marked pocket;
+    # `bunny-tts-kitten` is the kitten route; `bunny-tts-espeak` is a package
+    # dependency rather than an asset, because eSpeak NG and Speech Dispatcher
+    # come from Fedora.
     InstallRoute(
-        "speech-synthesis-models", "tree",
-        "assets/voice/tts", "/usr/share/bunny-os/voice", 0o444,
+        "speech-synthesis-model-pocket", "tree",
+        "assets/voice/tts/pocket", "/usr/share/bunny-os/voice/pocket", 0o444,
         profiles=DESKTOP_PROFILES,
-        note="pinned Pocket English and optional Kitten nano INT8 model payloads",
+        note="bunny-tts-pocket: the default engine's English model and prepared voice",
+    ),
+    InstallRoute(
+        "speech-synthesis-model-kitten", "tree",
+        "assets/voice/tts/kitten", "/usr/share/bunny-os/voice/kitten", 0o444,
+        profiles=DESKTOP_PROFILES,
+        note="bunny-tts-kitten: the low-resource engine's nano INT8 model and voices",
     ),
     InstallRoute(
         "speech-synthesis-runtime", "tree",
         "assets/voice/runtime", "/usr/lib/bunny-os/voice-runtime", 0o444,
         profiles=DESKTOP_PROFILES,
-        note="Pocket TTS v2.1.0 pure-Python runtime from an immutable upstream tag",
+        note="bunny-tts-pocket: Pocket TTS v2.1.0 pure-Python runtime from an "
+             "immutable upstream tag, plus the CPU PyTorch wheel it expands",
     ),
     InstallRoute(
         "speech-recognition-licenses", "tree",

@@ -2,6 +2,51 @@
 
 This root report mirrors the maintained detail in `docs/KNOWN_LIMITATIONS.md`.
 
+## Added by the spoken end-to-end pass — 2026-08-10
+
+**The desktop content layer takes no pointer input.** The top bar, sidebar and
+dock answer presses; the character, the dashboard cards, the Quick Access tiles,
+the suggestion chips, the assistant's text field, its microphone button and its
+Allow/Deny buttons do not. Measured four ways on a booted system, with a
+chrome control as the control condition each time: the dock's Terminal tile
+opens a terminal window, the Quick Access Terminal tile beside it opens nothing;
+the same holds with the layer stacked below `window_group` and above it; and a
+`button-release-event` handler on the layer itself never fired for a press on
+empty desktop. The consequence is that every interaction the dashboard offers
+has to be reached another way — the sidebar, the dock, or the keyboard.
+
+Three earlier measurements of this were wrong and are recorded so the next
+person does not repeat them: counting terminal *processes* cannot show a second
+window (`gnome-terminal-server` serves them all); pressing a control for an
+application that is already running opens nothing, because GNOME activates it by
+focusing it; and the "Open Terminal" suggestion chip is not a launcher at all —
+it goes through the assistant and stops at the permission question.
+
+**Spoken interaction was driven through the shipped bridge, not the shell's own
+button.** `bunny-shell-assistant listen` is the exact program `VoiceService`
+spawns, so everything from the shell's process boundary inwards is proved:
+capture, transcription, intent, the structured action, its validation, the
+launch, the reply, synthesis and playback. What is *not* proved is the GJS half
+— the character's LISTENING → THINKING → WORKING → TALKING → IDLE transitions
+were not observed, because the two paths that start a voice interaction from the
+shell are the microphone button (above) and the push-to-talk keybinding, and no
+extension keybinding fired in the iteration guest. That guest ran the extension
+from `~/.local/share`, where the settings schema is not in the global source,
+which is a plausible cause and was not confirmed.
+
+**This harness cannot send Super.** Neither GNOME's own overlay-key nor any
+`<Super>` accelerator fired, while ordinary typing into a focused terminal
+works and creates a file. Push-to-talk was rebound to `<Control><Alt>v` for the
+run, which is a supported setting rather than a test hook.
+
+**The shipped wallpaper does not load.** `bunny-nocturne.svg` fails with
+"Unknown image format: application/xml" — the image has no SVG pixbuf loader —
+so GNOME paints the dconf gradient behind the desktop's own contrast scrim
+instead. Composed and dark, as the fallback intends, but not the shipped image.
+
+**The search results panel is drawn empty.** A 560×13 strip sits under the top
+bar with no rows in it, in every screenshot taken this session.
+
 ## Added by the voice interaction milestone — 2026-08-09
 
 The source now connects explicit Bunny Shell push-to-talk to the existing
