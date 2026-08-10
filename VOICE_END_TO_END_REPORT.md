@@ -34,9 +34,15 @@ Pointer input            PASS  root cause: GNOME's _coverPane, left shown
 Microphone button        PASS  pressed on screen; the whole flow follows
 Character lifecycle      PASS  idle → listening → thinking → waiting →
                                working → talking → success → idle
-Tests                    4649 run, 0 failed, 7 skipped
+Interruption             PASS  116 ms from the cancel to silence
+Pocket -> Kitten         PASS  audio_started named kitten/Bella
+All providers gone       PASS  text answer intact, never stuck in TALKING
+Offline "Open Terminal"  PASS  spoken by Pocket with every link down
+Voice settings UI        NOT SEEN - the page could not import `companion` at
+                               all; fixed in source, not yet seen working
+Tests                    4665 run, 0 failed, 7 skipped
 Source gate              PASS, exit 0, clean tree
-Exact image              NOT BUILT - the host ran out of disk; see below
+Exact image              BLOCKED - 2.3 GB free on the host; see below
 ```
 
 ## Task #12: the dashboard could not be clicked
@@ -414,20 +420,22 @@ own is refused with `SettingsError` and leaves the stored choice alone.
 ## Tests and gate
 
 ```text
-4649 run, 0 failed, 7 skipped     (as bunny, on ext4, at fdab622)
+4665 run, 0 failed, 7 skipped     (as bunny, on ext4)
 
-source gate: PASS                 (as bunny, on ext4, at fdab622, clean tree)
+source gate: PASS                 (as bunny, on ext4, clean tree)
   ok  baselineRecorded          ok  qualificationSuitesPass
   ok  licenceGatePassed         ok  repositoryValidation
   ok  minimisationComplete      ok  sourceSuitesPass
 exit code 0
 ```
 
-The gate failed once in between, on `sourceSuitesPass`, and that failure was the
-host rather than the source: `scripts/task.py test` re-run by hand at the same
-commit passed 4646 and then 60, and the run that failed overlapped the disk
-fault described below. A gate result taken while the block layer is returning
-I/O errors says nothing about the tree.
+The gate failed twice in between, both times on `sourceSuitesPass`, and both
+times the identical command run by hand at the same commit passed every test.
+The first overlapped the disk fault below; the second overlapped a running
+guest. Neither could be attributed further, because the gate captured the
+suite's output and discarded it — so a failure named no test. That is fixed:
+the runner now prints the last lines of both streams, which is the difference
+between a gate you can act on and one you re-run and hope.
 
 Twenty-six new, in four groups: every extension module parsed as strict-mode ES
 with a planted-fault control; the ownership rule inside and outside a user
