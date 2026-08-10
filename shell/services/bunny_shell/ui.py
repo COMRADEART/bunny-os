@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 from typing import Any
 
 from .core_state import read_snapshot, shell_status
@@ -19,6 +20,35 @@ from .project import project_status
 from .search import SearchIndex
 from .settings import SECTIONS, SettingsStore
 from .workspaces import WorkspaceStore
+
+
+def _make_the_companion_importable() -> None:
+    """Put the installed companion on the path, if it is not already there.
+
+    Measured on a booted image, on screen: the Voice page read
+
+        Voice settings are unavailable because Bunny Companion is not
+        reachable: No module named 'companion'
+
+    `/usr/bin/bunny-settings` adds `/usr/lib/bunny-shell` so that `bunny_shell`
+    imports, and nothing adds `/usr/lib/bunny-os/python`, where `companion`
+    lives. So the page could never reach the runtime on an installed system —
+    the provider list, the readiness text and the engine selector were all
+    unreachable behind one missing path, and the fallback message made it look
+    like the *service* was down.
+
+    Only when the import fails first. Prepending unconditionally would put the
+    installed tree ahead of a developer's checkout and run the shipped
+    companion against edited source, which this repository has paid for before.
+    """
+    try:
+        import companion.protocol  # noqa: F401
+        return
+    except ImportError:
+        pass
+    installed = Path("/usr/lib/bunny-os/python")
+    if installed.is_dir() and str(installed) not in sys.path:
+        sys.path.insert(0, str(installed))
 
 
 GNOME_PANELS = {
@@ -203,6 +233,7 @@ class BunnyApplication:
     def _voice_settings(self, detail: Any) -> None:
         """The focused voice page, backed by the running companion service."""
         try:
+            _make_the_companion_importable()
             from companion.protocol import CompanionClient, default_endpoint_path
 
             connection = CompanionClient(default_endpoint_path(), timeout=5.0)

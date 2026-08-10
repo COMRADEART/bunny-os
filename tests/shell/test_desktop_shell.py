@@ -551,6 +551,34 @@ class InstalledCommandTests(unittest.TestCase):
 
     COMMAND_DIRECTORIES = ("shell/services/bin", "installer/bin")
 
+    def test_the_voice_settings_page_can_reach_the_companion(self) -> None:
+        """`bunny-settings` adds bunny_shell to the path, and nothing added companion.
+
+        Measured on a booted image, on screen: the Voice page read "Voice
+        settings are unavailable because Bunny Companion is not reachable: No
+        module named 'companion'". /usr/bin/bunny-settings puts
+        /usr/lib/bunny-shell on sys.path so `bunny_shell` imports; `companion`
+        lives in /usr/lib/bunny-os/python and nothing put that there. So the
+        engine selector, the provider list and the readiness text were
+        unreachable on every installed system, behind a message that blamed the
+        service.
+
+        The guard is the same one the bridge uses: try the import first, and
+        only fall back to the installed tree, so a checkout is never shadowed.
+        """
+        text = (ROOT / "shell/services/bunny_shell/ui.py").read_text(encoding="utf-8")
+        self.assertIn("_make_the_companion_importable", text)
+        body = text.split("def _make_the_companion_importable", 1)[1].split(chr(10) + "def ", 1)[0]
+        self.assertIn("/usr/lib/bunny-os/python", body)
+        self.assertIn("import companion.protocol", body)
+        self.assertIn("return", body.split("except ImportError", 1)[0],
+                      "an unconditional prepend would shadow a developer's checkout")
+        page = text.split("def _voice_settings", 1)[1]
+        self.assertLess(
+            page.index("_make_the_companion_importable()"),
+            page.index("from companion.protocol import"),
+            "the path has to be arranged before the import that needs it")
+
     def _commands(self):
         for directory in self.COMMAND_DIRECTORIES:
             base = ROOT / directory
