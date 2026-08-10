@@ -358,12 +358,35 @@ class ThePackageRoute(unittest.TestCase):
                 )
                 self.assertEqual(verdict["routes"], [])
 
-    def test_the_package_route_is_the_only_reason_the_voice_runtime_is_installed(self) -> None:
-        """Named, so that deleting the route fails with the reason attached."""
+    def test_the_package_routes_are_the_only_reason_these_packages_are_installed(self) -> None:
+        """Named, so that deleting a route fails with the reason attached.
+
+        Five packages, and the list is exact rather than a membership check: a
+        package that reaches the image without appearing here is a package
+        nobody decided to ship, and the closure analyser reported the voice
+        runtime's build impact as zero for exactly that reason once already.
+
+        ``trust``, ``capsules`` and ``catalog`` are here because
+        ``companion.capsule_bridge`` imports all three. Installing the companion
+        without them gives the user service an ImportError on every start, which
+        is the same failure the capability route exists to prevent.
+        """
         package_routes = [route for route in INSTALL_ROUTES if route.kind == "package"]
         self.assertEqual(
-            sorted(route.source for route in package_routes), ["capability", "companion"],
+            sorted(route.source for route in package_routes),
+            ["capability", "capsules", "catalog", "companion", "trust"],
         )
+
+    def test_the_catalogue_entries_are_installed_as_data_not_as_source(self) -> None:
+        """A package route copies Python and skips everything else, so the
+        catalogue's JSON would not reach the image on the package route alone —
+        and an installed system with no entries refuses every application it has
+        no grant for, which is fail-closed, correct, and reads as a bug."""
+        destinations = {route.name: route.destination for route in INSTALL_ROUTES}
+        self.assertEqual(destinations.get("app-catalog-entries"), "/usr/share/bunny-os/catalog")
+        from catalog.registry import INSTALLED_CATALOG_DIRECTORY
+
+        self.assertEqual(str(INSTALLED_CATALOG_DIRECTORY), "/usr/share/bunny-os/catalog")
 
 
 class TheAuditFailsClosed(unittest.TestCase):

@@ -41,8 +41,28 @@ __all__ = ["CATALOG_SCHEMA_VERSION", "CatalogRegistry", "default_catalog_directo
 CATALOG_SCHEMA_VERSION = 1
 
 
+#: Where the entries land on an installed system. A package route copies Python
+#: source; the JSON entries are data and are installed separately, so the
+#: installed tree has ``catalog/`` without ``catalog/data/`` inside it.
+INSTALLED_CATALOG_DIRECTORY = Path("/usr/share/bunny-os/catalog")
+
+
 def default_catalog_directory() -> Path:
-    """Where the curated entries live in this checkout and in the image."""
+    """Where the curated entries live: the image first, then this checkout.
+
+    The installed path wins when it exists, so a booted system reads the
+    reviewed bytes that shipped with it rather than anything a checkout beside
+    it happens to contain. The source tree is the fallback for development and
+    for the tests.
+
+    The order matters more than it looks. If this returned the source directory
+    on an installed system it would find nothing, every application would
+    resolve to :func:`~trust.declaration.UNDECLARED`, and the trust layer would
+    refuse everything not already granted — fail-closed, correct, and
+    indistinguishable from a permission bug to anybody using it.
+    """
+    if INSTALLED_CATALOG_DIRECTORY.is_dir():
+        return INSTALLED_CATALOG_DIRECTORY
     return Path(__file__).resolve().parent / "data"
 
 
