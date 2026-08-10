@@ -1,0 +1,36 @@
+kernel=6.18.33.2-microsoft-standard-WSL2
+arch=x86_64
+systemd=systemd 259 (259.8-1.fc44)
+cgroup=cgroup2fs
+controllers=cpuset cpu io memory hugetlb pids rdma
+python=Python 3.14.3
+virtualisation=wsl
+---MEM---
+{
+ "environment": {
+  "architecture": "x86_64",
+  "baseline": {
+   "MemAvailable": 15726665728,
+   "MemFree": 15413927936,
+   "MemTotal": 16561385472,
+   "SwapFree": 4294967296,
+   "SwapTotal": 4294967296,
+   "processCount": 92
+  },
+  "cyclesPerRun": 2,
+  "emulated": false,
+  "kernel": "6.18.33.2-microsoft-standard-WSL2",
+  "mode": "observe",
+  "python": "3.14.3",
+  "swapPermitted": false,
+  "virtualisation": "wsl"
+ },
+ "classification": {
+  "componentResult": "A",
+  "detail": "peak 20.89 MiB inside 64 MiB, 43.11 MiB headroom, no reclaim events. This is the supervisor process only.",
+  "headline": "The control plane alone fits at this limit",
+  "systemDetail": "no Bunny OS image has been booted under this limit. This run measured a Python interpreter running the supervisor inside a cgroup; a booted system additionally carries a kernel, an init, a service manager and the base userspace, none of which is included above. The \u00a717 gate is unresolved until an image is booted and measured.",
+  "systemResult": "NOT_MEASURED"
+ }
+}
+peaks: [(64, 20.89, 0, 0), (128, 17.53, 0, 0), (256, 17.61, 0, 0), (512, 17.46, 0, 0)]

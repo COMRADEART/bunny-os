@@ -394,13 +394,20 @@ class RuntimeMonitor:
         emergency = event_name in EMERGENCY_EVENTS
         if not emergency and state.last_event_at is not None:
             if (now - state.last_event_at) < config.cooldown_seconds:
-                # Held by the cooldown. The state still flips, so the machine's
-                # view of itself stays accurate; only the notification is
-                # suppressed. A monitor that also refused to update its state
-                # would have to rediscover the crossing later.
-                state.breached = direction == "enter"
-                state.pending_since = None
-                state.pending_direction = ""
+                # Held by the cooldown — *delayed*, not discarded.
+                #
+                # An earlier version flipped ``breached`` here and cleared the
+                # pending direction, on the reasoning that the machine's view of
+                # itself should stay accurate. Measured against a real kernel,
+                # that silently destroyed the event: a recovery arriving inside
+                # the cooldown window was suppressed, the state flipped so the
+                # condition was no longer a transition, and the recovery could
+                # never be raised again. The service stayed on the degraded plan
+                # indefinitely, because nothing ever told the engine to look.
+                #
+                # A cooldown exists to bound how *often* we act, not to decide
+                # that something did not happen. So the candidate is left
+                # pending and fires on the first sample past the window.
                 return []
 
         state.breached = direction == "enter"

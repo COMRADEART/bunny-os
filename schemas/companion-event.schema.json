@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-event-1.schema.json",
+  "title": "Bunny Companion task event",
+  "description": "One ordered, deduplicated, redacted task event. Observed facts and generated descriptions are explicitly distinguished.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "sessionId", "taskId", "sequence", "eventType", "occurredAt", "source", "recordKind", "payload", "description", "evidenceReferences"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "eventId": { "type": "string", "format": "uuid" },
+    "sessionId": { "$ref": "#/$defs/identifier" },
+    "taskId": { "$ref": "#/$defs/identifier" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "task_created", "task_classified", "executor_selected", "reviewer_added", "planning_started",
+        "tool_requested", "approval_requested", "approval_resolved", "tool_started", "tool_progress",
+        "tool_completed", "tool_failed", "reviewer_observation", "reviewer_disagreement", "response_drafting",
+        "speech_started", "speech_completed", "task_completed", "task_cancelled", "task_failed",
+        "capability_degraded", "connection_lost", "connection_restored"
+      ]
+    },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "source": { "$ref": "#/$defs/identifier" },
+    "recordKind": { "type": "string", "enum": ["observed_fact", "generated_description"] },
+    "payload": { "type": "object", "maxProperties": 256 },
+    "description": { "type": "string", "maxLength": 1000 },
+    "evidenceReferences": { "type": "array", "maxItems": 256, "items": { "type": "string", "format": "uuid" } }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "recordKind": { "const": "generated_description" } } },
+      "then": {
+        "properties": {
+          "description": { "minLength": 1 },
+          "evidenceReferences": { "minItems": 1 }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+\\-]{0,127}$" }
+  }
+}

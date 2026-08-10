@@ -2,8 +2,10 @@
 from pathlib import Path
 import sys
 
-system = Path("/usr/lib/bunny-shell")
-sys.path.insert(0, str(system if system.exists() else Path(__file__).resolve().parents[1]))
-from bunny_shell.cli import main
+system = Path("/usr/lib/bunny-os/python")
+sys.path.insert(0, str(system if system.exists() else Path(__file__).resolve().parents[3]))
+from companion.cli import main
 
-raise SystemExit(main("bunny-approvals"))
+# The Approval Centre is a view of the companion runtime's authoritative,
+# scoped capability approval records. It never grants from a shell cache.
+raise SystemExit(main("bunny-companion", []))

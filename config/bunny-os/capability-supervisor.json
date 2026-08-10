@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "mode": "observe",
+  "intervalSeconds": 60,
+  "cycleDeadlineSeconds": 120,
+  "stateDirectory": "/var/lib/bunny-os/capability",
+  "runtimeDirectory": "/run/bunny-os/capability",
+  "auditPath": "/var/log/bunny-os/capability-audit.jsonl",
+  "discoveryBudgetMs": 2000,
+  "constrainedMonitoring": false,
+  "allowEssentialStop": false,
+  "directCgroupWrites": false,
+  "maximumCycles": 0
+}

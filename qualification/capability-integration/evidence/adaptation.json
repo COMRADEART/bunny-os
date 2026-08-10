@@ -1,0 +1,92 @@
+{
+  "failures": [],
+  "passed": true,
+  "schemaVersion": 1,
+  "steps": [
+    {
+      "memoryCurrent": 11698176,
+      "memoryMax": 536870912,
+      "path": "/sys/fs/cgroup/system.slice/run-p1156-i162849.service",
+      "step": "cgroup"
+    },
+    {
+      "availableFraction": 0.9777,
+      "freeBytes": 524914688,
+      "granted": 73400320,
+      "running": 5,
+      "step": "initial"
+    },
+    {
+      "afterEvents": [],
+      "spikeEvents": [],
+      "step": "transient-spike"
+    },
+    {
+      "availableFraction": 0.0383,
+      "highEvents": 0,
+      "maxEvents": 0,
+      "memoryCurrent": 516313088,
+      "memoryMax": 536870912,
+      "requestedMib": 475,
+      "residentReported": true,
+      "step": "pressure-applied"
+    },
+    {
+      "firstPass": [],
+      "secondPass": [
+        "memory_pressure_entered"
+      ],
+      "step": "sustained-pressure"
+    },
+    {
+      "freeBytes": 20557824,
+      "granted": 23068672,
+      "reason": "memory_pressure_entered",
+      "revision": 2,
+      "running": 4,
+      "step": "replan"
+    },
+    {
+      "essentialRunning": 4,
+      "essentialTotal": 5,
+      "optionalRunning": [],
+      "refusedEssential": [
+        "bunny.system.update"
+      ],
+      "step": "priority-under-pressure"
+    },
+    {
+      "availableFraction": 0.9775,
+      "memoryCurrent": 12070912,
+      "step": "pressure-removed"
+    },
+    {
+      "events": [
+        "memory_pressure_recovered"
+      ],
+      "step": "sustained-recovery"
+    },
+    {
+      "digestSequence": [
+        "1de5290ad223",
+        "1de5290ad223",
+        "1de5290ad223",
+        "1de5290ad223",
+        "1de5290ad223",
+        "1de5290ad223"
+      ],
+      "finalRunning": 5,
+      "granted": 73400320,
+      "running": 5,
+      "step": "restore"
+    },
+    {
+      "count": 2,
+      "events": [
+        "memory_pressure_entered",
+        "memory_pressure_recovered"
+      ],
+      "step": "event-total"
+    }
+  ]
+}
