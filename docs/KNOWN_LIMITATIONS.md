@@ -2,15 +2,38 @@
 
 ## Voice interaction milestone additions
 
-- Pocket TTS is now the configured default output provider, with packaged local
+- Pocket TTS is the configured default output provider, with packaged local
   model/voice assets, a CPU-only PyTorch worker, optional Kitten Nano INT8 and
-  deterministic eSpeak/Speech Dispatcher fallback. This source integration has
-  not yet produced or booted an exact candidate: the Fedora package lock and
-  retained snapshot still need the newly declared Python/ONNX packages.
-- No real Pocket or Kitten inference, audible output, interruption timing,
-  cold/warm benchmark, quality comparison, settings screenshot or spoken
-  `Open Files` run has occurred inside Bunny OS. The TTS milestone remains FAIL,
-  regardless of source-test results.
+  deterministic eSpeak/Speech Dispatcher fallback. Both neural engines have now
+  been run: on the Fedora 44 reference host each produces real audio through
+  the real worker and the real registry, and each is recognised back by the
+  bundled Vosk model at word error rate 0.00. Pocket measures real-time factor
+  0.56–0.59 and Kitten 0.17–0.19, unchanged when the worker is pinned to two
+  cores. Doing so found four defects in Kitten's phonemization, every one of
+  which produced fluent, confident audio that was not the requested sentence;
+  see `POCKET_TTS_MILESTONE_REPORT.md`.
+- A `shell-test` image was built at commit `4d7e9a4` against a relocked
+  543-package snapshot, and the voice stack was exercised inside that image:
+  the expanded PyTorch runtime, both models and the worker launcher are
+  present, Pocket reports READY, the registry selects Pocket with no preference
+  expressed, and both engines synthesise audio that is recognised back at word
+  error rate 0.00. The engine therefore works on a real Bunny OS image and not
+  only on a staging host.
+- What has still not happened is driving it through a booted graphical session.
+  No spoken `Open Files` run, no settings-UI validation at 1920×1080 or
+  1366×768, and no observation of the character's TALKING state against real
+  playback. A VM also cannot present a real microphone without the null-sink
+  and loopback arrangement used elsewhere in this project. Until those exist
+  the TTS milestone is not a PASS, regardless of source-test results.
+- Pocket streaming is not implemented. `supports_streaming` is declared `False`
+  rather than simulated by cutting a finished WAV into pieces, so time to first
+  audio is whole-utterance synthesis time: 0.94s for "Files is open." and about
+  2.2s for a typical sentence on the reference host.
+- Making Pocket the default costs roughly 1.1 GiB uncompressed — 865 MiB of
+  runtime, model and prepared voice, of which 651 MiB is the expanded PyTorch
+  CPU wheel, plus about 260 MiB of newly named Fedora packages. Kitten alone
+  would cost about a tenth of that. This is a large amount for the modest
+  hardware Bunny targets and is recorded rather than absorbed.
 
 - Bunny Shell push-to-talk uses the canonical companion capture, recognition,
   assistant-action and TTS path. The Alpha image definition now declares
