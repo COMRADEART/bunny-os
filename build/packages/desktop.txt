@@ -81,3 +81,40 @@ speech-dispatcher-espeak-ng
 # It lives in -utils, which nothing pulled in, so that provider could never have
 # been selected on the shipped image.
 speech-dispatcher-utils
+
+# category: local neural text to speech
+#
+# Pocket TTS 2.1.0 is Bunny's default response voice. Its inference process is
+# isolated from GNOME Shell and remains resident between utterances. Kitten nano
+# INT8 is the explicit low-resource alternative and uses ONNX Runtime. These are
+# named inputs, not transitive accidents: install-root.py imports every module
+# under the image interpreter and refuses the image if any one is unusable.
+#
+# Fedora's python3-torch package is intentionally not used: its hard dependency
+# closure is the ROCm build (MIOpen, rocBLAS, MAGMA and related GPU libraries),
+# even on a CPU-only installation. Bunny instead expands the pinned official
+# PyTorch 2.9.1 CPU wheel at image build time. Its compressed input is
+# 184,378,318 bytes and expands to 682,347,734 bytes. The selected models,
+# Pocket source runtime and notices add about 252 MB more. This deliberate Alpha
+# image cost is recorded in voice provenance and the candidate artifact report;
+# no first-run or boot-time download replaces it.
+python3-onnxruntime
+python3-numpy
+python3-scipy
+python3-sentencepiece
+python3-safetensors
+python3-beartype
+python3-pydantic
+python3-einops
+python3-huggingface-hub
+python3-requests
+python3-pyyaml
+python3-typing-extensions
+# Declared dependencies of the pinned PyTorch CPU wheel. Naming them here keeps
+# the transaction in the signed Fedora snapshot while avoiding the ROCm build.
+python3-filelock
+python3-fsspec
+python3-jinja2
+python3-networkx
+python3-setuptools
+python3-sympy

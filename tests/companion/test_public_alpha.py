@@ -837,6 +837,13 @@ class BuildIntegrationTests(unittest.TestCase):
         self.assertNotIn("MemoryDenyWriteExecute=yes", unit)
         self.assertIn("RestrictAddressFamilies=AF_UNIX AF_NETLINK", unit)
 
+    def test_the_neural_voice_worker_is_offline_without_a_write_execute_denial(self) -> None:
+        """CPU inference JITs kernels, but it still has no network family."""
+        unit = (REPOSITORY / "systemd/user/bunny-companion.service").read_text(encoding="utf-8")
+        self.assertNotIn("MemoryDenyWriteExecute=yes", unit)
+        self.assertIn("RestrictAddressFamilies=AF_UNIX", unit)
+        self.assertIn("MemoryMax=2G", unit)
+
     def test_the_launcher_and_the_diagnostics_program_are_installed(self) -> None:
         from install_routes_shim import SYSTEM_SCRIPTS  # type: ignore
 
@@ -902,9 +909,19 @@ class BuildIntegrationTests(unittest.TestCase):
         }
         for package in (
             "espeak-ng", "speech-dispatcher", "speech-dispatcher-espeak-ng",
-            "vosk-api-devel",
+            "vosk-api-devel", "python3-onnxruntime", "python3-numpy",
+            "python3-scipy", "python3-sentencepiece", "python3-safetensors",
+            "python3-beartype", "python3-pydantic", "python3-einops",
+            "python3-huggingface-hub", "python3-requests", "python3-pyyaml",
+            "python3-typing-extensions", "python3-filelock", "python3-fsspec",
+            "python3-jinja2", "python3-networkx", "python3-setuptools",
+            "python3-sympy",
         ):
             self.assertIn(package, declared)
+        self.assertNotIn(
+            "python3-torch", declared,
+            "Fedora's torch package hard-requires the ROCm GPU closure; Bunny pins the CPU wheel",
+        )
 
     def test_the_offline_stt_model_is_integrity_checked_and_installed(self) -> None:
         from companion.speech.recognizers import _discover_model
@@ -930,6 +947,32 @@ class BuildIntegrationTests(unittest.TestCase):
             (
                 "assets/voice/PROVENANCE.json",
                 "/usr/share/doc/bunny-os/voice-provenance.json",
+            ),
+        ):
+            self.assertEqual(self.destination("beta", source), destination)
+            self.assertIsNone(self.destination("minimal", source))
+
+    def test_the_neural_tts_models_runtime_and_worker_reach_the_image(self) -> None:
+        for source, destination in (
+            (
+                "assets/voice/tts/pocket/english/manifest.json",
+                "/usr/share/bunny-os/voice/pocket/english/manifest.json",
+            ),
+            (
+                "assets/voice/tts/kitten/nano-int8/manifest.json",
+                "/usr/share/bunny-os/voice/kitten/nano-int8/manifest.json",
+            ),
+            (
+                "assets/voice/runtime/site-packages/pocket_tts/__init__.py",
+                "/usr/lib/bunny-os/voice-runtime/site-packages/pocket_tts/__init__.py",
+            ),
+            (
+                "assets/voice/runtime/wheels/MANIFEST.json",
+                "/usr/lib/bunny-os/voice-runtime/wheels/MANIFEST.json",
+            ),
+            (
+                "shell/services/bin/bunny-voice-neural-worker",
+                "/usr/bin/bunny-voice-neural-worker",
             ),
         ):
             self.assertEqual(self.destination("beta", source), destination)

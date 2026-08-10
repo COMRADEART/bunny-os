@@ -39,7 +39,12 @@ from companion.settings import (
     load_settings,
     save_settings,
 )
-from companion.service import CompanionGateway, InteractiveConsent
+from companion.service import (
+    CompanionGateway,
+    CompanionService,
+    InteractiveConsent,
+    ServiceOptions,
+)
 from companion.speech.wakeword import WakeWordService, WakeWordState
 from companion.tools import ToolBroker, ToolInvocationContext
 
@@ -461,6 +466,52 @@ class VoiceSettingsTests(unittest.TestCase):
             self.assertFalse(load_settings(root, strict=True).speech_input.enabled)
             self.assertFalse(load_settings(root, strict=True).voice.enabled)
 
+    def test_service_restart_restores_saved_voice_and_input_preferences(self) -> None:
+        """The login service must not replace saved settings with defaults."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            save_settings(root, Settings(
+                voice=VoiceSettings(
+                    enabled=True,
+                    response_mode="all",
+                    provider_id="kitten",
+                    model_id="nano-int8",
+                    voice_id="Bella",
+                    speaking_rate=1.25,
+                    performance_mode="automatic",
+                ),
+                speech_input=SpeechInputSettings(
+                    enabled=False,
+                    device_id="alsa_input.test",
+                    model_id="vosk-model-small-en-us-0.15",
+                    language="en",
+                ),
+            ))
+            service = CompanionService.__new__(CompanionService)
+            service.options = ServiceOptions(root=root)
+            service.root = root
+            service.runtime = SimpleNamespace(clock=mock.sentinel.clock)
+            service.voice = None
+
+            with mock.patch("companion.voice.service.VoiceService") as voice_constructor:
+                service._build_voice()
+            voice_options = voice_constructor.call_args.args[0]
+            self.assertEqual(voice_options.preferences.provider_id, "kitten")
+            self.assertEqual(voice_options.preferences.model_id, "nano-int8")
+            self.assertEqual(voice_options.preferences.voice_id, "Bella")
+            self.assertEqual(voice_options.preferences.response_mode, "all")
+            self.assertAlmostEqual(voice_options.preferences.speaking_rate, 1.25)
+
+            with mock.patch("companion.speech.service.SpeechInputService") as speech_constructor:
+                service._build_speech()
+            speech_options = speech_constructor.call_args.args[0]
+            self.assertFalse(speech_options.preferences.enabled)
+            self.assertEqual(speech_options.preferences.input_device, "alsa_input.test")
+            self.assertEqual(
+                speech_options.preferences.model_id,
+                "vosk-model-small-en-us-0.15",
+            )
+
 
 class _BridgeConnection:
     def __init__(self, *, confidence: float | None = 0.93, disposition: str = "") -> None:
@@ -518,9 +569,14 @@ class _BridgeConnection:
                 "cancellationToken": "voicetok-1",
             }
         if operation == "voice_status":
-            return {"recentEvents": [{
-                "kind": "speech_finished", "requestId": "voicereq-1",
-            }]}
+            return {"recentEvents": [
+                {
+                    "kind": "audio_started", "requestId": "voicereq-1",
+                    "providerId": "pocket", "backendId": "pipewire",
+                    "deviceId": "default-output",
+                },
+                {"kind": "speech_finished", "requestId": "voicereq-1"},
+            ]}
         if operation in ("speech_input_stop", "voice_cancel"):
             return {"cancelled": ["voicereq-1"], "count": 1}
         raise AssertionError(operation)
@@ -907,6 +963,35 @@ class ShellVoiceBoundaryTests(unittest.TestCase):
         for state in ("listening", "thinking", "working", "talking", "success", "warning", "error"):
             self.assertIn(state, shell + assistant)
         self.assertIn("transcribing: 'thinking'", assistant)
+
+    def test_talking_begins_only_after_voice_worker_audio_started(self) -> None:
+        bridge = BRIDGE.read_text(encoding="utf-8")
+        wait = bridge.split("def _wait_for_speech", 1)[1].split("def _speak_result", 1)[0]
+        speak = bridge.split("def _speak_result", 1)[1].split("def watch", 1)[0]
+        self.assertIn('kind == "audio_started"', wait)
+        self.assertIn("on_audio_started(event)", wait)
+        self.assertIn("on_audio_started=_audio_started", speak)
+
+        assistant = (EXTENSION / "lib/services/assistant.js").read_text(encoding="utf-8")
+        self.assertIn("presenting_result: 'thinking'", assistant)
+        shell = (EXTENSION / "lib/desktopShell.js").read_text(encoding="utf-8")
+        typed_reply = shell.split("onReply:", 1)[1].split("onFileResults:", 1)[0]
+        self.assertNotIn("setState('talking'", typed_reply)
+        speech_started = shell.split("onSpeechStarted:", 1)[1].split("onSpeechFinished:", 1)[0]
+        self.assertIn("setSpeaking(true)", speech_started)
+        self.assertIn("setState('talking'", speech_started)
+
+    def test_tts_and_recognition_model_selectors_save_separate_values(self) -> None:
+        settings = (ROOT / "shell/services/bunny_shell/ui.py").read_text(encoding="utf-8")
+        self.assertIn(
+            '"modelId": recognition_model_values[model.get_selected()]',
+            settings,
+        )
+        self.assertIn(
+            '"ttsModelId": tts_model_values[tts_model.get_selected()]',
+            settings,
+        )
+        self.assertNotIn('"ttsModelId": model_values[', settings)
 
     def test_file_results_have_a_bounded_scroll_area_and_show_all_control(self) -> None:
         panel = (EXTENSION / "lib/assistant/panel.js").read_text(encoding="utf-8")

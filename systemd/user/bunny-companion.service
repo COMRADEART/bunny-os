@@ -55,15 +55,23 @@ RestrictNamespaces=yes
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
-MemoryDenyWriteExecute=yes
+# Deliberately absent: Pocket's CPU-only PyTorch/oneDNN kernels may create
+# executable code pages just as Mesa does in the separate window unit. Enabling
+# systemd's write/execute denial makes the kernel kill valid local inference. The
+# process remains offline (AF_UNIX only), unprivileged, read-only outside its
+# private state, syscall-filtered and bounded by MemoryHigh/MemoryMax below.
 SystemCallArchitectures=native
 SystemCallFilter=@system-service
 SystemCallErrorNumber=EPERM
 # The smallest validated Vosk model brings the companion process to roughly
-# 175 MiB while recognition is active. 128 MiB killed real STT before it could
-# return a transcript; 384 MiB keeps inference bounded while leaving measured
-# headroom for the task runtime and TTS. The window remains a separate process.
-MemoryMax=384M
+# 175 MiB while recognition is active. Pocket TTS adds a persistent, isolated
+# CPU-only PyTorch worker with a 1 GiB conservative provider estimate. These
+# are enforcement budgets, not benchmark claims: MemoryHigh asks the kernel to
+# reclaim before the hard limit, while MemoryMax still contains a runaway
+# worker. Low-resource mode starts at the much smaller Kitten provider. The
+# graphical window remains a separate process and cgroup.
+MemoryHigh=1536M
+MemoryMax=2G
 TasksMax=64
 StandardOutput=journal
 StandardError=journal

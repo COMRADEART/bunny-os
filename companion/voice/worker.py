@@ -94,6 +94,7 @@ EVENT_KINDS = (
     "speech_cancelled",
     "speech_failed",
     "speech_degraded",
+    "speech_provider_fallback",
     "worker_started",
     "worker_stopped",
 )
@@ -543,37 +544,74 @@ class VoiceWorker:
             if utterance.measurement is not None:
                 utterance.measurement.synthesis_started_at = self.clock.monotonic()
 
-            selection = self.registry.select(request, monotonic=now)
-            utterance.selection = selection
-            if not selection.selected or selection.provider is None:
-                self._degrade(
-                    utterance, "no-eligible-provider", "selection",
-                    selection.detail,
+            failed: list[str] = []
+            prefer_streaming = request.prefer_streaming or decision.prefer_streaming
+            while True:
+                selection = self.registry.select(
+                    request,
+                    monotonic=self.clock.monotonic(),
+                    exclude=failed,
+                    require_streaming=prefer_streaming,
+                    preferred_provider_id=request.provider_id,
                 )
-                self._settle(utterance, SpeechDisposition.DEGRADED_TO_CAPTIONS, selection.detail)
-                return
-            utterance.provider = selection.provider
-
-            wants_samples = (
-                selection.provider.declaration.supports_synthesis
-                and not (request.prefer_streaming or decision.prefer_streaming)
-            )
-            if wants_samples:
-                if self._synthesise_and_play(utterance, decision):
-                    return
-                # Synthesis or playback failed and the fallback is one attempt at
-                # the streaming path — §12's "fall back once, then captions".
-                if not self._stream(utterance, decision, fallback=True):
+                utterance.selection = selection
+                if not selection.selected or selection.provider is None:
+                    self._degrade(
+                        utterance, "no-eligible-provider", "selection",
+                        selection.detail,
+                    )
                     self._settle(
                         utterance, SpeechDisposition.DEGRADED_TO_CAPTIONS,
-                        utterance.detail or "no local path produced audio; the caption stands",
+                        utterance.detail or selection.detail,
                     )
-                return
-            if not self._stream(utterance, decision, fallback=False):
-                self._settle(
-                    utterance, SpeechDisposition.DEGRADED_TO_CAPTIONS,
-                    utterance.detail or "the provider could not speak; the caption stands",
+                    return
+                provider = selection.provider
+                utterance.provider = provider
+                selected_id = provider.declaration.provider_id
+                requested_known = bool(
+                    request.provider_id and self.registry.get(request.provider_id) is not None
                 )
+                preference_fallback = requested_known and selected_id != request.provider_id
+                if failed or preference_fallback:
+                    rejected = {
+                        provider_id: "; ".join(reasons)
+                        for provider_id, reasons in selection.rejected
+                    }
+                    reason = (
+                        utterance.detail
+                        if failed else rejected.get(
+                            request.provider_id,
+                            f"{request.provider_id} was not ready",
+                        )
+                    )
+                    failed_ids = list(dict.fromkeys([
+                        *failed,
+                        *(
+                            [request.provider_id]
+                            if preference_fallback and request.provider_id not in failed else []
+                        ),
+                    ]))
+                    self._emit(self._event("speech_provider_fallback", request, {
+                        "requestedProviderId": request.provider_id,
+                        "failedProviderIds": failed_ids,
+                        "providerId": selected_id,
+                        "failureReason": reason,
+                        "detail": (
+                            f"using {provider.declaration.display_name or provider.declaration.provider_id} "
+                            f"because {reason}"
+                        ),
+                    }))
+
+                if provider.declaration.supports_synthesis and not prefer_streaming:
+                    if self._synthesise_and_play(utterance, decision):
+                        return
+                else:
+                    if self._stream(utterance, decision, selection=selection):
+                        return
+                if utterance.cancellation.cancelled:
+                    self._finish_cancelled(utterance)
+                    return
+                failed.append(provider.declaration.provider_id)
         finally:
             # Neutral before release, always. A mouth left mid-syllable is the
             # most visible symptom of a runtime that lost track of itself, and
@@ -596,6 +634,8 @@ class VoiceWorker:
         provider = utterance.provider
         assert provider is not None
 
+        if utterance.workspace is not None:
+            utterance.workspace.close()
         utterance.workspace = PrivateWorkspace()
         synthesis = provider.synthesize(
             request, utterance.workspace, cancellation=utterance.cancellation
@@ -735,17 +775,26 @@ class VoiceWorker:
 
     # ----------------------------------------------------------------- #
 
-    def _stream(self, utterance: Utterance, decision: VoiceDecision, *, fallback: bool) -> bool:
+    def _stream(
+        self,
+        utterance: Utterance,
+        decision: VoiceDecision,
+        *,
+        selection: SelectionResult | None = None,
+        fallback: bool = False,
+    ) -> bool:
         """The lighter path: the provider keeps the audio, we estimate the mouth."""
         request = utterance.request
         exclude: list[str] = []
         if fallback and utterance.selection is not None and utterance.selection.provider is not None:
             exclude.append(utterance.selection.provider.declaration.provider_id)
 
-        selection = self.registry.select(
-            request, monotonic=self.clock.monotonic(),
-            exclude=exclude, require_streaming=True,
-        )
+        if selection is None:
+            selection = self.registry.select(
+                request, monotonic=self.clock.monotonic(),
+                exclude=exclude, require_streaming=True,
+                preferred_provider_id=request.provider_id,
+            )
         if not selection.selected or selection.provider is None:
             if fallback:
                 self._degrade(
@@ -762,31 +811,10 @@ class VoiceWorker:
         utterance.timeline = from_text(
             request.request_id, request.speech_text, rate=request.speaking_rate
         )
-
-        started = self.clock.monotonic()
-        if utterance.measurement is not None:
-            utterance.measurement.audio_started_at = started
-            utterance.measurement.viseme_source = utterance.timeline.source
-        self._emit(self._event("audio_started", request, {
-            "providerId": provider.declaration.provider_id,
-            "providerOwnedPlayback": True,
-            "estimatedMs": duration_ms,
-            "visemeSource": utterance.timeline.source,
-            "visemeConfidence": utterance.timeline.confidence,
-        }))
-
-        self._emit_viseme_timeline(request, utterance.timeline)
-        frame = utterance.scheduler.start(utterance.timeline)
-        if utterance.measurement is not None:
-            utterance.measurement.first_viseme_at = self.clock.monotonic()
-        self._emit_viseme(request, frame)
-
-        # The provider blocks holding its own audio, so the mouth is driven from
-        # a ticker this worker creates, owns and joins. On the estimated clock:
-        # there is no audio clock to compare against, which is exactly why this
-        # timeline's confidence is 0.35 and not higher.
         stop = threading.Event()
         utterance.ticker_stop = stop
+        ticker: threading.Thread | None = None
+        playback_started = False
 
         def _tick() -> None:
             origin = self.clock.monotonic()
@@ -797,16 +825,51 @@ class VoiceWorker:
                     return
                 stop.wait(self.tick_seconds)
 
-        ticker = threading.Thread(target=_tick, name="companion-voice-mouth", daemon=True)
-        utterance.ticker = ticker
-        ticker.start()
+        def _provider_started() -> None:
+            """Publish TALKING only after the provider's child is running."""
+            nonlocal playback_started, ticker
+            if playback_started:
+                return
+            playback_started = True
+            started = self.clock.monotonic()
+            if utterance.measurement is not None:
+                utterance.measurement.audio_started_at = started
+                utterance.measurement.viseme_source = utterance.timeline.source
+            self._emit(self._event("audio_started", request, {
+                "providerId": provider.declaration.provider_id,
+                "providerOwnedPlayback": True,
+                "startEvidence": "provider-process-running",
+                "estimatedMs": duration_ms,
+                "visemeSource": utterance.timeline.source,
+                "visemeConfidence": utterance.timeline.confidence,
+            }))
+            self._emit_viseme_timeline(request, utterance.timeline)
+            frame = utterance.scheduler.start(utterance.timeline)
+            if utterance.measurement is not None:
+                utterance.measurement.first_viseme_at = self.clock.monotonic()
+            self._emit_viseme(request, frame)
 
-        outcome = provider.stream(request, cancellation=utterance.cancellation)
+            # The provider blocks holding its own audio, so the mouth is driven
+            # from a ticker this worker creates, owns and joins. On the estimated
+            # clock there is no sample position to compare against, which is why
+            # this timeline's confidence is deliberately low.
+            ticker = threading.Thread(
+                target=_tick, name="companion-voice-mouth", daemon=True,
+            )
+            utterance.ticker = ticker
+            ticker.start()
+
+        outcome = provider.stream(
+            request,
+            cancellation=utterance.cancellation,
+            on_started=_provider_started,
+        )
         stop.set()
-        ticker.join(timeout=2.0)
+        if ticker is not None:
+            ticker.join(timeout=2.0)
         utterance.ticker = None
 
-        if utterance.measurement is not None:
+        if utterance.measurement is not None and playback_started:
             utterance.measurement.audio_finished_at = self.clock.monotonic()
 
         if outcome.cancelled or utterance.cancellation.cancelled:
@@ -818,6 +881,14 @@ class VoiceWorker:
                 provider_id=outcome.provider_id,
             )
             utterance.detail = outcome.detail
+            return False
+        if not playback_started:
+            detail = "the provider reported success without playback-start evidence"
+            self._degrade(
+                utterance, "provider-failure", "playback", detail,
+                provider_id=outcome.provider_id,
+            )
+            utterance.detail = detail
             return False
         self._settle(utterance, SpeechDisposition.PLAYED, "played by the provider")
         return True

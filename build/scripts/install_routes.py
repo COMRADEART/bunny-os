@@ -260,6 +260,22 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         profiles=DESKTOP_PROFILES,
         note="pinned local Vosk models with per-file Bunny integrity manifests",
     ),
+    # Neural speech is immutable image data as well. Pocket is the default;
+    # Kitten nano INT8 is the explicit low-resource option. Both trees carry a
+    # manifest with every runtime file's size and SHA-256, and neither worker
+    # has a download path at runtime.
+    InstallRoute(
+        "speech-synthesis-models", "tree",
+        "assets/voice/tts", "/usr/share/bunny-os/voice", 0o444,
+        profiles=DESKTOP_PROFILES,
+        note="pinned Pocket English and optional Kitten nano INT8 model payloads",
+    ),
+    InstallRoute(
+        "speech-synthesis-runtime", "tree",
+        "assets/voice/runtime", "/usr/lib/bunny-os/voice-runtime", 0o444,
+        profiles=DESKTOP_PROFILES,
+        note="Pocket TTS v2.1.0 pure-Python runtime from an immutable upstream tag",
+    ),
     InstallRoute(
         "speech-recognition-licenses", "tree",
         "assets/voice/licenses", "/usr/share/licenses/bunny-os-voice", 0o444,
@@ -545,6 +561,21 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
 #: is never an unchanged image.
 GENERATED_ROUTES: tuple[Mapping[str, Any], ...] = (
     {
+        "destination": (
+            "/usr/lib/bunny-os/voice-runtime/site-packages/"
+            "{torch,functorch,torchgen,torch-2.9.1+cpu.dist-info}/**"
+        ),
+        "derivedFrom": (
+            "assets/voice/runtime/wheels/torch-2.9.1+cpu-cp314-cp314-"
+            "manylinux_2_28_x86_64.whl and its pinned MANIFEST.json"
+        ),
+        "producer": "install-root.py:expand_vendored_voice_wheels",
+        "note": (
+            "official PyTorch CPU wheel; outer SHA-256 and every wheel RECORD entry "
+            "are verified before the build-time staging wheel is removed"
+        ),
+    },
+    {
         "destination": "OCI config label org.opencontainers.image.revision",
         "derivedFrom": "the git commit being built (BUNNY_SOURCE_COMMIT)",
         "producer": "build/Containerfile",
@@ -645,6 +676,7 @@ COPY_HELPERS: Mapping[str, str] = {
 #: different answers — the arrangement that makes ``main`` unable to install
 #: anything the table has not declared.
 INSTALL_STAGES: frozenset[str] = frozenset({
+    "expand_vendored_voice_wheels",
     "install_all_routes",
     "install_release_payload",
     "install_activation",

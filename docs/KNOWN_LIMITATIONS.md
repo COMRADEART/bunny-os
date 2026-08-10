@@ -2,6 +2,16 @@
 
 ## Voice interaction milestone additions
 
+- Pocket TTS is now the configured default output provider, with packaged local
+  model/voice assets, a CPU-only PyTorch worker, optional Kitten Nano INT8 and
+  deterministic eSpeak/Speech Dispatcher fallback. This source integration has
+  not yet produced or booted an exact candidate: the Fedora package lock and
+  retained snapshot still need the newly declared Python/ONNX packages.
+- No real Pocket or Kitten inference, audible output, interruption timing,
+  cold/warm benchmark, quality comparison, settings screenshot or spoken
+  `Open Files` run has occurred inside Bunny OS. The TTS milestone remains FAIL,
+  regardless of source-test results.
+
 - Bunny Shell push-to-talk uses the canonical companion capture, recognition,
   assistant-action and TTS path. The Alpha image definition now declares
   Fedora's native Vosk runtime and bundles the reviewed small English model;

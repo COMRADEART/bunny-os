@@ -249,6 +249,112 @@ class BunnyApplication:
             response_values.index(response_mode) if response_mode in response_values else 0,
         )
 
+        # Voice output is provider-neutral here. The companion supplies names,
+        # readiness, model inventory and voices; this page never imports a
+        # Pocket- or Kitten-specific API.
+        provider_order = ["pocket", "kitten", "espeak-ng", "speech-dispatcher"]
+        provider_fallback_names = {
+            "pocket": "Pocket TTS", "kitten": "Kitten TTS",
+            "espeak-ng": "eSpeak NG", "speech-dispatcher": "Speech Dispatcher",
+        }
+        discovered_providers = {
+            str(item.get("providerId") or ""): item
+            for item in state.get("ttsProviders", []) if isinstance(item, dict)
+        }
+        provider_values = list(provider_order)
+        provider_labels: list[str] = []
+        for provider_id in provider_values:
+            item = discovered_providers.get(provider_id, {})
+            name = str(item.get("displayName") or provider_fallback_names[provider_id])
+            provider_status = str(item.get("status") or "NOT_INSTALLED")
+            label_status = "Ready" if bool(item.get("ready")) else provider_status.replace("_", " ").title()
+            provider_labels.append(f"{name} — {label_status}")
+        selected_provider = str(state.get("ttsProviderId") or "pocket")
+        engine = dropdown_row(
+            "Engine", provider_labels,
+            provider_values.index(selected_provider) if selected_provider in provider_values else 0,
+        )
+
+        performance_values = ["automatic", "quality", "low-resource"]
+        performance_name = str(state.get("performanceMode") or "automatic")
+        performance = dropdown_row(
+            "Voice performance mode", ["Automatic", "Quality", "Low Resource"],
+            performance_values.index(performance_name) if performance_name in performance_values else 0,
+        )
+
+        voices = [item for item in state.get("ttsVoices", []) if isinstance(item, dict)]
+        selected_tts_voice = str(state.get("ttsVoiceId") or "")
+        selected_tts_model = str(state.get("ttsModelId") or "")
+        voice_values: list[str] = [""]
+        tts_model_values: list[str] = [""]
+        voice_row = self.Gtk.Box(orientation=self.Gtk.Orientation.HORIZONTAL, spacing=12)
+        voice_row.append(self._label("Voice"))
+        voice = self.Gtk.DropDown.new_from_strings(["Provider default"])
+        voice_row.append(voice)
+        detail.append(voice_row)
+        model_row = self.Gtk.Box(orientation=self.Gtk.Orientation.HORIZONTAL, spacing=12)
+        model_row.append(self._label("Model"))
+        tts_model = self.Gtk.DropDown.new_from_strings(["Provider default"])
+        model_row.append(tts_model)
+        detail.append(model_row)
+
+        rate_row = self.Gtk.Box(orientation=self.Gtk.Orientation.HORIZONTAL, spacing=12)
+        rate_row.append(self._label("Speech speed"))
+        rate = self.Gtk.Scale.new_with_range(
+            self.Gtk.Orientation.HORIZONTAL, 0.5, 2.0, 0.05)
+        rate.set_value(float(state.get("speakingRate") or 1.0))
+        rate.set_hexpand(True)
+        rate.update_property([self.Gtk.AccessibleProperty.LABEL], ["Speech speed"])
+        rate_row.append(rate)
+        detail.append(rate_row)
+        provider_readiness = self._label("")
+        detail.append(provider_readiness)
+
+        def refresh_voice_output(_control: Any = None, _property: Any = None) -> None:
+            nonlocal voice_values, tts_model_values
+            provider_id = provider_values[engine.get_selected()]
+            item = discovered_providers.get(provider_id, {})
+            provider_voices = [
+                entry for entry in voices if str(entry.get("providerId") or "") == provider_id
+            ]
+            voice_values = [""] + [str(entry.get("voiceId") or "") for entry in provider_voices]
+            voice_labels = ["Provider default"] + [
+                str(entry.get("name") or entry.get("voiceId") or "Voice") for entry in provider_voices
+            ]
+            voice.set_model(self.Gtk.StringList.new(voice_labels))
+            voice.set_selected(
+                voice_values.index(selected_tts_voice)
+                if provider_id == selected_provider and selected_tts_voice in voice_values else 0)
+
+            model_reports = [
+                entry for entry in item.get("modelHealth", []) if isinstance(entry, dict)
+            ]
+            declared_models = [str(value) for value in item.get("models", []) if str(value)]
+            tts_model_values = [""] + declared_models
+            status_by_model = {
+                str(entry.get("modelId") or ""): entry for entry in model_reports
+            }
+            model_labels = ["Provider default"] + [
+                f"{value} — {'Installed' if status_by_model.get(value, {}).get('installed') else 'Not Installed'}"
+                for value in declared_models
+            ]
+            tts_model.set_model(self.Gtk.StringList.new(model_labels))
+            tts_model.set_selected(
+                tts_model_values.index(selected_tts_model)
+                if provider_id == selected_provider and selected_tts_model in tts_model_values else 0)
+            model_row.set_visible(provider_id == "kitten")
+            # Pocket 2.1 does not expose speech-rate control. Do not present a
+            # slider that its provider would silently ignore.
+            rate_row.set_visible(provider_id != "pocket")
+            detail_text = str(item.get("detail") or "This engine is not installed.")
+            provider_readiness.set_text(detail_text)
+
+        engine.connect("notify::selected", refresh_voice_output)
+        refresh_voice_output()
+        fallback_warning = str(state.get("ttsFallbackWarning") or "")
+        if fallback_warning:
+            detail.append(self._label(f"Last voice fallback: {fallback_warning}"))
+
         devices = [item for item in state.get("devices", []) if isinstance(item, dict)]
         device_values = [""] + [str(item.get("deviceId") or "") for item in devices]
         device_labels = ["System default"] + [
@@ -267,15 +373,16 @@ class BunnyApplication:
             origin = str(item.get("modelOrigin") or "")
             if origin:
                 discovered_models.append(Path(origin).name)
-        model_values = [""] + list(dict.fromkeys(discovered_models))
+        recognition_model_values = [""] + list(dict.fromkeys(discovered_models))
         model_labels = ["Automatic (smallest installed)"] + list(dict.fromkeys(discovered_models))
         selected_model = str(state.get("modelId") or "")
-        if selected_model and selected_model not in model_values:
-            model_values.append(selected_model)
+        if selected_model and selected_model not in recognition_model_values:
+            recognition_model_values.append(selected_model)
             model_labels.append(f"{selected_model} (not installed)")
         model = dropdown_row(
             "Speech recognition model", model_labels,
-            model_values.index(selected_model) if selected_model in model_values else 0,
+            recognition_model_values.index(selected_model)
+            if selected_model in recognition_model_values else 0,
         )
         if not discovered_models:
             readiness = state.get("readiness", {})
@@ -307,10 +414,15 @@ class BunnyApplication:
                     "speechResponses": speech_responses.get_active(),
                     "responseMode": response_values[response.get_selected()],
                     "deviceId": device_values[device.get_selected()],
-                    "modelId": model_values[model.get_selected()],
+                    "modelId": recognition_model_values[model.get_selected()],
                     "language": language_values[language.get_selected()],
                     "shortcut": str(state.get("shortcut") or "<Super><Alt>space"),
                     "wakeWord": "disabled",
+                    "ttsProviderId": provider_values[engine.get_selected()],
+                    "ttsModelId": tts_model_values[tts_model.get_selected()],
+                    "ttsVoiceId": voice_values[voice.get_selected()],
+                    "speakingRate": rate.get_value(),
+                    "performanceMode": performance_values[performance.get_selected()],
                 })
                 status.set_text(
                     "Saved. Restart Bunny Companion to change the loaded model."

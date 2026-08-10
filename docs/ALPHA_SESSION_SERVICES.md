@@ -89,15 +89,17 @@ the state directory rather than as a hope.
 ## Sandboxing, and the one place it differs
 
 The runtime unit is heavily confined: `ProtectSystem=strict`, `ProtectHome=read-only`,
-`RestrictAddressFamilies=AF_UNIX`, `MemoryDenyWriteExecute=yes`,
-`SystemCallFilter=@system-service`.
+`RestrictAddressFamilies=AF_UNIX`, `SystemCallFilter=@system-service`, and a
+2 GiB hard memory cgroup bound. `MemoryDenyWriteExecute` is deliberately absent:
+Pocket's CPU-only PyTorch/oneDNN runtime generates optimized executable kernels.
+It remains a local child of the offline, unprivileged companion cgroup.
 
-The window unit is confined too, with one deliberate exception:
-**`MemoryDenyWriteExecute` is absent.** Mesa's shader compilers and llvmpipe's
+The window unit is confined too. **`MemoryDenyWriteExecute` is absent there as
+well.** Mesa's shader compilers and llvmpipe's
 JIT map executable pages, and a window that is killed the moment it draws in 3D
 is not a hardened window — it is a broken one. The window holds no durable state,
 makes no outbound connection (`RestrictAddressFamilies=AF_UNIX AF_NETLINK`), and
-is a client of a runtime that keeps the stricter profile.
+is a client of a runtime that retains the same network and filesystem boundary.
 
 ## Ordering, and why `Wants` rather than `Requires`
 

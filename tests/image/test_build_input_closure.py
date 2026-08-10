@@ -27,6 +27,10 @@ that it cannot go quiet again:
 
 from __future__ import annotations
 
+import base64
+import csv
+import hashlib
+import io
 import importlib.util
 import json
 from pathlib import Path
@@ -34,6 +38,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "build/scripts"
@@ -186,14 +191,34 @@ class TheInstalledVoicePayload(unittest.TestCase):
             "usr/bin/arecord",
             "usr/bin/espeak-ng",
             "usr/bin/spd-say",
+            "usr/bin/bunny-voice-neural-worker",
             "usr/lib64/libvosk.so",
             "usr/lib/bunny-os/python/companion/speech/vosk_runtime.py",
+            "usr/lib/bunny-os/python/companion/voice/neural_worker.py",
+            "usr/lib/bunny-os/voice-runtime/site-packages/pocket_tts/__init__.py",
+            "usr/lib/bunny-os/voice-runtime/site-packages/pocket_tts-2.1.0.dist-info/METADATA",
+            "usr/lib/bunny-os/voice-runtime/site-packages/torch/__init__.py",
+            "usr/lib/bunny-os/voice-runtime/site-packages/torch-2.9.1+cpu.dist-info/METADATA",
+            "usr/lib/bunny-os/voice-runtime/wheels/MANIFEST.json",
             "usr/lib/systemd/user/bunny-companion.service",
             "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/.bunny-model.json",
             "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/am/final.mdl",
             "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/graph/Gr.fst",
             "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/graph/HCLr.fst",
+            "usr/share/bunny-os/voice/pocket/english/manifest.json",
+            "usr/share/bunny-os/voice/pocket/english/config.yaml",
+            "usr/share/bunny-os/voice/pocket/english/model.safetensors",
+            "usr/share/bunny-os/voice/pocket/english/tokenizer.model",
+            "usr/share/bunny-os/voice/pocket/english/voices/caro_davy.safetensors",
+            "usr/share/bunny-os/voice/kitten/nano-int8/manifest.json",
+            "usr/share/bunny-os/voice/kitten/nano-int8/config.json",
+            "usr/share/bunny-os/voice/kitten/nano-int8/kitten_tts_nano_v0_8.onnx",
+            "usr/share/bunny-os/voice/kitten/nano-int8/voices.npz",
             "usr/share/licenses/bunny-os-voice/Apache-2.0.txt",
+            "usr/share/licenses/bunny-os-voice/pocket-tts/MIT.txt",
+            "usr/share/licenses/bunny-os-voice/pocket-model/CC-BY-4.0.txt",
+            "usr/share/licenses/bunny-os-voice/voice-zero/CC0-1.0.txt",
+            "usr/share/licenses/bunny-os-voice/kitten-tts/Apache-2.0.txt",
             "usr/share/doc/bunny-os/voice-provenance.json",
         )
         for relative in relative_paths:
@@ -215,8 +240,11 @@ class TheInstalledVoicePayload(unittest.TestCase):
                 for route_id in (
                     "companion-package",
                     "speech-recognition-models",
+                    "speech-synthesis-models",
+                    "speech-synthesis-runtime",
                     "speech-recognition-licenses",
                     "speech-recognition-provenance",
+                    "shell-commands",
                     "user-units",
                 )
             }
@@ -224,6 +252,62 @@ class TheInstalledVoicePayload(unittest.TestCase):
 
     def test_a_non_desktop_profile_does_not_require_voice(self) -> None:
         INSTALLER.assert_voice_image_payload("minimal", {}, root=Path("unused"))
+
+
+class TheVendoredCpuWheel(unittest.TestCase):
+    """The CPU wheel is verified and expanded at build time, never at login."""
+
+    @staticmethod
+    def _wheel(root: Path, *, corrupt_manifest: bool = False) -> Path:
+        wheel_root = root / "usr/lib/bunny-os/voice-runtime/wheels"
+        wheel_root.mkdir(parents=True)
+        wheel = wheel_root / "tiny-1.0-py3-none-any.whl"
+        files = {
+            "tiny/__init__.py": b"VALUE = 1\n",
+            "tiny-1.0.dist-info/METADATA": b"Metadata-Version: 2.4\nName: tiny\nVersion: 1.0\n",
+            "tiny-1.0.dist-info/WHEEL": b"Wheel-Version: 1.0\nTag: py3-none-any\n",
+        }
+        output = io.StringIO()
+        writer = csv.writer(output, lineterminator="\n")
+        for name, payload in files.items():
+            encoded = base64.urlsafe_b64encode(hashlib.sha256(payload).digest()).rstrip(b"=").decode("ascii")
+            writer.writerow((name, f"sha256={encoded}", len(payload)))
+        record_name = "tiny-1.0.dist-info/RECORD"
+        writer.writerow((record_name, "", ""))
+        files[record_name] = output.getvalue().encode("utf-8")
+        with zipfile.ZipFile(wheel, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for name, payload in files.items():
+                archive.writestr(name, payload)
+        digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
+        (wheel_root / "MANIFEST.json").write_text(json.dumps({
+            "schemaVersion": 1,
+            "wheels": [{
+                "fileName": wheel.name,
+                "sizeBytes": wheel.stat().st_size,
+                "sha256": "0" * 64 if corrupt_manifest else digest,
+            }],
+        }), encoding="utf-8")
+        return wheel
+
+    def test_a_pinned_wheel_is_record_verified_expanded_and_removed(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="bunny-wheel-") as temporary:
+            root = Path(temporary)
+            wheel = self._wheel(root)
+            INSTALLER.expand_vendored_voice_wheels("beta", root=root)
+            self.assertEqual(
+                (root / "usr/lib/bunny-os/voice-runtime/site-packages/tiny/__init__.py").read_text(),
+                "VALUE = 1\n",
+            )
+            self.assertFalse(wheel.exists(), "the compressed staging copy must not remain in the image")
+            self.assertTrue((wheel.parent / "MANIFEST.json").is_file())
+
+    def test_a_wheel_whose_outer_digest_changed_is_refused_before_extraction(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="bunny-wheel-") as temporary:
+            root = Path(temporary)
+            self._wheel(root, corrupt_manifest=True)
+            with self.assertRaisesRegex(SystemExit, "pinned SHA-256"):
+                INSTALLER.expand_vendored_voice_wheels("beta", root=root)
+            self.assertFalse((root / "usr/lib/bunny-os/voice-runtime/site-packages/tiny").exists())
 
 
 class ThePackageRoute(unittest.TestCase):
@@ -405,7 +489,12 @@ class ARenameMovesNoRoute(unittest.TestCase):
         self.assertEqual(dict(COPY_HELPERS), {"copy_file": "file", "copy_route": "route-engine"})
         self.assertEqual(
             INSTALL_STAGES,
-            frozenset({"install_all_routes", "install_release_payload", "install_activation"}),
+            frozenset({
+                "expand_vendored_voice_wheels",
+                "install_all_routes",
+                "install_release_payload",
+                "install_activation",
+            }),
         )
         self.assertEqual(
             GENERATOR_FUNCTIONS,
@@ -420,7 +509,7 @@ class ARenameMovesNoRoute(unittest.TestCase):
                 "write_os_release",
             }),
         )
-        self.assertEqual(len(MODELLED_HELPERS), 8)
+        self.assertEqual(len(MODELLED_HELPERS), 9)
 
     def test_every_generated_route_names_what_produces_it(self) -> None:
         for entry in GENERATED_ROUTES:

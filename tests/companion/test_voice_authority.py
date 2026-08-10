@@ -209,6 +209,33 @@ class ServiceBoundaryTests(unittest.TestCase):
                 f"VoiceService.{attribute} is a {type(value).__name__}",
             )
 
+    def test_preparing_neural_provider_keeps_fallback_speech_available(self) -> None:
+        """Cold Pocket startup must not turn a working fallback into captions."""
+        from companion.voice.provider import ProviderHealth
+
+        for status in ("INITIALIZING", "MODEL_VERIFIED"):
+            with self.subTest(status=status):
+                provider = ScriptedProvider(provider_id="pocket")
+                provider.health = lambda **_kwargs: ProviderHealth(
+                    provider_id="pocket",
+                    available=False,
+                    healthy=True,
+                    status=status,
+                    detail="Pocket TTS is preparing its local model",
+                )
+                service = VoiceService(VoiceServiceOptions(
+                    runtime_directory=temporary_root(self),
+                    registry=ProviderRegistry([provider]),
+                    router=__import__(
+                        "companion.voice.audio", fromlist=["AudioRouter"]
+                    ).AudioRouter([ScriptedBackend()]),
+                    start_worker=False,
+                ))
+                self.addCleanup(service.close)
+                self.assertTrue(service.policy.decision.speaks)
+                self.assertTrue(service.voice_status()["signals"]["localProviderAvailable"])
+                self.assertTrue(service.voice_status()["signals"]["synthesisProviderAvailable"])
+
     def test_every_boundary_claim_is_answered_and_answered_no(self) -> None:
         boundaries = self.service.boundaries()
         self.assertTrue(boundaries["captionsAuthoritative"])

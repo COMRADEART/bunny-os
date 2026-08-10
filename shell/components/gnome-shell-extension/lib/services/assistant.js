@@ -50,7 +50,9 @@ export const PHASE_TO_STATE = {
     listening: 'listening',
     transcribing: 'thinking',
     speaking: 'talking',
-    presenting_result: 'talking',
+    // Text becoming visible is not evidence that audio is playing. The bridge
+    // moves the character to TALKING only after VoiceWorker's audio_started.
+    presenting_result: 'thinking',
     working: 'working',
     success: 'success',
     cancelling: 'warning',

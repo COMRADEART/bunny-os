@@ -143,6 +143,11 @@ export class AssistantBubble {
         });
     }
 
+    /** Keep the decorative speaking bars tied to real playback evidence. */
+    setSpeaking(active) {
+        this._setWave(Boolean(active));
+    }
+
     /**
      * Position the bubble against the figure.
      *

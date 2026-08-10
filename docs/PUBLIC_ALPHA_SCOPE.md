@@ -114,7 +114,7 @@ and a proposal to add it defaults to *no*.
 | New desktop action classes | Frozen at nine |
 | New agent autonomy | Frozen |
 | New character-rendering architecture | Frozen at 3D / animated-2D / static / text |
-| New speech engines | Frozen at Vosk |
+| New recognition engines | Frozen at Vosk; output is limited to Pocket, Kitten, eSpeak NG and Speech Dispatcher |
 | New task runtimes | Frozen |
 
 ### Telemetry

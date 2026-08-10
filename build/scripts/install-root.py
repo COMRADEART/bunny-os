@@ -22,14 +22,19 @@ audit, which fails the closure closed.
 from __future__ import annotations
 
 import argparse
+import base64
+import csv
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
 import platform
 import shutil
+import stat
 import subprocess
 import sys
+import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -427,6 +432,139 @@ def assert_no_stray_user_units() -> None:
         )
 
 
+def expand_vendored_voice_wheels(
+    profile: str,
+    *,
+    root: Path = Path("/"),
+) -> None:
+    """Expand pinned CPU-only wheels after verifying the wheel and its RECORD.
+
+    Fedora 44's ``python3-torch`` is a ROCm build whose *hard* dependency
+    closure includes several gigabytes of GPU libraries. Bunny voice is CPU
+    inference, so the image carries PyTorch's official manylinux CPU wheel
+    instead. This is deliberately a build-time expansion: no package manager,
+    network request or first-run extraction is reachable on an installed OS.
+    """
+    if profile not in {"developer", "desktop", "shell", "shell-test", "live", "beta"}:
+        return
+    wheel_root = root / "usr/lib/bunny-os/voice-runtime/wheels"
+    manifest_path = wheel_root / "MANIFEST.json"
+    try:
+        raw = manifest_path.read_bytes()
+        if len(raw) > 64 * 1024:
+            raise ValueError("wheel manifest is oversized")
+        manifest = json.loads(raw.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        raise SystemExit(f"BLOCKED: the neural voice wheel manifest is invalid: {exc}") from exc
+    wheels = manifest.get("wheels") if isinstance(manifest, dict) else None
+    if manifest.get("schemaVersion") != 1 or not isinstance(wheels, list) or not wheels:
+        raise SystemExit("BLOCKED: the neural voice wheel manifest has no supported wheel set")
+
+    install_root = root / "usr/lib/bunny-os/voice-runtime/site-packages"
+    install_root.mkdir(parents=True, exist_ok=True)
+    for record in wheels:
+        if not isinstance(record, dict):
+            raise SystemExit("BLOCKED: a neural voice wheel record is malformed")
+        file_name = record.get("fileName")
+        digest = record.get("sha256")
+        size = record.get("sizeBytes")
+        if (
+            not isinstance(file_name, str)
+            or Path(file_name).name != file_name
+            or not file_name.endswith(".whl")
+            or not isinstance(digest, str)
+            or len(digest) != 64
+            or not isinstance(size, int)
+            or size <= 0
+        ):
+            raise SystemExit("BLOCKED: a neural voice wheel identity is unsafe")
+        wheel_path = wheel_root / file_name
+        try:
+            if wheel_path.stat().st_size != size:
+                raise ValueError("size mismatch")
+            wheel_hash = hashlib.sha256()
+            with wheel_path.open("rb") as wheel_stream:
+                for block in iter(lambda: wheel_stream.read(1024 * 1024), b""):
+                    wheel_hash.update(block)
+            actual = wheel_hash.hexdigest()
+        except (OSError, ValueError) as exc:
+            raise SystemExit(f"BLOCKED: {file_name} cannot be verified: {exc}") from exc
+        if actual != digest:
+            raise SystemExit(f"BLOCKED: {file_name} failed its pinned SHA-256")
+
+        try:
+            archive = zipfile.ZipFile(wheel_path)
+        except (OSError, zipfile.BadZipFile) as exc:
+            raise SystemExit(f"BLOCKED: {file_name} is not a valid wheel archive: {exc}") from exc
+        with archive:
+            members = archive.infolist()
+            if not 1 <= len(members) <= 20_000:
+                raise SystemExit(f"BLOCKED: {file_name} has an unsafe member count")
+            total = sum(item.file_size for item in members)
+            if total <= 0 or total > 1024 * 1024 * 1024:
+                raise SystemExit(f"BLOCKED: {file_name} has an unsafe expanded size")
+
+            record_names = [item.filename for item in members if item.filename.endswith(".dist-info/RECORD")]
+            if len(record_names) != 1:
+                raise SystemExit(f"BLOCKED: {file_name} does not carry exactly one RECORD")
+            try:
+                rows = {
+                    row[0]: (row[1], row[2])
+                    for row in csv.reader(archive.read(record_names[0]).decode("utf-8").splitlines())
+                    if len(row) == 3
+                }
+            except (KeyError, UnicodeDecodeError, csv.Error) as exc:
+                raise SystemExit(f"BLOCKED: {file_name} RECORD cannot be read: {exc}") from exc
+
+            for item in members:
+                parts = Path(item.filename).parts
+                mode = (item.external_attr >> 16) & 0o177777
+                if (
+                    not item.filename
+                    or item.filename.startswith(("/", "\\"))
+                    or ".." in parts
+                    or any(part.endswith(".data") for part in parts)
+                    or stat.S_ISLNK(mode)
+                    or item.file_size > 768 * 1024 * 1024
+                ):
+                    raise SystemExit(f"BLOCKED: {file_name} contains an unsafe member")
+                if item.is_dir():
+                    continue
+                expected = rows.get(item.filename)
+                if expected is None:
+                    raise SystemExit(f"BLOCKED: {file_name} RECORD omits {item.filename}")
+                expected_hash, expected_size = expected
+                if expected_size and (not expected_size.isdigit() or int(expected_size) != item.file_size):
+                    raise SystemExit(f"BLOCKED: {file_name} member size verification failed")
+
+                target = install_root.joinpath(*parts)
+                try:
+                    target.resolve(strict=False).relative_to(install_root.resolve(strict=True))
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    descriptor = os.open(target, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o444)
+                    member_hash = hashlib.sha256()
+                    copied = 0
+                    with archive.open(item, "r") as source, os.fdopen(descriptor, "wb") as output:
+                        for block in iter(lambda: source.read(1024 * 1024), b""):
+                            output.write(block)
+                            member_hash.update(block)
+                            copied += len(block)
+                    os.chmod(target, 0o555 if mode & 0o111 else 0o444)
+                except (FileExistsError, OSError, ValueError) as exc:
+                    raise SystemExit(f"BLOCKED: {file_name} member cannot be installed: {exc}") from exc
+                if copied != item.file_size:
+                    raise SystemExit(f"BLOCKED: {file_name} member extraction was truncated")
+                if expected_hash:
+                    algorithm, separator, encoded = expected_hash.partition("=")
+                    observed = base64.urlsafe_b64encode(member_hash.digest()).rstrip(b"=").decode("ascii")
+                    if algorithm != "sha256" or not separator or observed != encoded:
+                        raise SystemExit(f"BLOCKED: {file_name} RECORD hash verification failed")
+        # The installed root needs the expanded runtime, not a second compressed
+        # copy. The immutable manifest remains as the provenance of the removed
+        # build-time staging file.
+        wheel_path.unlink()
+
+
 def assert_voice_image_payload(
     profile: str,
     installed: dict[str, list[str]],
@@ -447,8 +585,11 @@ def assert_voice_image_payload(
     required_routes = (
         "companion-package",
         "speech-recognition-models",
+        "speech-synthesis-models",
+        "speech-synthesis-runtime",
         "speech-recognition-licenses",
         "speech-recognition-provenance",
+        "shell-commands",
         "user-units",
     )
     problems = [
@@ -463,13 +604,33 @@ def assert_voice_image_payload(
         "usr/bin/arecord",
         "usr/bin/espeak-ng",
         "usr/bin/spd-say",
+        "usr/bin/bunny-voice-neural-worker",
         "usr/lib/bunny-os/python/companion/speech/vosk_runtime.py",
+        "usr/lib/bunny-os/python/companion/voice/neural_worker.py",
+        "usr/lib/bunny-os/voice-runtime/site-packages/pocket_tts/__init__.py",
+        "usr/lib/bunny-os/voice-runtime/site-packages/pocket_tts-2.1.0.dist-info/METADATA",
+        "usr/lib/bunny-os/voice-runtime/site-packages/torch/__init__.py",
+        "usr/lib/bunny-os/voice-runtime/site-packages/torch-2.9.1+cpu.dist-info/METADATA",
+        "usr/lib/bunny-os/voice-runtime/wheels/MANIFEST.json",
         "usr/lib/systemd/user/bunny-companion.service",
         "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/.bunny-model.json",
         "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/am/final.mdl",
         "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/graph/Gr.fst",
         "usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15/graph/HCLr.fst",
+        "usr/share/bunny-os/voice/pocket/english/manifest.json",
+        "usr/share/bunny-os/voice/pocket/english/config.yaml",
+        "usr/share/bunny-os/voice/pocket/english/model.safetensors",
+        "usr/share/bunny-os/voice/pocket/english/tokenizer.model",
+        "usr/share/bunny-os/voice/pocket/english/voices/caro_davy.safetensors",
+        "usr/share/bunny-os/voice/kitten/nano-int8/manifest.json",
+        "usr/share/bunny-os/voice/kitten/nano-int8/config.json",
+        "usr/share/bunny-os/voice/kitten/nano-int8/kitten_tts_nano_v0_8.onnx",
+        "usr/share/bunny-os/voice/kitten/nano-int8/voices.npz",
         "usr/share/licenses/bunny-os-voice/Apache-2.0.txt",
+        "usr/share/licenses/bunny-os-voice/pocket-tts/MIT.txt",
+        "usr/share/licenses/bunny-os-voice/pocket-model/CC-BY-4.0.txt",
+        "usr/share/licenses/bunny-os-voice/voice-zero/CC0-1.0.txt",
+        "usr/share/licenses/bunny-os-voice/kitten-tts/Apache-2.0.txt",
         "usr/share/doc/bunny-os/voice-provenance.json",
     )
     for relative in required_files:
@@ -487,6 +648,30 @@ def assert_voice_image_payload(
     )
     if not any(path.is_file() for path in runtime_candidates):
         problems.append("libvosk.so is absent from both /usr/lib64 and /usr/lib")
+
+    # On the real image root, prove that every native/Python runtime needed by
+    # the isolated worker imports under the system interpreter. File-name
+    # guesses are not reliable for architecture-tagged extension modules, and
+    # an RPM transaction may succeed while a dependency is still unusable.
+    if root == Path("/"):
+        probe = subprocess.run(
+            [
+                "/usr/bin/python3", "-I", "-c",
+                (
+                    "import sys; "
+                    "sys.path.insert(0, '/usr/lib/bunny-os/voice-runtime/site-packages'); "
+                    "import beartype, einops, numpy, onnxruntime, pydantic, requests, "
+                    "safetensors, scipy, sentencepiece, torch, yaml, pocket_tts"
+                ),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if probe.returncode != 0:
+            detail = (probe.stderr or probe.stdout or "import probe failed").strip()
+            problems.append(f"neural TTS runtime import failed: {detail[:512]}")
 
     if problems:
         raise SystemExit(
@@ -524,6 +709,7 @@ def main() -> int:
     artifact_manifest = json.loads(artifact_manifest_path.read_text(encoding="utf-8"))
 
     installed = install_all_routes(source, args.profile)
+    expand_vendored_voice_wheels(args.profile)
     assert_no_stray_user_units()
     assert_voice_image_payload(args.profile, installed)
     compile_desktop_assets(args.profile)

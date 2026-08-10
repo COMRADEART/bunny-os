@@ -45,7 +45,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
-from typing import Mapping
+from typing import Callable, Mapping
 import time
 
 # The installed tree, but only when the checkout is not already importable.
@@ -730,9 +730,14 @@ def _recorded_phase(event: object) -> tuple[int, str]:
 
 
 def _wait_for_speech(
-    connection: CompanionClient, request_id: str, *, deadline: float
+    connection: CompanionClient,
+    request_id: str,
+    *,
+    deadline: float,
+    on_audio_started: Callable[[Mapping[str, object]], None] | None = None,
 ) -> tuple[str, str]:
-    """Wait for one accepted TTS request; return disposition and detail."""
+    """Wait for one accepted TTS request; report TALKING from real playback."""
+    audio_reported = False
     while time.monotonic() <= deadline:
         try:
             status = connection.call("voice_status", {})
@@ -740,12 +745,20 @@ def _wait_for_speech(
             return "failed", str(exc)
         events = status.get("recentEvents", [])
         if isinstance(events, list):
-            for event in reversed(events):
+            # Events are retained in production order.  Scan forward so an
+            # utterance short enough to start and finish between polls still
+            # announces its real audio start before its terminal event.
+            for event in events:
                 if not isinstance(event, Mapping):
                     continue
                 if str(event.get("requestId") or "") != request_id:
                     continue
                 kind = str(event.get("kind") or "")
+                if kind == "audio_started" and not audio_reported:
+                    audio_reported = True
+                    if on_audio_started is not None:
+                        on_audio_started(event)
+                    continue
                 if kind == "speech_finished":
                     return "finished", ""
                 if kind in ("speech_cancelled", "speech_interrupted"):
@@ -774,12 +787,21 @@ def _speak_result(
     if not answer.get("accepted"):
         return "failed", str(answer.get("reason") or "speech output is unavailable")
     request_id = str(answer.get("requestId") or "")
-    emit(
-        "speech_started", requestId=request_id, taskId=task_id,
-        cancellationToken=answer.get("cancellationToken", ""),
+
+    def _audio_started(event: Mapping[str, object]) -> None:
+        emit(
+            "speech_started", requestId=request_id, taskId=task_id,
+            cancellationToken=answer.get("cancellationToken", ""),
+            providerId=event.get("providerId", ""),
+            backendId=event.get("backendId", ""),
+            deviceId=event.get("deviceId", ""),
+        )
+        emit("phase", phase="speaking", statusText="Speaking...", taskId=task_id)
+
+    disposition, detail = _wait_for_speech(
+        connection, request_id, deadline=deadline,
+        on_audio_started=_audio_started,
     )
-    emit("phase", phase="speaking", statusText="Speaking...", taskId=task_id)
-    disposition, detail = _wait_for_speech(connection, request_id, deadline=deadline)
     emit("speech_finished", requestId=request_id, taskId=task_id, disposition=disposition)
     return disposition, detail
 

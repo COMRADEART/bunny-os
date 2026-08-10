@@ -44,6 +44,7 @@ from dataclasses import asdict, dataclass, field, replace
 import json
 import os
 from pathlib import Path
+import re
 import tempfile
 from typing import Any, Mapping
 
@@ -66,6 +67,16 @@ SETTINGS_FILE_NAME = "settings.json"
 SETTINGS_SCHEMA_VERSION = 1
 
 _MAX_FILE_BYTES = 64 * 1024
+
+# Provider-owned model identifiers accepted by the settings schema. This is a
+# validation boundary, not a claim that every model is installed: Settings can
+# retain an optional Kitten choice and the provider reports its availability.
+VOICE_PROVIDER_MODELS: Mapping[str, tuple[str, ...]] = {
+    "pocket": ("english",),
+    "kitten": ("nano-int8", "nano", "micro", "mini"),
+    "espeak-ng": (),
+    "speech-dispatcher": (),
+}
 
 #: Key names that must never appear in this document at any depth. Checked on
 #: every read and every write. A settings file that arrived with one of these is
@@ -135,13 +146,32 @@ class VoiceSettings:
 
     enabled: bool = True
     response_mode: str = "voice-only"
+    provider_id: str = "pocket"
+    model_id: str = ""
     voice_id: str = ""
     speaking_rate: float = 1.0
     volume: float = 1.0
+    performance_mode: str = "automatic"
 
     def __post_init__(self) -> None:
         if self.response_mode not in ("voice-only", "all", "never"):
             raise SettingsError("voice.responseMode is 'voice-only', 'all' or 'never'")
+        if self.provider_id not in VOICE_PROVIDER_MODELS:
+            raise SettingsError("voice.providerId is a supported local TTS provider")
+        if self.model_id and (
+            len(self.model_id) > 64 or not re.match(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$", self.model_id)
+        ):
+            raise SettingsError("voice.modelId is an installed model id, never a path")
+        if self.model_id and self.model_id not in VOICE_PROVIDER_MODELS[self.provider_id]:
+            raise SettingsError(
+                f"voice.modelId {self.model_id!r} is not a model declared by {self.provider_id!r}"
+            )
+        if self.voice_id and (
+            len(self.voice_id) > 64 or not re.match(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$", self.voice_id)
+        ):
+            raise SettingsError("voice.voiceId is an installed voice id, never a path")
+        if self.performance_mode not in ("automatic", "quality", "low-resource"):
+            raise SettingsError("voice.performanceMode is 'automatic', 'quality' or 'low-resource'")
         object.__setattr__(self, "speaking_rate", _clamp(self.speaking_rate, 0.5, 2.0))
         object.__setattr__(self, "volume", _clamp(self.volume, 0.0, 1.0))
 
@@ -296,12 +326,21 @@ class Settings:
     def voice_preferences(self) -> Any:
         from .voice.policy import VoicePreferences
 
+        if self.voice.performance_mode == "low-resource":
+            provider_id, model_id = "kitten", "nano-int8"
+        elif self.voice.performance_mode == "quality":
+            provider_id, model_id = "pocket", "english"
+        else:
+            provider_id, model_id = self.voice.provider_id, self.voice.model_id
         return VoicePreferences(
             enabled=(self.voice.enabled and self.voice.response_mode != "never"),
             response_mode=self.voice.response_mode,
+            provider_id=provider_id,
+            model_id=model_id,
             voice_id=self.voice.voice_id,
             speaking_rate=self.voice.speaking_rate,
             volume=self.voice.volume,
+            performance_mode=self.voice.performance_mode,
         )
 
     def speech_preferences(self) -> Any:
@@ -330,9 +369,12 @@ class Settings:
             "voice": {
                 "enabled": self.voice.enabled,
                 "responseMode": self.voice.response_mode,
+                "providerId": self.voice.provider_id,
+                "modelId": self.voice.model_id,
                 "voiceId": self.voice.voice_id,
                 "speakingRate": self.voice.speaking_rate,
                 "volume": self.voice.volume,
+                "performanceMode": self.voice.performance_mode,
             },
             "speechInput": {
                 "enabled": self.speech_input.enabled,
@@ -416,9 +458,12 @@ class Settings:
             voice=VoiceSettings(
                 enabled=flag(voice, "enabled", True),
                 response_mode=text(voice, "responseMode", "voice-only"),
+                provider_id=text(voice, "providerId", "pocket"),
+                model_id=text(voice, "modelId"),
                 voice_id=text(voice, "voiceId"),
                 speaking_rate=number(voice, "speakingRate", 1.0),
                 volume=number(voice, "volume", 1.0),
+                performance_mode=text(voice, "performanceMode", "automatic"),
             ),
             speech_input=SpeechInputSettings(
                 enabled=flag(speech, "enabled", True),

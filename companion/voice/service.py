@@ -194,9 +194,21 @@ class VoiceService:
         healths = self.router.observe()
         audio_available = any(item.ready for item in healths)
         provider_healths = self.registry.health(monotonic=self.clock.monotonic())
-        provider_available = any(item.ready for item in provider_healths)
+        # Neural providers deliberately verify their installation outside the
+        # caller's thread and load inference only when selected. These states
+        # mean "installed and becoming usable", not "this machine has no local
+        # voice". Keeping the policy speech-capable lets
+        # registry selection move down to Kitten/eSpeak/Speech Dispatcher for
+        # this utterance; once the cached probe becomes READY, later requests
+        # select Pocket normally.  A genuinely missing/corrupt provider still
+        # reports one of the unavailable states and is not counted here.
+        provider_available = any(
+            item.ready or item.status in ("INITIALIZING", "MODEL_VERIFIED")
+            for item in provider_healths
+        )
         synthesis_available = any(
-            item.ready and provider.declaration.supports_synthesis
+            (item.ready or item.status in ("INITIALIZING", "MODEL_VERIFIED"))
+            and provider.declaration.supports_synthesis
             for item, provider in zip(provider_healths, self.registry)
         )
         signals = signals_from_capability(
@@ -310,6 +322,8 @@ class VoiceService:
             caption,
             priority=priority,
             interruption_policy=interruption_policy,
+            provider_id=preferences.provider_id,
+            model_id=preferences.model_id,
             voice_id=voice_id or preferences.voice_id,
             language=preferences.language,
             locale=preferences.locale,

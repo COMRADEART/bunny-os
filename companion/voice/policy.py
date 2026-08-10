@@ -103,6 +103,8 @@ class VoicePreferences:
     """
 
     enabled: bool = True
+    provider_id: str = "pocket"
+    model_id: str = ""
     voice_id: str = ""
     language: str = "en"
     locale: str = "en-GB"
@@ -125,14 +127,21 @@ class VoicePreferences:
     #: Which request origins should be spoken. Policy still decides whether
     #: this machine can speak; this setting can only make output quieter.
     response_mode: str = "voice-only"
+    performance_mode: str = "automatic"
 
     def __post_init__(self) -> None:
         if self.response_mode not in ("voice-only", "all", "never"):
             raise ValueError("response_mode is 'voice-only', 'all' or 'never'")
+        if self.provider_id not in ("pocket", "kitten", "espeak-ng", "speech-dispatcher"):
+            raise ValueError("provider_id is a supported local TTS provider")
+        if self.performance_mode not in ("automatic", "quality", "low-resource"):
+            raise ValueError("performance_mode is 'automatic', 'quality' or 'low-resource'")
 
     def to_json(self) -> dict[str, Any]:
         return {
             "enabled": self.enabled,
+            "providerId": self.provider_id,
+            "modelId": self.model_id,
             "voiceId": self.voice_id,
             "language": self.language,
             "locale": self.locale,
@@ -145,6 +154,7 @@ class VoicePreferences:
             "screenReaderActive": self.screen_reader_active,
             "preferredDevice": self.preferred_device,
             "responseMode": self.response_mode,
+            "performanceMode": self.performance_mode,
         }
 
 

@@ -47,7 +47,7 @@ honour rather than letting the worker discover it at the subprocess.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Mapping, Protocol, Sequence, runtime_checkable
+from typing import Any, Callable, Iterable, Mapping, Protocol, Sequence, runtime_checkable
 
 from ..privacy import rank
 from .execution import CancellationSignal, CommandOutcome, PrivateWorkspace
@@ -111,6 +111,7 @@ class ProviderDeclaration:
     """
 
     provider_id: str
+    display_name: str = ""
     #: Which *build* of the provider this is — a version, a data revision, the
     #: thing that changes when the same provider id starts sounding different.
     #: Recorded on every utterance so a measurement can be attributed.
@@ -141,6 +142,10 @@ class ProviderDeclaration:
     #: accuracy that has not been measured, and none has been.
     provides_phoneme_timing: bool = False
     provides_native_visemes: bool = False
+    #: Installed model ids exposed to settings.  Empty for engines whose model
+    #: is part of the system package rather than a user choice.
+    models: tuple[str, ...] = ()
+    default_model_id: str = ""
     #: How the provider was resolved. ``False`` means it was found outside
     #: :data:`companion.voice.execution.TRUSTED_DIRECTORIES`, which the installed
     #: system never does; carried so a report can say which platform it is about.
@@ -230,6 +235,7 @@ class ProviderDeclaration:
     def to_json(self) -> dict[str, Any]:
         return {
             "providerId": self.provider_id,
+            "displayName": self.display_name or self.provider_id,
             "implementationId": self.implementation_id,
             "languages": list(self.languages),
             "locales": list(self.locales),
@@ -247,6 +253,8 @@ class ProviderDeclaration:
             "requiresAuthentication": self.requires_authentication,
             "providesPhonemeTiming": self.provides_phoneme_timing,
             "providesNativeVisemes": self.provides_native_visemes,
+            "models": list(self.models),
+            "defaultModelId": self.default_model_id,
             "trustedResolution": self.trusted_resolution,
             "fullyDeclared": self.fully_declared,
             "remoteTransmission": not self.local,
@@ -263,13 +271,16 @@ class ProviderHealth:
     authenticated: bool = True
     healthy: bool = True
     detail: str = ""
+    #: Stable machine-readable readiness state.  Settings renders ``detail``;
+    #: diagnostics and tests use this value without parsing prose.
+    status: str = ""
     #: The monotonic reading this was taken at. Health is cached — probing a
     #: binary's existence on every utterance is a stat call per word — and a
     #: cached answer with no timestamp is an answer nobody can age out.
     checked_at_monotonic: float = 0.0
-    #: How many consecutive failures this provider has had. §12's fallback is
-    #: "once, then captions", and this is the counter that makes "once" mean
-    #: once rather than forever.
+    #: How many consecutive failures this provider has had. The fixed local
+    #: ladder uses it for diagnostics; one utterance never retries the same
+    #: failed provider.
     consecutive_failures: int = 0
 
     @property
@@ -284,6 +295,7 @@ class ProviderHealth:
             "healthy": self.healthy,
             "ready": self.ready,
             "detail": self.detail,
+            "status": self.status or ("READY" if self.ready else "UNAVAILABLE"),
             "checkedAtMonotonic": self.checked_at_monotonic,
             "consecutiveFailures": self.consecutive_failures,
         }
@@ -435,6 +447,7 @@ class VoiceProvider(Protocol):
         request: VoiceRequest,
         *,
         cancellation: CancellationSignal | None = None,
+        on_started: Callable[[], None] | None = None,
     ) -> StreamOutcome:
         """Speak directly, with the provider owning playback."""
 
@@ -523,7 +536,8 @@ class ProviderRegistry:
         voices: list[VoiceDescriptor] = []
         for provider in self._providers:
             try:
-                if not provider.health().available:
+                health = provider.health()
+                if not health.available and health.status not in ("INITIALIZING", "MODEL_VERIFIED"):
                     continue
                 voices.extend(provider.inventory())
             except Exception:  # noqa: BLE001 - an inventory must never break a list
@@ -541,16 +555,23 @@ class ProviderRegistry:
         exclude: Iterable[str] = (),
         require_synthesis: bool = False,
         require_streaming: bool = False,
+        preferred_provider_id: str = "",
     ) -> SelectionResult:
         """The first provider in order that may and can serve this request.
 
-        ``exclude`` is how §12's "fall back once, then captions" is expressed:
-        the worker retries with the failed provider excluded, and if the next
-        pass selects nothing the answer is captions rather than a third attempt.
+        ``exclude`` carries providers already tried on this utterance. The
+        worker retries with failed providers excluded. It may descend the
+        complete fixed local ladder, but after the last eligible provider the
+        visible caption is the whole output.
         """
         skipped = set(exclude)
         rejected: list[tuple[str, tuple[str, ...]]] = []
-        for provider in self._providers:
+        preference_known = any(
+            provider.declaration.provider_id == preferred_provider_id
+            for provider in self._providers
+        ) if preferred_provider_id else False
+        providers = self._ordered_from(preferred_provider_id)
+        for provider in providers:
             declaration = provider.declaration
             name = declaration.provider_id
             if name in skipped:
@@ -564,6 +585,23 @@ class ProviderRegistry:
                 problems.append(f"{name!r} cannot stream")
             if permitted and not problems:
                 health = provider.health(monotonic=monotonic)
+                # Neural providers verify their pinned assets asynchronously so
+                # companion startup never waits for model I/O, then load only
+                # the provider selected for the utterance. Selection runs on
+                # the dedicated voice worker, where waiting is safe and keeps
+                # the first response from skipping Pocket during cold startup.
+                if not health.ready and health.status in ("INITIALIZING", "MODEL_VERIFIED"):
+                    try:
+                        health = provider.health(monotonic=monotonic, refresh=True)
+                    except Exception as exc:  # noqa: BLE001 - selection falls down safely
+                        health = ProviderHealth(
+                            provider_id=name,
+                            available=False,
+                            healthy=False,
+                            detail=f"readiness refresh failed: {type(exc).__name__}",
+                            status="WORKER_FAILED",
+                            checked_at_monotonic=monotonic,
+                        )
                 if not health.ready:
                     problems.append(
                         f"{name!r} is not ready" + (f": {health.detail}" if health.detail else "")
@@ -571,7 +609,13 @@ class ProviderRegistry:
             if problems:
                 rejected.append((name, tuple(problems)))
                 continue
-            voice = _choose_voice(provider, request)
+            voice = _choose_voice(
+                provider,
+                request,
+                honour_named_voice=(
+                    not preference_known or name == preferred_provider_id
+                ),
+            )
             if voice is None:
                 rejected.append((name, (f"{name!r} has no installed voice matching the request",)))
                 continue
@@ -588,6 +632,21 @@ class ProviderRegistry:
             detail="no eligible local voice provider; the caption is the whole of the output",
         )
 
+    def _ordered_from(self, preferred_provider_id: str) -> list[VoiceProvider]:
+        """The fixed degradation ladder beginning at the user's preference.
+
+        A preference may move the starting point down the declared order; it
+        cannot smuggle in an unregistered provider and it never climbs back to a
+        heavier provider after failure.  Thus low-resource Kitten degrades to
+        eSpeak and Speech Dispatcher, not back to Pocket.
+        """
+        if not preferred_provider_id:
+            return list(self._providers)
+        for index, provider in enumerate(self._providers):
+            if provider.declaration.provider_id == preferred_provider_id:
+                return list(self._providers[index:])
+        return list(self._providers)
+
     def close(self) -> None:
         for provider in self._providers:
             try:
@@ -596,7 +655,12 @@ class ProviderRegistry:
                 continue
 
 
-def _choose_voice(provider: VoiceProvider, request: VoiceRequest) -> VoiceDescriptor | None:
+def _choose_voice(
+    provider: VoiceProvider,
+    request: VoiceRequest,
+    *,
+    honour_named_voice: bool = True,
+) -> VoiceDescriptor | None:
     """The voice a request names, or the provider's default for its language.
 
     A named voice that is not installed returns ``None`` rather than quietly
@@ -609,7 +673,7 @@ def _choose_voice(provider: VoiceProvider, request: VoiceRequest) -> VoiceDescri
         return None
     if not voices:
         return None
-    if request.voice_id:
+    if request.voice_id and honour_named_voice:
         for voice in voices:
             if voice.voice_id == request.voice_id:
                 return voice

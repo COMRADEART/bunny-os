@@ -699,7 +699,7 @@ export class DesktopShell {
         // as a page load rather than as somebody saying hello.
         this._greetTimer = timeout(700, () => {
             this._bubble.say(`${salutation}!\n\n${agendaLine}\n\nShall we get started?`);
-            this.characterState.setState('talking', {reason: 'greeting'});
+            this.characterState.setState('success', {reason: 'greeting'});
             this._returnToIdleAfterTalking();
         });
     }
@@ -778,7 +778,7 @@ export class DesktopShell {
     _activateAssistant() {
         log_('assistant activated; the text input has focus');
         this.characterState.noteActivity();
-        this._bubble?.say('Ready when you are. Type a request or press the microphone.', {wave: true});
+        this._bubble?.say('Ready when you are. Type a request or press the microphone.', {wave: false});
         this._assistantPanel?.focusInput();
     }
 
@@ -884,13 +884,9 @@ export class DesktopShell {
                 // and already has the whole thing from `addTurn` above.
                 this._bubble?.say(reply, {
                     tone: isError ? 'error' : 'normal',
-                    wave: !isError,
+                    wave: false,
                     onOpenFull: () => this._assistantPanel?.focusInput(),
                 });
-                if (!isError) {
-                    this.characterState.setState('talking', {reason: 'delivering the answer'});
-                    this._returnToIdleAfterTalking();
-                }
             },
             onFileResults: (results, meta) => {
                 if (this._owns(meta))
@@ -901,22 +897,27 @@ export class DesktopShell {
                     return;
                 this._voicePhase = 'speaking';
                 this._assistantPanel?.setVoiceState(false, 'speaking');
+                this._bubble?.setSpeaking(true);
                 this.characterState.setState('talking', {reason: 'speaking the typed response'});
             },
             onSpeechFinished: (_speech, meta) => {
-                if (this._owns(meta))
+                if (this._owns(meta)) {
                     this._voicePhase = 'idle';
+                    this._bubble?.setSpeaking(false);
+                }
             },
             onSpeechError: (reason, meta) => {
                 if (!this._owns(meta))
                     return;
                 this._voicePhase = 'idle';
+                this._bubble?.setSpeaking(false);
                 this.notifications.warning(`Bunny could not speak: ${reason}`);
             },
             onFinished: (phase, meta) => {
                 if (!this._owns(meta))
                     return;
                 this._voicePhase = 'idle';
+                this._bubble?.setSpeaking(false);
                 this._assistantPanel?.clearApproval();
                 this._assistantPanel?.setBusy(false);
                 this._assistantPanel?.setStatus('');
@@ -1145,7 +1146,7 @@ export class DesktopShell {
                 this._assistantPanel?.addTurn('bunny', reply, {tone: isError ? 'error' : 'normal'});
                 this._bubble?.say(reply, {
                     tone: isError ? 'error' : 'normal',
-                    wave: !isError,
+                    wave: false,
                     onOpenFull: () => this._assistantPanel?.focusInput(),
                 });
             },
@@ -1158,17 +1159,27 @@ export class DesktopShell {
                     return;
                 this._voicePhase = 'speaking';
                 this._assistantPanel?.setVoiceState(false, 'speaking');
+                this._bubble?.setSpeaking(true);
                 this.characterState.setState('talking', {reason: 'speaking the response'});
+            },
+            onSpeechFinished: (_speech, meta) => {
+                if (!this._ownsVoice(meta))
+                    return;
+                this._voicePhase = 'idle';
+                this._bubble?.setSpeaking(false);
             },
             onSpeechError: (reason, meta) => {
                 if (!this._ownsVoice(meta))
                     return;
+                this._voicePhase = 'idle';
+                this._bubble?.setSpeaking(false);
                 this._assistantPanel?.setStatus(`Response displayed; speech unavailable: ${reason}`);
                 this.notifications.warning(`Bunny could not speak: ${reason}`);
             },
             onWarning: (reason, meta) => {
                 if (!this._ownsVoice(meta))
                     return;
+                this._bubble?.setSpeaking(false);
                 this._assistantPanel?.addTurn('bunny', reason, {tone: 'error'});
                 this._assistantPanel?.setStatus(reason);
                 this.characterState.setState('warning', {reason});
@@ -1177,6 +1188,7 @@ export class DesktopShell {
             onFinished: (phase, meta) => {
                 if (!this._ownsVoice(meta))
                     return;
+                this._bubble?.setSpeaking(false);
                 this._setMicrophoneVisible(false);
                 this._assistantPanel?.clearApproval();
                 this._assistantPanel?.setVoiceState(false);
@@ -1195,6 +1207,7 @@ export class DesktopShell {
                 if (!this._ownsVoice(meta))
                     return;
                 this._voicePhase = 'idle';
+                this._bubble?.setSpeaking(false);
                 this._assistantPanel?.clearApproval();
                 this._failRequest(reason, {retry: null});
             },

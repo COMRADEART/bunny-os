@@ -171,8 +171,8 @@ class Parameter:
     required: bool = False
     default: Any = None
     maximum_length: int = 8192
-    minimum: int = 0
-    maximum: int = 1 << 31
+    minimum: float = 0
+    maximum: float = 1 << 31
 
     def coerce(self, value: Any) -> Any:
         if self.kind == "string":
@@ -195,6 +195,14 @@ class Parameter:
                     f"{self.name} must be between {self.minimum} and {self.maximum}"
                 )
             return value
+        if self.kind == "number":
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise ProtocolError(f"{self.name} must be a number")
+            if not self.minimum <= float(value) <= self.maximum:
+                raise ProtocolError(
+                    f"{self.name} must be between {self.minimum} and {self.maximum}"
+                )
+            return float(value)
         if self.kind == "boolean":
             if not isinstance(value, bool):
                 raise ProtocolError(f"{self.name} must be true or false")
@@ -362,6 +370,11 @@ OPERATIONS: Mapping[str, Operation] = {
                 Parameter("language", "string", required=True, maximum_length=16),
                 Parameter("shortcut", "string", required=True, maximum_length=64),
                 Parameter("wakeWord", "string", required=True, maximum_length=16),
+                Parameter("ttsProviderId", "string", default=None, maximum_length=32),
+                Parameter("ttsModelId", "string", default=None, maximum_length=64),
+                Parameter("ttsVoiceId", "string", default=None, maximum_length=64),
+                Parameter("speakingRate", "number", default=None, minimum=0.5, maximum=2.0),
+                Parameter("performanceMode", "string", default=None, maximum_length=16),
             ),
             mutating=True,
         ),

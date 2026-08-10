@@ -62,8 +62,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 import errno
+import json
 import os
 from pathlib import Path
+import queue
 import shutil
 import signal
 import stat
@@ -71,7 +73,7 @@ import subprocess
 import sys
 import tempfile
 import threading
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 __all__ = [
     "ALLOWED_EXECUTABLES",
@@ -79,12 +81,14 @@ __all__ = [
     "CommandOutcome",
     "CommandSpec",
     "ExecutableRefused",
+    "PersistentJsonWorker",
     "PrivateWorkspace",
     "TRUSTED_DIRECTORIES",
     "child_environment",
     "redacted_argv",
     "resolve_executable",
     "run",
+    "WorkerProtocolError",
 ]
 
 #: Every program this package may start, by base name. A name absent from this
@@ -96,7 +100,7 @@ __all__ = [
 #: are local binaries handed bounded arguments by the same runner.
 ALLOWED_EXECUTABLES = frozenset({
     # Synthesis
-    "spd-say", "espeak-ng", "espeak", "say",
+    "spd-say", "espeak-ng", "espeak", "say", "bunny-voice-neural-worker",
     # Playback
     "paplay", "pw-play", "aplay",
     # Device enumeration
@@ -150,6 +154,10 @@ _ENVIRONMENT_DENYLIST = frozenset({
 
 class ExecutableRefused(RuntimeError):
     """A program may not be run, with the reason stated rather than implied."""
+
+
+class WorkerProtocolError(RuntimeError):
+    """A private worker failed or returned data outside its bounded protocol."""
 
 
 # --------------------------------------------------------------------------- #
@@ -780,6 +788,7 @@ def run(
     cancellation: CancellationSignal | None = None,
     monotonic: Any = None,
     poll_interval: float = 0.02,
+    on_started: Callable[[], None] | None = None,
 ) -> CommandOutcome:
     """Start one program, wait for it, and leave nothing behind.
 
@@ -805,6 +814,11 @@ def run(
     cancelled = False
     deadline = started + max(0.0, spec.timeout_seconds)
     try:
+        # Popen succeeding is the earliest evidence available for a provider
+        # that owns its audio stream. Never announce it for a child that failed
+        # to start or had already exited while its input was being delivered.
+        if on_started is not None and child.poll() is None:
+            on_started()
         while True:
             if child.poll() is not None:
                 break
@@ -826,11 +840,226 @@ def run(
                 grace_seconds=spec.grace_seconds,
                 kill_grace_seconds=spec.kill_grace_seconds,
             )
+    except BaseException:
+        if child.poll() is None:
+            child.terminate(
+                grace_seconds=spec.grace_seconds,
+                kill_grace_seconds=spec.kill_grace_seconds,
+            )
+        raise
     finally:
         child.finish()
     return child.outcome(
         duration_seconds=now() - started, timed_out=timed_out, cancelled=cancelled
     )
+
+
+class PersistentJsonWorker:
+    """One long-lived, line-delimited JSON child with bounded lifecycle.
+
+    Neural speech models are too expensive to reload for every sentence.  This
+    is the only persistent ``Popen`` in the voice package, keeping the same
+    allowlist, environment, process-group and terminate-then-kill rules as
+    :class:`Child`.  Calls are serial: a provider model is not thread-safe and
+    the voice worker itself has one audio floor.
+    """
+
+    MAX_MESSAGE_BYTES = 64 * 1024
+
+    def __init__(
+        self,
+        executable: str,
+        arguments: Sequence[str] = (),
+        *,
+        environment: Mapping[str, str] | None = None,
+        working_directory: str = "",
+        grace_seconds: float = 1.0,
+        kill_grace_seconds: float = 2.0,
+    ) -> None:
+        name = Path(executable).name
+        if name not in ALLOWED_EXECUTABLES:
+            raise ExecutableRefused(f"{name!r} is not an allowed voice executable")
+        if any("\0" in str(item) for item in arguments):
+            raise ExecutableRefused("a worker argument contains a NUL")
+        self.executable = str(executable)
+        self.arguments = tuple(str(item) for item in arguments)
+        self.environment = dict(environment or {})
+        self.working_directory = str(working_directory)
+        self.grace_seconds = max(0.05, float(grace_seconds))
+        self.kill_grace_seconds = max(0.05, float(kill_grace_seconds))
+        self._process: subprocess.Popen[bytes] | None = None
+        self._responses: "queue.Queue[bytes | None]" = queue.Queue()
+        self._stdout_reader: threading.Thread | None = None
+        self._stderr_reader: threading.Thread | None = None
+        self._stderr: list[bytes] = []
+        self._guard = threading.RLock()
+        self._call_guard = threading.Lock()
+
+    @property
+    def started(self) -> bool:
+        with self._guard:
+            return self._process is not None and self._process.poll() is None
+
+    @property
+    def pid(self) -> int:
+        with self._guard:
+            return self._process.pid if self._process is not None else -1
+
+    @property
+    def stderr(self) -> str:
+        body, _truncated = _bounded(b"".join(self._stderr))
+        return body
+
+    def _start(self) -> subprocess.Popen[bytes]:
+        with self._guard:
+            if self._process is not None and self._process.poll() is None:
+                return self._process
+            self._responses = queue.Queue()
+            self._stderr = []
+            extra: dict[str, Any] = {}
+            if os.name == "posix":
+                extra["start_new_session"] = True
+            try:
+                process = subprocess.Popen(  # noqa: S603 - fixed argv, never a shell
+                    [self.executable, *self.arguments],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=child_environment(extra=self.environment),
+                    cwd=self.working_directory or None,
+                    close_fds=True,
+                    shell=False,
+                    **extra,
+                )
+            except OSError as exc:
+                raise WorkerProtocolError(f"the neural voice worker did not start: {exc.strerror or exc}") from exc
+            self._process = process
+            responses = self._responses
+
+            def _read_stdout() -> None:
+                stream = process.stdout
+                try:
+                    if stream is not None:
+                        while True:
+                            line = stream.readline(self.MAX_MESSAGE_BYTES + 1)
+                            if not line:
+                                break
+                            responses.put(line)
+                except (OSError, ValueError):
+                    pass
+                finally:
+                    responses.put(None)
+
+            def _read_stderr() -> None:
+                stream = process.stderr
+                try:
+                    if stream is not None:
+                        self._stderr.append(stream.read(MAX_STDERR_BYTES * 4))
+                except (OSError, ValueError):
+                    pass
+
+            self._stdout_reader = threading.Thread(
+                target=_read_stdout, name="voice-neural-stdout", daemon=True
+            )
+            self._stderr_reader = threading.Thread(
+                target=_read_stderr, name="voice-neural-stderr", daemon=True
+            )
+            self._stdout_reader.start()
+            self._stderr_reader.start()
+            return process
+
+    def call(self, document: Mapping[str, Any], *, timeout_seconds: float) -> dict[str, Any]:
+        """Send one private request and receive one bounded object response."""
+        try:
+            payload = json.dumps(document, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        except (TypeError, ValueError) as exc:
+            raise WorkerProtocolError("the neural worker request is not JSON serialisable") from exc
+        if not payload or len(payload) > self.MAX_MESSAGE_BYTES:
+            raise WorkerProtocolError(
+                f"the neural worker request is {len(payload)} bytes against a "
+                f"{self.MAX_MESSAGE_BYTES}-byte limit"
+            )
+
+        with self._call_guard:
+            process = self._start()
+            stream = process.stdin
+            if stream is None:
+                self.stop()
+                raise WorkerProtocolError("the neural voice worker has no input pipe")
+            try:
+                stream.write(payload + b"\n")
+                stream.flush()
+            except (BrokenPipeError, OSError, ValueError) as exc:
+                detail = self.stderr
+                self.stop()
+                raise WorkerProtocolError(
+                    "the neural voice worker stopped before accepting a request"
+                    + (f": {detail}" if detail else "")
+                ) from exc
+
+            try:
+                raw = self._responses.get(timeout=max(0.05, float(timeout_seconds)))
+            except queue.Empty as exc:
+                self.stop()
+                raise WorkerProtocolError("the neural voice worker timed out") from exc
+            if raw is None:
+                detail = self.stderr
+                self.stop()
+                raise WorkerProtocolError(
+                    "the neural voice worker exited without a response"
+                    + (f": {detail}" if detail else "")
+                )
+            if len(raw) > self.MAX_MESSAGE_BYTES:
+                self.stop()
+                raise WorkerProtocolError("the neural voice worker returned an oversized response")
+            try:
+                answer = json.loads(raw.decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                self.stop()
+                raise WorkerProtocolError("the neural voice worker returned malformed JSON") from exc
+            if not isinstance(answer, dict):
+                self.stop()
+                raise WorkerProtocolError("the neural voice worker response is not an object")
+            return answer
+
+    def stop(self) -> bool:
+        """Terminate the whole worker group and reap it. Safe after a crash."""
+        with self._guard:
+            process = self._process
+            self._process = None
+        if process is None:
+            return False
+        was_running = process.poll() is None
+        if was_running:
+            _signal_group(process, signal.SIGTERM)
+            try:
+                process.wait(timeout=self.grace_seconds)
+            except subprocess.TimeoutExpired:
+                _signal_group(process, getattr(signal, "SIGKILL", signal.SIGTERM))
+                try:
+                    process.wait(timeout=self.kill_grace_seconds)
+                except subprocess.TimeoutExpired:
+                    pass
+        else:
+            try:
+                process.wait(timeout=self.kill_grace_seconds)
+            except subprocess.TimeoutExpired:
+                pass
+        for stream in (process.stdin, process.stdout, process.stderr):
+            try:
+                if stream is not None and not stream.closed:
+                    stream.close()
+            except OSError:
+                pass
+        for reader in (self._stdout_reader, self._stderr_reader):
+            if reader is not None and reader is not threading.current_thread():
+                reader.join(timeout=self.grace_seconds)
+        self._stdout_reader = None
+        self._stderr_reader = None
+        return was_running
+
+    def close(self) -> None:
+        self.stop()
 
 
 def posix_only() -> bool:

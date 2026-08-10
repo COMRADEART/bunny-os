@@ -1199,6 +1199,9 @@ class CompanionGateway:
         devices: list[dict[str, Any]] = []
         recognizers: list[dict[str, Any]] = []
         readiness: dict[str, Any] = {}
+        tts_providers: list[dict[str, Any]] = []
+        tts_voices: list[dict[str, Any]] = []
+        fallback_warning = ""
         if self.speech is not None:
             try:
                 devices = list(self.speech.speech_input_devices().get("devices", []))
@@ -1207,10 +1210,41 @@ class CompanionGateway:
                 readiness = dict(speech_health.get("readiness", {}))
             except Exception:  # noqa: BLE001 - inventory never blocks settings
                 devices, recognizers, readiness = [], [], {}
+        if self.voice is not None:
+            try:
+                health = self.voice.voice_health()
+                by_id = {
+                    str(item.get("providerId") or ""): dict(item)
+                    for item in health.get("providers", [])
+                    if isinstance(item, Mapping)
+                }
+                for provider in self.voice.registry:
+                    provider_id = provider.declaration.provider_id
+                    report = by_id.get(provider_id, provider.declaration.to_json())
+                    model_health = getattr(provider, "model_health", None)
+                    report["modelHealth"] = (
+                        list(model_health()) if callable(model_health) else []
+                    )
+                    tts_providers.append(report)
+                tts_voices = list(self.voice.voice_list(language="en", limit=128).get("voices", []))
+                recent = self.voice.voice_status().get("recentEvents", [])
+                for event in reversed(recent if isinstance(recent, list) else []):
+                    if isinstance(event, Mapping) and event.get("kind") == "speech_provider_fallback":
+                        payload = event.get("payload")
+                        if isinstance(payload, Mapping):
+                            fallback_warning = str(payload.get("detail") or "")
+                        break
+            except Exception:  # noqa: BLE001 - an unavailable TTS never blocks settings
+                tts_providers, tts_voices, fallback_warning = [], [], ""
         return {
             "voiceInput": settings.speech_input.enabled,
             "speechResponses": settings.voice.enabled,
             "responseMode": settings.voice.response_mode,
+            "ttsProviderId": settings.voice.provider_id,
+            "ttsModelId": settings.voice.model_id,
+            "ttsVoiceId": settings.voice.voice_id,
+            "speakingRate": settings.voice.speaking_rate,
+            "performanceMode": settings.voice.performance_mode,
             "deviceId": settings.speech_input.device_id,
             "modelId": settings.speech_input.model_id,
             "language": settings.speech_input.language,
@@ -1219,6 +1253,9 @@ class CompanionGateway:
             "devices": devices[:64],
             "recognizers": recognizers,
             "readiness": readiness,
+            "ttsProviders": tts_providers,
+            "ttsVoices": tts_voices,
+            "ttsFallbackWarning": fallback_warning,
             "modelDownloadAutomatic": False,
             "wakeWordAvailable": False,
         }
@@ -1240,6 +1277,11 @@ class CompanionGateway:
         language: str,
         shortcut: str,
         wakeWord: str,
+        ttsProviderId: str | None = None,
+        ttsModelId: str | None = None,
+        ttsVoiceId: str | None = None,
+        speakingRate: float | None = None,
+        performanceMode: str | None = None,
     ) -> dict[str, Any]:
         if self.settings_root is None:
             raise CompanionError("this runtime has no writable settings root")
@@ -1254,9 +1296,16 @@ class CompanionGateway:
         voice = VoiceSettings(
             enabled=bool(speechResponses),
             response_mode=responseMode,
-            voice_id=current.voice.voice_id,
-            speaking_rate=current.voice.speaking_rate,
+            provider_id=ttsProviderId if ttsProviderId is not None else current.voice.provider_id,
+            model_id=ttsModelId if ttsModelId is not None else current.voice.model_id,
+            voice_id=ttsVoiceId if ttsVoiceId is not None else current.voice.voice_id,
+            speaking_rate=(
+                float(speakingRate) if speakingRate is not None else current.voice.speaking_rate
+            ),
             volume=current.voice.volume,
+            performance_mode=(
+                performanceMode if performanceMode is not None else current.voice.performance_mode
+            ),
         )
         speech = SpeechInputSettings(
             enabled=bool(voiceInput),
@@ -2226,13 +2275,21 @@ class CompanionService:
         The captions are unaffected and every ``voice_*`` operation reports the
         absence.
         """
+        from .settings import load_settings
         from .voice.service import VoiceService, VoiceServiceOptions
 
         assert self.runtime is not None
         try:
+            preferences = self.options.voice_preferences
+            if preferences is None:
+                # The settings surface writes into the same durable root that
+                # owns the companion store.  An explicit ServiceOptions value
+                # remains the test/deployment override; the normal login path
+                # must restore the user's last saved choice after a restart.
+                preferences = load_settings(self.root).voice_preferences()
             return VoiceService(VoiceServiceOptions(
                 runtime_directory=self.root / "voice",
-                preferences=self.options.voice_preferences or VoicePreferences(),
+                preferences=preferences,
                 clock=self.runtime.clock,
                 # Constructed here, started at step 6. The split is the whole
                 # point of having two steps: a constructed worker owns no
@@ -2252,13 +2309,17 @@ class CompanionService:
         speech input load-bearing for tasks. Typed input is unaffected and
         every ``speech_input_*`` operation reports the absence.
         """
+        from .settings import load_settings
         from .speech.service import SpeechInputService, SpeechInputServiceOptions
 
         assert self.runtime is not None
         try:
+            preferences = self.options.speech_preferences
+            if preferences is None:
+                preferences = load_settings(self.root).speech_preferences()
             return SpeechInputService(SpeechInputServiceOptions(
                 runtime_directory=self.root / "speech",
-                preferences=self.options.speech_preferences or SpeechInputPreferences(),
+                preferences=preferences,
                 clock=self.runtime.clock,
                 # A live proxy rather than the worker object: the voice
                 # service replaces its worker on restart, and a coordinator

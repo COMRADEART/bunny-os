@@ -47,7 +47,10 @@ or `companion.executor` fails the suite whatever it did with the import.
 | `request.py` | The versioned bounded schema; §7's priority ladder; interruption policy |
 | `execution.py` | Allowlisted argv-only execution, private workspaces, escalating termination |
 | `provider.py` | The provider-neutral contract and the registry |
-| `providers.py` | eSpeak NG and Speech Dispatcher — the only two, both real |
+| `providers.py` | Fixed Pocket → Kitten → eSpeak NG → Speech Dispatcher registry |
+| `neural.py` | Pocket/Kitten discovery, integrity, readiness, lifecycle and cancellation |
+| `neural_worker.py` | Isolated persistent PyTorch/ONNX inference process; no playback or network |
+| `chunking.py` | Sentence-aware bounded synthesis chunks |
 | `pcm.py` | WAV inspection and the amplitude envelope |
 | `audio.py` | Device discovery, playback, loss handling, backoff and hysteresis |
 | `captions.py` | Caption authority, the replay guard, §14's measurements |
@@ -135,6 +138,39 @@ sounds: a provider that "succeeded" emptily would make the worker record an
 utterance as *played*, which would make recovery believe there was nothing to
 reconcile, which would leave a user who heard nothing unable to tell a broken
 synthesiser from a silent one.
+
+### Pocket TTS
+
+Pocket TTS 2.1.0 is the default local CPU provider. The companion process never
+imports PyTorch: an allowlisted, persistent `bunny-voice-neural-worker` child
+loads the immutable English model and the prepared `caro_davy` voice state.
+The service checks the runtime, manifest, every model/voice size and SHA-256,
+then reports `MODEL_VERIFIED` without importing PyTorch at login. On first use,
+the dedicated voice worker loads the selected provider and proves model/voice
+initialization before reporting `READY`; Kitten is not loaded alongside Pocket.
+Cancellation kills and reaps that exact worker generation so old audio cannot
+leak into a newer request. A five-minute idle timer may unload the resident
+model.
+
+The official Pocket API exposes incremental generation, but Bunny's
+`AudioRouter` currently accepts complete WAV artifacts. This build therefore
+uses honest complete synthesis with sentence-aware chunks; it does not label a
+completed WAV as streaming. Playback, amplitude visemes and TALKING begin only
+after the shared audio backend reports that it started.
+
+### Kitten TTS
+
+Kitten TTS 0.8.1 is the explicit low-resource option, using the packaged Nano
+INT8 ONNX model, packaged voice archive and CPU Execution Provider. Its built-in
+voices are discovered from the integrity-checked model manifest. Phonemization
+uses the fixed packaged `/usr/bin/espeak-ng` helper inside the offline neural
+worker; the resulting PCM still returns to the shared `AudioRouter` rather than
+opening hardware in the provider.
+
+The fixed automatic degradation order is Pocket, Kitten, eSpeak NG, then Speech
+Dispatcher. A selected engine remains the starting point and the registry only
+moves downward. Each failed provider is excluded for the rest of that utterance,
+and all-provider failure leaves the already-visible caption intact.
 
 ### eSpeak NG
 
@@ -564,9 +600,10 @@ touched — this object has no reference to one.
 3. **Text-derived timing assumes even pacing**, which no synthesiser honours. It
    drifts on long utterances; §14 measures the drift and degrades rather than
    hiding it.
-4. **Streaming is provider-owned playback, not incremental delivery.** Nothing
-   here delivers partial audio, and a "streaming" provider costs amplitude
-   visemes, pause and resume.
+4. **Pocket incremental delivery is not wired yet.** Pocket and Kitten return
+   complete WAV artifacts to the shared audio router. Speech Dispatcher's
+   existing stream path is provider-owned playback and costs amplitude visemes,
+   pause and resume.
 5. **The GTK widget layer is not exercised by the voice slice.** It needs a
    compositor; step 14 is recorded `NOT_RUN`.
 6. **CPU during synthesis and during playback are not separable.** The figure is
@@ -582,6 +619,10 @@ touched — this object has no reference to one.
    provider owns the audio.
 10. **`espeak` (the older binary) is a declared fallback but has not been
     exercised**; only `espeak-ng` was available on the reference target.
+11. **Pocket and Kitten have no Bunny OS benchmark or audible acceptance yet.**
+    Cold/warm latency, first playable audio, real-time factor, peak memory,
+    average CPU, pronunciation quality and physical output remain unmeasured on
+    the exact image.
 
 ## 18. Unverified assumptions
 

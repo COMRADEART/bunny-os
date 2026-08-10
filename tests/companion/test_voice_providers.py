@@ -73,6 +73,7 @@ class AllowlistTests(unittest.TestCase):
     def test_the_allowlist_holds_only_synthesisers_players_and_enumerators(self) -> None:
         self.assertEqual(ALLOWED_EXECUTABLES, frozenset({
             "spd-say", "espeak-ng", "espeak", "say",
+            "bunny-voice-neural-worker",
             "paplay", "pw-play", "aplay",
             "pactl", "pw-dump", "spd-conf",
         }))
@@ -472,13 +473,13 @@ class RegistrySelectionTests(unittest.TestCase):
 
 
 class LocalProviderTests(unittest.TestCase):
-    """The two real adapters, whether or not this host has them installed."""
+    """All local adapters, whether or not this host has their runtime installed."""
 
-    def test_both_adapters_are_offered_even_when_their_programs_are_absent(self) -> None:
+    def test_all_adapters_are_offered_in_the_documented_fallback_order(self) -> None:
         registry = local_providers()
         self.assertEqual(
             [item.declaration.provider_id for item in registry],
-            ["espeak-ng", "speech-dispatcher"],
+            ["pocket", "kitten", "espeak-ng", "speech-dispatcher"],
         )
 
     def test_an_absent_program_reports_unavailable_rather_than_raising(self) -> None:
