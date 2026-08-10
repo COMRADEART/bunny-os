@@ -507,3 +507,69 @@ working Wayland stack. Until it is, the correct recorded state for every V4
 mandatory gate is `NOT_RUN` or `NOT_AVAILABLE` — never `PASS`.
 
 GNOME remains the supported architecture throughout.
+
+## After the Companion / App Capsule / Trust phase — 2026-08-10
+
+Branch `feature/bunny-companion-capsules-trust`, commits `fc1e58a` and `adce2c5`,
+branch point `262b06d`. Full report: `COMPANION_CAPSULES_TRUST_REPORT.md`.
+
+**Nothing below changes the release position.** `gate-stable-release` is still
+`NO-GO`, all three pilot gates are still `BLOCKED`, the vulnerability position is
+untouched, and there is still no hardware, no second signer, no independent
+review and no production key. This pass added a consumer experience to a system
+that cannot ship; that is worth doing and is not progress towards shipping.
+
+### What exists now that did not
+
+Three packages and their surfaces: `trust/` (seventeen permission categories,
+deny-by-default in its strong form, fail-closed everywhere, an audit that holds
+digests rather than paths), `capsules/` (one persistent sandbox per installed
+application over Flatpak, Bubblewrap and a systemd scope, with an isolation plan
+that starts empty and four refusals that raise), and `catalog/` (curated metadata
+with nothing that fetches, establishing the permission ceiling and carrying a
+curator's paragraph on how each option genuinely differs). Plus the §33 task
+slice, the Settings and workspace projections, the text consent surface, the
+installer conversation with its authority rule, and three importless shell
+modules. 248 tests; suite total 4,856.
+
+### The stop condition for this pass is reached, and the next item is cheap
+
+**1. Run `make test-capsule-phase` on Linux, as `bunny`, from an ext4 checkout.**
+Three symlink tests are `NOT_RUN` on a Windows host, and they are among the most
+important in `APP_CAPSULE_SECURITY_REVIEW.md` §2.3 — until they run, those rows
+are design claims rather than measurements. One command on the Fedora builder.
+
+**2. Start one capsule for real.** `SubprocessExecutor`, one catalogue entry, one
+file grant, and the checks in `CAPSULE_VM_VALIDATION_PROCEDURE.md` §3 run from
+*inside* the sandbox. This single step is what every remaining claim waits on: it
+moves the phase from *tested* to *runtime validated*, and it turns "no bind mount
+naming the home directory appears in the plan" into "the home directory is not
+there". Run the negative control in the same session; four of the five gate
+failures this repository has recorded fired because a property got better, and a
+check that passes because the command was wrong looks identical to one that
+passes because the sandbox works.
+
+**3. Boot an image, enable Orca, trigger one permission prompt.** The Trust
+prompt is the only modal Bunny raises unasked. If it does not raise correctly in
+the AT-SPI tree, a screen-reader user meets a silent modal — an application that
+appears to hang — which is a worse failure than any this phase fixes.
+`TRUST_ACCESSIBILITY_REPORT.md` §4.
+
+Then: wire the shell modules and the Settings page on Linux one at a time; measure
+a real cold launch (`CAPSULE_PERFORMANCE_REPORT.md` §5 lists the seven numbers
+that are missing); implement clipboard and Bluetooth enforcement or hide them.
+
+None of 1–3 needs money, hardware or a third party.
+
+### What not to do next
+
+- **Do not wire the shell extension from a host that cannot run it.** The three
+  modules are complete and nothing imports them, deliberately. Editing
+  `extension.js` has cost a boot per mistake, four times.
+- **Do not add a permission category.** Seventeen is §11's list. A category that
+  nothing enforces is the liability `clipboard` and `bluetooth` already are.
+- **Do not add a catalogue entry without a second reader.** An entry is a security
+  artefact — it is the permission ceiling — and currently has one author.
+- **Do not update the report's "runtime validated" row from anything but a
+  completed section of the VM procedure.** The report says nothing has been; that
+  sentence is correct until a run says otherwise.
