@@ -231,13 +231,22 @@ No existing voice test was weakened or removed.
 ## Source gate
 
 ```text
-python3 scripts/release.py gate --kind source
+python3 scripts/release.py gate --kind source        (as bunny, on ext4, at 6b3f70b)
 source gate: PASS
   ok  baselineRecorded          ok  qualificationSuitesPass
   ok  licenceGatePassed         ok  repositoryValidation
   ok  minimisationComplete      ok  sourceSuitesPass
 exit code 0
 ```
+
+It failed once in between, and the failure was the accounting working. Running
+the phoneme experiments imported the vendored `pocket_tts` **in place**, which
+left `__pycache__` directories inside `assets/voice/runtime`, which made the
+tree 204,236 bytes larger than `PROVENANCE.json` declares. That is worth
+recording rather than quietly cleaning: a `.pyc` sitting in that tree at build
+time would be copied into the image, so the test is defending a real property
+and not just a number. Anyone exercising the vendored runtime from the
+repository should set `PYTHONDONTWRITEBYTECODE=1`.
 
 ## Byte-accounting defects fixed on the way
 
