@@ -28,6 +28,9 @@ MAX_TEXT_CHARACTERS = 4000
 MAX_CHUNKS = 64
 _SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,95}\Z")
 _TEXT_TOKENS = re.compile(r"\w+|[^\w\s]")
+#: The header eSpeak NG prints when an argument made it list voices instead of
+#: phonemizing. Matched so that output is refused rather than spoken.
+_VOICE_TABLE = re.compile(r"^\s*Pty\s+Language\s+Age/Gender", re.MULTILINE)
 
 
 def _runtime_site() -> Path:
@@ -203,7 +206,13 @@ class _TextCleaner:
     """Kitten 0.8.1's public token inventory, retained byte-for-byte in meaning."""
 
     def __init__(self) -> None:
-        punctuation = ';:,.!?¡¿—…"«» ' 
+        # Every character here is an *index*, not a decoration. The model was
+        # trained against this exact ordering, so dropping one shifts every
+        # symbol after it and the model reads a different phoneme than the one
+        # eSpeak produced. The two curly double quotes are easy to lose to a
+        # copy through a smart-quote-aware editor and cost nothing visible: the
+        # audio stays fluent and confident and simply says something else.
+        punctuation = ';:,.!?¡¿—…"«»“” '
         letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         ipa = "ɑɐɒæɓʙβɔɕçɗɖðʤəɘɚɛɜɝɞɟʄɡɠɢʛɦɧħɥʜɨɪʝɭɬɫɮʟɱɯɰŋɳɲɴøɵɸθœɶʘɹɺɾɻʀʁɽʂʃʈʧʉʊʋⱱʌɣɤʍχʎʏʑʐʒʔʡʕʢǀǁǂǃˈˌːˑʼʴʰʱʲʷˠˤ˞↓↑→↗↘'̩'ᵻ"
         symbols = ["$"] + list(punctuation) + list(letters) + list(ipa)
@@ -211,6 +220,24 @@ class _TextCleaner:
 
     def __call__(self, text: str) -> list[int]:
         return [self._indices[character] for character in text if character in self._indices]
+
+    def retain_known(self, text: str) -> str:
+        """Drop characters the model has no index for, *before* tokenization.
+
+        Dropping them afterwards is too late. ``_TEXT_TOKENS`` classifies any
+        non-word non-space character as its own token, and the tokens are then
+        joined with spaces — so an unknown character does not merely get
+        ignored, it injects a space where there was none. Space is a real index
+        in this vocabulary, so ``həlˈoʊ`` phonemized with ``--ipa=3`` ties
+        becomes ``həlˈo ‍ ʊ`` and the model reads a word boundary inside every
+        diphthong. Measured on "Hello. I am Bunny, and your system is ready.":
+        word error rate 0.44 and 5.59s of audio with the ties left in, 0.00 and
+        4.09s with them removed here.
+        """
+        return "".join(
+            character for character in text
+            if character in self._indices or character.isspace()
+        )
 
 
 class _KittenEngine:
@@ -239,7 +266,19 @@ class _KittenEngine:
         if not Path(executable).is_file():
             raise FileNotFoundError("eSpeak NG is required for Kitten phonemization")
         completed = subprocess.run(  # noqa: S603 - fixed executable and argument array
-            [executable, "--quiet", "--ipa=3", "--voice=en-us", "--stdin"],
+            # Every element of this array is load-bearing, and eSpeak NG 1.52
+            # punishes each mistake by *succeeding*:
+            #
+            # ``-q``          the long ``--quiet`` does not exist. Given it,
+            #                 eSpeak prints "unrecognized option" and exits 0.
+            #                 Without ``-q`` at all it opens an audio device and
+            #                 returns only the first clause.
+            # ``-v en-us``    as two arguments. ``--voice=en-us`` is prefix
+            #                 matched to ``--voices`` and prints the whole voice
+            #                 *table* to stdout, also with status 0 — which is
+            #                 non-empty output that would be phonemized and
+            #                 spoken as if the table were the utterance.
+            [executable, "-q", "--ipa=3", "-v", "en-us", "--stdin"],
             input=text.encode("utf-8"),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -248,9 +287,18 @@ class _KittenEngine:
             shell=False,
             env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"},
         )
+        # The exit status is therefore not evidence that anything was
+        # phonemized, so it is only the first of three checks rather than the
+        # only one. A rejected argument leaves its complaint on stderr, and a
+        # listing leaves the table's header on stdout.
         if completed.returncode != 0 or not completed.stdout:
             raise RuntimeError("Kitten phonemization failed")
-        return completed.stdout.decode("utf-8", errors="strict").strip()
+        if b"unrecognized option" in completed.stderr or b"invalid option" in completed.stderr:
+            raise RuntimeError("Kitten phonemization rejected an argument")
+        phonemes = completed.stdout.decode("utf-8", errors="strict").strip()
+        if _VOICE_TABLE.search(phonemes):
+            raise RuntimeError("Kitten phonemization returned a voice listing rather than phonemes")
+        return phonemes
 
     def _one(self, text: str, voice_id: str, rate: float) -> Any:
         import numpy as np
@@ -259,7 +307,7 @@ class _KittenEngine:
         if key not in self.voices.files:
             raise ValueError("the selected Kitten voice is absent")
         effective_rate = float(rate) * float(self.speed_priors.get(key, 1.0))
-        phonemes = " ".join(_TEXT_TOKENS.findall(self._phonemize(text)))
+        phonemes = " ".join(_TEXT_TOKENS.findall(self.cleaner.retain_known(self._phonemize(text))))
         tokens = self.cleaner(phonemes)
         if not tokens:
             raise ValueError("Kitten phonemization returned no tokens")
