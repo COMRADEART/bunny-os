@@ -44,6 +44,34 @@ def _install_runtime_path() -> None:
         sys.path.insert(0, str(runtime))
 
 
+def _bound_thread_environment() -> None:
+    """Cap the maths libraries' thread pools before anything imports them.
+
+    ``torch.set_num_threads(1)`` bounds PyTorch's own intra-op pool and does
+    *not* bound the OpenMP runtime underneath it, which sizes itself from the
+    core count and busy-waits at every barrier. On the 22-core reference host
+    that spin cost almost everything, synthesising the same four-second
+    utterance:
+
+        as shipped          12.05s wall   209.24s CPU   17.4x   RTF 3.14
+        OMP_NUM_THREADS=1    2.00s wall     2.66s CPU    1.3x   RTF 0.57
+        OMP_NUM_THREADS=2    1.57s wall     5.58s CPU    3.6x   RTF 0.43
+        OMP_NUM_THREADS=4    1.35s wall     9.99s CPU    7.4x   RTF 0.36
+
+    One thread is six times faster in wall clock than the default and uses
+    seventy-nine times less processor to do it. Two and four are faster still,
+    but they buy tenths of a second with multiples of the whole machine, and
+    Bunny is meant to run on modest hardware where four OpenMP threads is
+    oversubscription rather than parallelism. Speech that is already about
+    twice as fast as real time does not need the rest of the CPU.
+
+    This must run before the first import of torch or onnxruntime: OpenMP reads
+    the variable when its library initialises and ignores later changes.
+    """
+    for name in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+        os.environ.setdefault(name, "1")
+
+
 def _disable_network_environment() -> None:
     os.environ["HF_HUB_OFFLINE"] = "1"
     os.environ["TRANSFORMERS_OFFLINE"] = "1"
@@ -463,6 +491,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--provider", choices=("pocket", "kitten"), required=True)
     arguments = parser.parse_args(argv)
+    _bound_thread_environment()
     _disable_network_environment()
     _install_runtime_path()
     worker = Worker(arguments.provider)
