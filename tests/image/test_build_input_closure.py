@@ -382,7 +382,7 @@ class ThePackageRoute(unittest.TestCase):
         catalogue's JSON would not reach the image on the package route alone —
         and an installed system with no entries refuses every application it has
         no grant for, which is fail-closed, correct, and reads as a bug."""
-        destinations = {route.name: route.destination for route in INSTALL_ROUTES}
+        destinations = {route.id: route.destination for route in INSTALL_ROUTES}
         self.assertEqual(destinations.get("app-catalog-entries"), "/usr/share/bunny-os/catalog")
         from catalog.registry import INSTALLED_CATALOG_DIRECTORY
 
