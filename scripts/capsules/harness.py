@@ -252,6 +252,11 @@ class Harness:
         )
 
     @staticmethod
+    def probe_path() -> Path:
+        """The probe fixture, for a section that installs a capsule of its own."""
+        return PROBE
+
+    @staticmethod
     @contextlib.contextmanager
     def listening_socket():
         """A real TCP listener on loopback, for the duration of one probe pair.

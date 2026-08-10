@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import shutil
 from typing import Any, Mapping
 
 import trust
@@ -63,7 +64,13 @@ def _install(harness: Harness, ceiling: str, domains: frozenset[str] = frozenset
         network_domains=domains,
         limits=ResourceLimits(),
     )
-    return harness.runtime.install(manifest)
+    capsule = harness.runtime.install(manifest)
+    # The application is the probe. Copying it into the capsule's own storage is
+    # how any application's files get there; without this the capsule starts,
+    # finds nothing to run, and every row reads NOT_RUN — which is what the first
+    # run of this section did.
+    shutil.copy2(harness.probe_path(), capsule.layout.directory("data") / "probe.py")
+    return capsule
 
 
 def _run(harness: Harness, capsule, port: int) -> Mapping[str, Any]:
