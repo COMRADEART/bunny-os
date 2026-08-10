@@ -1,0 +1,1165 @@
+{
+  "commit": "37f74c038d4110206a00f2cf58b0eb465caf2ef1",
+  "explanation": "17 checks isolated, each reached by the control; mounts 22 inside against 39 outside, all under ['/', '/dev', '/proc', '/run/bunny/app/cache', '/run/bunny/app/config', '/run/bunny/app/data', '/run/bunny/app/exports', '/run/bunny/app/inbox', '/run/bunny/app/runtime', '/run/bunny/app/tmp', '/tmp', '/usr']; processes 2 against 103; environment exactly the ['HOME', 'LANG', 'PATH', 'TMPDIR', 'XDG_CACHE_HOME', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_RUNTIME_DIR'] the plan declares",
+  "findings": [],
+  "finishedAt": "2026-08-10T23:33:29.757544Z",
+  "host": {
+    "backends": [
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "selinux": "Disabled",
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "wsl"
+  },
+  "measurements": {
+    "capsule": {
+      "argv": [
+        "systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--unit=bunny-capsule-art-comrade-probea.23231c5a842320ba",
+        "--description=Bunny capsule for art.comrade.ProbeA",
+        "--property",
+        "MemoryHigh=2147483648",
+        "--property",
+        "MemoryMax=4294967296",
+        "--property",
+        "TasksMax=512",
+        "--property",
+        "CPUWeight=100",
+        "--property",
+        "KillMode=mixed",
+        "bwrap",
+        "--die-with-parent",
+        "--new-session",
+        "--unshare-user",
+        "--unshare-pid",
+        "--unshare-ipc",
+        "--unshare-uts",
+        "--unshare-cgroup",
+        "--unshare-net",
+        "--ro-bind",
+        "/usr",
+        "/usr",
+        "--symlink",
+        "usr/lib",
+        "/lib",
+        "--symlink",
+        "usr/lib64",
+        "/lib64",
+        "--symlink",
+        "usr/bin",
+        "/bin",
+        "--symlink",
+        "usr/sbin",
+        "/sbin",
+        "--proc",
+        "/proc",
+        "--dev",
+        "/dev",
+        "--bind",
+        "/tmp/bunny-qualify-of8m9gbt/capsules/art-comrade-probea.23231c5a842320ba/cache",
+        "/run/bunny/app/cache",
+        "--bind",
+        "/tmp/bunny-qualify-of8m9gbt/capsules/art-comrade-probea.23231c5a842320ba/config",
+        "/run/bunny/app/config",
+        "--bind",
+        "/tmp/bunny-qualify-of8m9gbt/capsules/art-comrade-probea.23231c5a842320ba/data",
+        "/run/bunny/app/data",
+        "--bind",
+        "/tmp/bunny-qualify-of8m9gbt/capsules/art-comrade-probea.23231c5a842320ba/exports",
+        "/run/bunny/app/exports",
+        "--bind",
+        "/tmp/bunny-qualify-of8m9gbt/capsules/art-comrade-probea.23231c5a842320ba/inbox",
+        "/run/bunny/app/inbox",
+        "--bind",
+        "/tmp/bunny-qualify-of8m9gbt/capsules/art-comrade-probea.23231c5a842320ba/runtime",
+        "/run/bunny/app/runtime",
+        "--bind",
+        "/tmp/bunny-qualify-of8m9gbt/capsules/art-comrade-probea.23231c5a842320ba/tmp",
+        "/run/bunny/app/tmp",
+        "--tmpfs",
+        "/tmp",
+        "--remount-ro",
+        "/",
+        "--clearenv",
+        "--setenv",
+        "HOME",
+        "/run/bunny/app/data",
+        "--setenv",
+        "LANG",
+        "C.UTF-8",
+        "--setenv",
+        "PATH",
+        "/usr/bin:/bin",
+        "--setenv",
+        "TMPDIR",
+        "/run/bunny/app/tmp",
+        "--setenv",
+        "XDG_CACHE_HOME",
+        "/run/bunny/app/cache",
+        "--setenv",
+        "XDG_CONFIG_HOME",
+        "/run/bunny/app/config",
+        "--setenv",
+        "XDG_DATA_HOME",
+        "/run/bunny/app/data",
+        "--setenv",
+        "XDG_RUNTIME_DIR",
+        "/run/bunny/app/runtime",
+        "--chdir",
+        "/run/bunny/app/data",
+        "--",
+        "/usr/bin/python3",
+        "/run/bunny/app/data/probe.py"
+      ],
+      "backend": "bubblewrap",
+      "exitCode": 0,
+      "pid": 762,
+      "planRefusals": [],
+      "probe": {
+        "checks": [
+          {
+            "category": "capsule",
+            "check": "own_data_read",
+            "detail": "A's own data",
+            "ms": 0.03,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "capsule",
+            "check": "own_data_write",
+            "detail": "/run/bunny/app/data/probe-wrote-this.txt",
+            "ms": 0.04,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "user-files",
+            "check": "home_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "credentials",
+            "check": "ssh_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "credentials",
+            "check": "ssh_key_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "credentials",
+            "check": "gnupg_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "credentials",
+            "check": "browser_profile_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "credentials",
+            "check": "shadow_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "cross-app",
+            "check": "other_capsule_enumerate",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.0,
+            "result": "ABSENT"
+          },
+          {
+            "category": "cross-app",
+            "check": "other_capsule_secret_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "file-grant",
+            "check": "granted_file_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "file-grant",
+            "check": "neighbour_file_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "environment",
+            "check": "environment",
+            "data": {
+              "count": 15,
+              "dangerous": [],
+              "keys": [
+                "BUNNY_PROBE_CAPSULE_ROOT",
+                "BUNNY_PROBE_ENVIRONMENT",
+                "BUNNY_PROBE_HOME",
+                "BUNNY_PROBE_LOCALHOST_PORT",
+                "BUNNY_PROBE_NEIGHBOUR_FILE",
+                "BUNNY_PROBE_SYMLINK_TARGET",
+                "HOME",
+                "LANG",
+                "PATH",
+                "PWD",
+                "TMPDIR",
+                "XDG_CACHE_HOME",
+                "XDG_CONFIG_HOME",
+                "XDG_DATA_HOME",
+                "XDG_RUNTIME_DIR"
+              ]
+            },
+            "detail": "15 variables, 0 of concern",
+            "ms": 0.02,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "environment",
+            "check": "mounts",
+            "data": {
+              "count": 22,
+              "points": [
+                "/",
+                "/dev",
+                "/dev/full",
+                "/dev/null",
+                "/dev/pts",
+                "/dev/random",
+                "/dev/tty",
+                "/dev/urandom",
+                "/dev/zero",
+                "/proc",
+                "/run/bunny/app/cache",
+                "/run/bunny/app/config",
+                "/run/bunny/app/data",
+                "/run/bunny/app/exports",
+                "/run/bunny/app/inbox",
+                "/run/bunny/app/runtime",
+                "/run/bunny/app/tmp",
+                "/tmp",
+                "/usr",
+                "/usr/lib/modules/6.18.33.2-microsoft-standard-WSL2",
+                "/usr/lib/wsl/drivers",
+                "/usr/lib/wsl/lib"
+              ]
+            },
+            "detail": "22 mounts",
+            "ms": 0.11,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "filesystem",
+            "check": "tmp",
+            "detail": "0 entries, writable, sample []",
+            "ms": 0.05,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "devices",
+            "check": "camera",
+            "detail": "no /dev/video* nodes",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "devices",
+            "check": "microphone",
+            "detail": "/dev/snd is not present",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "devices",
+            "check": "gpu",
+            "detail": "/dev/dri is not present",
+            "ms": 0.0,
+            "result": "ABSENT"
+          },
+          {
+            "category": "desktop",
+            "check": "clipboard",
+            "detail": "no WAYLAND_DISPLAY or XDG_RUNTIME_DIR in the environment",
+            "ms": 0.0,
+            "result": "ABSENT"
+          },
+          {
+            "category": "network",
+            "check": "network_external",
+            "detail": "errno 101: Network is unreachable",
+            "ms": 3.97,
+            "result": "DENIED"
+          },
+          {
+            "category": "network",
+            "check": "network_dns",
+            "detail": "name resolution failed: [Errno -3] Temporary failure in name resolution",
+            "ms": 0.14,
+            "result": "DENIED"
+          },
+          {
+            "category": "network",
+            "check": "network_localhost",
+            "detail": "refused: [Errno 111] Connection refused",
+            "ms": 0.07,
+            "result": "ABSENT"
+          },
+          {
+            "category": "network",
+            "check": "network_allowed_domain",
+            "detail": "name resolution failed: [Errno -3] Temporary failure in name resolution",
+            "ms": 0.05,
+            "result": "DENIED"
+          },
+          {
+            "category": "network",
+            "check": "network_forbidden_domain",
+            "detail": "name resolution failed: [Errno -3] Temporary failure in name resolution",
+            "ms": 0.04,
+            "result": "DENIED"
+          },
+          {
+            "category": "ipc",
+            "check": "dbus_system",
+            "detail": "/run/dbus/system_bus_socket is not present",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "ipc",
+            "check": "dbus_session",
+            "detail": "/run/bunny/app/runtime/bus is not present",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "execution",
+            "check": "subprocess",
+            "detail": "child ok",
+            "ms": 10.27,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "filesystem",
+            "check": "traversal_etc_passwd",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.05,
+            "result": "ABSENT"
+          },
+          {
+            "category": "filesystem",
+            "check": "symlink_escape_home",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.04,
+            "result": "ABSENT"
+          },
+          {
+            "category": "filesystem",
+            "check": "write_outside_home",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "filesystem",
+            "check": "write_outside_tmp_root",
+            "detail": "errno 30: Read-only file system",
+            "ms": 0.01,
+            "result": "DENIED"
+          },
+          {
+            "category": "process",
+            "check": "process_visibility",
+            "data": {
+              "others": 0,
+              "sample": [
+                1,
+                2
+              ],
+              "visible": 2
+            },
+            "detail": "2 processes visible, 0 of them somebody else's",
+            "ms": 0.04,
+            "result": "AVAILABLE"
+          }
+        ],
+        "environment": "capsule",
+        "identity": {
+          "cwd": "/run/bunny/app/data",
+          "executable": "/usr/bin/python3",
+          "gid": 1000,
+          "hostname": "comrade",
+          "in_userns": "user:[4026532599]",
+          "pid": 2,
+          "uid": 1000
+        },
+        "probeVersion": 1,
+        "schemaVersion": 1
+      },
+      "reachablePaths": [],
+      "started": true,
+      "unenforced": []
+    },
+    "comparison": {
+      "controlProvedSomething": true,
+      "isolatedCount": 17,
+      "rows": [
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "credentials",
+          "check": "browser_profile_read",
+          "control": "AVAILABLE",
+          "controlDetail": "1 entries",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "no /dev/video* nodes",
+          "category": "devices",
+          "check": "camera",
+          "control": "ABSENT",
+          "controlDetail": "no /dev/video* nodes",
+          "verdict": "INCONCLUSIVE"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "no WAYLAND_DISPLAY or XDG_RUNTIME_DIR in the environment",
+          "category": "desktop",
+          "check": "clipboard",
+          "control": "ABSENT",
+          "controlDetail": "no WAYLAND_DISPLAY or XDG_RUNTIME_DIR in the environment",
+          "verdict": "INCONCLUSIVE"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "/run/bunny/app/runtime/bus is not present",
+          "category": "ipc",
+          "check": "dbus_session",
+          "control": "AVAILABLE",
+          "controlDetail": "connected to /run/user/1000/bus",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "/run/dbus/system_bus_socket is not present",
+          "category": "ipc",
+          "check": "dbus_system",
+          "control": "AVAILABLE",
+          "controlDetail": "connected to /run/dbus/system_bus_socket",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "AVAILABLE",
+          "capsuleDetail": "15 variables, 0 of concern",
+          "category": "environment",
+          "check": "environment",
+          "control": "AVAILABLE",
+          "controlDetail": "46 variables, 0 of concern",
+          "verdict": "SHARED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "credentials",
+          "check": "gnupg_read",
+          "control": "AVAILABLE",
+          "controlDetail": "1 entries",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "/dev/dri is not present",
+          "category": "devices",
+          "check": "gpu",
+          "control": "ABSENT",
+          "controlDetail": "/dev/dri is not present",
+          "verdict": "INCONCLUSIVE"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "file-grant",
+          "check": "granted_file_read",
+          "control": "ABSENT",
+          "controlDetail": "FileNotFoundError: No such file or directory",
+          "verdict": "INCONCLUSIVE"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "user-files",
+          "check": "home_read",
+          "control": "AVAILABLE",
+          "controlDetail": "10 entries: ['.config', '.gnupg', '.mozilla', '.ssh', 'Desktop', 'Documents', 'Downloads', 'Music']",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "/dev/snd is not present",
+          "category": "devices",
+          "check": "microphone",
+          "control": "DENIED",
+          "controlDetail": "PermissionError: Permission denied",
+          "verdict": "BOTH-DENIED"
+        },
+        {
+          "capsule": "AVAILABLE",
+          "capsuleDetail": "22 mounts",
+          "category": "environment",
+          "check": "mounts",
+          "control": "AVAILABLE",
+          "controlDetail": "39 mounts",
+          "verdict": "SHARED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "file-grant",
+          "check": "neighbour_file_read",
+          "control": "AVAILABLE",
+          "controlDetail": "9 bytes",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "DENIED",
+          "capsuleDetail": "name resolution failed: [Errno -3] Temporary failure in name resolution",
+          "category": "network",
+          "check": "network_allowed_domain",
+          "control": "AVAILABLE",
+          "controlDetail": "connected to allowed domain",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "DENIED",
+          "capsuleDetail": "name resolution failed: [Errno -3] Temporary failure in name resolution",
+          "category": "network",
+          "check": "network_dns",
+          "control": "AVAILABLE",
+          "controlDetail": "connected to example.com:443",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "DENIED",
+          "capsuleDetail": "errno 101: Network is unreachable",
+          "category": "network",
+          "check": "network_external",
+          "control": "AVAILABLE",
+          "controlDetail": "connected to 1.1.1.1:443",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "DENIED",
+          "capsuleDetail": "name resolution failed: [Errno -3] Temporary failure in name resolution",
+          "category": "network",
+          "check": "network_forbidden_domain",
+          "control": "AVAILABLE",
+          "controlDetail": "connected to unnamed domain",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "refused: [Errno 111] Connection refused",
+          "category": "network",
+          "check": "network_localhost",
+          "control": "AVAILABLE",
+          "controlDetail": "connected to 127.0.0.1:45581",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "cross-app",
+          "check": "other_capsule_enumerate",
+          "control": "AVAILABLE",
+          "controlDetail": "1 capsule directories: ['art-comrade-probea.23231c5a842320ba']",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "cross-app",
+          "check": "other_capsule_secret_read",
+          "control": "ABSENT",
+          "controlDetail": "FileNotFoundError: No such file or directory",
+          "verdict": "INCONCLUSIVE"
+        },
+        {
+          "capsule": "AVAILABLE",
+          "capsuleDetail": "A's own data",
+          "category": "capsule",
+          "check": "own_data_read",
+          "control": "ABSENT",
+          "controlDetail": "/tmp/bunny-qualify-of8m9gbt/control/own-marker.txt does not exist",
+          "verdict": "INCONCLUSIVE"
+        },
+        {
+          "capsule": "AVAILABLE",
+          "capsuleDetail": "/run/bunny/app/data/probe-wrote-this.txt",
+          "category": "capsule",
+          "check": "own_data_write",
+          "control": "AVAILABLE",
+          "controlDetail": "/tmp/bunny-qualify-of8m9gbt/control/probe-wrote-this.txt",
+          "verdict": "SHARED"
+        },
+        {
+          "capsule": "AVAILABLE",
+          "capsuleDetail": "2 processes visible, 0 of them somebody else's",
+          "category": "process",
+          "check": "process_visibility",
+          "control": "AVAILABLE",
+          "controlDetail": "103 processes visible, 100 of them somebody else's",
+          "verdict": "SHARED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "credentials",
+          "check": "shadow_read",
+          "control": "DENIED",
+          "controlDetail": "PermissionError: Permission denied",
+          "verdict": "BOTH-DENIED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "credentials",
+          "check": "ssh_key_read",
+          "control": "AVAILABLE",
+          "controlDetail": "59 bytes",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "credentials",
+          "check": "ssh_read",
+          "control": "AVAILABLE",
+          "controlDetail": "1 entries",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "AVAILABLE",
+          "capsuleDetail": "child ok",
+          "category": "execution",
+          "check": "subprocess",
+          "control": "AVAILABLE",
+          "controlDetail": "child ok",
+          "verdict": "SHARED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "filesystem",
+          "check": "symlink_escape_home",
+          "control": "AVAILABLE",
+          "controlDetail": "59 bytes through a symlink to /tmp/bunny-qualify-of8m9gbt/home/.ssh/id_ed25519",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "AVAILABLE",
+          "capsuleDetail": "0 entries, writable, sample []",
+          "category": "filesystem",
+          "check": "tmp",
+          "control": "AVAILABLE",
+          "controlDetail": "8 entries, writable, sample ['.X11-unix', 'bunny-qualify-of8m9gbt', 'systemd-private-9232e337745940b1b8e0e8e73c947bb9-dbus-broker.service-K6OejV', 'systemd-private-9232e337745940b1b8e0e8e73c947bb9-pol",
+          "verdict": "SHARED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "filesystem",
+          "check": "traversal_etc_passwd",
+          "control": "AVAILABLE",
+          "controlDetail": "2416 bytes via /tmp/bunny-qualify-of8m9gbt/control/../../../../etc/passwd",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "ABSENT",
+          "capsuleDetail": "FileNotFoundError: No such file or directory",
+          "category": "filesystem",
+          "check": "write_outside_home",
+          "control": "AVAILABLE",
+          "controlDetail": "wrote /tmp/bunny-qualify-of8m9gbt/home/probe-escaped.txt",
+          "verdict": "ISOLATED"
+        },
+        {
+          "capsule": "DENIED",
+          "capsuleDetail": "errno 30: Read-only file system",
+          "category": "filesystem",
+          "check": "write_outside_tmp_root",
+          "control": "DENIED",
+          "controlDetail": "PermissionError: Permission denied",
+          "verdict": "BOTH-DENIED"
+        }
+      ],
+      "widerInside": []
+    },
+    "control": {
+      "exitCode": 0,
+      "probe": {
+        "checks": [
+          {
+            "category": "capsule",
+            "check": "own_data_read",
+            "detail": "/tmp/bunny-qualify-of8m9gbt/control/own-marker.txt does not exist",
+            "ms": 0.02,
+            "result": "ABSENT"
+          },
+          {
+            "category": "capsule",
+            "check": "own_data_write",
+            "detail": "/tmp/bunny-qualify-of8m9gbt/control/probe-wrote-this.txt",
+            "ms": 0.04,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "user-files",
+            "check": "home_read",
+            "detail": "10 entries: ['.config', '.gnupg', '.mozilla', '.ssh', 'Desktop', 'Documents', 'Downloads', 'Music']",
+            "ms": 0.02,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "credentials",
+            "check": "ssh_read",
+            "detail": "1 entries",
+            "ms": 0.01,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "credentials",
+            "check": "ssh_key_read",
+            "detail": "59 bytes",
+            "ms": 0.01,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "credentials",
+            "check": "gnupg_read",
+            "detail": "1 entries",
+            "ms": 0.01,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "credentials",
+            "check": "browser_profile_read",
+            "detail": "1 entries",
+            "ms": 0.01,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "credentials",
+            "check": "shadow_read",
+            "detail": "PermissionError: Permission denied",
+            "ms": 0.01,
+            "result": "DENIED"
+          },
+          {
+            "category": "cross-app",
+            "check": "other_capsule_enumerate",
+            "detail": "1 capsule directories: ['art-comrade-probea.23231c5a842320ba']",
+            "ms": 0.01,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "cross-app",
+            "check": "other_capsule_secret_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.02,
+            "result": "ABSENT"
+          },
+          {
+            "category": "file-grant",
+            "check": "granted_file_read",
+            "detail": "FileNotFoundError: No such file or directory",
+            "ms": 0.01,
+            "result": "ABSENT"
+          },
+          {
+            "category": "file-grant",
+            "check": "neighbour_file_read",
+            "detail": "9 bytes",
+            "ms": 0.01,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "environment",
+            "check": "environment",
+            "data": {
+              "count": 46,
+              "dangerous": [],
+              "keys": [
+                "BUNNY_CAPSULE_ROOT",
+                "BUNNY_PROBE_CAPSULE_ROOT",
+                "BUNNY_PROBE_ENVIRONMENT",
+                "BUNNY_PROBE_HOME",
+                "BUNNY_PROBE_LOCALHOST_PORT",
+                "BUNNY_PROBE_NEIGHBOUR_FILE",
+                "BUNNY_PROBE_OUTPUT",
+                "BUNNY_PROBE_SYMLINK_TARGET",
+                "BUNNY_TRUST_ROOT",
+                "BUN_INSTALL",
+                "DBUS_SESSION_BUS_ADDRESS",
+                "DEBUGINFOD_IMA_CERT_PATH",
+                "DEBUGINFOD_URLS",
+                "EDITOR",
+                "GPG_TTY",
+                "GUESTFISH_INIT",
+                "GUESTFISH_OUTPUT",
+                "GUESTFISH_PS1",
+                "GUESTFISH_RESTORE",
+                "HISTCONTROL",
+                "HISTSIZE",
+                "HOME",
+                "HOSTNAME",
+                "LANG",
+                "LESSOPEN",
+                "LOGNAME",
+                "MAIL",
+                "OLDPWD",
+                "PATH",
+                "PWD",
+                "SHELL",
+                "SHLVL",
+                "TERM",
+                "USER",
+                "XDG_DATA_HOME",
+                "XDG_DESKTOP_DIR",
+                "XDG_DOCUMENTS_DIR",
+                "XDG_DOWNLOAD_DIR",
+                "XDG_MUSIC_DIR",
+                "XDG_PICTURES_DIR",
+                "XDG_RUNTIME_DIR",
+                "XDG_SESSION_CLASS",
+                "XDG_SESSION_ID",
+                "XDG_SESSION_TYPE",
+                "XDG_VIDEOS_DIR",
+                "_"
+              ]
+            },
+            "detail": "46 variables, 0 of concern",
+            "ms": 0.02,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "environment",
+            "check": "mounts",
+            "data": {
+              "count": 39,
+              "points": [
+                "/",
+                "/dev",
+                "/dev/hugepages",
+                "/dev/mqueue",
+                "/dev/pts",
+                "/dev/shm",
+                "/init",
+                "/mnt/c",
+                "/mnt/wsl",
+                "/mnt/wslg",
+                "/mnt/wslg/distro",
+                "/mnt/wslg/doc",
+                "/mnt/wslg/run/user/0",
+                "/mnt/wslg/run/user/1000",
+                "/mnt/wslg/versions.txt",
+                "/proc",
+                "/proc/sys/fs/binfmt_misc",
+                "/run",
+                "/run/credentials/getty@tty1.service",
+                "/run/credentials/systemd-journald.service",
+                "/run/credentials/systemd-resolved.service",
+                "/run/lock",
+                "/run/shm",
+                "/run/user",
+                "/run/user/0",
+                "/run/user/1000",
+                "/sys",
+                "/sys/fs/cgroup",
+                "/sys/fs/fuse/connections",
+                "/sys/kernel/config",
+                "/sys/kernel/debug",
+                "/sys/kernel/tracing",
+                "/tmp",
+                "/tmp/.X11-unix",
+                "/usr/lib/modules/6.18.33.2-microsoft-standard-WSL2",
+                "/usr/lib/wsl/drivers",
+                "/usr/lib/wsl/lib",
+                "/var/lib/nfs/rpc_pipefs"
+              ]
+            },
+            "detail": "39 mounts",
+            "ms": 0.15,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "filesystem",
+            "check": "tmp",
+            "detail": "8 entries, writable, sample ['.X11-unix', 'bunny-qualify-of8m9gbt', 'systemd-private-9232e337745940b1b8e0e8e73c947bb9-dbus-broker.service-K6OejV', 'systemd-private-9232e337745940b1b8e0e8e73c947bb9-polkit.service-p6Woro', 'systemd-private-9232e337745940b1b8e0e8e73c947bb9-rtkit-daemon.service-vxGc2Q']",
+            "ms": 0.04,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "devices",
+            "check": "camera",
+            "detail": "no /dev/video* nodes",
+            "ms": 0.08,
+            "result": "ABSENT"
+          },
+          {
+            "category": "devices",
+            "check": "microphone",
+            "detail": "PermissionError: Permission denied",
+            "ms": 0.01,
+            "result": "DENIED"
+          },
+          {
+            "category": "devices",
+            "check": "gpu",
+            "detail": "/dev/dri is not present",
+            "ms": 0.0,
+            "result": "ABSENT"
+          },
+          {
+            "category": "desktop",
+            "check": "clipboard",
+            "detail": "no WAYLAND_DISPLAY or XDG_RUNTIME_DIR in the environment",
+            "ms": 0.0,
+            "result": "ABSENT"
+          },
+          {
+            "category": "network",
+            "check": "network_external",
+            "detail": "connected to 1.1.1.1:443",
+            "ms": 22.39,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "network",
+            "check": "network_dns",
+            "detail": "connected to example.com:443",
+            "ms": 51.76,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "network",
+            "check": "network_localhost",
+            "detail": "connected to 127.0.0.1:45581",
+            "ms": 0.17,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "network",
+            "check": "network_allowed_domain",
+            "detail": "connected to allowed domain",
+            "ms": 21.03,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "network",
+            "check": "network_forbidden_domain",
+            "detail": "connected to unnamed domain",
+            "ms": 39.79,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "ipc",
+            "check": "dbus_system",
+            "detail": "connected to /run/dbus/system_bus_socket",
+            "ms": 0.14,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "ipc",
+            "check": "dbus_session",
+            "detail": "connected to /run/user/1000/bus",
+            "ms": 0.09,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "execution",
+            "check": "subprocess",
+            "detail": "child ok",
+            "ms": 10.94,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "filesystem",
+            "check": "traversal_etc_passwd",
+            "detail": "2416 bytes via /tmp/bunny-qualify-of8m9gbt/control/../../../../etc/passwd",
+            "ms": 0.08,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "filesystem",
+            "check": "symlink_escape_home",
+            "detail": "59 bytes through a symlink to /tmp/bunny-qualify-of8m9gbt/home/.ssh/id_ed25519",
+            "ms": 0.07,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "filesystem",
+            "check": "write_outside_home",
+            "detail": "wrote /tmp/bunny-qualify-of8m9gbt/home/probe-escaped.txt",
+            "ms": 0.05,
+            "result": "AVAILABLE"
+          },
+          {
+            "category": "filesystem",
+            "check": "write_outside_tmp_root",
+            "detail": "PermissionError: Permission denied",
+            "ms": 0.02,
+            "result": "DENIED"
+          },
+          {
+            "category": "process",
+            "check": "process_visibility",
+            "data": {
+              "others": 100,
+              "sample": [
+                1,
+                2,
+                6,
+                60,
+                69,
+                90,
+                91,
+                95,
+                101,
+                102,
+                103,
+                104
+              ],
+              "visible": 103
+            },
+            "detail": "103 processes visible, 100 of them somebody else's",
+            "ms": 0.3,
+            "result": "AVAILABLE"
+          }
+        ],
+        "environment": "control",
+        "identity": {
+          "cwd": "/home/bunny/bunny-os",
+          "executable": "/usr/bin/python3",
+          "gid": 1000,
+          "hostname": "comrade",
+          "in_userns": "user:[4026531837]",
+          "pid": 766,
+          "uid": 1000
+        },
+        "probeVersion": 1,
+        "schemaVersion": 1
+      },
+      "stderr": ""
+    },
+    "structural": {
+      "environment": {
+        "crossed": [],
+        "dangerous": [],
+        "declared": [
+          "HOME",
+          "LANG",
+          "PATH",
+          "TMPDIR",
+          "XDG_CACHE_HOME",
+          "XDG_CONFIG_HOME",
+          "XDG_DATA_HOME",
+          "XDG_RUNTIME_DIR"
+        ],
+        "inside": [
+          "BUNNY_PROBE_CAPSULE_ROOT",
+          "BUNNY_PROBE_ENVIRONMENT",
+          "BUNNY_PROBE_HOME",
+          "BUNNY_PROBE_LOCALHOST_PORT",
+          "BUNNY_PROBE_NEIGHBOUR_FILE",
+          "BUNNY_PROBE_SYMLINK_TARGET",
+          "HOME",
+          "LANG",
+          "PATH",
+          "PWD",
+          "TMPDIR",
+          "XDG_CACHE_HOME",
+          "XDG_CONFIG_HOME",
+          "XDG_DATA_HOME",
+          "XDG_RUNTIME_DIR"
+        ]
+      },
+      "mounts": {
+        "allowedPrefixes": [
+          "/",
+          "/dev",
+          "/proc",
+          "/run/bunny/app/cache",
+          "/run/bunny/app/config",
+          "/run/bunny/app/data",
+          "/run/bunny/app/exports",
+          "/run/bunny/app/inbox",
+          "/run/bunny/app/runtime",
+          "/run/bunny/app/tmp",
+          "/tmp",
+          "/usr"
+        ],
+        "inside": 22,
+        "outside": 39,
+        "points": [
+          "/",
+          "/dev",
+          "/dev/full",
+          "/dev/null",
+          "/dev/pts",
+          "/dev/random",
+          "/dev/tty",
+          "/dev/urandom",
+          "/dev/zero",
+          "/proc",
+          "/run/bunny/app/cache",
+          "/run/bunny/app/config",
+          "/run/bunny/app/data",
+          "/run/bunny/app/exports",
+          "/run/bunny/app/inbox",
+          "/run/bunny/app/runtime",
+          "/run/bunny/app/tmp",
+          "/tmp",
+          "/usr",
+          "/usr/lib/modules/6.18.33.2-microsoft-standard-WSL2",
+          "/usr/lib/wsl/drivers",
+          "/usr/lib/wsl/lib"
+        ],
+        "unexpected": []
+      },
+      "problems": [],
+      "processes": {
+        "inside": 2,
+        "outside": 103
+      }
+    }
+  },
+  "schemaVersion": 1,
+  "section": "isolation",
+  "startedAt": "2026-08-10T23:33:29.464277Z",
+  "verdict": "PASS"
+}
