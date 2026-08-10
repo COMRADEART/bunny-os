@@ -36,6 +36,7 @@ __all__ = [
     "section_filegrant",
     "section_host",
     "section_isolation",
+    "section_network",
     "section_resources",
 ]
 
@@ -593,6 +594,7 @@ def section_failclosed(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     )
 
 
+from .sections_network import section_network  # noqa: E402
 from .sections_runtime import section_crash, section_resources  # noqa: E402
 
 #: Section name to function. The order is the order a failure is cheapest to
@@ -607,6 +609,7 @@ SECTIONS = {
     "crossapp": section_crossapp,
     "filegrant": section_filegrant,
     "failclosed": section_failclosed,
+    "network": section_network,
     "crash": section_crash,
     "resources": section_resources,
 }

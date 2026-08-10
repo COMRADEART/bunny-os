@@ -33,7 +33,7 @@ from capsules.runtime import CapsuleRuntime, SubprocessExecutor
 
 from .harness import Evidence, Harness, require_confinement
 
-__all__ = ["section_crash", "section_resources"]
+__all__ = ["section_crash", "section_network", "section_resources"]
 
 STRESS = Path(__file__).resolve().parents[2] / "qualification/capsules/stress.py"
 
