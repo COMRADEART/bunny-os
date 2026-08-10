@@ -191,6 +191,32 @@ class AuditDisclosureTests(unittest.TestCase):
         # The short display form is present, which is what a person already saw.
         self.assertIn("divorce-draft.odt", raw)
 
+    def test_a_path_outside_the_users_own_folders_is_elided_in_the_record(self) -> None:
+        """Found by the Linux qualification run. A path under Documents shortens
+        to `Documents/x`, which is what the person saw and is harmless in a log.
+        A path outside every user directory has no shorter honest form, so the
+        *prompt* shows it whole — and the *record* keeps only the file name,
+        because support tooling and a diagnostic export were not in front of the
+        prompt."""
+        outside = Path(self.world.base) / "elsewhere" / "board-minutes.odt"
+        outside.parent.mkdir(parents=True, exist_ok=True)
+        outside.write_bytes(b"x")
+        resource = trust.path_resource(outside)
+        # The prompt keeps enough to identify the file honestly...
+        self.assertIn("board-minutes.odt", resource.display)
+        self.assertIn("elsewhere", resource.display)
+        # ...and the record does not name the directory.
+        self.assertEqual(resource.log_display, ".../board-minutes.odt")
+        self.assertNotIn("elsewhere", dict(resource.as_record())["display"])
+
+    def test_a_path_under_a_user_directory_needs_no_roots_argument(self) -> None:
+        """The defect itself: a caller that passed no roots used to get the whole
+        absolute path as the display, on a person's screen and in the log."""
+        inside = self.world.file("Documents/report.odt")
+        resource = trust.path_resource(inside)
+        self.assertEqual(resource.display, "Documents/report.odt")
+        self.assertEqual(resource.log_display, "Documents/report.odt")
+
     def test_request_metadata_never_reaches_the_record(self) -> None:
         """Caller-supplied metadata is a channel through which user content
         would otherwise arrive in a log by accident."""

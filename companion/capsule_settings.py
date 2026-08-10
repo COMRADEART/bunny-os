@@ -149,6 +149,11 @@ class ApplicationSettings:
     reachable_paths: tuple[str, ...]
     storage: Mapping[str, int]
     unenforced: tuple[str, ...]
+    #: Declared resource limits this machine cannot apply. Shown beside the
+    #: unenforced permissions and worded the same way, because "we ask for a
+    #: 4 GB ceiling and this computer ignores it" is the same kind of fact as
+    #: "we record this permission and do not restrict it".
+    unapplied_limits: tuple[str, ...]
     activity: tuple[ActivityEntry, ...]
     actions: Mapping[str, Mapping[str, str]]
     catalog_note: str | None = None
@@ -163,6 +168,7 @@ class ApplicationSettings:
             "reachablePaths": list(self.reachable_paths),
             "storage": dict(self.storage),
             "unenforced": list(self.unenforced),
+            "unappliedLimits": list(self.unapplied_limits),
             "activity": [dict(entry.as_record()) for entry in self.activity],
             "actions": {key: dict(value) for key, value in self.actions.items()},
             "catalogNote": self.catalog_note,
@@ -234,10 +240,12 @@ def application_settings(
         reachable = plan.reachable_paths()
         backend = plan.backend
         unenforced = plan.unenforced
+        unapplied_limits = plan.unapplied_limits
     except Exception:  # noqa: BLE001 - a page must render even when a plan cannot be built
         reachable = ()
         backend = capsule.state.backend or capsule.manifest.preferred_backend
         unenforced = capsule.manifest.unenforced_permissions()
+        unapplied_limits = ()
 
     note = None
     if registry is not None:
@@ -254,6 +262,7 @@ def application_settings(
         reachable_paths=tuple(reachable),
         storage=capsule.layout.usage(),
         unenforced=tuple(unenforced),
+        unapplied_limits=tuple(unapplied_limits),
         activity=audit.activity(limit=activity_limit, application_id=capsule.identity.application_id),
         actions=maintenance_actions(capsule),
         catalog_note=note,
@@ -304,6 +313,7 @@ def capsule_overview(
         for capsule in runtime.list()
     ]
     unenforced_total = sorted({category for app in applications for category in app["unenforced"]})
+    unapplied_total = sorted({name for app in applications for name in app.get("unappliedLimits", [])})
     return {
         "section": "app-capsules",
         "applications": applications,
@@ -314,6 +324,13 @@ def capsule_overview(
             + ", ".join(unenforced_total)
         )
         if unenforced_total
+        else "",
+        "unappliedLimits": unapplied_total,
+        "unappliedLimitsNote": (
+            "This computer ignores these limits, so Bunny cannot cap what an app uses: "
+            + ", ".join(unapplied_total)
+        )
+        if unapplied_total
         else "",
         "recentActivity": [dict(entry.as_record()) for entry in audit.activity(limit=25)],
     }

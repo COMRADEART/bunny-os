@@ -98,6 +98,21 @@ def render_bubblewrap(plan: IsolationPlan, command: Sequence[str]) -> tuple[str,
         else:
             arguments += ["--ro-bind", bind.source, bind.target.rstrip("/") or "/"]
 
+    # The sandbox's own root, read-only, after every mount is in place.
+    #
+    # bwrap builds the root as a fresh tmpfs and leaves it writable, so an
+    # application could create files at `/` inside its own sandbox. Nothing
+    # escapes — the tmpfs dies with the namespace — but the Linux qualification
+    # run recorded it as a capability the capsule had and the *unconfined*
+    # control did not, which is a strange enough shape to be worth removing.
+    #
+    # Ordering is the whole of it, and it was measured rather than assumed: with
+    # `--remount-ro /` placed here, after the binds and the tmpfs, the root
+    # becomes read-only and the capsule's own seven directories and /tmp stay
+    # writable, because each is its own mount and keeps its own flags. Placed
+    # before them it would have made them read-only too.
+    arguments += ["--remount-ro", "/"]
+
     arguments += ["--clearenv"]
     for key in sorted(plan.environment):
         arguments += ["--setenv", key, plan.environment[key]]

@@ -157,6 +157,13 @@ class CapsuleState:
     last_failure: str | None = None
     backend: str | None = None
     scope_name: str | None = None
+    #: The launcher process this runtime started, when it started one. Recorded
+    #: so a later operation can ask whether it is still there rather than
+    #: trusting a state written before the application exited. Meaningful only to
+    #: the executor that started it: a pid from another process, or from a
+    #: previous boot, may have been reused, which is why ``session_id`` below is
+    #: what decides whether this record can be reasoned about at all.
+    pid: int | None = None
     #: The session the capsule was last started in. Compared on load: a record
     #: saying ``running`` from a previous session cannot be true, and the state
     #: becomes ``unknown`` so the next operation reconciles instead of trusting
@@ -194,6 +201,7 @@ class CapsuleState:
             "lastFailure": self.last_failure,
             "backend": self.backend,
             "scopeName": self.scope_name,
+            "pid": self.pid,
             "sessionId": self.session_id,
         }
 
@@ -216,6 +224,7 @@ class CapsuleState:
             last_failure=_optional_str(record.get("lastFailure")),
             backend=_optional_str(record.get("backend")),
             scope_name=_optional_str(record.get("scopeName")),
+            pid=(int(record["pid"]) if record.get("pid") is not None else None),
             session_id=_optional_str(record.get("sessionId")),
         )
 

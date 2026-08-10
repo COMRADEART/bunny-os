@@ -127,6 +127,59 @@ class LaunchTests(unittest.TestCase):
         self.assertNotIn("-c", record.argv)
         self.assertNotIn("bash", record.argv)
 
+    def test_the_sandbox_root_is_remounted_read_only_after_the_binds(self) -> None:
+        """Order is the property: before the binds it would make the capsule's
+        own directories read-only too. Measured on Linux, asserted here."""
+        record = self.world.runtime.launch(self.world.runtime.open("org.example.PhotoEditor"))
+        argv = list(record.argv)
+        remount = argv.index("--remount-ro")
+        self.assertEqual(argv[remount + 1], "/")
+        last_bind = max(index for index, value in enumerate(argv) if value in ("--bind", "--ro-bind", "--tmpfs"))
+        self.assertGreater(remount, last_bind, "the root is remounted before a bind is in place")
+        self.assertLess(remount, argv.index("--clearenv"))
+
+    def test_the_launcher_environment_is_two_keys_and_is_not_the_applications(self) -> None:
+        """systemd-run --user needs the session bus to create a scope. bwrap's
+        --clearenv between the two is what stops the launcher's environment
+        reaching the application."""
+        from capsules.isolation import LAUNCHER_ENVIRONMENT_KEYS
+
+        plan = self.world.runtime.build_plan(self.world.runtime.open("org.example.PhotoEditor"))
+        self.assertTrue(set(plan.launcher_environment) <= set(LAUNCHER_ENVIRONMENT_KEYS))
+        self.assertEqual(set(LAUNCHER_ENVIRONMENT_KEYS), {"XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS"})
+        for key in plan.launcher_environment:
+            self.assertNotIn(key, plan.environment)
+
+    def test_a_capsule_whose_process_exited_can_be_launched_again(self) -> None:
+        """Nothing moves a capsule out of `running` when an ordinary application
+        exits, so before reconciliation the second launch refused forever."""
+
+        class Exiting:
+            starts_processes = True
+
+            def __init__(self) -> None:
+                self.started = 0
+
+            def start(self, argv, plan):  # noqa: ANN001
+                self.started += 1
+                return 4242
+
+            def poll(self, pid):  # noqa: ANN001
+                return 0
+
+            def stop(self, scope_name):  # noqa: ANN001
+                return True
+
+        self.world.runtime.executor = Exiting()
+        first = self.world.runtime.launch(self.world.runtime.open("org.example.PhotoEditor"))
+        self.assertTrue(first.started)
+        capsule = self.world.runtime.open("org.example.PhotoEditor")
+        self.assertEqual(capsule.state.state, "stopped")
+        self.assertEqual(capsule.state.last_exit_code, 0)
+        second = self.world.runtime.launch(capsule)
+        self.assertTrue(second.started)
+        self.assertEqual(self.world.runtime.executor.started, 2)
+
     def test_bubblewrap_clears_the_environment_before_setting_it(self) -> None:
         record = self.world.runtime.launch(self.world.runtime.open("org.example.PhotoEditor"))
         self.assertIn("--clearenv", record.argv)

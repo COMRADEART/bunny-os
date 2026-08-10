@@ -123,6 +123,13 @@ class Executor(Protocol):
     def stop(self, scope_name: str) -> bool:
         ...
 
+    #: Optional. An executor that can answer "has this exited, and how" lets the
+    #: runtime reconcile a stale ``running`` instead of believing it. Read with
+    #: ``getattr`` so an executor that cannot answer simply does not, rather than
+    #: every executor having to implement a method it has no way to honour.
+    #:
+    #: def poll(self, pid: int) -> int | None: ...
+
 
 @dataclass
 class RecordingExecutor:
@@ -148,9 +155,32 @@ class RecordingExecutor:
 
 @dataclass
 class SubprocessExecutor:
-    """Starts the process for real. Selected explicitly, never by fallback."""
+    """Starts the process for real. Selected explicitly, never by fallback.
+
+    The handles are retained. That is not bookkeeping: without them the runtime
+    could start a capsule and never learn how it ended, and
+    :attr:`~capsules.lifecycle.CapsuleState.last_exit_code` — a field that exists
+    precisely to record that — could never be filled. The Linux qualification run
+    is what surfaced it, because a harness that launches an application and
+    cannot ask whether it succeeded is a harness that reports every run as a
+    success.
+
+    The launcher's environment is the plan's
+    :attr:`~capsules.isolation.IsolationPlan.launcher_environment` and nothing
+    else — two keys, both of which ``systemd-run --user`` needs to reach the
+    user's own systemd over the session bus. It is a *different* environment from
+    the application's, and ``bwrap``'s ``--clearenv`` between them is what keeps
+    it from reaching inside.
+
+    This started as ``env={}``, which is the stricter-looking choice and meant
+    every launch on a real Linux host failed with "Failed to connect to user
+    scope bus". The Linux qualification run found it. A sandbox that cannot start
+    is not a safe sandbox — it is an application that does not run and a reason
+    for somebody to reach for the unconfined path.
+    """
 
     starts_processes: bool = True
+    _processes: dict[int, "subprocess.Popen[bytes]"] = field(default_factory=dict)
 
     def start(self, argv: Sequence[str], plan: IsolationPlan) -> int | None:
         if not plan.confining:
@@ -161,9 +191,27 @@ class SubprocessExecutor:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             start_new_session=True,
-            env={},
+            env=dict(plan.launcher_environment),
         )
+        self._processes[process.pid] = process
         return process.pid
+
+    def poll(self, pid: int) -> int | None:
+        """The exit code if the process has ended, ``None`` if it is still running."""
+        process = self._processes.get(pid)
+        return process.poll() if process is not None else None
+
+    def wait(self, pid: int, timeout: float | None = None) -> int | None:
+        """Wait for a started process. ``None`` if this executor did not start it.
+
+        Raises :class:`subprocess.TimeoutExpired` rather than returning a value
+        on timeout, because "it is still running" and "it exited with 0" must not
+        be the same return.
+        """
+        process = self._processes.get(pid)
+        if process is None:
+            return None
+        return process.wait(timeout=timeout)
 
     def stop(self, scope_name: str) -> bool:
         result = subprocess.run(  # noqa: S603
@@ -235,6 +283,42 @@ class CapsuleRuntime:
         state.write(layout.state_path)
         return Capsule(identity=manifest.identity, layout=layout, manifest=stored, state=state)
 
+    def reconcile(self, capsule: Capsule) -> Capsule:
+        """Ask whether a capsule recorded as running actually is.
+
+        A capsule reaches ``running`` when a process starts and nothing moves it
+        back when that process ends, because an ordinary application exits
+        without telling anybody. Before this existed, the second launch of an
+        application refused with "already running" forever — found by the Linux
+        qualification run on its second probe, and it would have been found by
+        the first person to close an application and open it again.
+
+        The executor is the authority, and only for processes it started itself.
+        A record from a previous session is not reconciled here: a pid can be
+        reused, so :meth:`CapsuleState.reconcile_for_session` downgrades that
+        case to ``unknown`` on load and it is resolved by the state table rather
+        than by a guess about somebody else's process.
+        """
+        if capsule.state.state not in ("running", "starting"):
+            return capsule
+        if capsule.state.session_id != self.session_id or capsule.state.pid is None:
+            return capsule
+        poll = getattr(self.executor, "poll", None)
+        if poll is None:
+            return capsule
+        exit_code = poll(capsule.state.pid)
+        if exit_code is None:
+            return capsule
+        if capsule.state.state == "starting":
+            capsule.state.move("stopped", failure="the process ended during start-up")
+        else:
+            capsule.state.move("stopping").move("stopped")
+        capsule.state.last_exit_code = int(exit_code)
+        capsule.state.last_stopped_at = _now()
+        capsule.state.pid = None
+        capsule.state.write(capsule.layout.state_path)
+        return capsule
+
     def open(self, application_id: str) -> Capsule:
         """Reconnect to an application's existing capsule.
 
@@ -248,7 +332,7 @@ class CapsuleRuntime:
             raise CapsuleStateError(f"{application_id} has no capsule")
         manifest = CapsuleManifest.read(layout.manifest_path)
         state = CapsuleState.read(layout.state_path).reconcile_for_session(self.session_id)
-        return Capsule(identity=identity, layout=layout, manifest=manifest, state=state)
+        return self.reconcile(Capsule(identity=identity, layout=layout, manifest=manifest, state=state))
 
     def exists(self, application_id: str) -> bool:
         try:
@@ -365,6 +449,7 @@ class CapsuleRuntime:
             layout=capsule.layout,
             capsule_root=self.root,
             session_id=self.session_id,
+            controllers=self.probe.cgroup_controllers,
         )
 
     def launch(
@@ -380,6 +465,7 @@ class CapsuleRuntime:
             raise CapsuleBusy(f"another operation owns {application_id}'s capsule")
         self._busy.add(application_id)
         try:
+            self.reconcile(capsule)
             if capsule.state.state in ("running", "starting"):
                 raise CapsuleStateError(f"{capsule.manifest.display_name} is already running")
             if capsule.state.state == "unknown":
@@ -400,6 +486,7 @@ class CapsuleRuntime:
             pid = self.executor.start(argv, plan)
             started = bool(self.executor.starts_processes and pid is not None)
             capsule.state.move("running" if started else "stopped")
+            capsule.state.pid = pid if started else None
             capsule.state.launch_count += 1
             capsule.state.last_started_at = _now()
             if not started:
@@ -441,6 +528,7 @@ class CapsuleRuntime:
 
     def stop(self, capsule: Capsule) -> bool:
         """Stop the application and drop the permissions it held for the session."""
+        self.reconcile(capsule)
         if capsule.state.state in ("stopped", "ready"):
             return False
         if capsule.state.state == "unknown":
@@ -450,6 +538,7 @@ class CapsuleRuntime:
             self.executor.stop(capsule.state.scope_name or capsule.identity.unit_name)
             capsule.state.move("stopped")
         capsule.state.last_stopped_at = _now()
+        capsule.state.pid = None
         capsule.state.write(capsule.layout.state_path)
         # §11's session scope means "while you are using it", and an application
         # that has exited is not being used.

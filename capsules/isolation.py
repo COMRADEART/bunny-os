@@ -58,7 +58,7 @@ from typing import Any, Mapping, Sequence
 from trust.decision import Grant
 from trust.resources import real_path
 
-from .backends import BackendDescriptor
+from .backends import LIMIT_CONTROLLERS, BackendDescriptor
 from .errors import CapsuleContainmentError, CapsuleIsolationError, CapsuleSchemaError
 from .identity import CapsuleIdentity
 from .layout import CapsuleLayout, is_capsule_private
@@ -70,6 +70,7 @@ __all__ = [
     "GRANT_TARGET_ROOT",
     "BindMount",
     "IsolationPlan",
+    "LAUNCHER_ENVIRONMENT_KEYS",
     "plan_isolation",
 ]
 
@@ -128,6 +129,25 @@ _CONDITIONAL_ENVIRONMENT: Mapping[str, tuple[str, ...]] = {
     "gpu": ("__GLX_VENDOR_LIBRARY_NAME", "LIBVA_DRIVER_NAME"),
 }
 
+#: The complete environment the **launcher** runs with — ``systemd-run``, not the
+#: application. Two keys, and both are needed for the same reason: creating a
+#: transient user scope means talking to the user's own systemd over the session
+#: bus, and ``systemd-run --user`` finds that bus through exactly these.
+#:
+#: This is not a hole in :data:`_BASE_ENVIRONMENT`, and the ordering in
+#: :func:`capsules.command.render_bubblewrap` is what makes that true: ``bwrap``
+#: is given ``--clearenv`` *before* any ``--setenv``, so whatever the launcher
+#: holds is discarded at the sandbox boundary and cannot reach the application.
+#: The launcher and the application have separate environments on purpose.
+#:
+#: Found by the Linux qualification run. The executor previously started the
+#: launcher with an empty environment, which is the stricter-looking choice and
+#: meant every capsule launch failed with "Failed to connect to user scope bus".
+#: A sandbox that cannot start is not a safe sandbox; it is an application that
+#: does not run, and the pressure to "just run it without the scope" is exactly
+#: the unconfined fallback §22 forbids.
+LAUNCHER_ENVIRONMENT_KEYS = ("XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS")
+
 
 @dataclass(frozen=True)
 class BindMount:
@@ -180,6 +200,9 @@ class IsolationPlan:
     network: str
     network_domains: tuple[str, ...]
     environment: Mapping[str, str]
+    #: The environment the *launcher* runs with, which is not the application's.
+    #: See :data:`LAUNCHER_ENVIRONMENT_KEYS`.
+    launcher_environment: Mapping[str, str]
     dbus_talk: tuple[str, ...]
     portal_allow: tuple[str, ...]
     unshare: tuple[str, ...]
@@ -188,6 +211,12 @@ class IsolationPlan:
     #: silently: the runtime records this, Settings shows it, and the install
     #: prompt says it.
     unenforced: tuple[str, ...]
+    #: Declared resource limits whose cgroup controller is not delegated on this
+    #: machine, and therefore cannot be applied at all. Surfaced beside
+    #: ``unenforced`` and for the same reason: a limit nobody applies is not a
+    #: limit, and a status page that showed the declared figure without saying so
+    #: would be describing a machine other than this one.
+    unapplied_limits: tuple[str, ...]
     #: Grants that were refused at plan time and why. A refusal here is a security
     #: event, not a configuration detail.
     refusals: tuple[tuple[str, str], ...]
@@ -207,11 +236,13 @@ class IsolationPlan:
             "network": self.network,
             "networkDomains": list(self.network_domains),
             "environmentKeys": sorted(self.environment),
+            "launcherEnvironmentKeys": sorted(self.launcher_environment),
             "dbusTalk": list(self.dbus_talk),
             "portalAllow": list(self.portal_allow),
             "unshare": list(self.unshare),
             "systemdProperties": list(self.systemd_properties),
             "unenforced": list(self.unenforced),
+            "unappliedLimits": list(self.unapplied_limits),
             "refusals": [{"grantId": gid, "reason": reason} for gid, reason in self.refusals],
             "confining": self.confining,
         }
@@ -244,6 +275,7 @@ def plan_isolation(
     layout: CapsuleLayout,
     capsule_root: Path | None = None,
     session_id: str | None = None,
+    controllers: frozenset[str] | None = None,
 ) -> IsolationPlan:
     """Build the sandbox description for one launch.
 
@@ -257,6 +289,7 @@ def plan_isolation(
     would have to decide whether to launch with less isolation than intended, and
     that decision must not exist.
     """
+    controllers = frozenset(controllers) if controllers is not None else frozenset(LIMIT_CONTROLLERS.values())
     binds: list[BindMount] = []
     devices: list[str] = list(BASE_DEVICES)
     environment = dict(_BASE_ENVIRONMENT)
@@ -415,11 +448,22 @@ def plan_isolation(
         network=network,
         network_domains=network_domains,
         environment=environment,
+        launcher_environment={
+            key: os.environ[key] for key in LAUNCHER_ENVIRONMENT_KEYS if os.environ.get(key)
+        },
         dbus_talk=tuple(sorted(set(dbus_talk))),
         portal_allow=tuple(sorted(set(portal_allow))),
         unshare=unshare,
         systemd_properties=tuple(properties),
         unenforced=unenforced,
+        unapplied_limits=tuple(
+            sorted(
+                prop.split("=", 1)[0]
+                for prop in properties
+                if prop.split("=", 1)[0] in LIMIT_CONTROLLERS
+                and LIMIT_CONTROLLERS[prop.split("=", 1)[0]] not in controllers
+            )
+        ),
         refusals=tuple(refusals),
         confining=backend.confines,
     )

@@ -49,7 +49,7 @@ import shutil
 from typing import Any, Mapping
 
 from trust.persistence import private_directory
-from trust.resources import Resource, contains, real_path
+from trust.resources import Resource, contains, real_path, user_roots
 
 from .errors import CapsuleExportRefused, CapsuleSchemaError
 from .isolation import CREDENTIAL_DIRECTORIES, GRANT_TARGET_ROOT
@@ -69,30 +69,19 @@ __all__ = [
 #: a thousand ``cat (n).png`` is not a collision, it is a defect somewhere.
 MAX_EXPORT_ATTEMPTS = 1000
 
-_XDG_DESTINATIONS = {
-    "Documents": "XDG_DOCUMENTS_DIR",
-    "Downloads": "XDG_DOWNLOAD_DIR",
-    "Pictures": "XDG_PICTURES_DIR",
-    "Music": "XDG_MUSIC_DIR",
-    "Videos": "XDG_VIDEOS_DIR",
-    "Desktop": "XDG_DESKTOP_DIR",
-}
-
-
 def user_destinations(home: Path | None = None) -> Mapping[str, Path]:
     """The directories an export may land in, resolved.
 
-    The home directory itself is not one. "Anywhere in your home" is not a bound,
-    and it contains every credential directory in
+    One definition, in :func:`trust.resources.user_roots`, shared with the code
+    that shortens a path for display. Two lists would eventually disagree about
+    which directories are the user's own, and the disagreement would show up as
+    an export refused to a folder the prompt had just called ``Pictures``.
+
+    The home directory itself is not one of them. "Anywhere in your home" is not
+    a bound, and home contains every credential directory in
     :data:`~capsules.isolation.CREDENTIAL_DIRECTORIES`.
     """
-    base = Path(home) if home is not None else Path(os.path.expanduser("~"))
-    found: dict[str, Path] = {}
-    for name, variable in sorted(_XDG_DESTINATIONS.items()):
-        configured = os.environ.get(variable)
-        path = Path(configured) if configured else base / name
-        found[name] = path
-    return found
+    return user_roots(home)
 
 
 def digest_file(path: Path) -> str:

@@ -157,6 +157,17 @@ class MachineProbe:
     user_namespaces: bool = False
     portal: bool = False
     graphical_session: bool = False
+    #: cgroup v2 controllers delegated to this user's systemd manager. A limit
+    #: whose controller is absent cannot be applied at all.
+    #:
+    #: Necessary and **not sufficient**, and this repository has the measurement
+    #: that proves it: on the WSL2 qualification host the ``memory`` controller
+    #: is present, ``memory.max`` reads back exactly as set, and a plain user
+    #: scope still allocated 2 GB against a 256 MB ceiling. Controller presence
+    #: is what can be known cheaply at launch; whether the kernel acts on the
+    #: limit can only be known by exceeding it, which is what
+    #: ``scripts/capsules`` does once rather than on every launch.
+    cgroup_controllers: frozenset[str] = frozenset()
 
     @classmethod
     def measure(cls) -> "MachineProbe":
@@ -166,6 +177,7 @@ class MachineProbe:
             user_namespaces=_user_namespaces_available(),
             portal=_portal_available(),
             graphical_session=bool(os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY")),
+            cgroup_controllers=_delegated_controllers(),
         )
 
     def supports(self, name: str) -> bool:
@@ -205,6 +217,37 @@ def _user_namespaces_available() -> bool:
         except (OSError, ValueError):
             return False
     return True
+
+
+#: Which controller each declared limit needs. Written out rather than inferred
+#: from the property name, so that adding a limit means naming its controller.
+LIMIT_CONTROLLERS: Mapping[str, str] = {
+    "MemoryHigh": "memory",
+    "MemoryMax": "memory",
+    "TasksMax": "pids",
+    "CPUWeight": "cpu",
+}
+
+
+def _delegated_controllers() -> frozenset[str]:
+    """The cgroup v2 controllers this user's manager can hand to a scope.
+
+    Read from the user slice rather than from the root, because delegation is
+    what decides whether a ``--property`` reaches a cgroup file at all. Absent
+    on a machine with no cgroup v2, which is reported as an empty set rather
+    than guessed at.
+    """
+    uid = os.getuid()
+    for candidate in (
+        Path(f"/sys/fs/cgroup/user.slice/user-{uid}.slice/user@{uid}.service/cgroup.controllers"),
+        Path(f"/sys/fs/cgroup/user.slice/user-{uid}.slice/cgroup.controllers"),
+        Path("/sys/fs/cgroup/cgroup.controllers"),
+    ):
+        try:
+            return frozenset(candidate.read_text(encoding="utf-8").split())
+        except OSError:
+            continue
+    return frozenset()
 
 
 def _portal_available() -> bool:

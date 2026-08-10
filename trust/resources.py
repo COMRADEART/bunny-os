@@ -19,12 +19,21 @@ catches a symlinked parent.
 **Containment is by path component, not by string prefix.** ``/home/bunny-evil``
 starts with ``/home/bunny`` and is not inside it.
 
-**A resource carries a digest and a display string, and the store keys on the
-digest.** The display string is short, relative to a named root where possible,
-and safe to put on a screen; the identifier is the canonical absolute path and is
-what enforcement uses. An audit record keeps the digest and the display, never
-the identifier — ``/home/x/divorce/draft.odt`` discloses something to anyone who
-reads the log, whether or not the permission was granted.
+**A resource carries a digest and two display strings, and the store keys on the
+digest.** ``display`` is what a *prompt* shows: relative to one of the user's own
+directories where possible, and the whole path where there is no shorter honest
+form. ``log_display`` is what a *record* holds, which elides the directory for a
+path outside those directories — a log is read by support tooling, a diagnostic
+export and whoever holds the disk, and none of them were in front of the prompt.
+The identifier, the canonical absolute path enforcement uses, reaches neither.
+``/home/x/divorce/draft.odt`` discloses something to anyone who reads the log,
+whether or not the permission was granted.
+
+The distinction between the two was added after a Linux qualification run: the
+display defaulted to the whole absolute path whenever a caller passed no roots,
+and a Windows developer host had hidden it because its temporary directory
+happened to sit under the user profile, so the home-relative fallback shortened
+it and the guarding test passed for the wrong reason.
 
 This module deliberately does not reuse :mod:`companion.desktop.paths`. That one
 answers a different question — *may the companion reveal a path the runtime
@@ -62,6 +71,7 @@ __all__ = [
     "real_path",
     "resource_digest",
     "resource_for",
+    "user_roots",
 ]
 
 #: Long enough for any real path, short enough that a path cannot be used to
@@ -137,16 +147,37 @@ class Resource:
     identifier: str
     display: str
     digest: str
+    #: What a *record* may hold, which is not always what a prompt shows.
+    #:
+    #: The two differ for one case, and the Linux qualification run is what
+    #: found it. A path under one of the user's own directories shortens to
+    #: ``Documents/report.odt``: that is what the person saw, it names no
+    #: directory above the one they chose, and it is harmless in a log. Any
+    #: other path — ``/tmp/x``, ``~/divorce/draft.odt``, an external drive —
+    #: has no shorter *honest* form for a prompt, because telling somebody an
+    #: app wants to open ``passwd`` when the file is ``/etc/passwd`` would be a
+    #: worse failure than a long line. So the prompt shows it whole and the
+    #: record keeps only the file name.
+    #:
+    #: A field rather than something derived from ``display``, because deriving
+    #: it would mean inferring *which* shortening rule had applied by looking at
+    #: the resulting string, and a rule inferred from its own output is a rule
+    #: that silently stops applying when the output changes.
+    log_display: str = ""
 
     def __post_init__(self) -> None:  # pragma: no cover - construction-time guard
         if self.kind not in RESOURCE_KINDS:
             raise TrustSchemaError(f"unknown resource kind: {self.kind!r}")
         if len(self.identifier) > MAX_IDENTIFIER_LENGTH:
             raise TrustSchemaError(f"resource identifier longer than {MAX_IDENTIFIER_LENGTH} characters")
+        if not self.log_display:
+            # Every non-path kind, and any resource rebuilt from a stored record
+            # whose display is already the logged form.
+            object.__setattr__(self, "log_display", self.display)
 
     def as_record(self) -> Mapping[str, Any]:
-        """The audit projection: kind, display and digest, never the identifier."""
-        return {"kind": self.kind, "display": self.display, "digest": self.digest}
+        """The audit projection: kind, log display and digest, never the identifier."""
+        return {"kind": self.kind, "display": self.log_display, "digest": self.digest}
 
     def covers(self, other: "Resource") -> bool:
         """Whether a grant on this resource also covers ``other``.
@@ -270,26 +301,72 @@ def path_resource(
     identifier = str(resolved)
     if directory and not identifier.endswith(os.sep):
         identifier = identifier + "/"
+    display, under_user_directory = _display_path(resolved, roots)
     return Resource(
         kind="path",
         identifier=identifier,
-        display=_display_path(resolved, roots),
+        display=display,
         digest=resource_digest("path", identifier),
+        log_display=display if under_user_directory else ".../" + (resolved.name or display),
     )
 
 
-def _display_path(resolved: Path, roots: Mapping[str, Path] | None) -> str:
-    if roots:
-        for name, root in sorted(roots.items(), key=lambda item: -len(str(item[1]))):
-            root_resolved = real_path(root)
-            if contains(root_resolved, resolved):
-                relative = resolved.relative_to(root_resolved)
-                return _elide(f"{name}/{relative}" if relative.parts else name)
+#: The XDG user directories, by the name a person calls them. One definition,
+#: used for three things that must agree: shortening a path for display, deciding
+#: where a capsule may export a result (:func:`capsules.exchange.user_destinations`),
+#: and deciding whether a path is somewhere a person keeps their own files.
+_XDG_USER_DIRECTORIES: Mapping[str, str] = {
+    "Documents": "XDG_DOCUMENTS_DIR",
+    "Downloads": "XDG_DOWNLOAD_DIR",
+    "Pictures": "XDG_PICTURES_DIR",
+    "Music": "XDG_MUSIC_DIR",
+    "Videos": "XDG_VIDEOS_DIR",
+    "Desktop": "XDG_DESKTOP_DIR",
+}
+
+
+def user_roots(home: Path | None = None) -> Mapping[str, Path]:
+    """The user's own directories, resolved, by display name.
+
+    The home directory itself is deliberately not one. "Anywhere in your home"
+    is not a bound, and home contains every credential directory
+    :mod:`capsules.isolation` refuses.
+
+    This is the default for :func:`path_resource`, and that default is the fix
+    for a defect the Linux qualification run found: a caller that passed no
+    roots got a resource whose ``display`` was the **whole absolute path**, which
+    then went on a person's screen and into the audit record. On a Windows
+    developer host the temporary directory happened to sit under the user
+    profile, so the home-relative fallback shortened it and the test that guards
+    this passed for the wrong reason.
+    """
+    base = Path(home) if home is not None else Path(os.path.expanduser("~"))
+    found: dict[str, Path] = {}
+    for name, variable in sorted(_XDG_USER_DIRECTORIES.items()):
+        configured = os.environ.get(variable)
+        found[name] = Path(configured) if configured else base / name
+    return found
+
+
+def _display_path(resolved: Path, roots: Mapping[str, Path] | None) -> tuple[str, bool]:
+    """The prompt form, and whether it is relative to one of the user's own
+    directories.
+
+    The boolean is what decides :attr:`Resource.log_display`. The home-relative
+    fallback below is *not* a named root: ``~/divorce/draft.odt`` hides the
+    account name and discloses the directory, and the directory is the part this
+    module's own docstring gives as the example of what must not reach a log.
+    """
+    for name, root in sorted((roots or user_roots()).items(), key=lambda item: -len(str(item[1]))):
+        root_resolved = real_path(root)
+        if contains(root_resolved, resolved):
+            relative = resolved.relative_to(root_resolved)
+            return _elide(f"{name}/{relative}" if relative.parts else name), True
     home = real_path(Path.home()) if os.path.expanduser("~") != "~" else None
     if home is not None and contains(home, resolved):
         relative = resolved.relative_to(home)
-        return _elide(f"~/{relative}" if relative.parts else "~")
-    return _elide(str(resolved))
+        return _elide(f"~/{relative}" if relative.parts else "~"), False
+    return _elide(str(resolved)), False
 
 
 def network_resource(value: str, *, allowlist: tuple[str, ...] = ()) -> Resource:
