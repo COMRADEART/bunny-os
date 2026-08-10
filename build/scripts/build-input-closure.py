@@ -171,7 +171,17 @@ def classify(
             "profiles": sorted(route.profiles) if route.profiles is not None else list(PROFILES),
         })
 
-    if matched:
+    if matched and not reachable:
+        # A route names this path and the build context does not contain it, so
+        # the copy inside the container has nothing to copy. Reporting this as
+        # "installed" would be the analyser's original defect running the other
+        # way round: it told the truth about routes and not about reach, and a
+        # package added to install_routes.py without a matching COPY in the
+        # Containerfile was silently absent from the image while every check
+        # said it was there. Named separately so it cannot be read as either
+        # "installed" or "not built from".
+        classification = "route-without-context"
+    elif matched:
         classification = "installed"
     elif reachable:
         classification = "context-only"

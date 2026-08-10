@@ -153,6 +153,36 @@ class TheSharedDeclaration(unittest.TestCase):
         identifiers = [route.id for route in INSTALL_ROUTES]
         self.assertEqual(len(identifiers), len(set(identifiers)))
 
+    def test_every_route_source_is_inside_a_build_context_root(self) -> None:
+        """A route the build cannot see installs nothing, and said it did.
+
+        The analyser matched routes against paths and never asked whether the
+        Containerfile copies the directory the route names. Adding a package to
+        the route table without a matching COPY produced an image with the
+        package missing while every check reported it installed — the original
+        closure defect running the other way round.
+
+        This is the assertion that catches it, and it is on the *declaration*
+        rather than on a build: a missing COPY is visible without building
+        anything.
+        """
+        roots, unresolved = CLOSURE.build_context_roots(ROOT / "build/Containerfile")
+        self.assertEqual(unresolved, [], "a COPY the analyser cannot resolve makes this check partial")
+        for route in INSTALL_ROUTES:
+            with self.subTest(route=route.id):
+                head = route.source.split("/", 1)[0]
+                self.assertIn(
+                    head, roots,
+                    f"route {route.id} installs from {route.source}, which no COPY puts in the "
+                    f"build context; the image would not contain it",
+                )
+
+    def test_a_route_without_a_context_root_is_named_rather_than_called_installed(self) -> None:
+        """The analyser has a word for it now, and it is not 'installed'."""
+        verdict = CLOSURE.classify("capability/engine.py", ["build"])
+        self.assertEqual(verdict["classification"], "route-without-context")
+        self.assertTrue(verdict["routes"], "the route still matched; only the reach is missing")
+
     def test_the_installer_selects_exactly_what_the_analyser_classifies(self) -> None:
         """The two answers come from one function, and this is the assertion of it.
 

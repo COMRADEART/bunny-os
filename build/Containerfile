@@ -34,6 +34,8 @@ COPY build /tmp/bunny-os/build
 # restart. A missing COPY is not a build error; it is a silently empty install.
 COPY assets /tmp/bunny-os/assets
 COPY capability /tmp/bunny-os/capability
+COPY capsules /tmp/bunny-os/capsules
+COPY catalog /tmp/bunny-os/catalog
 COPY companion /tmp/bunny-os/companion
 COPY config /tmp/bunny-os/config
 COPY desktop-integration /tmp/bunny-os/desktop-integration
@@ -47,6 +49,7 @@ COPY services /tmp/bunny-os/services
 COPY shell /tmp/bunny-os/shell
 COPY systemd /tmp/bunny-os/systemd
 COPY tools /tmp/bunny-os/tools
+COPY trust /tmp/bunny-os/trust
 
 # A hermetic build installs from the retained snapshot bind-mounted at
 # /snapshot and stamps the transaction with the declared epoch through the
