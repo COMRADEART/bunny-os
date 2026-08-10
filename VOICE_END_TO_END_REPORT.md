@@ -28,12 +28,135 @@ Pocket selected          PASS  READY, no fallback recorded
 Pocket synthesis         PASS
 PipeWire playback        PASS  the emulated speaker's own recording says
                                "files is open"
-Character lifecycle      NOT OBSERVED - the shell's own activation paths are
-                               both blocked; see "What is not proved"
+Pointer input            PASS  root cause: GNOME's _coverPane, left shown
+                               because this desktop stopped the startup
+                               animation completing
+Microphone button        PASS  pressed on screen; the whole flow follows
+Character lifecycle      PASS  idle → listening → thinking → waiting →
+                               working → talking → success → idle
 Tests                    4649 run, 0 failed, 7 skipped
 Source gate              PASS, exit 0, clean tree
 Exact image              NOT BUILT - the host ran out of disk; see below
 ```
+
+## Task #12: the dashboard could not be clicked
+
+The dashboard received no pointer input at all — not the character, not a card,
+not a Quick Access tile, not a suggestion chip, not the assistant's field, not
+its microphone button. The top bar, the sidebar and the dock worked.
+
+Asked of the compositor rather than guessed at — `get_actor_at_pos`, the same
+picking the event path uses, at each failing coordinate:
+
+```text
+(360,414)  (1784,627)  (1420,547)  (1713,627)  (700,800)
+  → Main.layoutManager._coverPane
+    reactive=True visible=True mapped=True opacity=0
+    stage={x:0, y:0, width:1920, height:1080}
+    chain: ClutterActor < uiGroup < MetaStage
+
+(991,1028) → StBoxLayout 'bunny-dock-tile' — the dock, which is chrome
+```
+
+`_coverPane` is GNOME's own full-screen, transparent, **reactive** actor. Its
+only job is to swallow input while the startup animation runs, and
+`_startupAnimationComplete` disposes of it. That animation eases `panelBox`
+into place. This desktop hid `panelBox` at enable() and re-hid it on every
+`notify::visible`, so the animation never completed and the pane was never
+disposed of. It sits in uiGroup **above `window_group`**, so it was taking
+events meant for application windows as well.
+
+With `desktop-enabled false` in the same image, the same points picked ordinary
+actors. That control condition is what pinned it on this desktop rather than on
+GNOME.
+
+The fix takes the panel only after `startup-complete` — or after a deadline, for
+the case where that signal fired before this desktop enabled — keeps the
+visibility watcher inert until then, and, if the pane is *still* shown at that
+point, hides it explicitly. Nothing decorative was made reactive to win the
+pick: the content layer is still non-reactive and `makeActivatable` is still the
+only place reactivity is granted.
+
+### Two more that only appeared once clicks arrived
+
+**The companion had no display.** A spoken "Open Files" was transcribed, routed,
+approved — and answered *"there is no graphical session, so a launched
+application would have nowhere to appear"*, on a machine with a desktop on
+screen. `bunny-companion.service` was ordered after
+`graphical-session-pre.target`, so it started at 14:00:23 while the target was
+reached at 14:00:25: before the compositor had created `wayland-0`. It spent the
+session refusing every action needing a display. It hid because restarting the
+service picks the variables up, and development restarts it constantly. The unit
+is now ordered after the target, and the service adopts the display from the
+runtime directory if it is still missing.
+
+**Voice availability was asked once.** Ordering the companion later made the
+shell's single startup check reliably precede the companion's socket, and the
+microphone button read *"Speak to Bunny. Unavailable: the companion runtime is
+unreachable"* with `sensitive=false` for the whole session. It is asked again,
+bounded, and stops the moment the answer is yes.
+
+## The shell-originated run
+
+From a pointer press on the visible microphone button, with no injected
+transcript, no manual action and no manually set character state:
+
+```text
++0.0s   press at (1784,627) on 'Speak to Bunny'
++1.0s   listening        privacy indicator up
++5.7s   thinking         "open files", Vosk, confidence 1.00
++6.7s   waiting for permission (launch_application, irreversible)
+        → allowed
++8.1s   working
++15.9s  talking          "Files is open."   Pocket, caro_davy
++17.5s  success → idle
+```
+
+Files really opened: process, `dbus-:1.2-org.gnome.Nautilus@0.service`, the
+`org.gnome.Nautilus` bus name, and a showing frame at (0, 0, 890, 550).
+
+## The other spoken acceptances
+
+```text
+"How much memory am I using?"
+  spoken   "You are using 1.9 GiB of 5.8 GiB of memory (33%)."
+  /proc    used 1.91 GiB of 5.77 GiB (33%)          — the same number
+
+"Find PDF files in Downloads."
+  spoken   "I found 2 matching files: bunny-test-one.pdf, bunny-test-two.pdf."
+  on disk  those two, plus bunny-test-notes.txt, which was correctly not matched
+  and with an empty Downloads the same question answered "I did not find any"
+
+interruption
+  audio stopped 116 ms after the cancel        (target < 250 ms)
+  measured on the player process and the sink's own state, polled at 10 ms
+
+Pocket unavailable (its model tree replaced by an empty directory)
+  audio_started providerId=kitten implementationId=kitten-tts/0.8.1
+                voiceId=Bella — and the configured engine stayed pocket
+
+every provider unavailable (both models and both programs)
+  the text answer was still correct and still displayed; the character went
+  listening → thinking → success and never entered TALKING; no crash
+
+networking down (every non-loopback link down, ping unreachable)
+  "Open Terminal" → Terminal opened, spoken by pocket-tts/2.1.0 locally
+```
+
+## Performance, on the booted system
+
+```text
+                     Pocket        Kitten
+cold synthesis       7.37s         1.12s      includes the worker's first load
+warm synthesis       0.99, 1.12s   0.75, 0.93s
+warm RTF             0.28          0.19-0.23
+```
+
+Worker RSS is **not** reported: the reader matched a 13 MiB process, which
+cannot be the worker that holds a PyTorch model, so the number is wrong and a
+wrong number is worse than none. GNOME Shell stayed responsive throughout —
+every screenshot, pointer press and window operation in this report was taken
+while this was running.
 
 ## What the screenshot actually showed
 
@@ -227,16 +350,25 @@ plainly rather than implied.
 
 ## What is not proved
 
-1. **The character's state machine was not observed.** The interaction was
-   driven through `bunny-shell-assistant listen` — the exact program
-   `VoiceService` spawns — so everything from the shell's process boundary
-   inwards is proved. The GJS half is not: the shell only moves the character
-   for an interaction *it* started, and both of its starting paths are blocked.
-   The microphone button is in the desktop content layer, which takes no pointer
-   input; and no extension keybinding fired in the iteration guest, which ran
-   the extension from `~/.local/share` where its schema is not in the global
-   source. See KNOWN_LIMITATIONS.md.
-2. **No human has heard any of this audio.**
+1. **No human has heard any of this audio.** Every audibility claim ends at
+   QEMU's recording of the emulated speaker, read back by a recogniser.
+2. **The voice settings page was not seen working.** The defect that made it
+   unreachable — no `companion` on `bunny-settings`'s path — is fixed in source
+   and covered by a test, and the page was photographed at both resolutions
+   still showing the old build, because the iteration overlay does not reach
+   `/usr/lib/bunny-shell`. Nothing in this report claims the provider list or
+   the readiness states have been looked at.
+3. **The 1366×768 screenshots are sheared.** A screendump taken after the
+   framebuffer is resized tears diagonally; the same artefact is described in
+   DESKTOP_SHELL_ALPHA_VALIDATION.md. The accessibility measurement at that
+   size is sound — 62 controls, **0 off-screen** — but the photograph is not
+   presentable and no visual judgement should be made from it.
+4. **The keyboard shortcut was not exercised end to end.** All four bindings
+   now report successful registration in the journal, which is new; but this
+   harness cannot deliver Super to Mutter at all — GNOME's own overlay-key does
+   not fire either, while ordinary typing into a focused terminal works. The
+   shortcut path was therefore replaced by the microphone button, which is the
+   stronger claim anyway.
 3. **The exact image was not built or booted from this candidate.** The
    attempt failed on the host's disk, not on anything in the tree: Windows C:
    reached zero bytes free, so the WSL `ext4.vhdx` could not grow, and writes

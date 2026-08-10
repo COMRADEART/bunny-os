@@ -4,48 +4,44 @@ This root report mirrors the maintained detail in `docs/KNOWN_LIMITATIONS.md`.
 
 ## Added by the spoken end-to-end pass — 2026-08-10
 
-**The desktop content layer takes no pointer input.** The top bar, sidebar and
-dock answer presses; the character, the dashboard cards, the Quick Access tiles,
-the suggestion chips, the assistant's text field, its microphone button and its
-Allow/Deny buttons do not. Measured four ways on a booted system, with a
-chrome control as the control condition each time: the dock's Terminal tile
-opens a terminal window, the Quick Access Terminal tile beside it opens nothing;
-the same holds with the layer stacked below `window_group` and above it; and a
-`button-release-event` handler on the layer itself never fired for a press on
-empty desktop. The consequence is that every interaction the dashboard offers
-has to be reached another way — the sidebar, the dock, or the keyboard.
+**The voice settings page has not been seen working.** It could not reach the
+companion on any installed system — `/usr/bin/bunny-settings` puts
+`/usr/lib/bunny-shell` on `sys.path` and nothing put `/usr/lib/bunny-os/python`
+there, so the page always rendered "Voice settings are unavailable because Bunny
+Companion is not reachable: No module named 'companion'". That is fixed in
+source and covered by a test; the page was photographed at 1920×1080 and
+1366×768 still showing the old build, because the iteration overlay does not
+reach `/usr/lib/bunny-shell`. The provider list, the readiness states and the
+engine selector have therefore still not been looked at.
 
-Three earlier measurements of this were wrong and are recorded so the next
-person does not repeat them: counting terminal *processes* cannot show a second
-window (`gnome-terminal-server` serves them all); pressing a control for an
-application that is already running opens nothing, because GNOME activates it by
-focusing it; and the "Open Terminal" suggestion chip is not a launcher at all —
-it goes through the assistant and stops at the permission question.
-
-**Spoken interaction was driven through the shipped bridge, not the shell's own
-button.** `bunny-shell-assistant listen` is the exact program `VoiceService`
-spawns, so everything from the shell's process boundary inwards is proved:
-capture, transcription, intent, the structured action, its validation, the
-launch, the reply, synthesis and playback. What is *not* proved is the GJS half
-— the character's LISTENING → THINKING → WORKING → TALKING → IDLE transitions
-were not observed, because the two paths that start a voice interaction from the
-shell are the microphone button (above) and the push-to-talk keybinding, and no
-extension keybinding fired in the iteration guest. That guest ran the extension
-from `~/.local/share`, where the settings schema is not in the global source,
-which is a plausible cause and was not confirmed.
+**A screendump taken after a resolution change is sheared.** The 1366×768
+photographs tear diagonally; the accessibility measurement at that size is sound
+(62 controls, none off-screen) but the images are not presentable. The same
+artefact is described in DESKTOP_SHELL_ALPHA_VALIDATION.md.
 
 **This harness cannot send Super.** Neither GNOME's own overlay-key nor any
-`<Super>` accelerator fired, while ordinary typing into a focused terminal
-works and creates a file. Push-to-talk was rebound to `<Control><Alt>v` for the
-run, which is a supported setting rather than a test hook.
+`<Super>` accelerator fires, while ordinary typing into a focused terminal works
+and creates a file. All four extension keybindings now report successful
+registration in the journal — which is itself new, because `addKeybinding`
+signals refusal by return value rather than by raising — but the push-to-talk
+shortcut has not been exercised end to end. The microphone button was used
+instead, which is the stronger claim.
+
+**Worker RSS is not reported.** The reader matched a 13 MiB process, which
+cannot be the worker holding a PyTorch model. A number known to be wrong is
+worse than no number; the same rule already applies to CPU-seconds on this host.
 
 **The shipped wallpaper does not load.** `bunny-nocturne.svg` fails with
 "Unknown image format: application/xml" — the image has no SVG pixbuf loader —
-so GNOME paints the dconf gradient behind the desktop's own contrast scrim
-instead. Composed and dark, as the fallback intends, but not the shipped image.
+so GNOME paints the dconf gradient behind the desktop's own contrast scrim.
 
 **The search results panel is drawn empty.** A 560×13 strip sits under the top
-bar with no rows in it, in every screenshot taken this session.
+bar with no rows in it.
+
+**The exact image has not been built from this candidate.** The host ran out of
+disk: Windows C: reached zero free, the WSL virtual disk could not grow, and
+podman failed with block-layer I/O errors. `df` inside the guest still reported
+hundreds of free gigabytes, so the first symptom was not about space at all.
 
 ## Added by the voice interaction milestone — 2026-08-09
 
