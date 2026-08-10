@@ -5,10 +5,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Bunny voice end-to-end and desktop visual acceptance
 
-Candidate: `feature/bunny-desktop-shell` at **`fdab622`**. The spoken run and the
-desktop photographs below were taken at `ce7f7a1`, the commit that carries the
-three fixes; `fdab622` adds the packaging split, the settings round-trip test
-and this report, and changes nothing the run exercised.
+Candidate: `feature/bunny-desktop-shell` at **`8577ede`**.
+
+The shell-originated run was taken at `1d0de5d`, which carries every fix it
+exercises. `8706b24` adds only the gate's failure reporting and `8577ede` only
+this document; neither changes anything the run touched. The earlier
+bridge-driven evidence — the recogniser reading the speaker's own recording back
+as "files is open" — was taken at `ce7f7a1`.
 
 Measured on the Fedora 44 reference host, in a QEMU/KVM guest booted from the
 `shell-test` image, unless a line says otherwise.
