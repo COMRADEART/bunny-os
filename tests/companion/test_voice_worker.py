@@ -117,6 +117,25 @@ class LifecycleTests(unittest.TestCase):
         for expected in ("speech_queued", "speech_started", "audio_started", "speech_finished", "mouth_neutral"):
             self.assertIn(expected, kinds)
 
+    def test_audio_started_names_the_provider_that_is_being_heard(self) -> None:
+        """Which engine spoke is a fact about playback, not about configuration.
+
+        The streaming path always carried `providerId`; the synthesise-and-play
+        path carried only the backend and the device, so a desktop — and the
+        acceptance harness — had to infer the engine from the *setting*. That
+        inference is wrong in exactly the case worth reporting: a fallback.
+        """
+        request = make_request()
+        self.assertTrue(self.harness.worker.submit(request).accepted)
+        self.assertTrue(self.harness.worker.drain(timeout=BARRIER_TIMEOUT))
+        started = [item for item in self.harness.events if item.kind == "audio_started"]
+        self.assertTrue(started, "no audio_started event was emitted")
+        payload = started[-1].payload
+        self.assertTrue(payload.get("providerId"),
+                        "audio_started did not name the provider that produced the audio")
+        self.assertIn("implementationId", payload)
+        self.assertIn("voiceId", payload)
+
     def test_only_one_utterance_holds_the_floor_at_a_time(self) -> None:
         gate = threading.Event()
         entered = threading.Event()

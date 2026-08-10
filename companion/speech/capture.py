@@ -43,6 +43,7 @@ import threading
 import time
 from typing import Any, Iterable, Mapping, Protocol, Sequence
 
+from ..pipewire import DEFAULT_SOURCE_KEYS, default_node_name
 from ..voice.execution import CommandSpec, ExecutableRefused, child_environment
 from .execution import CaptureChild, resolve_capture_executable
 from .request import SpeechInputRequest
@@ -909,6 +910,10 @@ class PipeWireCaptureBackend(_RecorderBackend):
             raise _Unreachable(f"pw-dump produced output this cannot read: {exc}") from exc
         if not isinstance(graph, list):
             raise _Unreachable("pw-dump did not produce a graph")
+        # Which source the session calls its default is metadata, not a node
+        # property; see companion/pipewire.py for what reading it off the node
+        # cost.
+        default_name = default_node_name(graph, DEFAULT_SOURCE_KEYS)
         devices: list[CaptureDevice] = []
         for node in graph:
             if not isinstance(node, Mapping):
@@ -928,7 +933,7 @@ class PipeWireCaptureBackend(_RecorderBackend):
                 backend_id=self.backend_id,
                 name=name,
                 description=str(props.get("node.description", "")),
-                default=bool(props.get("node.default", False)),
+                default=bool(default_name) and name == default_name,
                 state=str(info.get("state", "")) if isinstance(info, Mapping) else "",
                 monitor="monitor" in name.lower(),
             ))

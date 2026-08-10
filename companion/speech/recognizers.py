@@ -40,6 +40,7 @@ import stat
 import threading
 from typing import Any, Callable, Sequence
 
+from ..ownership import owner_is_trusted
 from .recognizer import (
     RecognizerDeclaration,
     RecognizerHealth,
@@ -117,7 +118,12 @@ def _path_safe(path: Path, *, require_directory: bool | None = None) -> tuple[bo
     Ownership and permissions, checked before anything is parsed: a model
     entry writable by another account is data another account chooses.
     Root-owned is accepted — the system location is root's — and so is our own
-    uid; nothing else is.
+    uid; nothing else is, except the one case
+    :mod:`companion.ownership` documents, where this process is inside a user
+    namespace that does not map root and the kernel therefore reports every
+    root-owned file as the overflow uid. That is the configuration the
+    companion service actually runs in, and refusing it disabled speech input
+    on every shipped image.
     """
     try:
         info = path.lstat()
@@ -133,7 +139,7 @@ def _path_safe(path: Path, *, require_directory: bool | None = None) -> tuple[bo
         stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode)
     ):
         return False, "is neither a regular file nor a directory"
-    if hasattr(os, "getuid") and info.st_uid not in (0, os.getuid()):
+    if hasattr(os, "getuid") and not owner_is_trusted(info.st_uid):
         return False, f"is owned by uid {info.st_uid} rather than root or this user"
     if os.name == "posix" and info.st_mode & (stat.S_IWGRP | stat.S_IWOTH):
         return False, "is writable by group or other"

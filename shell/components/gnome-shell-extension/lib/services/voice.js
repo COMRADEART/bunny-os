@@ -364,10 +364,17 @@ export class VoiceService {
         }
     }
 
-    _control(arguments, onLine = null) {
-        this._run(arguments, line => {
+    // The parameter is `argumentList` and not `arguments` for a reason that cost
+    // a whole desktop: an ES module is strict-mode code, binding the name
+    // `arguments` in it is a SyntaxError, and GJS reports that when it *loads*
+    // the module — before enable() runs, so extension.js's try/catch never sees
+    // it. The extension went to state ERROR, GNOME Shell carried on with its
+    // own desktop, and the session looked like an ordinary GNOME login.
+    _control(argumentList, onLine = null) {
+        this._run(argumentList, line => {
             if (line.event === 'error')
-                logOnce(`voice-control-${arguments[0]}`, line.reason ?? `${arguments[0]} failed`);
+                logOnce(`voice-control-${argumentList[0]}`,
+                    line.reason ?? `${argumentList[0]} failed`);
             onLine?.(line);
         }, null);
     }

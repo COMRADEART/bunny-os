@@ -26,10 +26,11 @@
 // The named six survive as a *preference order*, not as contents: if this
 // machine has Files, Files is first. Nothing is drawn for the ones it lacks.
 
+import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
 import {Card} from './base.js';
-import {box, iconTile} from '../widgets.js';
+import {iconTile} from '../widgets.js';
 
 /**
  * Preferred first, in this order, when the machine actually has them.
@@ -42,6 +43,14 @@ const PREFERRED = ['files', 'vscode', 'obs', 'blender', 'discord', 'spotify', 't
 
 const MAX_TILES = 8;
 
+//: Tiles per row. The card is a fixed 304px strip (see lib/layout.js) and a
+//: tile is 55px wide plus 8px of padding, so four and their three 6px gaps come
+//: to 270px — the content width once the card's own 17px padding is taken off.
+//: A fifth does not fit, and a single row of eight ran 300px past the card's
+//: right edge and out over the wallpaper on the first machine that had eight
+//: applications installed. Every earlier screenshot had four.
+const TILES_PER_ROW = 4;
+
 export class QuickAccess extends Card {
     constructor({launcher, blur, onSeeAll}) {
         super({
@@ -51,7 +60,16 @@ export class QuickAccess extends Card {
             headerTrailing: Card.headerButton('All apps', onSeeAll),
         });
         this._launcher = launcher;
-        this._grid = box({style_class: 'bunny-quick-grid'});
+        // A grid rather than a row: the tile count is what the machine has
+        // installed, not a constant, so the container has to be able to wrap.
+        this._grid = new St.Widget({
+            style_class: 'bunny-quick-grid',
+            layout_manager: new Clutter.GridLayout({
+                orientation: Clutter.Orientation.HORIZONTAL,
+                column_spacing: 6,
+                row_spacing: 6,
+            }),
+        });
         this.content.add_child(this._grid);
         this._empty = new St.Label({
             text: 'No applications are installed yet.',
@@ -93,8 +111,9 @@ export class QuickAccess extends Card {
             }
         }
 
-        for (const app of chosen) {
-            this._grid.add_child(iconTile({
+        const layout = this._grid.layout_manager;
+        for (const [position, app] of chosen.entries()) {
+            layout.attach(iconTile({
                 // The application's own icon, always. There is no branch here
                 // that draws a placeholder, because there is no tile here for
                 // something that is not installed.
@@ -104,7 +123,7 @@ export class QuickAccess extends Card {
                 styleClass: 'bunny-quick-tile',
                 accessibleName: app.get_name(),
                 onActivate: () => app.activate(),
-            }));
+            }), position % TILES_PER_ROW, Math.floor(position / TILES_PER_ROW), 1, 1);
         }
 
         // An empty card says so rather than being an unexplained blank. This is

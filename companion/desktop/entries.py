@@ -56,6 +56,7 @@ import shlex
 import stat
 from typing import Any, Iterable, Mapping, Sequence
 
+from ..ownership import owner_is_trusted
 from .errors import DesktopRefused
 
 __all__ = [
@@ -323,7 +324,11 @@ def _entry_file_safe(path: Path, application_id: str) -> None:
             f"{application_id!r} is writable by group or other, so what it says now is not "
             "what it may say when it is launched; it was refused"
         )
-    if os.name == "posix" and info.st_uid not in (0, os.getuid()):
+    # `owner_is_trusted` rather than a literal `(0, os.getuid())`: the companion
+    # service runs inside a user namespace that maps only its own uid, so every
+    # root-owned entry in /usr/share/applications is reported to it as the
+    # overflow uid. See companion/ownership.py.
+    if os.name == "posix" and not owner_is_trusted(info.st_uid):
         raise DesktopRefused(
             f"{application_id!r} is owned by neither root nor this user; an entry a third "
             "party controls is not one this build will start"

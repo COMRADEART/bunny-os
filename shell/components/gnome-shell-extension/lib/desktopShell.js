@@ -14,16 +14,26 @@
 // exists.
 //
 // **Desktop content** — the character, the cards, the bubbles, the scrim —
-// goes into Main.layoutManager._backgroundGroup, which sits inside
-// global.window_group beneath every window actor. So an open window covers the
-// dashboard the way it covers a wallpaper, which is the behaviour a desktop
-// has; if the cards were chrome they would float over Firefox.
+// goes inside global.window_group, immediately *above* GNOME's background group
+// and below every window actor. So an open window covers the dashboard the way
+// it covers a wallpaper, which is the behaviour a desktop has; if the cards were
+// chrome they would float over Firefox.
 //
-// _backgroundGroup is private API. The fallback below inserts into uiGroup
-// beneath window_group instead, which puts the content in the same place by a
-// different route. Both are checked at enable() and the choice is logged, so a
-// future Shell that renames the field degrades to a working desktop with a
-// journal line rather than to an exception in enable().
+// "Immediately above the background" is the whole of it, and getting it wrong
+// is invisible in every way except one. An earlier version parented the layer
+// into uiGroup and lowered it *below* window_group, on the reasoning that below
+// the windows is where a desktop lives. It is — but GNOME's wallpaper is not
+// above window_group, it is the bottom child *inside* it, so the layer went
+// behind an opaque full-screen background and stopped being drawn at all.
+// Nothing else changed: the actors were still built, still allocated, still
+// reported their rectangles to assistive technology and still answered clicks,
+// so every check in the suite passed and two boots were photographed with a
+// blank middle before anyone compared the photograph to the accessibility tree.
+// `_assertDesktopContentIsDrawable` below exists so that cannot happen twice.
+//
+// _backgroundGroup is private API, so its absence is tolerated: the layer is
+// then placed at the bottom of window_group, which is the same position by
+// index rather than by sibling. The choice is logged either way.
 //
 // ## What this file does not do
 //
@@ -100,6 +110,12 @@ export class DesktopShell {
 
         /** Names of components that failed to build. See `_optional`. */
         this.degraded = [];
+
+        //: Where GNOME's background group was before `_lowerTheWallpaper` moved
+        //: it, so `destroy` can put it back exactly there.
+        this._loweredBackground = null;
+        this._wallpaperHome = null;
+        this._wallpaperIndex = -1;
 
         this._blur = this._decideBlur();
         this.notifications = new NotificationService();
@@ -368,33 +384,47 @@ export class DesktopShell {
             layout_manager: new Clutter.FixedLayout(),
         });
 
-        // Desktop content goes into uiGroup, below window_group, and is
-        // *tracked as chrome*. Both halves are load-bearing and the second one
-        // was missing for two releases.
+        // Desktop content is chrome in uiGroup, lowered below window_group, and
+        // GNOME's wallpaper is brought down to sit below it. All three parts
+        // are load-bearing, and each of the first two was tried alone and
+        // failed in a way the other hides.
         //
-        // The background group was the obvious home and it is the wrong one:
-        // actors under `global.window_group` are not in the shell's input
-        // region, so a click on them is not delivered to the shell at all — it
-        // passes through to whatever is behind, which on an empty desktop is
-        // nothing. Every control in that layer was therefore inert. The dock
-        // and the sidebar worked because they are chrome; the character, the
-        // cards, the suggestions and the assistant's text field were not, and
-        // nothing had ever pressed one of those to find out. The first run of
-        // the assistant harness typed a request into a field that could not
-        // take focus.
+        // *Chrome* is what a tracked actor in uiGroup is, and it is what the
+        // dock and the sidebar are — both take presses. This layer does not,
+        // and that is an open defect rather than a property of the placement:
+        // pointer events were measured never to arrive with the layer below
+        // window_group, above window_group, on a tile, and on empty desktop
+        // with the layer itself made reactive. See KNOWN_LIMITATIONS.md. The
+        // placement below is therefore chosen for what it does fix — the
+        // dashboard is drawn at all — and not on a claim about input.
         //
-        // `addChrome` puts it in the input region, and then it is lowered below
-        // `window_group` so an open window still covers the dashboard the way
-        // it covers a wallpaper. `trackFullscreen` keeps the old behaviour of
-        // getting out of the way of a fullscreen video.
+        // *Below window_group* is what lets an open window cover the dashboard
+        // the way it covers a wallpaper. Chrome above the windows would float
+        // the cards over Firefox.
+        //
+        // *Moving the background* is what makes any of it visible. GNOME's
+        // wallpaper is not behind window_group, it is the bottom child inside
+        // it, so a layer lowered below window_group is behind an opaque
+        // full-screen image and is never drawn — allocated, sized, answering
+        // assistive technology and answering clicks, and invisible. Two boots
+        // were photographed with a blank middle before the photograph was
+        // compared with the accessibility tree.
+        //
+        // So the background group is reparented into uiGroup, immediately below
+        // this layer, and put back in destroy(). The alternative — drawing the
+        // wallpaper here — is the one lib/wallpaperLayer.js explains at length
+        // why not to do: GNOME owns multi-monitor, hot-plug, the light/dark
+        // pair and the user's own choice of image, and a second renderer would
+        // fight all four.
         Main.layoutManager.addChrome(this._desktopLayer, {
             affectsStruts: false,
             trackFullscreen: true,
         });
-        Main.layoutManager.uiGroup.set_child_below_sibling(
-            this._desktopLayer, global.window_group);
-        this._desktopParent = Main.layoutManager.uiGroup;
-        log_('desktop content is in uiGroup below window_group, tracked as chrome');
+        const uiGroup = Main.layoutManager.uiGroup;
+        uiGroup.set_child_below_sibling(this._desktopLayer, global.window_group);
+        this._desktopParent = uiGroup;
+        this._lowerTheWallpaper();
+        this._assertDesktopContentIsDrawable();
 
         for (const component of [
             this.wallpaper, this._characterViewport, this._bubble, this._suggestions,
@@ -434,6 +464,111 @@ export class DesktopShell {
         }
 
         this._hidePanel();
+    }
+
+    /**
+     * Move GNOME's wallpaper below the desktop content, reversibly.
+     *
+     * `_backgroundGroup` is private API, so its absence is tolerated: the
+     * desktop then runs with GNOME's background above it, which is the failure
+     * `_assertDesktopContentIsDrawable` reports rather than a crash. Where it
+     * exists, the move is recorded precisely enough to be undone — the parent
+     * and the index, not "put it back at the bottom", because the bottom of
+     * window_group is only where it happens to be today.
+     */
+    _lowerTheWallpaper() {
+        const background = Main.layoutManager._backgroundGroup;
+        if (!background) {
+            log_('no background group was found; the wallpaper cannot be lowered');
+            return;
+        }
+        const home = background.get_parent();
+        if (!home) {
+            log_('the background group has no parent; leaving it alone');
+            return;
+        }
+        this._wallpaperHome = home;
+        this._wallpaperIndex = home.get_children().indexOf(background);
+        home.remove_child(background);
+        const uiGroup = Main.layoutManager.uiGroup;
+        uiGroup.add_child(background);
+        uiGroup.set_child_below_sibling(background, this._desktopLayer);
+        this._loweredBackground = background;
+        log_('the wallpaper is in uiGroup below the desktop content, which is below the windows');
+    }
+
+    /** Put the wallpaper back where GNOME left it. */
+    _restoreTheWallpaper() {
+        const background = this._loweredBackground;
+        this._loweredBackground = null;
+        if (!background || !this._wallpaperHome)
+            return;
+        const uiGroup = Main.layoutManager.uiGroup;
+        if (background.get_parent() === uiGroup)
+            uiGroup.remove_child(background);
+        if (background.get_parent() === null) {
+            this._wallpaperHome.add_child(background);
+            const index = this._wallpaperIndex;
+            if (Number.isInteger(index) && index >= 0)
+                this._wallpaperHome.set_child_at_index(background, index);
+        }
+        this._wallpaperHome = null;
+        this._wallpaperIndex = -1;
+    }
+
+    /**
+     * Say so, in the journal, if the content layer cannot be seen.
+     *
+     * The defect this exists for produced a desktop that was correct in every
+     * respect except the one that matters: the cards and the character were
+     * built, sized, placed and answering to assistive technology, and none of
+     * them was ever painted, because an opaque wallpaper was drawn on top of
+     * the whole layer. There is no assertion about a widget that catches that
+     * — the widget is fine — so the check is about *scene-graph order*, which
+     * is the thing that was actually wrong.
+     *
+     * It reports rather than throws. A desktop whose dashboard is hidden is
+     * still a desktop with a working top bar, sidebar and dock, and tearing it
+     * down would take those away too; the journal line, `degraded`, and the
+     * harness's pixel check are the three places this becomes visible.
+     */
+    _assertDesktopContentIsDrawable() {
+        const layer = this._desktopLayer;
+        const uiGroup = Main.layoutManager.uiGroup;
+        const parent = layer.get_parent();
+        const problems = [];
+
+        if (parent !== uiGroup) {
+            problems.push(
+                `the content layer is parented to ${parent} rather than uiGroup, so it is ` +
+                'outside the shell\'s input region and its controls cannot be pressed');
+        } else {
+            const siblings = parent.get_children();
+            const here = siblings.indexOf(layer);
+            if (here > siblings.indexOf(global.window_group))
+                problems.push('the content layer is above window_group, so it will draw over windows');
+            // Anything opaque and full-screen drawn after us hides us. The one
+            // that did is a background group, and the check names it rather
+            // than testing for opacity, which an actor cannot be asked.
+            for (const actor of siblings.slice(here + 1)) {
+                if (actor instanceof Meta.BackgroundGroup)
+                    problems.push('a background group is drawn above the content layer in uiGroup');
+            }
+            const background = Main.layoutManager._backgroundGroup;
+            if (background && background.get_parent() === global.window_group) {
+                problems.push(
+                    'the wallpaper is still inside window_group, which is drawn above this ' +
+                    'layer, so none of the dashboard or the character will be visible');
+            }
+        }
+
+        if (problems.length === 0) {
+            log_('desktop content layer is above the wallpaper and below the windows');
+            return;
+        }
+        this.degraded.push('desktop content layer placement');
+        for (const problem of problems)
+            log_(`desktop content will not be visible: ${problem}`);
     }
 
     /**
@@ -1497,6 +1632,11 @@ export class DesktopShell {
                 this.launcher?.disconnect(this._installedChangedId);
             this._characterUnsubscribe?.();
         });
+
+        // Before the chrome goes: the wallpaper has to be back inside
+        // window_group, or a session that disabled the extension would be left
+        // with GNOME's background in the shell's chrome layer.
+        attempt('wallpaper', () => this._restoreTheWallpaper());
 
         attempt('chrome', () => {
             for (const actor of this._chromeActors ?? []) {

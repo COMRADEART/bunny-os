@@ -716,9 +716,19 @@ class VoiceWorker:
         if utterance.measurement is not None:
             utterance.measurement.audio_started_at = started
             utterance.measurement.viseme_source = utterance.timeline.source
+        # The provider is named here, on the event that says audio is being
+        # heard, and not only on the synthesis event. "Which engine spoke" is a
+        # question about playback: a run could see Pocket synthesise, fall back,
+        # and play something else, and an audio_started that carried only the
+        # backend and the device left the desktop — and the acceptance harness —
+        # inferring the answer from configuration rather than reading it.
+        synthesis = utterance.synthesis
         self._emit(self._event("audio_started", request, {
             "backendId": backend.backend_id,
             "deviceId": device.device_id,
+            "providerId": synthesis.provider_id if synthesis else "",
+            "implementationId": synthesis.implementation_id if synthesis else "",
+            "voiceId": synthesis.voice_id if synthesis else "",
             "audioSeconds": round(probe.duration_seconds, 4),
             "visemeSource": utterance.timeline.source,
             "visemeConfidence": utterance.timeline.confidence,

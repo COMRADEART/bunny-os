@@ -42,6 +42,7 @@ import threading
 import time
 from typing import Any, Iterable, Mapping, Protocol, Sequence
 
+from ..pipewire import DEFAULT_SINK_KEYS, default_node_name
 from .execution import (
     CancellationSignal,
     Child,
@@ -1057,6 +1058,8 @@ class PipeWireBackend(_CommandBackend):
             raise _Unreachable(f"pw-dump produced output this cannot read: {exc}") from exc
         if not isinstance(graph, list):
             raise _Unreachable("pw-dump did not produce a graph")
+        # See companion/pipewire.py: the default is metadata, not a node prop.
+        default_name = default_node_name(graph, DEFAULT_SINK_KEYS)
         devices: list[AudioDevice] = []
         for node in graph:
             if not isinstance(node, Mapping):
@@ -1075,7 +1078,7 @@ class PipeWireBackend(_CommandBackend):
                 backend_id=self.backend_id,
                 name=name,
                 description=str(props.get("node.description", "")),
-                default=bool(props.get("node.default", False)),
+                default=bool(default_name) and name == default_name,
                 state=str(info.get("state", "")) if isinstance(info, Mapping) else "",
             ))
             if len(devices) >= 64:

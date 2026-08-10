@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 
 from tests.support import ROOT
@@ -136,6 +137,72 @@ class LayoutTests(unittest.TestCase):
                 self.assertNotEqual(
                     present, reported,
                     f"{key}: placed={present}, reported dropped={reported}")
+
+
+class ModuleSyntaxTests(unittest.TestCase):
+    """Every module the extension ships must parse as strict-mode ES.
+
+    This exists because it happened. `lib/services/voice.js` named a parameter
+    `arguments`, which is legal in a sloppy-mode script and a SyntaxError in a
+    module — and every module is strict. GJS raised it while *loading* the
+    import graph, so it happened before `enable()` was called and the top-level
+    try/catch in extension.js never ran. GNOME Shell recorded the extension as
+    state 3 (ERROR), started its own desktop instead, and the session looked
+    like an ordinary GNOME login: correct top bar, working overview, no Bunny
+    anything. A screenshot of it is indistinguishable from a session where the
+    desktop is simply switched off.
+
+    Nothing else in this suite would catch it. The layout tests import
+    `lib/layout.js` alone, the rest read the modules as *text*, and the Python
+    that packages them never parses them. So the graph is parsed here, one file
+    at a time, so that the failure names the file.
+
+    Parsing is all that is wanted: `--check` does not resolve imports, which is
+    what makes it usable on modules that import `gi://` and `resource:///`.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not shutil.which("node"):
+            raise unittest.SkipTest("node is unavailable on this host")
+
+    def _parse(self, path: Path) -> subprocess.CompletedProcess:
+        # `encoding="utf-8"` on the call, not only on the read: without it
+        # Python encodes the child's stdin with the platform's preferred codec,
+        # which on Windows is cp1252, and the first module containing an emoji
+        # raised UnicodeEncodeError instead of reporting a syntax result.
+        return subprocess.run(
+            [shutil.which("node"), "--input-type=module", "--check"],
+            input=path.read_text(encoding="utf-8"),
+            capture_output=True, text=True, encoding="utf-8", cwd=ROOT,
+        )
+
+    def test_every_extension_module_parses_as_a_module(self) -> None:
+        modules = sorted(EXTENSION.rglob("*.js"))
+        self.assertGreater(len(modules), 20, "the extension's modules were not found")
+        for module in modules:
+            with self.subTest(module=str(module.relative_to(EXTENSION))):
+                result = self._parse(module)
+                self.assertEqual(
+                    result.returncode, 0,
+                    f"{module.relative_to(ROOT)} does not parse as an ES module:\n"
+                    f"{result.stderr.strip()}")
+
+    def test_the_check_would_fail_on_the_defect_it_was_written_for(self) -> None:
+        """The negative control: a check that cannot fail proves nothing.
+
+        A parameter named `arguments` is the exact fault that cost a desktop,
+        so it is the fault this asserts the check still detects.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            planted = Path(directory) / "planted.js"
+            planted.write_text(
+                "export function f(arguments) { return arguments[0]; }\n",
+                encoding="utf-8")
+            result = self._parse(planted)
+        self.assertNotEqual(result.returncode, 0,
+                            "the module syntax check no longer detects a strict-mode violation")
+        self.assertIn("arguments", result.stderr)
 
 
 class CharacterStateTests(unittest.TestCase):
@@ -1625,10 +1692,40 @@ class QuickAccessTests(unittest.TestCase):
 
     def test_every_tile_uses_the_application_s_own_icon(self) -> None:
         text = module_text(self.MODULE)
-        body = text.split("for (const app of chosen)", 1)[1]
+        # The loop is found by what it iterates, not by its exact heading: the
+        # tiles moved from a row into a grid and the heading changed with them,
+        # which broke this test while the property it guards was untouched.
+        marker = "of chosen.entries()"
+        self.assertIn(marker, text, "the tile loop no longer iterates `chosen`")
+        body = text.split(marker, 1)[1]
         self.assertIn("gicon: app.get_icon()", body)
         self.assertNotIn("APP_GENERIC", body)
         self.assertNotIn("iconName", body)
+
+    def test_the_tiles_wrap_rather_than_running_out_of_the_card(self) -> None:
+        """Eight tiles in one 304px card ran 300px out over the wallpaper.
+
+        The count is what the machine has installed, so the container has to
+        wrap. Asserted on the layout the module asks for, because the overflow
+        itself is only visible in a photograph.
+        """
+        text = module_text(self.MODULE)
+        self.assertIn("Clutter.GridLayout", text)
+        self.assertIn("TILES_PER_ROW", text)
+        per_row = int(re.search(r"const TILES_PER_ROW = (\d+)", text).group(1))
+        self.assertGreater(per_row, 0)
+        stylesheet = (EXTENSION / "stylesheet.css").read_text(encoding="utf-8")
+        tile = re.search(r"\.bunny-quick-tile \{(.*?)\}", stylesheet, re.S).group(1)
+        width = int(re.search(r"width:\s*(\d+)px", tile).group(1))
+        padding = re.search(r"padding:\s*\d+px (\d+)px", tile)
+        horizontal = 2 * int(padding.group(1)) if padding else 0
+        spacing = int(re.search(r"column_spacing: (\d+)", text).group(1))
+        # The card is 304px wide (lib/layout.js) with 17px padding either side.
+        content = 304 - 2 * 17
+        used = per_row * (width + horizontal) + (per_row - 1) * spacing
+        self.assertLessEqual(
+            used, content,
+            f"{per_row} tiles need {used}px and the card gives {content}px")
 
     def test_tiles_come_from_the_installed_registry(self) -> None:
         text = module_text(self.MODULE)
