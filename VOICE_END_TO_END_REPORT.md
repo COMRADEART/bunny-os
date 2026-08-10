@@ -5,13 +5,45 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Bunny voice end-to-end and desktop visual acceptance
 
-Candidate: `feature/bunny-desktop-shell` at **`8577ede`**.
+Candidate: `feature/bunny-desktop-shell` at **`69b7b0b`**.
 
-The shell-originated run was taken at `1d0de5d`, which carries every fix it
-exercises. `8706b24` adds only the gate's failure reporting and `8577ede` only
-this document; neither changes anything the run touched. The earlier
+The shell-originated run was taken at `8e8d082`, which carries every fix it
+exercises. `a99b6e4` adds only the gate's failure reporting and `69b7b0b` only
+this document; neither changes anything the run touched, and anything after
+them on this branch is this document again. The earlier
 bridge-driven evidence — the recogniser reading the speaker's own recording back
-as "files is open" — was taken at `ce7f7a1`.
+as "files is open" — was taken at `b18d9d6`.
+
+### The commit identity changed once, after the evidence was taken
+
+GitHub refuses any push carrying a file over 100 MB, and `776624d` vendors two:
+the Pocket weights (209 MB) and the CPU torch wheel (176 MB). Both now live in
+Git LFS, which meant replaying the twenty unpushed commits — so every SHA this
+document cited when it was written has a new value. The published history was
+not touched: the replay starts at the old origin tip `784aaea` and pushed as a
+fast-forward, and the 469 commits before it keep their hashes.
+
+Nothing about the tested content moved. `git diff` between the pre-replay
+candidate and the new one is three files: `.gitattributes`, and the two binaries
+becoming 134-byte pointers whose recorded OIDs are the SHA-256 digests the
+originals already had — `be9c6b48…` and `88adf515…`, the same values
+`manifest.json` and `install-root.py` verify.
+
+| written as | now | |
+|---|---|---|
+| `ce7f7a1` | `b18d9d6` | the desktop that never loaded |
+| `1d0de5d` | `8e8d082` | the voice settings page could not reach the companion |
+| `8706b24` | `a99b6e4` | gate failure reporting |
+| `8577ede` | `69b7b0b` | this document |
+| `4d7e9a4` | `2803890` | the relock the `shell-test` image was built from |
+| `488f4bd` | `776624d` | Pocket as the default engine |
+
+`POCKET_TTS_MILESTONE_REPORT.md` still says `4d7e9a4`, and deliberately: the
+image it describes is tagged `localhost/bunny-os-shell-test:4d7e9a4736f7`, so
+the old hash is the one that actually names that artifact. Read it through the
+table above. The pre-replay objects are still reachable locally at the tag
+`candidate-4ce6482`; they cannot be pushed, because pushing them is exactly what
+GitHub rejects.
 
 Measured on the Fedora 44 reference host, in a QEMU/KVM guest booted from the
 `shell-test` image, unless a line says otherwise.
@@ -41,11 +73,13 @@ Interruption             PASS  116 ms from the cancel to silence
 Pocket -> Kitten         PASS  audio_started named kitten/Bella
 All providers gone       PASS  text answer intact, never stuck in TALKING
 Offline "Open Terminal"  PASS  spoken by Pocket with every link down
-Voice settings UI        NOT SEEN - the page could not import `companion` at
-                               all; fixed in source, not yet seen working
+Voice settings UI        PASS on a booted system, not on the artifact: the
+                               page reaches the companion, 143 controls, 0
+                               off-screen at 1920x1080. Measured with the
+                               checkout bind-mounted over /usr/lib/bunny-shell
 Tests                    4665 run, 0 failed, 7 skipped
 Source gate              PASS, exit 0, clean tree
-Exact image              BLOCKED - 2.3 GB free on the host; see below
+Exact image              BLOCKED - 5.8 GB free on the host, ~15 GB needed
 ```
 
 ## Task #12: the dashboard could not be clicked
