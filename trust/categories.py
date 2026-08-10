@@ -261,7 +261,16 @@ CATEGORIES: Mapping[str, CategoryDescriptor] = {
             risk="medium",
             resource_kind="network",
             allow_scopes=("session", "always"),
-            enforcement="network namespace; slirp/pasta with an address allowlist, or no netns at all",
+            # Two of the four classes are a kernel boundary and two are not.
+            # `enforced_by_default` is per category and cannot express that, so
+            # it says what is true of the category as a whole — the restriction
+            # exists — and capsules.isolation.NETWORK_ENFORCED_CLASSES carries
+            # the per-class truth, which the plan and Settings both surface.
+            enforcement=(
+                "network namespace: 'nothing' and 'the internet' are enforced by the kernel; "
+                "'local network' and named-domain allowlists are declarations this build does "
+                "not filter on"
+            ),
             enforced_by_default=True,
             revocation="next-launch",
             sentence="{app} wants to connect to {resource}.",

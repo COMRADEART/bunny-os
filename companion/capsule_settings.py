@@ -154,6 +154,9 @@ class ApplicationSettings:
     #: 4 GB ceiling and this computer ignores it" is the same kind of fact as
     #: "we record this permission and do not restrict it".
     unapplied_limits: tuple[str, ...]
+    #: The granted network class, and whether this build filters on it.
+    network_class: str
+    network_enforced: bool
     activity: tuple[ActivityEntry, ...]
     actions: Mapping[str, Mapping[str, str]]
     catalog_note: str | None = None
@@ -169,6 +172,7 @@ class ApplicationSettings:
             "storage": dict(self.storage),
             "unenforced": list(self.unenforced),
             "unappliedLimits": list(self.unapplied_limits),
+            "network": {"class": self.network_class, "enforced": self.network_enforced},
             "activity": [dict(entry.as_record()) for entry in self.activity],
             "actions": {key: dict(value) for key, value in self.actions.items()},
             "catalogNote": self.catalog_note,
@@ -241,11 +245,15 @@ def application_settings(
         backend = plan.backend
         unenforced = plan.unenforced
         unapplied_limits = plan.unapplied_limits
+        network_enforced = plan.network_enforced
+        network_class = plan.network
     except Exception:  # noqa: BLE001 - a page must render even when a plan cannot be built
         reachable = ()
         backend = capsule.state.backend or capsule.manifest.preferred_backend
         unenforced = capsule.manifest.unenforced_permissions()
         unapplied_limits = ()
+        network_enforced = True
+        network_class = "unknown"
 
     note = None
     if registry is not None:
@@ -263,6 +271,8 @@ def application_settings(
         storage=capsule.layout.usage(),
         unenforced=tuple(unenforced),
         unapplied_limits=tuple(unapplied_limits),
+        network_class=network_class,
+        network_enforced=network_enforced,
         activity=audit.activity(limit=activity_limit, application_id=capsule.identity.application_id),
         actions=maintenance_actions(capsule),
         catalog_note=note,

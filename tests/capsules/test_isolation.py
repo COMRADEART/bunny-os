@@ -119,6 +119,24 @@ class PlanShapeTests(unittest.TestCase):
         self.assertIn("/dev/dri", plan.devices)
         self.assertEqual(len(plan.devices), len(BASE_DEVICES) + 1)
 
+    def test_the_two_network_classes_this_build_cannot_filter_say_so(self) -> None:
+        """Measured on Linux: a capsule granted an allowlist naming one domain
+        connected to a different one. The plan must not report that as enforced."""
+        for ceiling, expected in (("internet", True), ("allowlisted", False), ("local-network", False)):
+            world = World.build(answers=[("network", "allow", "always")])
+            self.addCleanup(world.close)
+            domains = frozenset({"example.com"}) if ceiling == "allowlisted" else frozenset()
+            world.install(manifest_for(optional=("network",), network_ceiling=ceiling, network_domains=domains))
+            capsule = world.runtime.open("org.example.PhotoEditor")
+            resource = (
+                trust.network_resource("allowlisted", allowlist=("example.com",))
+                if ceiling == "allowlisted"
+                else trust.network_resource(ceiling)
+            )
+            world.request(capsule, category="network", resource=resource)
+            plan = world.runtime.build_plan(world.runtime.open("org.example.PhotoEditor"))
+            self.assertEqual(plan.network_enforced, expected, f"{ceiling} reported {plan.network_enforced}")
+
     def test_no_network_grant_means_no_resolver_in_the_sandbox(self) -> None:
         """A capsule with no network has no use for a resolver, and no reason to
         learn the addresses of this machine's DNS servers."""

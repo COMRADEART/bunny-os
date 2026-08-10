@@ -100,6 +100,20 @@ CREDENTIAL_DIRECTORIES = frozenset({
 #: Read-only, individually named, and absent entirely when the network class is
 #: ``none`` — a capsule with no network has no use for a resolver and no reason
 #: to learn the addresses of the machine's DNS servers.
+#: The network classes this build actually enforces, and the two it does not.
+#:
+#: ``none`` is a network namespace with nothing in it — a kernel boundary.
+#: ``internet`` is the absence of one. ``local-network`` and ``allowlisted`` are
+#: declared by the catalogue and mapped onto ``internet``, because nothing here
+#: filters by subnet or by name.
+#:
+#: Measured rather than assumed: the qualification granted a capsule an
+#: allowlist naming one domain, and the capsule connected to a different one.
+#: Recorded, disclosed at every surface, and not papered over — asking the
+#: application to respect the list would be enforcement by cooperation, which is
+#: not enforcement.
+NETWORK_ENFORCED_CLASSES = ("none", "internet")
+
 NETWORK_SYSTEM_FILES = (
     "/etc/resolv.conf",
     "/etc/hosts",
@@ -245,6 +259,9 @@ class IsolationPlan:
     refusals: tuple[tuple[str, str], ...]
     #: Whether the plan restricts anything beyond resource usage.
     confining: bool
+    #: Whether the granted network class is one this build can enforce. ``False``
+    #: for ``local-network`` and ``allowlisted``, which are declarations.
+    network_enforced: bool = True
 
     def reachable_paths(self) -> tuple[str, ...]:
         """Every user path this capsule can currently see. What Settings lists."""
@@ -268,6 +285,7 @@ class IsolationPlan:
             "unappliedLimits": list(self.unapplied_limits),
             "refusals": [{"grantId": gid, "reason": reason} for gid, reason in self.refusals],
             "confining": self.confining,
+            "networkEnforced": self.network_enforced,
         }
 
 
@@ -506,4 +524,5 @@ def plan_isolation(
         ),
         refusals=tuple(refusals),
         confining=backend.confines,
+        network_enforced=network in NETWORK_ENFORCED_CLASSES,
     )
