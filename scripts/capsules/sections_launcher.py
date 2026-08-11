@@ -223,8 +223,9 @@ def _state_writable(properties: Sequence[str], environment: Mapping[str, str], u
     real account, and a temporary directory is exactly the place ProtectHome does
     not cover — so measuring there would report a Companion that works.
 
-    One file is created and removed under each root. The roots belong to Bunny,
-    the name says what it is, and nothing else in the account is touched.
+    One file is created and removed under the nearest ancestor of each root that
+    already exists. Nothing is created that was not there, and the name of the
+    file says what it is.
     """
     import capsules as _capsules
     import trust as _trust
@@ -236,10 +237,16 @@ def _state_writable(properties: Sequence[str], environment: Mapping[str, str], u
     }
     results: dict[str, Any] = {}
     for index, (name, directory) in enumerate(targets.items()):
-        probe = directory / ".bunny-qualify-write-probe"
+        # The nearest ancestor that exists, rather than creating the tree. A
+        # qualification run must not leave directories behind in somebody's
+        # account, and it does not need to: ProtectHome= covers the whole of
+        # $HOME uniformly, so any existing ancestor answers the same question.
+        probed = directory
+        while not probed.is_dir() and probed.parent != probed:
+            probed = probed.parent
+        marker = probed / ".bunny-qualify-write-probe"
         script = (
-            f"mkdir -p {_quote(str(directory))} 2>/dev/null; "
-            f"touch {_quote(str(probe))} && rm -f {_quote(str(probe))} && echo WRITABLE"
+            f"touch {_quote(str(marker))} && rm -f {_quote(str(marker))} && echo WRITABLE"
         )
         outcome = _run(
             _nested(["/bin/sh", "-c", script], properties, f"{unit}-{index}"),
@@ -248,6 +255,8 @@ def _state_writable(properties: Sequence[str], environment: Mapping[str, str], u
         )
         results[name] = {
             "path": str(directory),
+            "probed": str(probed),
+            "existed": directory.is_dir(),
             "writable": outcome["exitCode"] == 0,
             "exitCode": outcome["exitCode"],
         }
