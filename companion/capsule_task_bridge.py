@@ -689,10 +689,23 @@ class CapsuleSupport:
             category="files",
             resource_display=prepared.resource_display,
             verdict="allow",
-            # `once`, always, for this build. A standing grant is a thing a
-            # person should choose in a prompt that offered it; the Companion's
-            # approval offered one act, so one act is what it converts to.
-            scope="once",
+            # `session`, and this is the one place in the integration where the
+            # obvious answer is wrong.
+            #
+            # "Allow once" is what the person is offered and what they get. It
+            # is not what the *grant* can say, because Trust deliberately never
+            # persists an allow-once decision — and the isolation plan is built
+            # from persisted grants, so a once grant produces no bind at all and
+            # the application is handed a path to nothing. Measured, on the
+            # first real end-to-end run: the capsule started and the program
+            # reported "the input is not a file this app can see".
+            #
+            # A session grant is persisted, so the bind exists, and the runtime
+            # drops every session grant when the capsule stops. The coordinator
+            # stops the capsule as soon as the operation finishes, so the grant
+            # outlives the person's answer by exactly one launch. That is what
+            # "once" means to them, expressed in the lifetime the store has.
+            scope="session",
         )
         self.gate.surface = surface
         coordinator = CapsuleTaskCoordinator(

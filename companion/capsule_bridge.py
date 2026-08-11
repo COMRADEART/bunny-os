@@ -649,6 +649,22 @@ class CapsuleTaskCoordinator:
         steps.append(
             TaskStep("export", STEP_LABELS["export"], "done", ", ".join(export.display for export in exports))
         )
+        # Stop the capsule now the operation has finished.
+        #
+        # Not tidiness. The grant that made the input reachable is session
+        # scoped, and the runtime drops session grants when a capsule stops — so
+        # this is what turns "allow once" into a permission that lasted one
+        # launch. An application left running would keep the file reachable for
+        # the rest of the login, which is not what anybody was asked.
+        #
+        # Persistent capsule data survives: stopping ends a process, and the
+        # application's private storage is the capsule's identity, not the
+        # task's.
+        try:
+            self.runtime.stop(self.runtime.open(entry.application_id))
+        except (CapsuleError, TrustError) as exc:  # noqa: BLE001
+            warnings.append(f"the app could not be stopped cleanly: {exc}")
+
         steps.append(TaskStep("done", STEP_LABELS["done"], "done"))
 
         summary = _completion_sentence(entry.name, exports, overwrote=overwrite_inputs)
