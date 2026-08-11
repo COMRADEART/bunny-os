@@ -187,23 +187,32 @@ def run(decision: str) -> dict:
         if not states or states[-1] != state:
             states.append(state)
         if state == "waiting_for_approval" and not answered:
-            pending = view.get("approvals") or []
+            # The *presentation* state, which is where the window gets its
+            # approvals. The task view carries only eight of the eleven binding
+            # fields — no sessionId, no taskId, no destination — so answering
+            # from it is refused with "requires sessionId". ApprovalPresentation
+            # has a `binding` for exactly this, and the runtime compares every
+            # field against the request it recorded.
+            try:
+                presented = client.get_presentation_state(task_id)
+            except CompanionClientError as error:
+                record["presentationError"] = str(error)
+                break
+            pending = (presented.get("state") or {}).get("approvals") or []
             if pending:
                 raw = dict(pending[-1])
-                # Exactly the keys the operation declares, taken from the
-                # approval as received and neither rebuilt nor defaulted. This
-                # is the same list CompanionViewModel.resolve uses, and it is a
-                # list rather than "everything in the record" because the task
-                # view carries bookkeeping the operation refuses — planRevision
-                # and resolvedSequence, which is what the first attempt sent.
                 binding = {key: raw.get(key) for key in BINDING_KEYS}
                 approval = {
                     "action": raw.get("action"),
-                    "reason": raw.get("reason") or raw.get("summary"),
+                    "reason": raw.get("reason"),
                     "destination": raw.get("destination"),
+                    "destinationDetail": raw.get("destinationDetail"),
                     "requestId": raw.get("requestId"),
                     "dataClassification": raw.get("dataClassification"),
                     "keys": sorted(raw),
+                    "missingFromBinding": sorted(
+                        key for key in BINDING_KEYS if raw.get(key) in (None, "")
+                    ),
                 }
                 try:
                     client.resolve_approval(binding, decision)
@@ -315,8 +324,23 @@ def main(argv: list[str] | None = None) -> int:
 
         record = {"probeError": f"{type(error).__name__}: {error}",
                   "traceback": traceback.format_exc()[-1500:]}
+    body = json.dumps(record, indent=1, sort_keys=True)
+    # A file first, and the console second.
+    #
+    # The console is shared with the kernel, and a kernel audit line landed in
+    # the middle of a JSON *line* — not between lines, where a prefix strip
+    # would have caught it. The record parsed as garbage and a completed run
+    # read as no record at all. The file is extracted from the disk afterwards;
+    # the console copy stays because it is the only channel a boot that never
+    # reaches shutdown still has.
+    try:
+        target = Path("/var/log/bunny-journey.json")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(body, encoding="utf-8")
+    except OSError as error:
+        print(f"could not write the record: {error}", file=sys.stderr)
     print(BEGIN, flush=True)
-    print(json.dumps(record, indent=1, sort_keys=True), flush=True)
+    print(body, flush=True)
     print(END, flush=True)
     return 0
 

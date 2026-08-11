@@ -159,16 +159,38 @@ done
 cleanup
 trap - EXIT
 
+# The record, from the disk. The console copy is the fallback: it is shared with
+# the kernel, and an audit line landed inside a JSON line on one run — not
+# between lines, where the prefix strip would have caught it — so a completed
+# journey read as no record at all.
 echo "--- the record ---"
+root_partition="${BUNNY_JOURNEY_ROOT_PARTITION:-/dev/sda4}"
+deployment="$(guestfish --ro -a "${disk}" run : mount "${root_partition}" /   : glob-expand "/ostree/deploy/*/deploy/*.0/" 2>/dev/null | head -1)"
+if [[ -n "${deployment}" ]]; then
+  stateroot="$(dirname "$(dirname "${deployment%/}")")"
+  if guestfish --ro -a "${disk}" run : mount "${root_partition}" /        : download "${stateroot}/var/log/bunny-journey.json" "${work}/journey.json"        2>/dev/null && [[ -s "${work}/journey.json" ]]; then
+    echo "record read from the guest filesystem"
+  fi
+fi
+
 python3 - "${log}" "${work}/journey.json" <<'PYTHON'
 import json, pathlib, re, sys
 
+target = pathlib.Path(sys.argv[2])
+record = None
+if target.exists() and target.stat().st_size:
+    try:
+        record = json.loads(target.read_text(encoding="utf-8"))
+        print("  (from the guest filesystem)")
+    except json.JSONDecodeError:
+        record = None
+
 text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace")
 begin, end = "BUNNY-JOURNEY-BEGIN", "BUNNY-JOURNEY-END"
-if begin not in text or end not in text:
-    print("no journey record on the console")
+if record is None and (begin not in text or end not in text):
+    print("no journey record on the console and none on the disk")
     raise SystemExit(0)
-body = text.split(begin, 1)[1].split(end, 1)[0]
+body = text.split(begin, 1)[1].split(end, 1)[0] if begin in text and end in text else ""
 # The console interleaves kernel lines with the probe's, and systemd prefixes
 # each with a timestamp and the unit. Strip both rather than hoping neither
 # appeared: a record that failed to parse would be reported as "no record".
