@@ -1,0 +1,111 @@
+{
+  "commit": "d9a36620044d915463b33d68ce2588b880bc4483",
+  "explanation": "every expected capsule operation worked with the policy loaded (mode Enforcing, modules None); AVC collection was blind, so no denial count is claimed",
+  "findings": [
+    "no AVC collector could see anything: journalctl returned 0 kernel lines and ausearch is not installed. The zero denial count below is 'nobody looked', not 'nothing happened'."
+  ],
+  "finishedAt": "2026-08-11T01:48:30.469564Z",
+  "host": {
+    "backends": [
+      "flatpak",
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "7.1.5-200.fc44.x86_64",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Enforcing",
+      "policyName": "targeted",
+      "policyVersion": "35",
+      "probeError": null,
+      "selfContext": "system_u:system_r:initrc_t:s0"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "kvm"
+  },
+  "measurements": {
+    "avc": {
+      "blind": true,
+      "count": 0,
+      "records": [],
+      "sources": {
+        "ausearch": {
+          "available": false,
+          "blind": true,
+          "reason": "not installed"
+        },
+        "dmesg": {
+          "available": false,
+          "blind": true,
+          "kernelLinesSeen": 1,
+          "reason": "dmesg: read kernel buffer failed: Operation not permitted"
+        },
+        "journalctl": {
+          "available": true,
+          "blind": true,
+          "kernelLinesSeen": 0
+        },
+        "window": "whole boot (the since-window returned no kernel lines at all)"
+      }
+    },
+    "expectedOperations": {
+      "capsuleLaunched": true,
+      "exported": true,
+      "grantedFileRead": true,
+      "ownDataRead": true,
+      "ownDataWrite": true,
+      "probeProducedResult": true,
+      "subprocess": true
+    },
+    "export": {
+      "bytes": 9,
+      "destination": "/tmp/bunny-qualify-w1cjn6k1/home/Documents/result.txt",
+      "ok": true
+    },
+    "grant": {
+      "reason": "user-allowed",
+      "verdict": "allow"
+    },
+    "launch": {
+      "backend": "bubblewrap",
+      "exitCode": 0,
+      "started": true,
+      "unenforced": []
+    },
+    "policyAfter": {
+      "booleanCount": 367,
+      "localBooleans": [],
+      "mode": "Enforcing",
+      "moduleTool": false,
+      "permissiveDomains": []
+    },
+    "policyBefore": {
+      "booleanCount": 367,
+      "localBooleans": [],
+      "mode": "Enforcing",
+      "moduleTool": false,
+      "permissiveDomains": []
+    },
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Enforcing",
+      "policyName": "targeted",
+      "policyVersion": "35",
+      "probeError": null,
+      "selfContext": "system_u:system_r:initrc_t:s0"
+    },
+    "unexpectedAccessDenied": {
+      "homeDenied": true,
+      "peerCapsuleDenied": true,
+      "sshDenied": true
+    }
+  },
+  "schemaVersion": 1,
+  "section": "selinux",
+  "startedAt": "2026-08-11T01:48:28.735245Z",
+  "verdict": "PASS"
+}
