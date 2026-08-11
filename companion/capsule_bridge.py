@@ -337,7 +337,18 @@ class CapsuleProcessTool:
         if self.exit_code is None:
             return ToolOutcome((), ok=False, failure="the app never started")
         if self.exit_code != 0:
-            said = f": {self.detail.splitlines()[-1]}" if self.detail.strip() else ""
+            # The application's lines, not systemd's. The manager's own
+            # "Failed with result 'exit-code'" is the last line of the block and
+            # says only that something failed — which is the thing already
+            # known. Taking the last line got exactly that and threw away the
+            # program's explanation directly above it.
+            said = ""
+            spoken = [
+                line for line in self.detail.splitlines()
+                if line.strip() and ".service:" not in line
+            ]
+            if spoken:
+                said = ": " + "; ".join(spoken[-3:])
             return ToolOutcome(
                 (), ok=False,
                 failure=f"the app stopped with status {self.exit_code}{said}",

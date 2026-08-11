@@ -80,6 +80,18 @@ def _unit_prefix(plan: IsolationPlan) -> list[str]:
         "--quiet",
         f"--unit={plan.identity.unit_name.removesuffix('.service')}",
         f"--description=Bunny capsule for {plan.identity.application_id}",
+        # The application's own output, in the journal, under its own unit.
+        #
+        # A transient unit defaults to inheriting the stdout of whatever asked
+        # for it, which is the runtime — and the runtime captures that stream
+        # and discards it. So a capsule that explained why it could not do
+        # something explained it into a pipe nobody read, and the only thing
+        # left was systemd's "Failed with result 'exit-code'". Naming the
+        # journal makes the explanation durable, attributable to one capsule,
+        # and readable afterwards by
+        # :meth:`~capsules.runtime.SubprocessExecutor.diagnostics`.
+        "--property=StandardOutput=journal",
+        "--property=StandardError=journal",
     ]
     for prop in plan.systemd_properties:
         arguments.extend(["--property", prop])

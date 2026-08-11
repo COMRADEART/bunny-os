@@ -118,6 +118,24 @@ def _registry_for(program: Path):
     return CatalogRegistry.from_entries(entries)
 
 
+
+def _executable_copy(source: Path, harness: Harness) -> Path:
+    """The checkout's copy of the tool, at 0755, outside the checkout.
+
+    The install route gives the shipped program mode 0555. A git checkout gives
+    it 0644, and bubblewrap running a file it cannot execute exits 1 with
+    nothing on stderr — which reads exactly like a program that ran and failed.
+    That cost a diagnosis, and the fix is not to make the section tolerant of a
+    non-executable program: it is to reproduce the mode the image installs, so
+    that this measurement and the guest's measure the same thing.
+    """
+    target = harness.base / "bin" / source.name.removesuffix(".py")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, target)
+    target.chmod(0o755)
+    return target
+
+
 def section_apptask(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     """Run one image resize the way the Companion runs it, and check the file."""
     evidence = Evidence(section="apptask")
@@ -141,10 +159,11 @@ def section_apptask(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     before = _digest(source)
     neighbour_digest = _digest(neighbour)
 
-    program = _INSTALLED_TOOL if _INSTALLED_TOOL.is_file() else _TOOL
+    program = _INSTALLED_TOOL if _INSTALLED_TOOL.is_file() else _executable_copy(_TOOL, harness)
     evidence.measurements["program"] = {
         "path": str(program),
         "installed": program == _INSTALLED_TOOL,
+        "mode": oct(program.stat().st_mode & 0o777) if program.exists() else None,
     }
 
     support = CapsuleSupport(
