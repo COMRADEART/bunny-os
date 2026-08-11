@@ -186,6 +186,23 @@ def _renamed(argv: Sequence[str], suffix: str) -> tuple[str, ...]:
     )
 
 
+def _expanded(properties: Sequence[str], environment: Mapping[str, str]) -> tuple[str, ...]:
+    """Unit-file specifiers resolved, because ``systemd-run`` will not.
+
+    ``%h`` and ``%t`` are expanded when a unit *file* is loaded. A property
+    handed to ``systemd-run --property=`` is parsed directly and a ``%h`` in a
+    path is "Invalid ReadWritePaths" — measured, the whole transient unit is
+    refused. The shipped units use specifiers, as they should, so the
+    reproduction expands them the way the loader would have.
+    """
+    home = os.path.expanduser("~")
+    runtime = environment.get("XDG_RUNTIME_DIR", os.environ.get("XDG_RUNTIME_DIR", ""))
+    out = []
+    for prop in properties:
+        out.append(prop.replace("%h", home).replace("%t", runtime))
+    return tuple(out)
+
+
 def _nested(argv: Sequence[str], properties: Sequence[str], unit: str) -> tuple[str, ...]:
     """``argv`` run inside a transient unit carrying ``properties``.
 
@@ -377,8 +394,8 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
         return evidence
 
     sources = {name: find_unit(name) for name in LAUNCHER_UNITS}
-    units = {name: unit_properties(path) for name, path in sources.items() if path is not None}
-    evidence.measurements["units"] = {name: list(props) for name, props in units.items()}
+    authored = {name: unit_properties(path) for name, path in sources.items() if path is not None}
+    evidence.measurements["units"] = {name: list(props) for name, props in authored.items()}
     evidence.measurements["unitSources"] = {
         name: str(path) if path is not None else None for name, path in sources.items()
     }
@@ -397,176 +414,186 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
             f"hardening or a parser that stopped recognising it; neither is a result",
         )
 
-    capsule = harness.install_probe_app("art.comrade.LauncherProbe", "Launcher Probe")
-    harness.configure_probe(capsule)
-    plan = harness.runtime.build_plan(capsule)
-    # The probe, not the manifest's default command. The default for this fixture
-    # is a bare interpreter, which reads stdin and never exits, and a shape that
-    # hangs is indistinguishable from a shape the sandbox refused.
-    argv = render(plan, (sys.executable, "/run/bunny/app/data/probe.py"))
-    environment = dict(plan.launcher_environment)
-    result_path = capsule.layout.directory("data") / "probe-result.json"
-    evidence.measurements["backend"] = plan.backend
-    evidence.measurements["unshare"] = list(plan.unshare)
-
-    # Per unit rather than as a union. Two units that both set
-    # RestrictAddressFamilies= with different lists cannot be merged into one
-    # transient unit without inventing a third policy that neither ships, and a
-    # failure under an invented policy is attributable to nobody.
-    def shape(vector: Sequence[str]) -> Mapping[str, Any]:
-        """Run one shape and say whether the *probe* ran, not whether systemd did.
-
-        A zero from ``systemd-run`` means the manager accepted the job, which a
-        job that then started nothing also produces. The file is written from
-        inside the sandbox by the process the sandbox was built for, so its
-        presence is the only thing here that a failed launch cannot fake.
-
-        The wait is why this is a closure and not a one-liner: asking the manager
-        for a transient unit returns as soon as the job is enqueued, so there is
-        no exit code to wait on and the file is the only thing to wait for.
-        """
-        if result_path.exists():
-            result_path.unlink()
-        outcome = dict(_run(vector, environment))
-        deadline = time.monotonic() + _PROBE_SECONDS
-        while not result_path.exists() and time.monotonic() < deadline:
-            time.sleep(0.1)
-        outcome["probeWroteResult"] = result_path.exists()
-        outcome["secondsWaited"] = round(_PROBE_SECONDS - max(0.0, deadline - time.monotonic()), 1)
-        outcome["started"] = bool(outcome["ran"] and outcome["probeWroteResult"])
-        outcome["blamesNamespaces"] = _blames_namespaces(outcome)
-        return outcome
-
-    shapes: dict[str, Mapping[str, Any]] = {}
-    shapes["direct"] = shape(_renamed(argv, "direct"))
-    shapes["permissive"] = shape(
-        _nested(_renamed(argv, "permissive"), (), "bunny-launcher-permissive")
-    )
-    for index, (name, properties) in enumerate(units.items()):
-        stem = name.removesuffix(".service").replace("bunny-", "")
-        shapes[f"hardened:{name}"] = shape(
-            _nested(_renamed(argv, f"h{index}"), properties, f"bunny-launcher-h{index}-{stem}")
-        )
-        # The pre-fix shape, under the same properties. It must still fail, or
-        # this section has stopped being able to see the thing it was written
-        # for and its PASS above means nothing.
-        shapes[f"scope:{name}"] = shape(
-            _nested(_as_scope(_renamed(argv, f"s{index}")), properties, f"bunny-launcher-s{index}-{stem}")
-        )
-    evidence.measurements["shapes"] = shapes
-
-    if not shapes["direct"]["started"]:
-        return evidence.settle(
-            "BLOCKED",
-            f"the capsule could not be launched from a plain process either "
-            f"(exit {shapes['direct']['exitCode']}); this host cannot answer the question",
-        )
-    if not shapes["permissive"]["started"]:
-        return evidence.settle(
-            "BLOCKED",
-            f"nesting alone broke the launch (exit {shapes['permissive']['exitCode']}); "
-            f"the hardened shape cannot be attributed to the sandbox properties",
-        )
-
-    refused = [name for name in units if not shapes[f"hardened:{name}"]["started"]]
-    if refused:
-        for name in refused:
-            outcome = shapes[f"hardened:{name}"]
-            restrict = [p for p in units[name] if p.startswith("RestrictNamespaces=")]
-            evidence.findings.append(
-                f"{name} cannot launch a capsule: the same vector that succeeds from a plain "
-                f"process and from an unhardened transient unit fails inside a unit carrying that "
-                f"unit's own properties (exit {outcome['exitCode']}, probe wrote nothing"
-                + (", and the error names the namespace call" if outcome["blamesNamespaces"] else "")
-                + f"). Look first at {restrict or 'the directives listed above'}: bubblewrap's "
-                f"mechanism is unshare(2), and a seccomp filter is inherited by anything the unit "
-                f"forks."
-            )
-        return evidence.settle(
-            "FAIL",
-            f"the capsule launches from a plain process and from an unhardened unit, and not from "
-            f"{refused}",
-        )
-
-    # Launching is not the whole job. The runtime unit installs capsules and
-    # records grants, so it must be able to write the state roots; the window is
-    # a client of it, so it must not. Both directions, because either one
-    # regressing is a defect and they fail in opposite ways: a runtime that
-    # cannot write fails the first application anybody adds, and a window that
-    # can write the trust store is a renderer that can mint its own grants.
+    # Expanded once, for every use below. The state roots are established first:
+    # the hardened shapes carry the runtime unit's ReadWritePaths= now, and a
+    # ReadWritePaths= path that does not exist fails namespace setup with
+    # 226/NAMESPACE before ExecStart — which would fail the *launch* shapes for
+    # a reason that has nothing to do with launching. In the image the
+    # user-tmpfiles rule provides exactly this precondition.
     targets = _state_roots()
     established = _establish(targets)
+    evidence.measurements["stateRootsEstablished"] = [str(item) for item in established]
+
     try:
+        capsule = harness.install_probe_app("art.comrade.LauncherProbe", "Launcher Probe")
+        harness.configure_probe(capsule)
+        plan = harness.runtime.build_plan(capsule)
+        # The probe, not the manifest's default command. The default for this fixture
+        # is a bare interpreter, which reads stdin and never exits, and a shape that
+        # hangs is indistinguishable from a shape the sandbox refused.
+        argv = render(plan, (sys.executable, "/run/bunny/app/data/probe.py"))
+        environment = dict(plan.launcher_environment)
+        result_path = capsule.layout.directory("data") / "probe-result.json"
+        evidence.measurements["backend"] = plan.backend
+        evidence.measurements["unshare"] = list(plan.unshare)
+
+        # Per unit rather than as a union. Two units that both set
+        # RestrictAddressFamilies= with different lists cannot be merged into one
+        # transient unit without inventing a third policy that neither ships, and a
+        # failure under an invented policy is attributable to nobody.
+        def shape(vector: Sequence[str]) -> Mapping[str, Any]:
+            """Run one shape and say whether the *probe* ran, not whether systemd did.
+
+            A zero from ``systemd-run`` means the manager accepted the job, which a
+            job that then started nothing also produces. The file is written from
+            inside the sandbox by the process the sandbox was built for, so its
+            presence is the only thing here that a failed launch cannot fake.
+
+            The wait is why this is a closure and not a one-liner: asking the manager
+            for a transient unit returns as soon as the job is enqueued, so there is
+            no exit code to wait on and the file is the only thing to wait for.
+            """
+            if result_path.exists():
+                result_path.unlink()
+            outcome = dict(_run(vector, environment))
+            deadline = time.monotonic() + _PROBE_SECONDS
+            while not result_path.exists() and time.monotonic() < deadline:
+                time.sleep(0.1)
+            outcome["probeWroteResult"] = result_path.exists()
+            outcome["secondsWaited"] = round(_PROBE_SECONDS - max(0.0, deadline - time.monotonic()), 1)
+            outcome["started"] = bool(outcome["ran"] and outcome["probeWroteResult"])
+            outcome["blamesNamespaces"] = _blames_namespaces(outcome)
+            return outcome
+
+        shapes: dict[str, Mapping[str, Any]] = {}
+        shapes["direct"] = shape(_renamed(argv, "direct"))
+        shapes["permissive"] = shape(
+            _nested(_renamed(argv, "permissive"), (), "bunny-launcher-permissive")
+        )
+        units = {name: _expanded(props, environment) for name, props in authored.items()}
+        for index, (name, properties) in enumerate(units.items()):
+            stem = name.removesuffix(".service").replace("bunny-", "")
+            shapes[f"hardened:{name}"] = shape(
+                _nested(_renamed(argv, f"h{index}"), properties, f"bunny-launcher-h{index}-{stem}")
+            )
+            # The pre-fix shape, under the same properties. It must still fail, or
+            # this section has stopped being able to see the thing it was written
+            # for and its PASS above means nothing.
+            shapes[f"scope:{name}"] = shape(
+                _nested(_as_scope(_renamed(argv, f"s{index}")), properties, f"bunny-launcher-s{index}-{stem}")
+            )
+        evidence.measurements["shapes"] = shapes
+
+        if not shapes["direct"]["started"]:
+            return evidence.settle(
+                "BLOCKED",
+                f"the capsule could not be launched from a plain process either "
+                f"(exit {shapes['direct']['exitCode']}); this host cannot answer the question",
+            )
+        if not shapes["permissive"]["started"]:
+            return evidence.settle(
+                "BLOCKED",
+                f"nesting alone broke the launch (exit {shapes['permissive']['exitCode']}); "
+                f"the hardened shape cannot be attributed to the sandbox properties",
+            )
+
+        refused = [name for name in units if not shapes[f"hardened:{name}"]["started"]]
+        if refused:
+            for name in refused:
+                outcome = shapes[f"hardened:{name}"]
+                restrict = [p for p in units[name] if p.startswith("RestrictNamespaces=")]
+                evidence.findings.append(
+                    f"{name} cannot launch a capsule: the same vector that succeeds from a plain "
+                    f"process and from an unhardened transient unit fails inside a unit carrying that "
+                    f"unit's own properties (exit {outcome['exitCode']}, probe wrote nothing"
+                    + (", and the error names the namespace call" if outcome["blamesNamespaces"] else "")
+                    + f"). Look first at {restrict or 'the directives listed above'}: bubblewrap's "
+                    f"mechanism is unshare(2), and a seccomp filter is inherited by anything the unit "
+                    f"forks."
+                )
+            return evidence.settle(
+                "FAIL",
+                f"the capsule launches from a plain process and from an unhardened unit, and not from "
+                f"{refused}",
+            )
+
+        # Launching is not the whole job. The runtime unit installs capsules and
+        # records grants, so it must be able to write the state roots; the window is
+        # a client of it, so it must not. Both directions, because either one
+        # regressing is a defect and they fail in opposite ways: a runtime that
+        # cannot write fails the first application anybody adds, and a window that
+        # can write the trust store is a renderer that can mint its own grants.
         writability = {
             name: _state_writable(targets, properties, environment, f"bunny-launcher-w{index}")
             for index, (name, properties) in enumerate(units.items())
         }
+        evidence.measurements["stateWritable"] = writability
+
+        unwritable = sorted({
+            f"{unit} cannot write {row['path']}"
+            for unit, rows in writability.items()
+            if LAUNCHER_UNIT_ROLES.get(unit) == "runtime"
+            for row in rows.values()
+            if not row["writable"]
+        })
+        overwritable = sorted({
+            f"{unit} can write {row['path']}"
+            for unit, rows in writability.items()
+            if LAUNCHER_UNIT_ROLES.get(unit) == "client"
+            for row in rows.values()
+            if row["writable"]
+        })
+        if unwritable:
+            evidence.findings.append(
+                "the Companion can start a capsule and cannot keep one: "
+                + "; ".join(unwritable)
+                + ". Installing a capsule writes the capsule root and recording a grant writes the "
+                "trust store, both under the user's XDG directories, which ProtectHome=read-only "
+                "covers. The narrow fix is a ReadWritePaths= line naming those roots on the runtime "
+                "unit, plus the user-tmpfiles rule that makes them exist before namespace setup."
+            )
+        if overwritable:
+            evidence.findings.append(
+                "a client unit can write the runtime's state: "
+                + "; ".join(overwritable)
+                + ". The window holds no authority by design — a renderer that can write the trust "
+                "store can mint its own grants. Its ProtectHome=read-only must stay, and no "
+                "ReadWritePaths= naming these roots belongs on it."
+            )
+        if unwritable or overwritable:
+            return evidence.settle(
+                "FAIL",
+                f"the capsule launched under every unit's properties, and the state roots are "
+                f"{'read-only to the runtime unit' if unwritable else ''}"
+                f"{' and ' if unwritable and overwritable else ''}"
+                f"{'writable by a client unit' if overwritable else ''}",
+            )
+
+        # The regression control. Everything above passing is the intended result and
+        # is also what a section that had stopped measuring anything would report.
+        still_detected = [name for name in units if not shapes[f"scope:{name}"]["started"]]
+        if len(still_detected) != len(units):
+            blind = [name for name in units if name not in still_detected]
+            evidence.findings.append(
+                f"the pre-fix shape — the capsule as a scope forked from the launcher — also started "
+                f"under {blind}. That was the defect, so either this machine does not enforce the "
+                f"directive the finding rests on, or this section can no longer detect it. Its PASS "
+                f"is not evidence either way until that is resolved."
+            )
+            return evidence.settle(
+                "BLOCKED",
+                f"every shape started, including the one that must not: the scope shape is this "
+                f"section's control and it did not fail under {blind}",
+            )
+
+        measured = sum(len(props) for props in units.values())
+        return evidence.settle(
+            "PASS",
+            f"the capsule launched inside units carrying {measured} sandboxing directives across "
+            f"{len(units)} shipped Companion unit(s), and the pre-fix scope shape still failed under "
+            f"all {len(units)} of them",
+        )
     finally:
+        # The account is left as found: only what _establish created, only if
+        # still empty, deepest first.
         _remove_established(established)
-    evidence.measurements["stateWritable"] = writability
-    evidence.measurements["stateRootsEstablished"] = [str(item) for item in established]
-
-    unwritable = sorted({
-        f"{unit} cannot write {row['path']}"
-        for unit, rows in writability.items()
-        if LAUNCHER_UNIT_ROLES.get(unit) == "runtime"
-        for row in rows.values()
-        if not row["writable"]
-    })
-    overwritable = sorted({
-        f"{unit} can write {row['path']}"
-        for unit, rows in writability.items()
-        if LAUNCHER_UNIT_ROLES.get(unit) == "client"
-        for row in rows.values()
-        if row["writable"]
-    })
-    if unwritable:
-        evidence.findings.append(
-            "the Companion can start a capsule and cannot keep one: "
-            + "; ".join(unwritable)
-            + ". Installing a capsule writes the capsule root and recording a grant writes the "
-            "trust store, both under the user's XDG directories, which ProtectHome=read-only "
-            "covers. The narrow fix is a ReadWritePaths= line naming those roots on the runtime "
-            "unit, plus the user-tmpfiles rule that makes them exist before namespace setup."
-        )
-    if overwritable:
-        evidence.findings.append(
-            "a client unit can write the runtime's state: "
-            + "; ".join(overwritable)
-            + ". The window holds no authority by design — a renderer that can write the trust "
-            "store can mint its own grants. Its ProtectHome=read-only must stay, and no "
-            "ReadWritePaths= naming these roots belongs on it."
-        )
-    if unwritable or overwritable:
-        return evidence.settle(
-            "FAIL",
-            f"the capsule launched under every unit's properties, and the state roots are "
-            f"{'read-only to the runtime unit' if unwritable else ''}"
-            f"{' and ' if unwritable and overwritable else ''}"
-            f"{'writable by a client unit' if overwritable else ''}",
-        )
-
-    # The regression control. Everything above passing is the intended result and
-    # is also what a section that had stopped measuring anything would report.
-    still_detected = [name for name in units if not shapes[f"scope:{name}"]["started"]]
-    if len(still_detected) != len(units):
-        blind = [name for name in units if name not in still_detected]
-        evidence.findings.append(
-            f"the pre-fix shape — the capsule as a scope forked from the launcher — also started "
-            f"under {blind}. That was the defect, so either this machine does not enforce the "
-            f"directive the finding rests on, or this section can no longer detect it. Its PASS "
-            f"is not evidence either way until that is resolved."
-        )
-        return evidence.settle(
-            "BLOCKED",
-            f"every shape started, including the one that must not: the scope shape is this "
-            f"section's control and it did not fail under {blind}",
-        )
-
-    measured = sum(len(props) for props in units.values())
-    return evidence.settle(
-        "PASS",
-        f"the capsule launched inside units carrying {measured} sandboxing directives across "
-        f"{len(units)} shipped Companion unit(s), and the pre-fix scope shape still failed under "
-        f"all {len(units)} of them",
-    )
