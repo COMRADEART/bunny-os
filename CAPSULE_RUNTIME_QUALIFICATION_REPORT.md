@@ -214,8 +214,11 @@ them.
 
 ## 7. Defects found, and what changed
 
-Eight, none of which was visible from a Windows developer host. Two made the
-feature not work at all.
+Ten, none of which was visible from a Windows developer host. Four made the
+feature not work at all — and the last two of those, L-9 and L-10, were not
+visible from a Linux host either until something asked the question the product
+asks: not "can a capsule be launched" but "can the thing that launches capsules
+launch one".
 
 | # | Defect | Severity | Fix |
 |---|---|---|---|
@@ -227,11 +230,41 @@ feature not work at all.
 | L-6 | **A route the build context could not see reported as installed.** The three new packages were in `install_routes.py` and not in the Containerfile; the image would have shipped a companion importing packages that were not there. | **Blocker** | Containerfile copies them; a fourth classification `route-without-context`; a test asserts every route source is inside a context root |
 | L-7 | The sandbox root was writable — contained, but a capability the capsule had and the unconfined control did not. | Low | `--remount-ro /` after the binds, measured to keep the capsule's own directories writable |
 | L-8 | **`MemoryMax` is declared and this host ignores it**, with nothing saying so. | Medium, disclosed | The plan reports limits whose controller is not delegated; Settings and the status surface show them |
+| L-9 | **The Companion could not launch a capsule at all.** A capsule was a `systemd-run --user --scope`, a scope is forked by whoever asks for it and inherits that process's seccomp filter, and both Companion units set `RestrictNamespaces=yes` — while bubblewrap's whole mechanism is `unshare(2)`. Always, on every machine. Every section of this suite had launched from a login shell, which nothing in the product does. | **Blocker** | The renderer asks the manager for a transient *service*; the manager spawns it, so nothing of the launcher's is inherited. The capsule keeps its cgroup and its declared limits |
+| L-10 | **The Companion could start a capsule and not keep one.** Installing a capsule writes the capsule root and recording a grant writes the trust store, both under the user's XDG directories, which `ProtectHome=read-only` covers. The install failed on its first write. | **Blocker** | `ReadWritePaths=` on the runtime unit only, plus the user-tmpfiles rule that makes the roots exist — a `ReadWritePaths=` path that does not exist fails namespace setup with 226/NAMESPACE before `ExecStart` |
 
-Three harness defects were also found and are worth recording because each would
+Six harness defects were also found and are worth recording because each would
 have produced a false PASS: counting only `DENIED` as isolation (2 checks instead
-of 17), truncating structured probe output so a comparison silently skipped, and
-counting any SIGKILL as memory enforcement.
+of 17), truncating structured probe output so a comparison silently skipped,
+counting any SIGKILL as memory enforcement, probing writability at the harness's
+own `/tmp` override — where `PrivateTmp=`, not `ProtectHome=`, decides the answer
+— reproducing a unit's restrictions without its `ReadWritePaths=` relaxation, so
+the fix was invisible to the check, and reading a *stale installed* unit on the
+developer host in preference to the one under test.
+
+### Why L-9 and L-10 took a new section
+
+Every section above launches a capsule from a plain login shell. That is the
+right place to measure what a capsule can *reach* and the wrong place to measure
+whether one can be *started*, because nothing in the product starts one from a
+login shell. The `launcher` section reproduces the launch inside a transient unit
+carrying each shipped Companion unit's own directives — read out of the unit
+files rather than copied, so a directive added to a unit is measured without
+anybody remembering to — and runs four shapes:
+
+| Shape | Before the fix | After |
+|---|---|---|
+| `direct` — the vector from a plain process | started | started |
+| `permissive` — nested in a transient unit with no properties | started | started |
+| `hardened` — nested in a unit with the Companion's own properties | **failed** | started |
+| `scope` — the pre-fix vector, same properties | failed | **still fails** |
+
+The fourth is the section's own control. Everything passing is the intended
+result and is also exactly what a section that had quietly stopped measuring
+anything would report; without a shape that must fail there is no way to tell
+those apart. It is asserted in both directions on the writability half too: the
+runtime unit must be able to write the state roots, and the window unit must not
+— a renderer that can write the trust store can mint its own grants.
 
 ---
 
