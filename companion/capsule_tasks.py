@@ -37,6 +37,8 @@ from pathlib import Path
 import re
 from typing import Any, Mapping, Sequence
 
+from .errors import CompanionError
+
 __all__ = [
     "FAILURE_CODES",
     "FAILURE_SENTENCES",
@@ -94,12 +96,20 @@ FAILURE_SENTENCES: Mapping[str, str] = {
 }
 
 
-class CapsuleTaskFailure(Exception):
+class CapsuleTaskFailure(CompanionError):
     """A typed failure of an application task.
 
     Carries the code, the sentence, and a ``detail`` that may name a mechanism.
     The detail reaches the audit record and the "Details" button; it never
     reaches the first line a person reads.
+
+    A :class:`~companion.errors.CompanionError`, and that matters more than it
+    looks. The runtime catches ``CompanionError`` and turns it into a failed
+    task with a reason; anything else escapes. This was a plain ``Exception``,
+    and a task whose operation could not be prepared — no input file, in the
+    first booted journey — neither failed nor advanced. It sat in
+    ``waiting_for_executor`` until the probe's window ran out, which reads as a
+    hang rather than as the refusal it was.
     """
 
     def __init__(self, code: str, detail: str = "", *, retryable: bool = False) -> None:

@@ -210,6 +210,33 @@ class TheRouteExists(RouteFixture):
             "operation timeout the release would have cut short",
         )
 
+    def test_a_typed_failure_is_one_the_runtime_can_handle(self) -> None:
+        """The runtime catches CompanionError and turns it into a failed task
+        with a reason; anything else escapes and the task neither fails nor
+        advances.
+
+        This was a plain Exception. In the first booted journey a task whose
+        operation could not be prepared — no input file — sat in
+        ``waiting_for_executor`` until the probe's window ran out, which reads
+        as a hang rather than as the refusal it was.
+        """
+        from companion.capsule_tasks import CapsuleTaskFailure
+        from companion.errors import CompanionError
+
+        self.assertTrue(issubclass(CapsuleTaskFailure, CompanionError))
+
+    def test_preparing_without_an_input_raises_that_typed_failure(self) -> None:
+        """And it raises rather than returning None: returning None would fall
+        back to the generic tool requirement and ask a person to approve
+        something that cannot run."""
+        from companion.capsule_tasks import CapsuleTaskFailure
+
+        self.support.release_task_context(self.task.task_id)
+        with self.assertRaises(CapsuleTaskFailure) as caught:
+            self.support.requirement_for(self.task, self.plan, _operation())
+        self.assertEqual(caught.exception.code, "SECURITY_POLICY_BLOCKED")
+        self.assertIn("no file", caught.exception.detail)
+
 
 class TheUserIsAskedFirst(RouteFixture):
     def test_the_requirement_names_the_file_and_the_application(self) -> None:
