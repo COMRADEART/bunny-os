@@ -56,6 +56,7 @@ from pathlib import Path
 from typing import Any, Mapping, Protocol, Sequence
 
 from capsules.errors import CapsuleError, CapsuleExportRefused
+from capsules.isolation import SANDBOX_DIRECTORIES
 from capsules.exchange import ExportResult, describe_import, export_artifact, user_destinations
 from capsules.manifest import CapsuleManifest, ResourceLimits
 from capsules.runtime import Capsule, CapsuleRuntime, LaunchRecord
@@ -76,6 +77,7 @@ __all__ = [
     "CapsuleTaskCoordinator",
     "CapsuleTaskError",
     "CapsuleTaskResult",
+    "CapsuleProcessTool",
     "CapsuleTool",
     "RecordingTool",
     "TaskStep",
@@ -194,7 +196,26 @@ class ToolOutcome:
 
 
 class CapsuleTool(Protocol):
-    """Whatever actually does the work inside the capsule."""
+    """Whatever actually does the work inside the capsule.
+
+    A tool may optionally declare ``command``, in which case the *launch itself*
+    is the work: the coordinator starts the capsule running that argument vector
+    and :meth:`run` waits for it and reports what appeared. A tool without
+    ``command`` is started alongside a default launch and does the work in this
+    process, which is what :class:`RecordingTool` does and is honest only
+    because that tool makes no claim about a third-party application.
+
+    The distinction matters and is not cosmetic. With ``command``, the process
+    that reads the granted file is the confined one; without it, the process
+    that reads the granted file is Bunny. Only the first is a measurement of the
+    sandbox.
+
+    ::
+
+        def command(self, *, capability: str, inputs: Sequence[str],
+                    output_directory: str, parameters: Mapping[str, Any],
+                    program: str) -> tuple[str, ...]: ...
+    """
 
     def run(
         self,
@@ -238,6 +259,97 @@ class RecordingTool:
             (output_directory / name).write_bytes(b"")
             produced.append(name)
         return ToolOutcome(artifact_names=tuple(produced), notes=("Worked on the file you chose.",))
+
+
+@dataclass
+class CapsuleProcessTool:
+    """Does the work by *being* the capsule's process. The production tool.
+
+    The argument vector is built from three trusted sources and nothing else:
+    the program comes from the application's manifest, the flag names come from
+    :mod:`companion.capsule_tasks`' operation table, and the values are the
+    sandbox paths the grant produced plus parameters that have already been
+    validated to a bounded integer. There is no string from a person anywhere in
+    it, and no shell to interpret one if there were.
+
+    Waiting is done against the executor rather than by sleeping: the runtime
+    records the manager's ``MainPID`` and asks systemd whether the unit is still
+    active, so "finished" means the transient service finished. A poll loop over
+    the exports directory would report success as soon as the first byte of a
+    partially written file appeared.
+    """
+
+    #: The validated parameters for this one run. Set by the caller immediately
+    #: before :meth:`run`; a tool instance is never shared between tasks.
+    parameters: Mapping[str, Any] = field(default_factory=dict)
+    #: The name Bunny chose for the result. The application is told where to
+    #: write; it does not choose, and a file under any other name is not
+    #: collected.
+    output_name: str = ""
+    timeout_seconds: float = 120.0
+    #: Set after :meth:`run`. The exit status of the confined process, and the
+    #: stderr it produced, for the audit record and the Details view.
+    exit_code: int | None = None
+    detail: str = ""
+
+    def command(
+        self,
+        *,
+        capability: str,
+        inputs: Sequence[str],
+        output_directory: str,
+        parameters: Mapping[str, Any],
+        program: str,
+    ) -> tuple[str, ...]:
+        if capability != "resize-image":
+            raise CapsuleTaskError(f"no argument vector is defined for {capability!r}")
+        if len(inputs) != 1:
+            raise CapsuleTaskError("this operation takes exactly one input")
+        width = parameters.get("width")
+        if not isinstance(width, int) or isinstance(width, bool):
+            raise CapsuleTaskError("width must have been validated before a command is built")
+        return (
+            program,
+            "resize",
+            "--input", str(inputs[0]),
+            "--output", f"{output_directory.rstrip('/')}/{self.output_name}",
+            "--width", str(width),
+        )
+
+    def run(
+        self,
+        capsule: Capsule,
+        *,
+        capability: str,
+        inputs: Sequence[str],
+        output_directory: Path,
+    ) -> ToolOutcome:
+        """Wait for the launched process, then report what it left behind.
+
+        The presence of the file is checked here and *verified* by the export,
+        which is the boundary that owns "is this really an artefact of this
+        capsule". This method's job is only to turn "the unit ended" into "the
+        name Bunny asked for exists", and to refuse the two ways that can be
+        misread: a process that exited non-zero, and a process that exited zero
+        having written nothing.
+        """
+        produced = output_directory / self.output_name
+        if self.exit_code is None:
+            return ToolOutcome((), ok=False, failure="the app never started")
+        if self.exit_code != 0:
+            return ToolOutcome(
+                (), ok=False,
+                failure=f"the app stopped with status {self.exit_code}",
+            )
+        if not produced.is_file():
+            return ToolOutcome(
+                (), ok=False,
+                failure="the app finished without producing the file",
+            )
+        return ToolOutcome(
+            artifact_names=(self.output_name,),
+            notes=("Worked on the file you chose.",),
+        )
 
 
 @dataclass(frozen=True)
@@ -324,6 +436,7 @@ class CapsuleTaskCoordinator:
         destination: Path,
         request_text: str | None = None,
         overwrite_inputs: bool = False,
+        parameters: Mapping[str, Any] | None = None,
     ) -> CapsuleTaskResult:
         """Do the work, or stop at the first refusal and say which one it was."""
         started = _now()
@@ -434,13 +547,50 @@ class CapsuleTaskCoordinator:
         #    runs against the capsule's own directories either way, so a recorded
         #    launch still exercises the plan and still refuses when it cannot be
         #    built.
+        # A tool that declares `command` makes the launch *be* the work: the
+        # confined process is the one that reads the granted file. A tool
+        # without one is started alongside a default launch and does the work
+        # here, which exercises the plan and claims nothing about an
+        # application. The vector is built from the manifest's program, the
+        # operation table's flags and already-validated values — never from the
+        # request.
+        command = None
+        build_command = getattr(self.tool, "command", None)
+        if build_command is not None:
+            try:
+                command = build_command(
+                    capability=capability,
+                    inputs=tuple(sandbox_inputs),
+                    output_directory=SANDBOX_DIRECTORIES["exports"],
+                    parameters=dict(parameters or {}),
+                    program=capsule.manifest.package_reference,
+                )
+            except CapsuleTaskError as exc:
+                steps.append(TaskStep("open", STEP_LABELS["open"], "failed", str(exc)))
+                return fail(f"Bunny could not work out how to ask {entry.name} to do that.")
         try:
             capsule = self.runtime.open(entry.application_id)
-            launch = self.runtime.launch(capsule)
+            launch = self.runtime.launch(capsule, command=command)
         except (CapsuleError, TrustError) as exc:
             steps.append(TaskStep("open", STEP_LABELS["open"], "failed", str(exc)))
             return fail(f"Bunny could not open {entry.name} safely, so it did not open it at all.")
         steps.append(TaskStep("open", STEP_LABELS["open"], "done", launch.backend))
+
+        # Wait for the confined process before asking what it produced. The
+        # executor asks the manager whether the transient unit is still active;
+        # this is not a sleep, and "finished" means the unit finished.
+        if command is not None and launch.started and launch.pid is not None:
+            wait = getattr(self.runtime.executor, "wait", None)
+            timeout = getattr(self.tool, "timeout_seconds", 120.0)
+            try:
+                exit_code = wait(launch.pid, timeout=timeout) if wait else None
+            except Exception:  # noqa: BLE001 - a timeout is a task failure, not a crash
+                self.runtime.stop(capsule)
+                steps.append(TaskStep("work", STEP_LABELS["work"], "failed", "timed out"))
+                return fail(f"{entry.name} took too long, so Bunny stopped it.")
+            self.tool.exit_code = exit_code
+        elif command is not None:
+            self.tool.exit_code = None
         for grant_id, reason in launch.plan.refusals:
             warnings.append(reason)
 

@@ -68,6 +68,7 @@ __all__ = [
     "BASE_DEVICES",
     "CREDENTIAL_DIRECTORIES",
     "GRANT_TARGET_ROOT",
+    "SANDBOX_DIRECTORIES",
     "BindMount",
     "IsolationPlan",
     "LAUNCHER_ENVIRONMENT_KEYS",
@@ -143,6 +144,13 @@ _CAPSULE_TARGETS: Mapping[str, str] = {
     "exports": "/run/bunny/app/exports",
     "inbox": "/run/bunny/app/inbox",
 }
+
+#: The same table, under a name other packages may use. The Companion needs to
+#: know where a capsule's exports appear *inside* the sandbox, because that is
+#: the path it tells a confined program to write to — and computing it by string
+#: concatenation somewhere else would be a second definition of the layout that
+#: could drift from this one.
+SANDBOX_DIRECTORIES: Mapping[str, str] = _CAPSULE_TARGETS
 
 #: The complete environment a capsule receives, before grant-derived additions.
 #: Keys, not a filter: an allowlist applied to the session's environment would
