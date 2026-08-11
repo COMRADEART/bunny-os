@@ -282,8 +282,22 @@ def section_apptask(harness: Harness, host: Mapping[str, Any]) -> Evidence:
 
     protected = value.get("protectedSpace") or {}
     evidence.measurements["protectedSpace"] = dict(protected)
-    if protected.get("network") not in (None, "Off"):
-        problems.append(f"the capsule ran with network {protected.get('network')!r}")
+    # The plain view is a list of labelled rows, which is what a person reads.
+    # Reading a top-level "network" key found nothing and reported "unknown",
+    # which is the projection being read wrongly rather than the capsule being
+    # unmeasured — the technical view carries the enforced class beside it.
+    plain = {str(row.get("label")): str(row.get("value")) for row in protected.get("plain", [])}
+    technical_network = (protected.get("technical") or {}).get("network") or {}
+    network = plain.get("Network", "unknown")
+    evidence.measurements["network"] = {
+        "shown": network,
+        "class": technical_network.get("class"),
+        "enforced": technical_network.get("enforced"),
+    }
+    if network != "Off":
+        problems.append(f"the capsule ran with network shown as {network!r}")
+    if technical_network.get("class") != "none" or not technical_network.get("enforced"):
+        problems.append(f"the plan's network is {technical_network!r}, not an enforced 'none'")
 
     if problems:
         evidence.findings.extend(problems)
@@ -293,5 +307,6 @@ def section_apptask(harness: Harness, host: Mapping[str, Any]) -> Evidence:
         "PASS",
         f"the Companion route produced {produced.name} at {size[0]}x{size[1]} in {elapsed_ms} ms; "
         f"the original is unchanged, the neighbour was never authorised, and the capsule ran "
-        f"with network {protected.get('network', 'unknown')}",
+        f"with network {network} (class {technical_network.get('class')}, "
+        f"enforced {technical_network.get('enforced')})",
     )
