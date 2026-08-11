@@ -1,0 +1,78 @@
+{
+  "commit": "596d9e1bf9eba01dec18ecf3ebb4c9bf4b9c53c3",
+  "explanation": "every failure path denied, wrote no grant, and produced its own reason: ['expired', 'not-declared', 'replayed', 'store-unreadable', 'surface-failed', 'unanswered']",
+  "findings": [],
+  "finishedAt": "2026-08-11T03:11:45.745743Z",
+  "host": {
+    "backends": [
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Disabled",
+      "policyVersion": null,
+      "probeError": null,
+      "selfContext": "kernel"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "wsl"
+  },
+  "measurements": {
+    "expired": {
+      "grant": null,
+      "reason": "expired",
+      "verdict": "deny"
+    },
+    "malformedStore": {
+      "grant": null,
+      "loadError": "/tmp/bunny-qualify-rwfjbjwj/trust/grants.json is not readable JSON: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)",
+      "reason": "store-unreadable",
+      "verdict": "deny"
+    },
+    "noAnswer": {
+      "grant": null,
+      "reason": "unanswered",
+      "verdict": "deny"
+    },
+    "replaySetup": {
+      "grant": null,
+      "reason": "user-allowed",
+      "verdict": "allow"
+    },
+    "replayedApproval": {
+      "grant": null,
+      "reason": "replayed",
+      "verdict": "deny"
+    },
+    "resourceChangedAfterApproval": {
+      "boundAnyway": [],
+      "grant": "6hTy0gNn_lprXspE",
+      "refusals": [
+        {
+          "grantId": "6hTy0gNn_lprXspE",
+          "reason": "that file is no longer an ordinary file"
+        }
+      ]
+    },
+    "uiCrash": {
+      "grant": null,
+      "reason": "surface-failed",
+      "verdict": "deny"
+    },
+    "undeclaredCategory": {
+      "grant": null,
+      "reason": "not-declared",
+      "verdict": "deny"
+    }
+  },
+  "schemaVersion": 1,
+  "section": "failclosed",
+  "startedAt": "2026-08-11T03:11:45.743246Z",
+  "verdict": "PASS"
+}

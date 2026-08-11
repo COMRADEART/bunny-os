@@ -1,0 +1,113 @@
+{
+  "commit": "596d9e1bf9eba01dec18ecf3ebb4c9bf4b9c53c3",
+  "explanation": "confining backends: ['bubblewrap']; absent, so its backend is NOT_RUN rather than PASS: ['flatpak']",
+  "findings": [
+    "['flatpak'] is not installed on this host. Every result below is the bubblewrap backend only; the Flatpak backend has not been exercised.",
+    "The host is WSL2. Its kernel is Microsoft's, not Fedora's stock kernel, so a namespace or cgroup behaviour measured here should be re-measured on the shipped kernel before it is called a property of Bunny OS."
+  ],
+  "finishedAt": "2026-08-11T03:11:44.324211Z",
+  "host": {
+    "backends": [
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Disabled",
+      "policyVersion": null,
+      "probeError": null,
+      "selfContext": "kernel"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "wsl"
+  },
+  "measurements": {
+    "availableBackends": [
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "cgroupVersion": "cgroup2fs",
+    "commit": "596d9e1bf9eba01dec18ecf3ebb4c9bf4b9c53c3",
+    "graphical": {
+      "display": ":0",
+      "waylandDisplay": "wayland-0"
+    },
+    "homeFilesystem": "ext2/ext3",
+    "image": {
+      "bootc": {
+        "digest": null,
+        "image": null,
+        "transport": null,
+        "version": null
+      },
+      "osRelease": {
+        "ANSI_COLOR": "\"0;38;2;60;110;180\"",
+        "BUG_REPORT_URL": "\"https://bugzilla.redhat.com/\"",
+        "CPE_NAME": "\"cpe:/o:fedoraproject:fedora:44\"",
+        "DEFAULT_HOSTNAME": "\"fedora\"",
+        "DOCUMENTATION_URL": "\"https://docs.fedoraproject.org/en-US/fedora/f44/\"",
+        "HOME_URL": "\"https://fedoraproject.org/\"",
+        "ID": "fedora",
+        "LOGO": "fedora-logo-icon",
+        "NAME": "\"Fedora Linux\"",
+        "PRETTY_NAME": "\"Fedora Linux 44 (WSL)\"",
+        "REDHAT_BUGZILLA_PRODUCT": "\"Fedora\"",
+        "REDHAT_BUGZILLA_PRODUCT_VERSION": "44",
+        "REDHAT_SUPPORT_PRODUCT": "\"Fedora\"",
+        "REDHAT_SUPPORT_PRODUCT_VERSION": "44",
+        "RELEASE_TYPE": "stable",
+        "SUPPORT_END": "2027-05-19",
+        "SUPPORT_URL": "\"https://ask.fedoraproject.org/\"",
+        "VARIANT": "\"WSL\"",
+        "VARIANT_ID": "wsl",
+        "VERSION": "\"44 (WSL)\"",
+        "VERSION_CODENAME": "\"\"",
+        "VERSION_ID": "44"
+      }
+    },
+    "isRoot": false,
+    "kernelUserNamespaces": {
+      "maxUserNamespaces": 63133,
+      "nsFilePresent": true
+    },
+    "machineProbe": {
+      "graphicalSession": true,
+      "portal": true,
+      "programs": [
+        "bwrap",
+        "systemd-run"
+      ],
+      "userNamespaces": true
+    },
+    "recordedAt": "2026-08-11T03:11:44.279922Z",
+    "schemaVersion": 1,
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Disabled",
+      "policyVersion": null,
+      "probeError": null,
+      "selfContext": "kernel"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "versions": {
+      "bubblewrap": "bubblewrap 0.11.0",
+      "flatpak": "ABSENT",
+      "kernel": "6.18.33.2-microsoft-standard-WSL2",
+      "python": "Python 3.14.3",
+      "systemd": "systemd 259 (259.8-1.fc44)"
+    },
+    "virtualization": "wsl"
+  },
+  "schemaVersion": 1,
+  "section": "host",
+  "startedAt": "2026-08-11T03:11:44.323862Z",
+  "verdict": "PASS"
+}

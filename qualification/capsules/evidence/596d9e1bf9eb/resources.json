@@ -1,0 +1,75 @@
+{
+  "commit": "596d9e1bf9eba01dec18ecf3ebb4c9bf4b9c53c3",
+  "explanation": "tasks enforced at 45 against 48 declared; memory not enforced by this kernel (see findings); cold launch 11.6 ms; steady state 17362944 bytes over 3 processes",
+  "findings": [
+    "MemoryMax is accepted and not enforced by this kernel: a plain systemd user scope with no capsule and no bwrap allocated 2147483648 bytes against the same 268435456-byte ceiling. The limit was applied correctly (memory.max read back as set); the kernel does not act on it. This is a property of the host, not of the capsule wrapper."
+  ],
+  "finishedAt": "2026-08-11T03:14:07.801168Z",
+  "host": {
+    "backends": [
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Disabled",
+      "policyVersion": null,
+      "probeError": null,
+      "selfContext": "kernel"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "wsl"
+  },
+  "measurements": {
+    "hostControl": {
+      "allocatedBytes": 2147483648,
+      "ceiling": 268435456,
+      "enforced": false,
+      "exitCode": 0,
+      "outcome": "ceiling-reached-without-intervention",
+      "ran": true,
+      "stderr": ""
+    },
+    "launchLatencyMs": {
+      "cold": 11.6,
+      "subsequent": [
+        11.0,
+        11.0
+      ]
+    },
+    "memory": {
+      "allocatedBytes": 4294967296,
+      "cgroup": "0::/",
+      "cgroupEvents": {
+        "available": false,
+        "reason": "no ControlGroup for bunny-capsule-art-comrade-hungry.6fb6a63640d6fa1b.service"
+      },
+      "declaredHigh": 201326592,
+      "declaredMax": 268435456,
+      "exitCode": 0,
+      "intervention": "unknown-no-counters",
+      "outcome": "ceiling-reached-without-intervention"
+    },
+    "steadyState": {
+      "applicationRssBytes": 13250560,
+      "capsuleDiskBytes": 7305,
+      "treeRssBytes": 17362944,
+      "treeSize": 3
+    },
+    "tasks": {
+      "declaredMax": 48,
+      "exitCode": 0,
+      "outcome": "RuntimeError: can't start new thread",
+      "threadsStarted": 45
+    }
+  },
+  "schemaVersion": 1,
+  "section": "resources",
+  "startedAt": "2026-08-11T03:13:56.365529Z",
+  "verdict": "BLOCKED"
+}

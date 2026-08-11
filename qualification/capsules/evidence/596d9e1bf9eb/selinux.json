@@ -1,0 +1,45 @@
+{
+  "commit": "596d9e1bf9eba01dec18ecf3ebb4c9bf4b9c53c3",
+  "explanation": "SELinux mode is 'Disabled'; this section can only produce a result where it is Enforcing, and reporting anything else would be evidence about a layer that was not running",
+  "findings": [],
+  "finishedAt": "2026-08-11T03:11:46.908204Z",
+  "host": {
+    "backends": [
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Disabled",
+      "policyVersion": null,
+      "probeError": null,
+      "selfContext": "kernel"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "wsl"
+  },
+  "measurements": {
+    "policy": {
+      "localBooleans": [],
+      "mode": "Disabled",
+      "moduleTool": false,
+      "permissiveDomains": []
+    },
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Disabled",
+      "policyVersion": null,
+      "probeError": null,
+      "selfContext": "kernel"
+    }
+  },
+  "schemaVersion": 1,
+  "section": "selinux",
+  "startedAt": "2026-08-11T03:11:46.569531Z",
+  "verdict": "BLOCKED"
+}
