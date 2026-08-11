@@ -337,9 +337,10 @@ class CapsuleProcessTool:
         if self.exit_code is None:
             return ToolOutcome((), ok=False, failure="the app never started")
         if self.exit_code != 0:
+            said = f": {self.detail.splitlines()[-1]}" if self.detail.strip() else ""
             return ToolOutcome(
                 (), ok=False,
-                failure=f"the app stopped with status {self.exit_code}",
+                failure=f"the app stopped with status {self.exit_code}{said}",
             )
         if not produced.is_file():
             return ToolOutcome(
@@ -589,6 +590,11 @@ class CapsuleTaskCoordinator:
                 steps.append(TaskStep("work", STEP_LABELS["work"], "failed", "timed out"))
                 return fail(f"{entry.name} took too long, so Bunny stopped it.")
             self.tool.exit_code = exit_code
+            if exit_code not in (0, None):
+                # What the program said, from the journal, for the Details view.
+                diagnostics = getattr(self.runtime.executor, "diagnostics", None)
+                if diagnostics is not None:
+                    self.tool.detail = diagnostics(launch.pid)
         elif command is not None:
             self.tool.exit_code = None
         for grant_id, reason in launch.plan.refusals:

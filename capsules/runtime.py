@@ -296,6 +296,28 @@ class SubprocessExecutor:
                 raise subprocess.TimeoutExpired(self._units[pid], timeout or 0)
             time.sleep(0.05)
 
+    def diagnostics(self, pid: int, *, lines: int = 20) -> str:
+        """What the capsule's own process said on its way out.
+
+        The transient unit's output goes to the journal, not to this process, so
+        a program that explained itself explained itself somewhere nobody was
+        reading. This is that explanation: bounded, from one unit, and shown
+        behind "Details" rather than in the sentence a person reads first.
+
+        It is the *application's* stderr. It can contain a file name the
+        application was given — it cannot contain anything else of the user's,
+        because nothing else of the user's is inside the sandbox.
+        """
+        unit = self._units.get(pid)
+        if unit is None:
+            return ""
+        result = subprocess.run(  # noqa: S603
+            ["journalctl", "--user", "-u", unit, "-n", str(lines),
+             "--no-pager", "--output", "cat"],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, check=False,
+        )
+        return (result.stdout or "").strip()[:2000]
+
     def stop(self, unit_name: str) -> bool:
         result = subprocess.run(  # noqa: S603
             ["systemctl", "--user", "stop", unit_name],
