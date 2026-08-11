@@ -80,7 +80,8 @@ cp --reflink=auto "${source_image}" "${disk}"
 # harness has no channel into the guest before the session exists and a probe
 # that read its own configuration from somewhere would need one.
 probe="${work}/capsule-journey-probe.py"
-sed "s|^DECISION_DEFAULT = .*$|DECISION_DEFAULT = \"${decision}\"|" \
+sed -e "s|^DECISION_DEFAULT = .*$|DECISION_DEFAULT = \"${decision}\"|" \
+    -e "s|^FIXTURE_DEFAULT = .*$|FIXTURE_DEFAULT = \"${fixture}\"|" \
   build/scripts/capsule-journey-probe.py >"${probe}"
 # The rewrite is checked, not assumed. A sed that matched nothing would leave
 # the denial run answering "allow" and produce a green record for the wrong
