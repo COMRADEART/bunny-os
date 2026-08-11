@@ -458,7 +458,9 @@ Broken capsules are listed rather than dropped — §23 needs a recovery path an
 page that hid them would offer none.
 
 **Status: implemented and tested as a projection. The GTK Settings page that
-renders it is not written.**
+renders it is not written.** `companion/capsule_status.py` adds the §16 pair —
+four plain lines and a technical panel derived from the same isolation plan — and
+is likewise a projection with no window reading it.
 
 ---
 
@@ -549,20 +551,32 @@ The GTK consent dialog (`GtkConsentSurface.ask`) — needs a display. The
 * Real package installation. `ensure_capsule` writes the manifest and provisions
   the directories; it does not run `flatpak install` or `dnf`.
 
-### Never observed
+### Superseded by the runtime qualification — 2026-08-10
 
-**Nothing in this phase has run on a booted Bunny OS image.** In particular:
+This section previously read *"Nothing in this phase has run on a booted Bunny OS
+image"* and listed eight things that had never happened. Six of them have now
+happened, and the record is `CAPSULE_RUNTIME_QUALIFICATION_REPORT.md` with
+evidence under `qualification/capsules/evidence/`. The corrections, so this
+document does not disagree with the repository:
 
-* No `bwrap` process has been started from a rendered plan. Whether bubblewrap
-  honours the argument vector is unmeasured.
-* No portal has denied anything.
-* No cgroup limit has been applied.
-* No permission dialog has been drawn.
-* No screen reader has read a prompt.
-* No person has used any of it.
+| Then | Now |
+|---|---|
+| No `bwrap` process has been started from a rendered plan | Started repeatedly; 17 checks isolated against a negative control |
+| Whether bubblewrap honours the argument vector is unmeasured | Measured: home absent, credential directories absent, another capsule's data absent, traversal and symlink escapes absent, the environment exactly the eight declared keys |
+| No cgroup limit has been applied | `TasksMax` applied and **enforced**; `MemoryMax` applied and **ignored by this kernel**, proven by a control with no capsule |
+| The `SubprocessExecutor` — needs a Linux kernel | Exercised; two blocker defects found in it |
+| The GTK consent dialog | still **not run** — no graphical session was driven |
+| No portal has denied anything | still **not run** |
+| No permission dialog has been drawn | still **not run** |
+| No screen reader has read a prompt | still **not run** |
+| No person has used any of it | still true |
 
-The security review lists which specific claims that leaves standing on source
-inspection alone.
+The three symlink tests recorded here as `NOT_RUN` on Windows now run and pass on
+Linux. The performance figures in `CAPSULE_PERFORMANCE_REPORT.md` §5 have their
+first real measurements: cold launch 1.3–1.9 ms to the launcher returning, steady
+state 17.2 MB RSS over three processes, 6 KB of capsule disk. The seven metrics
+that report lists as missing are still missing except those three, because they
+need an application with a window and none has been started.
 
 ### The next six things, in order
 

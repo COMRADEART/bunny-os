@@ -206,12 +206,49 @@ judgement with no second reader.
 
 ---
 
+## 5a. Superseded by the runtime qualification — 2026-08-10
+
+§2.4 listed eleven attacks not attempted "because they need a running kernel",
+and §4 said no result in §2.3 had been observed enforcing anything. Both have
+changed and the record is `CAPSULE_RUNTIME_QUALIFICATION_REPORT.md`.
+
+Now measured on a Linux host with real sandboxes and a negative control: the
+symlink rows (all three tests run and pass), home and credential access,
+cross-capsule access, environment leakage, traversal, writing outside the
+sandbox, network isolation, the crash boundaries and the cgroup limits.
+
+Still not attempted, and still for the same reason: a mount escape, a
+user-namespace escape, a seccomp bypass, portal misuse, D-Bus filter bypass, IPC
+spoofing, a Secret Service proxy leak and broker misuse via `sensitive_system`.
+Those need a graphical session and services this phase did not start.
+
+Two findings to add to §2:
+
+**F-3 — an allowlisted network class is not a boundary. (High, disclosed, not
+fixed.)** A capsule granted `example.com` connected to `example.org`. Every class
+other than `none` maps onto the absence of a network namespace. Disclosed on the
+plan, in Settings, in the status surface and in the category's enforcement text;
+the alternative — asking the application to respect the list — is enforcement by
+cooperation and is not enforcement.
+
+**F-4 — a route the build context could not see reported as installed. (Blocker,
+fixed.)** The three packages were declared in `install_routes.py` and absent from
+the Containerfile, so the image would have shipped a companion importing packages
+that were not there. The closure analyser matched routes against paths and never
+asked whether any COPY put the path in the context.
+
 ## 6. Verdict
 
-**No Blocker or High finding is open.** One High was found and fixed (F-1); one
-Medium is accepted with disclosure at five surfaces (W-1); one Low was found and
-fixed (F-2).
+**No Blocker is open.** Two Blockers were found by the runtime qualification and
+fixed (a launcher that could never start, a route the build could not see). One
+High was found and fixed (F-1), one High is disclosed and not fixed (F-3, the
+allowlisted network class), one Medium is accepted with disclosure at five
+surfaces (W-1, clipboard and Bluetooth), one Medium is disclosed (unapplied
+resource limits), and one Low was found and fixed (F-2).
 
-The design is sound on inspection and the fail-closed behaviour is thorough and
-tested. **It has not been observed defending anything**, and until recommendation
-2 is done, that is the honest summary of this review.
+The sentence this section previously ended on — *"it has not been observed
+defending anything"* — is no longer true of the isolation and permission layers,
+which have now been observed refusing seventeen things a control could reach. It
+remains true of every graphical surface, of the portals, and of SELinux, which
+is Disabled on the qualification host and enforcing in the guest nobody has
+logged into.
