@@ -406,7 +406,7 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
             f"no copy of {absent} under {[str(p) for p in UNIT_SEARCH_PATHS]}; the unit files are "
             f"the input to this section and it will not invent a policy to test",
         )
-    bare = [name for name, props in units.items() if not props]
+    bare = [name for name, props in authored.items() if not props]
     if bare:
         return evidence.settle(
             "BLOCKED",
