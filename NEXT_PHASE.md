@@ -896,3 +896,40 @@ Not started, and each is real work rather than a loose end:
 * portal-based export, replacing the interim `ReadWritePaths=-%h/Pictures`.
 
 **Phase status: INCOMPLETE.**
+
+### Why the Trust prompt never appeared — diagnosed, not guessed
+
+Worth writing down because it changes the size of the remaining work by an order
+of magnitude.
+
+**The Trust surface already exists, in the shell extension.**
+`shell/components/gnome-shell-extension/lib/assistant/panel.js` builds an
+approval box with `Allow` and `Deny` buttons, both carrying `accessible_name`
+(`"Allow this Bunny action"`, `"Deny this Bunny action"`), wired through
+`services/assistant.js` to the Companion's `resolve_approval`. Nothing needs to
+be built.
+
+**It never showed because of one line.** `lib/desktopShell.js` gates its
+`onApproval` handler behind `this._owns(meta)` — the panel shows approvals only
+for tasks *it* asked for through `assistant.ask()`. The journey probe submits
+through its own `CompanionClient`, so `_owns` is false and the approval is
+delivered to nobody.
+
+**And the GTK window is a dead end on purpose.**
+`config/systemd/60-bunny-os-user.preset` disables
+`bunny-companion-window.service` deliberately: the desktop has an assistant
+surface of its own now, and starting the window at login put a second, larger
+copy of the same assistant on top of the character. Enabling it to get a dialog
+would be undoing a considered decision, not fixing anything.
+
+So the remaining work for a visible Trust prompt is **harness wiring**:
+`build/scripts/desktop_interaction.py` already drives the shell's assistant over
+AT-SPI and reads its states — the desktop story types "What files are in my
+Downloads folder?" and reads the answer back. Extend it to submit the resize
+request into the assistant input, wait for the approval box, and press
+`Allow`/`Deny` by accessible name. Screenshots then bind naturally to states,
+because the driver knows when each one is reached.
+
+That also delivers most of the accessibility items for free: the buttons already
+have accessible names, so the AT-SPI run *is* the interaction path rather than a
+separate inspection.
