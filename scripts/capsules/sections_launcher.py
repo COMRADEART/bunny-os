@@ -122,6 +122,10 @@ SANDBOX_DIRECTIVES = (
 #: now, so this is the only thing there is to wait for.
 _PROBE_SECONDS = 60.0
 
+#: The environment variables that redirect the trust store and the capsule
+#: root. The harness sets both; the product sets neither.
+_ROOT_OVERRIDES = ("BUNNY_CAPSULE_ROOT", "BUNNY_TRUST_ROOT")
+
 _DIRECTIVE = re.compile(r"^\s*([A-Za-z]+)\s*=\s*(.*?)\s*$")
 
 
@@ -230,11 +234,22 @@ def _state_writable(properties: Sequence[str], environment: Mapping[str, str], u
     import capsules as _capsules
     import trust as _trust
 
-    targets = {
-        "capsuleRoot": _capsules.default_capsule_root(),
-        "trustStore": _trust.default_store_path().parent,
-        "trustAudit": _trust.default_audit_path().parent,
-    }
+    # Without the harness's overrides. Harness.build() points both roots at a
+    # throwaway directory under /tmp so a qualification run never touches the
+    # real account — and /tmp is exactly where PrivateTmp=yes, not ProtectHome,
+    # decides the answer. Probing there measured the wrong property and reported
+    # a failure with the wrong cause.
+    saved = {key: os.environ.pop(key, None) for key in _ROOT_OVERRIDES}
+    try:
+        targets = {
+            "capsuleRoot": _capsules.default_capsule_root(),
+            "trustStore": _trust.default_store_path().parent,
+            "trustAudit": _trust.default_audit_path().parent,
+        }
+    finally:
+        for key, value in saved.items():
+            if value is not None:
+                os.environ[key] = value
     results: dict[str, Any] = {}
     for index, (name, directory) in enumerate(targets.items()):
         # The nearest ancestor that exists, rather than creating the tree. A
