@@ -106,7 +106,17 @@ echo "qualification exit: $?" >>"${out}/runtime_qualify.log"
 
 # A compact summary on the console, so a run whose disk cannot be read
 # afterwards still says something.
+# The kernel buffer after the run, captured as root. The section collects its
+# own as the ordinary user and records that it could not: kernel.dmesg_restrict
+# is 1 in this image, the journal carries no kernel lines and auditd is not
+# installed. This is the copy that can actually answer "were there denials",
+# and it is taken after the capsule work rather than before it.
+dmesg --ctime >"${out}/dmesg-after.txt" 2>"${out}/dmesg-after.err" || true
+grep -ci "avc" "${out}/dmesg-after.txt" >"${out}/dmesg-avc-count.txt" 2>/dev/null || echo 0 >"${out}/dmesg-avc-count.txt"
+grep -i "avc" "${out}/dmesg-after.txt" >"${out}/dmesg-avc-lines.txt" 2>/dev/null || true
+
 echo "BUNNY-CAPSULE-QUALIFY-BEGIN"
+echo "kernel-avc-lines: $(cat "${out}/dmesg-avc-count.txt" 2>/dev/null || echo unknown)"
 /usr/bin/python3 - "${out}/evidence" <<'SUMMARY'
 import json, sys
 from pathlib import Path
