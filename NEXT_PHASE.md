@@ -830,3 +830,69 @@ Also still open:
 **Phase status: INCOMPLETE.** Both journeys run and the security route is
 validated end to end in the booted guest; the *visual* half of the vertical
 slice is not.
+
+---
+
+## Update 2026-08-11 (later still) — failure semantics fixed and proved
+
+`qualification/capsules/evidence/journey-0ef5862-failing/`.
+
+**A failed operation can no longer become a completed task.** The cause was
+structural: `TaskResult` had no failure channel, so an executor could not report
+one, and the runtime — which had watched every operation settle — asked nobody.
+Both knew and neither could say.
+
+There are now two verdicts and the pessimistic one wins. `TaskResult` carries an
+outcome and a structured reason; `CompanionRuntime._observed_outcome` forms its
+own from the operation records rather than from any claim about them;
+`worst_outcome` combines them. The executor's default of `success` is safe only
+because it is not trusted, and a test asserts precisely that: a
+default-constructed result over a plan whose operations all failed still
+produces a failed task.
+
+The invariants are pure functions, so they are checked on every machine rather
+than only where a VM boots — success completes, failure fails, a denial *blocks*
+rather than failing (a person saying no is not a malfunction), cancellation is
+its own state, and an unknown verdict fails.
+
+**Proved in the booted guest.** A third journey slice, `failing`, is `granted`
+with an input the program cannot read — the approval, the capsule and the launch
+are unchanged, only the input differs:
+
+```
+states   created → waiting_for_approval → executing → failed
+error    operation_failed: "The app stopped before it finished."
+result   no output file; original byte-identical; no surviving grant
+```
+
+Before the fix that exact path produced `completed`.
+
+### Three graphical slices now run
+
+| Slice | States | Result |
+|---|---|---|
+| granted | → executing → completed | `holiday-resized.png` 100×50 |
+| denied | → blocked | none |
+| failing | → executing → failed | none |
+
+### What remains, and it is the headline of the phase
+
+**The Trust prompt has still never been drawn.** Approval is answered over the
+Companion protocol — the real route, but not the visible one. By the brief's own
+rule that is decisive on its own: *if approval is still answered
+programmatically, the phase is INCOMPLETE*.
+
+Not started, and each is real work rather than a loose end:
+
+* raising the real GTK Trust surface when a task reaches `waiting_for_approval`,
+  and driving it through AT-SPI rather than the protocol;
+* state-triggered screenshot capture, so frames are bound to transitions instead
+  of to a timer that currently fires an hour of guest-seconds too late;
+* the Companion's visible state projection for each terminal path;
+* protected-space and Trust-history surfaces on screen;
+* every accessibility item — keyboard, AT-SPI names, reduced motion, text-only,
+  screen reader;
+* the `"this"` resolver's ambiguity rule (ask when more than one plausible file);
+* portal-based export, replacing the interim `ReadWritePaths=-%h/Pictures`.
+
+**Phase status: INCOMPLETE.**
