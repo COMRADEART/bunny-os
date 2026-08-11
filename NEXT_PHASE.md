@@ -507,3 +507,429 @@ working Wayland stack. Until it is, the correct recorded state for every V4
 mandatory gate is `NOT_RUN` or `NOT_AVAILABLE` — never `PASS`.
 
 GNOME remains the supported architecture throughout.
+
+## After the Companion / App Capsule / Trust phase — 2026-08-10
+
+Branch `feature/bunny-companion-capsules-trust`, commits `fc1e58a` and `adce2c5`,
+branch point `262b06d`. Full report: `COMPANION_CAPSULES_TRUST_REPORT.md`.
+
+**Nothing below changes the release position.** `gate-stable-release` is still
+`NO-GO`, all three pilot gates are still `BLOCKED`, the vulnerability position is
+untouched, and there is still no hardware, no second signer, no independent
+review and no production key. This pass added a consumer experience to a system
+that cannot ship; that is worth doing and is not progress towards shipping.
+
+### What exists now that did not
+
+Three packages and their surfaces: `trust/` (seventeen permission categories,
+deny-by-default in its strong form, fail-closed everywhere, an audit that holds
+digests rather than paths), `capsules/` (one persistent sandbox per installed
+application over Flatpak, Bubblewrap and a systemd scope, with an isolation plan
+that starts empty and four refusals that raise), and `catalog/` (curated metadata
+with nothing that fetches, establishing the permission ceiling and carrying a
+curator's paragraph on how each option genuinely differs). Plus the §33 task
+slice, the Settings and workspace projections, the text consent surface, the
+installer conversation with its authority rule, and three importless shell
+modules. 248 tests; suite total 4,856.
+
+### The stop condition for this pass is reached, and the next item is cheap
+
+**1. Run `make test-capsule-phase` on Linux, as `bunny`, from an ext4 checkout.**
+Three symlink tests are `NOT_RUN` on a Windows host, and they are among the most
+important in `APP_CAPSULE_SECURITY_REVIEW.md` §2.3 — until they run, those rows
+are design claims rather than measurements. One command on the Fedora builder.
+
+**2. Start one capsule for real.** `SubprocessExecutor`, one catalogue entry, one
+file grant, and the checks in `CAPSULE_VM_VALIDATION_PROCEDURE.md` §3 run from
+*inside* the sandbox. This single step is what every remaining claim waits on: it
+moves the phase from *tested* to *runtime validated*, and it turns "no bind mount
+naming the home directory appears in the plan" into "the home directory is not
+there". Run the negative control in the same session; four of the five gate
+failures this repository has recorded fired because a property got better, and a
+check that passes because the command was wrong looks identical to one that
+passes because the sandbox works.
+
+**3. Boot an image, enable Orca, trigger one permission prompt.** The Trust
+prompt is the only modal Bunny raises unasked. If it does not raise correctly in
+the AT-SPI tree, a screen-reader user meets a silent modal — an application that
+appears to hang — which is a worse failure than any this phase fixes.
+`TRUST_ACCESSIBILITY_REPORT.md` §4.
+
+Then: wire the shell modules and the Settings page on Linux one at a time; measure
+a real cold launch (`CAPSULE_PERFORMANCE_REPORT.md` §5 lists the seven numbers
+that are missing); implement clipboard and Bluetooth enforcement or hide them.
+
+None of 1–3 needs money, hardware or a third party.
+
+### What not to do next
+
+- **Do not wire the shell extension from a host that cannot run it.** The three
+  modules are complete and nothing imports them, deliberately. Editing
+  `extension.js` has cost a boot per mistake, four times.
+- **Do not add a permission category.** Seventeen is §11's list. A category that
+  nothing enforces is the liability `clipboard` and `bluetooth` already are.
+- **Do not add a catalogue entry without a second reader.** An entry is a security
+  artefact — it is the permission ceiling — and currently has one author.
+- **Do not update the report's "runtime validated" row from anything but a
+  completed section of the VM procedure.** The report says nothing has been; that
+  sentence is correct until a run says otherwise.
+
+## Update 2026-08-10 — capsule isolation is runtime-observed; the graphical slice is not
+
+`CAPSULE_RUNTIME_QUALIFICATION_REPORT.md` is the record. Evidence at
+`qualification/capsules/evidence/37f74c038d41/` (host) and `.../57068ea4b2b5/`
+(VM boot).
+
+**What moved.** App Capsule isolation is now HOST RUNTIME VALIDATED rather than
+unit tested: real bubblewrap sandboxes, started by the production runtime and
+the production executor, measured by a probe that runs inside them and again
+outside as a negative control. 17 checks isolated, each one reached by the
+control. Cross-application isolation, the file-grant lifecycle, six fail-closed
+paths, the crash boundaries and the network classes are all measured rather than
+asserted. The image builds, contains the three new packages, and boots to
+`graphical.target` with no failed unit.
+
+**What did not move.** Nothing graphical. No login, no session, no Companion on
+screen, no Trust prompt drawn, no §15 journey, no accessibility run. The VM
+harness boots and greps a serial log; it has no login injection. Those rows are
+`NOT_RUN` in the report and must not be read as anything else.
+
+**Eight defects, two of them blockers**, none visible from a Windows host: every
+capsule launch failed for want of two environment variables; a capsule whose
+process exited stayed `running` forever; a resource display leaked absolute paths
+into the audit; a network grant could not resolve a name; the allowlisted network
+class is not a boundary; a route the build context could not see reported as
+installed; the sandbox root was writable; `MemoryMax` is ignored by this kernel.
+All eight are fixed or disclosed at every surface. Three *harness* defects were
+also found, each of which would have produced a false PASS.
+
+### Next, in order, and the first three need only time on the existing builder
+
+1. **Install Flatpak on the qualification host and re-run.** One of two backends
+   is `NOT_RUN`, and it is the one most applications will use.
+2. **Run the qualification inside the booted VM.** SELinux is *enforcing* there
+   and Disabled on the WSL host, so this is the first measurement of that layer
+   and it converts the isolation result from HOST to VM RUNTIME VALIDATED.
+3. **Measure `MemoryMax` on a stock Fedora kernel.** This host accepts the limit
+   and ignores it; a plain systemd scope with no capsule behaves identically, so
+   the question cannot be answered here.
+4. **Get a login into the VM and drive the §15 journey**, using the existing
+   desktop route: `desktop-drive.py`, virtio-tablet pointer injection, AT-SPI.
+5. **Install Orca and drive the accessibility pass.** The Trust prompt is the
+   only modal Bunny raises unasked; a screen-reader user meeting a silent modal
+   is worse than anything this phase fixed.
+6. **Decide about the allowlisted network class.** Implement per-name filtering
+   or remove the class and offer off / local / on. It is a word that currently
+   promises more than it does — disclosed, and still present.
+
+### Unchanged
+
+`gate-stable-release` is still `NO-GO`. All three pilot gates are still
+`BLOCKED`. The vulnerability position, the absent hardware, the absent
+independent reviews, the absent second signer and the absent production key are
+all untouched by this pass.
+
+---
+
+## Update 2026-08-10 (later) — the guest answered; the Companion could never have launched anything
+
+Evidence at `qualification/capsules/evidence/guest-d9a36620044d/` (booted guest)
+and the host directory for the same run. `CAPSULE_RUNTIME_QUALIFICATION_REPORT.md`
+§§9–10 are the record.
+
+**Items 2 and 3 above are done.** The full suite ran inside the booted image as
+`bunny` in a real login session, with SELinux **Enforcing** and the targeted
+policy at version 35. All eight sections then present returned PASS. `MemoryMax`
+is a real boundary on the shipped kernel: the capsule was throttled by
+`MemoryHigh` at 209,715,200 bytes against a 268,435,456 ceiling — 2,934 high
+events, zero max, zero OOM kills — and the control, same ceiling without
+`MemoryHigh`, was killed by the cgroup at 243,269,632. On the WSL host the same
+control took 2 GB and nothing stopped it. L-8 is a property of the development
+host, not of Bunny OS.
+
+**AVC collection is blind in this image and reports itself so.** `journalctl`
+carries no kernel lines, `ausearch` is absent, `kernel.dmesg_restrict` is 1, and
+the buffer is empty even to root. The section refuses to report a denial count
+rather than reporting zero. Adding `audit` to the *qualification* profile is the
+fix and has not been done, because a test profile must not ship.
+
+**Two new blockers, and they are the reason this entry exists.** Every section of
+that suite launches a capsule from a login shell. Nothing in the product does —
+the Companion does, and the Companion is a systemd user unit with a sandbox of
+its own. Asking that question found:
+
+* **L-9.** A capsule was a `systemd-run --user --scope`. A scope is forked by its
+  requester and inherits that process's seccomp filter; both Companion units set
+  `RestrictNamespaces=yes`; bubblewrap's whole mechanism is `unshare(2)`. **Every
+  capsule launch from the Companion failed, always, on every machine.** Fixed by
+  asking the manager for a transient *service*, which the manager spawns.
+* **L-10.** `ProtectHome=read-only` covers the capsule root and the trust store,
+  so the runtime could start a capsule and failed on the first install write.
+  Fixed with `ReadWritePaths=` on the runtime unit only — the window is a client,
+  and a renderer that can write the trust store can mint its own grants — plus a
+  user-tmpfiles rule creating the roots, because a `ReadWritePaths=` path that
+  does not exist fails namespace setup with 226/NAMESPACE before `ExecStart`.
+
+Both are guarded by a new `launcher` qualification section that runs four shapes,
+the fourth of which rebuilds the pre-fix vector and **must still fail**: every
+shape passing is the intended result and is also what a section that had stopped
+measuring anything would report.
+
+### Next, in order
+
+1. **Rebuild the image and re-run the guest qualification.** The guest runs the
+   packages the image installed and only the harness is injected, so `launcher` —
+   and with it both new blockers — is currently HOST RUNTIME VALIDATED only.
+2. **Give the Companion a path to a capsule task at all.** `capsule_bridge.py`
+   has no caller outside the tests. Until it does, L-9 and L-10 are fixes to a
+   route nothing takes, and the §15 journey cannot be driven from the UI.
+3. **Then the graphical work**: login, `BUNNY_SESSION_READY`, the Companion
+   drawn, the Trust prompt raised on screen, the journey and its failure variant.
+   The existing desktop route — `desktop-drive.py`, virtio-tablet pointer
+   injection, AT-SPI — is the harness; it does not need to be rebuilt.
+4. Flatpak on the qualification host; Orca for the accessibility pass; the
+   allowlisted network class decision. All unchanged from the entry above.
+
+### The Phase C stop condition is not met
+
+The phase completes only if a successful graphical vertical slice **and** one
+graphical failure slice both run inside the Bunny OS VM. Neither has run. **Phase
+status: INCOMPLETE**, and the source tests passing does not change that.
+
+### Found and not touched
+
+`tests/companion/test_neural_tts.py::test_provenance_accounts_for_every_selected_tts_byte`
+fails: the bundled voice assets measure 436,604,323 bytes against 436,603,718
+recorded in `assets/voice/PROVENANCE.json`, a 605-byte excess. It predates this
+phase — `assets/voice` was last touched at `a7ba40f`, before this branch's base —
+and it is left alone deliberately. Editing the recorded number to match the files
+would be adjusting the record to the artefact without establishing which of the
+two is wrong.
+
+---
+
+## Update 2026-08-11 — the guest runs the real route; nothing graphical has run
+
+`GUEST_REBUILD_AND_STORAGE_REPORT.md` and `GUEST_REQUALIFICATION_REPORT.md` are
+the record. Evidence at `qualification/capsules/evidence/guest-4c6e101bd354/`
+(the run that found a defect) and `.../guest-524107e50b2e/` (the re-run).
+
+**Two images were built.** `0482f4c90f00`, then `39a5c575da9e` after the defect
+below. Both from a checkout with all five integration fixes; the second also
+ships `/usr/libexec/bunny-session-ready`.
+
+**Eleven of eleven sections pass in the rebuilt guest**, SELinux Enforcing,
+targeted policy v35, as `bunny` in a real login session, against the packages
+the image installed. `launcher` and `apptask` had never run in a guest before.
+The image task produced 100×50 from 400×200 in 214 ms, exit 0, one authorised
+file, the neighbour never authorised, network class `none` enforced, original
+byte-identical.
+
+**The allow-once regression found a real defect.** `stop()` drops session grants
+and returns early for a capsule that `reconcile()` has already stopped — so for
+an application that exits by itself, which is every task application, the drop
+never ran and "allow once" left a permission behind for the rest of the login.
+The drop moved to `reconcile()`. The unit suite passed before and after, so a
+test that fails without the fix now exists.
+
+**The storage incident was operations tooling, not the build.** Three
+qualification copies of a repository containing tens of gigabytes of generated
+images filled the WSL virtual disk. `scripts/check-copy-size.py` now refuses an
+order-of-magnitude miss, and `.containerignore`'s coverage is asserted. Note for
+whoever hits this next: `fstrim` freed 702 GiB inside the guest and returned
+nothing to Windows — the VHDX is not sparse, so it grows and never shrinks.
+Compaction needs an elevated environment and is deliberately not automated.
+
+### What has not run, and is the whole of what remains
+
+Nothing graphical. No login, no `BUNNY_SESSION_READY` observed in a booted
+session, no Companion drawn, no Trust prompt on screen, no allow-once pressed by
+a person, no denial slice, no unsafe-launch slice, no keyboard path, no AT-SPI
+run, no screen reader, no reduced-motion or text-only run, and no screenshots.
+
+**Phase status: INCOMPLETE.** The security route is now VM RUNTIME VALIDATED
+end to end; the *experience* is not validated at all.
+
+### Next, in order
+
+1. **Drive the graphical harness** — `build/scripts/vm-desktop-story.sh` with
+   `desktop-drive.py`, virtio-tablet pointer injection and AT-SPI already exist
+   and do not need rebuilding. The readiness probe now ships, so the harness can
+   wait on `BUNNY_SESSION_READY` instead of a delay.
+2. **The success slice**, then **the denial slice**, then the unsafe-launch
+   slice. §34's list is otherwise met.
+3. Accessibility: keyboard, AT-SPI names, Orca in a qualification-only profile,
+   reduced motion, text-only.
+4. A qualification-only profile carrying audit tooling, so AVC evidence stops
+   being blind.
+
+---
+
+## Update 2026-08-11 (later) — both journeys run in the booted guest
+
+Evidence at `qualification/capsules/evidence/journey-b38d51000543-{granted,denied}/`.
+Image `b38d51000543`, SELinux enforcing, as the logged-in user, against the
+Companion service the session started.
+
+**The success slice.** From a spoken request — "Resize this to 100 pixels wide."
+— `created → waiting_for_approval → executing → completed`. The permission named
+the real file and said the original would not change. Answered in 0.352 s; the
+whole journey took 1.1 s. `holiday-resized.png` at **100×50** from a 400×200
+original. Original byte-identical. The neighbour in the same directory was never
+authorised. No grant survived the task.
+
+**The denial slice.** Same program, one argument apart:
+`created → waiting_for_approval → blocked`. No grant, no execution, no output,
+original unchanged.
+
+**`BUNNY_SESSION_READY` was observed in both** — all eight conditions true, the
+marker on its own line, from the installed probe rather than a harness copy.
+
+### One product defect, found by the fifth image
+
+The Companion could do everything except put the result down:
+`OSError: [Errno 30] Read-only file system` on the export.
+`bunny-companion.service` has `ProtectHome=read-only`, the state roots had
+`ReadWritePaths=` and the *destination* did not. Fixed with one `-`-prefixed
+directory; the capsule is unaffected, because an application writes to its own
+exports directory and the runtime copies the verified artefact out. Not dynamic:
+`ReadWritePaths=` resolves at unit load, so a person whose `XDG_PICTURES_DIR`
+points elsewhere still cannot receive a result. A portal is the answer to that.
+
+Five images were needed and each one was missing exactly one link that only a
+booted run could show: the launcher shape, the grant lifetime, the input
+binding, the readiness probe's socket, and finally the export permission.
+
+### What did not happen, stated plainly
+
+**The Trust prompt was never drawn.** The probe answers over the Companion
+protocol — the same path the window uses, so the *route* is genuine — but no GTK
+dialog rendered and nothing photographed one. The screenshots also start at
+t=120 s while the journey finishes by t=60 s, so both frames show an idle
+desktop. They are evidence that the desktop and the Companion character render,
+and of nothing else.
+
+So against the brief's list: route, states, permission decision, capsule launch,
+scoped file access, output export, audit and both terminal states are VM RUNTIME
+VALIDATED. "Trust prompt appears" and "user chooses Allow once" are **NOT** —
+they were exercised programmatically.
+
+Also still open:
+
+* **a failed operation produced a `completed` task.** The runtime recorded
+  `operation_failed` and an error reference and the state stayed `completed`;
+  only the summary text carried the truth. `TaskResult` has no failure channel.
+  This is the brief's "failure does not produce completed", it is in shared
+  runtime logic, and it is unfixed.
+* `"this"` resolves to the most recently modified image, which can offer the
+  wrong file. The prompt names it, so the person is the safeguard — by design,
+  but thin. Observed for real: one run offered to resize the neighbour.
+* no keyboard path, no AT-SPI run, no screen reader, no reduced-motion or
+  text-only run, no accessibility evidence of any kind.
+
+**Phase status: INCOMPLETE.** Both journeys run and the security route is
+validated end to end in the booted guest; the *visual* half of the vertical
+slice is not.
+
+---
+
+## Update 2026-08-11 (later still) — failure semantics fixed and proved
+
+`qualification/capsules/evidence/journey-0ef5862-failing/`.
+
+**A failed operation can no longer become a completed task.** The cause was
+structural: `TaskResult` had no failure channel, so an executor could not report
+one, and the runtime — which had watched every operation settle — asked nobody.
+Both knew and neither could say.
+
+There are now two verdicts and the pessimistic one wins. `TaskResult` carries an
+outcome and a structured reason; `CompanionRuntime._observed_outcome` forms its
+own from the operation records rather than from any claim about them;
+`worst_outcome` combines them. The executor's default of `success` is safe only
+because it is not trusted, and a test asserts precisely that: a
+default-constructed result over a plan whose operations all failed still
+produces a failed task.
+
+The invariants are pure functions, so they are checked on every machine rather
+than only where a VM boots — success completes, failure fails, a denial *blocks*
+rather than failing (a person saying no is not a malfunction), cancellation is
+its own state, and an unknown verdict fails.
+
+**Proved in the booted guest.** A third journey slice, `failing`, is `granted`
+with an input the program cannot read — the approval, the capsule and the launch
+are unchanged, only the input differs:
+
+```
+states   created → waiting_for_approval → executing → failed
+error    operation_failed: "The app stopped before it finished."
+result   no output file; original byte-identical; no surviving grant
+```
+
+Before the fix that exact path produced `completed`.
+
+### Three graphical slices now run
+
+| Slice | States | Result |
+|---|---|---|
+| granted | → executing → completed | `holiday-resized.png` 100×50 |
+| denied | → blocked | none |
+| failing | → executing → failed | none |
+
+### What remains, and it is the headline of the phase
+
+**The Trust prompt has still never been drawn.** Approval is answered over the
+Companion protocol — the real route, but not the visible one. By the brief's own
+rule that is decisive on its own: *if approval is still answered
+programmatically, the phase is INCOMPLETE*.
+
+Not started, and each is real work rather than a loose end:
+
+* raising the real GTK Trust surface when a task reaches `waiting_for_approval`,
+  and driving it through AT-SPI rather than the protocol;
+* state-triggered screenshot capture, so frames are bound to transitions instead
+  of to a timer that currently fires an hour of guest-seconds too late;
+* the Companion's visible state projection for each terminal path;
+* protected-space and Trust-history surfaces on screen;
+* every accessibility item — keyboard, AT-SPI names, reduced motion, text-only,
+  screen reader;
+* the `"this"` resolver's ambiguity rule (ask when more than one plausible file);
+* portal-based export, replacing the interim `ReadWritePaths=-%h/Pictures`.
+
+**Phase status: INCOMPLETE.**
+
+### Why the Trust prompt never appeared — diagnosed, not guessed
+
+Worth writing down because it changes the size of the remaining work by an order
+of magnitude.
+
+**The Trust surface already exists, in the shell extension.**
+`shell/components/gnome-shell-extension/lib/assistant/panel.js` builds an
+approval box with `Allow` and `Deny` buttons, both carrying `accessible_name`
+(`"Allow this Bunny action"`, `"Deny this Bunny action"`), wired through
+`services/assistant.js` to the Companion's `resolve_approval`. Nothing needs to
+be built.
+
+**It never showed because of one line.** `lib/desktopShell.js` gates its
+`onApproval` handler behind `this._owns(meta)` — the panel shows approvals only
+for tasks *it* asked for through `assistant.ask()`. The journey probe submits
+through its own `CompanionClient`, so `_owns` is false and the approval is
+delivered to nobody.
+
+**And the GTK window is a dead end on purpose.**
+`config/systemd/60-bunny-os-user.preset` disables
+`bunny-companion-window.service` deliberately: the desktop has an assistant
+surface of its own now, and starting the window at login put a second, larger
+copy of the same assistant on top of the character. Enabling it to get a dialog
+would be undoing a considered decision, not fixing anything.
+
+So the remaining work for a visible Trust prompt is **harness wiring**:
+`build/scripts/desktop_interaction.py` already drives the shell's assistant over
+AT-SPI and reads its states — the desktop story types "What files are in my
+Downloads folder?" and reads the answer back. Extend it to submit the resize
+request into the assistant input, wait for the approval box, and press
+`Allow`/`Deny` by accessible name. Screenshots then bind naturally to states,
+because the driver knows when each one is reached.
+
+That also delivers most of the accessibility items for free: the buttons already
+have accessible names, so the AT-SPI run *is* the interaction path rather than a
+separate inspection.

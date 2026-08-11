@@ -31,3 +31,10 @@ qualification/tpm/evidence/*/state/
 
 # Session ops scripts: host-specific paths, not part of the repository.
 .ops-*
+
+# Rust/Tauri build cache. `desktop/` holds no source in this repository:
+# ARCHITECTURE.md describes Bunny Desktop as an upstream artifact delivered
+# signed into /opt/bunny/releases, so a target/ tree here is neither the build
+# input nor the build output of anything this repository builds. 242 files of
+# it were tracked; they were a cache somebody committed once.
+desktop/src-tauri/target/

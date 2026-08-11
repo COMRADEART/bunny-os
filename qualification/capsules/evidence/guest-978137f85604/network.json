@@ -1,0 +1,920 @@
+{
+  "commit": "978137f856049aea2d058a39b8e3c65e185092e5",
+  "explanation": "no-network denied external, DNS and loopback; internet reached AVAILABLE; allowlisted reached the named domain (AVAILABLE) and also an unnamed one (AVAILABLE) \u2014 recorded as a disclosed gap",
+  "findings": [
+    "the allowlisted network class is a declaration, not a boundary: a capsule granted only example.com connected to example.org. This build maps every class other than 'none' onto the absence of a network namespace; there is no per-domain filter and none is claimed. Accepted and disclosed, not fixed here."
+  ],
+  "finishedAt": "2026-08-11T01:27:01.030113Z",
+  "host": {
+    "backends": [
+      "flatpak",
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "7.1.5-200.fc44.x86_64",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Enforcing",
+      "policyName": "targeted",
+      "policyVersion": "35",
+      "probeError": null,
+      "selfContext": "system_u:system_r:initrc_t:s0"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "kvm"
+  },
+  "measurements": {
+    "allowlistGrant": {
+      "allowed": "example.com",
+      "forbidden": "example.org",
+      "reason": "user-allowed",
+      "verdict": "allow"
+    },
+    "allowlisted": {
+      "planDomains": [
+        "example.com"
+      ],
+      "planNetwork": "allowlisted",
+      "probe": {
+        "browser_profile_read": {
+          "category": "credentials",
+          "check": "browser_profile_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "camera": {
+          "category": "devices",
+          "check": "camera",
+          "detail": "no /dev/video* nodes",
+          "ms": 0.02,
+          "result": "ABSENT"
+        },
+        "clipboard": {
+          "category": "desktop",
+          "check": "clipboard",
+          "detail": "no WAYLAND_DISPLAY or XDG_RUNTIME_DIR in the environment",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "dbus_session": {
+          "category": "ipc",
+          "check": "dbus_session",
+          "detail": "/run/bunny/app/runtime/bus is not present",
+          "ms": 0.04,
+          "result": "ABSENT"
+        },
+        "dbus_system": {
+          "category": "ipc",
+          "check": "dbus_system",
+          "detail": "/run/dbus/system_bus_socket is not present",
+          "ms": 0.07,
+          "result": "ABSENT"
+        },
+        "environment": {
+          "category": "environment",
+          "check": "environment",
+          "data": {
+            "count": 15,
+            "dangerous": [],
+            "keys": [
+              "BUNNY_PROBE_ALLOWED_DOMAIN",
+              "BUNNY_PROBE_CAPSULE_ROOT",
+              "BUNNY_PROBE_ENVIRONMENT",
+              "BUNNY_PROBE_FORBIDDEN_DOMAIN",
+              "BUNNY_PROBE_HOME",
+              "BUNNY_PROBE_LOCALHOST_PORT",
+              "HOME",
+              "LANG",
+              "PATH",
+              "PWD",
+              "TMPDIR",
+              "XDG_CACHE_HOME",
+              "XDG_CONFIG_HOME",
+              "XDG_DATA_HOME",
+              "XDG_RUNTIME_DIR"
+            ]
+          },
+          "detail": "15 variables, 0 of concern",
+          "ms": 0.01,
+          "result": "AVAILABLE"
+        },
+        "gnupg_read": {
+          "category": "credentials",
+          "check": "gnupg_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "gpu": {
+          "category": "devices",
+          "check": "gpu",
+          "detail": "/dev/dri is not present",
+          "ms": 0.0,
+          "result": "ABSENT"
+        },
+        "granted_file_read": {
+          "category": "file-grant",
+          "check": "granted_file_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "home_read": {
+          "category": "user-files",
+          "check": "home_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "microphone": {
+          "category": "devices",
+          "check": "microphone",
+          "detail": "/dev/snd is not present",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "mounts": {
+          "category": "environment",
+          "check": "mounts",
+          "data": {
+            "count": 27,
+            "points": [
+              "/",
+              "/dev",
+              "/dev/full",
+              "/dev/null",
+              "/dev/pts",
+              "/dev/random",
+              "/dev/tty",
+              "/dev/urandom",
+              "/dev/zero",
+              "/etc/crypto-policies",
+              "/etc/host.conf",
+              "/etc/hosts",
+              "/etc/nsswitch.conf",
+              "/etc/pki/tls/certs",
+              "/etc/resolv.conf",
+              "/etc/services",
+              "/etc/ssl/certs",
+              "/proc",
+              "/run/bunny/app/cache",
+              "/run/bunny/app/config",
+              "/run/bunny/app/data",
+              "/run/bunny/app/exports",
+              "/run/bunny/app/inbox",
+              "/run/bunny/app/runtime",
+              "/run/bunny/app/tmp",
+              "/tmp",
+              "/usr"
+            ]
+          },
+          "detail": "27 mounts",
+          "ms": 0.11,
+          "result": "AVAILABLE"
+        },
+        "neighbour_file_read": {
+          "category": "file-grant",
+          "check": "neighbour_file_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "network_allowed_domain": {
+          "category": "network",
+          "check": "network_allowed_domain",
+          "detail": "connected to allowed domain",
+          "ms": 19.38,
+          "result": "AVAILABLE"
+        },
+        "network_dns": {
+          "category": "network",
+          "check": "network_dns",
+          "detail": "connected to example.com:443",
+          "ms": 24.45,
+          "result": "AVAILABLE"
+        },
+        "network_external": {
+          "category": "network",
+          "check": "network_external",
+          "detail": "connected to 1.1.1.1:443",
+          "ms": 17.2,
+          "result": "AVAILABLE"
+        },
+        "network_forbidden_domain": {
+          "category": "network",
+          "check": "network_forbidden_domain",
+          "detail": "connected to unnamed domain",
+          "ms": 36.47,
+          "result": "AVAILABLE"
+        },
+        "network_localhost": {
+          "category": "network",
+          "check": "network_localhost",
+          "detail": "connected to 127.0.0.1:42273",
+          "ms": 0.15,
+          "result": "AVAILABLE"
+        },
+        "other_capsule_enumerate": {
+          "category": "cross-app",
+          "check": "other_capsule_enumerate",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.0,
+          "result": "ABSENT"
+        },
+        "other_capsule_secret_read": {
+          "category": "cross-app",
+          "check": "other_capsule_secret_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "own_data_read": {
+          "category": "capsule",
+          "check": "own_data_read",
+          "detail": "/run/bunny/app/data/own-marker.txt does not exist",
+          "ms": 0.02,
+          "result": "ABSENT"
+        },
+        "own_data_write": {
+          "category": "capsule",
+          "check": "own_data_write",
+          "detail": "/run/bunny/app/data/probe-wrote-this.txt",
+          "ms": 0.06,
+          "result": "AVAILABLE"
+        },
+        "process_visibility": {
+          "category": "process",
+          "check": "process_visibility",
+          "data": {
+            "others": 0,
+            "sample": [
+              1,
+              2
+            ],
+            "visible": 2
+          },
+          "detail": "2 processes visible, 0 of them somebody else's",
+          "ms": 0.04,
+          "result": "AVAILABLE"
+        },
+        "shadow_read": {
+          "category": "credentials",
+          "check": "shadow_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "ssh_key_read": {
+          "category": "credentials",
+          "check": "ssh_key_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "ssh_read": {
+          "category": "credentials",
+          "check": "ssh_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.02,
+          "result": "ABSENT"
+        },
+        "subprocess": {
+          "category": "execution",
+          "check": "subprocess",
+          "detail": "child ok",
+          "ms": 11.55,
+          "result": "AVAILABLE"
+        },
+        "symlink_escape_home": {
+          "category": "filesystem",
+          "check": "symlink_escape_home",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.05,
+          "result": "ABSENT"
+        },
+        "tmp": {
+          "category": "filesystem",
+          "check": "tmp",
+          "detail": "0 entries, writable, sample []",
+          "ms": 0.13,
+          "result": "AVAILABLE"
+        },
+        "traversal_etc_passwd": {
+          "category": "filesystem",
+          "check": "traversal_etc_passwd",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.05,
+          "result": "ABSENT"
+        },
+        "write_outside_home": {
+          "category": "filesystem",
+          "check": "write_outside_home",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "write_outside_tmp_root": {
+          "category": "filesystem",
+          "check": "write_outside_tmp_root",
+          "detail": "errno 30: Read-only file system",
+          "ms": 0.01,
+          "result": "DENIED"
+        }
+      },
+      "unshare": [
+        "user",
+        "pid",
+        "ipc",
+        "uts",
+        "cgroup"
+      ]
+    },
+    "internet": {
+      "networkClass": "internet",
+      "plan": {
+        "network": null
+      },
+      "probe": {
+        "browser_profile_read": {
+          "category": "credentials",
+          "check": "browser_profile_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "camera": {
+          "category": "devices",
+          "check": "camera",
+          "detail": "no /dev/video* nodes",
+          "ms": 0.02,
+          "result": "ABSENT"
+        },
+        "clipboard": {
+          "category": "desktop",
+          "check": "clipboard",
+          "detail": "no WAYLAND_DISPLAY or XDG_RUNTIME_DIR in the environment",
+          "ms": 0.0,
+          "result": "ABSENT"
+        },
+        "dbus_session": {
+          "category": "ipc",
+          "check": "dbus_session",
+          "detail": "/run/bunny/app/runtime/bus is not present",
+          "ms": 0.05,
+          "result": "ABSENT"
+        },
+        "dbus_system": {
+          "category": "ipc",
+          "check": "dbus_system",
+          "detail": "/run/dbus/system_bus_socket is not present",
+          "ms": 0.04,
+          "result": "ABSENT"
+        },
+        "environment": {
+          "category": "environment",
+          "check": "environment",
+          "data": {
+            "count": 15,
+            "dangerous": [],
+            "keys": [
+              "BUNNY_PROBE_ALLOWED_DOMAIN",
+              "BUNNY_PROBE_CAPSULE_ROOT",
+              "BUNNY_PROBE_ENVIRONMENT",
+              "BUNNY_PROBE_FORBIDDEN_DOMAIN",
+              "BUNNY_PROBE_HOME",
+              "BUNNY_PROBE_LOCALHOST_PORT",
+              "HOME",
+              "LANG",
+              "PATH",
+              "PWD",
+              "TMPDIR",
+              "XDG_CACHE_HOME",
+              "XDG_CONFIG_HOME",
+              "XDG_DATA_HOME",
+              "XDG_RUNTIME_DIR"
+            ]
+          },
+          "detail": "15 variables, 0 of concern",
+          "ms": 0.01,
+          "result": "AVAILABLE"
+        },
+        "gnupg_read": {
+          "category": "credentials",
+          "check": "gnupg_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "gpu": {
+          "category": "devices",
+          "check": "gpu",
+          "detail": "/dev/dri is not present",
+          "ms": 0.0,
+          "result": "ABSENT"
+        },
+        "granted_file_read": {
+          "category": "file-grant",
+          "check": "granted_file_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "home_read": {
+          "category": "user-files",
+          "check": "home_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "microphone": {
+          "category": "devices",
+          "check": "microphone",
+          "detail": "/dev/snd is not present",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "mounts": {
+          "category": "environment",
+          "check": "mounts",
+          "data": {
+            "count": 27,
+            "points": [
+              "/",
+              "/dev",
+              "/dev/full",
+              "/dev/null",
+              "/dev/pts",
+              "/dev/random",
+              "/dev/tty",
+              "/dev/urandom",
+              "/dev/zero",
+              "/etc/crypto-policies",
+              "/etc/host.conf",
+              "/etc/hosts",
+              "/etc/nsswitch.conf",
+              "/etc/pki/tls/certs",
+              "/etc/resolv.conf",
+              "/etc/services",
+              "/etc/ssl/certs",
+              "/proc",
+              "/run/bunny/app/cache",
+              "/run/bunny/app/config",
+              "/run/bunny/app/data",
+              "/run/bunny/app/exports",
+              "/run/bunny/app/inbox",
+              "/run/bunny/app/runtime",
+              "/run/bunny/app/tmp",
+              "/tmp",
+              "/usr"
+            ]
+          },
+          "detail": "27 mounts",
+          "ms": 0.1,
+          "result": "AVAILABLE"
+        },
+        "neighbour_file_read": {
+          "category": "file-grant",
+          "check": "neighbour_file_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "network_allowed_domain": {
+          "category": "network",
+          "check": "network_allowed_domain",
+          "detail": "connected to allowed domain",
+          "ms": 22.54,
+          "result": "AVAILABLE"
+        },
+        "network_dns": {
+          "category": "network",
+          "check": "network_dns",
+          "detail": "connected to example.com:443",
+          "ms": 23.3,
+          "result": "AVAILABLE"
+        },
+        "network_external": {
+          "category": "network",
+          "check": "network_external",
+          "detail": "connected to 1.1.1.1:443",
+          "ms": 18.49,
+          "result": "AVAILABLE"
+        },
+        "network_forbidden_domain": {
+          "category": "network",
+          "check": "network_forbidden_domain",
+          "detail": "connected to unnamed domain",
+          "ms": 23.32,
+          "result": "AVAILABLE"
+        },
+        "network_localhost": {
+          "category": "network",
+          "check": "network_localhost",
+          "detail": "connected to 127.0.0.1:42273",
+          "ms": 0.16,
+          "result": "AVAILABLE"
+        },
+        "other_capsule_enumerate": {
+          "category": "cross-app",
+          "check": "other_capsule_enumerate",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.0,
+          "result": "ABSENT"
+        },
+        "other_capsule_secret_read": {
+          "category": "cross-app",
+          "check": "other_capsule_secret_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "own_data_read": {
+          "category": "capsule",
+          "check": "own_data_read",
+          "detail": "/run/bunny/app/data/own-marker.txt does not exist",
+          "ms": 0.02,
+          "result": "ABSENT"
+        },
+        "own_data_write": {
+          "category": "capsule",
+          "check": "own_data_write",
+          "detail": "/run/bunny/app/data/probe-wrote-this.txt",
+          "ms": 0.06,
+          "result": "AVAILABLE"
+        },
+        "process_visibility": {
+          "category": "process",
+          "check": "process_visibility",
+          "data": {
+            "others": 0,
+            "sample": [
+              1,
+              2
+            ],
+            "visible": 2
+          },
+          "detail": "2 processes visible, 0 of them somebody else's",
+          "ms": 0.06,
+          "result": "AVAILABLE"
+        },
+        "shadow_read": {
+          "category": "credentials",
+          "check": "shadow_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "ssh_key_read": {
+          "category": "credentials",
+          "check": "ssh_key_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "ssh_read": {
+          "category": "credentials",
+          "check": "ssh_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "subprocess": {
+          "category": "execution",
+          "check": "subprocess",
+          "detail": "child ok",
+          "ms": 11.11,
+          "result": "AVAILABLE"
+        },
+        "symlink_escape_home": {
+          "category": "filesystem",
+          "check": "symlink_escape_home",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.09,
+          "result": "ABSENT"
+        },
+        "tmp": {
+          "category": "filesystem",
+          "check": "tmp",
+          "detail": "0 entries, writable, sample []",
+          "ms": 0.08,
+          "result": "AVAILABLE"
+        },
+        "traversal_etc_passwd": {
+          "category": "filesystem",
+          "check": "traversal_etc_passwd",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.07,
+          "result": "ABSENT"
+        },
+        "write_outside_home": {
+          "category": "filesystem",
+          "check": "write_outside_home",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.02,
+          "result": "ABSENT"
+        },
+        "write_outside_tmp_root": {
+          "category": "filesystem",
+          "check": "write_outside_tmp_root",
+          "detail": "errno 30: Read-only file system",
+          "ms": 0.02,
+          "result": "DENIED"
+        }
+      }
+    },
+    "internetGrant": {
+      "reason": "user-allowed",
+      "verdict": "allow"
+    },
+    "none": {
+      "probe": {
+        "browser_profile_read": {
+          "category": "credentials",
+          "check": "browser_profile_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "camera": {
+          "category": "devices",
+          "check": "camera",
+          "detail": "no /dev/video* nodes",
+          "ms": 0.02,
+          "result": "ABSENT"
+        },
+        "clipboard": {
+          "category": "desktop",
+          "check": "clipboard",
+          "detail": "no WAYLAND_DISPLAY or XDG_RUNTIME_DIR in the environment",
+          "ms": 0.0,
+          "result": "ABSENT"
+        },
+        "dbus_session": {
+          "category": "ipc",
+          "check": "dbus_session",
+          "detail": "/run/bunny/app/runtime/bus is not present",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "dbus_system": {
+          "category": "ipc",
+          "check": "dbus_system",
+          "detail": "/run/dbus/system_bus_socket is not present",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "environment": {
+          "category": "environment",
+          "check": "environment",
+          "data": {
+            "count": 15,
+            "dangerous": [],
+            "keys": [
+              "BUNNY_PROBE_ALLOWED_DOMAIN",
+              "BUNNY_PROBE_CAPSULE_ROOT",
+              "BUNNY_PROBE_ENVIRONMENT",
+              "BUNNY_PROBE_FORBIDDEN_DOMAIN",
+              "BUNNY_PROBE_HOME",
+              "BUNNY_PROBE_LOCALHOST_PORT",
+              "HOME",
+              "LANG",
+              "PATH",
+              "PWD",
+              "TMPDIR",
+              "XDG_CACHE_HOME",
+              "XDG_CONFIG_HOME",
+              "XDG_DATA_HOME",
+              "XDG_RUNTIME_DIR"
+            ]
+          },
+          "detail": "15 variables, 0 of concern",
+          "ms": 0.02,
+          "result": "AVAILABLE"
+        },
+        "gnupg_read": {
+          "category": "credentials",
+          "check": "gnupg_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "gpu": {
+          "category": "devices",
+          "check": "gpu",
+          "detail": "/dev/dri is not present",
+          "ms": 0.0,
+          "result": "ABSENT"
+        },
+        "granted_file_read": {
+          "category": "file-grant",
+          "check": "granted_file_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "home_read": {
+          "category": "user-files",
+          "check": "home_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "microphone": {
+          "category": "devices",
+          "check": "microphone",
+          "detail": "/dev/snd is not present",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "mounts": {
+          "category": "environment",
+          "check": "mounts",
+          "data": {
+            "count": 19,
+            "points": [
+              "/",
+              "/dev",
+              "/dev/full",
+              "/dev/null",
+              "/dev/pts",
+              "/dev/random",
+              "/dev/tty",
+              "/dev/urandom",
+              "/dev/zero",
+              "/proc",
+              "/run/bunny/app/cache",
+              "/run/bunny/app/config",
+              "/run/bunny/app/data",
+              "/run/bunny/app/exports",
+              "/run/bunny/app/inbox",
+              "/run/bunny/app/runtime",
+              "/run/bunny/app/tmp",
+              "/tmp",
+              "/usr"
+            ]
+          },
+          "detail": "19 mounts",
+          "ms": 0.14,
+          "result": "AVAILABLE"
+        },
+        "neighbour_file_read": {
+          "category": "file-grant",
+          "check": "neighbour_file_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "network_allowed_domain": {
+          "category": "network",
+          "check": "network_allowed_domain",
+          "detail": "name resolution failed: [Errno -3] Temporary failure in name resolution",
+          "ms": 0.05,
+          "result": "DENIED"
+        },
+        "network_dns": {
+          "category": "network",
+          "check": "network_dns",
+          "detail": "name resolution failed: [Errno -3] Temporary failure in name resolution",
+          "ms": 0.16,
+          "result": "DENIED"
+        },
+        "network_external": {
+          "category": "network",
+          "check": "network_external",
+          "detail": "errno 101: Network is unreachable",
+          "ms": 0.91,
+          "result": "DENIED"
+        },
+        "network_forbidden_domain": {
+          "category": "network",
+          "check": "network_forbidden_domain",
+          "detail": "name resolution failed: [Errno -3] Temporary failure in name resolution",
+          "ms": 0.09,
+          "result": "DENIED"
+        },
+        "network_localhost": {
+          "category": "network",
+          "check": "network_localhost",
+          "detail": "refused: [Errno 111] Connection refused",
+          "ms": 0.2,
+          "result": "ABSENT"
+        },
+        "other_capsule_enumerate": {
+          "category": "cross-app",
+          "check": "other_capsule_enumerate",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.0,
+          "result": "ABSENT"
+        },
+        "other_capsule_secret_read": {
+          "category": "cross-app",
+          "check": "other_capsule_secret_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "own_data_read": {
+          "category": "capsule",
+          "check": "own_data_read",
+          "detail": "/run/bunny/app/data/own-marker.txt does not exist",
+          "ms": 0.02,
+          "result": "ABSENT"
+        },
+        "own_data_write": {
+          "category": "capsule",
+          "check": "own_data_write",
+          "detail": "/run/bunny/app/data/probe-wrote-this.txt",
+          "ms": 0.12,
+          "result": "AVAILABLE"
+        },
+        "process_visibility": {
+          "category": "process",
+          "check": "process_visibility",
+          "data": {
+            "others": 0,
+            "sample": [
+              1,
+              2
+            ],
+            "visible": 2
+          },
+          "detail": "2 processes visible, 0 of them somebody else's",
+          "ms": 0.04,
+          "result": "AVAILABLE"
+        },
+        "shadow_read": {
+          "category": "credentials",
+          "check": "shadow_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "ssh_key_read": {
+          "category": "credentials",
+          "check": "ssh_key_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "ssh_read": {
+          "category": "credentials",
+          "check": "ssh_read",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "subprocess": {
+          "category": "execution",
+          "check": "subprocess",
+          "detail": "child ok",
+          "ms": 13.98,
+          "result": "AVAILABLE"
+        },
+        "symlink_escape_home": {
+          "category": "filesystem",
+          "check": "symlink_escape_home",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.06,
+          "result": "ABSENT"
+        },
+        "tmp": {
+          "category": "filesystem",
+          "check": "tmp",
+          "detail": "0 entries, writable, sample []",
+          "ms": 0.07,
+          "result": "AVAILABLE"
+        },
+        "traversal_etc_passwd": {
+          "category": "filesystem",
+          "check": "traversal_etc_passwd",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.04,
+          "result": "ABSENT"
+        },
+        "write_outside_home": {
+          "category": "filesystem",
+          "check": "write_outside_home",
+          "detail": "FileNotFoundError: No such file or directory",
+          "ms": 0.01,
+          "result": "ABSENT"
+        },
+        "write_outside_tmp_root": {
+          "category": "filesystem",
+          "check": "write_outside_tmp_root",
+          "detail": "errno 30: Read-only file system",
+          "ms": 0.01,
+          "result": "DENIED"
+        }
+      }
+    }
+  },
+  "schemaVersion": 1,
+  "section": "network",
+  "startedAt": "2026-08-11T01:27:00.576518Z",
+  "verdict": "PASS"
+}

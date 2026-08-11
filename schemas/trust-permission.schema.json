@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.comrade.art/schemas/trust-permission.schema.json",
+  "title": "Bunny Trust permission records",
+  "description": "The three durable shapes the trust layer writes: the grant store, a settled decision, and an activity record. A resource identifier appears only in the grant store, which is owner-readable and is not part of a diagnostic export; the decision and activity records carry a digest and a short display string instead, because a path is user content.",
+  "type": "object",
+  "oneOf": [
+    {"$ref": "#/$defs/grantStore"},
+    {"$ref": "#/$defs/activityRecord"}
+  ],
+  "$defs": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "files", "folders", "camera", "microphone", "screen_capture", "clipboard",
+        "notifications", "network", "bluetooth", "usb", "location", "gpu",
+        "background", "startup", "ipc", "credentials", "sensitive_system"
+      ]
+    },
+    "scope": {"type": "string", "enum": ["once", "session", "always"]},
+    "verdict": {"type": "string", "enum": ["allow", "deny"]},
+    "purpose": {"type": "string", "enum": ["read", "write", "use"]},
+    "source": {
+      "type": "string",
+      "enum": ["user", "catalog", "policy", "system"],
+      "description": "There is deliberately no source meaning a model inferred the decision."
+    },
+    "reasonCode": {
+      "type": "string",
+      "enum": [
+        "malformed-request", "store-unreadable", "not-declared", "unknown-application",
+        "beyond-ceiling", "user-denied", "granted-previously", "catalog-default",
+        "needs-user", "user-allowed", "surface-failed", "unanswered", "replayed",
+        "answer-mismatch", "expired", "scope-not-offered", "store-unwritable"
+      ],
+      "description": "Closed so that a surface can be exhaustive about the sentences it renders. The five codes about the asking - surface-failed, unanswered, replayed, answer-mismatch, expired - must never be presented as user-denied."
+    },
+    "resourceProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "display", "digest"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["path", "network", "device", "peer", "none"]},
+        "display": {"type": "string", "maxLength": 96},
+        "digest": {"type": "string", "pattern": "^[0-9a-f]{0,32}$"}
+      }
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grantId", "applicationId", "category", "resource", "resourceIdentifier",
+        "purpose", "scope", "verdict", "source", "decidedAt"
+      ],
+      "properties": {
+        "grantId": {"type": "string", "minLength": 1, "maxLength": 128},
+        "applicationId": {"type": "string", "minLength": 1, "maxLength": 255},
+        "category": {"$ref": "#/$defs/category"},
+        "resource": {"$ref": "#/$defs/resourceProjection"},
+        "resourceIdentifier": {
+          "type": "string",
+          "maxLength": 1024,
+          "description": "The canonical identifier enforcement uses. Present only here."
+        },
+        "purpose": {"$ref": "#/$defs/purpose"},
+        "scope": {"type": "string", "enum": ["session", "always"], "description": "A once decision produces no grant."},
+        "verdict": {"$ref": "#/$defs/verdict"},
+        "source": {"$ref": "#/$defs/source"},
+        "decidedAt": {"type": "string", "format": "date-time", "description": "For display only. Nothing decides anything from this field; a grant stops standing because its scope or session says so, never because a clock moved."},
+        "sessionId": {"type": "string", "maxLength": 128}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"scope": {"const": "session"}}, "required": ["scope"]},
+          "then": {"required": ["sessionId"]},
+          "else": {"not": {"required": ["sessionId"]}}
+        }
+      ]
+    },
+    "grantStore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "grants"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "writtenAt": {"type": "string", "format": "date-time"},
+        "grants": {"type": "array", "items": {"$ref": "#/$defs/grant"}}
+      }
+    },
+    "decisionRecord": {
+      "type": "object",
+      "required": ["kind", "at", "applicationId", "category", "resource", "verdict", "scope", "source", "reasonCode"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "decision"},
+        "at": {"type": "string", "format": "date-time"},
+        "requestId": {"type": "string", "maxLength": 128},
+        "applicationId": {"type": "string", "maxLength": 255},
+        "applicationName": {"type": "string", "maxLength": 128},
+        "category": {"$ref": "#/$defs/category"},
+        "resource": {"$ref": "#/$defs/resourceProjection"},
+        "purpose": {"$ref": "#/$defs/purpose"},
+        "verdict": {"$ref": "#/$defs/verdict"},
+        "scope": {"$ref": "#/$defs/scope"},
+        "source": {"$ref": "#/$defs/source"},
+        "reasonCode": {"$ref": "#/$defs/reasonCode"},
+        "decidedAt": {"type": "string", "format": "date-time"},
+        "sessionId": {"type": "string", "maxLength": 128},
+        "taskId": {"type": ["string", "null"], "maxLength": 128},
+        "grantId": {"type": ["string", "null"], "maxLength": 128},
+        "failure": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "The diagnostic half of a fail-closed denial. Redacted by a diagnostic export; the reason code alone renders the user-facing sentence."
+        }
+      }
+    },
+    "useRecord": {
+      "type": "object",
+      "required": ["kind", "at", "applicationId", "category", "resource"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "use"},
+        "at": {"type": "string", "format": "date-time"},
+        "applicationId": {"type": "string", "maxLength": 255},
+        "applicationName": {"type": "string", "maxLength": 128},
+        "category": {"$ref": "#/$defs/category"},
+        "resource": {"$ref": "#/$defs/resourceProjection"},
+        "grantId": {"type": ["string", "null"], "maxLength": 128},
+        "taskId": {"type": ["string", "null"], "maxLength": 128}
+      }
+    },
+    "revocationRecord": {
+      "type": "object",
+      "required": ["kind", "at", "applicationId", "category", "resource", "revocation"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "revocation"},
+        "at": {"type": "string", "format": "date-time"},
+        "applicationId": {"type": "string", "maxLength": 255},
+        "applicationName": {"type": "string", "maxLength": 128},
+        "category": {"$ref": "#/$defs/category"},
+        "resource": {"$ref": "#/$defs/resourceProjection"},
+        "revocation": {
+          "type": "string",
+          "enum": ["immediate", "next-launch"],
+          "description": "How soon the withdrawal actually takes effect. Two values because a portal grant and a bind mount stop mattering at different moments, and claiming the first when only the second is true would be the comfortable lie."
+        }
+      }
+    },
+    "activityRecord": {
+      "oneOf": [
+        {"$ref": "#/$defs/decisionRecord"},
+        {"$ref": "#/$defs/useRecord"},
+        {"$ref": "#/$defs/revocationRecord"}
+      ]
+    }
+  }
+}

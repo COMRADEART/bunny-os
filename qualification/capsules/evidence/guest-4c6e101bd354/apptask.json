@@ -1,0 +1,273 @@
+{
+  "commit": "4c6e101bd35433f8bada4d362991de9ee9be339b",
+  "explanation": "an allow-once grant outlived its task: {'ok': False, 'applicationId': 'art.comrade.BunnyImageTool', 'remainingFileGrants': [{'grantId': 'krIC6UoMKoxpPDoY', 'applicationId': 'art.comrade.BunnyImageTool', 'category': 'files', 'resource': {'kind': 'path', 'display': 'Pictures/holiday.png', 'digest': '8cb170cba8fdd470d438cbb2d4b69cfb'}, 'resourceIdentifier': '/tmp/bunny-qualify-3fw15qhp/home/Pictures/holiday.png', 'purpose': 'read', 'scope': 'session', 'verdict': 'allow', 'source': 'user', 'decidedAt': '2026-08-11T16:05:55.550523Z', 'sessionId': 'qualify-1'}], 'remainingGrantCount': 1}",
+  "findings": [
+    "an allow-once grant outlived its task: {'ok': False, 'applicationId': 'art.comrade.BunnyImageTool', 'remainingFileGrants': [{'grantId': 'krIC6UoMKoxpPDoY', 'applicationId': 'art.comrade.BunnyImageTool', 'category': 'files', 'resource': {'kind': 'path', 'display': 'Pictures/holiday.png', 'digest': '8cb170cba8fdd470d438cbb2d4b69cfb'}, 'resourceIdentifier': '/tmp/bunny-qualify-3fw15qhp/home/Pictures/holiday.png', 'purpose': 'read', 'scope': 'session', 'verdict': 'allow', 'source': 'user', 'decidedAt': '2026-08-11T16:05:55.550523Z', 'sessionId': 'qualify-1'}], 'remainingGrantCount': 1}"
+  ],
+  "finishedAt": "2026-08-11T16:05:55.775060Z",
+  "host": {
+    "backends": [
+      "flatpak",
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "7.1.5-200.fc44.x86_64",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Enforcing",
+      "policyName": "targeted",
+      "policyVersion": "35",
+      "probeError": null,
+      "selfContext": "system_u:system_r:initrc_t:s0"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "kvm"
+  },
+  "measurements": {
+    "allowOnceLifetime": {
+      "applicationId": "art.comrade.BunnyImageTool",
+      "ok": false,
+      "remainingFileGrants": [
+        {
+          "applicationId": "art.comrade.BunnyImageTool",
+          "category": "files",
+          "decidedAt": "2026-08-11T16:05:55.550523Z",
+          "grantId": "krIC6UoMKoxpPDoY",
+          "purpose": "read",
+          "resource": {
+            "digest": "8cb170cba8fdd470d438cbb2d4b69cfb",
+            "display": "Pictures/holiday.png",
+            "kind": "path"
+          },
+          "resourceIdentifier": "/tmp/bunny-qualify-3fw15qhp/home/Pictures/holiday.png",
+          "scope": "session",
+          "sessionId": "qualify-1",
+          "source": "user",
+          "verdict": "allow"
+        }
+      ],
+      "remainingGrantCount": 1
+    },
+    "approval": {
+      "action": "launch_application",
+      "destination": "art.comrade.BunnyImageTool",
+      "leavesDevice": false,
+      "namesTheFile": true,
+      "reason": "Bunny Image Tool wants to open Pictures/holiday.png. It will save a copy as holiday-resized.png. Your original file will not be changed. It runs in its protected space with no network access."
+    },
+    "exitStates": {
+      "collectsTheUnit": false,
+      "ok": true,
+      "unknownStatus": -2
+    },
+    "export": {
+      "bytesWritten": 182,
+      "destination": "/tmp/bunny-qualify-3fw15qhp/home/Pictures/holiday-resized.png",
+      "digest": "27b5e614d887aa5360eb4b1b7258345d85073fc99c7bc44fa86fe9e0db572649",
+      "display": "Pictures/holiday-resized.png",
+      "originalCopy": null,
+      "originalPreserved": true,
+      "renamed": false
+    },
+    "neighbour": {
+      "stillExists": true,
+      "unchangedDigest": true
+    },
+    "network": {
+      "class": "none",
+      "enforced": true,
+      "shown": "Off"
+    },
+    "original": {
+      "stillExists": true,
+      "unchangedDigest": true
+    },
+    "outcome": {
+      "detail": "Done. The work happened inside Bunny Image Tool's protected space. Your original file wasn't changed. The result is in Pictures/holiday-resized.png.",
+      "elapsedMs": 214.9,
+      "exitStatus": 0,
+      "failure": null,
+      "ok": true,
+      "surfaceQuestions": [
+        {
+          "applicationId": "art.comrade.BunnyImageTool",
+          "category": "files",
+          "matched": true,
+          "resource": "Pictures/holiday.png",
+          "spent": false
+        }
+      ]
+    },
+    "program": {
+      "installed": true,
+      "mode": "0o555",
+      "path": "/usr/libexec/bunny-image-tool",
+      "source": "/etc/bunny-capsule-qualify/scripts/bunny-image-tool.py"
+    },
+    "protectedSpace": {
+      "applicationId": "art.comrade.BunnyImageTool",
+      "caveats": [],
+      "displayName": "Bunny Image Tool",
+      "headline": "Bunny Image Tool runs in its protected space.",
+      "plain": [
+        {
+          "label": "Access",
+          "value": "This file only: holiday.png"
+        },
+        {
+          "label": "Network",
+          "value": "Off"
+        },
+        {
+          "label": "Private app data",
+          "value": "Isolated"
+        },
+        {
+          "label": "Devices",
+          "value": "None"
+        }
+      ],
+      "running": false,
+      "technical": {
+        "applicationId": "art.comrade.BunnyImageTool",
+        "backend": "bubblewrap",
+        "cgroupUnit": "bunny-capsule-art-comrade-bunnyimagetool.88d8725406aed402.service",
+        "confining": true,
+        "dbusTalk": [],
+        "devices": [
+          "/dev/null",
+          "/dev/zero",
+          "/dev/full",
+          "/dev/random",
+          "/dev/urandom",
+          "/dev/tty"
+        ],
+        "environmentKeys": [
+          "HOME",
+          "LANG",
+          "PATH",
+          "TMPDIR",
+          "XDG_CACHE_HOME",
+          "XDG_CONFIG_HOME",
+          "XDG_DATA_HOME",
+          "XDG_RUNTIME_DIR"
+        ],
+        "mounts": [
+          {
+            "origin": "capsule",
+            "source": "/tmp/bunny-qualify-3fw15qhp/capsules/art-comrade-bunnyimagetool.88d8725406aed402/cache",
+            "target": "/run/bunny/app/cache",
+            "writable": true
+          },
+          {
+            "origin": "capsule",
+            "source": "/tmp/bunny-qualify-3fw15qhp/capsules/art-comrade-bunnyimagetool.88d8725406aed402/config",
+            "target": "/run/bunny/app/config",
+            "writable": true
+          },
+          {
+            "origin": "capsule",
+            "source": "/tmp/bunny-qualify-3fw15qhp/capsules/art-comrade-bunnyimagetool.88d8725406aed402/data",
+            "target": "/run/bunny/app/data",
+            "writable": true
+          },
+          {
+            "origin": "capsule",
+            "source": "/tmp/bunny-qualify-3fw15qhp/capsules/art-comrade-bunnyimagetool.88d8725406aed402/exports",
+            "target": "/run/bunny/app/exports",
+            "writable": true
+          },
+          {
+            "origin": "capsule",
+            "source": "/tmp/bunny-qualify-3fw15qhp/capsules/art-comrade-bunnyimagetool.88d8725406aed402/inbox",
+            "target": "/run/bunny/app/inbox",
+            "writable": true
+          },
+          {
+            "origin": "capsule",
+            "source": "/tmp/bunny-qualify-3fw15qhp/capsules/art-comrade-bunnyimagetool.88d8725406aed402/runtime",
+            "target": "/run/bunny/app/runtime",
+            "writable": true
+          },
+          {
+            "origin": "capsule",
+            "source": "/tmp/bunny-qualify-3fw15qhp/capsules/art-comrade-bunnyimagetool.88d8725406aed402/tmp",
+            "target": "/run/bunny/app/tmp",
+            "writable": true
+          },
+          {
+            "origin": "system",
+            "source": "tmpfs",
+            "target": "/tmp",
+            "writable": true
+          },
+          {
+            "origin": "grant",
+            "source": "/tmp/bunny-qualify-3fw15qhp/home/Pictures/holiday.png",
+            "target": "/run/bunny/files/8cb170cba8fdd470d438cbb2d4b69cfb/holiday.png",
+            "writable": false
+          }
+        ],
+        "namespaces": [
+          "user",
+          "pid",
+          "ipc",
+          "uts",
+          "cgroup",
+          "net"
+        ],
+        "network": {
+          "class": "none",
+          "domains": [],
+          "enforced": true
+        },
+        "pid": null,
+        "portalAllow": [],
+        "refusals": [],
+        "resourceLimits": [
+          "MemoryHigh=2147483648",
+          "MemoryMax=4294967296",
+          "TasksMax=512",
+          "CPUWeight=100",
+          "KillMode=mixed"
+        ],
+        "unappliedLimits": [],
+        "unenforcedPermissions": [],
+        "unitName": "bunny-capsule-art-comrade-bunnyimagetool.88d8725406aed402.service"
+      }
+    },
+    "result": {
+      "bytes": 182,
+      "digest": "27b5e614d887aa5360eb4b1b7258345d",
+      "expected": [
+        100,
+        50
+      ],
+      "name": "holiday-resized.png",
+      "pixels": [
+        100,
+        50
+      ]
+    },
+    "scope": {
+      "authorisedFiles": [
+        "Pictures/holiday.png"
+      ],
+      "neighbourAuthorised": false
+    },
+    "substitution": {
+      "bytesActuallyChanged": true,
+      "code": "SECURITY_POLICY_BLOCKED",
+      "detail": "the file changed between the question and the answer",
+      "refused": true
+    }
+  },
+  "schemaVersion": 1,
+  "section": "apptask",
+  "startedAt": "2026-08-11T16:05:55.442112Z",
+  "verdict": "FAIL"
+}

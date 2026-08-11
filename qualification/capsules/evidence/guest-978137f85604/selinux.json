@@ -1,0 +1,99 @@
+{
+  "commit": "978137f856049aea2d058a39b8e3c65e185092e5",
+  "explanation": "every expected capsule operation worked with the policy loaded (mode Enforcing, None modules); 0 AVC record(s) logged during the run",
+  "findings": [],
+  "finishedAt": "2026-08-11T01:27:02.730846Z",
+  "host": {
+    "backends": [
+      "flatpak",
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "7.1.5-200.fc44.x86_64",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Enforcing",
+      "policyName": "targeted",
+      "policyVersion": "35",
+      "probeError": null,
+      "selfContext": "system_u:system_r:initrc_t:s0"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "kvm"
+  },
+  "measurements": {
+    "avc": {
+      "count": 0,
+      "records": [],
+      "sources": {
+        "ausearch": {
+          "available": false,
+          "reason": "not installed"
+        },
+        "journalctl": {
+          "available": true,
+          "lines": 0
+        }
+      }
+    },
+    "expectedOperations": {
+      "capsuleLaunched": true,
+      "exported": true,
+      "grantedFileRead": true,
+      "ownDataRead": true,
+      "ownDataWrite": true,
+      "probeProducedResult": true,
+      "subprocess": true
+    },
+    "export": {
+      "bytes": 9,
+      "destination": "/tmp/bunny-qualify-pap5542r/home/Documents/result.txt",
+      "ok": true
+    },
+    "grant": {
+      "reason": "user-allowed",
+      "verdict": "allow"
+    },
+    "launch": {
+      "backend": "bubblewrap",
+      "exitCode": 0,
+      "started": true,
+      "unenforced": []
+    },
+    "policyAfter": {
+      "booleanCount": 367,
+      "localBooleans": [],
+      "mode": "Enforcing",
+      "moduleTool": false,
+      "permissiveDomains": []
+    },
+    "policyBefore": {
+      "booleanCount": 367,
+      "localBooleans": [],
+      "mode": "Enforcing",
+      "moduleTool": false,
+      "permissiveDomains": []
+    },
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Enforcing",
+      "policyName": "targeted",
+      "policyVersion": "35",
+      "probeError": null,
+      "selfContext": "system_u:system_r:initrc_t:s0"
+    },
+    "unexpectedAccessDenied": {
+      "homeDenied": true,
+      "peerCapsuleDenied": true,
+      "sshDenied": true
+    }
+  },
+  "schemaVersion": 1,
+  "section": "selinux",
+  "startedAt": "2026-08-11T01:27:01.030728Z",
+  "verdict": "PASS"
+}

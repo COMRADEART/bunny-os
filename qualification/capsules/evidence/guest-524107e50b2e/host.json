@@ -1,0 +1,136 @@
+{
+  "commit": "524107e50b2eec97c5ac4fe79232e9fedda73a4a",
+  "explanation": "confining backends: ['flatpak', 'bubblewrap']",
+  "findings": [],
+  "finishedAt": "2026-08-11T16:30:37.916388Z",
+  "host": {
+    "backends": [
+      "flatpak",
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "7.1.5-200.fc44.x86_64",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Enforcing",
+      "policyName": "targeted",
+      "policyVersion": "35",
+      "probeError": null,
+      "selfContext": "system_u:system_r:initrc_t:s0"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "kvm"
+  },
+  "measurements": {
+    "availableBackends": [
+      "flatpak",
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "cgroupVersion": "cgroup2fs",
+    "commit": "524107e50b2eec97c5ac4fe79232e9fedda73a4a",
+    "graphical": {
+      "display": "",
+      "waylandDisplay": ""
+    },
+    "homeFilesystem": "ext2/ext3",
+    "image": {
+      "osRelease": {
+        "ANSI_COLOR": "\"0;38;2;60;110;180\"",
+        "BUG_REPORT_URL": "\"file:///usr/share/doc/bunny-os/REPORTING_BUGS.md\"",
+        "BUNNY_OS_BUILD_ID": "39a5c575da9e.1786465088",
+        "BUNNY_OS_CHANNEL": "development",
+        "BUNNY_OS_COMMIT": "39a5c575da9e5140cf9435db4607d8fc085dac6a",
+        "BUNNY_OS_PROFILE": "shell",
+        "BUNNY_OS_VERSION": "0.1.0",
+        "CPE_NAME": "\"cpe:/o:fedoraproject:fedora:44\"",
+        "DEFAULT_HOSTNAME": "\"fedora\"",
+        "DOCUMENTATION_URL": "\"file:///usr/share/doc/bunny-os/README.md\"",
+        "HOME_URL": "\"https://bunny-os.org/\"",
+        "ID": "fedora",
+        "LOGO": "fedora-logo-icon",
+        "NAME": "\"Bunny OS\"",
+        "PRETTY_NAME": "\"Bunny OS 0.1.0 (development)\"",
+        "REDHAT_BUGZILLA_PRODUCT": "\"Fedora\"",
+        "REDHAT_BUGZILLA_PRODUCT_VERSION": "44",
+        "REDHAT_SUPPORT_PRODUCT": "\"Fedora\"",
+        "REDHAT_SUPPORT_PRODUCT_VERSION": "44",
+        "RELEASE_TYPE": "stable",
+        "SUPPORT_END": "2027-05-19",
+        "SUPPORT_URL": "\"file:///usr/share/doc/bunny-os/TROUBLESHOOTING.md\"",
+        "VARIANT": "\"Bunny OS 0.1.0 (development)\"",
+        "VARIANT_ID": "development",
+        "VERSION": "\"44 (Forty Four)\"",
+        "VERSION_CODENAME": "\"\"",
+        "VERSION_ID": "44"
+      },
+      "release": {
+        "architecture": "x86_64",
+        "baseDistribution": "Fedora",
+        "baseImageReference": "quay.io/fedora/fedora-bootc:44",
+        "baseVersion": "44",
+        "brokerVersion": "0.1.0",
+        "buildId": "39a5c575da9e.1786465088",
+        "buildTimestamp": "2026-08-11T16:18:08Z",
+        "buildTool": "OCI Containerfile + unified image-builder",
+        "bunnyArtifactStatus": "placeholder",
+        "bunnyProtocolVersion": 3,
+        "bunnyVersion": "0.2.0",
+        "contractVersion": "1.0.0",
+        "imageVersion": "0.1.0-shell.39a5c575da9e",
+        "osVersion": "0.1.0",
+        "profile": "shell",
+        "recoveryVersion": "0.1.0",
+        "releaseChannel": "development",
+        "schemaVersion": 1,
+        "sourceCommit": "39a5c575da9e5140cf9435db4607d8fc085dac6a",
+        "sourceDateEpoch": 1786465088
+      }
+    },
+    "isRoot": false,
+    "kernelUserNamespaces": {
+      "maxUserNamespaces": 23129,
+      "nsFilePresent": true
+    },
+    "machineProbe": {
+      "graphicalSession": false,
+      "portal": true,
+      "programs": [
+        "bwrap",
+        "flatpak",
+        "systemd-run"
+      ],
+      "userNamespaces": true
+    },
+    "recordedAt": "2026-08-11T16:30:37.905020Z",
+    "schemaVersion": 1,
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Enforcing",
+      "policyName": "targeted",
+      "policyVersion": "35",
+      "probeError": null,
+      "selfContext": "system_u:system_r:initrc_t:s0"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "versions": {
+      "bubblewrap": "bubblewrap 0.11.0",
+      "flatpak": "Flatpak 1.18.0",
+      "kernel": "7.1.5-200.fc44.x86_64",
+      "python": "Python 3.14.6",
+      "systemd": "systemd 259 (259.8-1.fc44)"
+    },
+    "virtualization": "kvm"
+  },
+  "schemaVersion": 1,
+  "section": "host",
+  "startedAt": "2026-08-11T16:30:37.916240Z",
+  "verdict": "PASS"
+}

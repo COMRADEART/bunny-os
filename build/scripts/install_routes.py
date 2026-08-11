@@ -119,6 +119,19 @@ SYSTEM_SCRIPTS: tuple[str, ...] = (
     # and not the program would be a unit that fails at every login.
     "bunny-companion-window",
     "bunny-companion-recovery",
+    # The first application a capsule runs. It is a system program rather than
+    # part of the companion package because a capsule gives its process no Bunny
+    # code on its import path: a program that imported the companion could not
+    # run inside the sandbox it exists for, and the failure would only appear on
+    # a machine where the sandbox worked. The catalogue entry names this exact
+    # path, so a profile with the entry and without the program would offer an
+    # operation that cannot start.
+    "bunny-image-tool",
+    # The readiness probe. Installed on every profile because the thing it
+    # answers - "is this session usable" - is a question a support call asks as
+    # often as a qualification harness does, and a probe that only exists in a
+    # test image cannot answer it on a machine that is actually broken.
+    "bunny-session-ready",
 )
 
 #: The one system script that is a systemd generator rather than a libexec
@@ -243,6 +256,42 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
             "analyser did not model, which is why the voice runtime's build "
             "impact was reported as zero"
         ),
+    ),
+    # The three packages the Companion speaks for: the permission layer, the
+    # capsule runtime, and the curated catalogue. On the same import path as the
+    # companion, because `companion.capsule_bridge` imports all three and an
+    # installed system with the companion and without them gives the user
+    # service an ImportError on every start.
+    #
+    # `trust` first in this list for the same reason it is first in the
+    # dependency order: `capsules` and `catalog` both import it and neither is
+    # useful without it.
+    InstallRoute(
+        "trust-package", "package",
+        "trust", "/usr/lib/bunny-os/python/trust", 0o444,
+        note="copy_python_package: source only, read-only. The permission layer.",
+    ),
+    InstallRoute(
+        "capsules-package", "package",
+        "capsules", "/usr/lib/bunny-os/python/capsules", 0o444,
+        note="copy_python_package: source only, read-only. The App Capsule runtime.",
+    ),
+    InstallRoute(
+        "catalog-package", "package",
+        "catalog", "/usr/lib/bunny-os/python/catalog", 0o444,
+        note=(
+            "copy_python_package: source only. The catalogue's JSON entries live "
+            "under catalog/data/ and are installed by the route below, because a "
+            "package route copies source and these are data."
+        ),
+    ),
+    # The curated catalogue entries. Without them every application resolves to
+    # UNDECLARED and the trust layer refuses everything not already granted —
+    # fail-closed, correct, and completely unusable. This is the route whose
+    # absence would make a booted image look like a permission bug.
+    InstallRoute(
+        "app-catalog-entries", "tree",
+        "catalog/data", "/usr/share/bunny-os/catalog", 0o444,
     ),
     # Data the capability registry reads at start-up. Without it the registry
     # silently falls back to the source tree, which does not exist on an

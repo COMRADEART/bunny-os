@@ -1,0 +1,159 @@
+{
+ "answeredAt": 0.352,
+ "approval": {
+  "action": "launch_application",
+  "dataClassification": "personal",
+  "destination": "local",
+  "destinationDetail": "art.comrade.BunnyImageTool",
+  "keys": [
+   "action",
+   "alternatives",
+   "dataClassification",
+   "decision",
+   "destination",
+   "destinationDetail",
+   "destinationFingerprint",
+   "estimatedCostUnits",
+   "expiresAtMonotonic",
+   "planId",
+   "providerId",
+   "reason",
+   "requestId",
+   "safeDefault",
+   "sessionId",
+   "taskId",
+   "transitionId"
+  ],
+  "missingFromBinding": [
+   "estimatedCostUnits",
+   "providerId"
+  ],
+  "reason": "Bunny Image Tool wants to open Pictures/holiday.png. It will save a copy as holiday-resized.png. Your original file will not be changed. It runs in its protected space with no network access.",
+  "requestId": "approval:task-41ac71909a564cad9a4abba8b6ca331b:15a82f74b590affa88fcb99508364503:0:launch_application"
+ },
+ "decision": "granted",
+ "elapsedSeconds": 1.108,
+ "errors": [],
+ "finalState": "completed",
+ "fixture": {
+  "digest": "5de7c234a1c3bdcf6b194ac44cf2df96",
+  "ok": true,
+  "source": "/home/bunny/Pictures/holiday.png"
+ },
+ "grantsAfter": [],
+ "neighbour": {
+  "unchanged": true
+ },
+ "operationEvents": [],
+ "original": {
+  "exists": true,
+  "unchanged": true
+ },
+ "outputs": [
+  {
+   "byteSize": 44,
+   "classification": "personal",
+   "createdSequence": 18,
+   "digest": "6c26d9cd80a5ae6046478bf7a66e9551",
+   "kind": "text",
+   "outputId": "output-1",
+   "summary": "resized to 100: Pictures/holiday-resized.png"
+  }
+ ],
+ "readiness": {
+  "checks": {
+   "capsules": {
+    "backends": [
+     "flatpak",
+     "bubblewrap",
+     "systemd-scope"
+    ],
+    "confining": [
+     "flatpak",
+     "bubblewrap"
+    ],
+    "ok": true
+   },
+   "client": {
+    "connected": true,
+    "exists": true,
+    "ok": true,
+    "socket": "/run/user/1000/bunny-companion/runtime.sock"
+   },
+   "companion": {
+    "ok": true,
+    "units": {
+     "bunny-companion-window.service": {
+      "activeState": "inactive",
+      "loadState": "loaded",
+      "looping": false,
+      "ok": true,
+      "restarts": 0
+     },
+     "bunny-companion.service": {
+      "activeState": "active",
+      "loadState": "loaded",
+      "looping": false,
+      "ok": true,
+      "restarts": 0
+     }
+    }
+   },
+   "compositor": {
+    "gnomeShellRunning": true,
+    "ok": true,
+    "socketExists": true,
+    "waylandDisplay": "wayland-0"
+   },
+   "session": {
+    "hasGraphicalSession": true,
+    "ok": true,
+    "userState": "active"
+   },
+   "shell": {
+    "ok": true,
+    "queried": true,
+    "raw": "({'uuid': <'bunny-shell@bunny-os.org'>, 'name': <'Bunny Shell'>, 'description': <'The Bunny OS desktop: top bar, sidebar, dock, dashboard and the Bunny assistant character, plus the launcher, workspac",
+    "state": 1.0
+   },
+   "tasks": {
+    "missingPrograms": [],
+    "ok": true,
+    "operations": [
+     "image.resize"
+    ]
+   },
+   "trust": {
+    "ok": true,
+    "store": "/home/bunny/.local/share/bunny/trust/grants.json"
+   }
+  },
+  "markerSeen": true,
+  "notReady": [],
+  "ok": true
+ },
+ "request": "Resize this to 100 pixels wide.",
+ "result": {
+  "expected": "holiday-resized.png",
+  "files": [
+   "holiday-resized.png"
+  ],
+  "fromTheIntendedInput": true,
+  "pixels": [
+   100,
+   50
+  ]
+ },
+ "states": [
+  "created",
+  "waiting_for_approval",
+  "executing",
+  "completed"
+ ],
+ "submit": {
+  "ok": true,
+  "sessionId": "ses-2de3c5299d314929a68f7dca9338f09b",
+  "taskId": "task-41ac71909a564cad9a4abba8b6ca331b"
+ },
+ "summary": "Resize this to 100 pixels wide."
+}

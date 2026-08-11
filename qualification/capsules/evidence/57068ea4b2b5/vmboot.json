@@ -1,0 +1,44 @@
+{
+  "command": "bash build/scripts/vm-smoke.sh shell",
+  "commit": "57068ea4b2b59415e48e858ac381c8209bdc5d17",
+  "exitCode": 0,
+  "explanation": "the image booted to graphical.target with the privileged broker started and no failed unit",
+  "findings": [
+    "SELinux is enforcing in the guest (audit records carry system_u:system_r), which the WSL qualification host does not do. Nothing in the host runtime qualification is evidence about SELinux; this boot is the first place that layer is even active.",
+    "The harness boots and greps a serial log. It performs no login, starts no graphical session, launches no capsule and draws no Companion. Every graphical claim in this phase remains unobserved."
+  ],
+  "host": {
+    "note": "the VM harness runs as root because qemu and the image live there; the guest is what is under test",
+    "user": {
+      "name": "root",
+      "uid": 0
+    }
+  },
+  "measurements": {
+    "failedUnits": [],
+    "markers": {
+      "brlapiKey": true,
+      "brokerService": true,
+      "brokerSocket": true,
+      "displayManager": true,
+      "graphicalTarget": true,
+      "grubEntry": true,
+      "healthCheck": true,
+      "loginPrompt": true,
+      "selinuxEnforcing": true,
+      "welcome": true
+    },
+    "qcow2": {
+      "bytes": 2965712896,
+      "path": "/root/bunny-os/build/out/shell/bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2",
+      "sha256": "f72361ed13e450acb1f6078add1efc01afcf4855dd26044faddbbb6dde7fbac7"
+    },
+    "serialLogBytes": 102472,
+    "targetsReached": 67,
+    "unitsStarted": 51
+  },
+  "recordedAt": "2026-08-11T00:48:06Z",
+  "schemaVersion": 1,
+  "section": "vmboot",
+  "verdict": "PASS"
+}

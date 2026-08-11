@@ -29,6 +29,13 @@ After=graphical-session.target
 # improvise one; the condition names the missing dependency in the journal
 # rather than producing an ImportError on every restart attempt.
 ConditionPathExists=/usr/lib/bunny-os/python/capability
+# The state roots below are created by the user manager's tmpfiles rule
+# (user-tmpfiles/bunny-os.conf); a ReadWritePaths= path that does not exist
+# fails namespace setup with 226/NAMESPACE before ExecStart ever runs, which
+# is why the rule and this Wants= exist. See bunny-config-dir.service for why
+# After= alone would order nothing.
+Wants=systemd-tmpfiles-setup.service
+After=systemd-tmpfiles-setup.service
 StartLimitIntervalSec=60s
 StartLimitBurst=4
 
@@ -56,6 +63,33 @@ TimeoutStopSec=15s
 # The socket lives here, 0700, and goes away with the session.
 RuntimeDirectory=bunny-companion
 RuntimeDirectoryMode=0700
+# The capsule root and the trust store. Installing a capsule writes the first;
+# recording a grant writes the second and third; all live under the user's XDG
+# directories, which ProtectHome=read-only covers. The launcher qualification
+# section measured a runtime that could start a capsule and could not keep one:
+# the install failed on the first write. These two lines are the whole fix, and
+# the window unit deliberately does not get them - it is a client, and a
+# renderer that could write the trust store could mint its own grants.
+ReadWritePaths=%h/.local/share/bunny %h/.local/state/bunny
+# And where a finished result is put down.
+#
+# The capsule never sees this. An application writes into its own exports
+# directory and the *runtime* copies the verified artefact out — so this is
+# write access for the trusted component, at the last step, and the sandbox is
+# unchanged by it. Without it the whole journey works and the final copy fails
+# with EROFS: the capsule ran, produced the image, and the result could not be
+# put anywhere. That is what a booted run found and what no host test could.
+#
+# `-` so a home without a Pictures directory does not fail namespace setup with
+# 226/NAMESPACE before ExecStart, the way a missing ReadWritePaths= path does.
+#
+# The narrowness is real but limited: it is one directory rather than the home,
+# and it is the directory the only operation writes to. It is *not* dynamic — a
+# person whose XDG_PICTURES_DIR points somewhere else still cannot receive a
+# result, because ReadWritePaths= is resolved when the unit loads and a user's
+# XDG configuration is not known then. A portal is the answer to that, and this
+# is not one.
+ReadWritePaths=-%h/Pictures
 # The store lives here. Per-user under the session, never system-wide: a
 # companion session is one person's conversation and /var would make it readable
 # by every account on a shared machine.

@@ -153,6 +153,36 @@ class TheSharedDeclaration(unittest.TestCase):
         identifiers = [route.id for route in INSTALL_ROUTES]
         self.assertEqual(len(identifiers), len(set(identifiers)))
 
+    def test_every_route_source_is_inside_a_build_context_root(self) -> None:
+        """A route the build cannot see installs nothing, and said it did.
+
+        The analyser matched routes against paths and never asked whether the
+        Containerfile copies the directory the route names. Adding a package to
+        the route table without a matching COPY produced an image with the
+        package missing while every check reported it installed — the original
+        closure defect running the other way round.
+
+        This is the assertion that catches it, and it is on the *declaration*
+        rather than on a build: a missing COPY is visible without building
+        anything.
+        """
+        roots, unresolved = CLOSURE.build_context_roots(ROOT / "build/Containerfile")
+        self.assertEqual(unresolved, [], "a COPY the analyser cannot resolve makes this check partial")
+        for route in INSTALL_ROUTES:
+            with self.subTest(route=route.id):
+                head = route.source.split("/", 1)[0]
+                self.assertIn(
+                    head, roots,
+                    f"route {route.id} installs from {route.source}, which no COPY puts in the "
+                    f"build context; the image would not contain it",
+                )
+
+    def test_a_route_without_a_context_root_is_named_rather_than_called_installed(self) -> None:
+        """The analyser has a word for it now, and it is not 'installed'."""
+        verdict = CLOSURE.classify("capability/engine.py", ["build"])
+        self.assertEqual(verdict["classification"], "route-without-context")
+        self.assertTrue(verdict["routes"], "the route still matched; only the reach is missing")
+
     def test_the_installer_selects_exactly_what_the_analyser_classifies(self) -> None:
         """The two answers come from one function, and this is the assertion of it.
 
@@ -358,12 +388,39 @@ class ThePackageRoute(unittest.TestCase):
                 )
                 self.assertEqual(verdict["routes"], [])
 
-    def test_the_package_route_is_the_only_reason_the_voice_runtime_is_installed(self) -> None:
-        """Named, so that deleting the route fails with the reason attached."""
+    def test_the_package_routes_are_the_only_reason_these_packages_are_installed(self) -> None:
+        """Named, so that deleting a route fails with the reason attached.
+
+        Five packages, and the list is exact rather than a membership check: a
+        package that reaches the image without appearing here is a package
+        nobody decided to ship, and the closure analyser reported the voice
+        runtime's build impact as zero for exactly that reason once already.
+
+        ``trust``, ``capsules`` and ``catalog`` are here because
+        ``companion.capsule_bridge`` imports all three. Installing the companion
+        without them gives the user service an ImportError on every start, which
+        is the same failure the capability route exists to prevent.
+        """
         package_routes = [route for route in INSTALL_ROUTES if route.kind == "package"]
         self.assertEqual(
-            sorted(route.source for route in package_routes), ["capability", "companion"],
+            sorted(route.source for route in package_routes),
+            ["capability", "capsules", "catalog", "companion", "trust"],
         )
+
+    def test_the_catalogue_entries_are_installed_as_data_not_as_source(self) -> None:
+        """A package route copies Python and skips everything else, so the
+        catalogue's JSON would not reach the image on the package route alone —
+        and an installed system with no entries refuses every application it has
+        no grant for, which is fail-closed, correct, and reads as a bug."""
+        destinations = {route.id: route.destination for route in INSTALL_ROUTES}
+        self.assertEqual(destinations.get("app-catalog-entries"), "/usr/share/bunny-os/catalog")
+        from catalog.registry import INSTALLED_CATALOG_DIRECTORY
+
+        # as_posix(), because a Windows checkout renders a PurePosixPath's
+        # separators its own way and the destination is a Linux path either way.
+        # as_posix(), because str() on a Windows checkout renders the
+        # separators its own way and the destination is a Linux path either way.
+        self.assertEqual(INSTALLED_CATALOG_DIRECTORY.as_posix(), "/usr/share/bunny-os/catalog")
 
 
 class TheAuditFailsClosed(unittest.TestCase):

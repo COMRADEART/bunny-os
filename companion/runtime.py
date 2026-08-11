@@ -764,6 +764,7 @@ from .session import CompanionSession, CostPolicy, PrivacyPolicy
 from .states import TERMINAL_STATES, require_transition
 from .store import CompanionStore
 from .task import (
+    worst_outcome,
     ApprovalReference,
     CompanionTask,
     ErrorReference,
@@ -856,6 +857,13 @@ class RuntimeOptions:
     #: registered at all, so a plan naming one fails at the allowlist exactly as
     #: a plan naming ``shell.run`` does.
     desktop: Any = None
+    #: The capsule task support, when this build has one.
+    #: :class:`companion.capsule_task_bridge.CapsuleSupport`, duck-typed for the
+    #: same reason ``desktop`` is: the runtime knows only that something can
+    #: refine a requirement and build an invocation context, and keeps no import
+    #: of the capsule packages. ``None`` means no capsule operations are
+    #: registered, so a plan naming one fails at the allowlist.
+    capsules: Any = None
 
 
 class CompanionRuntime:
@@ -869,6 +877,7 @@ class CompanionRuntime:
         self.ids = options.ids
         self.broker = options.broker
         self.desktop = options.desktop
+        self.capsules = options.capsules
         self.leases = ExecutorLeases()
         self.approvals = options.approvals or CompanionApprovalStore()
         self.gate = ApprovalGate(self.approvals, consent=options.consent)
@@ -1353,6 +1362,38 @@ class CompanionRuntime:
             return persisted
         return None
 
+    # -- tool supports -----------------------------------------------------
+
+    def _tool_supports(self) -> tuple[Any, ...]:
+        """The subsystems that can refine a requirement and build a context.
+
+        A tuple rather than a chain of ``if`` branches, so adding a third does
+        not mean editing three call sites and remembering all of them. Order is
+        registration order and does not matter: a tool id belongs to at most one
+        support, which :meth:`_tool_support` asserts by taking the first match
+        and which the broker's allowlist makes true — two supports registering
+        the same tool id would have one overwrite the other at registration.
+        """
+        return tuple(item for item in (self.desktop, self.capsules) if item is not None)
+
+    def _tool_support(self, tool_id: str) -> Any:
+        """Whichever support owns this tool, or ``None`` for a plain tool."""
+        for support in self._tool_supports():
+            if support.handles(tool_id):
+                return support
+        return None
+
+    def _refine_requirement(self, task: Any, plan: Any, operation: Any) -> Any:
+        """The precise question for this operation, from whoever owns the tool.
+
+        ``None`` falls back to the generic tool-declaration requirement, which
+        is what a plain tool gets. A support that owns the tool and refuses to
+        prepare it raises, and the raise is deliberate: it stops a person being
+        asked to approve something that would then report that it could not run.
+        """
+        support = self._tool_support(operation.tool)
+        return support.requirement_for(task, plan, operation) if support is not None else None
+
     def _cancellation_arrived(self, task: CompanionTask) -> bool:
         """Whether a stop has landed, asked of the store rather than remembered.
 
@@ -1652,13 +1693,12 @@ class CompanionRuntime:
             # invalidates every approval granted against it — done explicitly
             # rather than left to expiry, so a superseded consent cannot be
             # spent inside its remaining time. The next revision asks again.
-            if self.desktop is not None:
-                # And the prepared desktop actions go with it. A preparation
-                # cached under the old plan's fingerprint would otherwise be
-                # found by the next revision's operation of the same name, and
-                # the act executed would be the one the *superseded* plan
-                # described.
-                self.desktop.forget_plan(task.task_id)
+            for support in self._tool_supports():
+                # And the prepared acts go with it. A preparation cached under
+                # the old plan's fingerprint would otherwise be found by the
+                # next revision's operation of the same name, and the act
+                # executed would be the one the *superseded* plan described.
+                support.forget_plan(task.task_id)
             withdrawn = self.gate.invalidate_for_task(
                 task,
                 detail=(
@@ -1726,8 +1766,8 @@ class CompanionRuntime:
             # A build with no desktop support passes nothing and the generic
             # path is unchanged.
             refine=(
-                (lambda operation: self.desktop.requirement_for(task, plan, operation))
-                if self.desktop is not None else None
+                (lambda operation: self._refine_requirement(task, plan, operation))
+                if self._tool_supports() else None
             ),
         )
         if not requirements:
@@ -2045,13 +2085,14 @@ class CompanionRuntime:
             tool_context = None
             declaration = self.broker.declaration(operation.tool)
             if declaration is not None and declaration.requires_context:
+                support = self._tool_support(operation.tool)
                 tool_context = (
-                    self.desktop.context_for(
+                    support.context_for(
                         task, plan, operation,
                         cancelled=lambda: self._cancellation_arrived(task),
                         audit_reference=plan.plan_id,
                     )
-                    if self.desktop is not None and self.desktop.handles(operation.tool)
+                    if support is not None
                     else ToolInvocationContext(
                         session_id=task.session_id,
                         task_id=task.task_id,
@@ -2195,10 +2236,44 @@ class CompanionRuntime:
         self._checkpoint(session, task)
         return task, observations, revise
 
+    @staticmethod
+    def _observed_outcome(task: CompanionTask) -> str:
+        """What the runtime itself saw, from the operations it settled.
+
+        Independent of anything an executor says. Every operation that failed
+        left an ``operation_failed`` error reference on the task, and every one
+        that succeeded left a ``completed`` operation reference — so this reads
+        the record rather than a claim about it.
+
+        A plan with no operations is a success: "answer this question" is a real
+        task and produces no operations at all. What is *not* a success is a plan
+        whose operations were all attempted and none settled well.
+        """
+        operations = task.operations
+        if not operations:
+            return "success"
+        settled = [item for item in operations if item.status in ("completed", "failed")]
+        if not settled:
+            return "success"
+        if any(item.status == "completed" for item in settled):
+            return "success"
+        return "failed"
+
     def _present(self, session: CompanionSession, task: CompanionTask, result: TaskResult) -> CompanionTask:
+        # Two verdicts, combined pessimistically: what the executor reports and
+        # what the runtime watched happen. The runtime's is not overridable —
+        # an executor that returns a TaskResult with the default `success` for a
+        # plan whose every operation failed does not get to say so.
+        #
+        # This is the fix for a task that reached `completed` with its only
+        # operation failed on EROFS and the truth in its summary text alone.
+        outcome = worst_outcome(result.outcome, self._observed_outcome(task))
         task = self._transition(task, "presenting", {
             "resultId": result.result_id,
             "result": result.to_json(),
+            "outcome": outcome,
+            "executorOutcome": result.outcome,
+            "observedOutcome": self._observed_outcome(task),
         })
         for output in result.outputs:
             task = task.with_output(OutputReference(
@@ -2206,7 +2281,18 @@ class CompanionRuntime:
                 byte_size=output.byte_size, classification=output.classification,
                 summary=display_summary(output.content), created_sequence=self.store.tip(task.session_id)[0],
             ))
-        task = self._transition(task, "completed", {"resultId": result.result_id})
+        if outcome == "success":
+            task = self._transition(task, "completed", {"resultId": result.result_id})
+        else:
+            # §11's invariants. Never unknown to success, never non-zero to
+            # completed, never a missing output to completed.
+            terminal = {"cancelled": "cancelled", "blocked": "blocked"}.get(outcome, "failed")
+            task = self._transition(task, terminal, {
+                "resultId": result.result_id,
+                "outcome": outcome,
+                "reason": dict(result.failure) if result.failure else None,
+                "errors": [dict(item.to_json()) for item in task.errors[-3:]],
+            })
         task = task.finished(self.clock.wall())
         session = self.session(task.session_id).task_finished(task.task_id, self.clock.wall())
         self._sessions[session.session_id] = session

@@ -75,6 +75,14 @@ SEARCH_FILES_TOOL = "files.search"
 SYSTEM_METRIC_TOOL = "system.get_metric"
 MEDIA_CONTROL_TOOL = "media.control"
 
+#: The application-task operation. Named here as a literal rather than imported
+#: from the operation table, for the same reason every other tool id in this
+#: file is a literal: an executor proposes a *name*, and the broker's allowlist
+#: is what decides whether that name resolves to anything. An executor that
+#: imported the table would still be proposing a name; it would just look as
+#: though it had checked.
+RESIZE_IMAGE_TOOL = "image.resize"
+
 #: The desktop actions this executor may plan. Written out rather than derived
 #: so that adding a new intent cannot silently reach an action nobody reviewed.
 LAUNCH_ACTION = "desktop.application.launch"
@@ -191,6 +199,23 @@ class LocalIntentExecutor:
         if intent.kind == "capabilities":
             return [], "Explain what this assistant can do"
 
+        if intent.kind == "resize_image":
+            # The width is the only argument. The *file* is not proposed here
+            # and is not in the intent's parameters as a path: the capsule
+            # support reads it from the task's bound input authority, which the
+            # user established by naming a file, and an executor has no channel
+            # to it. So a plan cannot select a file, which is the whole of why
+            # a resolved path never travels in an argument list.
+            return [
+                PlannedOperation(
+                    name="resize-image",
+                    tool=RESIZE_IMAGE_TOOL,
+                    arguments={"width": int(intent.parameters.get("width", 0))},
+                    requires_approval=True,
+                    approval_action="launch_application",
+                ),
+            ], intent.description
+
         if intent.kind == "open_application":
             candidates = tuple(intent.parameters.get("candidates", ()))
             application_id = resolve_installed_application(candidates)
@@ -306,11 +331,53 @@ class LocalIntentExecutor:
 
     # -- result ------------------------------------------------------------
 
+
+    @staticmethod
+    def _verdict(intent, results):  # type: ignore[no-untyped-def]
+        """What the work amounted to, and the typed reason when it did not.
+
+        The runtime forms its own verdict from the operation records and takes
+        the worse of the two, so this cannot make a failed task look successful.
+        What it *can* do is carry the code — ``CAPSULE_EXITED``,
+        ``OUTPUT_EXPORT_FAILED`` — that the runtime's inference cannot recover
+        from a status alone, so the audit keeps the distinction the sentence a
+        person reads throws away.
+        """
+        if intent is None or intent.kind != "resize_image":
+            return "success", None
+        for outcome in results:
+            if outcome.get("name") != "resize-image":
+                continue
+            value = outcome.get("value")
+            if isinstance(value, Mapping):
+                failure = value.get("failure")
+                if isinstance(failure, Mapping):
+                    code = str(failure.get("code", ""))
+                    # A person saying no is not a malfunction. Everything else
+                    # that stopped the work is.
+                    verdict = "blocked" if code in (
+                        "PERMISSION_DENIED", "PERMISSION_EXPIRED",
+                    ) else "failed"
+                    return verdict, dict(failure)
+                if outcome.get("error"):
+                    return "failed", {"code": "CAPSULE_EXITED",
+                                      "detail": str(outcome.get("error"))[:300]}
+                return "success", None
+            if outcome.get("error"):
+                return "failed", {"code": "CAPSULE_EXITED",
+                                  "detail": str(outcome.get("error"))[:300]}
+        # The operation was planned and produced no result at all.
+        return "failed", {"code": "OUTPUT_MISSING",
+                          "detail": "the operation produced no result"}
+
     def result(self, context: TaskContext) -> TaskResult:
         request = str(context.task.get("originalRequest", ""))
         intent = recognise(request)
         summary, body = self._answer(intent, context.operation_results)
+        outcome, failure = self._verdict(intent, context.operation_results)
         return TaskResult(
+            outcome=outcome,
+            failure=failure,
             result_id="result-" + hashlib.sha256(
                 f"{context.task.get('taskId', '')}\x1f{body}".encode("utf-8")
             ).hexdigest()[:16],
@@ -356,6 +423,35 @@ class LocalIntentExecutor:
         if intent is None or intent.kind == "capabilities":
             sentence = capability_sentence()
             return sentence, sentence
+
+        if intent.kind == "resize_image":
+            outcome = self._outcome(results, "resize-image")
+            value = outcome.get("value") if outcome is not None else None
+            if outcome is None or not isinstance(value, Mapping):
+                # §50: the failure sentence belongs to the failure, which
+                # already carries one written for a person. Bunny repeats it
+                # rather than inventing a second, vaguer version — and it never
+                # says the app ran when it did not.
+                sentence = "I could not do that."
+                if isinstance(value, Mapping):
+                    failure = value.get("failure")
+                    if isinstance(failure, Mapping):
+                        sentence = str(failure.get("sentence") or sentence)
+                return sentence, "resize did not complete"
+            outputs = value.get("outputs") or []
+            name = ""
+            if outputs and isinstance(outputs[0], Mapping):
+                name = str(outputs[0].get("display") or outputs[0].get("name") or "")
+            width = intent.parameters.get("width")
+            if not name:
+                return "I could not do that.", "resize produced no output"
+            # "You allowed", never "I gave permission"; and the original is
+            # named as untouched because that is the thing a person worries
+            # about when they hand a file to something.
+            return (
+                f"Done. I made {name} at {width} pixels wide. Your original wasn't changed.",
+                f"resized to {width}: {name}",
+            )
 
         if intent.kind == "open_application":
             spoken = str(intent.parameters.get("spoken", "the application"))

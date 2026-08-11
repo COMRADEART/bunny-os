@@ -528,6 +528,11 @@ class CompanionGateway:
         #: operation answers "no desktop action broker" — and, unlike the other
         #: three, means the tools are not on the allowlist at all.
         self.desktop: Any = None
+        #: Attached by the service the same way, through :meth:`attach_capsules`.
+        #: Absent means an application task cannot resolve an input, and the
+        #: capsule operations are not on the allowlist at all — which is the
+        #: same refusal a plan naming an absent desktop action gets.
+        self.capsules: Any = None
         self._desktop_service: Any = None
         self._work: "queue.Queue[str | None]" = queue.Queue()
         self._running: set[str] = set()
@@ -905,12 +910,75 @@ class CompanionGateway:
         )
         if path_context is not None:
             self.desktop.bind_path_context(task.task_id, path_context)
+        inputs = self._capsule_inputs_for_request(request)
+        if inputs:
+            self.capsules.bind_inputs(task.task_id, inputs)
         return task
 
+    def _capsule_inputs_for_request(self, request: str) -> tuple[Path, ...]:
+        """The file an application task will be asked to open, resolved here.
+
+        This is the *only* place a request's words become a path, and it is
+        deliberately outside the executor, the plan and the operation table. A
+        plan carries a width and no file; the capsule support reads the file
+        from what this bound; so a provider proposing an operation cannot choose
+        which file it runs on, and a resolved path never travels in an argument
+        list where a later reader might treat it as data.
+
+        Resolution is closed. A named file must be a plain name — the recogniser
+        refuses anything with a separator — and it is looked up inside the
+        user's own Pictures directory only. "This" with no name resolves to the
+        most recently modified image there, which is what a person means when
+        they have just been looking at one. Neither path leaves that directory,
+        and neither follows a symlink out of it.
+        """
+        binder = getattr(self.capsules, "bind_inputs", None)
+        if not callable(binder):
+            return ()
+
+        from .capsule_tasks import OPERATIONS
+        from .intents import recognise
+        from .local_intent import user_directory
+
+        intent = recognise(request)
+        if intent is None or intent.kind != "resize_image":
+            return ()
+        # The key is the uppercase XDG name, as `companion.intents.FOLDERS`
+        # spells it. Lowercase resolves to nothing, silently, which would make
+        # every application task quietly file-less.
+        pictures = user_directory("PICTURES")
+        if pictures is None:
+            return ()
+        root = Path(os.path.realpath(pictures))
+        extensions = OPERATIONS["image.resize"].input_extensions
+
+        hint = str(intent.parameters.get("fileHint", "")).strip()
+        if hint:
+            candidate = root / hint
+        else:
+            images = [
+                item for item in root.iterdir()
+                if item.is_file() and item.suffix.lower() in extensions
+            ]
+            if not images:
+                return ()
+            candidate = max(images, key=lambda item: item.stat().st_mtime)
+
+        # Resolved and re-checked: a name that resolves outside the directory —
+        # through a symlink, or because the name was not what it looked like —
+        # is not a file this task may name.
+        resolved = Path(os.path.realpath(candidate))
+        if resolved.parent != root or not resolved.is_file():
+            return ()
+        if resolved.suffix.lower() not in extensions:
+            return ()
+        return (resolved,)
+
     def _release_desktop_context(self, task_id: str) -> None:
-        release = getattr(self.desktop, "release_task_context", None)
-        if callable(release):
-            release(task_id)
+        for subsystem in (self.desktop, self.capsules):
+            release = getattr(subsystem, "release_task_context", None)
+            if callable(release):
+                release(task_id)
 
     def list_tasks(self, *, sessionId: str | None) -> dict[str, Any]:
         session_ids = [sessionId] if sessionId else list(self.runtime.store.session_ids())
@@ -1457,6 +1525,16 @@ class CompanionGateway:
         self.desktop = desktop
         self._desktop_service = None
 
+    def attach_capsules(self, capsules: Any) -> None:
+        """Wire the capsule support in, for input binding only.
+
+        The gateway gains no way to launch anything. What it gains is the
+        ability to bind the file a request named to the task, before a plan
+        exists — which is what keeps a plan carrying a width and no file, and an
+        executor unable to choose which file an operation runs on.
+        """
+        self.capsules = capsules
+
     def _submit_confirmed_transcript(self, submission: Any) -> str:
         session_id = submission.transcript.session_id
         task = self._submit_runtime_task(session_id, submission.text)
@@ -1856,6 +1934,17 @@ class ServiceOptions:
     #: ``shell.run`` does. A capability that can be removed entirely should be
     #: removable entirely.
     desktop_enabled: bool = True
+    #: Whether application tasks may run in capsules. Same shape and same
+    #: argument as ``desktop_enabled``: off means the operations are absent from
+    #: the allowlist, not present-and-refusing. Default on, because a Companion
+    #: that cannot run an application task is a Companion whose one production
+    #: route to a sandbox is unreachable — which is the state this integration
+    #: exists to leave behind.
+    capsules_enabled: bool = True
+    #: Where results are written when a task does not name somewhere. ``None``
+    #: means the user's own Pictures directory, resolved at run time; a task
+    #: never chooses this and an application never sees it.
+    capsule_destination: Path | None = None
     #: §17: permit opening a URI with no graphical session. Off by default and
     #: deliberately a service option rather than a runtime one — it is a
     #: deployment's decision about a headless machine, not a task's.
@@ -1960,6 +2049,18 @@ RELEASE_ORDER: tuple[str, ...] = (
     # first, so the proposal never arrives and the broker has nothing new to
     # refuse on the way down.
     "desktop",
+    # Capsules before the task worker, for the sharpest version of the same
+    # reason in this list. A task running an application task is blocked inside
+    # a wait on a transient unit, for up to the operation's timeout, and the
+    # only thing that ends that wait early is the unit stopping. Releasing the
+    # support stops every capsule this login started, so the wait returns and
+    # the worker join has something to join. Releasing it *after* the join would
+    # mean the join waited out a two-minute timeout that the release would have
+    # cut short.
+    #
+    # After desktop, because a task that has just had a desktop action refused
+    # on the way down should not then be starting an application.
+    "capsules",
     "voice-runtime",
     "task-worker",
     "durable-state",
@@ -1997,6 +2098,23 @@ class StartupFailed(RuntimeError):
         self.cause = cause
 
 
+def _login_session_id() -> str:
+    """The identity a ``session``-scoped grant and a recorded pid belong to.
+
+    ``XDG_SESSION_ID`` is what logind calls this login, which is exactly the
+    lifetime "until you log out" means — so a grant taken in one login is not
+    honoured in the next, and a pid recorded in one is not believed in the next.
+    A machine with no logind session (a headless test, a container) gets a fresh
+    random id, which is the same answer with a shorter lifetime: nothing from a
+    previous run is trusted.
+    """
+    import os
+
+    session = os.environ.get("XDG_SESSION_ID", "").strip()
+    return f"login-{session}" if session else f"login-{os.urandom(6).hex()}"
+
+
+
 class CompanionService:
     """One runtime, one worker, one socket. Started by the user unit.
 
@@ -2020,6 +2138,9 @@ class CompanionService:
         #: Absent means no desktop tool is registered at all, so a plan naming
         #: one fails at the allowlist rather than somewhere deeper.
         self.desktop: Any = None
+        #: The capsule task support, when this build has one. Absent means no
+        #: capsule operation is registered at all.
+        self.capsules: Any = None
         self.gateway: CompanionGateway | None = None
         self.server: CompanionServer | None = None
         self.singleton: RuntimeSingleton | None = None
@@ -2205,6 +2326,7 @@ class CompanionService:
         # because this is where the gateway first exists.
         if self.desktop is not None:
             self.gateway.attach_desktop(self.desktop)
+            self.gateway.attach_capsules(self.capsules)
         self.gateway.endpoint_description = self.server.describe()
 
     def _step_start_voice_worker(self) -> None:
@@ -2445,6 +2567,7 @@ class CompanionService:
         # support registers no desktop tools, so a plan naming one fails at the
         # allowlist exactly as a plan naming `shell.run` does.
         desktop = self._build_desktop(broker)
+        capsules = self._build_capsules(broker)
         if self.options.extra_executors:
             # First in the tuple is first in capability selection's preference
             # order, so a slice executor that handles the task class it was
@@ -2463,7 +2586,37 @@ class CompanionService:
             clock=SystemClock(),
             ids=RandomIds(),
             desktop=desktop,
+            capsules=capsules,
         ))
+
+    def _build_capsules(self, broker: Any) -> Any:
+        """Construct the capsule support and register its operations, or carry on.
+
+        The failure mode is deliberate and is the opposite of the desktop's in
+        one respect worth stating: a desktop with no adapters degrades to
+        actions that report they cannot be performed, because a desktop action
+        is about *this* machine's session. A capsule that cannot be built is not
+        degraded — it is absent — because the alternative to a capsule is not a
+        weaker capsule, it is running an application unconfined, and there is no
+        such path. So an exception here removes the operations from the
+        allowlist and a plan naming one fails there.
+        """
+        if not self.options.capsules_enabled:
+            return None
+        from .capsule_task_bridge import CapsuleSupport, register_capsule_tools
+
+        try:
+            support = CapsuleSupport.create(
+                session_id=_login_session_id(),
+                destination=self.options.capsule_destination,
+            )
+            support.start()
+        except Exception:  # noqa: BLE001 - no capsule support is a build without the tools
+            return None
+        register_capsule_tools(broker, support)
+        self.capsules = support
+        self._unwind.append(("capsules", support.stop))
+        return support
 
     def _build_desktop(self, broker: Any) -> Any:
         """Construct the desktop broker and register its tools, or carry on.

@@ -1,0 +1,88 @@
+{
+  "commit": "d9a36620044d915463b33d68ce2588b880bc4483",
+  "explanation": "cold launch 3.3 ms, then [1.0, 1.2]; steady state 16973824 bytes over 3 processes; memory intervened at 209715200 bytes against 268435456 declared (exit TIMEOUT, cgroup-throttle); tasks intervened at 45 against 48",
+  "findings": [],
+  "finishedAt": "2026-08-11T01:51:53.048095Z",
+  "host": {
+    "backends": [
+      "flatpak",
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "7.1.5-200.fc44.x86_64",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Enforcing",
+      "policyName": "targeted",
+      "policyVersion": "35",
+      "probeError": null,
+      "selfContext": "system_u:system_r:initrc_t:s0"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "kvm"
+  },
+  "measurements": {
+    "hostControl": {
+      "allocatedBytes": 243269632,
+      "ceiling": 268435456,
+      "enforced": true,
+      "exitCode": -9,
+      "outcome": "started",
+      "ran": true,
+      "stderr": ""
+    },
+    "launchLatencyMs": {
+      "cold": 3.3,
+      "subsequent": [
+        1.0,
+        1.2
+      ]
+    },
+    "memory": {
+      "allocatedBytes": 209715200,
+      "cgroup": "0::/",
+      "cgroupEvents": {
+        "available": true,
+        "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bunny-capsule-art-comrade-hungry.6fb6a63640d6fa1b.scope",
+        "events.high": 2934,
+        "events.low": 0,
+        "events.max": 0,
+        "events.oom": 0,
+        "events.oom_group_kill": 0,
+        "events.oom_kill": 0,
+        "events.sock_throttled": 0,
+        "memory.current": "247181312",
+        "memory.high": "201326592",
+        "memory.max": "268435456",
+        "memory.peak": "247181312",
+        "pids.max": "64",
+        "pids.peak": "3"
+      },
+      "declaredHigh": 201326592,
+      "declaredMax": 268435456,
+      "exitCode": "TIMEOUT",
+      "intervention": "cgroup-throttle",
+      "outcome": "started"
+    },
+    "steadyState": {
+      "applicationRssBytes": 13225984,
+      "capsuleDiskBytes": 7306,
+      "treeRssBytes": 16973824,
+      "treeSize": 3
+    },
+    "tasks": {
+      "declaredMax": 48,
+      "exitCode": 0,
+      "outcome": "RuntimeError: can't start new thread",
+      "threadsStarted": 45
+    }
+  },
+  "schemaVersion": 1,
+  "section": "resources",
+  "startedAt": "2026-08-11T01:48:38.551410Z",
+  "verdict": "PASS"
+}

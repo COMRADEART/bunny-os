@@ -1,0 +1,70 @@
+{
+  "commit": "37f74c038d4110206a00f2cf58b0eb465caf2ef1",
+  "explanation": "confining backends: ['bubblewrap']; absent, so its backend is NOT_RUN rather than PASS: ['flatpak']; SELinux is not enforcing",
+  "findings": [
+    "['flatpak'] is not installed on this host. Every result below is the bubblewrap backend only; the Flatpak backend has not been exercised.",
+    "SELinux is Disabled on this host. The capsule design treats SELinux as one layer among namespaces, cgroups, portals and Polkit; every isolation result recorded here is the namespace and cgroup layer alone, and none of it is evidence about SELinux.",
+    "The host is WSL2. Its kernel is Microsoft's, not Fedora's stock kernel, so a namespace or cgroup behaviour measured here should be re-measured on the shipped kernel before it is called a property of Bunny OS."
+  ],
+  "finishedAt": "2026-08-10T23:33:29.463714Z",
+  "host": {
+    "backends": [
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "selinux": "Disabled",
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "wsl"
+  },
+  "measurements": {
+    "availableBackends": [
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "cgroupVersion": "cgroup2fs",
+    "commit": "37f74c038d4110206a00f2cf58b0eb465caf2ef1",
+    "graphical": {
+      "display": "",
+      "waylandDisplay": ""
+    },
+    "homeFilesystem": "ext2/ext3",
+    "isRoot": false,
+    "kernelUserNamespaces": {
+      "maxUserNamespaces": 63133,
+      "nsFilePresent": true
+    },
+    "machineProbe": {
+      "graphicalSession": false,
+      "portal": true,
+      "programs": [
+        "bwrap",
+        "systemd-run"
+      ],
+      "userNamespaces": true
+    },
+    "recordedAt": "2026-08-10T23:33:29.461027Z",
+    "schemaVersion": 1,
+    "selinux": "Disabled",
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "versions": {
+      "bubblewrap": "bubblewrap 0.11.0",
+      "flatpak": "ABSENT",
+      "kernel": "6.18.33.2-microsoft-standard-WSL2",
+      "python": "Python 3.14.3",
+      "systemd": "systemd 259 (259.8-1.fc44)"
+    },
+    "virtualization": "wsl"
+  },
+  "schemaVersion": 1,
+  "section": "host",
+  "startedAt": "2026-08-10T23:33:29.463193Z",
+  "verdict": "PASS"
+}
