@@ -150,7 +150,31 @@ class TheRouteExists(RouteFixture):
         vector = self.world.executor.launches[-1]
         output = vector[vector.index("--output") + 1]
         self.assertTrue(output.startswith("/run/bunny/app/exports/"), output)
-        self.assertNotIn(str(self.destination), " ".join(vector))
+        # Every argument *after* the program is the application's, and none of
+        # them may name a host path. The bwrap arguments before it name host
+        # paths on purpose — that is what a bind is — and asserting on the whole
+        # vector caught the read-only grant bind, which is the thing working.
+        program = vector.index("/usr/libexec/bunny-image-tool")
+        for argument in vector[program:]:
+            self.assertFalse(
+                argument.startswith(str(self.world.home)), f"{argument} names a host path"
+            )
+
+    def test_the_only_host_path_from_the_home_is_the_granted_file(self) -> None:
+        """The negative control for the bind list: one file, read only, and the
+        neighbour in the same directory is not there."""
+        broker = ToolBroker()
+        register_capsule_tools(broker, self.support)
+        neighbour = self.world.file("Pictures/neighbour.png", b"png-bytes" * 8)
+        broker.invoke(
+            "image.resize", {"width": 1024}, caller="runtime",
+            context=self.approved_context(), classification="personal",
+        )
+        vector = self.world.executor.launches[-1]
+        from_home = [item for item in vector if item.startswith(str(self.world.home))]
+        self.assertEqual(from_home, [str(self.source)], from_home)
+        self.assertNotIn(str(neighbour), vector)
+        self.assertEqual(vector[vector.index(str(self.source)) - 1], "--ro-bind")
 
     def test_the_runtime_dispatches_the_tool_to_this_support(self) -> None:
         """The other half of the route: the runtime must find the support that

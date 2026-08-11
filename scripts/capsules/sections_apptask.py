@@ -221,13 +221,21 @@ def section_apptask(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     outputs = list(value.get("outputs") or [])
     if not outputs:
         return evidence.settle("FAIL", "the task reported success and named no output")
-    produced = pictures / str(outputs[0].get("name") or outputs[0].get("display") or "")
+    # `destination` is the absolute path the export wrote; `display` is what a
+    # person is shown. The check is against the path, because a display string
+    # that happened to name a file that exists would pass without the export
+    # having written anything.
+    produced = Path(str(outputs[0].get("destination") or ""))
+    evidence.measurements["export"] = dict(outputs[0])
     if not produced.is_file():
-        # The export names where it put the file; if that is not on disk the
-        # success was reported by something that did not check.
         candidates = sorted(item.name for item in pictures.iterdir())
         return evidence.settle(
-            "FAIL", f"the named output is not on disk; the directory holds {candidates}"
+            "FAIL",
+            f"the export named {produced} and it is not on disk; the directory holds {candidates}",
+        )
+    if produced.parent != pictures:
+        return evidence.settle(
+            "FAIL", f"the result was written outside the destination: {produced}"
         )
 
     size = _measure_png(produced)
