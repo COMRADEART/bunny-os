@@ -762,3 +762,71 @@ end to end; the *experience* is not validated at all.
    reduced motion, text-only.
 4. A qualification-only profile carrying audit tooling, so AVC evidence stops
    being blind.
+
+---
+
+## Update 2026-08-11 (later) — both journeys run in the booted guest
+
+Evidence at `qualification/capsules/evidence/journey-b38d51000543-{granted,denied}/`.
+Image `b38d51000543`, SELinux enforcing, as the logged-in user, against the
+Companion service the session started.
+
+**The success slice.** From a spoken request — "Resize this to 100 pixels wide."
+— `created → waiting_for_approval → executing → completed`. The permission named
+the real file and said the original would not change. Answered in 0.352 s; the
+whole journey took 1.1 s. `holiday-resized.png` at **100×50** from a 400×200
+original. Original byte-identical. The neighbour in the same directory was never
+authorised. No grant survived the task.
+
+**The denial slice.** Same program, one argument apart:
+`created → waiting_for_approval → blocked`. No grant, no execution, no output,
+original unchanged.
+
+**`BUNNY_SESSION_READY` was observed in both** — all eight conditions true, the
+marker on its own line, from the installed probe rather than a harness copy.
+
+### One product defect, found by the fifth image
+
+The Companion could do everything except put the result down:
+`OSError: [Errno 30] Read-only file system` on the export.
+`bunny-companion.service` has `ProtectHome=read-only`, the state roots had
+`ReadWritePaths=` and the *destination* did not. Fixed with one `-`-prefixed
+directory; the capsule is unaffected, because an application writes to its own
+exports directory and the runtime copies the verified artefact out. Not dynamic:
+`ReadWritePaths=` resolves at unit load, so a person whose `XDG_PICTURES_DIR`
+points elsewhere still cannot receive a result. A portal is the answer to that.
+
+Five images were needed and each one was missing exactly one link that only a
+booted run could show: the launcher shape, the grant lifetime, the input
+binding, the readiness probe's socket, and finally the export permission.
+
+### What did not happen, stated plainly
+
+**The Trust prompt was never drawn.** The probe answers over the Companion
+protocol — the same path the window uses, so the *route* is genuine — but no GTK
+dialog rendered and nothing photographed one. The screenshots also start at
+t=120 s while the journey finishes by t=60 s, so both frames show an idle
+desktop. They are evidence that the desktop and the Companion character render,
+and of nothing else.
+
+So against the brief's list: route, states, permission decision, capsule launch,
+scoped file access, output export, audit and both terminal states are VM RUNTIME
+VALIDATED. "Trust prompt appears" and "user chooses Allow once" are **NOT** —
+they were exercised programmatically.
+
+Also still open:
+
+* **a failed operation produced a `completed` task.** The runtime recorded
+  `operation_failed` and an error reference and the state stayed `completed`;
+  only the summary text carried the truth. `TaskResult` has no failure channel.
+  This is the brief's "failure does not produce completed", it is in shared
+  runtime logic, and it is unfixed.
+* `"this"` resolves to the most recently modified image, which can offer the
+  wrong file. The prompt names it, so the person is the safeguard — by design,
+  but thin. Observed for real: one run offered to resize the neighbour.
+* no keyboard path, no AT-SPI run, no screen reader, no reduced-motion or
+  text-only run, no accessibility evidence of any kind.
+
+**Phase status: INCOMPLETE.** Both journeys run and the security route is
+validated end to end in the booted guest; the *visual* half of the vertical
+slice is not.
