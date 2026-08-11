@@ -381,11 +381,16 @@ def interact(control, qmp, pointer, targets, arguments,
         # the target list built at start-up cannot contain it.
         wanted = "Allow this Bunny action" if decision == "granted" else "Deny this Bunny action"
         button = None
+        last_answer: dict | None = None
         states: list[dict] = []
         deadline = time.monotonic() + arguments.settle * 2
         while time.monotonic() < deadline:
             answer = control.ask({"command": "controls", "label": "journey-approval"},
-                                 timeout=120)
+                                 timeout=180)
+            # Keep the answer, not just the part of it that was wanted. A run
+            # reported "0 controls seen" and there was no way to tell a walk that
+            # found nothing from a call that never ran.
+            last_answer = answer
             controls_now = (answer or {}).get("controls") or {}
             button = desktop_interaction_find(controls_now, wanted)
             if button is not None:
@@ -415,6 +420,12 @@ def interact(control, qmp, pointer, targets, arguments,
             })[:40]
             outcome["controlsMatching"] = interesting
             outcome["atspiOk"] = (controls_now or {}).get("ok")
+            outcome["answerKeys"] = sorted(last_answer or {})
+            outcome["probeError"] = str((last_answer or {}).get("error", ""))[:300]
+            outcome["atspiCall"] = {
+                k: str(v)[:200] for k, v in ((controls_now or {}).get("call") or {}).items()
+                if k in ("returncode", "stderr", "error", "ran")
+            }
             step("journey-approval", visible=False,
                  reason=f"no control named {wanted!r} appeared on screen",
                  controlsSeen=len(seen), matching=interesting[:10],

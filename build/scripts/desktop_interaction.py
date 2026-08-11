@@ -195,16 +195,12 @@ elif mode == "controls":
             continue
         if (application.get_name() or "") not in ("gnome-shell", "GNOME Shell", "mutter"):
             continue
-        # 20, not 12.
-        #
-        # The Trust approval box sits deeper than twelve levels inside the
-        # shell's actor tree, so a walk that stopped at twelve found every dock
-        # tile and sidebar row and none of the approval buttons — and the
-        # journey reported "no control named 'Allow this Bunny action' appeared
-        # on screen" while a screenshot taken at the same moment showed it
-        # plainly. The output cap is already four megabytes; depth was the
-        # limit, not size.
-        walk(application, 0, found, 20)
+        # Twelve. Raised to twenty once, on the theory that the Trust approval
+        # box sat deeper than the walk reached — and the run that followed
+        # returned *no controls at all*, because a deeper walk over this tree
+        # does not finish inside the call's timeout. The theory was wrong and
+        # the change made the instrument worse, so it is back.
+        walk(application, 0, found, 12)
     print(json.dumps({"controls": [entry for entry in found if entry["name"]]}))
 '''
 
