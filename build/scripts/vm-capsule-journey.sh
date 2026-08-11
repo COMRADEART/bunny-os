@@ -190,9 +190,10 @@ print(f"  decision      {record.get('decision')}")
 print(f"  ready         {(record.get('readiness') or {}).get('ok')}"
       f"  not ready: {(record.get('readiness') or {}).get('notReady')}")
 print(f"  states        {' -> '.join(record.get('states') or [])}")
-print(f"  approval      {(record.get('approval') or {}).get('reason', '')[:150]}")
+print(f"  approval      {str((record.get('approval') or {}).get('reason') or '')[:150]}")
+print(f"  answered      {record.get('answeredAt')}  {record.get('answerError') or ''}")
 print(f"  final         {record.get('finalState')}")
-print(f"  summary       {record.get('summary', '')[:150]}")
+print(f"  summary       {str(record.get('summary') or '')[:150]}")
 print(f"  result        {(record.get('result') or {}).get('files')}"
       f" {(record.get('result') or {}).get('pixels')}")
 print(f"  original      {record.get('original')}")

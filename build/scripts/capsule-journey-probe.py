@@ -51,6 +51,17 @@ SOURCE_WIDTH, SOURCE_HEIGHT, TARGET_WIDTH = 400, 200, 100
 #: that a hang is not a hang for ever.
 JOURNEY_SECONDS = 180.0
 
+#: The binding fields ``resolve_approval`` declares. Repeated back exactly as
+#: received: the runtime compares every one against the request it recorded, and
+#: a client that answered "this is not the question that was asked" by trying
+#: again with different values would be doing the thing that check exists to
+#: prevent.
+BINDING_KEYS = (
+    "requestId", "sessionId", "taskId", "planId", "transitionId", "action",
+    "destination", "providerId", "dataClassification", "estimatedCostUnits",
+    "destinationFingerprint",
+)
+
 #: Which answer this copy of the probe gives. The harness rewrites this line
 #: when it stages the file, because the injected unit runs the probe with no
 #: arguments and there is no channel into the guest before the session exists.
@@ -178,12 +189,21 @@ def run(decision: str) -> dict:
         if state == "waiting_for_approval" and not answered:
             pending = view.get("approvals") or []
             if pending:
-                binding = dict(pending[-1])
+                raw = dict(pending[-1])
+                # Exactly the keys the operation declares, taken from the
+                # approval as received and neither rebuilt nor defaulted. This
+                # is the same list CompanionViewModel.resolve uses, and it is a
+                # list rather than "everything in the record" because the task
+                # view carries bookkeeping the operation refuses — planRevision
+                # and resolvedSequence, which is what the first attempt sent.
+                binding = {key: raw.get(key) for key in BINDING_KEYS}
                 approval = {
-                    "action": binding.get("action"),
-                    "reason": binding.get("reason"),
-                    "destination": binding.get("destination"),
-                    "requestId": binding.get("requestId"),
+                    "action": raw.get("action"),
+                    "reason": raw.get("reason") or raw.get("summary"),
+                    "destination": raw.get("destination"),
+                    "requestId": raw.get("requestId"),
+                    "dataClassification": raw.get("dataClassification"),
+                    "keys": sorted(raw),
                 }
                 try:
                     client.resolve_approval(binding, decision)
