@@ -129,6 +129,56 @@ def _descendants(pid: int) -> list[int]:
     return sorted(found)
 
 
+def _cgroup_memory_events(scope_name: str) -> Mapping[str, Any]:
+    """The cgroup's own account of what it did to the process.
+
+    §27 asks for the distinction that a exit code cannot make: a process killed
+    by *its* memory limit, and a process killed because the whole machine ran
+    out. The kernel keeps the counters that separate them, and they are the only
+    place the answer exists.
+
+    ``memory.events`` carries ``max`` — how many times the limit was hit — and
+    ``oom_kill`` — how many processes the cgroup killed. A run where ``max`` is
+    non-zero and ``oom_kill`` is zero was *throttled*: it hit the ceiling and was
+    made to reclaim rather than being killed, which is what MemoryHigh does and
+    is a different sentence from "it was killed".
+
+    Read while the scope is still alive. Once it exits the directory is gone and
+    with it every counter, so a reader who wanted this afterwards would have
+    nothing.
+    """
+    code, output = _run_command(["systemctl", "--user", "show", scope_name, "-p", "ControlGroup"])
+    path = ""
+    if code == 0 and "=" in output:
+        path = output.split("=", 1)[1].strip()
+    if not path:
+        return {"available": False, "reason": f"no ControlGroup for {scope_name}"}
+    base = Path("/sys/fs/cgroup") / path.lstrip("/")
+    if not base.is_dir():
+        return {"available": False, "reason": f"{base} is not present"}
+    facts: dict[str, Any] = {"available": True, "cgroup": str(base)}
+    for name in ("memory.max", "memory.high", "memory.current", "memory.peak", "pids.max", "pids.peak"):
+        try:
+            facts[name] = (base / name).read_text(encoding="utf-8").strip()
+        except OSError:
+            facts[name] = None
+    try:
+        for line in (base / "memory.events").read_text(encoding="utf-8").splitlines():
+            key, _, value = line.partition(" ")
+            facts[f"events.{key}"] = int(value) if value.strip().isdigit() else value
+    except OSError:
+        facts["events"] = None
+    return facts
+
+
+def _run_command(argv: Sequence[str], timeout: int = 30) -> tuple[int, str]:
+    try:
+        result = subprocess.run(list(argv), capture_output=True, text=True, timeout=timeout, check=False)
+        return result.returncode, (result.stdout + result.stderr).strip()
+    except (OSError, subprocess.SubprocessError) as error:
+        return -1, f"{type(error).__name__}: {error}"
+
+
 def _memory_control(ceiling: int) -> Mapping[str, Any]:
     """Allocate past ``ceiling`` in a plain user scope, with no capsule involved.
 
@@ -178,6 +228,38 @@ def _memory_control(ceiling: int) -> Mapping[str, Any]:
         # cgroup working and is the opposite of the truth.
         "enforced": isinstance(allocated, int) and allocated <= ceiling * 2,
     }
+
+
+def _intervention(events: Mapping[str, Any], exit_code: Any, result: Mapping[str, Any]) -> str:
+    """Which mechanism stopped the allocation, named from the counters.
+
+    ``cgroup-oom-kill``  the cgroup killed it: oom_kill is non-zero.
+    ``cgroup-throttle``  it hit the ceiling and was made to reclaim: max is
+                         non-zero, nothing was killed. This is MemoryHigh, and it
+                         is enforcement — the process could not get past the
+                         limit — but it is not a kill and must not be reported
+                         as one.
+    ``allocation-error`` the allocator refused, which the process saw itself.
+    ``external-kill``    something killed it and the cgroup counted nothing;
+                         on a machine that ignores the limit this is the whole
+                         system's out-of-memory killer.
+    ``none``             nothing intervened.
+    """
+    if not events.get("available"):
+        if result.get("outcome") == "MemoryError":
+            return "allocation-error"
+        if isinstance(exit_code, int) and exit_code < 0:
+            return "external-kill"
+        return "unknown-no-counters"
+    if int(events.get("events.oom_kill", 0) or 0) > 0:
+        return "cgroup-oom-kill"
+    if int(events.get("events.max", 0) or 0) > 0 or int(events.get("events.high", 0) or 0) > 0:
+        return "cgroup-throttle"
+    if result.get("outcome") == "MemoryError":
+        return "allocation-error"
+    if isinstance(exit_code, int) and exit_code < 0:
+        return "external-kill"
+    return "none"
 
 
 def section_crash(harness: Harness, host: Mapping[str, Any]) -> Evidence:
@@ -359,11 +441,18 @@ def section_resources(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     )
     memory_record = _launch_stress(harness, memory_capsule, "memory")
     exit_code = None
+    cgroup_events: Mapping[str, Any] = {"available": False, "reason": "not read"}
     if memory_record.pid:
         try:
             exit_code = harness.executor.wait(memory_record.pid, timeout=180)
+            # The scope is gone the moment the process exits, so anything the
+            # kernel counted has to be read before that. A clean exit means the
+            # counters are already unreadable and the record says so.
+            cgroup_events = _cgroup_memory_events(memory_record.scope_name)
         except Exception:  # noqa: BLE001
             exit_code = "TIMEOUT"
+            # Still running, which is the case where the counters exist.
+            cgroup_events = _cgroup_memory_events(memory_record.scope_name)
             harness.executor.stop(memory_record.scope_name)
     memory_result = _stress_result(memory_capsule)
     measurements["memory"] = {
@@ -373,6 +462,11 @@ def section_resources(harness: Harness, host: Mapping[str, Any]) -> Evidence:
         "allocatedBytes": memory_result.get("allocatedBytes"),
         "outcome": memory_result.get("outcome"),
         "cgroup": memory_result.get("cgroup"),
+        "cgroupEvents": cgroup_events,
+        # What actually intervened, in one word, derived from the counters rather
+        # than from the exit code. An exit code cannot tell a cgroup kill from a
+        # machine running out of memory; these can.
+        "intervention": _intervention(cgroup_events, exit_code, memory_result),
     }
 
     # Task ceiling. 64 tasks, and the fixture spawns past it.
@@ -456,5 +550,6 @@ def section_resources(harness: Harness, host: Mapping[str, Any]) -> Evidence:
         f"{measurements['steadyState']['treeRssBytes']} bytes over "
         f"{measurements['steadyState']['treeSize']} processes; memory intervened at "
         f"{allocated} bytes against {memory_limits.memory_max} declared "
-        f"(exit {exit_code}); tasks intervened at {threads} against {task_limits.tasks_max}",
+        f"(exit {exit_code}, {measurements['memory']['intervention']}); "
+        f"tasks intervened at {threads} against {task_limits.tasks_max}",
     )
