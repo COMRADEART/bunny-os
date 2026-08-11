@@ -382,26 +382,48 @@ def interact(control, qmp, pointer, targets, arguments,
         wanted = "Allow this Bunny action" if decision == "granted" else "Deny this Bunny action"
         button = None
         last_answer: dict | None = None
+        controls_now: dict = {}
         states: list[dict] = []
+
+        # Wait on the *cheap* signal, then ask the expensive question once.
+        #
+        # The first version polled the whole accessibility tree every two
+        # seconds while it waited. Each of those walks the shell's actors and
+        # takes tens of seconds under llvmpipe, so the calls overlapped, the
+        # probe stopped answering, and the run recorded "0 controls" and no
+        # character states — an instrument that had loaded itself to a standstill
+        # and reported the desktop as empty.
+        #
+        # The character state is one small read. It is polled until the shell
+        # says it is waiting for permission, and only then is the tree walked.
         deadline = time.monotonic() + arguments.settle * 2
+        asking = False
         while time.monotonic() < deadline:
+            character = control.ask({"command": "character", "label": "journey-wait"},
+                                    timeout=180)
+            observation = (character or {}).get("character") or {}
+            state = str(observation.get("state", ""))
+            if state and (not states or states[-1] != state):
+                states.append(state)
+            if "approval" in state or "permission" in str(observation.get("says", "")).lower():
+                asking = True
+                break
+            if state in ("success", "error") and len(states) > 1:
+                break
+            time.sleep(3)
+        outcome["statesBeforeApproval"] = states
+        outcome["sawAskingState"] = asking
+
+        for _ in range(3):
             answer = control.ask({"command": "controls", "label": "journey-approval"},
-                                 timeout=180)
-            # Keep the answer, not just the part of it that was wanted. A run
-            # reported "0 controls seen" and there was no way to tell a walk that
-            # found nothing from a call that never ran.
+                                 timeout=240)
             last_answer = answer
             controls_now = (answer or {}).get("controls") or {}
             button = desktop_interaction_find(controls_now, wanted)
-            if button is not None:
+            if button is not None or controls_now.get("controls"):
                 break
-            character = control.ask({"command": "character", "label": "journey-wait"},
-                                    timeout=120)
-            state = ((character or {}).get("character") or {}).get("state", "")
-            if state and (not states or states[-1] != state):
-                states.append(state)
-            time.sleep(2)
-        outcome["statesBeforeApproval"] = states
+            time.sleep(5)
+
         if button is None:
             # What the walk *did* see, so the next diagnosis is not another
             # guess. Twice now the prompt has been on screen in a screenshot
