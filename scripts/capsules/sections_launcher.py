@@ -211,9 +211,8 @@ def _blames_namespaces(outcome: Mapping[str, Any]) -> bool:
 def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     """Launch one capsule four ways and report which of them a Companion could do."""
     evidence = Evidence(section="launcher")
-    blocked = require_confinement(host, evidence)
-    if blocked is not None:
-        return blocked
+    if not require_confinement(host, evidence):
+        return evidence
 
     units = {name: unit_properties(_REPOSITORY / "systemd/user" / name) for name in LAUNCHER_UNITS}
     evidence.measurements["units"] = {name: list(props) for name, props in units.items()}
