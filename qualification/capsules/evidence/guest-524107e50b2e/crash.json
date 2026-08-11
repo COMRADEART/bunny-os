@@ -1,0 +1,75 @@
+{
+  "commit": "524107e50b2eec97c5ac4fe79232e9fedda73a4a",
+  "explanation": "killing the launcher left no process in the host namespace (2 checked); stopping the scope left 0 orphan(s), none unconfined; a policy store corrupted mid-run denied with store-unreadable",
+  "findings": [],
+  "finishedAt": "2026-08-11T16:30:49.406331Z",
+  "host": {
+    "backends": [
+      "flatpak",
+      "bubblewrap",
+      "systemd-scope"
+    ],
+    "homeFilesystem": "ext2/ext3",
+    "kernel": "7.1.5-200.fc44.x86_64",
+    "selinux": {
+      "fsMounted": true,
+      "mode": "Enforcing",
+      "policyName": "targeted",
+      "policyVersion": "35",
+      "probeError": null,
+      "selfContext": "system_u:system_r:initrc_t:s0"
+    },
+    "user": {
+      "name": "bunny",
+      "uid": 1000
+    },
+    "virtualization": "kvm"
+  },
+  "measurements": {
+    "afterCompanionKill": {
+      "launcherAlive": false,
+      "survivors": {
+        "2224": {
+          "alive": false,
+          "escapedToHostNamespace": false,
+          "mountNamespace": null
+        },
+        "2225": {
+          "alive": false,
+          "escapedToHostNamespace": false,
+          "mountNamespace": null
+        }
+      }
+    },
+    "afterScopeStop": {
+      "orphanNamespaces": {},
+      "orphansAfter": [],
+      "stopReported": true,
+      "treeBefore": [
+        2231,
+        2232
+      ],
+      "unit": "bunny-capsule-art-comrade-idler2.0d45ad9215178ae5.service"
+    },
+    "beforeKill": {
+      "descendantMountNamespaces": {
+        "2224": "mnt:[4026533133]",
+        "2225": "mnt:[4026533133]"
+      },
+      "descendants": [
+        2224,
+        2225
+      ],
+      "hostMountNamespace": "mnt:[4026531832]",
+      "launcherPid": 2222
+    },
+    "policyStoreCorruptedWhileRunning": {
+      "reason": "store-unreadable",
+      "verdict": "deny"
+    }
+  },
+  "schemaVersion": 1,
+  "section": "crash",
+  "startedAt": "2026-08-11T16:30:41.318672Z",
+  "verdict": "PASS"
+}
