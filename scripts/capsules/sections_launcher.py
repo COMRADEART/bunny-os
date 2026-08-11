@@ -67,12 +67,25 @@ _REPOSITORY = Path(__file__).resolve().parents[2]
 #: directive dropped between the checkout and the image would otherwise be
 #: measured from the file that still has it. The checkout is last, so a
 #: developer host with no installed units can still answer the question.
+#:
+#: ``BUNNY_QUALIFY_UNIT_DIR`` overrides the whole ladder, because a development
+#: host can carry *stale* installed units — this one did: a copy from an
+#: earlier phase, four directives behind the checkout, shadowed the file under
+#: test and the section measured a unit nobody ships any more. The guest never
+#: sets it, so the guest keeps measuring what the image installed.
 UNIT_SEARCH_PATHS = (
     Path("/etc/systemd/user"),
     Path("/usr/lib/systemd/user"),
     Path("/usr/local/lib/systemd/user"),
     _REPOSITORY / "systemd/user",
 )
+
+
+def unit_search_paths() -> tuple[Path, ...]:
+    override = os.environ.get("BUNNY_QUALIFY_UNIT_DIR")
+    if override:
+        return (Path(override),)
+    return UNIT_SEARCH_PATHS
 
 #: The units this section measures, and what each is for. ``runtime`` hosts the
 #: capsule runtime: it launches capsules and writes the capsule root and the
@@ -90,8 +103,8 @@ LAUNCHER_UNITS = tuple(LAUNCHER_UNIT_ROLES)
 
 
 def find_unit(name: str) -> Path | None:
-    """The first readable copy of ``name``, in :data:`UNIT_SEARCH_PATHS` order."""
-    for directory in UNIT_SEARCH_PATHS:
+    """The first readable copy of ``name``, in :func:`unit_search_paths` order."""
+    for directory in unit_search_paths():
         candidate = directory / name
         if candidate.is_file():
             return candidate
