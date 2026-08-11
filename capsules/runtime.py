@@ -422,6 +422,19 @@ class CapsuleRuntime:
         capsule.state.last_stopped_at = _now()
         capsule.state.pid = None
         capsule.state.write(capsule.layout.state_path)
+        # §11's session scope ends here, and not in :meth:`stop`.
+        #
+        # This is where the runtime *learns* that the application has ended, and
+        # a permission granted "while you are using it" is over at that moment
+        # whether or not anybody asked for a stop. `stop` drops them too, but it
+        # returns early for a capsule that is already stopped — and reconcile is
+        # what stopped it — so for an application that exits by itself, which is
+        # every task application, that branch never ran and the grant survived.
+        #
+        # Found in the rebuilt guest by the allow-once lifetime regression: the
+        # task completed, the capsule stopped, and the file grant was still in
+        # the store afterwards.
+        self._drop_session_grants(capsule)
         return capsule
 
     def open(self, application_id: str) -> Capsule:

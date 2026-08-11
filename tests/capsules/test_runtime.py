@@ -288,5 +288,95 @@ class MaintenanceTests(unittest.TestCase):
         self.assertEqual(self.world.runtime.broken(), (self.capsule.layout.root.name,))
 
 
+class ASessionGrantEndsWhenTheApplicationDoes(unittest.TestCase):
+    """A permission granted "while you are using it" ends when the process ends.
+
+    The runtime dropped session grants in :meth:`stop`, which returns early for
+    a capsule that is already stopped — and :meth:`reconcile`, called on the
+    first line of ``stop``, is what stops it. So for an application that exits by
+    itself, which is every task application, the drop never happened and the
+    grant survived into the rest of the login.
+
+    Found in the rebuilt guest by the allow-once lifetime regression, not here:
+    the suite passed before the fix and after it. That is why this exists.
+    """
+
+    def setUp(self) -> None:
+        self.world = World.build(answers=(("files", "allow", "session"),))
+        self.addCleanup(self.world.close)
+
+    def _grants(self, application_id: str = "org.example.PhotoEditor"):
+        return [
+            grant for grant in self.world.store.for_application(application_id)
+            if grant.category == "files"
+        ]
+
+    def test_reconciling_an_exited_capsule_drops_its_session_grants(self) -> None:
+        capsule = self.world.install(manifest_for())
+        source = self.world.file("Documents/report.txt", b"words")
+        decision = self.world.request(
+            capsule, category="files", resource=trust.path_resource(source), purpose="read"
+        )
+        self.assertTrue(decision.allowed)
+        self.assertEqual(len(self._grants()), 1)
+
+        # The capsule is running, and then its process ends without anybody
+        # asking it to stop — which is what a task application does.
+        capsule.state.move("starting").move("running")
+        capsule.state.pid = 4242
+        capsule.state.session_id = self.world.runtime.session_id
+        capsule.state.write(capsule.layout.state_path)
+
+        class Exited:
+            starts_processes = True
+
+            def start(self, argv, plan):  # noqa: ANN001
+                return 4242
+
+            def stop(self, unit_name):  # noqa: ANN001
+                return True
+
+            def poll(self, pid):  # noqa: ANN001
+                return 0
+
+        self.world.runtime.executor = Exited()
+        self.world.runtime.reconcile(capsule)
+
+        self.assertEqual(capsule.state.state, "stopped")
+        self.assertEqual(
+            self._grants(), [],
+            "the application ended and the permission it held for the session did not",
+        )
+
+    def test_a_running_capsule_keeps_its_grant(self) -> None:
+        """The control. A drop that fired while the application was still
+        running would take the file away mid-task."""
+        capsule = self.world.install(manifest_for())
+        source = self.world.file("Documents/report.txt", b"words")
+        self.world.request(
+            capsule, category="files", resource=trust.path_resource(source), purpose="read"
+        )
+        capsule.state.move("starting").move("running")
+        capsule.state.pid = 4242
+        capsule.state.session_id = self.world.runtime.session_id
+
+        class StillRunning:
+            starts_processes = True
+
+            def start(self, argv, plan):  # noqa: ANN001
+                return 4242
+
+            def stop(self, unit_name):  # noqa: ANN001
+                return True
+
+            def poll(self, pid):  # noqa: ANN001
+                return None
+
+        self.world.runtime.executor = StillRunning()
+        self.world.runtime.reconcile(capsule)
+        self.assertEqual(capsule.state.state, "running")
+        self.assertEqual(len(self._grants()), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
