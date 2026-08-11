@@ -363,12 +363,23 @@ def main(argv: list[str] | None = None) -> int:
     # read as no record at all. The file is extracted from the disk afterwards;
     # the console copy stays because it is the only channel a boot that never
     # reaches shutdown still has.
-    try:
-        target = Path("/var/log/bunny-journey.json")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(body, encoding="utf-8")
-    except OSError as error:
-        print(f"could not write the record: {error}", file=sys.stderr)
+    # The user's own home. /var/log was the first choice and is not writable by
+    # the ordinary user this runs as, so the write failed silently into stderr
+    # and only the console copy survived — which is the copy a kernel line had
+    # already been shown to corrupt. The home directory lives in the stateroot,
+    # which is what the extractor mounts.
+    written = ""
+    for candidate in (Path.home() / "bunny-journey.json", Path("/tmp/bunny-journey.json")):
+        try:
+            candidate.write_text(body, encoding="utf-8")
+            written = str(candidate)
+            break
+        except OSError:
+            continue
+    if not written:
+        print("could not write the record anywhere", file=sys.stderr)
+    else:
+        print(f"record written to {written}", file=sys.stderr)
     print(BEGIN, flush=True)
     print(body, flush=True)
     print(END, flush=True)

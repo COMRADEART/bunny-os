@@ -165,12 +165,22 @@ trap - EXIT
 # journey read as no record at all.
 echo "--- the record ---"
 root_partition="${BUNNY_JOURNEY_ROOT_PARTITION:-/dev/sda4}"
+# Clear any record from a previous run *before* looking for this one. A stale
+# file left in place was parsed and announced as "from the guest filesystem",
+# which is the most misleading thing this script has done: a run that produced
+# no record reported the previous run's.
+rm -f "${work}/journey.json"
 deployment="$(guestfish --ro -a "${disk}" run : mount "${root_partition}" /   : glob-expand "/ostree/deploy/*/deploy/*.0/" 2>/dev/null | head -1)"
 if [[ -n "${deployment}" ]]; then
   stateroot="$(dirname "$(dirname "${deployment%/}")")"
-  if guestfish --ro -a "${disk}" run : mount "${root_partition}" /        : download "${stateroot}/var/log/bunny-journey.json" "${work}/journey.json"        2>/dev/null && [[ -s "${work}/journey.json" ]]; then
-    echo "record read from the guest filesystem"
-  fi
+  # The user's home first: the probe runs as the user, and /var/log is not
+  # writable by one - the first version wrote nowhere and said so only on stderr.
+  for candidate in "${stateroot}/var/home/${user}/bunny-journey.json"                    "${stateroot}/var/tmp/bunny-journey.json"; do
+    if guestfish --ro -a "${disk}" run : mount "${root_partition}" /          : download "${candidate}" "${work}/journey.json" 2>/dev/null        && [[ -s "${work}/journey.json" ]]; then
+      echo "record read from the guest filesystem (${candidate})"
+      break
+    fi
+  done
 fi
 
 python3 - "${log}" "${work}/journey.json" <<'PYTHON'
@@ -201,13 +211,19 @@ for line in body.splitlines():
     if line.strip():
         lines.append(line)
 raw = "\n".join(lines)
-try:
-    record = json.loads(raw)
-except json.JSONDecodeError as error:
-    print(f"the record did not parse: {error}")
-    pathlib.Path(sys.argv[2]).write_text(raw, encoding="utf-8")
-    raise SystemExit(0)
-pathlib.Path(sys.argv[2]).write_text(json.dumps(record, indent=1, sort_keys=True), encoding="utf-8")
+if record is None:
+    try:
+        record = json.loads(raw)
+        print("  (from the serial console)")
+    except json.JSONDecodeError as error:
+        print(f"the console copy did not parse and there was no file: {error}")
+        target.write_text(raw, encoding="utf-8")
+        raise SystemExit(0)
+# A record already read from the disk is *not* re-parsed from the console over
+# the top of it. Doing exactly that destroyed one: the console copy had a kernel
+# line in it, the parse failed, and the failure path wrote the raw text back
+# over the good file it had just read.
+target.write_text(json.dumps(record, indent=1, sort_keys=True), encoding="utf-8")
 print(f"  decision      {record.get('decision')}")
 print(f"  ready         {(record.get('readiness') or {}).get('ok')}"
       f"  not ready: {(record.get('readiness') or {}).get('notReady')}")
