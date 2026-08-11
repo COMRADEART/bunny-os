@@ -75,6 +75,14 @@ SEARCH_FILES_TOOL = "files.search"
 SYSTEM_METRIC_TOOL = "system.get_metric"
 MEDIA_CONTROL_TOOL = "media.control"
 
+#: The application-task operation. Named here as a literal rather than imported
+#: from the operation table, for the same reason every other tool id in this
+#: file is a literal: an executor proposes a *name*, and the broker's allowlist
+#: is what decides whether that name resolves to anything. An executor that
+#: imported the table would still be proposing a name; it would just look as
+#: though it had checked.
+RESIZE_IMAGE_TOOL = "image.resize"
+
 #: The desktop actions this executor may plan. Written out rather than derived
 #: so that adding a new intent cannot silently reach an action nobody reviewed.
 LAUNCH_ACTION = "desktop.application.launch"
@@ -190,6 +198,23 @@ class LocalIntentExecutor:
 
         if intent.kind == "capabilities":
             return [], "Explain what this assistant can do"
+
+        if intent.kind == "resize_image":
+            # The width is the only argument. The *file* is not proposed here
+            # and is not in the intent's parameters as a path: the capsule
+            # support reads it from the task's bound input authority, which the
+            # user established by naming a file, and an executor has no channel
+            # to it. So a plan cannot select a file, which is the whole of why
+            # a resolved path never travels in an argument list.
+            return [
+                PlannedOperation(
+                    name="resize-image",
+                    tool=RESIZE_IMAGE_TOOL,
+                    arguments={"width": int(intent.parameters.get("width", 0))},
+                    requires_approval=True,
+                    approval_action="launch_application",
+                ),
+            ], intent.description
 
         if intent.kind == "open_application":
             candidates = tuple(intent.parameters.get("candidates", ()))
@@ -356,6 +381,35 @@ class LocalIntentExecutor:
         if intent is None or intent.kind == "capabilities":
             sentence = capability_sentence()
             return sentence, sentence
+
+        if intent.kind == "resize_image":
+            outcome = self._outcome(results, "resize-image")
+            value = outcome.get("value") if outcome is not None else None
+            if outcome is None or not isinstance(value, Mapping):
+                # §50: the failure sentence belongs to the failure, which
+                # already carries one written for a person. Bunny repeats it
+                # rather than inventing a second, vaguer version — and it never
+                # says the app ran when it did not.
+                sentence = "I could not do that."
+                if isinstance(value, Mapping):
+                    failure = value.get("failure")
+                    if isinstance(failure, Mapping):
+                        sentence = str(failure.get("sentence") or sentence)
+                return sentence, "resize did not complete"
+            outputs = value.get("outputs") or []
+            name = ""
+            if outputs and isinstance(outputs[0], Mapping):
+                name = str(outputs[0].get("display") or outputs[0].get("name") or "")
+            width = intent.parameters.get("width")
+            if not name:
+                return "I could not do that.", "resize produced no output"
+            # "You allowed", never "I gave permission"; and the original is
+            # named as untouched because that is the thing a person worries
+            # about when they hand a file to something.
+            return (
+                f"Done. I made {name} at {width} pixels wide. Your original wasn't changed.",
+                f"resized to {width}: {name}",
+            )
 
         if intent.kind == "open_application":
             spoken = str(intent.parameters.get("spoken", "the application"))

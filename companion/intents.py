@@ -98,6 +98,7 @@ FOLDERS: Mapping[str, str] = {
 #: exhaustively handle them and a test can assert the set has not grown by
 #: accident.
 KNOWN_INTENTS = (
+    "resize_image",
     "open_application",
     "show_folder",
     "list_folder",
@@ -169,6 +170,47 @@ def _longest_key(table: Mapping[str, object], text: str) -> str:
     return best
 
 
+
+#: "resize this to 1024 pixels wide", "make holiday.png 800px wide".
+#:
+#: Two things are captured and nothing else: a bounded width, and an optional
+#: literal file-name fragment. The width becomes a validated integer parameter;
+#: the fragment is *not* a path and never becomes one — the caller resolves it
+#: against the user's own picture folder and the resolved file is authorised
+#: separately, which is what makes a request naming ``../../etc/shadow`` a
+#: request that finds no such picture rather than one that opens a file.
+_RESIZE = re.compile(
+    r"(?:resize|scale|shrink|make)\b"
+    r"(?:\s+(?:me\s+)?(?:a\s+)?(?:smaller\s+)?(?:copy\s+of\s+)?)?"
+    r"\s*(?P<subject>this(?:\s+(?:image|picture|photo|file))?|[\w][\w .-]{0,63}?"
+    r"\.(?:png|jpe?g|webp|bmp|tiff?))"
+    r"[\s,]*(?:to|at|down to)?\s*"
+    r"(?P<width>\d{2,5})\s*(?:pixels?|px)?\s*(?:wide|width|across)",
+    re.IGNORECASE,
+)
+
+#: Words that mean "the file we are talking about" rather than a name.
+_DEICTIC = re.compile(r"^this(?:\s+(?:image|picture|photo|file))?$", re.IGNORECASE)
+
+
+def _resize_intent(text: str) -> "Intent | None":
+    match = _RESIZE.search(text)
+    if match is None:
+        return None
+    width = int(match.group("width"))
+    subject = match.group("subject").strip()
+    parameters: dict[str, object] = {"width": width}
+    if not _DEICTIC.match(subject):
+        parameters["fileHint"] = subject
+    spoken = subject if "fileHint" in parameters else "that image"
+    return Intent(
+        kind="resize_image",
+        description=f"Make a copy of {spoken} {width} pixels wide",
+        parameters=parameters,
+        matched=match.group(0),
+    )
+
+
 def recognise(request: str) -> Intent | None:
     """The one entry point. Returns an intent, or None for "I do not know".
 
@@ -185,6 +227,14 @@ def recognise(request: str) -> Intent | None:
     # unrecognised, so it is a real intent rather than an error path.
     if re.search(r"\b(?:what can you do|what do you do|help|capabilities)\b", text):
         return Intent(kind="capabilities", description="Explain what I can do", matched=text)
+
+    # An application task, and deliberately before the open/list verbs below.
+    # "Make me a smaller copy of holiday.png at 800 pixels wide" begins with a
+    # verb the application opener also answers to, and the opener would
+    # otherwise claim it and try to launch something called "me a smaller copy".
+    resize = _resize_intent(text)
+    if resize is not None:
+        return resize
 
     # -- current system facts ---------------------------------------------
     # These phrases ask for this machine's measured state. "What is RAM?"
@@ -336,9 +386,10 @@ def capability_sentence() -> str:
     only thing that knows where it is.
     """
     return (
-        "I can open applications and folders, search approved user folders, "
+        "I can resize an image, open applications and folders, "
+        "search approved user folders, "
         "read current system metrics, and control an active media player — "
-        "try “Open Files”, “Find PDFs in Downloads” or "
+        "try “Resize this to 1024 pixels wide”, “Open Files” or "
         "“How much memory am I using?”. "
         "I do not have a language model configured on this machine, so I cannot "
         "answer general questions yet."

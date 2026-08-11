@@ -104,9 +104,56 @@ class RecognitionTests(unittest.TestCase):
             for sentence in ("Open Files", "what is in my downloads",
                              "open my downloads folder", "Find my resume",
                              "Open the newest one", "How much memory am I using?",
-                             "Pause music", "what can you do")
+                             "Pause music", "what can you do",
+                             "Resize this to 1024 pixels wide")
         }
         self.assertEqual(produced, set(KNOWN_INTENTS))
+
+    def test_a_subject_that_is_not_a_plain_file_name_is_not_recognised(self) -> None:
+        """The recogniser refuses rather than sanitises.
+
+        A separator, a tilde or a quote in the subject means the sentence does
+        not match at all, so the request reaches the capability sentence instead
+        of reaching a resolver with something to clean up. Sanitising is the
+        weaker choice: it produces a name from an input that was trying to be a
+        path, and somebody later has to be sure the cleaning was complete.
+        """
+        for sentence in (
+            "make ../../etc/shadow.png 800 pixels wide",
+            "make /etc/passwd.png 800 pixels wide",
+            "make ~/secrets.png 800 pixels wide",
+            "make $(id).png 800 pixels wide",
+        ):
+            with self.subTest(sentence=sentence):
+                self.assertIsNone(recognise(sentence))
+
+    def test_a_plain_file_name_is_a_hint_and_carries_no_separator(self) -> None:
+        intent = recognise("make holiday.png 800 pixels wide")
+        self.assertEqual(intent.kind, "resize_image")
+        hint = str(intent.parameters.get("fileHint", ""))
+        self.assertEqual(hint, "holiday.png")
+        for character in ("/", chr(92), "..", "~"):
+            self.assertNotIn(character, hint)
+
+    def test_a_resize_without_a_width_is_not_a_resize(self) -> None:
+        """"resize this" is a request Bunny cannot act on, and guessing a
+        default width would silently produce a file nobody asked for."""
+        self.assertIsNone(recognise("resize this"))
+        self.assertIsNone(recognise("resize this image"))
+
+    def test_an_absurd_width_is_not_recognised_here_and_refused_later(self) -> None:
+        """Five digits is the recogniser's bound; the operation table's bound is
+        16384. Two independent limits, and the wider one still refuses."""
+        self.assertIsNone(recognise("resize this to 9999999 pixels wide"))
+        from companion.capsule_tasks import CapsuleTaskFailure, OPERATIONS
+
+        with self.assertRaises(CapsuleTaskFailure):
+            OPERATIONS["image.resize"].validate({"width": 99999})
+
+    def test_a_deictic_subject_carries_no_hint(self) -> None:
+        """"this" is not a file name and must not become one."""
+        intent = recognise("resize this photo to 640 pixels wide")
+        self.assertNotIn("fileHint", intent.parameters)
 
     def test_the_capability_sentence_is_honest_about_the_model(self) -> None:
         """It must not imply an ability the machine does not have."""
