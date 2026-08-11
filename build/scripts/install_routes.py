@@ -119,6 +119,14 @@ SYSTEM_SCRIPTS: tuple[str, ...] = (
     # and not the program would be a unit that fails at every login.
     "bunny-companion-window",
     "bunny-companion-recovery",
+    # The first application a capsule runs. It is a system program rather than
+    # part of the companion package because a capsule gives its process no Bunny
+    # code on its import path: a program that imported the companion could not
+    # run inside the sandbox it exists for, and the failure would only appear on
+    # a machine where the sandbox worked. The catalogue entry names this exact
+    # path, so a profile with the entry and without the program would offer an
+    # operation that cannot start.
+    "bunny-image-tool",
 )
 
 #: The one system script that is a systemd generator rather than a libexec

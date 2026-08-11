@@ -2,6 +2,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The program that runs *inside* a capsule and resizes one image.
 
+It lives in ``scripts/`` with the other ``/usr/libexec`` programs rather than
+inside ``companion/`` deliberately. A capsule gives its process no Bunny code on
+its import path at all, so a program that imported the Companion would be one
+that could not run in the sandbox it exists to be run in — and the import error
+would only surface on a machine where the sandbox worked. Being outside the
+package makes that structural rather than remembered, and
+``tests/capsule_task/test_image_tool.py`` asserts it.
+
 This is the application in the first vertical slice. It is deliberately small
 and deliberately Bunny's own, for three reasons that all point the same way:
 
@@ -36,7 +44,7 @@ resize.
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import sys
 
 #: Where a capsule's own directories appear inside its namespace. Anything
@@ -52,9 +60,23 @@ _MIN_PIXELS = 16
 _MAX_PIXELS = 16384
 
 
-def _inside_sandbox(path: Path) -> bool:
-    text = str(path)
-    return any(text.startswith(root) for root in _SANDBOX_ROOTS)
+def _inside_sandbox(path: str) -> bool:
+    """Whether a path names somewhere inside this capsule's own namespace.
+
+    Compared as POSIX text against the argument as given, not through
+    :class:`pathlib.Path`. This program only ever runs on Linux, but its tests
+    run wherever the suite does, and ``Path`` on Windows rewrites the separators
+    — so a check written through ``Path`` refused every path on a developer
+    machine, for the wrong reason, and four tests passed vacuously because of
+    it. Text in, text compared.
+
+    ``..`` is refused outright rather than resolved: resolution here would
+    consult the *developer's* filesystem in a test and the sandbox's in
+    production, which are different questions.
+    """
+    if ".." in PurePosixPath(path).parts:
+        return False
+    return any(path.startswith(root) for root in _SANDBOX_ROOTS)
 
 
 def _fail(message: str) -> int:
@@ -120,10 +142,13 @@ def main(argv: list[str] | None = None) -> int:
     # Both paths inside the capsule's own namespace. This is not the isolation —
     # bubblewrap is — it is the program refusing to be the thing that carries a
     # bad path across a boundary somebody else is enforcing.
-    for label, path in (("input", input_path), ("output", output_path)):
-        if not _inside_sandbox(path):
+    for label, given, path in (
+        ("input", arguments.input, input_path),
+        ("output", arguments.output, output_path),
+    ):
+        if not _inside_sandbox(given):
             return _fail(f"the {label} path is outside this app's own space")
-        if path != Path(str(path)).resolve(strict=False) and path.is_symlink():
+        if path.is_symlink():
             return _fail(f"the {label} path is a symbolic link")
 
     if not _MIN_PIXELS <= arguments.width <= _MAX_PIXELS:
