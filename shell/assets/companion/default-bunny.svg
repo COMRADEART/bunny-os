@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Default Bunny Companion</title>
+  <desc id="desc">A simple static white bunny face with violet accents.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
 <!-- SPDX-FileCopyrightText: 2026 ComradeArt -->
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- The shipped static companion. Drawn for Bunny OS; no third-party asset, no
@@ -15,6 +20,7 @@
       <stop offset="1" stop-color="#a168ff"/>
     </linearGradient>
   </defs>
+  <circle cx="256" cy="270" r="210" fill="url(#bg)" opacity=".16"/>
   <circle cx="256" cy="270" r="210" fill="url(#halo)" opacity=".16"/>
   <rect x="128" y="38" width="88" height="230" rx="44" fill="#f8f7ff" stroke="#5b4ce1" stroke-width="14" transform="rotate(-9 172 153)"/>
   <rect x="296" y="38" width="88" height="230" rx="44" fill="#f8f7ff" stroke="#5b4ce1" stroke-width="14" transform="rotate(9 340 153)"/>
