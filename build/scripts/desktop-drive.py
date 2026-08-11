@@ -429,8 +429,38 @@ def interact(control, qmp, pointer, targets, arguments,
             return outcome
 
         screenshot("journey-01-idle")
+        # Activate the assistant, then *check* that it woke.
+        #
+        # The shortcut is the documented binding and is tried first, but on this
+        # guest it does not fire — the two asks earlier in this same run both
+        # fell back to the pointer. Typing into an assistant that never became
+        # listening put the request nowhere, and the journey then reported "no
+        # approval appeared", which is true and entirely misleading.
         pointer.key("meta_l", "shift", "b")
         time.sleep(2.5)
+        woke = control.ask({"command": "character", "label": "journey-activated"},
+                           timeout=120)
+        state = ((woke or {}).get("character") or {}).get("state", "")
+        route = "shortcut"
+        if state != "listening":
+            target = targets.get("ask")
+            if target is None:
+                step("journey-activate", activated=False, route="none",
+                     reason="the shortcut did not activate and the input was not found")
+                outcome["activated"] = False
+                return outcome
+            x, y = centre(target["extents"])
+            pointer.click(x, y)
+            time.sleep(1.5)
+            route = "pointer"
+            state = ((control.ask({"command": "character", "label": "journey-activated-2"},
+                                  timeout=120) or {}).get("character") or {}).get("state", "")
+        outcome["activated"] = state == "listening"
+        outcome["activationRoute"] = route
+        step("journey-activate", activated=outcome["activated"], route=route, state=state)
+        if not outcome["activated"]:
+            screenshot("journey-02-not-listening")
+            return outcome
         screenshot("journey-02-listening")
         pointer.type_text(JOURNEY_REQUEST)
         time.sleep(0.5)
