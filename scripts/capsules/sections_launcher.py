@@ -51,13 +51,41 @@ from capsules.command import render
 
 from .harness import Evidence, Harness, require_confinement
 
-__all__ = ["LAUNCHER_UNITS", "SANDBOX_DIRECTIVES", "section_launcher", "unit_properties"]
+__all__ = [
+    "LAUNCHER_UNITS",
+    "SANDBOX_DIRECTIVES",
+    "UNIT_SEARCH_PATHS",
+    "find_unit",
+    "section_launcher",
+    "unit_properties",
+]
 
 _REPOSITORY = Path(__file__).resolve().parents[2]
+
+#: Where to look for a unit, nearest-to-the-running-system first. In a booted
+#: guest the answer that matters is the unit *as installed*, not as authored: a
+#: directive dropped between the checkout and the image would otherwise be
+#: measured from the file that still has it. The checkout is last, so a
+#: developer host with no installed units can still answer the question.
+UNIT_SEARCH_PATHS = (
+    Path("/etc/systemd/user"),
+    Path("/usr/lib/systemd/user"),
+    Path("/usr/local/lib/systemd/user"),
+    _REPOSITORY / "systemd/user",
+)
 
 #: The units that launch capsules in the product. Both, because they carry
 #: different properties and either could be the one that starts an application.
 LAUNCHER_UNITS = ("bunny-companion.service", "bunny-companion-window.service")
+
+
+def find_unit(name: str) -> Path | None:
+    """The first readable copy of ``name``, in :data:`UNIT_SEARCH_PATHS` order."""
+    for directory in UNIT_SEARCH_PATHS:
+        candidate = directory / name
+        if candidate.is_file():
+            return candidate
+    return None
 
 #: The ``[Service]`` directives that can stop a sandbox being built. Everything
 #: here is a restriction; none of them is a resource limit or a logging choice,
@@ -97,7 +125,7 @@ _PROBE_SECONDS = 60.0
 _DIRECTIVE = re.compile(r"^\s*([A-Za-z]+)\s*=\s*(.*?)\s*$")
 
 
-def unit_properties(path: Path) -> tuple[str, ...]:
+def unit_properties(path: Path | None) -> tuple[str, ...]:
     """The sandboxing directives of a unit file, in the order they appear.
 
     Read rather than copied. A directive added to the unit and not to this list
@@ -105,7 +133,7 @@ def unit_properties(path: Path) -> tuple[str, ...]:
     a directive copied into this file and later changed in the unit is a section
     that passes for a machine that no longer exists, which is a gap nobody can.
     """
-    if not path.is_file():
+    if path is None or not path.is_file():
         return ()
     found: list[str] = []
     section = ""
@@ -220,13 +248,25 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     if not require_confinement(host, evidence):
         return evidence
 
-    units = {name: unit_properties(_REPOSITORY / "systemd/user" / name) for name in LAUNCHER_UNITS}
+    sources = {name: find_unit(name) for name in LAUNCHER_UNITS}
+    units = {name: unit_properties(path) for name, path in sources.items() if path is not None}
     evidence.measurements["units"] = {name: list(props) for name, props in units.items()}
-    missing = [name for name, props in units.items() if not props]
-    if missing:
+    evidence.measurements["unitSources"] = {
+        name: str(path) if path is not None else None for name, path in sources.items()
+    }
+    absent = [name for name, path in sources.items() if path is None]
+    if absent:
         return evidence.settle(
             "BLOCKED",
-            f"no sandboxing directives found for {missing}; the unit files are the input to this section",
+            f"no copy of {absent} under {[str(p) for p in UNIT_SEARCH_PATHS]}; the unit files are "
+            f"the input to this section and it will not invent a policy to test",
+        )
+    bare = [name for name, props in units.items() if not props]
+    if bare:
+        return evidence.settle(
+            "BLOCKED",
+            f"{bare} carry no sandboxing directive at all, which is either a unit that lost its "
+            f"hardening or a parser that stopped recognising it; neither is a result",
         )
 
     capsule = harness.install_probe_app("art.comrade.LauncherProbe", "Launcher Probe")
