@@ -1856,6 +1856,17 @@ class ServiceOptions:
     #: ``shell.run`` does. A capability that can be removed entirely should be
     #: removable entirely.
     desktop_enabled: bool = True
+    #: Whether application tasks may run in capsules. Same shape and same
+    #: argument as ``desktop_enabled``: off means the operations are absent from
+    #: the allowlist, not present-and-refusing. Default on, because a Companion
+    #: that cannot run an application task is a Companion whose one production
+    #: route to a sandbox is unreachable — which is the state this integration
+    #: exists to leave behind.
+    capsules_enabled: bool = True
+    #: Where results are written when a task does not name somewhere. ``None``
+    #: means the user's own Pictures directory, resolved at run time; a task
+    #: never chooses this and an application never sees it.
+    capsule_destination: Path | None = None
     #: §17: permit opening a URI with no graphical session. Off by default and
     #: deliberately a service option rather than a runtime one — it is a
     #: deployment's decision about a headless machine, not a task's.
@@ -1960,6 +1971,18 @@ RELEASE_ORDER: tuple[str, ...] = (
     # first, so the proposal never arrives and the broker has nothing new to
     # refuse on the way down.
     "desktop",
+    # Capsules before the task worker, for the sharpest version of the same
+    # reason in this list. A task running an application task is blocked inside
+    # a wait on a transient unit, for up to the operation's timeout, and the
+    # only thing that ends that wait early is the unit stopping. Releasing the
+    # support stops every capsule this login started, so the wait returns and
+    # the worker join has something to join. Releasing it *after* the join would
+    # mean the join waited out a two-minute timeout that the release would have
+    # cut short.
+    #
+    # After desktop, because a task that has just had a desktop action refused
+    # on the way down should not then be starting an application.
+    "capsules",
     "voice-runtime",
     "task-worker",
     "durable-state",
@@ -1997,6 +2020,23 @@ class StartupFailed(RuntimeError):
         self.cause = cause
 
 
+def _login_session_id() -> str:
+    """The identity a ``session``-scoped grant and a recorded pid belong to.
+
+    ``XDG_SESSION_ID`` is what logind calls this login, which is exactly the
+    lifetime "until you log out" means — so a grant taken in one login is not
+    honoured in the next, and a pid recorded in one is not believed in the next.
+    A machine with no logind session (a headless test, a container) gets a fresh
+    random id, which is the same answer with a shorter lifetime: nothing from a
+    previous run is trusted.
+    """
+    import os
+
+    session = os.environ.get("XDG_SESSION_ID", "").strip()
+    return f"login-{session}" if session else f"login-{os.urandom(6).hex()}"
+
+
+
 class CompanionService:
     """One runtime, one worker, one socket. Started by the user unit.
 
@@ -2020,6 +2060,9 @@ class CompanionService:
         #: Absent means no desktop tool is registered at all, so a plan naming
         #: one fails at the allowlist rather than somewhere deeper.
         self.desktop: Any = None
+        #: The capsule task support, when this build has one. Absent means no
+        #: capsule operation is registered at all.
+        self.capsules: Any = None
         self.gateway: CompanionGateway | None = None
         self.server: CompanionServer | None = None
         self.singleton: RuntimeSingleton | None = None
@@ -2445,6 +2488,7 @@ class CompanionService:
         # support registers no desktop tools, so a plan naming one fails at the
         # allowlist exactly as a plan naming `shell.run` does.
         desktop = self._build_desktop(broker)
+        capsules = self._build_capsules(broker)
         if self.options.extra_executors:
             # First in the tuple is first in capability selection's preference
             # order, so a slice executor that handles the task class it was
@@ -2463,7 +2507,37 @@ class CompanionService:
             clock=SystemClock(),
             ids=RandomIds(),
             desktop=desktop,
+            capsules=capsules,
         ))
+
+    def _build_capsules(self, broker: Any) -> Any:
+        """Construct the capsule support and register its operations, or carry on.
+
+        The failure mode is deliberate and is the opposite of the desktop's in
+        one respect worth stating: a desktop with no adapters degrades to
+        actions that report they cannot be performed, because a desktop action
+        is about *this* machine's session. A capsule that cannot be built is not
+        degraded — it is absent — because the alternative to a capsule is not a
+        weaker capsule, it is running an application unconfined, and there is no
+        such path. So an exception here removes the operations from the
+        allowlist and a plan naming one fails there.
+        """
+        if not self.options.capsules_enabled:
+            return None
+        from .capsule_task_bridge import CapsuleSupport, register_capsule_tools
+
+        try:
+            support = CapsuleSupport.create(
+                session_id=_login_session_id(),
+                destination=self.options.capsule_destination,
+            )
+            support.start()
+        except Exception:  # noqa: BLE001 - no capsule support is a build without the tools
+            return None
+        register_capsule_tools(broker, support)
+        self.capsules = support
+        self._unwind.append(("capsules", support.stop))
+        return support
 
     def _build_desktop(self, broker: Any) -> Any:
         """Construct the desktop broker and register its tools, or carry on.
