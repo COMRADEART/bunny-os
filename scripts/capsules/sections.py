@@ -38,6 +38,7 @@ __all__ = [
     "section_isolation",
     "section_network",
     "section_resources",
+    "section_selinux",
 ]
 
 
@@ -595,6 +596,7 @@ def section_failclosed(harness: Harness, host: Mapping[str, Any]) -> Evidence:
 
 
 from .sections_network import section_network  # noqa: E402
+from .sections_selinux import section_selinux  # noqa: E402
 from .sections_runtime import section_crash, section_resources  # noqa: E402
 
 #: Section name to function. The order is the order a failure is cheapest to
@@ -610,6 +612,10 @@ SECTIONS = {
     "filegrant": section_filegrant,
     "failclosed": section_failclosed,
     "network": section_network,
+    # SELinux before the crash and resource sections: it is the layer the host
+    # qualification could not measure at all, and on a guest it is the reason
+    # the run exists.
+    "selinux": section_selinux,
     "crash": section_crash,
     "resources": section_resources,
 }

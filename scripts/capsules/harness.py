@@ -86,6 +86,16 @@ def _now() -> str:
 
 
 def _commit() -> str:
+    """The commit this run measures.
+
+    ``$BUNNY_QUALIFY_COMMIT`` wins, because inside a booted guest there is no
+    git checkout to ask — the harness is injected into a disk and the commit it
+    belongs to is a fact the injector knows and the guest does not. Falling back
+    to "unknown" there would produce evidence bound to nothing.
+    """
+    stated = os.environ.get("BUNNY_QUALIFY_COMMIT", "").strip()
+    if stated:
+        return stated
     try:
         return subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
@@ -118,7 +128,7 @@ def host_record() -> Mapping[str, Any]:
     ):
         code, output = _command_output(argv)
         versions[name] = output.splitlines()[0] if code == 0 and output else "ABSENT"
-    _, selinux = _command_output(["getenforce"])
+    selinux = _selinux_facts()
     _, virt = _command_output(["systemd-detect-virt"])
     filesystem = "unknown"
     code, output = _command_output(["stat", "-fc", "%T", str(Path.home())])
@@ -128,10 +138,13 @@ def host_record() -> Mapping[str, Any]:
         "schemaVersion": 1,
         "recordedAt": _now(),
         "commit": _commit(),
-        "user": {"name": os.environ.get("USER") or os.environ.get("LOGNAME") or "unknown", "uid": os.getuid()},
-        "isRoot": os.getuid() == 0,
+        "user": {
+            "name": os.environ.get("USER") or os.environ.get("LOGNAME") or "unknown",
+            "uid": _uid(),
+        },
+        "isRoot": _uid() == 0,
         "versions": versions,
-        "selinux": selinux.strip() or "unknown",
+        "selinux": selinux,
         "virtualization": virt.strip() or "unknown",
         "homeFilesystem": filesystem,
         "cgroupVersion": _cgroup_version(),
@@ -146,11 +159,98 @@ def host_record() -> Mapping[str, Any]:
             "graphicalSession": probe.graphical_session,
         },
         "availableBackends": list(available_backends(probe)),
+        "image": _image_identity(),
         "graphical": {
             "waylandDisplay": os.environ.get("WAYLAND_DISPLAY", ""),
             "display": os.environ.get("DISPLAY", ""),
         },
     }
+
+
+def _selinux_facts() -> Mapping[str, Any]:
+    """Mode, policy version and type — the three that decide what a result means.
+
+    The host qualification ran with SELinux Disabled and said so everywhere. A
+    guest run has it enforcing, and the difference is the whole reason the guest
+    run exists, so the facts are recorded as a structure rather than a word.
+    """
+    code, mode = _command_output(["getenforce"])
+    # A platform with no getenforce is not "Permissive" and not "Disabled"; it
+    # has no answer, and the difference matters because Disabled is a real
+    # SELinux state a reader would draw a conclusion from.
+    facts: dict[str, Any] = {
+        "mode": mode.strip() if code == 0 and mode.strip() else "unavailable",
+        "probeError": None if code == 0 else mode.strip()[:200],
+    }
+    try:
+        facts["policyVersion"] = Path("/sys/fs/selinux/policyvers").read_text(encoding="utf-8").strip()
+    except OSError:
+        facts["policyVersion"] = None
+    code, output = _command_output(["sestatus"])
+    if code == 0:
+        for line in output.splitlines():
+            key, _, value = line.partition(":")
+            key = key.strip().lower()
+            if key == "loaded policy name":
+                facts["policyName"] = value.strip()
+            elif key == "policy from config file":
+                facts["policyFromConfig"] = value.strip()
+    facts["fsMounted"] = Path("/sys/fs/selinux").is_dir()
+    try:
+        facts["selfContext"] = Path("/proc/self/attr/current").read_text(encoding="utf-8").strip().rstrip(chr(0))
+    except OSError:
+        facts["selfContext"] = None
+    return facts
+
+
+def _image_identity() -> Mapping[str, Any]:
+    """What image this is, when the run is inside one.
+
+    Read from the release file the image build writes and from bootc's own view
+    of the deployment. Absent on a developer host, which is itself the answer to
+    "was this measured in the product or beside it".
+    """
+    identity: dict[str, Any] = {}
+    for path in (Path("/usr/lib/bunny-os/release.json"), Path("/etc/bunny-os/release.json")):
+        if path.is_file():
+            try:
+                identity["release"] = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as error:
+                identity["releaseError"] = str(error)
+            break
+    code, output = _command_output(["bootc", "status", "--json"])
+    if code == 0 and output:
+        try:
+            status = json.loads(output)
+            booted = (status.get("status") or {}).get("booted") or {}
+            image = (booted.get("image") or {}).get("image") or {}
+            identity["bootc"] = {
+                "image": image.get("image"),
+                "transport": image.get("transport"),
+                "digest": (booted.get("image") or {}).get("imageDigest"),
+                "version": (booted.get("image") or {}).get("version"),
+            }
+        except (json.JSONDecodeError, AttributeError):
+            identity["bootcRaw"] = output[:400]
+    try:
+        identity["osRelease"] = dict(
+            line.split("=", 1) for line in
+            Path("/etc/os-release").read_text(encoding="utf-8").splitlines() if "=" in line
+        )
+    except OSError:
+        pass
+    return identity
+
+
+def _uid() -> int:
+    """The POSIX uid, or -1 where the platform has none.
+
+    -1 rather than 0: a record that reported uid 0 on a platform with no uids
+    would read as "this ran as root", and `require_confinement` refuses to
+    qualify anything as root.
+    """
+    getuid = getattr(os, "getuid", None)
+    return getuid() if getuid is not None else -1
 
 
 def _cgroup_version() -> str:

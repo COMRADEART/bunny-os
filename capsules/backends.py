@@ -237,7 +237,14 @@ def _delegated_controllers() -> frozenset[str]:
     on a machine with no cgroup v2, which is reported as an empty set rather
     than guessed at.
     """
-    uid = os.getuid()
+    # A platform with no POSIX uid has no cgroup hierarchy either, and
+    # `MachineProbe.measure()` must survive being called there: it is the first
+    # thing a diagnostic runs, and a diagnostic that raises tells nobody
+    # anything. Found on a Windows developer host.
+    getuid = getattr(os, "getuid", None)
+    if getuid is None:
+        return frozenset()
+    uid = getuid()
     for candidate in (
         Path(f"/sys/fs/cgroup/user.slice/user-{uid}.slice/user@{uid}.service/cgroup.controllers"),
         Path(f"/sys/fs/cgroup/user.slice/user-{uid}.slice/cgroup.controllers"),
