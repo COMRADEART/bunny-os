@@ -127,6 +127,11 @@ SYSTEM_SCRIPTS: tuple[str, ...] = (
     # path, so a profile with the entry and without the program would offer an
     # operation that cannot start.
     "bunny-image-tool",
+    # The readiness probe. Installed on every profile because the thing it
+    # answers - "is this session usable" - is a question a support call asks as
+    # often as a qualification harness does, and a probe that only exists in a
+    # test image cannot answer it on a machine that is actually broken.
+    "bunny-session-ready",
 )
 
 #: The one system script that is a systemd generator rather than a libexec
