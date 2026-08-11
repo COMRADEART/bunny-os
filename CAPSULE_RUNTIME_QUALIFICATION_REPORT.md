@@ -171,9 +171,10 @@ been measured and is not claimed.
 
 ---
 
-## 6. The VM — boot only
+## 6. The VM — boot, then the full suite inside it
 
-`vmboot.json`, at commit `57068ea`.
+`vmboot.json`, at commit `57068ea`. The qualification run inside the booted
+guest is §9.
 
 The image this branch produces was built (2.97 GB qcow2, 3.1 GB OCI archive,
 8m47s) and booted under QEMU. **VM RUNTIME VALIDATED** for exactly this:
@@ -198,17 +199,24 @@ Companion and answers no permission prompt. Therefore:
 |---|---|
 | the image boots to a graphical target | VM RUNTIME VALIDATED |
 | the three packages are in the image and import there | VM RUNTIME VALIDATED |
-| a capsule confines an application on the booted system | **NOT RUN** |
+| a capsule confines an application on the booted system | VM RUNTIME VALIDATED — §9 |
+| SELinux is enforcing while a capsule runs, and refuses nothing it needs | VM RUNTIME VALIDATED — §9 |
+| `MemoryMax` is a boundary on the shipped kernel | VM RUNTIME VALIDATED — §9 |
+| AVC denials during capsule operation | **NOT MEASURABLE in this image** — every collector is blind; §9 |
+| the Companion can launch a capsule at all | HOST RUNTIME VALIDATED — the `launcher` section post-dates the guest run |
 | the Companion is visible on a Bunny desktop | **NOT RUN** |
 | the Trust prompt is drawn and answerable | **NOT RUN** |
 | the §15 image-editing journey completes | **NOT RUN** |
 | the failure variant behaves safely on screen | **NOT RUN** |
 | accessibility driven with Orca, keyboard, high contrast | **NOT RUN** — Orca is not installed on the qualification host |
 
-Everything in the isolation and permission columns was measured on a Linux host
-running the production runtime, which is a strong result; it is not the same
-result as measuring it on the booted product, and this report does not merge
-them.
+The isolation and permission columns were first measured on a Linux host running
+the production runtime and then again inside the booted guest, and the two are
+kept apart above rather than merged. What remains unmeasured is everything with
+a person in it: nothing in this phase has drawn a Companion, raised a Trust
+prompt on a screen, or completed a task a person asked for. That is not a gap in
+the security evidence; it is the whole of the user-facing claim, and it is
+recorded as NOT RUN rather than inferred from the parts that do work.
 
 ---
 
@@ -285,13 +293,45 @@ runtime unit must be able to write the state roots, and the window unit must not
 
 ---
 
-## 9. What to do next, in order
+## 9. What was measured inside the booted guest
 
-1. **Install Flatpak on the qualification host and re-run.** One backend of two
+Run at image commit `57068ea4b2b5`, kernel 7.1.5-200.fc44, SELinux **Enforcing**
+with the targeted policy at version 35, as `bunny` (uid 1000) in a real login
+session. Evidence under `qualification/capsules/evidence/guest-d9a36620044d/`.
+All eight sections then present returned PASS.
+
+Two results the WSL host could not produce:
+
+**Memory is enforced by this kernel.** The capsule allocated 209,715,200 bytes
+against a 268,435,456 ceiling with 2,934 `memory.events.high`, zero `max` and
+zero `oom_kill`: `MemoryHigh` throttled it and it never reached `MemoryMax`. The
+control — same ceiling, no `MemoryHigh` — was killed by the cgroup at
+243,269,632 bytes. On the WSL host the same control allocated 2 GB against the
+same ceiling and nothing stopped it. So `MemoryMax` is a real boundary on the
+shipped kernel; L-8 is a property of the development host, not of Bunny OS.
+
+**AVC collection is blind, and says so.** `journalctl` carries no kernel lines,
+`ausearch` is not installed, and `dmesg` refuses the ordinary user because
+`kernel.dmesg_restrict` is 1 — and returns an empty buffer even to root. The
+section reports *blind* with a positive control rather than reporting zero
+denials. A zero nobody could have seen is not a measurement, and the honest
+consequence is that this build has no evidence either way about AVC denials
+during capsule operation. Adding `audit` to the qualification test profile is
+the fix; it has not been done, because a test profile must not ship.
+
+The `launcher` section post-dates that run and has been measured on the Linux
+host only. Re-running it in the guest needs an image rebuild, because the guest
+runs the packages the image installed and only the harness is injected.
+
+---
+
+## 10. What to do next, in order
+
+1. **Rebuild the image and re-run the guest qualification**, so `launcher` — and
+   therefore both L-9 and L-10 — is measured against the units the image
+   actually installs rather than the ones in the checkout.
+2. **Install Flatpak on the qualification host and re-run.** One backend of two
    is currently `NOT_RUN`, and Flatpak is the one most applications will use.
-2. **Run the qualification inside the booted VM**, where SELinux is enforcing.
-   That converts §4 and §5 from HOST to VM RUNTIME VALIDATED and is the first
-   measurement of the SELinux layer.
 3. **Get a login into the VM and drive the §15 journey.** The harness has no
    login injection; the desktop work in this repository (`desktop-drive.py`,
    virtio-tablet pointer injection, AT-SPI) is the existing route.
@@ -299,9 +339,8 @@ runtime unit must be able to write the state roots, and the window unit must not
    only modal Bunny raises unasked; if it does not raise correctly in the AT-SPI
    tree a screen-reader user meets a silent modal, which is worse than anything
    this phase fixed.
-5. **Measure `MemoryMax` on a stock Fedora kernel.** This host cannot answer it.
-6. **Decide about the allowlisted network class**: implement per-name filtering,
+5. **Decide about the allowlisted network class**: implement per-name filtering,
    or remove the class and offer only off / local / on. It is currently a word
    that promises more than it does, disclosed but still present.
 
-Items 1, 2 and 5 need nothing but time on the existing builder.
+Items 1 and 2 need nothing but time on the existing builder.
