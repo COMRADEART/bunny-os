@@ -38,7 +38,7 @@ from typing import Any, Mapping, Protocol, Sequence
 from .errors import MalformedOutput
 from .ids import operation_key
 from .privacy import DATA_CLASSES, display_summary, rank
-from .task import TASK_TYPES, CompanionTask
+from .task import TASK_OUTCOMES, TASK_TYPES, CompanionTask
 
 __all__ = [
     "COST_CLASSES",
@@ -342,12 +342,26 @@ class TaskResult:
     summary: str
     outputs: tuple[ProducedOutput, ...] = ()
     classification: str = "internal"
+    #: What the executor says the work amounted to.
+    #:
+    #: Defaults to ``success`` because every existing executor predates the
+    #: field, and a default of ``failed`` would fail every task. That default is
+    #: *safe only because the runtime does not trust it*: it watched every
+    #: operation settle and combines its own verdict with this one
+    #: pessimistically. An executor that omits the field and whose operations
+    #: all failed still produces a failed task.
+    outcome: str = "success"
+    #: Why, when it is not ``success``. Structured rather than prose so that the
+    #: audit keeps the distinction the sentence a person reads throws away.
+    failure: Mapping[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if not self.result_id:
             raise MalformedOutput("a result needs an identifier")
         if self.classification not in DATA_CLASSES:
             raise MalformedOutput(f"unknown result classification: {self.classification!r}")
+        if self.outcome not in TASK_OUTCOMES:
+            raise MalformedOutput(f"unknown task outcome: {self.outcome!r}")
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -355,6 +369,8 @@ class TaskResult:
             "summary": self.summary,
             "classification": self.classification,
             "outputs": [item.to_json() for item in self.outputs],
+            "outcome": self.outcome,
+            "failure": dict(self.failure) if self.failure else None,
         }
 
 

@@ -74,6 +74,7 @@ from .session import CompanionSession, CostPolicy, PrivacyPolicy
 from .states import TERMINAL_STATES, require_transition
 from .store import CompanionStore
 from .task import (
+    worst_outcome,
     ApprovalReference,
     CompanionTask,
     ErrorReference,
@@ -1545,10 +1546,44 @@ class CompanionRuntime:
         self._checkpoint(session, task)
         return task, observations, revise
 
+    @staticmethod
+    def _observed_outcome(task: CompanionTask) -> str:
+        """What the runtime itself saw, from the operations it settled.
+
+        Independent of anything an executor says. Every operation that failed
+        left an ``operation_failed`` error reference on the task, and every one
+        that succeeded left a ``completed`` operation reference — so this reads
+        the record rather than a claim about it.
+
+        A plan with no operations is a success: "answer this question" is a real
+        task and produces no operations at all. What is *not* a success is a plan
+        whose operations were all attempted and none settled well.
+        """
+        operations = task.operations
+        if not operations:
+            return "success"
+        settled = [item for item in operations if item.status in ("completed", "failed")]
+        if not settled:
+            return "success"
+        if any(item.status == "completed" for item in settled):
+            return "success"
+        return "failed"
+
     def _present(self, session: CompanionSession, task: CompanionTask, result: TaskResult) -> CompanionTask:
+        # Two verdicts, combined pessimistically: what the executor reports and
+        # what the runtime watched happen. The runtime's is not overridable —
+        # an executor that returns a TaskResult with the default `success` for a
+        # plan whose every operation failed does not get to say so.
+        #
+        # This is the fix for a task that reached `completed` with its only
+        # operation failed on EROFS and the truth in its summary text alone.
+        outcome = worst_outcome(result.outcome, self._observed_outcome(task))
         task = self._transition(task, "presenting", {
             "resultId": result.result_id,
             "result": result.to_json(),
+            "outcome": outcome,
+            "executorOutcome": result.outcome,
+            "observedOutcome": self._observed_outcome(task),
         })
         for output in result.outputs:
             task = task.with_output(OutputReference(
@@ -1556,7 +1591,18 @@ class CompanionRuntime:
                 byte_size=output.byte_size, classification=output.classification,
                 summary=display_summary(output.content), created_sequence=self.store.tip(task.session_id)[0],
             ))
-        task = self._transition(task, "completed", {"resultId": result.result_id})
+        if outcome == "success":
+            task = self._transition(task, "completed", {"resultId": result.result_id})
+        else:
+            # §11's invariants. Never unknown to success, never non-zero to
+            # completed, never a missing output to completed.
+            terminal = {"cancelled": "cancelled", "blocked": "blocked"}.get(outcome, "failed")
+            task = self._transition(task, terminal, {
+                "resultId": result.result_id,
+                "outcome": outcome,
+                "reason": dict(result.failure) if result.failure else None,
+                "errors": [dict(item.to_json()) for item in task.errors[-3:]],
+            })
         task = task.finished(self.clock.wall())
         session = self.session(task.session_id).task_finished(task.task_id, self.clock.wall())
         self._sessions[session.session_id] = session

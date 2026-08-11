@@ -50,7 +50,9 @@ __all__ = [
     "OPERATION_STATES",
     "OperationReference",
     "OutputReference",
+    "TASK_OUTCOMES",
     "TASK_TYPES",
+    "worst_outcome",
 ]
 
 #: What kind of work this is. Coarse on purpose: the type selects which
@@ -65,6 +67,33 @@ TASK_TYPES = (
     "compute",
     "local_action",
 )
+
+#: What an attempt at the work amounted to, independent of what an executor
+#: chose to say about it.
+#:
+#: Separate from the task state because the two are decided by different things:
+#: the state is a lifecycle position, and this is a verdict on the work. A
+#: verdict of ``failed`` cannot become the state ``completed``, which is the
+#: whole reason this exists — a task whose only operation failed with EROFS was
+#: presented as ``completed`` with the failure visible only in its summary text.
+TASK_OUTCOMES = ("success", "failed", "cancelled", "blocked")
+
+#: Worst-wins ordering. Two parties have an opinion about how the work went —
+#: the executor, which reports what it produced, and the runtime, which watched
+#: every operation settle. They are combined pessimistically: an executor that
+#: claims success for a plan whose operations all failed does not get to.
+_OUTCOME_SEVERITY = {"success": 0, "cancelled": 1, "blocked": 2, "failed": 3}
+
+
+def worst_outcome(*outcomes: str) -> str:
+    """The most severe of several verdicts. Unknown values are treated as failure."""
+    worst, rank = "success", 0
+    for outcome in outcomes:
+        severity = _OUTCOME_SEVERITY.get(outcome, _OUTCOME_SEVERITY["failed"])
+        if severity > rank:
+            worst, rank = (outcome if outcome in TASK_OUTCOMES else "failed"), severity
+    return worst
+
 
 #: How far cancellation has got. Separate from the task state so that a task
 #: which failed *while* being cancelled still records that it was asked to stop.

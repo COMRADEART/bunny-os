@@ -331,11 +331,53 @@ class LocalIntentExecutor:
 
     # -- result ------------------------------------------------------------
 
+
+    @staticmethod
+    def _verdict(intent, results):  # type: ignore[no-untyped-def]
+        """What the work amounted to, and the typed reason when it did not.
+
+        The runtime forms its own verdict from the operation records and takes
+        the worse of the two, so this cannot make a failed task look successful.
+        What it *can* do is carry the code — ``CAPSULE_EXITED``,
+        ``OUTPUT_EXPORT_FAILED`` — that the runtime's inference cannot recover
+        from a status alone, so the audit keeps the distinction the sentence a
+        person reads throws away.
+        """
+        if intent is None or intent.kind != "resize_image":
+            return "success", None
+        for outcome in results:
+            if outcome.get("name") != "resize-image":
+                continue
+            value = outcome.get("value")
+            if isinstance(value, Mapping):
+                failure = value.get("failure")
+                if isinstance(failure, Mapping):
+                    code = str(failure.get("code", ""))
+                    # A person saying no is not a malfunction. Everything else
+                    # that stopped the work is.
+                    verdict = "blocked" if code in (
+                        "PERMISSION_DENIED", "PERMISSION_EXPIRED",
+                    ) else "failed"
+                    return verdict, dict(failure)
+                if outcome.get("error"):
+                    return "failed", {"code": "CAPSULE_EXITED",
+                                      "detail": str(outcome.get("error"))[:300]}
+                return "success", None
+            if outcome.get("error"):
+                return "failed", {"code": "CAPSULE_EXITED",
+                                  "detail": str(outcome.get("error"))[:300]}
+        # The operation was planned and produced no result at all.
+        return "failed", {"code": "OUTPUT_MISSING",
+                          "detail": "the operation produced no result"}
+
     def result(self, context: TaskContext) -> TaskResult:
         request = str(context.task.get("originalRequest", ""))
         intent = recognise(request)
         summary, body = self._answer(intent, context.operation_results)
+        outcome, failure = self._verdict(intent, context.operation_results)
         return TaskResult(
+            outcome=outcome,
+            failure=failure,
             result_id="result-" + hashlib.sha256(
                 f"{context.task.get('taskId', '')}\x1f{body}".encode("utf-8")
             ).hexdigest()[:16],
