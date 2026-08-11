@@ -119,6 +119,82 @@ def _registry_for(program: Path):
 
 
 
+
+def prepared_application_id(support: CapsuleSupport) -> str:
+    for prepared in support._prepared.values():  # noqa: SLF001 - the section owns this object
+        return prepared.application_id
+    return ""
+
+
+def _substitution_refused(support, task, plan, operation, source: Path) -> Mapping[str, Any]:
+    """§8. Approve against file A, change A's bytes, then try to run.
+
+    Uses the approval that was already issued: re-preparing would produce a
+    binding over the *new* content and prove nothing. The bytes are restored
+    afterwards so the rest of the section still sees the file it measured.
+    """
+    original = source.read_bytes()
+    try:
+        _write_png(source, _SOURCE_WIDTH, _SOURCE_HEIGHT, 0xCC3333FF)
+        changed = source.read_bytes() != original
+        context = support.context_for(task, plan, operation)
+        outcome = support.invoke("image.resize", {"width": _TARGET_WIDTH}, context)
+        value = outcome.value if isinstance(outcome.value, Mapping) else {}
+        code = (value.get("failure") or {}).get("code")
+        return {
+            "bytesActuallyChanged": changed,
+            "refused": (not outcome.ok) and code == "SECURITY_POLICY_BLOCKED",
+            "code": code,
+            "detail": str((value.get("failure") or {}).get("detail", ""))[:200],
+        }
+    finally:
+        source.write_bytes(original)
+
+
+def _grant_expired(support: CapsuleSupport, application_id: str) -> Mapping[str, Any]:
+    """§9. After the task, the session grant must be gone.
+
+    Read from the store rather than inferred from the capsule's state: the
+    question is whether a *permission* survived, and a stopped capsule with a
+    live grant is exactly the state that would let the next launch skip the
+    question.
+    """
+    if not application_id:
+        return {"ok": False, "reason": "nothing was prepared, so nothing can be checked"}
+    remaining = [
+        dict(grant.as_record()) for grant in support.store.for_application(application_id)
+    ]
+    files = [row for row in remaining if row.get("category") == "files"]
+    return {
+        "ok": not files,
+        "applicationId": application_id,
+        "remainingFileGrants": files,
+        "remainingGrantCount": len(remaining),
+    }
+
+
+def _exit_states(harness: Harness) -> Mapping[str, Any]:
+    """§10. Success, failure and unknown must be three different answers.
+
+    ``EXIT_STATUS_UNKNOWN`` is asserted to be non-zero rather than simulated:
+    the case it stands for — a unit whose status the manager can no longer
+    produce — cannot be provoked reliably, and a test that faked it would be
+    asserting the fake. What can be asserted is that the value the runtime
+    reports for it is one every caller reads as failure, and that the renderer
+    no longer asks systemd to discard it.
+    """
+    from capsules.command import render
+    from capsules.runtime import EXIT_STATUS_UNKNOWN
+
+    capsule = harness.install_probe_app("art.comrade.ExitProbe", "Exit Probe")
+    vector = render(harness.runtime.build_plan(capsule), ("/usr/bin/true",))
+    return {
+        "ok": EXIT_STATUS_UNKNOWN != 0 and "--collect" not in vector,
+        "unknownStatus": EXIT_STATUS_UNKNOWN,
+        "collectsTheUnit": "--collect" in vector,
+    }
+
+
 def section_apptask(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     """Run one image resize the way the Companion runs it, and check the file."""
     evidence = Evidence(section="apptask")
@@ -299,6 +375,36 @@ def section_apptask(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     if technical_network.get("class") != "none" or not technical_network.get("enforced"):
         problems.append(f"the plan's network is {technical_network!r}, not an enforced 'none'")
 
+    # -- the three that must never come back ------------------------------
+    #
+    # Each of these was a real defect found while wiring this route, and each
+    # failed in the direction that looks like success. They run here, against
+    # the same live support object, because a fixture that could not launch a
+    # capsule could not tell any of them apart from a refusal.
+
+    # §8. The approval carries a digest of the bytes. Replace them and the
+    # stale approval must not authorise the new content.
+    substitution = _substitution_refused(support, task, plan, operation, source)
+    evidence.measurements["substitution"] = substitution
+    if not substitution["refused"]:
+        problems.append(
+            f"a file swapped after approval was accepted: {substitution}"
+        )
+
+    # §9. The grant that made the input reachable was session scoped and the
+    # capsule has stopped, so it must be gone — and a second launch on the
+    # strength of the first answer must be denied.
+    lifetime = _grant_expired(support, prepared_application_id(support))
+    evidence.measurements["allowOnceLifetime"] = lifetime
+    if not lifetime["ok"]:
+        problems.append(f"an allow-once grant outlived its task: {lifetime}")
+
+    # §10. An exit status nobody could read must never become zero.
+    exits = _exit_states(harness)
+    evidence.measurements["exitStates"] = exits
+    if not exits["ok"]:
+        problems.append(f"an execution state was reported wrongly: {exits}")
+
     if problems:
         evidence.findings.extend(problems)
         return evidence.settle("FAIL", "; ".join(problems))
@@ -308,5 +414,6 @@ def section_apptask(harness: Harness, host: Mapping[str, Any]) -> Evidence:
         f"the Companion route produced {produced.name} at {size[0]}x{size[1]} in {elapsed_ms} ms; "
         f"the original is unchanged, the neighbour was never authorised, and the capsule ran "
         f"with network {network} (class {technical_network.get('class')}, "
-        f"enforced {technical_network.get('enforced')})",
+        f"enforced {technical_network.get('enforced')}); a swapped file was refused, "
+        f"the allow-once grant did not outlive the task, and no unreadable exit became zero",
     )
