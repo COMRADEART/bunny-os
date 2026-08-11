@@ -77,9 +77,12 @@ mkdir -p "${out}"
 chown "${user}" "${out}"
 
 # The user manager has to be up before `systemd-run --user` can create a scope.
-# Linger is set by the injector; this waits for the result rather than sleeping.
+# Linger is set by the injector, and it is asked for explicitly as well: a
+# lingering user whose marker file the policy refused to read looks exactly like
+# a user with no linger, and starting the unit by name says which it was.
+systemctl start "user@1000.service" >/dev/null 2>&1 || true
 for _ in $(seq 1 60); do
-  [[ -d /run/user/1000 ]] && break
+  [[ -d /run/user/1000 ]] && [[ -S /run/user/1000/bus ]] && break
   sleep 1
 done
 loginctl show-user "${user}" >"${out}/loginctl.txt" 2>&1 || true
@@ -221,6 +224,12 @@ relabel=(
       "${deployment}/etc/systemd/system/bunny-capsule-qualify.service"
   : lsetxattr security.selinux "system_u:object_r:var_log_t:s0" 0
       "${stateroot}/var/log/bunny-capsule-qualify"
+  # The linger marker. Unlabelled, logind cannot read it, the user manager never
+  # starts, and `systemd-run --user` has no bus to talk to — which is exactly
+  # what the first guest run produced: user@1000.service inactive and an empty
+  # loginctl. The failure is silent in the same way the AccountsService one was.
+  : lsetxattr security.selinux "system_u:object_r:var_lib_t:s0" 0
+      "${stateroot}/var/lib/systemd/linger/${user}"
   : lsetxattr security.selinux "system_u:object_r:user_home_dir_t:s0" 0
       "${stateroot}/var/home/${user}"
 )

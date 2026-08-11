@@ -83,7 +83,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[{marker}] {name:12} {evidence.explanation[:150]}")
         for finding in evidence.findings:
             print(f"          - {finding[:200]}")
-        print(f"          -> {path.relative_to(ROOT)}")
+        # The evidence root is a parameter and may sit outside the repository —
+        # inside a booted guest it is /var/log/..., and relative_to() raises
+        # there. The first guest run died on this line after the host section,
+        # which is a reporting statement killing a qualification.
+        try:
+            shown = path.relative_to(ROOT)
+        except ValueError:
+            shown = path
+        print(f"          -> {shown}")
 
     print()
     print("summary:", json.dumps(verdicts))
