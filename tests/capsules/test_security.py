@@ -22,13 +22,15 @@ import trust
 from capsules.errors import (
     CapsuleContainmentError,
     CapsuleExportRefused,
+    CapsuleIsolationError,
     CapsuleSchemaError,
+    CapsuleUnavailable,
 )
 from capsules.exchange import describe_import, export_artifact
 from capsules.isolation import GRANT_TARGET_ROOT
 from capsules.layout import CapsuleLayout, is_capsule_private
 
-from tests.capsule_support import World, manifest_for
+from tests.capsule_support import World, manifest_for, unconfined_probe
 
 
 class ExportTraversalTests(unittest.TestCase):
@@ -232,6 +234,103 @@ class ImportDescriptionTests(unittest.TestCase):
     def test_only_a_path_can_be_imported(self) -> None:
         with self.assertRaises(CapsuleSchemaError):
             describe_import(trust.network_resource("internet"), writable=False)
+
+
+class NoDowngradeTests(unittest.TestCase):
+    """A machine that cannot confine gets no application, not a naked one.
+
+    §22 of the brief in one sentence, and the sentence it exists to forbid is
+    "Sandbox failed, opening normally." The route to that sentence is short and
+    entirely plausible: ``build_plan`` already takes ``allow_unconfined``, one
+    caller already passes it, and a second caller passing it in a hurry is how
+    a fail-open ships. So the tests below are about *callers* as much as about
+    the planner — an unenforceable plan is refused, the coordinator never asks
+    for one, and the executor refuses one even if a plan reached it.
+    """
+
+    def setUp(self) -> None:
+        self.world = World.build(probe=unconfined_probe())
+        self.addCleanup(self.world.close)
+
+    def test_a_machine_without_confinement_refuses_the_plan(self) -> None:
+        capsule = self.world.install(manifest_for())
+        with self.assertRaises((CapsuleUnavailable, CapsuleIsolationError)):
+            self.world.runtime.build_plan(capsule)
+
+    def test_the_refusal_names_the_machine_and_not_the_application(self) -> None:
+        """A person told "PhotoEditor failed" looks for a broken application. The
+        machine is what is missing, and the message has to say which."""
+        capsule = self.world.install(manifest_for())
+        try:
+            self.world.runtime.build_plan(capsule)
+        except (CapsuleUnavailable, CapsuleIsolationError) as error:
+            message = str(error).lower()
+        else:
+            self.fail("an unconfinable machine produced a plan")
+        self.assertTrue(
+            any(word in message for word in ("namespace", "backend", "confin", "sandbox")),
+            message,
+        )
+
+    def test_launching_on_such_a_machine_starts_nothing(self) -> None:
+        capsule = self.world.install(manifest_for())
+        with self.assertRaises((CapsuleUnavailable, CapsuleIsolationError)):
+            self.world.runtime.launch(capsule)
+        state = self.world.runtime.open("org.example.PhotoEditor").state
+        self.assertNotEqual(state.state, "running")
+        self.assertIsNone(state.pid)
+
+    def test_the_unconfined_plan_is_marked_and_the_executor_refuses_it(self) -> None:
+        """The one caller that may build an unconfined plan builds it to *look at*.
+        The executor is the second lock: a plan that reached it without
+        confinement is refused there too, so a projection can never become a
+        launch by being handed to the wrong function."""
+        from capsules.runtime import SubprocessExecutor
+
+        capsule = self.world.install(manifest_for())
+        plan = self.world.runtime.build_plan(capsule, allow_unconfined=True)
+        self.assertFalse(plan.confining)
+        with self.assertRaises(CapsuleIsolationError):
+            SubprocessExecutor().start(("/bin/true",), plan)
+
+    def test_no_caller_outside_a_projection_asks_for_an_unconfined_plan(self) -> None:
+        """Grepped rather than reasoned about. ``allow_unconfined=True`` is one
+        keyword away from a fail-open, and the set of places that pass it is
+        small enough to enumerate and important enough to pin."""
+        import re
+
+        from tests.support import ROOT
+
+        allowed = {"companion/capsule_settings.py"}
+        pattern = re.compile(r"allow_unconfined\s*=\s*True")
+
+        def scan(extra: str = "") -> tuple[list[str], int]:
+            found, looked = [], 0
+            for path in sorted(ROOT.glob("*/*.py")) + sorted(ROOT.glob("*/*/*.py")):
+                relative = path.relative_to(ROOT).as_posix()
+                if relative.startswith(("tests/", "capsules/")) or relative in allowed:
+                    continue
+                looked += 1
+                if pattern.search(path.read_text(encoding="utf-8", errors="replace")):
+                    found.append(relative)
+            if extra and pattern.search(extra):
+                found.append("<planted>")
+            return found, looked
+
+        offenders, looked = scan()
+        self.assertGreater(
+            looked, 100,
+            "the scan found almost nothing to read, so an empty result is not a result",
+        )
+        self.assertEqual(
+            offenders, [],
+            "a new caller asks for a plan with no confinement; if that is "
+            "deliberate and read-only, add it to `allowed` with a reason",
+        )
+        # The check's own control: the pattern must actually match the thing it
+        # is looking for, or the clean result above means nothing.
+        self.assertEqual(scan("plan = build_plan(c, allow_unconfined=True)")[0], ["<planted>"])
+        self.assertEqual(scan("plan = build_plan(c, allow_unconfined = True)")[0], ["<planted>"])
 
 
 if __name__ == "__main__":
