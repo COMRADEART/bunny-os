@@ -1,0 +1,184 @@
+      Press enter to boot the selected OS, `e' to edit the commands before booting or `c' for a command-line. ESC to return previous menu.                 *Bunny OS 0.1.0 (development) (ostree:0)                                                                                                                     UEFI Firmware Settings                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     The highlighted entry will be executed automatically in 1s.                                                                                                    The highlighted entry will be executed automatically in 0s.                                                                                                   Booting `Bunny OS 0.1.0 (development) (ostree:0)'
+[    0.315196] VFS: Finished mounting rootfs on nullfs
+[    1.939021] systemd[1]: Started clevis-luks-askpass.path - Forward Password Requests to Clevis Directory Watch.
+[  OK  ] Started clevis-luks-askpass.path -…Requests to Clevis Directory Watch.
+[    1.943227] systemd[1]: Started systemd-ask-password-console.path - Dispatch Password Requests to Console Directory Watch.
+[  OK  ] Started systemd-ask-password-conso…equests to Console Directory Watch.
+[    1.948221] systemd[1]: Reached target initrd-usr-fs.target - Initrd /usr File System.
+[  OK  ] Reached target initrd-usr-fs.target - Initrd /usr File System.
+[    1.950969] systemd[1]: Reached target paths.target - Path Units.
+[  OK  ] Reached target paths.target - Path Units.
+[    1.952648] systemd[1]: Reached target slices.target - Slice Units.
+[  OK  ] Reached target slices.target - Slice Units.
+[    1.954341] systemd[1]: Reached target swap.target - Swaps.
+[  OK  ] Reached target swap.target - Swaps.
+[    1.956356] systemd[1]: Reached target timers.target - Timer Units.
+[  OK  ] Reached target timers.target - Timer Units.
+[    1.969188] systemd[1]: Reached target sockets.target - Socket Units.
+[  OK  ] Reached target sockets.target - Socket Units.
+[    1.991892] systemd[1]: Reached target cryptsetup-pre.target - Local Encrypted Volumes (Pre).
+[  OK  ] Reached target cryptsetup-pre.target - Local Encrypted Volumes (Pre).
+[    1.994113] systemd[1]: Reached target cryptsetup.target - Local Encrypted Volumes.
+[  OK  ] Reached target cryptsetup.target - Local Encrypted Volumes.
+[    2.001016] systemd[1]: Finished kmod-static-nodes.service - Create List of Static Device Nodes.
+[  OK  ] Finished kmod-static-nodes.service…Create List of Static Device Nodes.
+         Starting syste[    2.008617] systemd[1]: Finished systemd-modules-load.service - Load Kernel Modules.
+[  OK  ] Finished systemd-modules-load.serv[    2.010588] systemd[1]: Starting systemd-sysctl.service - Apply Kernel Variables...
+         Startin[    2.011810] systemd[1]: Started systemd-journald.service - Journal Service.
+[  OK  ] Started systemd-journald.service - Journal Service.
+[  OK  ] Finished systemd-sysctl.service - Apply Kernel Variables.
+[  OK  ] Finished systemd-tmpfiles-setup-de…ic Device Nodes in /dev gracefully.
+[  OK  ] Finished systemd-vconsole-setup.service - Virtual Console Setup.
+[  OK  ] Finished systemd-tmpfiles-setup.se…reate System Files and Directories.
+[  OK  [[  OK  ] Reached target local-fs-pre.target…Preparation for Local File Systems.
+[  OK  ] Reached target local-fs.target - Local File Systems.
+[  OK  ] Finished dracut-cmdline-ask.servic… for additional cmdline parameters.
+[  OK  ] Finished dracut-cmdline.service - dracut cmdline hook.
+[  OK  ] Finished dracut-pre-udev.service - dracut pre-udev hook.
+[  OK  ] Started systemd-udevd.service - Ru…anager for Device Events and Files.
+[  OK  ] Finished dracut-pre-trigger.service - dracut pre-trigger hook.
+[  OK  ] Finished systemd-udev-trigger.service - Coldplug All udev Devices.
+[  OK  ] Reached target sysinit.target - System Initialization.
+[  OK  ] Reached target basic.target - Basic System.
+[  OK  ] Reached target network.target - Network.
+[  OK  ] Finished dracut-initqueue.service - dracut initqueue hook.
+[  OK  ] Reached target initrd-root-device.target - Initrd Root Device.
+[  OK  ] Reached target remote-fs-pre.targe…reparation for Remote File Systems.
+[  OK  ] Reached target remote-cryptsetup.target - Remote Encrypted Volumes.
+[  OK  ] Reached target remote-fs.target - Remote File Systems.
+[  OK  ] Finished dracut-pre-mount.service - dracut pre-mount hook.
+[  OK  ] Finished systemd-vconsole-setup.service - Virtual Console Setup.
+[  OK  ] Finished systemd-fsck-root.service…bc4a1f-cc80-4e67-bd04-4a59777c5755.
+[  OK  ] Finished ostree-prepare-root.service - OSTree Prepare OS/.
+[  OK  ] Reached target initrd-root-fs.target - Initrd Root File System.
+[  OK  ] Finished initrd-parse-etc.service …points Configured in the Real Root.
+[  OK  ] Reached target initrd-fs.target - Initrd File Systems.
+[  OK  ] Reached target initrd.target - Initrd Default Target.
+[  OK  ] Finished dracut-pre-pivot.service - dracut pre-pivot and cleanup hook.
+[  OK  ] Finished initrd-cleanup.service - …aning Up and Shutting Down Daemons.
+[  OK  ] Finished initrd-udevadm-cleanup-db.service - Cleanup udev Database.
+[  OK  ] Reached target initrd-switch-root.target - Switch Root.
+Welcome to Bunny OS 0.1.0 (development)!
+[    5.138847] systemd[1]: Started clevis-luks-askpass.path - Forward Password Requests to Clevis Directory Watch.
+[  OK  ] Started clevis-luks-askpass.path -…Requests to Clevis Directory Watch.
+[    5.141425] systemd[1]: Started systemd-ask-password-console.path - Dispatch Password Requests to Console Directory Watch.
+[  OK  ] Started systemd-ask-password-conso…equests to Console Directory Watch.
+[    5.144171] systemd[1]: Started systemd-ask-password-wall.path - Forward Password Requests to Wall Directory Watch.
+[  OK  ] Started systemd-ask-password-wall.…d Requests to Wall Directory Watch.
+[    5.156936] systemd[1]: Reached target imports.target - Image Downloads.
+[  OK  ] Reached target imports.target - Image Downloads.
+[    5.164955] systemd[1]: Reached target integritysetup.target - Local Integrity Protected Volumes.
+[  OK  ] Reached target integritysetup.targ… Local Integrity Protected Volumes.
+[    5.167257] systemd[1]: Reached target slices.target - Slice Units.
+[  OK  ] Reached target slices.target - Slice Units.
+[    5.169092] systemd[1]: Reached target swap.target - Swaps.
+[  OK  ] Reached target swap.target - Swaps.
+[    5.170719] systemd[1]: Reached target veritysetup.target - Local Verity Protected Volumes.
+[  OK  ] Reached target veritysetup.target - Local Verity Protected Volumes.
+[    5.366648] systemd[1]: Reached target cryptsetup-pre.target - Local Encrypted Volumes (Pre).
+[  OK  ] Reached target cryptsetup-pre.target - Local Encrypted Volumes (Pre).
+[    5.369418] systemd[1]: Reached target cryptsetup.target - Local Encrypted Volumes.
+[  OK  ] Reached target cryptsetup.target - Local Encrypted Volumes.
+[    5.392055] systemd[1]: Started systemd-journald.service - Journal Service.
+[  OK  ] Started systemd-journald.service - Journal Service.
+[  OK  ] Finished kmod-static-nodes.service…Create List of Static Device Nodes.
+[  OK  ] Finished lvm2-monitor.service - Mo…using dmeventd or progress polling.
+[  OK  ] Finished systemd-modules-load.service - Load Kernel Modules.
+[  OK  ] Finished systemd-network-generator…ork Units from Kernel Command Line.
+[  OK  ] Finished systemd-remount-fs.servic…mount Root and Kernel File Systems.
+[  OK  ] Finished systemd-udev-load-credent…- Load udev Rules from Credentials.
+[  OK  ] Finished systemd-sysctl.service - Apply Kernel Variables.
+[  OK  ] Finished systemd-udev-trigger.service - Coldplug All udev Devices.
+[  OK  ] Started systemd-userdbd.service - User Database Manager.
+[  OK  ] Finished systemd-tmpfiles-setup-de…ic Device Nodes in /dev gracefully.
+[  OK  ] Finished bootc-sysusers-shadow-syn…tc/gshadow before systemd-sysusers.
+[  OK  ] Finished systemd-sysusers.service - Create System Users.
+[  OK  ] Started systemd-oomd.service - Userspace Out-Of-Memory (OOM) Killer.
+[  OK  ] Finished systemd-tmpfiles-setup-de…Create Static Device Nodes in /dev.
+[  OK  ] Reached target local-fs-pre.target…Preparation for Local File Systems.
+[  OK  ] Started systemd-resolved.service - Network Name Resolution.
+[  OK  ] Reached target nss-lookup.target - Host and Network Name Lookups.
+[  OK  ] Finished systemd-hwdb-update.service - Rebuild Hardware Database.
+[  OK  ] Started systemd-udevd.service - Ru…anager for Device Events and Files.
+[  OK  ] Finished ostree-remount.service - OSTree Remount OS/ Bind Mounts.
+0m] Finished systemd-random-seed.service - Load/Save OS Random Seed.
+[  OK  ] Finished systemd-journal-flush.ser…lush Journal to Persistent Storage.
+[  OK  ] Finished systemd-vconsole-setup.service - Virtual Console Setup.
+[  OK  ] Reached target local-fs.target - Local File Systems.
+[  OK  ] Started rpc-statd-notify.service - Notify NFS peers of a restart.
+[  OK  ] Finished systemd-userdb-load-crede…ser/group Records from Credentials.
+[  OK  ] Finished systemd-tmpfiles-setup.se…reate System Files and Directories.
+[  OK  ] Finished systemd-update-utmp.servi…ecord System Boot/Shutdown in UTMP.
+[  OK  ] Finished systemd-journal-catalog-u….service - Rebuild Journal Catalog.
+[  OK  ] Finished bunny-brlapi-key.service …er-device BrlAPI authorisation key.
+[  OK  ] Reached target rpc_pipefs.target.
+[  OK  ] Finished systemd-binfmt.service - Set Up Additional Binary Formats.
+[  OK  ] Finished ldconfig.service - Rebuild Dynamic Linker Cache.
+[  OK  ] Finished systemd-update-done.service - Update is Completed.
+[  OK  ] Reached target sysinit.target - System Initialization.
+[  OK  ] Started bootc-status-updated.path - Monitor bootc for status changes.
+[  OK  ] Started cups.path - CUPS Scheduler.
+[  OK  ] Started lvm-devices-import.path - …es-import to create system.devices.
+[  OK  ] Started bootc-fetch-apply-updates.timer - Apply bootc updates.
+[  OK  ] Started fstrim.timer - Discard unused filesystem blocks once a week.
+[  OK  ] Started logrotate.timer - Daily rotation of log files.
+[  OK  ] Started raid-check.timer - Weekly RAID setup health check.
+[  OK  ] Started rpm-ostree-countme.timer - Weekly rpm-ostree Count Me timer.
+[  OK  ] Started systemd-tmpfiles-clean.tim…y Cleanup of Temporary Directories.
+[  OK  ] Reached target bootc-status-update… - Bootc status trigger state sync.
+[  OK  ] Reached target paths.target - Path Units.
+[  OK  ] Reached target timers.target - Timer Units.
+[  OK  ] Started bootc-generic-growpart.ser…ootc Fallback Root Filesystem Grow.
+[  OK  ] Reached target sockets.target - Socket Units.
+[  OK  ] Reached target ssh-access.target - SSH Access Available.
+[  OK  ] Started dbus-broker.service - D-Bus System Message Bus.
+[  OK  ] Reached target basic.target - Basic System.
+         Starting bunny-health-check.service - Bunny OS boot health check...
+[  OK  ] Started firewalld.service - firewalld - dynamic firewall daemon.
+[  OK  ] Reached target network-pre.target - Preparation for Network.
+[  OK  ] Started irqbalance.service - irqbalance daemon.
+[  OK  ] Finished authselect-apply-changes.service - Apply authselect changes.
+[  OK  ] Finished dracut-shutdown.service - Restore /run/initramfs on shutdown.
+[  OK  ] Finished lvm-devices-import.service - Create lvm system.devices.
+[  OK  ] Finished rpm-ostree-fix-shadow-mod…Update permissions for /etc/shadow.
+[  OK  ] Finished sshd-keygen@ecdsa.service…penSSH ecdsa Server Key Generation.
+[  OK  ] Finished sshd-keygen@ed25519.servi…nSSH ed25519 Server Key Generation.
+[  OK  ] Finished ssh-host-keys-migration.s…pdate OpenSSH host key permissions.
+[  OK  ] Started systemd-homed.service - Home Area Manager.
+[  OK  ] Started switcheroo-control.service - Switcheroo Control Proxy service.
+[  OK  ] Started rtkit-daemon.service - RealtimeKit Scheduling Policy Service.
+[  OK  ] Finished flatpak-add-fedora-repos.… - Add Fedora flatpak repositories.
+[  OK  ] Started avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+[  OK  ] Reached target nss-user-lookup.target - User and Group Name Lookups.
+[  OK  ] Finished systemd-homed-activate.service - Home Area Activation.
+[  OK  ] Finished bootloader-update.service - Update bootloader on boot.
+[  OK  ] Started chronyd.service - NTP client/server.
+[  OK  ] Started systemd-logind.service - User Login Management.
+[  OK  ] Started systemd-hostnamed.service - Hostname Service.
+[  OK  ] Started NetworkManager.service - Network Manager.
+[  OK  ] Reached target network.target - Network.
+[  OK  ] Started polkit.service - Authorization Manager.
+[  OK  ] Started accounts-daemon.service - Accounts Service.
+[  OK  ] Started bunny-system-broker.servic… narrowly scoped privileged broker.
+[  OK  ] Started NetworkManager-dispatcher.… Manager Script Dispatcher Service.
+[  OK  ] Started upower.service - Daemon for power management.
+[  OK  ] Started udisks2.service - Disk Manager.
+[  OK  ] Started gssproxy.service - GSSAPI Proxy Daemon.
+[  OK  ] Reached target nfs-client.target - NFS client services.
+[  OK  ] Reached target remote-fs-pre.targe…reparation for Remote File Systems.
+[  OK  ] Reached target remote-cryptsetup.target - Remote Encrypted Volumes.
+[  OK  ] Reached target remote-fs.target - Remote File Systems.
+[  OK  ] Reached target remote-integrityset…Remote Integrity Protected Volumes.
+[  OK  ] Reached target remote-veritysetup.… - Remote Verity Protected Volumes.
+[  OK  ] Finished systemd-user-sessions.service - Permit User Sessions.
+[  OK  ] Started serial-getty@ttyS0.service - Serial Getty on ttyS0.
+[  OK  ] Reached target getty.target - Login Prompts.
+[  OK  ] Finished sshd-keygen@rsa.service - OpenSSH rsa Server Key Generation.
+[  OK  ] Reached target sshd-keygen.target.
+[  OK  ] Started gdm.service - GNOME Display Manager.
+[  OK  ] Started sshd.service - OpenSSH server daemon.
+[  OK  ] Finished bunny-health-check.service - Bunny OS boot health check.
+[  OK  ] Reached target multi-user.target - Multi-User System.
+[  OK  ] Reached target graphical.target - Graphical Interface.
+Bunny OS 0.1.0 (development)
+fedora login: [   11.293071] audit: type=1334 audit(1786409016.069:147): prog-id=86 op=LOAD
