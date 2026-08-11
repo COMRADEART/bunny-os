@@ -528,6 +528,11 @@ class CompanionGateway:
         #: operation answers "no desktop action broker" — and, unlike the other
         #: three, means the tools are not on the allowlist at all.
         self.desktop: Any = None
+        #: Attached by the service the same way, through :meth:`attach_capsules`.
+        #: Absent means an application task cannot resolve an input, and the
+        #: capsule operations are not on the allowlist at all — which is the
+        #: same refusal a plan naming an absent desktop action gets.
+        self.capsules: Any = None
         self._desktop_service: Any = None
         self._work: "queue.Queue[str | None]" = queue.Queue()
         self._running: set[str] = set()
@@ -905,12 +910,75 @@ class CompanionGateway:
         )
         if path_context is not None:
             self.desktop.bind_path_context(task.task_id, path_context)
+        inputs = self._capsule_inputs_for_request(request)
+        if inputs:
+            self.capsules.bind_inputs(task.task_id, inputs)
         return task
 
+    def _capsule_inputs_for_request(self, request: str) -> tuple[Path, ...]:
+        """The file an application task will be asked to open, resolved here.
+
+        This is the *only* place a request's words become a path, and it is
+        deliberately outside the executor, the plan and the operation table. A
+        plan carries a width and no file; the capsule support reads the file
+        from what this bound; so a provider proposing an operation cannot choose
+        which file it runs on, and a resolved path never travels in an argument
+        list where a later reader might treat it as data.
+
+        Resolution is closed. A named file must be a plain name — the recogniser
+        refuses anything with a separator — and it is looked up inside the
+        user's own Pictures directory only. "This" with no name resolves to the
+        most recently modified image there, which is what a person means when
+        they have just been looking at one. Neither path leaves that directory,
+        and neither follows a symlink out of it.
+        """
+        binder = getattr(self.capsules, "bind_inputs", None)
+        if not callable(binder):
+            return ()
+
+        from .capsule_tasks import OPERATIONS
+        from .intents import recognise
+        from .local_intent import user_directory
+
+        intent = recognise(request)
+        if intent is None or intent.kind != "resize_image":
+            return ()
+        # The key is the uppercase XDG name, as `companion.intents.FOLDERS`
+        # spells it. Lowercase resolves to nothing, silently, which would make
+        # every application task quietly file-less.
+        pictures = user_directory("PICTURES")
+        if pictures is None:
+            return ()
+        root = Path(os.path.realpath(pictures))
+        extensions = OPERATIONS["image.resize"].input_extensions
+
+        hint = str(intent.parameters.get("fileHint", "")).strip()
+        if hint:
+            candidate = root / hint
+        else:
+            images = [
+                item for item in root.iterdir()
+                if item.is_file() and item.suffix.lower() in extensions
+            ]
+            if not images:
+                return ()
+            candidate = max(images, key=lambda item: item.stat().st_mtime)
+
+        # Resolved and re-checked: a name that resolves outside the directory —
+        # through a symlink, or because the name was not what it looked like —
+        # is not a file this task may name.
+        resolved = Path(os.path.realpath(candidate))
+        if resolved.parent != root or not resolved.is_file():
+            return ()
+        if resolved.suffix.lower() not in extensions:
+            return ()
+        return (resolved,)
+
     def _release_desktop_context(self, task_id: str) -> None:
-        release = getattr(self.desktop, "release_task_context", None)
-        if callable(release):
-            release(task_id)
+        for subsystem in (self.desktop, self.capsules):
+            release = getattr(subsystem, "release_task_context", None)
+            if callable(release):
+                release(task_id)
 
     def list_tasks(self, *, sessionId: str | None) -> dict[str, Any]:
         session_ids = [sessionId] if sessionId else list(self.runtime.store.session_ids())
@@ -1456,6 +1524,16 @@ class CompanionGateway:
         """
         self.desktop = desktop
         self._desktop_service = None
+
+    def attach_capsules(self, capsules: Any) -> None:
+        """Wire the capsule support in, for input binding only.
+
+        The gateway gains no way to launch anything. What it gains is the
+        ability to bind the file a request named to the task, before a plan
+        exists — which is what keeps a plan carrying a width and no file, and an
+        executor unable to choose which file an operation runs on.
+        """
+        self.capsules = capsules
 
     def _submit_confirmed_transcript(self, submission: Any) -> str:
         session_id = submission.transcript.session_id
@@ -2248,6 +2326,7 @@ class CompanionService:
         # because this is where the gateway first exists.
         if self.desktop is not None:
             self.gateway.attach_desktop(self.desktop)
+            self.gateway.attach_capsules(self.capsules)
         self.gateway.endpoint_description = self.server.describe()
 
     def _step_start_voice_worker(self) -> None:
