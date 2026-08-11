@@ -573,3 +573,58 @@ None of 1–3 needs money, hardware or a third party.
 - **Do not update the report's "runtime validated" row from anything but a
   completed section of the VM procedure.** The report says nothing has been; that
   sentence is correct until a run says otherwise.
+
+## Update 2026-08-10 — capsule isolation is runtime-observed; the graphical slice is not
+
+`CAPSULE_RUNTIME_QUALIFICATION_REPORT.md` is the record. Evidence at
+`qualification/capsules/evidence/37f74c038d41/` (host) and `.../57068ea4b2b5/`
+(VM boot).
+
+**What moved.** App Capsule isolation is now HOST RUNTIME VALIDATED rather than
+unit tested: real bubblewrap sandboxes, started by the production runtime and
+the production executor, measured by a probe that runs inside them and again
+outside as a negative control. 17 checks isolated, each one reached by the
+control. Cross-application isolation, the file-grant lifecycle, six fail-closed
+paths, the crash boundaries and the network classes are all measured rather than
+asserted. The image builds, contains the three new packages, and boots to
+`graphical.target` with no failed unit.
+
+**What did not move.** Nothing graphical. No login, no session, no Companion on
+screen, no Trust prompt drawn, no §15 journey, no accessibility run. The VM
+harness boots and greps a serial log; it has no login injection. Those rows are
+`NOT_RUN` in the report and must not be read as anything else.
+
+**Eight defects, two of them blockers**, none visible from a Windows host: every
+capsule launch failed for want of two environment variables; a capsule whose
+process exited stayed `running` forever; a resource display leaked absolute paths
+into the audit; a network grant could not resolve a name; the allowlisted network
+class is not a boundary; a route the build context could not see reported as
+installed; the sandbox root was writable; `MemoryMax` is ignored by this kernel.
+All eight are fixed or disclosed at every surface. Three *harness* defects were
+also found, each of which would have produced a false PASS.
+
+### Next, in order, and the first three need only time on the existing builder
+
+1. **Install Flatpak on the qualification host and re-run.** One of two backends
+   is `NOT_RUN`, and it is the one most applications will use.
+2. **Run the qualification inside the booted VM.** SELinux is *enforcing* there
+   and Disabled on the WSL host, so this is the first measurement of that layer
+   and it converts the isolation result from HOST to VM RUNTIME VALIDATED.
+3. **Measure `MemoryMax` on a stock Fedora kernel.** This host accepts the limit
+   and ignores it; a plain systemd scope with no capsule behaves identically, so
+   the question cannot be answered here.
+4. **Get a login into the VM and drive the §15 journey**, using the existing
+   desktop route: `desktop-drive.py`, virtio-tablet pointer injection, AT-SPI.
+5. **Install Orca and drive the accessibility pass.** The Trust prompt is the
+   only modal Bunny raises unasked; a screen-reader user meeting a silent modal
+   is worse than anything this phase fixed.
+6. **Decide about the allowlisted network class.** Implement per-name filtering
+   or remove the class and offer off / local / on. It is a word that currently
+   promises more than it does — disclosed, and still present.
+
+### Unchanged
+
+`gate-stable-release` is still `NO-GO`. All three pilot gates are still
+`BLOCKED`. The vulnerability position, the absent hardware, the absent
+independent reviews, the absent second signer and the absent production key are
+all untouched by this pass.
