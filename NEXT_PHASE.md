@@ -705,3 +705,60 @@ phase — `assets/voice` was last touched at `a7ba40f`, before this branch's bas
 and it is left alone deliberately. Editing the recorded number to match the files
 would be adjusting the record to the artefact without establishing which of the
 two is wrong.
+
+---
+
+## Update 2026-08-11 — the guest runs the real route; nothing graphical has run
+
+`GUEST_REBUILD_AND_STORAGE_REPORT.md` and `GUEST_REQUALIFICATION_REPORT.md` are
+the record. Evidence at `qualification/capsules/evidence/guest-4c6e101bd354/`
+(the run that found a defect) and `.../guest-524107e50b2e/` (the re-run).
+
+**Two images were built.** `0482f4c90f00`, then `39a5c575da9e` after the defect
+below. Both from a checkout with all five integration fixes; the second also
+ships `/usr/libexec/bunny-session-ready`.
+
+**Eleven of eleven sections pass in the rebuilt guest**, SELinux Enforcing,
+targeted policy v35, as `bunny` in a real login session, against the packages
+the image installed. `launcher` and `apptask` had never run in a guest before.
+The image task produced 100×50 from 400×200 in 214 ms, exit 0, one authorised
+file, the neighbour never authorised, network class `none` enforced, original
+byte-identical.
+
+**The allow-once regression found a real defect.** `stop()` drops session grants
+and returns early for a capsule that `reconcile()` has already stopped — so for
+an application that exits by itself, which is every task application, the drop
+never ran and "allow once" left a permission behind for the rest of the login.
+The drop moved to `reconcile()`. The unit suite passed before and after, so a
+test that fails without the fix now exists.
+
+**The storage incident was operations tooling, not the build.** Three
+qualification copies of a repository containing tens of gigabytes of generated
+images filled the WSL virtual disk. `scripts/check-copy-size.py` now refuses an
+order-of-magnitude miss, and `.containerignore`'s coverage is asserted. Note for
+whoever hits this next: `fstrim` freed 702 GiB inside the guest and returned
+nothing to Windows — the VHDX is not sparse, so it grows and never shrinks.
+Compaction needs an elevated environment and is deliberately not automated.
+
+### What has not run, and is the whole of what remains
+
+Nothing graphical. No login, no `BUNNY_SESSION_READY` observed in a booted
+session, no Companion drawn, no Trust prompt on screen, no allow-once pressed by
+a person, no denial slice, no unsafe-launch slice, no keyboard path, no AT-SPI
+run, no screen reader, no reduced-motion or text-only run, and no screenshots.
+
+**Phase status: INCOMPLETE.** The security route is now VM RUNTIME VALIDATED
+end to end; the *experience* is not validated at all.
+
+### Next, in order
+
+1. **Drive the graphical harness** — `build/scripts/vm-desktop-story.sh` with
+   `desktop-drive.py`, virtio-tablet pointer injection and AT-SPI already exist
+   and do not need rebuilding. The readiness probe now ships, so the harness can
+   wait on `BUNNY_SESSION_READY` instead of a delay.
+2. **The success slice**, then **the denial slice**, then the unsafe-launch
+   slice. §34's list is otherwise met.
+3. Accessibility: keyboard, AT-SPI names, Orca in a qualification-only profile,
+   reduced motion, text-only.
+4. A qualification-only profile carrying audit tooling, so AVC evidence stops
+   being blind.
