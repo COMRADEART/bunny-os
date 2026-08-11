@@ -118,8 +118,28 @@ def check_shell() -> dict:
         "--method", "org.gnome.Shell.Extensions.GetExtensionInfo",
         "bunny-shell@bunny-os.org",
     ])
-    loaded = code == 0 and "'state': <1>" in output.replace('"', "'")
-    return {"ok": loaded, "queried": code == 0, "raw": output[:200]}
+    # GNOME returns the extension record as a GVariant dictionary, and the
+    # state comes back as a double — ``<1.0>`` — not the ``<1>`` this first
+    # matched. The guest reported a *working* desktop as not ready because of
+    # it, while the desktop story running beside it reported the same extension
+    # ENABLED. Parsed rather than string-matched.
+    import re as _re
+
+    state = None
+    match = _re.search(r"'state':\s*<([0-9.]+)>", output.replace('"', "'"))
+    if match:
+        try:
+            state = float(match.group(1))
+        except ValueError:
+            state = None
+    # 1 is ENABLED in GNOME's ExtensionState enum. 2 is DISABLED, 3 is ERROR,
+    # and a missing extension answers with an empty dictionary.
+    return {
+        "ok": code == 0 and state == 1.0,
+        "queried": code == 0,
+        "state": state,
+        "raw": output[:200],
+    }
 
 
 def check_units() -> dict:
@@ -147,12 +167,34 @@ def check_units() -> dict:
 
 
 def check_client() -> dict:
-    runtime = os.environ.get("XDG_RUNTIME_DIR", "")
-    socket = Path(runtime) / "bunny-companion" / "companion.sock" if runtime else None
-    return {
-        "ok": socket is not None and socket.exists(),
-        "socket": str(socket) if socket else "",
-    }
+    """The Companion runtime's own socket, asked of the Companion.
+
+    The path was guessed once — ``bunny-companion/companion.sock`` — and the
+    real one is ``runtime.sock``. A readiness probe that invents a path reports
+    a session as broken while it is working, which is the same class of wrong as
+    reporting one as ready while it is not.
+
+    Existence is not enough: a stale socket file outlives the process that
+    bound it. The check connects.
+    """
+    import socket as socket_module
+
+    try:
+        sys.path.insert(0, "/usr/lib/bunny-os/python")
+        from companion.protocol import default_endpoint_path
+
+        path = default_endpoint_path()
+    except Exception as error:  # noqa: BLE001
+        return {"ok": False, "error": f"{type(error).__name__}: {error}"}
+    if not Path(path).exists():
+        return {"ok": False, "socket": str(path), "exists": False}
+    try:
+        with socket_module.socket(socket_module.AF_UNIX, socket_module.SOCK_STREAM) as sock:
+            sock.settimeout(5.0)
+            sock.connect(str(path))
+        return {"ok": True, "socket": str(path), "exists": True, "connected": True}
+    except OSError as error:
+        return {"ok": False, "socket": str(path), "exists": True, "error": str(error)}
 
 
 def check_trust() -> dict:

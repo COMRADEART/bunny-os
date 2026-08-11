@@ -145,7 +145,7 @@ def run(decision: str) -> dict:
 
     client = CompanionClient()
     try:
-        session = client.call("create_session", {"label": "journey"})
+        session = client.create_session("Journey")
         session_id = str(session["session"]["sessionId"])
     except (CompanionClientError, KeyError) as error:
         record["submit"] = {"ok": False, "error": str(error)}
