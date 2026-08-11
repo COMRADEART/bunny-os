@@ -4,7 +4,12 @@
 **Commits** `fc1e58a` (trust/capsules/catalog), `adce2c5` (surfaces, slice, tests)
 **Branch point** `262b06d`
 **Date** 2026-08-10
-**Status** Source implemented. Tested on one host. **Not runtime validated, not hardware validated, not release qualified.**
+**Status at the time of writing** Source implemented; tested on one host; not runtime validated.
+**Status now (2026-08-10, after the runtime qualification)** Isolation and the
+permission layer are **host runtime validated**; the image builds and boots; every
+graphical surface is still unobserved. See `CAPSULE_RUNTIME_QUALIFICATION_REPORT.md`
+and the superseding section in §20 — this document is left as it was written, with
+corrections marked, rather than rewritten.
 
 Those five words are the repository's own maturity ladder (`NEXT_PHASE.md`,
 "Maturity ladder, 2026-07-30") and this document keeps them apart everywhere. A
@@ -18,8 +23,11 @@ claim in this report is one of:
 | **Hardware validated** | Observed on physical hardware. |
 | **Release qualified** | Inside a passing `gate-stable-release`. |
 
-Nothing in this phase reaches the third row. That is not a hedge — it is the
-accurate position, and §36 asks for exactly this distinction.
+When this was written, nothing in the phase reached the third row. The runtime
+qualification has since moved isolation, cross-application separation, the
+file-grant lifecycle, the fail-closed paths, the crash boundaries and the network
+classes onto a running Linux host, and the image onto a booted VM. Every
+*graphical* claim is still on the second row. §20 has the corrections.
 
 ---
 
