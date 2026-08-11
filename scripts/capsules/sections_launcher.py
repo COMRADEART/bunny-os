@@ -44,6 +44,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time
 from typing import Any, Mapping, Sequence
 
 from capsules.command import render
@@ -88,6 +89,10 @@ SANDBOX_DIRECTIVES = (
     "SystemCallErrorNumber",
     "SystemCallFilter",
 )
+
+#: How long to wait for the probe to write its file. The launch is asynchronous
+#: now, so this is the only thing there is to wait for.
+_PROBE_SECONDS = 60.0
 
 _DIRECTIVE = re.compile(r"^\s*([A-Za-z]+)\s*=\s*(.*?)\s*$")
 
@@ -148,36 +153,37 @@ def _nested(argv: Sequence[str], properties: Sequence[str], unit: str) -> tuple[
     return tuple(prefix) + tuple(argv)
 
 
-def _manager_shape(argv: Sequence[str], properties: Sequence[str], unit: str) -> tuple[str, ...]:
-    """The capsule asked for as a unit of its own, from inside the hardened unit.
+def _as_scope(argv: Sequence[str]) -> tuple[str, ...]:
+    """The vector the renderer produced *before* the fix: a forked scope.
 
-    The outer unit is hardened exactly as before; the difference is that the
-    inner command is not forked from it. ``systemd-run`` without ``--scope``
-    hands the job to the user manager, which spawns the process itself, so the
-    caller's seccomp filter and mount namespace do not reach it.
+    This section's own negative control. The renderer now asks the manager for a
+    transient service, and under the Companion's properties that works — which
+    is the result the section exists to confirm and also exactly what it would
+    report if it had quietly stopped being able to detect anything. So the old
+    shape is run alongside, and it must still fail: a section in which every
+    shape passes cannot tell a fixed system from a broken measurement.
     """
-    inner = " ".join(_shell_quote(argument) for argument in argv)
-    request = (
-        f"systemd-run --user --wait --collect --quiet --unit={unit}-inner "
-        f"--property=Type=oneshot {inner}"
+    return tuple(
+        argument for argument in _replace_first(argv, "--quiet", ("--scope", "--quiet"))
+        if argument != "--collect"
     )
-    return _nested(["/bin/sh", "-c", request], properties, f"{unit}-outer")
 
 
-def _shell_quote(argument: str) -> str:
-    """Single-quote for ``sh -c``. The only place in this suite a shell is used.
-
-    It is used because the manager shape is *about* a process asking the manager
-    for another process, and there is no way to express that without a command
-    that itself runs a command. Every argument is quoted; a vector element
-    containing a quote is escaped rather than trusted.
-    """
-    return "'" + argument.replace("'", "'\\''") + "'"
+def _replace_first(argv: Sequence[str], needle: str, replacement: Sequence[str]) -> tuple[str, ...]:
+    out: list[str] = []
+    done = False
+    for argument in argv:
+        if argument == needle and not done:
+            out.extend(replacement)
+            done = True
+        else:
+            out.append(argument)
+    return tuple(out)
 
 
 def _run(argv: Sequence[str], environment: Mapping[str, str], *, timeout: float = 120.0) -> Mapping[str, Any]:
     try:
-        completed = subprocess.run(  # noqa: S603 - argv is a list; no shell except the manager shape
+        completed = subprocess.run(  # noqa: S603 - argv is a list; no shell anywhere
             list(argv),
             capture_output=True, text=True, timeout=timeout, check=False,
             env=dict(environment),
@@ -242,16 +248,24 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     def shape(vector: Sequence[str]) -> Mapping[str, Any]:
         """Run one shape and say whether the *probe* ran, not whether systemd did.
 
-        ``systemd-run --wait`` returning 0 means the job finished, which a job
-        that started nothing also does. The file is written from inside the
-        sandbox by the process the sandbox was built for, so its presence is the
-        only thing here that cannot be produced by a launch that failed.
+        A zero from ``systemd-run`` means the manager accepted the job, which a
+        job that then started nothing also produces. The file is written from
+        inside the sandbox by the process the sandbox was built for, so its
+        presence is the only thing here that a failed launch cannot fake.
+
+        The wait is why this is a closure and not a one-liner: asking the manager
+        for a transient unit returns as soon as the job is enqueued, so there is
+        no exit code to wait on and the file is the only thing to wait for.
         """
         if result_path.exists():
             result_path.unlink()
         outcome = dict(_run(vector, environment))
+        deadline = time.monotonic() + _PROBE_SECONDS
+        while not result_path.exists() and time.monotonic() < deadline:
+            time.sleep(0.1)
         outcome["probeWroteResult"] = result_path.exists()
-        outcome["started"] = bool(outcome["started"] and outcome["probeWroteResult"])
+        outcome["secondsWaited"] = round(_PROBE_SECONDS - max(0.0, deadline - time.monotonic()), 1)
+        outcome["started"] = bool(outcome["ran"] and outcome["probeWroteResult"])
         outcome["blamesNamespaces"] = _blames_namespaces(outcome)
         return outcome
 
@@ -265,8 +279,11 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
         shapes[f"hardened:{name}"] = shape(
             _nested(_renamed(argv, f"h{index}"), properties, f"bunny-launcher-h{index}-{stem}")
         )
-        shapes[f"manager:{name}"] = shape(
-            _manager_shape(_renamed(argv, f"m{index}"), properties, f"bunny-launcher-m{index}")
+        # The pre-fix shape, under the same properties. It must still fail, or
+        # this section has stopped being able to see the thing it was written
+        # for and its PASS above means nothing.
+        shapes[f"scope:{name}"] = shape(
+            _nested(_as_scope(_renamed(argv, f"s{index}")), properties, f"bunny-launcher-s{index}-{stem}")
         )
     evidence.measurements["shapes"] = shapes
 
@@ -290,31 +307,40 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
             restrict = [p for p in units[name] if p.startswith("RestrictNamespaces=")]
             evidence.findings.append(
                 f"{name} cannot launch a capsule: the same vector that succeeds from a plain "
-                f"process (exit 0) and from an unhardened transient unit (exit 0) fails inside a "
-                f"unit carrying that unit's own properties (exit {outcome['exitCode']}"
+                f"process and from an unhardened transient unit fails inside a unit carrying that "
+                f"unit's own properties (exit {outcome['exitCode']}, probe wrote nothing"
                 + (", and the error names the namespace call" if outcome["blamesNamespaces"] else "")
-                + f"). The directive that does it is {restrict or 'among those listed above'}: "
-                f"bubblewrap's mechanism is unshare(2), and the filter is inherited by anything the "
-                f"unit forks — including a systemd scope, which is what the renderer produces."
-            )
-        recovered = [name for name in refused if shapes[f"manager:{name}"]["started"]]
-        if recovered:
-            evidence.findings.append(
-                f"the same capsule started under {recovered} when the user manager spawned it as a "
-                f"transient unit instead of a scope forked from the launcher. That is the narrow "
-                f"fix, and it is a change of shape rather than a relaxation: the capsule's "
-                f"confinement then comes from its own declared plan, which this suite measures, "
-                f"rather than from inheriting the launcher's, which nothing did."
+                + f"). Look first at {restrict or 'the directives listed above'}: bubblewrap's "
+                f"mechanism is unshare(2), and a seccomp filter is inherited by anything the unit "
+                f"forks."
             )
         return evidence.settle(
             "FAIL",
             f"the capsule launches from a plain process and from an unhardened unit, and not from "
-            f"{refused}; the manager-spawned shape recovered {recovered or 'none of them'}",
+            f"{refused}",
+        )
+
+    # The regression control. Everything above passing is the intended result and
+    # is also what a section that had stopped measuring anything would report.
+    still_detected = [name for name in units if not shapes[f"scope:{name}"]["started"]]
+    if len(still_detected) != len(units):
+        blind = [name for name in units if name not in still_detected]
+        evidence.findings.append(
+            f"the pre-fix shape — the capsule as a scope forked from the launcher — also started "
+            f"under {blind}. That was the defect, so either this machine does not enforce the "
+            f"directive the finding rests on, or this section can no longer detect it. Its PASS "
+            f"is not evidence either way until that is resolved."
+        )
+        return evidence.settle(
+            "BLOCKED",
+            f"every shape started, including the one that must not: the scope shape is this "
+            f"section's control and it did not fail under {blind}",
         )
 
     measured = sum(len(props) for props in units.values())
     return evidence.settle(
         "PASS",
-        f"the capsule launched in every shape, including inside units carrying {measured} "
-        f"sandboxing directives across {len(units)} shipped Companion unit(s)",
+        f"the capsule launched inside units carrying {measured} sandboxing directives across "
+        f"{len(units)} shipped Companion unit(s), and the pre-fix scope shape still failed under "
+        f"all {len(units)} of them",
     )
