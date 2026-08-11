@@ -70,6 +70,13 @@ BINDING_KEYS = (
 #: be rewritten is one whose absence the driver can check for.
 DECISION_DEFAULT = "granted"
 
+#: Whether the fixture image is a real one. ``corrupt`` writes a file with a PNG
+#: name and no PNG in it, so the confined program exits non-zero *after* the
+#: person has approved — which is the only way to reach the execution-failure
+#: path without breaking the sandbox or the approval, both of which would be
+#: testing something else. Rewritten by the harness the same way the decision is.
+FIXTURE_DEFAULT = "real"
+
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:32]
@@ -131,11 +138,11 @@ def session_ready(wait: float) -> dict:
     }
 
 
-def run(decision: str) -> dict:
+def run(decision: str, fixture: str = "real") -> dict:
     sys.path.insert(0, "/usr/lib/bunny-os/python")
     from companion.protocol import CompanionClient, CompanionClientError
 
-    record: dict = {"decision": decision, "request": REQUEST}
+    record: dict = {"decision": decision, "fixtureKind": fixture, "request": REQUEST}
     record["readiness"] = session_ready(120.0)
 
     pictures = Path.home() / "Pictures"
@@ -153,7 +160,12 @@ def run(decision: str) -> dict:
     # seen it — the safety held — but the harness was asking the wrong question.
     write_png(neighbour, 32, 32, 0xFF0000FF)
     os.utime(neighbour, (1_000_000, 1_000_000))
-    if not write_png(source, SOURCE_WIDTH, SOURCE_HEIGHT, 0x3366CCFF):
+    if fixture == "corrupt":
+        # A PNG name over bytes that are not a PNG. The grant, the capsule and
+        # the launch are all unchanged; the program reads the file it was given
+        # and refuses it, which is an application failure after an approval.
+        source.write_bytes(b"not a png, and deliberately so" * 8)
+    elif not write_png(source, SOURCE_WIDTH, SOURCE_HEIGHT, 0x3366CCFF):
         record["fixture"] = {"ok": False, "reason": "no image library in the session"}
         return record
     before = digest(source)
@@ -341,14 +353,16 @@ def main(argv: list[str] | None = None) -> int:
         "--decision", choices=("granted", "denied"), default=DECISION_DEFAULT
     )
     parser.add_argument("--as-user", default=os.environ.get("BUNNY_PROBE_USER", ""))
+    parser.add_argument("--fixture", choices=("real", "corrupt"), default=FIXTURE_DEFAULT)
     arguments = parser.parse_args(argv)
 
     if arguments.as_user and os.geteuid() == 0:
         return _reexec_as_user(
-            arguments.as_user, ["--decision", arguments.decision]
+            arguments.as_user,
+            ["--decision", arguments.decision, "--fixture", arguments.fixture],
         )
     try:
-        record = run(arguments.decision)
+        record = run(arguments.decision, arguments.fixture)
     except Exception as error:  # noqa: BLE001 - a probe that dies must still report
         import traceback
 

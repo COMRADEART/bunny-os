@@ -36,9 +36,14 @@ height="${BUNNY_JOURNEY_HEIGHT:-1080}"
 #: task itself.
 shots="${BUNNY_JOURNEY_SHOTS:-120 180 210 240 300}"
 
+# `failing` is `granted` with an input the program cannot read: the approval is
+# given and the confined process then exits non-zero, which is the execution
+# failure §13 asks for and the one a permission denial cannot stand in for.
+fixture="real"
 case "${decision}" in
   granted|denied) ;;
-  *) echo "usage: vm-capsule-journey.sh [granted|denied] [label]" >&2; exit 2 ;;
+  failing) decision="granted"; fixture="corrupt"; label="${2:-journey-failing}" ;;
+  *) echo "usage: vm-capsule-journey.sh [granted|denied|failing] [label]" >&2; exit 2 ;;
 esac
 
 bunny_require_commands qemu-system-x86_64 guestfish openssl git python3 || exit 3
@@ -67,7 +72,7 @@ qmp="${work}/qmp.sock"
 
 echo "source image: ${source_image}"
 echo "work:         ${work}"
-echo "decision:     ${decision}"
+echo "decision:     ${decision} (fixture: ${fixture})"
 
 cp --reflink=auto "${source_image}" "${disk}"
 
@@ -80,8 +85,8 @@ sed "s|^DECISION_DEFAULT = .*$|DECISION_DEFAULT = \"${decision}\"|" \
 # The rewrite is checked, not assumed. A sed that matched nothing would leave
 # the denial run answering "allow" and produce a green record for the wrong
 # journey - which is the failure this whole script exists to be able to see.
-if ! grep -qx "DECISION_DEFAULT = \"${decision}\"" "${probe}"; then
-  echo "the decision could not be written into the probe" >&2
+if ! grep -qx "DECISION_DEFAULT = \"${decision}\"" "${probe}"    || ! grep -qx "FIXTURE_DEFAULT = \"${fixture}\"" "${probe}"; then
+  echo "the decision or fixture could not be written into the probe" >&2
   exit 5
 fi
 cp build/scripts/desktop_interaction.py "${work}/" 2>/dev/null || true
