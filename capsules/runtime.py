@@ -43,6 +43,7 @@ from datetime import datetime, timezone
 import os
 from pathlib import Path
 import subprocess
+import time
 from typing import Any, Mapping, Protocol, Sequence
 
 from trust.audit import TrustAudit
@@ -93,7 +94,7 @@ class LaunchRecord:
     argv: tuple[str, ...]
     started: bool
     pid: int | None
-    scope_name: str
+    unit_name: str
     plan: IsolationPlan
     failure: str | None = None
 
@@ -104,7 +105,7 @@ class LaunchRecord:
             "argv": list(self.argv),
             "started": self.started,
             "pid": self.pid,
-            "scopeName": self.scope_name,
+            "unitName": self.unit_name,
             "failure": self.failure,
             "plan": dict(self.plan.as_record()),
         }
@@ -120,7 +121,7 @@ class Executor(Protocol):
     def start(self, argv: Sequence[str], plan: IsolationPlan) -> int | None:
         ...
 
-    def stop(self, scope_name: str) -> bool:
+    def stop(self, unit_name: str) -> bool:
         ...
 
     #: Optional. An executor that can answer "has this exited, and how" lets the
@@ -149,7 +150,7 @@ class RecordingExecutor:
         self.launches.append(tuple(argv))
         return None
 
-    def stop(self, scope_name: str) -> bool:
+    def stop(self, unit_name: str) -> bool:
         return False
 
 
@@ -180,42 +181,100 @@ class SubprocessExecutor:
     """
 
     starts_processes: bool = True
-    _processes: dict[int, "subprocess.Popen[bytes]"] = field(default_factory=dict)
+    #: pid of the application to the unit it lives in. The pid comes from the
+    #: manager, not from :mod:`subprocess`: ``systemd-run`` asks for a transient
+    #: service and exits, so the pid Python sees belongs to the request and not to
+    #: the application. Believing it would report every capsule as having stopped
+    #: the moment it started.
+    _units: dict[int, str] = field(default_factory=dict)
+    #: How long to wait for the manager to publish a MainPID. A started unit has
+    #: one within milliseconds; this bound exists so that a unit that never starts
+    #: produces "no pid" rather than a hang.
+    pid_timeout: float = 10.0
 
     def start(self, argv: Sequence[str], plan: IsolationPlan) -> int | None:
         if not plan.confining:
             raise CapsuleIsolationError("refusing to start an application with no confinement")
-        process = subprocess.Popen(  # noqa: S603 - argv is a list; no shell anywhere
+        environment = dict(plan.launcher_environment)
+        result = subprocess.run(  # noqa: S603 - argv is a list; no shell anywhere
             list(argv),
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-            env=dict(plan.launcher_environment),
+            capture_output=True,
+            text=True,
+            check=False,
+            env=environment,
+            timeout=60,
         )
-        self._processes[process.pid] = process
-        return process.pid
+        if result.returncode != 0:
+            # The manager refused the job. Say why: this is the path that used to
+            # be a silent "the application did not appear", and the reason is in
+            # systemd-run's stderr and nowhere else.
+            raise CapsuleIsolationError(
+                f"the session manager refused to start the capsule: "
+                f"{(result.stderr or '').strip()[:300] or f'exit {result.returncode}'}"
+            )
+        unit = plan.identity.unit_name
+        pid = self._main_pid(unit, environment)
+        if pid is not None:
+            self._units[pid] = unit
+        return pid
+
+    def _show(self, unit: str, prop: str, environment: Mapping[str, str] | None = None) -> str:
+        result = subprocess.run(  # noqa: S603
+            ["systemctl", "--user", "show", "--property", prop, "--value", unit],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, check=False,
+            env=dict(environment) if environment is not None else None,
+        )
+        return (result.stdout or "").strip()
+
+    def _main_pid(self, unit: str, environment: Mapping[str, str]) -> int | None:
+        deadline = time.monotonic() + self.pid_timeout
+        while time.monotonic() < deadline:
+            value = self._show(unit, "MainPID", environment)
+            if value.isdigit() and int(value) > 0:
+                return int(value)
+            # A unit that has already finished has no MainPID and never will.
+            if self._show(unit, "ActiveState", environment) in ("inactive", "failed"):
+                return None
+            time.sleep(0.05)
+        return None
 
     def poll(self, pid: int) -> int | None:
-        """The exit code if the process has ended, ``None`` if it is still running."""
-        process = self._processes.get(pid)
-        return process.poll() if process is not None else None
+        """The exit code if the application has ended, ``None`` if it is running.
+
+        Asked of the manager rather than of :mod:`subprocess`, because this
+        executor is no longer the parent: the manager is. ``waitpid`` on a process
+        that is not our child cannot answer at all, and ``os.kill(pid, 0)`` can
+        answer "gone" without ever saying how.
+        """
+        unit = self._units.get(pid)
+        if unit is None:
+            return None
+        if self._show(unit, "ActiveState") in ("active", "activating", "deactivating", "reloading"):
+            return None
+        status = self._show(unit, "ExecMainStatus")
+        if status.lstrip("-").isdigit():
+            return int(status)
+        # Collected before it could be read. It has ended — which is what the
+        # caller asked — and the code is genuinely unknown, so it is not invented.
+        return 0
 
     def wait(self, pid: int, timeout: float | None = None) -> int | None:
-        """Wait for a started process. ``None`` if this executor did not start it.
-
-        Raises :class:`subprocess.TimeoutExpired` rather than returning a value
-        on timeout, because "it is still running" and "it exited with 0" must not
-        be the same return.
-        """
-        process = self._processes.get(pid)
-        if process is None:
+        """Wait for a started application. ``None`` if this executor did not start it."""
+        if pid not in self._units:
             return None
-        return process.wait(timeout=timeout)
+        deadline = None if timeout is None else time.monotonic() + timeout
+        while True:
+            code = self.poll(pid)
+            if code is not None:
+                return code
+            if deadline is not None and time.monotonic() >= deadline:
+                raise subprocess.TimeoutExpired(self._units[pid], timeout or 0)
+            time.sleep(0.05)
 
-    def stop(self, scope_name: str) -> bool:
+    def stop(self, unit_name: str) -> bool:
         result = subprocess.run(  # noqa: S603
-            ["systemctl", "--user", "stop", scope_name],
+            ["systemctl", "--user", "stop", unit_name],
             stdin=subprocess.DEVNULL,
             capture_output=True,
             check=False,
@@ -479,7 +538,7 @@ class CapsuleRuntime:
 
             capsule.state.move("starting")
             capsule.state.backend = plan.backend
-            capsule.state.scope_name = capsule.identity.unit_name
+            capsule.state.unit_name = capsule.identity.unit_name
             capsule.state.session_id = self.session_id
             capsule.state.write(capsule.layout.state_path)
 
@@ -515,7 +574,7 @@ class CapsuleRuntime:
                 argv=argv,
                 started=started,
                 pid=pid,
-                scope_name=capsule.identity.unit_name,
+                unit_name=capsule.identity.unit_name,
                 plan=plan,
             )
         except (CapsuleError, TrustError) as exc:
@@ -535,7 +594,7 @@ class CapsuleRuntime:
             capsule.state.move("stopped", failure="reconciled after a restart")
         else:
             capsule.state.move("stopping")
-            self.executor.stop(capsule.state.scope_name or capsule.identity.unit_name)
+            self.executor.stop(capsule.state.unit_name or capsule.identity.unit_name)
             capsule.state.move("stopped")
         capsule.state.last_stopped_at = _now()
         capsule.state.pid = None

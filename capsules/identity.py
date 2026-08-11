@@ -79,14 +79,23 @@ class CapsuleIdentity:
 
     @property
     def unit_name(self) -> str:
-        """The transient systemd scope this capsule's processes live in.
+        """The transient systemd unit this capsule's processes live in.
 
-        A scope rather than a service: the capsule's processes are started by the
-        session and *placed* in a cgroup, which is what makes the resource limits
-        in :mod:`capsules.manifest` apply to the whole application including
-        anything it forks.
+        A *service*, which the user manager spawns, and not a scope forked from
+        whatever asked for the launch. That was a scope until the launcher
+        qualification section measured what happens when the thing asking is the
+        Companion: a scope inherits the caller's seccomp filter and mount
+        namespace, both Companion units set ``RestrictNamespaces=yes``, and
+        bubblewrap's whole mechanism is ``unshare(2)``. Every capsule launch from
+        the Companion failed, on every machine.
+
+        The unit still carries the cgroup, so the resource limits in
+        :mod:`capsules.manifest` still apply to the whole application including
+        anything it forks. What changed is who the parent is — and with it, that
+        the capsule's confinement comes from its own declared plan instead of
+        being partly inherited from a launcher nobody was measuring.
         """
-        return f"bunny-capsule-{self.directory_name}.scope"
+        return f"bunny-capsule-{self.directory_name}.service"
 
     @property
     def portal_id(self) -> str:

@@ -161,7 +161,7 @@ def capsule_status(capsule: Capsule, plan: IsolationPlan) -> CapsuleStatus:
         "applicationId": capsule.identity.application_id,
         "unitName": capsule.identity.unit_name,
         "pid": capsule.state.pid,
-        "cgroupScope": capsule.state.scope_name,
+        "cgroupUnit": capsule.state.unit_name,
         "namespaces": list(plan.unshare),
         "mounts": [
             {

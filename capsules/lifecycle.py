@@ -156,7 +156,7 @@ class CapsuleState:
     last_exit_code: int | None = None
     last_failure: str | None = None
     backend: str | None = None
-    scope_name: str | None = None
+    unit_name: str | None = None
     #: The launcher process this runtime started, when it started one. Recorded
     #: so a later operation can ask whether it is still there rather than
     #: trusting a state written before the application exited. Meaningful only to
@@ -200,7 +200,7 @@ class CapsuleState:
             "lastExitCode": self.last_exit_code,
             "lastFailure": self.last_failure,
             "backend": self.backend,
-            "scopeName": self.scope_name,
+            "unitName": self.unit_name,
             "pid": self.pid,
             "sessionId": self.session_id,
         }
@@ -223,7 +223,10 @@ class CapsuleState:
             last_exit_code=(int(record["lastExitCode"]) if record.get("lastExitCode") is not None else None),
             last_failure=_optional_str(record.get("lastFailure")),
             backend=_optional_str(record.get("backend")),
-            scope_name=_optional_str(record.get("scopeName")),
+            # ``scopeName`` is the key this field had while a capsule was a
+            # transient scope. A state file written by that build is still
+            # readable; the name it used is not carried forward.
+            unit_name=_optional_str(record.get("unitName") or record.get("scopeName")),
             pid=(int(record["pid"]) if record.get("pid") is not None else None),
             session_id=_optional_str(record.get("sessionId")),
         )

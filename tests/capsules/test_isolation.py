@@ -307,5 +307,69 @@ class BackendHonestyTests(unittest.TestCase):
                 self.assertNotIn("files", entry.enforces, name)
 
 
+class TheCapsuleIsNotAScope(unittest.TestCase):
+    """The shape of the transient unit, asserted because the shape is the fix.
+
+    A capsule used to be a ``systemd-run --user --scope``. A scope is forked by
+    whoever asks for it and therefore inherits that process's seccomp filter and
+    mount namespace. In the product the process that asks is the Companion, whose
+    units set ``RestrictNamespaces=yes`` — so bubblewrap could not call
+    ``unshare(2)`` and every capsule launch from the Companion failed, always,
+    on every machine. Measured by the ``launcher`` qualification section against
+    three controls; fixed by asking the manager for a service instead.
+
+    These assertions are here rather than only in that section because the
+    section needs a Linux host with a user manager and this needs nothing. If
+    somebody puts ``--scope`` back, this fails on any machine in under a second.
+    """
+
+    def setUp(self) -> None:
+        self.world = World.build()
+        self.addCleanup(self.world.close)
+
+    def _vector(self) -> tuple[str, ...]:
+        from capsules.command import render
+
+        capsule = self.world.install(manifest_for())
+        plan = self.world.runtime.build_plan(capsule)
+        return render(plan, ("/usr/bin/true",))
+
+    def test_the_vector_asks_the_manager_for_a_transient_unit(self) -> None:
+        vector = self._vector()
+        self.assertEqual(vector[0], "systemd-run")
+        self.assertIn("--user", vector)
+        self.assertTrue(
+            any(argument.startswith("--unit=") for argument in vector),
+            "the capsule must be named, or a second launch cannot find the first",
+        )
+
+    def test_the_vector_is_not_a_scope(self) -> None:
+        self.assertNotIn("--scope", self._vector())
+
+    def test_the_unit_name_is_a_service(self) -> None:
+        capsule = self.world.install(manifest_for())
+        self.assertTrue(capsule.identity.unit_name.endswith(".service"))
+        self.assertFalse(capsule.identity.unit_name.endswith(".scope"))
+
+    def test_a_failed_capsule_does_not_hold_its_own_name(self) -> None:
+        """``--collect``, or the second launch fails because the first did."""
+        self.assertIn("--collect", self._vector())
+
+    def test_the_limits_still_ride_on_the_unit(self) -> None:
+        """The reason a capsule was wrapped at all. Changing scope to service
+        must not have dropped the cgroup that carries the resource ceilings."""
+        vector = self._vector()
+        properties = [
+            vector[index + 1]
+            for index, argument in enumerate(vector[:-1])
+            if argument == "--property"
+        ]
+        self.assertTrue(
+            any(item.startswith("MemoryMax=") for item in properties),
+            f"no MemoryMax among {properties}",
+        )
+        self.assertTrue(any(item.startswith("TasksMax=") for item in properties), properties)
+
+
 if __name__ == "__main__":
     unittest.main()

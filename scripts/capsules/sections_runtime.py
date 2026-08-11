@@ -129,7 +129,7 @@ def _descendants(pid: int) -> list[int]:
     return sorted(found)
 
 
-def _cgroup_memory_events(scope_name: str) -> Mapping[str, Any]:
+def _cgroup_memory_events(unit_name: str) -> Mapping[str, Any]:
     """The cgroup's own account of what it did to the process.
 
     §27 asks for the distinction that a exit code cannot make: a process killed
@@ -147,12 +147,12 @@ def _cgroup_memory_events(scope_name: str) -> Mapping[str, Any]:
     with it every counter, so a reader who wanted this afterwards would have
     nothing.
     """
-    code, output = _run_command(["systemctl", "--user", "show", scope_name, "-p", "ControlGroup"])
+    code, output = _run_command(["systemctl", "--user", "show", unit_name, "-p", "ControlGroup"])
     path = ""
     if code == 0 and "=" in output:
         path = output.split("=", 1)[1].strip()
     if not path:
-        return {"available": False, "reason": f"no ControlGroup for {scope_name}"}
+        return {"available": False, "reason": f"no ControlGroup for {unit_name}"}
     base = Path("/sys/fs/cgroup") / path.lstrip("/")
     if not base.is_dir():
         return {"available": False, "reason": f"{base} is not present"}
@@ -317,11 +317,11 @@ def section_crash(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     second_record = _launch_stress(harness, second, "idle")
     time.sleep(2.0)
     tree = _descendants(second_record.pid) if second_record.pid else []
-    stopped = harness.executor.stop(second_record.scope_name)
+    stopped = harness.executor.stop(second_record.unit_name)
     time.sleep(2.0)
     orphans = [pid for pid in tree if _alive(pid)]
     measurements["afterScopeStop"] = {
-        "scope": second_record.scope_name,
+        "unit": second_record.unit_name,
         "stopReported": stopped,
         "treeBefore": tree,
         "orphansAfter": orphans,
@@ -398,7 +398,7 @@ def section_resources(harness: Harness, host: Mapping[str, Any]) -> Evidence:
         elapsed = (time.monotonic() - started) * 1000
         timings.append(round(elapsed, 1))
         if record.pid:
-            harness.executor.stop(record.scope_name)
+            harness.executor.stop(record.unit_name)
             try:
                 harness.executor.wait(record.pid, timeout=10)
             except Exception:  # noqa: BLE001
@@ -429,7 +429,7 @@ def section_resources(harness: Harness, host: Mapping[str, Any]) -> Evidence:
         "capsuleDiskBytes": dict(idle_capsule.layout.usage()).get("total"),
     }
     if idle_record.pid:
-        harness.executor.stop(idle_record.scope_name)
+        harness.executor.stop(idle_record.unit_name)
 
     # Memory ceiling. 256 MiB, and the fixture allocates past it.
     memory_limits = ResourceLimits(
@@ -448,12 +448,12 @@ def section_resources(harness: Harness, host: Mapping[str, Any]) -> Evidence:
             # The scope is gone the moment the process exits, so anything the
             # kernel counted has to be read before that. A clean exit means the
             # counters are already unreadable and the record says so.
-            cgroup_events = _cgroup_memory_events(memory_record.scope_name)
+            cgroup_events = _cgroup_memory_events(memory_record.unit_name)
         except Exception:  # noqa: BLE001
             exit_code = "TIMEOUT"
             # Still running, which is the case where the counters exist.
-            cgroup_events = _cgroup_memory_events(memory_record.scope_name)
-            harness.executor.stop(memory_record.scope_name)
+            cgroup_events = _cgroup_memory_events(memory_record.unit_name)
+            harness.executor.stop(memory_record.unit_name)
     memory_result = _stress_result(memory_capsule)
     measurements["memory"] = {
         "declaredMax": memory_limits.memory_max,
@@ -481,7 +481,7 @@ def section_resources(harness: Harness, host: Mapping[str, Any]) -> Evidence:
             task_exit = harness.executor.wait(task_record.pid, timeout=180)
         except Exception:  # noqa: BLE001
             task_exit = "TIMEOUT"
-            harness.executor.stop(task_record.scope_name)
+            harness.executor.stop(task_record.unit_name)
     task_result = _stress_result(task_capsule)
     measurements["tasks"] = {
         "declaredMax": task_limits.tasks_max,

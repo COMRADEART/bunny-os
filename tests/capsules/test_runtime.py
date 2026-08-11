@@ -177,7 +177,7 @@ class LaunchTests(unittest.TestCase):
             def poll(self, pid):  # noqa: ANN001
                 return 0
 
-            def stop(self, scope_name):  # noqa: ANN001
+            def stop(self, unit_name):  # noqa: ANN001
                 return True
 
         self.world.runtime.executor = Exiting()

@@ -47,20 +47,34 @@ def _check_command(command: Sequence[str]) -> tuple[str, ...]:
     return tuple(command)
 
 
-def _scope_prefix(plan: IsolationPlan) -> list[str]:
-    """The transient systemd scope every backend is wrapped in.
+def _unit_prefix(plan: IsolationPlan) -> list[str]:
+    """The transient systemd unit every backend is wrapped in.
 
-    The scope is what carries the cgroup, and therefore the resource limits and
+    The unit is what carries the cgroup, and therefore the resource limits and
     the background-permission lifetime. It is applied for all three backends
     rather than only the weakest, so that "one application cannot make the
     desktop unusable" does not depend on which sandbox happened to be available.
+
+    **Not a scope.** A scope is forked by whoever asks for it, so it inherits
+    that process's seccomp filter and mount namespace. In the product the process
+    that asks is the Companion, whose units set ``RestrictNamespaces=yes`` — and
+    bubblewrap cannot build a sandbox without ``unshare(2)``. The launcher
+    qualification section measures this directly: the same vector succeeds from a
+    plain process and from an unhardened transient unit, and fails inside a unit
+    carrying either Companion unit's own properties. Asking the *manager* for a
+    transient service instead means the manager spawns it, and the capsule is
+    confined by the plan it declares rather than by whatever its launcher
+    happened to be confined by.
+
+    ``--collect`` so a capsule that exits non-zero does not leave a failed unit
+    behind under a name the next launch needs.
     """
     arguments = [
         "systemd-run",
         "--user",
-        "--scope",
         "--quiet",
-        f"--unit={plan.identity.unit_name.removesuffix('.scope')}",
+        "--collect",
+        f"--unit={plan.identity.unit_name.removesuffix('.service')}",
         f"--description=Bunny capsule for {plan.identity.application_id}",
     ]
     for prop in plan.systemd_properties:
@@ -70,7 +84,7 @@ def _scope_prefix(plan: IsolationPlan) -> list[str]:
 
 def render_bubblewrap(plan: IsolationPlan, command: Sequence[str]) -> tuple[str, ...]:
     """A ``bwrap`` invocation that expresses the whole plan."""
-    arguments = _scope_prefix(plan)
+    arguments = _unit_prefix(plan)
     arguments += ["bwrap", "--die-with-parent", "--new-session"]
 
     for namespace in plan.unshare:
@@ -131,7 +145,7 @@ def render_flatpak(plan: IsolationPlan, command: Sequence[str]) -> tuple[str, ..
     overrides on top of the packaged permissions, and an override that only
     *added* would leave whatever the packager asked for in place.
     """
-    arguments = _scope_prefix(plan)
+    arguments = _unit_prefix(plan)
     arguments += [
         "flatpak", "run",
         "--nofilesystem=host",
@@ -168,7 +182,7 @@ def render_systemd_scope(plan: IsolationPlan, command: Sequence[str]) -> tuple[s
     """
     if plan.confining:
         raise CapsuleIsolationError("a confining plan cannot be rendered as a bare scope")
-    arguments = _scope_prefix(plan)
+    arguments = _unit_prefix(plan)
     for key in sorted(plan.environment):
         arguments += ["--setenv", f"{key}={plan.environment[key]}"]
     arguments += list(_check_command(command))
