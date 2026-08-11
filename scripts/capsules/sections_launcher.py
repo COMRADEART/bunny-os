@@ -223,7 +223,7 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
             f"no sandboxing directives found for {missing}; the unit files are the input to this section",
         )
 
-    capsule = harness.install_probe_app("launcher-probe", "Launcher Probe")
+    capsule = harness.install_probe_app("art.comrade.LauncherProbe", "Launcher Probe")
     plan = harness.runtime.build_plan(capsule)
     argv = render(plan, _default_command(capsule.manifest))
     environment = dict(plan.launcher_environment)
