@@ -20,6 +20,7 @@ import tempfile
 import unittest
 
 from scripts.capsules.sections_launcher import (
+    LAUNCHER_UNIT_ROLES,
     LAUNCHER_UNITS,
     SANDBOX_DIRECTIVES,
     _as_scope,
@@ -133,6 +134,61 @@ class TheQuoting(unittest.TestCase):
         for value in ("a b", "a;rm -rf /", "$(id)", "`id`", "a\\b", 'a"b'):
             with self.subTest(value=value):
                 self.assertEqual(self._round_trip(value), value)
+
+
+class TheRolesAndTheFix(unittest.TestCase):
+    """The two halves of the launcher defect, pinned at the source level.
+
+    The section proves them on a Linux host; these fail on any machine the
+    moment somebody moves a ReadWritePaths= line to the wrong unit or drops the
+    tmpfiles rule the namespace setup depends on.
+    """
+
+    def test_exactly_one_unit_is_the_runtime(self) -> None:
+        roles = list(LAUNCHER_UNIT_ROLES.values())
+        self.assertEqual(roles.count("runtime"), 1, LAUNCHER_UNIT_ROLES)
+        self.assertEqual(set(roles), {"runtime", "client"})
+
+    def test_the_runtime_unit_names_the_state_roots(self) -> None:
+        properties = unit_properties(ROOT / "systemd/user/bunny-companion.service")
+        lines = [item for item in properties if item.startswith("ReadWritePaths=")]
+        self.assertEqual(len(lines), 1, properties)
+        self.assertIn("%h/.local/share/bunny", lines[0])
+        self.assertIn("%h/.local/state/bunny", lines[0])
+
+    def test_the_client_unit_does_not(self) -> None:
+        """A window that can write the trust store can mint its own grants."""
+        properties = unit_properties(ROOT / "systemd/user/bunny-companion-window.service")
+        self.assertEqual(
+            [item for item in properties if item.startswith("ReadWritePaths=")], []
+        )
+        self.assertIn("ProtectHome=read-only", properties)
+
+    def test_the_tmpfiles_rule_creates_what_the_unit_names(self) -> None:
+        """A ReadWritePaths= path that does not exist fails namespace setup with
+        226/NAMESPACE before ExecStart — measured on 60 of 60 fresh homes by the
+        first-boot unit, which is why the rule idiom exists at all."""
+        rules = (ROOT / "config/user-tmpfiles/bunny-os.conf").read_text(encoding="utf-8")
+        directives = [
+            line.split() for line in rules.splitlines()
+            if line.strip() and not line.strip().startswith("#")
+        ]
+        created = {parts[1] for parts in directives if parts[0] == "d"}
+        for needed in ("%h/.local/share/bunny", "%h/.local/state/bunny"):
+            self.assertIn(needed, created, f"{needed} is named by ReadWritePaths= but never created")
+
+    def test_the_parser_sees_the_relaxation(self) -> None:
+        """ReadWritePaths= must be in SANDBOX_DIRECTIVES: a sandbox reproduced
+        without its relaxations reports the pre-relaxation behaviour, and the
+        writability half of the section would fail forever against the fix."""
+        self.assertIn("ReadWritePaths", SANDBOX_DIRECTIVES)
+
+    def test_runtime_directory_is_deliberately_not_reproduced(self) -> None:
+        """systemd removes a RuntimeDirectory when its unit stops; a probe unit
+        reusing the live Companion's directory name would delete the session's
+        socket directory on exit."""
+        self.assertNotIn("RuntimeDirectory", SANDBOX_DIRECTIVES)
+
 
 
 if __name__ == "__main__":

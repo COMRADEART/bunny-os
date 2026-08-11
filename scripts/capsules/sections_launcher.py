@@ -74,9 +74,19 @@ UNIT_SEARCH_PATHS = (
     _REPOSITORY / "systemd/user",
 )
 
-#: The units that launch capsules in the product. Both, because they carry
-#: different properties and either could be the one that starts an application.
-LAUNCHER_UNITS = ("bunny-companion.service", "bunny-companion-window.service")
+#: The units this section measures, and what each is for. ``runtime`` hosts the
+#: capsule runtime: it launches capsules and writes the capsule root and the
+#: trust store, so it must be able to. ``client`` is a view of the runtime over
+#: its socket: it launches nothing and holds no authority, and it must *not* be
+#: able to write the trust store — a renderer that could would be a renderer
+#: that can mint its own grants. Both directions are asserted, because either
+#: one regressing is a defect and they fail in opposite directions.
+LAUNCHER_UNIT_ROLES = {
+    "bunny-companion.service": "runtime",
+    "bunny-companion-window.service": "client",
+}
+
+LAUNCHER_UNITS = tuple(LAUNCHER_UNIT_ROLES)
 
 
 def find_unit(name: str) -> Path | None:
@@ -87,11 +97,17 @@ def find_unit(name: str) -> Path | None:
             return candidate
     return None
 
-#: The ``[Service]`` directives that can stop a sandbox being built. Everything
-#: here is a restriction; none of them is a resource limit or a logging choice,
-#: because those cannot refuse a namespace and including them would make the
-#: transient unit fail to start for reasons that have nothing to do with the
-#: question.
+#: The ``[Service]`` directives that shape what a unit can reach. Restrictions,
+#: and also the mount-policy relaxations (``ReadWritePaths=``), because a
+#: sandbox reproduced without its relaxations reports the pre-relaxation
+#: behaviour: the writability half of this section would fail forever against a
+#: unit whose fix it cannot see. Resource limits and logging choices are left
+#: out — they cannot refuse a namespace, and including them would make the
+#: transient unit fail for reasons that have nothing to do with the question.
+#: ``RuntimeDirectory=`` is deliberately absent even though it shapes the
+#: filesystem: systemd removes a runtime directory when its unit stops, so a
+#: probe unit reusing the real Companion's directory name would delete a live
+#: session's socket directory on exit.
 SANDBOX_DIRECTIVES = (
     "CapabilityBoundingSet",
     "LockPersonality",
@@ -109,6 +125,9 @@ SANDBOX_DIRECTIVES = (
     "ProtectKernelTunables",
     "ProtectProc",
     "ProtectSystem",
+    "ReadOnlyPaths",
+    "ReadWritePaths",
+    "InaccessiblePaths",
     "RestrictAddressFamilies",
     "RestrictNamespaces",
     "RestrictRealtime",
@@ -213,35 +232,21 @@ def _replace_first(argv: Sequence[str], needle: str, replacement: Sequence[str])
     return tuple(out)
 
 
-def _state_writable(properties: Sequence[str], environment: Mapping[str, str], unit: str) -> Mapping[str, Any]:
-    """Can a unit with these properties write the trust store and the capsule root?
+def _state_roots() -> Mapping[str, Path]:
+    """The directories the runtime writes, at their default locations.
 
-    Launching is only half of what the Companion has to do. Installing a capsule
-    writes the capsule root; recording a grant writes the trust store; and both
-    live under the user's XDG directories, which ``ProtectHome=read-only``
-    covers. A Companion that could launch and could not install would fail on the
-    first application anybody added.
-
-    The *default* paths, not the harness's overrides. The harness points the
-    roots at a temporary directory so that a qualification run never touches the
-    real account, and a temporary directory is exactly the place ProtectHome does
-    not cover — so measuring there would report a Companion that works.
-
-    One file is created and removed under the nearest ancestor of each root that
-    already exists. Nothing is created that was not there, and the name of the
-    file says what it is.
+    Without the harness's overrides: ``Harness.build()`` points both roots at a
+    throwaway directory under ``/tmp`` so a qualification run never touches the
+    real account — and ``/tmp`` is exactly where ``PrivateTmp=yes``, not
+    ``ProtectHome=``, decides the answer. Probing there measured the wrong
+    property and reported a failure with the wrong cause.
     """
     import capsules as _capsules
     import trust as _trust
 
-    # Without the harness's overrides. Harness.build() points both roots at a
-    # throwaway directory under /tmp so a qualification run never touches the
-    # real account — and /tmp is exactly where PrivateTmp=yes, not ProtectHome,
-    # decides the answer. Probing there measured the wrong property and reported
-    # a failure with the wrong cause.
     saved = {key: os.environ.pop(key, None) for key in _ROOT_OVERRIDES}
     try:
-        targets = {
+        return {
             "capsuleRoot": _capsules.default_capsule_root(),
             "trustStore": _trust.default_store_path().parent,
             "trustAudit": _trust.default_audit_path().parent,
@@ -250,16 +255,66 @@ def _state_writable(properties: Sequence[str], environment: Mapping[str, str], u
         for key, value in saved.items():
             if value is not None:
                 os.environ[key] = value
+
+
+def _establish(targets: Mapping[str, Path]) -> list[Path]:
+    """Make the state roots exist, the way the image does before any unit starts.
+
+    In the image a user-tmpfiles rule creates ``~/.local/share/bunny`` and
+    ``~/.local/state/bunny`` before ``basic.target``, because a
+    ``ReadWritePaths=`` path that does not exist fails mount-namespace setup
+    with 226/NAMESPACE before ExecStart. This section reproduces the runtime
+    unit's directives, so it inherits the same precondition; on a development
+    host with no tmpfiles rule it establishes the directories itself and
+    returns what it created so the caller can remove them afterwards.
+    """
+    created: list[Path] = []
+    for directory in targets.values():
+        pending: list[Path] = []
+        current = directory
+        while not current.is_dir() and current.parent != current:
+            pending.append(current)
+            current = current.parent
+        for item in reversed(pending):
+            item.mkdir(mode=0o700)
+            created.append(item)
+    return created
+
+
+def _remove_established(created: Sequence[Path]) -> None:
+    """Remove what :func:`_establish` created, deepest first, only if empty.
+
+    ``rmdir`` refuses a non-empty directory, so anything a probe or another
+    process put there survives and the account is left exactly as found.
+    """
+    for directory in sorted(created, key=lambda item: len(item.parts), reverse=True):
+        try:
+            directory.rmdir()
+        except OSError:
+            pass
+
+
+def _state_writable(
+    targets: Mapping[str, Path],
+    properties: Sequence[str],
+    environment: Mapping[str, str],
+    unit: str,
+) -> Mapping[str, Any]:
+    """Can a unit with these properties write the trust store and the capsule root?
+
+    Launching is only half of what the Companion has to do. Installing a capsule
+    writes the capsule root; recording a grant writes the trust store; and both
+    live under the user's XDG directories, which ``ProtectHome=read-only``
+    covers. A Companion that could launch and could not install would fail on the
+    first application anybody added.
+
+    One file is created and removed under each root. The roots exist by this
+    point — :func:`_establish` is the same precondition the image's tmpfiles
+    rule provides — and the file's name says what it is.
+    """
     results: dict[str, Any] = {}
     for index, (name, directory) in enumerate(targets.items()):
-        # The nearest ancestor that exists, rather than creating the tree. A
-        # qualification run must not leave directories behind in somebody's
-        # account, and it does not need to: ProtectHome= covers the whole of
-        # $HOME uniformly, so any existing ancestor answers the same question.
-        probed = directory
-        while not probed.is_dir() and probed.parent != probed:
-            probed = probed.parent
-        marker = probed / ".bunny-qualify-write-probe"
+        marker = directory / ".bunny-qualify-write-probe"
         script = (
             f"touch {_quote(str(marker))} && rm -f {_quote(str(marker))} && echo WRITABLE"
         )
@@ -270,8 +325,6 @@ def _state_writable(properties: Sequence[str], environment: Mapping[str, str], u
         )
         results[name] = {
             "path": str(directory),
-            "probed": str(probed),
-            "existed": directory.is_dir(),
             "writable": outcome["exitCode"] == 0,
             "exitCode": outcome["exitCode"],
         }
@@ -435,18 +488,37 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
             f"{refused}",
         )
 
-    # Launching is not the whole job. A Companion that can start a capsule and
-    # cannot write the capsule root has moved the failure one step later.
-    writability = {
-        name: _state_writable(properties, environment, f"bunny-launcher-w{index}")
-        for index, (name, properties) in enumerate(units.items())
-    }
+    # Launching is not the whole job. The runtime unit installs capsules and
+    # records grants, so it must be able to write the state roots; the window is
+    # a client of it, so it must not. Both directions, because either one
+    # regressing is a defect and they fail in opposite ways: a runtime that
+    # cannot write fails the first application anybody adds, and a window that
+    # can write the trust store is a renderer that can mint its own grants.
+    targets = _state_roots()
+    established = _establish(targets)
+    try:
+        writability = {
+            name: _state_writable(targets, properties, environment, f"bunny-launcher-w{index}")
+            for index, (name, properties) in enumerate(units.items())
+        }
+    finally:
+        _remove_established(established)
     evidence.measurements["stateWritable"] = writability
+    evidence.measurements["stateRootsEstablished"] = [str(item) for item in established]
+
     unwritable = sorted({
         f"{unit} cannot write {row['path']}"
         for unit, rows in writability.items()
+        if LAUNCHER_UNIT_ROLES.get(unit) == "runtime"
         for row in rows.values()
         if not row["writable"]
+    })
+    overwritable = sorted({
+        f"{unit} can write {row['path']}"
+        for unit, rows in writability.items()
+        if LAUNCHER_UNIT_ROLES.get(unit) == "client"
+        for row in rows.values()
+        if row["writable"]
     })
     if unwritable:
         evidence.findings.append(
@@ -454,13 +526,24 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
             + "; ".join(unwritable)
             + ". Installing a capsule writes the capsule root and recording a grant writes the "
             "trust store, both under the user's XDG directories, which ProtectHome=read-only "
-            "covers. The narrow fix is a ReadWritePaths= line naming those two roots, which is "
-            "what bunny-desktop.service already does for the same directories."
+            "covers. The narrow fix is a ReadWritePaths= line naming those roots on the runtime "
+            "unit, plus the user-tmpfiles rule that makes them exist before namespace setup."
         )
+    if overwritable:
+        evidence.findings.append(
+            "a client unit can write the runtime's state: "
+            + "; ".join(overwritable)
+            + ". The window holds no authority by design — a renderer that can write the trust "
+            "store can mint its own grants. Its ProtectHome=read-only must stay, and no "
+            "ReadWritePaths= naming these roots belongs on it."
+        )
+    if unwritable or overwritable:
         return evidence.settle(
             "FAIL",
-            f"the capsule launched under every unit's properties, and {len(unwritable)} of the "
-            f"directories the runtime has to write are read-only to those same units",
+            f"the capsule launched under every unit's properties, and the state roots are "
+            f"{'read-only to the runtime unit' if unwritable else ''}"
+            f"{' and ' if unwritable and overwritable else ''}"
+            f"{'writable by a client unit' if overwritable else ''}",
         )
 
     # The regression control. Everything above passing is the intended result and

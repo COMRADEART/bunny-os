@@ -25,6 +25,13 @@ After=graphical-session.target
 # improvise one; the condition names the missing dependency in the journal
 # rather than producing an ImportError on every restart attempt.
 ConditionPathExists=/usr/lib/bunny-os/python/capability
+# The state roots below are created by the user manager's tmpfiles rule
+# (user-tmpfiles/bunny-os.conf); a ReadWritePaths= path that does not exist
+# fails namespace setup with 226/NAMESPACE before ExecStart ever runs, which
+# is why the rule and this Wants= exist. See bunny-config-dir.service for why
+# After= alone would order nothing.
+Wants=systemd-tmpfiles-setup.service
+After=systemd-tmpfiles-setup.service
 StartLimitIntervalSec=60s
 StartLimitBurst=4
 
@@ -44,6 +51,14 @@ TimeoutStopSec=15s
 # The socket lives here, 0700, and goes away with the session.
 RuntimeDirectory=bunny-companion
 RuntimeDirectoryMode=0700
+# The capsule root and the trust store. Installing a capsule writes the first;
+# recording a grant writes the second and third; all live under the user's XDG
+# directories, which ProtectHome=read-only covers. The launcher qualification
+# section measured a runtime that could start a capsule and could not keep one:
+# the install failed on the first write. These two lines are the whole fix, and
+# the window unit deliberately does not get them - it is a client, and a
+# renderer that could write the trust store could mint its own grants.
+ReadWritePaths=%h/.local/share/bunny %h/.local/state/bunny
 # The store lives here. Per-user under the session, never system-wide: a
 # companion session is one person's conversation and /var would make it readable
 # by every account on a shared machine.
