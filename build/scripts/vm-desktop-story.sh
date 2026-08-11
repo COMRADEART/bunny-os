@@ -167,6 +167,7 @@ if [[ "${interact}" == "1" ]]; then
   # The driver blocks until the guest's probe announces itself on the control
   # channel, so it is started after the screenshots rather than racing them.
   if python3 build/scripts/desktop-drive.py \
+      --journey "${BUNNY_DESKTOP_JOURNEY:-skip}" \
       --qmp "${qmp}" --control "${control}" \
       --width "${width}" --height "${height}" \
       --screens "${work}/screens" \

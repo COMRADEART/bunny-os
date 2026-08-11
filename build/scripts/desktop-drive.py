@@ -47,6 +47,18 @@ _qmp_input = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_qmp_input)
 Pointer = _qmp_input.Pointer
 
+# The same control finder the guest probe uses, imported rather than reimplemented
+# so that "the button the host pressed" and "the button the guest found" cannot be
+# two different rules for choosing among controls with one name.
+_interaction_spec = importlib.util.spec_from_file_location(
+    "desktop_interaction_host", Path(__file__).resolve().parent / "desktop_interaction.py")
+_interaction = importlib.util.module_from_spec(_interaction_spec)
+_interaction_spec.loader.exec_module(_interaction)
+desktop_interaction_find = _interaction.find_control
+
+#: What the person asks for. One sentence, and the only text the journey types.
+JOURNEY_REQUEST = "Resize this to 100 pixels wide."
+
 
 class Control:
     """The host end of the guest's control channel."""
@@ -116,6 +128,9 @@ def main() -> int:
     #: answer from the runtime; the second must produce a desktop action.
     parser.add_argument("--ask", default="What files are in my Downloads folder?")
     parser.add_argument("--ask-action", default="Open Files")
+    parser.add_argument("--journey", default="skip",
+                        choices=("skip", "granted", "denied", "failing"),
+                        help="drive the image journey through the shell's own Trust surface")
     arguments = parser.parse_args()
 
     steps: list[dict] = []
@@ -389,6 +404,101 @@ def interact(control, qmp, pointer, targets, arguments,
             "final": final,
         }
         screenshot(f"08-{label}-answered")
+
+
+    # ---- the image journey, through the screen -----------------------------
+    #
+    # The Trust surface already exists in the shell: an approval box with Allow
+    # and Deny, both carrying accessible names. It never appeared in earlier
+    # runs because `desktopShell.js` shows an approval only for a task *it*
+    # asked for — `this._owns(meta)` — and the journey probe submitted through
+    # its own protocol client. So the request is typed into the assistant here,
+    # the same way a person types it, and the button is pressed on screen.
+    #
+    # No protocol shortcut: this function never calls resolve_approval. If the
+    # approval box does not appear, the journey fails, which is the correct
+    # outcome for a Trust prompt nobody can see.
+    def run_journey(decision: str, fixture: str) -> dict:
+        outcome: dict = {"decision": decision, "fixture": fixture}
+        prepared = control.ask({"command": "fixture", "kind": fixture,
+                                "label": "journey-fixture"}, timeout=180)
+        outcome["fixture"] = (prepared or {}).get("fixture") or {}
+        step("journey-fixture", **{k: v for k, v in outcome["fixture"].items()
+                                   if k != "raw"})
+        if not outcome["fixture"].get("ok"):
+            return outcome
+
+        screenshot("journey-01-idle")
+        pointer.key("meta_l", "shift", "b")
+        time.sleep(2.5)
+        screenshot("journey-02-listening")
+        pointer.type_text(JOURNEY_REQUEST)
+        time.sleep(0.5)
+        screenshot("journey-03-typed")
+        pointer.key("ret")
+        step("journey-asked", request=JOURNEY_REQUEST)
+
+        # Wait for the approval box by *name*, re-locating controls each time.
+        # The box does not exist until the task reaches waiting_for_approval, so
+        # the target list built at start-up cannot contain it.
+        wanted = "Allow this Bunny action" if decision == "granted" else "Deny this Bunny action"
+        button = None
+        states: list[dict] = []
+        deadline = time.monotonic() + arguments.settle * 2
+        while time.monotonic() < deadline:
+            answer = control.ask({"command": "controls", "label": "journey-approval"},
+                                 timeout=120)
+            controls_now = (answer or {}).get("controls") or {}
+            button = desktop_interaction_find(controls_now, wanted)
+            if button is not None:
+                break
+            character = control.ask({"command": "character", "label": "journey-wait"},
+                                    timeout=120)
+            state = ((character or {}).get("character") or {}).get("state", "")
+            if state and (not states or states[-1] != state):
+                states.append(state)
+            time.sleep(2)
+        outcome["statesBeforeApproval"] = states
+        if button is None:
+            step("journey-approval", visible=False,
+                 reason=f"no control named {wanted!r} appeared on screen")
+            outcome["approvalVisible"] = False
+            screenshot("journey-04-no-approval")
+            return outcome
+
+        # The prompt is on screen. Photograph it before touching it.
+        screenshot("journey-04-trust-prompt")
+        labels = [
+            entry.get("name", "")
+            for entry in (controls_now.get("controls") or [])
+            if entry.get("name") and "bunny-assistant-approval" in " ".join(entry.get("path", []))
+        ]
+        outcome["approvalVisible"] = True
+        outcome["approvalLabels"] = labels[:12]
+        step("journey-approval", visible=True, button=wanted,
+             extents=button["extents"], role=button.get("role"), labels=labels[:6])
+
+        x, y = centre(button["extents"])
+        pointer.click(x, y)
+        step("journey-decision", pressed=wanted, at={"x": x, "y": y})
+        screenshot("journey-05-decided")
+
+        outcome["statesAfterApproval"] = [
+            item["state"] for item in watch_character(arguments.settle * 2, "journey")
+        ]
+        screenshot("journey-06-settled")
+        final = control.ask({"command": "character", "label": "journey-final"}, timeout=120)
+        outcome["final"] = (final or {}).get("character") or {}
+        result = control.ask({"command": "result", "label": "journey-result"}, timeout=180)
+        outcome["result"] = (result or {}).get("result") or {}
+        step("journey-result", **{k: v for k, v in outcome["result"].items() if k != "raw"})
+        screenshot("journey-07-result")
+        return outcome
+
+    if arguments.journey != "skip":
+        decision = "denied" if arguments.journey == "denied" else "granted"
+        fixture = "corrupt" if arguments.journey == "failing" else "real"
+        report["journey"] = run_journey(decision, fixture)
 
     # ---- Files ------------------------------------------------------------
     if press("files", "Files") is not None:

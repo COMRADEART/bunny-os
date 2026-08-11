@@ -358,6 +358,16 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
             # program the shell spawns. See desktop_interaction.ask_through_the_bridge.
             answer["ask"] = desktop_interaction.ask_through_the_bridge(
                 str(request.get("request", "")), user, environment)
+        elif verb == "fixture":
+            # The journey's images, written as the user. A file root created in
+            # /var/home would be owned by root and unreadable through the
+            # capsule's grant — a permission failure wearing a security result's
+            # clothes.
+            answer["fixture"] = desktop_interaction.make_image_fixture(
+                str(request.get("kind", "real")), user, environment
+            )
+        elif verb == "result":
+            answer["result"] = desktop_interaction.journey_result(user, environment)
         elif verb == "character":
             # What the figure is doing and what the bubble says, both read out
             # of the accessibility tree. This is how the host watches the state

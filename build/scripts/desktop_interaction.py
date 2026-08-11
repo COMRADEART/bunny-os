@@ -492,6 +492,100 @@ def ask_through_the_bridge(request: str, user: str, environment: list[str]) -> d
     }
 
 
+
+#: The journey's fixture, written as the user by the user's own Python. A file
+#: created by root in /var/home would be owned by root and unreadable to the
+#: capsule's grant, which is a permission failure dressed as a security result.
+_FIXTURE_PROGRAM = """
+import sys
+from pathlib import Path
+kind = sys.argv[1]
+pictures = Path.home() / "Pictures"
+pictures.mkdir(parents=True, exist_ok=True)
+source = pictures / "holiday.png"
+neighbour = pictures / "private-neighbour.png"
+for stale in list(pictures.glob("*-resized*.png")) + [source, neighbour]:
+    if stale.exists():
+        stale.unlink()
+import gi
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import GdkPixbuf
+def png(path, width, height, colour):
+    buf = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, False, 8, width, height)
+    buf.fill(colour)
+    buf.savev(str(path), "png", [], [])
+# The neighbour first and stamped older, so "this" means holiday.png. Written
+# after it once, and Bunny offered to resize the file the slice exists to prove
+# is never touched.
+png(neighbour, 32, 32, 0xFF0000FF)
+import os
+os.utime(neighbour, (1000000, 1000000))
+if kind == "corrupt":
+    source.write_bytes(b"not a png, and deliberately so" * 8)
+else:
+    png(source, 400, 200, 0x3366CCFF)
+import hashlib, json
+print(json.dumps({
+    "source": str(source),
+    "kind": kind,
+    "sourceDigest": hashlib.sha256(source.read_bytes()).hexdigest()[:32],
+    "neighbourDigest": hashlib.sha256(neighbour.read_bytes()).hexdigest()[:32],
+}))
+"""
+
+#: What the journey produced, read back as the user.
+_RESULT_PROGRAM = """
+import hashlib, json
+from pathlib import Path
+pictures = Path.home() / "Pictures"
+source = pictures / "holiday.png"
+neighbour = pictures / "private-neighbour.png"
+produced = sorted(item.name for item in pictures.glob("*-resized*.png"))
+pixels = None
+if produced:
+    try:
+        import gi
+        gi.require_version("GdkPixbuf", "2.0")
+        from gi.repository import GdkPixbuf
+        buf = GdkPixbuf.Pixbuf.new_from_file(str(pictures / produced[0]))
+        pixels = [buf.get_width(), buf.get_height()]
+    except Exception:
+        pixels = None
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()[:32] if path.is_file() else ""
+print(json.dumps({
+    "files": produced,
+    "pixels": pixels,
+    "sourceDigest": digest(source),
+    "neighbourDigest": digest(neighbour),
+}))
+"""
+
+
+def _as_user_python(program: str, arguments: list[str], user: str,
+                    environment: list[str]) -> dict:
+    code, out, err = _run(
+        ["/usr/bin/env", *environment, "/usr/bin/python3", "-c", program, *arguments],
+        user=user, timeout=60,
+    )
+    if code != 0:
+        return {"ok": False, "error": (err or out)[-300:]}
+    try:
+        return {"ok": True, **json.loads(out.strip().splitlines()[-1])}
+    except (ValueError, IndexError) as error:
+        return {"ok": False, "error": f"{type(error).__name__}: {error}", "raw": out[-200:]}
+
+
+def make_image_fixture(kind: str, user: str, environment: list[str]) -> dict:
+    """Put the journey's images in the user's Pictures folder."""
+    return _as_user_python(_FIXTURE_PROGRAM, [kind], user, environment)
+
+
+def journey_result(user: str, environment: list[str]) -> dict:
+    """What is in Pictures now, and whether the originals moved."""
+    return _as_user_python(_RESULT_PROGRAM, [], user, environment)
+
+
 def shell_alive(user: str, environment: list[str]) -> dict:
     """Is GNOME Shell still answering, and is the Bunny extension still enabled?
 
