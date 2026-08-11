@@ -1,0 +1,400 @@
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-tmpfiles-setup-de…[0mCreate Static Device Nodes in /dev.
+[[0;32m  OK  [0m] Reached target [0;1;39mlocal-fs-pre.target[0m…Preparation for Local File Systems.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-oomd.service[0m - Userspace Out-Of-Memory (OOM) Killer.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-resolved.service[0m - Network Name Resolution.
+[[0;32m  OK  [0m] Reached target [0;1;39mnss-lookup.target[0m - Host and Network Name Lookups.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-hwdb-update.service[0m - Rebuild Hardware Database.
+         Starting [0;1;39msystemd-udevd.service[0m - R…ager for Device Events and Files...
+[[0;32m  OK  [0m] Started [0;1;39msystemd-udevd.service[0m - Ru…anager for Device Events and Files.
+         Mounting [0;1;39mvar.mount[0m - /var...
+[[0;32m  OK  [0m] Mounted [0;1;39mvar.mount[0m - /var.
+         Starting [0;1;39mostree-remount.service[0m - OSTree Remount OS/ Bind Mounts...
+[[0;32m  OK  [0m] Finished [0;1;39mostree-remount.service[0m - OSTree Remount OS/ Bind Mounts.
+         Mounting [0;1;39mboot.mount[0m - /boot...
+         Starting [0;1;39msystemd-journal-flush.ser…[0msh Journal to Persistent Storage...
+         Starting [0;1;39msystemd-random-seed.service[0m - Load/Save OS Random Seed...
+[    6.150317] lpc_ich 0000:00:1f.0: I/O space for GPIO uninitialized
+[    6.150516] systemd-journald[657]: Received client request to flush runtime journal.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-random-seed.service[0m - Load/Save OS Random Seed.
+[    6.187682] [drm] pci: virtio-vga detected at 0000:00:02.0
+[    6.190996] input: QEMU Virtio Tablet as /devices/pci0000:00/0000:00:03.0/virtio2/input/input5
+[    6.206188] Console: switching to colour dummy device 80x25
+[    6.207309] virtio-pci 0000:00:02.0: vgaarb: deactivate vga console
+[    6.208362] [drm] features: -virgl +edid -resource_blob -host_visible
+[    6.208363] [drm] features: -context_init
+[    6.210458] [drm] number of scanouts: 1
+[    6.210994] [drm] number of cap sets: 0
+[    6.211874] virtio-pci 0000:00:02.0: [drm] Registered 1 planes with drm panic
+[    6.217043] [drm] Initialized virtio_gpu 0.1.0 for 0000:00:02.0 on minor 1
+[    6.219991] fbcon: virtio_gpudrmfb (fb0) is primary device
+[    6.233703] Console: switching to colour frame buffer device 240x67
+[    6.235547] iTCO_wdt iTCO_wdt.1.auto: Found a ICH9 TCO device (Version=2, TCOBASE=0x0660)
+[    6.235815] EXT4-fs (vda3): orphan cleanup on readonly fs
+[    6.235888] EXT4-fs (vda3): mounted filesystem 2a0342db-c907-4379-b477-150858506fff ro with ordered data mode. Quota mode: none.
+[    6.237471] iTCO_wdt iTCO_wdt.1.auto: initialized. heartbeat=30 sec (nowayout=0)
+[    6.239240] i801_smbus 0000:00:1f.3: Enabling SMBus device
+[    6.239337] i801_smbus 0000:00:1f.3: SMBus using PCI interrupt
+[    6.242987] i2c i2c-0: Memory type 0x07 not supported yet, not instantiating SPD
+[    6.244372] parport_pc 00:02: reported by Plug and Play ACPI
+[    6.244614] parport0: PC-style at 0x378, irq 7 [PCSPP,TRISTATE]
+[    6.256362] virtio-pci 0000:00:02.0: [drm] fb0: virtio_gpudrmfb frame buffer device
+         Starting [0;1;39msystemd-vconsole-setup.service[0m - Virtual Console Setup...
+[[0;32m  OK  [0m] Mounted [0;1;39mboot.mount[0m - /boot.
+         Mounting [0;1;39mboot-efi.mount[0m - /boot/efi...
+[    6.272945] erofs (device erofs): failed to read inode meta block (nid: 4076): -4
+[[0;32m  OK  [0m] Stopped [0;1;39msystemd-vconsole-setup.service[0m - Virtual Console Setup.
+         Starting [0;1;39msystemd-vconsole-setup.service[0m - Virtual Console Setup...
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-journal-flush.ser…[0mlush Journal to Persistent Storage.
+[    6.299020] RAPL PMU: API unit is 2^-32 Joules, 0 fixed counters, 10737418240 ms ovfl timer
+[[0;32m  OK  [0m] Mounted [0;1;39mboot-efi.mount[0m - /boot/efi.
+[[0;32m  OK  [0m] Reached target [0;1;39mlocal-fs.target[0m - Local File Systems.
+[[0;32m  OK  [0m] Listening on [0;1;39msystemd-bootctl.socket[0m - Boot Entries Service Socket.
+[[0;32m  OK  [0m] Listening on [0;1;39msystemd-sysext.socket[0m… System Extension Image Management.
+         Starting [0;1;39mrpc-statd-notify.service[0m - Notify NFS peers of a restart...
+         Starting [0;1;39msystemd-binfmt.service[0m - Set Up Additional Binary Formats...
+         Starting [0;1;39msystemd-tmpfiles-setup.se…[0mate System Files and Directories...
+         Starting [0;1;39msystemd-userdb-load-crede…[0mr/group Records from Credentials...
+[[0;32m  OK  [0m] Started [0;1;39mrpc-statd-notify.service[0m - Notify NFS peers of a restart.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-vconsole-setup.service[0m - Virtual Console Setup.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-userdb-load-crede…[0mser/group Records from Credentials.
+[    6.414229] ppdev: user-space parallel port driver
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-tmpfiles-setup.se…[0mreate System Files and Directories.
+         Starting [0;1;39mbunny-brlapi-key.service[0m …-device BrlAPI authorisation key...
+         Starting [0;1;39mldconfig.service[0m - Rebuild Dynamic Linker Cache...
+         Starting [0;1;39msystemd-journal-catalog-u…ervice[0m - Rebuild Journal Catalog...
+         Starting [0;1;39msystemd-update-utmp.servi…[0mord System Boot/Shutdown in UTMP...
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-update-utmp.servi…[0mecord System Boot/Shutdown in UTMP.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-journal-catalog-u….service[0m - Rebuild Journal Catalog.
+[    6.552335] intel_rapl_msr: PL4 support detected (updated).
+[[0;32m  OK  [0m] Finished [0;1;39mbunny-brlapi-key.service[0m …er-device BrlAPI authorisation key.
+         Mounting [0;1;39mproc-sys-fs-binfmt_misc.m…[0mcutable File Formats File System...
+         Mounting [0;1;39mvar-lib-nfs-rpc_pipefs.mount[0m - RPC Pipe File System...
+[[0;32m  OK  [0m] Mounted [0;1;39mvar-lib-nfs-rpc_pipefs.mount[0m - RPC Pipe File System.
+[[0;32m  OK  [0m] Reached target [0;1;39mrpc_pipefs.target[0m.
+[[0;32m  OK  [0m] Mounted [0;1;39mproc-sys-fs-binfmt_misc.mo…[0mxecutable File Formats File System.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-binfmt.service[0m - Set Up Additional Binary Formats.
+[    8.343182] clocksource: Watchdog remote CPU 3 read timed out
+[[0;32m  OK  [0m] Finished [0;1;39mldconfig.service[0m - Rebuild Dynamic Linker Cache.
+         Starting [0;1;39msystemd-update-done.service[0m - Update is Completed...
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-update-done.service[0m - Update is Completed.
+[[0;32m  OK  [0m] Reached target [0;1;39msysinit.target[0m - System Initialization.
+[[0;32m  OK  [0m] Started [0;1;39mbootc-status-updated.path[0m - Monitor bootc for status changes.
+[[0;32m  OK  [0m] Started [0;1;39mcups.path[0m - CUPS Scheduler.
+[[0;32m  OK  [0m] Started [0;1;39mlvm-devices-import.path[0m - …es-import to create system.devices.
+[[0;32m  OK  [0m] Started [0;1;39mbootc-fetch-apply-updates.timer[0m - Apply bootc updates.
+[[0;32m  OK  [0m] Started [0;1;39mfstrim.timer[0m - Discard unused filesystem blocks once a week.
+[[0;32m  OK  [0m] Started [0;1;39mlogrotate.timer[0m - Daily rotation of log files.
+[[0;32m  OK  [0m] Started [0;1;39mraid-check.timer[0m - Weekly RAID setup health check.
+[[0;32m  OK  [0m] Started [0;1;39mrpm-ostree-countme.timer[0m - Weekly rpm-ostree Count Me timer.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-tmpfiles-clean.tim…[0my Cleanup of Temporary Directories.
+[[0;32m  OK  [0m] Reached target [0;1;39mbootc-status-update…[0m - Bootc status trigger state sync.
+[[0;32m  OK  [0m] Reached target [0;1;39mpaths.target[0m - Path Units.
+[[0;32m  OK  [0m] Reached target [0;1;39mtimers.target[0m - Timer Units.
+[[0;32m  OK  [0m] Listening on [0;1;39mavahi-daemon.socket[0m -…DNS/DNS-SD Stack Activation Socket.
+[[0;32m  OK  [0m] Listening on [0;1;39mbunny-system-broker.s…[0m OS local privileged broker socket.
+[[0;32m  OK  [0m] Listening on [0;1;39mcups.socket[0m - CUPS Scheduler.
+[[0;32m  OK  [0m] Listening on [0;1;39mdbus.socket[0m - D-Bus System Message Bus Socket.
+[[0;32m  OK  [0m] Listening on [0;1;39msshd-unix-local.socke…[0mtemd-ssh-generator, AF_UNIX Local).
+         Starting [0;1;39msshd-vsock.socket[0m - OpenS…systemd-ssh-generator, AF_VSOCK)...
+[[0;32m  OK  [0m] Listening on [0;1;39msystemd-hostnamed.socket[0m - Hostname Service Socket.
+[[0;32m  OK  [0m] Listening on [0;1;39msystemd-logind-varlin…[0mer Login Management Varlink Socket.
+[[0;32m  OK  [0m] Started [0;1;39mbootc-generic-growpart.ser…[0mootc Fallback Root Filesystem Grow.
+         Starting [0;1;39mdbus-broker.service[0m - D-Bus System Message Bus...
+[[0;32m  OK  [0m] Listening on [0;1;39msshd-vsock.socket[0m - O… (systemd-ssh-generator, AF_VSOCK).
+[[0;32m  OK  [0m] Reached target [0;1;39msockets.target[0m - Socket Units.
+[[0;32m  OK  [0m] Reached target [0;1;39mssh-access.target[0m - SSH Access Available.
+[[0;32m  OK  [0m] Started [0;1;39mdbus-broker.service[0m - D-Bus System Message Bus.
+[[0;32m  OK  [0m] Reached target [0;1;39mbasic.target[0m - Basic System.
+         Starting [0;1;39mauthselect-apply-changes.…rvice[0m - Apply authselect changes...
+         Starting [0;1;39mavahi-daemon.service[0m - Avahi mDNS/DNS-SD Stack...
+         Starting [0;1;39mbootloader-update.service[0m - Update bootloader on boot...
+         Starting [0;1;39mbunny-health-check.service[0m - Bunny OS boot health check...
+         Starting [0;1;39mdracut-shutdown.service[0m -…store /run/initramfs on shutdown...
+[[0;32m  OK  [0m] Started [0;1;39mfirewalld.service[0m - firewalld - dynamic firewall daemon.
+[[0;32m  OK  [0m] Reached target [0;1;39mnetwork-pre.target[0m - Preparation for Network.
+         Starting [0;1;39mNetworkManager.service[0m - Network Manager...
+         Starting [0;1;39mflatpak-add-fedora-repos.…[0m Add Fedora flatpak repositories...
+[[0;32m  OK  [0m] Started [0;1;39mirqbalance.service[0m - irqbalance daemon.
+         Starting [0;1;39mlvm-devices-import.service[0m - Create lvm system.devices...
+         Starting [0;1;39mrpm-ostree-fix-shadow-mod…[0mdate permissions for /etc/shadow...
+         Starting [0;1;39mrtkit-daemon.service[0m - Re…imeKit Scheduling Policy Service...
+         Starting [0;1;39mssh-host-keys-migration.s…[0mate OpenSSH host key permissions...
+         Starting [0;1;39msshd-keygen@ecdsa.service[0m…nSSH ecdsa Server Key Generation...
+         Starting [0;1;39msshd-keygen@ed25519.servi…[0mSH ed25519 Server Key Generation...
+         Starting [0;1;39msshd-keygen@rsa.service[0m -…penSSH rsa Server Key Generation...
+         Starting [0;1;39mswitcheroo-control.servic…[0mSwitcheroo Control Proxy service...
+         Starting [0;1;39msystemd-homed.service[0m - Home Area Manager...
+         Starting [0;1;39mudisks2.service[0m - Disk Manager...
+         Starting [0;1;39mupower.service[0m - Daemon for power management...
+[[0;32m  OK  [0m] Finished [0;1;39mdracut-shutdown.service[0m - Restore /run/initramfs on shutdown.
+[[0;32m  OK  [0m] Finished [0;1;39mlvm-devices-import.service[0m - Create lvm system.devices.
+[[0;32m  OK  [0m] Finished [0;1;39msshd-keygen@ecdsa.service[0m…penSSH ecdsa Server Key Generation.[    9.308868] EXT4-fs (vda4): re-mounted 9f13d44e-b339-435b-8e52-10f130123dda.
+
+[[0;32m  OK  [0m] Finished [0;1;39msshd-keygen@ed25519.servi…[0mnSSH ed25519 Server Key Generation.
+[[0;32m  OK  [0m] Finished [0;1;39mssh-host-keys-migration.s…[0mpdate OpenSSH host key permissions.
+[    9.320334] EXT4-fs (vda3): re-mounted 2a0342db-c907-4379-b477-150858506fff r/w.
+[[0;32m  OK  [0m] Finished [0;1;39mrpm-ostree-fix-shadow-mod…[0mUpdate permissions for /etc/shadow.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-homed.service[0m - Home Area Manager.
+[[0;32m  OK  [0m] Started [0;1;39mswitcheroo-control.service[0m - Switcheroo Control Proxy service.
+[[0;32m  OK  [0m] Finished [0;1;39mauthselect-apply-changes.service[0m - Apply authselect changes.
+[[0;32m  OK  [0m] Started [0;1;39mrtkit-daemon.service[0m - RealtimeKit Scheduling Policy Service.
+[[0;32m  OK  [0m] Started [0;1;39mavahi-daemon.service[0m - Avahi mDNS/DNS-SD Stack.
+[[0;32m  OK  [0m] Reached target [0;1;39mnss-user-lookup.target[0m - User and Group Name Lookups.
+         Starting [0;1;39maccounts-daemon.service[0m - Accounts Service...
+         Starting [0;1;39mchronyd.service[0m - NTP client/server...
+         Starting [0;1;39mpolkit.service[0m - Authorization Manager...
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-homed-activate.service[0m - Home Area Activation.
+         Starting [0;1;39msystemd-hostnamed.service[0m - Hostname Service...
+         Starting [0;1;39msystemd-logind.service[0m - User Login Management...
+[[0;32m  OK  [0m] Finished [0;1;39mbootloader-update.service[0m - Update bootloader on boot.
+[[0;32m  OK  [0m] Finished [0;1;39mflatpak-add-fedora-repos.…[0m - Add Fedora flatpak repositories.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-hostnamed.service[0m - Hostname Service.
+[[0;32m  OK  [0m] Finished [0;1;39msshd-keygen@rsa.service[0m - OpenSSH rsa Server Key Generation.
+[[0;32m  OK  [0m] Reached target [0;1;39msshd-keygen.target[0m.
+[[0;32m  OK  [0m] Started [0;1;39mchronyd.service[0m - NTP client/server.
+[[0;32m  OK  [0m] Started [0;1;39mNetworkManager.service[0m - Network Manager.
+[[0;32m  OK  [0m] Created slice [0;1;39muser-1000.slice[0m - User Slice of UID 1000.
+[[0;32m  OK  [0m] Reached target [0;1;39mnetwork.target[0m - Network.
+[[0;32m  OK  [0m] Listening on [0;1;39msystemd-rfkill.socket[0m…ll Switch Status /dev/rfkill Watch.
+         Starting [0;1;39mNetworkManager-dispatcher…[0manager Script Dispatcher Service...
+         Starting [0;1;39mgssproxy.service[0m - GSSAPI Proxy Daemon...
+         Starting [0;1;39msshd.service[0m - OpenSSH server daemon...
+[[0;32m  OK  [0m] Started [0;1;39mpolkit.service[0m - Authorization Manager.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-logind.service[0m - User Login Management.
+[[0;32m  OK  [0m] Started [0;1;39msshd.service[0m - OpenSSH server daemon.
+[[0;32m  OK  [0m] Started [0;1;39maccounts-daemon.service[0m - Accounts Service.
+[[0;32m  OK  [0m] Started [0;1;39mudisks2.service[0m - Disk Manager.
+[[0;32m  OK  [0m] Started [0;1;39mNetworkManager-dispatcher.…[0m Manager Script Dispatcher Service.
+[[0;32m  OK  [0m] Started [0;1;39mbunny-system-broker.servic…[0m narrowly scoped privileged broker.
+         Starting [0;1;39muser-runtime-dir@1000.ser…[0mRuntime Directory /run/user/1000...
+[[0;32m  OK  [0m] Started [0;1;39mgssproxy.service[0m - GSSAPI Proxy Daemon.
+[[0;32m  OK  [0m] Reached target [0;1;39mnfs-client.target[0m - NFS client services.
+[[0;32m  OK  [0m] Reached target [0;1;39mremote-fs-pre.targe…[0mreparation for Remote File Systems.
+[[0;32m  OK  [0m] Reached target [0;1;39mremote-cryptsetup.target[0m - Remote Encrypted Volumes.
+[[0;32m  OK  [0m] Reached target [0;1;39mremote-fs.target[0m - Remote File Systems.
+[[0;32m  OK  [0m] Reached target [0;1;39mremote-integrityset…[0mRemote Integrity Protected Volumes.
+[[0;32m  OK  [0m] Reached target [0;1;39mremote-veritysetup.…[0m - Remote Verity Protected Volumes.
+         Starting [0;1;39msystemd-user-sessions.service[0m - Permit User Sessions...
+[[0;32m  OK  [0m] Finished [0;1;39muser-runtime-dir@1000.ser…[0mr Runtime Directory /run/user/1000.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-user-sessions.service[0m - Permit User Sessions.
+         Starting [0;1;39mgdm.service[0m - GNOME Display Manager...
+[[0;32m  OK  [0m] Started [0;1;39mserial-getty@ttyS0.service[0m - Serial Getty on ttyS0.
+[[0;32m  OK  [0m] Reached target [0;1;39mgetty.target[0m - Login Prompts.
+         Starting [0;1;39muser@1000.service[0m - User Manager for UID 1000...
+[[0;32m  OK  [0m] Started [0;1;39mupower.service[0m - Daemon for power management.
+[[0;32m  OK  [0m] Started [0;1;39mgdm.service[0m - GNOME Display Manager.
+[[0;32m  OK  [0m] Finished [0;1;39mbunny-health-check.service[0m - Bunny OS boot health check.
+[[0;32m  OK  [0m] Reached target [0;1;39mmulti-user.target[0m - Multi-User System.
+[[0;32m  OK  [0m] Reached target [0;1;39mgraphical.target[0m - Graphical Interface.
+         Starting [0;1;39mbunny-desktop-probe.servi…[0mted by the harness, not shipped)...
+[[0;32m  OK  [0m] Started [0;1;39muser@1000.service[0m - User Manager for UID 1000.
+[[0;32m  OK  [0m] Started [0;1;39msession-2.scope[0m - Session 2 of User bunny.
+[   10.438382] kauditd_printk_skb: 135 callbacks suppressed
+[   10.438385] audit: type=1325 audit(1786476182.990:135): table=firewalld:5 family=1 entries=224 op=nft_register_chain pid=856 subj=system_u:system_r:firewalld_t:s0 comm="firewalld"
+[   10.442339] audit: type=1300 audit(1786476182.990:135): arch=c000003e syscall=46 success=yes exit=25916 a0=5 a1=7ffe500d1010 a2=0 a3=0 items=0 ppid=1 pid=856 auid=4294967295 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=4294967295 comm="firewalld" exe="/usr/bin/python3.14" subj=system_u:system_r:firewalld_t:s0 key=(null)
+[   10.447924] audit: type=1327 audit(1786476182.990:135): proctitle=2F7573722F62696E2F707974686F6E33002D7350002F7573722F62696E2F6669726577616C6C64002D2D6E6F666F726B002D2D6E6F706964
+[   10.450191] audit: type=1325 audit(1786476183.129:136): table=firewalld_policy_drop:6 family=1 entries=2 op=nft_unregister_table pid=856 subj=system_u:system_r:firewalld_t:s0 comm="firewalld"
+[   10.454111] audit: type=1300 audit(1786476183.129:136): arch=c000003e syscall=46 success=yes exit=164 a0=5 a1=7ffe500d1010 a2=0 a3=0 items=0 ppid=1 pid=856 auid=4294967295 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=4294967295 comm="firewalld" exe="/usr/bin/python3.14" subj=system_u:system_r:firewalld_t:s0 key=(null)
+[   10.460621] audit: type=1327 audit(1786476183.129:136): proctitle=2F7573722F62696E2F707974686F6E33002D7350002F7573722F62696E2F6669726577616C6C64002D2D6E6F666F726B002D2D6E6F706964
+[   10.479928] audit: type=1325 audit(1786476183.162:137): table=firewalld:7 family=1 entries=25 op=nft_register_rule pid=856 subj=system_u:system_r:firewalld_t:s0 comm="firewalld"
+[   10.481944] audit: type=1300 audit(1786476183.162:137): arch=c000003e syscall=46 success=yes exit=6176 a0=5 a1=7ffe500d0900 a2=0 a3=0 items=0 ppid=1 pid=856 auid=4294967295 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=4294967295 comm="firewalld" exe="/usr/bin/python3.14" subj=system_u:system_r:firewalld_t:s0 key=(null)
+[   10.485208] audit: type=1327 audit(1786476183.162:137): proctitle=2F7573722F62696E2F707974686F6E33002D7350002F7573722F62696E2F6669726577616C6C64002D2D6E6F666F726B002D2D6E6F706964
+         Starting [0;1;39mcolord.service[0m - Manage, …tall and Generate Color Profiles...
+[[0;32m  OK  [0m] Started [0;1;39mcolord.service[0m - Manage, Install and Generate Color Profiles.
+[   11.202147] audit: type=1130 audit(1786476183.885:138): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=colord comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+         Starting [0;1;39msystemd-localed.service[0m - Locale Service...
+[[0;32m  OK  [0m] Created slice [0;1;39msystem-cups.slice[0m - CUPS Slice.
+         Starting [0;1;39mfoomaticrip-upgrade.servi…[0mtalled printers for foomatic-rip...
+[[0;32m  OK  [0m] Finished [0;1;39mfoomaticrip-upgrade.servi…[0mnstalled printers for foomatic-rip.
+         Starting [0;1;39mcups.service[0m - CUPS Scheduler...
+[[0;32m  OK  [0m] Started [0;1;39msystemd-localed.service[0m - Locale Service.
+[[0;32m  OK  [0m] Started [0;1;39mcups.service[0m - CUPS Scheduler.
+         Starting [0;1;39mmalcontent-timerd.service[0m - Parental Controls Timer Daemon...
+[[0;32m  OK  [0m] Started [0;1;39mmalcontent-timerd.service[0m - Parental Controls Timer Daemon.
+         Starting [0;1;39mgeoclue.service[0m - Location Lookup Service...
+         Starting [0;1;39mwpa_supplicant.service[0m - WPA supplicant...
+[[0;32m  OK  [0m] Started [0;1;39mwpa_supplicant.service[0m - WPA supplicant.
+[[0;32m  OK  [0m] Started [0;1;39mgeoclue.service[0m - Location Lookup Service.
+[!p]104\[0m[?7h[1G[0J[6n[32766;32766H[6n[!p]104\[0m[?7h[1G[0J[6n[32766;32766H[6n]3008;start=daa06fe107324baa8f2e84494e2e48c0;user=root;hostname=fedora;machineid=28e56475a8d3406f8352cec6f49e6454;bootid=411b585d5e6d4f72b75c82e9c28ba9c9;pid=1040;pidfdid=12583;comm=(agetty);servicename=serial-getty@ttyS0.service;invocationid=a494183953c147d797bf4ce0cb0b111a;type=service\P+q6E616D65\
+Bunny OS 0.1.0 (development)
+Kernel 7.1.5-200.fc44.x86_64 on x86_64 (ttyS0)
+
+enp0s1: 10.0.2.15 fec0::81c5:185b:63a1:cc2f
+Try contacting this VM's SSH server via 'ssh vsock%4294967295' from host.
+
+fedora login: [   19.758690] kauditd_printk_skb: 13 callbacks suppressed
+[   19.758693] audit: type=1131 audit(1786476194.184:152): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=NetworkManager-dispatcher comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[   42.073760] audit: type=1131 audit(1786476216.498:153): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-hostnamed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[   42.094774] audit: type=1334 audit(1786476216.520:154): prog-id=69 op=UNLOAD
+[   42.611142] audit: type=1131 audit(1786476217.036:155): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-localed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[   42.635789] audit: type=1334 audit(1786476217.061:156): prog-id=82 op=UNLOAD
+[   42.637647] audit: type=1334 audit(1786476217.061:157): prog-id=81 op=UNLOAD
+[   42.638937] audit: type=1334 audit(1786476217.061:158): prog-id=80 op=UNLOAD
+[   43.212835] audit: type=1131 audit(1786476217.638:159): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=malcontent-timerd comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[   43.236766] audit: type=1334 audit(1786476217.662:160): prog-id=85 op=UNLOAD
+[   43.237484] audit: type=1334 audit(1786476217.662:161): prog-id=84 op=UNLOAD
+[   43.238284] audit: type=1334 audit(1786476217.662:162): prog-id=83 op=UNLOAD
+[   54.831663] audit: type=1103 audit(1786476229.256:163): pid=2655 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg='op=PAM:setcred grantors=pam_rootok acct="bunny" exe="/usr/bin/runuser" hostname=? addr=? terminal=? res=success'
+[   54.838986] audit: type=1105 audit(1786476229.263:164): pid=2655 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_unix acct="bunny" exe="/usr/bin/runuser" hostname=? addr=? terminal=? res=success'
+[   54.847088] audit: type=1106 audit(1786476229.272:165): pid=2655 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_unix acct="bunny" exe="/usr/bin/runuser" hostname=? addr=? terminal=? res=success'
+[   54.849620] audit: type=1104 audit(1786476229.272:166): pid=2655 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg='op=PAM:setcred grantors=pam_rootok acct="bunny" exe="/usr/bin/runuser" hostname=? addr=? terminal=? res=success'
+[   54.852264] audit: type=1103 audit(1786476229.275:167): pid=2658 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg='op=PAM:setcred grantors=pam_rootok acct="bunny" exe="/usr/bin/runuser" hostname=? addr=? terminal=? res=success'
+[   54.854860] audit: type=1105 audit(1786476229.278:168): pid=2658 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_unix acct="bunny" exe="/usr/bin/runuser" hostname=? addr=? terminal=? res=success'
+[   55.753098] python3[2659]: record written to /home/bunny/bunny-journey.json
+[   55.754228] python3[2659]: BUNNY-JOURNEY-BEGIN
+[   55.755411] python3[2659]: {
+[   55.756076] python3[2659]:  "answeredAt": 0.355,
+[   55.756626] python3[2659]:  "approval": {
+[   55.757507] python3[2659]:   "action": "launch_application",
+[   55.757886] python3[2659]:   "dataClassification": "personal",
+[   55.758251] python3[2659]:   "destination": "local",
+[   55.758377] python3[2659]:   "destinationDetail": "art.comrade.BunnyImageTool",
+[   55.758513] python3[2659]:   "keys": [
+[   55.758655] python3[2659]:    "action",
+[   55.758799] python3[2659]:    "alternatives",
+[   55.758991] python3[2659]:    "dataClassification",
+[   55.759283] python3[2659]:    "decision",
+[   55.759422] python3[2659]:    "destination",
+[   55.759565] python3[2659]:    "destinationDetail",
+[   55.759705] python3[2659]:    "destinationFingerprint",
+[   55.759849] python3[2659]:    "estimatedCostUnits",
+[   55.760202] python3[2659]:    "expiresAtMonotonic",
+[   55.760345] python3[2659]:    "planId",
+[   55.760480] python3[2659]:    "providerId",
+[   55.760621] python3[2659]:    "reason",
+[   55.760762] python3[2659]:    "requestId",
+[   55.760904] python3[2659]:    "safeDefault",
+[   55.761231] python3[2659]:    "sessionId",
+[   55.761397] python3[2659]:    "taskId",
+[   55.761532] python3[2659]:    "transitionId"
+[   55.761672] python3[2659]:   ],
+[   55.761813] python3[2659]:   "missingFromBinding": [
+[   55.762169] python3[2659]:    "estimatedCostUnits",
+[   55.762309] python3[2659]:    "providerId"
+[   55.762451] python3[2659]:   ],
+[   55.762591] python3[2659]:   "reason": "Bunny Image Tool wants to open Pictures/holiday.png. It will save a copy as holiday-resized.png. Your original file will not be changed. It runs in its protected space with no network access.",
+[   55.762737] python3[2659]:   "requestId": "approval:task-52dc122eec2843efa70318010bc1c446:15a82f74b590affa88fcb99508364503:0:launch_application"
+[   55.762878] python3[2659]:  },
+[   55.763221] python3[2659]:  "decision": "denied",
+[   55.763346] python3[2659]:  "elapsedSeconds": 0.615,
+[   55.763487] python3[2659]:  "errors": [
+[   55.763637] python3[2659]:   {
+[   55.763773] python3[2659]:    "code": "blocked",
+[   55.764046] python3[2659]:    "producer": "runtime",
+[   55.764136] python3[2659]:    "sequence": 12,
+[   55.764273] python3[2659]:    "summary": "approval 'approval:task-52dc122eec2843efa70318010bc1c446:15a82f74b590affa88fcb99508364503:0:launch_application' was denied: declined for plan 15a82f74b590affa88fcb99508364503 step 15a82f74b590affa88fcb99508364503:0:launch_application \u2014 approval 'approval:task-52dc122eec2843efa70318010bc1c446:15a82f74b590affa88fcb99508364503:0:launch_application' was denied: declined for plan 15a82f74b590affa88fcb99508364503 step 15a82f74b590affa88fcb99508364503:0:launch_application"
+[   55.764425] python3[2659]:   }
+[   55.764750] python3[2659]:  ],
+[   55.764874] python3[2659]:  "finalState": "blocked",
+[   55.765184] python3[2659]:  "fixture": {
+[   55.765388] python3[2659]:   "digest": "5de7c234a1c3bdcf6b194ac44cf2df96",
+[   55.765584] python3[2659]:   "ok": true,
+[   55.765800] python3[2659]:   "source": "/home/bunny/Pictures/holiday.png"
+[   55.765950] python3[2659]:  },
+[   55.766363] python3[2659]:  "grantsAfter": [],
+[   55.766526] python3[2659]:  "neighbour": {
+[   55.766702] python3[2659]:   "unchanged": true
+[   55.766847] python3[2659]:  },
+[   55.767240] python3[2659]:  "operationEvents": [],
+[   55.767389] python3[2659]:  "original": {
+[   55.767544] python3[2659]:   "exists": true,
+[   55.767693] python3[2659]:   "unchanged": true
+[   55.767840] python3[2659]:  },
+[   55.768193] python3[2659]:  "outputs": [],
+[   55.768349] python3[2659]:  "readiness": {
+[   55.768651] python3[2659]:   "checks": {
+[   55.768795] python3[2659]:    "capsules": {
+[   55.768979] python3[2659]:     "backends": [
+[   55.769341] python3[2659]:      "flatpak",
+[   55.769494] python3[2659]:      "bubblewrap",
+[   55.769648] python3[2659]:      "systemd-scope"
+[   55.769826] python3[2659]:     ],
+[   55.769990] python3[2659]:     "confining": [
+[   55.770294] python3[2659]:      "flatpak",
+[   55.770437] python3[2659]:      "bubblewrap"
+[   55.770591] python3[2659]:     ],
+[   55.770921] python3[2659]:     "ok": true
+[   55.771228] python3[2659]:    },
+[   55.771378] python3[2659]:    "client": {
+[   55.771524] python3[2659]:     "connected": true,
+[   55.771674] python3[2659]:     "exists": true,
+[   55.772590] python3[2659]:     "ok": true,
+[   55.772688] python3[2659]:     "socket": "/run/user/1000/bunny-companion/runtime.sock"
+[   55.772845] python3[2659]:    },
+[   55.773191] python3[2659]:    "companion": {
+[   55.773365] python3[2659]:     "ok": true,
+[   55.773495] python3[2659]:     "units": {
+[   55.773670] python3[2659]:      "bunny-companion-window.service": {
+[   55.773791] python3[2659]:       "activeState": "inactive",
+[   55.773955] python3[2659]:       "loadState": "loaded",
+[   55.774265] python3[2659]:       "looping": false,
+[   55.774400] python3[2659]:       "ok": true,
+[   55.774699] python3[2659]:       "restarts": 0
+[   55.774836] python3[2659]:      },
+[   55.775096] python3[2659]:      "bunny-companion.service": {
+[   55.775341] python3[2659]:       "activeState": "active",
+[   55.775596] python3[2659]:       "loadState": "loaded",
+[   55.775880] python3[2659]:       "looping": false,
+[   55.776231] python3[2659]:       "ok": true,
+[   55.776397] python3[2659]:       "restarts": 0
+[   55.776685] python3[2659]:      }
+[   55.776824] python3[2659]:     }
+[   55.776996] python3[2659]:    },
+[   55.777321] python3[2659]:    "compositor": {
+[   55.777596] python3[2659]:     "gnomeShellRunning": true,
+[   55.777731] python3[2659]:     "ok": true,
+[   55.777876] python3[2659]:     "socketExists": true,
+[   55.778231] python3[2659]:     "waylandDisplay": "wayland-0"
+[   55.778366] python3[2659]:    },
+[   55.778658] python3[2659]:    "session": {
+[   55.778803] python3[2659]:     "hasGraphicalSession": true,
+[   55.779198] python3[2659]:     "ok": true,
+[   55.779434] python3[2659]:     "userState": "active"
+[   55.779566] python3[2659]:    },
+[   55.779700] python3[2659]:    "shell": {
+[   55.779846] python3[2659]:     "ok": true,
+[   55.780071] python3[2659]:     "queried": true,
+[   55.780170] python3[2659]:     "raw": "({'uuid': <'bunny-shell@bunny-os.org'>, 'name': <'Bunny Shell'>, 'description': <'The Bunny OS desktop: top bar, sidebar, dock, dashboard and the Bunny assistant character, plus the launcher, workspac",
+[   55.825733] python3[2659]:     "state": 1.0
+[   55.825966] python3[2659]:    },
+[   55.826266] python3[2659]:    "tasks": {
+[   55.826430] python3[2659]:     "missingPrograms": [],
+[   55.826597] python3[2659]:     "ok": true,
+[   55.826726] python3[2659]:     "operations": [
+[   55.826878] python3[2659]:      "image.resize"
+[   55.827411] python3[2659]:     ]
+[   55.827531] python3[2659]:    },
+[   55.827679] python3[2659]:    "trust": {
+[   55.827833] python3[2659]:     "ok": true,
+[   55.828201] python3[2659]:     "store": "/home/bunny/.local/share/bunny/trust/grants.json"
+[   55.828356] python3[2659]:    }
+[   55.828506] python3[2659]:   },
+[   55.828659] python3[2659]:   "markerSeen": true,
+[   55.828826] python3[2659]:   "notReady": [],
+[   55.829166] python3[2659]:   "ok": true
+[   55.829323] python3[2659]:  },
+[   55.829472] python3[2659]:  "request": "Resize this to 100 pixels wide.",
+[   55.829630] python3[2659]:  "result": {
+[   55.829780] python3[2659]:   "expected": "holiday-resized.png",
+[   55.829976] python3[2659]:   "files": [],
+[   55.830439] python3[2659]:   "fromTheIntendedInput": false,
+[   55.830641] python3[2659]:   "pixels": null
+[   55.830760] python3[2659]:  },
+[   55.830962] python3[2659]:  "states": [
+[   55.831272] python3[2659]:   "created",
+[   55.831429] python3[2659]:   "waiting_for_approval",
+[   55.831592] python3[2659]:   "blocked"
+[   55.831745] python3[2659]:  ],
+[   55.831900] python3[2659]:  "submit": {
+[   55.831910] python3[2659]:   "ok": true,
+[   55.831919] python3[2659]:   "sessionId": "ses-9e7d9ab088fb4095b01151fc981c31f0",
+[   55.831938] python3[2659]:   "taskId": "task-52dc122eec2843efa70318010bc1[   56.026681] audit: type=1106 audit(1786476230.451:169): pid=2658 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_unix acct="bunny" exe="/usr/bin/runuser" hostname=? addr=? terminal=? res=success'
+c446"
+[   55.83[   56.030436] audit: type=1104 audit(1786476230.451:170): pid=2658 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg='op=PAM:setcred grantors=pam_rootok acct="bunny" exe="/usr/bin/runuser" hostname=? addr=? terminal=? res=success'
+1949] python3[2659]:  },
+[   55.832262] python3[2659]:  "summary": "Resize this to 100 pixels wide."
+[   55.832413] python3[2659]: }
+[   55.832566] python3[2659]: BUNNY-JOURNEY-END
+[   56.036945] audit: type=1130 audit(1786476230.462:171): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=bunny-desktop-probe comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[   56.040147] audit: type=1131 audit(1786476230.462:172): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=bunny-desktop-probe comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[   73.199419] audit: type=1131 audit(1786476247.624:173): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=geoclue comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'

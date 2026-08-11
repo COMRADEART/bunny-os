@@ -1,0 +1,150 @@
+{
+ "answeredAt": 0.355,
+ "approval": {
+  "action": "launch_application",
+  "dataClassification": "personal",
+  "destination": "local",
+  "destinationDetail": "art.comrade.BunnyImageTool",
+  "keys": [
+   "action",
+   "alternatives",
+   "dataClassification",
+   "decision",
+   "destination",
+   "destinationDetail",
+   "destinationFingerprint",
+   "estimatedCostUnits",
+   "expiresAtMonotonic",
+   "planId",
+   "providerId",
+   "reason",
+   "requestId",
+   "safeDefault",
+   "sessionId",
+   "taskId",
+   "transitionId"
+  ],
+  "missingFromBinding": [
+   "estimatedCostUnits",
+   "providerId"
+  ],
+  "reason": "Bunny Image Tool wants to open Pictures/holiday.png. It will save a copy as holiday-resized.png. Your original file will not be changed. It runs in its protected space with no network access.",
+  "requestId": "approval:task-52dc122eec2843efa70318010bc1c446:15a82f74b590affa88fcb99508364503:0:launch_application"
+ },
+ "decision": "denied",
+ "elapsedSeconds": 0.615,
+ "errors": [
+  {
+   "code": "blocked",
+   "producer": "runtime",
+   "sequence": 12,
+   "summary": "approval 'approval:task-52dc122eec2843efa70318010bc1c446:15a82f74b590affa88fcb99508364503:0:launch_application' was denied: declined for plan 15a82f74b590affa88fcb99508364503 step 15a82f74b590affa88fcb99508364503:0:launch_application \u2014 approval 'approval:task-52dc122eec2843efa70318010bc1c446:15a82f74b590affa88fcb99508364503:0:launch_application' was denied: declined for plan 15a82f74b590affa88fcb99508364503 step 15a82f74b590affa88fcb99508364503:0:launch_application"
+  }
+ ],
+ "finalState": "blocked",
+ "fixture": {
+  "digest": "5de7c234a1c3bdcf6b194ac44cf2df96",
+  "ok": true,
+  "source": "/home/bunny/Pictures/holiday.png"
+ },
+ "grantsAfter": [],
+ "neighbour": {
+  "unchanged": true
+ },
+ "operationEvents": [],
+ "original": {
+  "exists": true,
+  "unchanged": true
+ },
+ "outputs": [],
+ "readiness": {
+  "checks": {
+   "capsules": {
+    "backends": [
+     "flatpak",
+     "bubblewrap",
+     "systemd-scope"
+    ],
+    "confining": [
+     "flatpak",
+     "bubblewrap"
+    ],
+    "ok": true
+   },
+   "client": {
+    "connected": true,
+    "exists": true,
+    "ok": true,
+    "socket": "/run/user/1000/bunny-companion/runtime.sock"
+   },
+   "companion": {
+    "ok": true,
+    "units": {
+     "bunny-companion-window.service": {
+      "activeState": "inactive",
+      "loadState": "loaded",
+      "looping": false,
+      "ok": true,
+      "restarts": 0
+     },
+     "bunny-companion.service": {
+      "activeState": "active",
+      "loadState": "loaded",
+      "looping": false,
+      "ok": true,
+      "restarts": 0
+     }
+    }
+   },
+   "compositor": {
+    "gnomeShellRunning": true,
+    "ok": true,
+    "socketExists": true,
+    "waylandDisplay": "wayland-0"
+   },
+   "session": {
+    "hasGraphicalSession": true,
+    "ok": true,
+    "userState": "active"
+   },
+   "shell": {
+    "ok": true,
+    "queried": true,
+    "raw": "({'uuid': <'bunny-shell@bunny-os.org'>, 'name': <'Bunny Shell'>, 'description': <'The Bunny OS desktop: top bar, sidebar, dock, dashboard and the Bunny assistant character, plus the launcher, workspac",
+    "state": 1.0
+   },
+   "tasks": {
+    "missingPrograms": [],
+    "ok": true,
+    "operations": [
+     "image.resize"
+    ]
+   },
+   "trust": {
+    "ok": true,
+    "store": "/home/bunny/.local/share/bunny/trust/grants.json"
+   }
+  },
+  "markerSeen": true,
+  "notReady": [],
+  "ok": true
+ },
+ "request": "Resize this to 100 pixels wide.",
+ "result": {
+  "expected": "holiday-resized.png",
+  "files": [],
+  "fromTheIntendedInput": false,
+  "pixels": null
+ },
+ "states": [
+  "created",
+  "waiting_for_approval",
+  "blocked"
+ ],
+ "submit": {
+  "ok": true,
+  "sessionId": "ses-9e7d9ab088fb4095b01151fc981c31f0",
+  "taskId": "task-52dc122eec2843efa70318010bc1c446"
+ },
+ "summary": "Resize this to 100 pixels wide."
+}
