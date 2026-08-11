@@ -1,0 +1,29 @@
+commit    978137f85604
+user      bunny (uid 1000)
+kernel    7.1.5-200.fc44.x86_64
+selinux   {'mode': 'Enforcing', 'probeError': None, 'policyVersion': '35', 'policyName': 'targeted', 'fsMounted': True, 'selfContext': 'system_u:system_r:initrc_t:s0'}   virt kvm   fs ext2/ext3
+backends  ['flatpak', 'bubblewrap', 'systemd-scope']
+evidence  /var/log/bunny-capsule-qualify/evidence/978137f85604
+
+[PASS ] host         confining backends: ['flatpak', 'bubblewrap']
+          -> /var/log/bunny-capsule-qualify/evidence/978137f85604/host.json
+[PASS ] isolation    17 checks isolated, each reached by the control; mounts 19 inside against 35 outside, all under ['/', '/dev', '/proc', '/run/bunny/app/cache', '/run/b
+          -> /var/log/bunny-capsule-qualify/evidence/978137f85604/isolation.json
+[PASS ] crossapp     B could neither read nor enumerate A's private storage before or after the transfer, and could read exactly the one artefact it was granted
+          -> /var/log/bunny-capsule-qualify/evidence/978137f85604/crossapp.json
+[PASS ] filegrant    no grant denied; granted readable; neighbour denied; revoked denied; allow-once left no grant; a standing grant was reused without being rewritten and
+          -> /var/log/bunny-capsule-qualify/evidence/978137f85604/filegrant.json
+[PASS ] failclosed   every failure path denied, wrote no grant, and produced its own reason: ['expired', 'not-declared', 'replayed', 'store-unreadable', 'surface-failed', 
+          -> /var/log/bunny-capsule-qualify/evidence/978137f85604/failclosed.json
+[PASS ] network      no-network denied external, DNS and loopback; internet reached AVAILABLE; allowlisted reached the named domain (AVAILABLE) and also an unnamed one (AV
+          - the allowlisted network class is a declaration, not a boundary: a capsule granted only example.com connected to example.org. This build maps every class other than 'none' onto the absence of a network
+          -> /var/log/bunny-capsule-qualify/evidence/978137f85604/network.json
+[PASS ] selinux      every expected capsule operation worked with the policy loaded (mode Enforcing, None modules); 0 AVC record(s) logged during the run
+          -> /var/log/bunny-capsule-qualify/evidence/978137f85604/selinux.json
+[PASS ] crash        killing the launcher left no process in the host namespace (2 checked); stopping the scope left 0 orphan(s), none unconfined; a policy store corrupted
+          -> /var/log/bunny-capsule-qualify/evidence/978137f85604/crash.json
+[PASS ] resources    cold launch 0.8 ms, then [1.1, 1.1]; steady state 17285120 bytes over 3 processes; memory intervened at 209715200 bytes against 268435456 declared (ex
+          -> /var/log/bunny-capsule-qualify/evidence/978137f85604/resources.json
+
+summary: {"host": "PASS", "isolation": "PASS", "crossapp": "PASS", "filegrant": "PASS", "failclosed": "PASS", "network": "PASS", "selinux": "PASS", "crash": "PASS", "resources": "PASS"}
+qualification exit: 0

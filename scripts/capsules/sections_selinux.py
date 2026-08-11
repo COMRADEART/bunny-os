@@ -77,16 +77,49 @@ def collect_avcs(since: str) -> Mapping[str, Any]:
     found: list[dict[str, Any]] = []
     sources: dict[str, Any] = {}
 
-    code, output = _run(["journalctl", "--since", since, "--no-pager", "-o", "cat", "-k"], timeout=60)
-    sources["journalctl"] = {"available": code == 0, "lines": len(output.splitlines())}
-    if code == 0:
-        for line in output.splitlines():
+    # The positive control for the collector itself. "No AVC denials" is only
+    # evidence if the collector could see kernel messages at all, and a query
+    # that returns nothing looks identical whether the system was quiet or the
+    # query was wrong. The first guest run reported zero denials from a
+    # journalctl call that had returned zero lines of any kind, which is not the
+    # same statement and must not be recorded as one.
+    control_code, control_output = _run(
+        ["journalctl", "--since", since, "--no-pager", "-o", "cat", "-k"], timeout=60
+    )
+    kernel_lines = len([line for line in control_output.splitlines() if line.strip()])
+    if kernel_lines == 0:
+        # Nothing at all from the kernel since `since`. Widen to the whole boot:
+        # a guest that has been up for two minutes may have logged everything
+        # before the window opened.
+        control_code, control_output = _run(
+            ["journalctl", "-b", "--no-pager", "-o", "cat", "-k"], timeout=60
+        )
+        kernel_lines = len([line for line in control_output.splitlines() if line.strip()])
+        sources["window"] = "whole boot (the since-window returned no kernel lines at all)"
+    else:
+        sources["window"] = f"since {since}"
+
+    sources["journalctl"] = {
+        "available": control_code == 0,
+        "kernelLinesSeen": kernel_lines,
+        # The collector is blind if it saw no kernel messages whatsoever. Named,
+        # so a reader is not left inferring it from a zero.
+        "blind": control_code != 0 or kernel_lines == 0,
+    }
+    if control_code == 0:
+        for line in control_output.splitlines():
             if "avc:" in line and "denied" in line:
                 found.append(_parse_avc(line))
 
     if shutil.which("ausearch"):
         code, output = _run(["ausearch", "-m", "AVC", "-ts", "recent", "-i"], timeout=60)
-        sources["ausearch"] = {"available": code in (0, 1), "lines": len(output.splitlines())}
+        # ausearch exits 1 for "no matches", which is a real answer and not a
+        # failure; anything else means it could not look.
+        sources["ausearch"] = {
+            "available": code in (0, 1),
+            "lines": len(output.splitlines()),
+            "blind": code not in (0, 1),
+        }
         if code == 0:
             for line in output.splitlines():
                 if "avc:" in line and "denied" in line:
@@ -94,9 +127,20 @@ def collect_avcs(since: str) -> Mapping[str, Any]:
                     if parsed not in found:
                         found.append(parsed)
     else:
-        sources["ausearch"] = {"available": False, "reason": "not installed"}
+        sources["ausearch"] = {"available": False, "blind": True, "reason": "not installed"}
 
-    return {"sources": sources, "count": len(found), "records": found[:80]}
+    blind = all(
+        source.get("blind", not source.get("available", False))
+        for source in sources.values() if isinstance(source, dict)
+    )
+    return {
+        "sources": sources,
+        "count": len(found),
+        "records": found[:80],
+        # True when no collector could see anything. A zero count under this flag
+        # means "nobody looked", not "nothing happened".
+        "blind": blind,
+    }
 
 
 def _parse_avc(line: str) -> dict[str, Any]:
@@ -250,12 +294,24 @@ def section_selinux(harness: Harness, host: Mapping[str, Any]) -> Evidence:
         )
         return evidence.settle("FAIL", f"expected capsule operations failed: {problems}")
 
+    if avcs.get("blind"):
+        evidence.findings.append(
+            "no AVC collector could see anything: journalctl returned "
+            f"{avcs['sources'].get('journalctl', {}).get('kernelLinesSeen')} kernel lines and "
+            f"ausearch is {avcs['sources'].get('ausearch', {}).get('reason', 'unavailable')}. "
+            "The zero denial count below is 'nobody looked', not 'nothing happened'."
+        )
     note = (
         f"every expected capsule operation worked with the policy loaded "
-        f"(mode {before.get('mode')}, {before.get('moduleCount')} modules); "
-        f"{avcs['count']} AVC record(s) logged during the run"
+        f"(mode {before.get('mode')}, modules {before.get('moduleCount')}); "
+        + (
+            "AVC collection was blind, so no denial count is claimed"
+            if avcs.get("blind")
+            else f"{avcs['count']} AVC record(s) logged during the run, from "
+                 f"{avcs['sources']['journalctl']['kernelLinesSeen']} kernel lines"
+        )
     )
-    if avcs["count"]:
+    if avcs["count"] and not avcs.get("blind"):
         evidence.findings.append(
             f"{avcs['count']} AVC record(s) were logged while the capsule ran and none of them "
             f"stopped an expected operation. They are recorded rather than judged; a denial the "
