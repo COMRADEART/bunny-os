@@ -342,43 +342,52 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
         verb = request.get("command")
         label = request.get("label", "")
         answer: dict = {"command": verb, "label": label}
-        if verb == "controls":
-            fresh = desktop_interaction.locate_controls(user, environment)
-            answer["controls"] = fresh
-        elif verb == "state":
-            name = request.get("application")
-            if name in desktop_interaction.APPLICATIONS:
-                answer["state"] = desktop_interaction.application_state(name, user, environment)
+        # Every command is answered, including one that raised.
+        #
+        # An exception in here used to kill the probe, and the host then read
+        # `null` for every answer after it — a broken harness that looks exactly
+        # like a broken desktop. The host can tell an error from a silence; it
+        # cannot tell a silence from a dead session.
+        try:
+            if verb == "controls":
+                fresh = desktop_interaction.locate_controls(user, environment)
+                answer["controls"] = fresh
+            elif verb == "state":
+                name = request.get("application")
+                if name in desktop_interaction.APPLICATIONS:
+                    answer["state"] = desktop_interaction.application_state(name, user, environment)
+                else:
+                    answer["error"] = f"unknown application {name!r}"
+            elif verb == "shell":
+                answer["shell"] = desktop_interaction.shell_alive(user, environment)
+            elif verb == "ask":
+                # The backend half of the end-to-end claim, through the exact
+                # program the shell spawns. See desktop_interaction.ask_through_the_bridge.
+                answer["ask"] = desktop_interaction.ask_through_the_bridge(
+                    str(request.get("request", "")), user, environment)
+            elif verb == "fixture":
+                # The journey's images, written as the user. A file root created in
+                # /var/home would be owned by root and unreadable through the
+                # capsule's grant — a permission failure wearing a security result's
+                # clothes.
+                answer["fixture"] = desktop_interaction.make_image_fixture(
+                    str(request.get("kind", "real")), user, environment
+                )
+            elif verb == "result":
+                answer["result"] = desktop_interaction.journey_result(user, environment)
+            elif verb == "character":
+                # What the figure is doing and what the bubble says, both read out
+                # of the accessibility tree. This is how the host watches the state
+                # machine it just started by typing.
+                answer["character"] = desktop_interaction.character_state(user, environment)
+            elif verb == "done":
+                transcript.append(answer)
+                channel.send({"reply": answer})
+                break
             else:
-                answer["error"] = f"unknown application {name!r}"
-        elif verb == "shell":
-            answer["shell"] = desktop_interaction.shell_alive(user, environment)
-        elif verb == "ask":
-            # The backend half of the end-to-end claim, through the exact
-            # program the shell spawns. See desktop_interaction.ask_through_the_bridge.
-            answer["ask"] = desktop_interaction.ask_through_the_bridge(
-                str(request.get("request", "")), user, environment)
-        elif verb == "fixture":
-            # The journey's images, written as the user. A file root created in
-            # /var/home would be owned by root and unreadable through the
-            # capsule's grant — a permission failure wearing a security result's
-            # clothes.
-            answer["fixture"] = desktop_interaction.make_image_fixture(
-                str(request.get("kind", "real")), user, environment
-            )
-        elif verb == "result":
-            answer["result"] = desktop_interaction.journey_result(user, environment)
-        elif verb == "character":
-            # What the figure is doing and what the bubble says, both read out
-            # of the accessibility tree. This is how the host watches the state
-            # machine it just started by typing.
-            answer["character"] = desktop_interaction.character_state(user, environment)
-        elif verb == "done":
-            transcript.append(answer)
-            channel.send({"reply": answer})
-            break
-        else:
-            answer["error"] = f"unknown command {verb!r}"
+                answer["error"] = f"unknown command {verb!r}"
+        except Exception as error:  # noqa: BLE001 - a command that raised is an answer
+            answer["error"] = f"{type(error).__name__}: {error}"
         transcript.append(answer)
         channel.send({"reply": answer})
 

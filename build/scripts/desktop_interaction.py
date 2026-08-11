@@ -564,12 +564,20 @@ print(json.dumps({
 
 def _as_user_python(program: str, arguments: list[str], user: str,
                     environment: list[str]) -> dict:
-    code, out, err = _run(
+    # `_run` returns a record, not a tuple. Unpacking it as three values raised
+    # inside the probe's command loop, which killed the probe and turned every
+    # answer after it into `null` — a broken harness reading exactly like a
+    # broken desktop.
+    outcome = _run(
         ["/usr/bin/env", *environment, "/usr/bin/python3", "-c", program, *arguments],
         user=user, timeout=60,
     )
-    if code != 0:
-        return {"ok": False, "error": (err or out)[-300:]}
+    if not outcome.get("ran"):
+        return {"ok": False, "error": str(outcome.get("error"))[:300]}
+    out = str(outcome.get("stdout", ""))
+    if outcome.get("returncode") != 0:
+        return {"ok": False,
+                "error": (str(outcome.get("stderr", "")) or out)[-300:]}
     try:
         return {"ok": True, **json.loads(out.strip().splitlines()[-1])}
     except (ValueError, IndexError) as error:
