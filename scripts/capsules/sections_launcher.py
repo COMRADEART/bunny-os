@@ -43,10 +43,10 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 from typing import Any, Mapping, Sequence
 
 from capsules.command import render
-from capsules.runtime import _default_command  # noqa: PLC2701 - the runtime's own choice
 
 from .harness import Evidence, Harness, require_confinement
 
@@ -224,9 +224,14 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
         )
 
     capsule = harness.install_probe_app("art.comrade.LauncherProbe", "Launcher Probe")
+    harness.configure_probe(capsule)
     plan = harness.runtime.build_plan(capsule)
-    argv = render(plan, _default_command(capsule.manifest))
+    # The probe, not the manifest's default command. The default for this fixture
+    # is a bare interpreter, which reads stdin and never exits, and a shape that
+    # hangs is indistinguishable from a shape the sandbox refused.
+    argv = render(plan, (sys.executable, "/run/bunny/app/data/probe.py"))
     environment = dict(plan.launcher_environment)
+    result_path = capsule.layout.directory("data") / "probe-result.json"
     evidence.measurements["backend"] = plan.backend
     evidence.measurements["unshare"] = list(plan.unshare)
 
@@ -234,23 +239,35 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
     # RestrictAddressFamilies= with different lists cannot be merged into one
     # transient unit without inventing a third policy that neither ships, and a
     # failure under an invented policy is attributable to nobody.
+    def shape(vector: Sequence[str]) -> Mapping[str, Any]:
+        """Run one shape and say whether the *probe* ran, not whether systemd did.
+
+        ``systemd-run --wait`` returning 0 means the job finished, which a job
+        that started nothing also does. The file is written from inside the
+        sandbox by the process the sandbox was built for, so its presence is the
+        only thing here that cannot be produced by a launch that failed.
+        """
+        if result_path.exists():
+            result_path.unlink()
+        outcome = dict(_run(vector, environment))
+        outcome["probeWroteResult"] = result_path.exists()
+        outcome["started"] = bool(outcome["started"] and outcome["probeWroteResult"])
+        outcome["blamesNamespaces"] = _blames_namespaces(outcome)
+        return outcome
+
     shapes: dict[str, Mapping[str, Any]] = {}
-    shapes["direct"] = _run(_renamed(argv, "direct"), environment)
-    shapes["permissive"] = _run(
-        _nested(_renamed(argv, "permissive"), (), "bunny-launcher-permissive"), environment
+    shapes["direct"] = shape(_renamed(argv, "direct"))
+    shapes["permissive"] = shape(
+        _nested(_renamed(argv, "permissive"), (), "bunny-launcher-permissive")
     )
     for index, (name, properties) in enumerate(units.items()):
         stem = name.removesuffix(".service").replace("bunny-", "")
-        shapes[f"hardened:{name}"] = _run(
-            _nested(_renamed(argv, f"h{index}"), properties, f"bunny-launcher-h{index}-{stem}"),
-            environment,
+        shapes[f"hardened:{name}"] = shape(
+            _nested(_renamed(argv, f"h{index}"), properties, f"bunny-launcher-h{index}-{stem}")
         )
-        shapes[f"manager:{name}"] = _run(
-            _manager_shape(_renamed(argv, f"m{index}"), properties, f"bunny-launcher-m{index}"),
-            environment,
+        shapes[f"manager:{name}"] = shape(
+            _manager_shape(_renamed(argv, f"m{index}"), properties, f"bunny-launcher-m{index}")
         )
-    for name, outcome in shapes.items():
-        shapes[name] = {**outcome, "blamesNamespaces": _blames_namespaces(outcome)}
     evidence.measurements["shapes"] = shapes
 
     if not shapes["direct"]["started"]:
