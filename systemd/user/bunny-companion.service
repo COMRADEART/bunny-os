@@ -59,6 +59,25 @@ RuntimeDirectoryMode=0700
 # the window unit deliberately does not get them - it is a client, and a
 # renderer that could write the trust store could mint its own grants.
 ReadWritePaths=%h/.local/share/bunny %h/.local/state/bunny
+# And where a finished result is put down.
+#
+# The capsule never sees this. An application writes into its own exports
+# directory and the *runtime* copies the verified artefact out — so this is
+# write access for the trusted component, at the last step, and the sandbox is
+# unchanged by it. Without it the whole journey works and the final copy fails
+# with EROFS: the capsule ran, produced the image, and the result could not be
+# put anywhere. That is what a booted run found and what no host test could.
+#
+# `-` so a home without a Pictures directory does not fail namespace setup with
+# 226/NAMESPACE before ExecStart, the way a missing ReadWritePaths= path does.
+#
+# The narrowness is real but limited: it is one directory rather than the home,
+# and it is the directory the only operation writes to. It is *not* dynamic — a
+# person whose XDG_PICTURES_DIR points somewhere else still cannot receive a
+# result, because ReadWritePaths= is resolved when the unit loads and a user's
+# XDG configuration is not known then. A portal is the answer to that, and this
+# is not one.
+ReadWritePaths=-%h/Pictures
 # The store lives here. Per-user under the session, never system-wide: a
 # companion session is one person's conversation and /var would make it readable
 # by every account on a shared machine.

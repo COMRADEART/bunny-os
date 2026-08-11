@@ -152,9 +152,13 @@ class TheRolesAndTheFix(unittest.TestCase):
     def test_the_runtime_unit_names_the_state_roots(self) -> None:
         properties = unit_properties(ROOT / "systemd/user/bunny-companion.service")
         lines = [item for item in properties if item.startswith("ReadWritePaths=")]
-        self.assertEqual(len(lines), 1, properties)
-        self.assertIn("%h/.local/share/bunny", lines[0])
-        self.assertIn("%h/.local/state/bunny", lines[0])
+        self.assertTrue(lines, properties)
+        # Across all of them: systemd merges repeated ReadWritePaths=, and the
+        # destination the results go to lives on its own line so that the reason
+        # for each is readable next to it.
+        granted = " ".join(lines)
+        self.assertIn("%h/.local/share/bunny", granted)
+        self.assertIn("%h/.local/state/bunny", granted)
 
     def test_the_client_unit_does_not(self) -> None:
         """A window that can write the trust store can mint its own grants."""
@@ -163,6 +167,34 @@ class TheRolesAndTheFix(unittest.TestCase):
             [item for item in properties if item.startswith("ReadWritePaths=")], []
         )
         self.assertIn("ProtectHome=read-only", properties)
+
+    def test_the_runtime_unit_can_write_where_results_go(self) -> None:
+        """The last step of the journey, and the one a host test cannot reach.
+
+        The capsule writes into its own exports directory; the runtime copies
+        the verified artefact out to the user's folder. Under
+        ``ProtectHome=read-only`` that copy fails with EROFS — the whole journey
+        runs, the image is produced, and the result cannot be put anywhere. A
+        booted graphical run is what found it.
+        """
+        properties = unit_properties(ROOT / "systemd/user/bunny-companion.service")
+        destinations = [
+            item for item in properties
+            if item.startswith("ReadWritePaths=") and "Pictures" in item
+        ]
+        self.assertEqual(len(destinations), 1, properties)
+        self.assertTrue(
+            destinations[0].startswith("ReadWritePaths=-"),
+            "a home with no Pictures directory would fail namespace setup with "
+            "226/NAMESPACE before ExecStart; the '-' prefix is what makes it optional",
+        )
+
+    def test_the_client_unit_still_cannot_write_there(self) -> None:
+        """The window renders results; it does not place them."""
+        properties = unit_properties(ROOT / "systemd/user/bunny-companion-window.service")
+        self.assertEqual(
+            [item for item in properties if item.startswith("ReadWritePaths=")], []
+        )
 
     def test_the_tmpfiles_rule_creates_what_the_unit_names(self) -> None:
         """A ReadWritePaths= path that does not exist fails namespace setup with
