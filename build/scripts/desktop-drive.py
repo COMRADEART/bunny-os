@@ -398,8 +398,27 @@ def interact(control, qmp, pointer, targets, arguments,
             time.sleep(2)
         outcome["statesBeforeApproval"] = states
         if button is None:
+            # What the walk *did* see, so the next diagnosis is not another
+            # guess. Twice now the prompt has been on screen in a screenshot
+            # taken at this exact moment while the finder reported nothing, and
+            # each time the cause was in the instrumentation.
+            seen = (controls_now or {}).get("controls") or []
+            interesting = sorted({
+                str(entry.get("name", ""))
+                for entry in seen
+                if any(word in str(entry.get("name", "")).lower()
+                       for word in ("allow", "deny", "bunny", "permission", "ask"))
+            })
+            outcome["controlsSeen"] = len(seen)
+            outcome["controlsSample"] = sorted({
+                str(entry.get("name", "")) for entry in seen if entry.get("name")
+            })[:40]
+            outcome["controlsMatching"] = interesting
+            outcome["atspiOk"] = (controls_now or {}).get("ok")
             step("journey-approval", visible=False,
-                 reason=f"no control named {wanted!r} appeared on screen")
+                 reason=f"no control named {wanted!r} appeared on screen",
+                 controlsSeen=len(seen), matching=interesting[:10],
+                 atspiOk=(controls_now or {}).get("ok"))
             outcome["approvalVisible"] = False
             screenshot("journey-04-no-approval")
             return outcome
