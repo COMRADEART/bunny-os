@@ -36,6 +36,7 @@ __all__ = [
     "section_filegrant",
     "section_host",
     "section_isolation",
+    "section_launcher",
     "section_network",
     "section_resources",
     "section_selinux",
@@ -597,6 +598,7 @@ def section_failclosed(harness: Harness, host: Mapping[str, Any]) -> Evidence:
 
 from .sections_network import section_network  # noqa: E402
 from .sections_selinux import section_selinux  # noqa: E402
+from .sections_launcher import section_launcher  # noqa: E402
 from .sections_runtime import section_crash, section_resources  # noqa: E402
 
 #: Section name to function. The order is the order a failure is cheapest to
@@ -617,5 +619,9 @@ SECTIONS = {
     # the run exists.
     "selinux": section_selinux,
     "crash": section_crash,
+    # Last but one, because it is the only section that asks whether a capsule
+    # can be *started* by the thing that starts capsules in the product. Every
+    # other section launches from a login shell, which nothing does.
+    "launcher": section_launcher,
     "resources": section_resources,
 }
