@@ -209,6 +209,57 @@ def _replace_first(argv: Sequence[str], needle: str, replacement: Sequence[str])
     return tuple(out)
 
 
+def _state_writable(properties: Sequence[str], environment: Mapping[str, str], unit: str) -> Mapping[str, Any]:
+    """Can a unit with these properties write the trust store and the capsule root?
+
+    Launching is only half of what the Companion has to do. Installing a capsule
+    writes the capsule root; recording a grant writes the trust store; and both
+    live under the user's XDG directories, which ``ProtectHome=read-only``
+    covers. A Companion that could launch and could not install would fail on the
+    first application anybody added.
+
+    The *default* paths, not the harness's overrides. The harness points the
+    roots at a temporary directory so that a qualification run never touches the
+    real account, and a temporary directory is exactly the place ProtectHome does
+    not cover — so measuring there would report a Companion that works.
+
+    One file is created and removed under each root. The roots belong to Bunny,
+    the name says what it is, and nothing else in the account is touched.
+    """
+    import capsules as _capsules
+    import trust as _trust
+
+    targets = {
+        "capsuleRoot": _capsules.default_capsule_root(),
+        "trustStore": _trust.default_store_path().parent,
+        "trustAudit": _trust.default_audit_path().parent,
+    }
+    results: dict[str, Any] = {}
+    for index, (name, directory) in enumerate(targets.items()):
+        probe = directory / ".bunny-qualify-write-probe"
+        script = (
+            f"mkdir -p {_quote(str(directory))} 2>/dev/null; "
+            f"touch {_quote(str(probe))} && rm -f {_quote(str(probe))} && echo WRITABLE"
+        )
+        outcome = _run(
+            _nested(["/bin/sh", "-c", script], properties, f"{unit}-{index}"),
+            environment,
+            timeout=60.0,
+        )
+        results[name] = {
+            "path": str(directory),
+            "writable": outcome["exitCode"] == 0,
+            "exitCode": outcome["exitCode"],
+        }
+    return results
+
+
+def _quote(argument: str) -> str:
+    """Single-quote for ``sh -c``. Used only by the writability probe, whose
+    subject is a path and which therefore has to build a command from one."""
+    return "'" + argument.replace("'", chr(39) + chr(92) + chr(39) + chr(39)) + "'"
+
+
 def _run(argv: Sequence[str], environment: Mapping[str, str], *, timeout: float = 120.0) -> Mapping[str, Any]:
     try:
         completed = subprocess.run(  # noqa: S603 - argv is a list; no shell anywhere
@@ -358,6 +409,34 @@ def section_launcher(harness: Harness, host: Mapping[str, Any]) -> Evidence:
             "FAIL",
             f"the capsule launches from a plain process and from an unhardened unit, and not from "
             f"{refused}",
+        )
+
+    # Launching is not the whole job. A Companion that can start a capsule and
+    # cannot write the capsule root has moved the failure one step later.
+    writability = {
+        name: _state_writable(properties, environment, f"bunny-launcher-w{index}")
+        for index, (name, properties) in enumerate(units.items())
+    }
+    evidence.measurements["stateWritable"] = writability
+    unwritable = sorted({
+        f"{unit} cannot write {row['path']}"
+        for unit, rows in writability.items()
+        for row in rows.values()
+        if not row["writable"]
+    })
+    if unwritable:
+        evidence.findings.append(
+            "the Companion can start a capsule and cannot keep one: "
+            + "; ".join(unwritable)
+            + ". Installing a capsule writes the capsule root and recording a grant writes the "
+            "trust store, both under the user's XDG directories, which ProtectHome=read-only "
+            "covers. The narrow fix is a ReadWritePaths= line naming those two roots, which is "
+            "what bunny-desktop.service already does for the same directories."
+        )
+        return evidence.settle(
+            "FAIL",
+            f"the capsule launched under every unit's properties, and {len(unwritable)} of the "
+            f"directories the runtime has to write are read-only to those same units",
         )
 
     # The regression control. Everything above passing is the intended result and
