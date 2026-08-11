@@ -111,6 +111,28 @@ def collect_avcs(since: str) -> Mapping[str, Any]:
             if "avc:" in line and "denied" in line:
                 found.append(_parse_avc(line))
 
+    # dmesg, because the guest's journal carried no kernel lines at all and a
+    # collector with one blind source is a collector with no answer. Whether an
+    # unprivileged user may read it is `kernel.dmesg_restrict`, so the result
+    # records which it was rather than treating a refusal as silence.
+    if shutil.which("dmesg"):
+        code, output = _run(["dmesg", "--ctime"], timeout=60)
+        lines = [line for line in output.splitlines() if line.strip()]
+        sources["dmesg"] = {
+            "available": code == 0,
+            "kernelLinesSeen": len(lines),
+            "blind": code != 0 or not lines,
+            "reason": None if code == 0 else output.strip()[:160],
+        }
+        if code == 0:
+            for line in lines:
+                if "avc:" in line and "denied" in line:
+                    parsed = _parse_avc(line)
+                    if parsed not in found:
+                        found.append(parsed)
+    else:
+        sources["dmesg"] = {"available": False, "blind": True, "reason": "not installed"}
+
     if shutil.which("ausearch"):
         code, output = _run(["ausearch", "-m", "AVC", "-ts", "recent", "-i"], timeout=60)
         # ausearch exits 1 for "no matches", which is a real answer and not a

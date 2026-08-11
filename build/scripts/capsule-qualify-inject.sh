@@ -86,6 +86,11 @@ for _ in $(seq 1 60); do
   sleep 1
 done
 loginctl show-user "${user}" >"${out}/loginctl.txt" 2>&1 || true
+# Kernel messages as root, kept beside the evidence. The section collects its
+# own as the ordinary user and records whether it could; this is the copy a
+# person can read afterwards when the answer was "it could not".
+dmesg --ctime >"${out}/dmesg-root.txt" 2>&1 || echo "dmesg unavailable" >"${out}/dmesg-root.txt"
+sysctl kernel.dmesg_restrict >"${out}/dmesg-restrict.txt" 2>&1 || true
 systemctl is-active "user@1000.service" >"${out}/user-manager.txt" 2>&1 || true
 
 runuser -u "${user}" -- env \
