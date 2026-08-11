@@ -48,6 +48,12 @@ _PHASES_AFTER_THE_RECORD = (
     # Public Alpha ran after this record was cut from fa49380 and committed its
     # gate evidence under its own name. It is a later phase, not an earlier one.
     "qualification/public-alpha/",
+    # The App Capsule runtime qualification, later still: the probe and stress
+    # fixtures it launches, and one evidence directory per commit it ran at.
+    # Declared here rather than added to the record for the reason above — a
+    # record that covered a tree still being written to would have to be
+    # rewritten on every run, which is the opposite of immutable.
+    "qualification/capsules/",
 )
 
 #: Build residue, which is not evidence and is not in the repository.
