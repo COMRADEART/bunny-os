@@ -35,6 +35,7 @@ __all__ = [
     "section_failclosed",
     "section_filegrant",
     "section_host",
+    "section_apptask",
     "section_isolation",
     "section_launcher",
     "section_network",
@@ -598,6 +599,7 @@ def section_failclosed(harness: Harness, host: Mapping[str, Any]) -> Evidence:
 
 from .sections_network import section_network  # noqa: E402
 from .sections_selinux import section_selinux  # noqa: E402
+from .sections_apptask import section_apptask  # noqa: E402
 from .sections_launcher import section_launcher  # noqa: E402
 from .sections_runtime import section_crash, section_resources  # noqa: E402
 
@@ -623,5 +625,8 @@ SECTIONS = {
     # can be *started* by the thing that starts capsules in the product. Every
     # other section launches from a login shell, which nothing does.
     "launcher": section_launcher,
+    # Last, because it is the only section that starts where a person
+    # does: one request, one approval, one confined process, one file.
+    "apptask": section_apptask,
     "resources": section_resources,
 }
