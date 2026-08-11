@@ -54,7 +54,12 @@ if [[ -z "${source_image}" ]]; then
   exit 2
 fi
 
-work="${BUNNY_JOURNEY_WORK:-build/out/${profile}/journey/${label}}"
+# Beside the build output, not inside it. The image build refuses to start
+# unless its own output directory is empty, so a harness that wrote under
+# build/out/<profile>/ made the next build exit 5 in under a second — and the
+# alternative, letting the build delete it, took a set of screenshots with it.
+# A sibling directory is neither the build's to clear nor in its way.
+work="${BUNNY_JOURNEY_WORK:-build/out/journey/${profile}-${label}}"
 mkdir -p "${work}/screens"
 disk="${work}/disk.qcow2"
 log="${work}/serial.log"
