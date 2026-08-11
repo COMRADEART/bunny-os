@@ -64,6 +64,10 @@ REQUIRED_VALIDATORS = (
 PERMITTED_SPDX = frozenset({"GPL-3.0-or-later", "Apache-2.0"})
 
 _SPDX = re.compile(r"SPDX-License-Identifier:\s*([A-Za-z0-9.\-+]+)")
+#: A carriage return followed by a newline, built rather than written, so the
+#: constant cannot itself be corrupted by the thing it detects.
+CRLF = bytes((13, 10))
+
 _SKIP_PARTS = frozenset({"node_modules", ".git", ".selfcheck-tmp", "__pycache__", "out"})
 
 
@@ -312,6 +316,59 @@ def _shell_syntax(root: Path) -> ValidatorOutcome:
             )
     outcome.checked = len(paths)
     outcome.summary = f"{len(paths)} scripts parsed by bash -n"
+    outcome.result = "FAIL" if outcome.failures else "PASS"
+    return outcome
+
+
+def _line_endings(root: Path) -> ValidatorOutcome:
+    """No CR in a file the repository has marked ``-text``.
+
+    ``.gitattributes`` already marks ``systemd/**``, ``config/**`` and ``*.sh``
+    as ``-text``, with a comment explaining precisely why: those files are parsed
+    by systemd, systemd-tmpfiles and the shell, none of which treat a trailing CR
+    as whitespace, and a Windows checkout under ``core.autocrlf=true`` produces
+    exactly that.
+
+    What ``-text`` does is stop git from *converting* them. What it does not do
+    is stop somebody authoring one on Windows and committing the CRLF verbatim —
+    and then the corruption is in the repository rather than in one working tree.
+    That happened: a harness script written on a Windows host went in with CRLF,
+    every other script in the tree being LF, and it failed on Linux at its first
+    line with ``set: pipefail: invalid option name``. bash -n on the same host
+    accepted it, because bash on Windows tolerates the CR that bash on Linux does
+    not.
+
+    So this asks the bytes rather than a parser, and it asks about every path the
+    attributes protect rather than only shell scripts.
+    """
+    outcome = ValidatorOutcome("Line endings")
+    protected = (
+        list(root.glob("systemd/**/*"))
+        + list(root.glob("config/**/*"))
+        + _shell_paths(root)
+    )
+    paths = sorted(
+        {
+            path for path in protected
+            if path.is_file() and not _SKIP_PARTS.intersection(path.parts)
+        }
+    )
+    for path in paths:
+        try:
+            data = path.read_bytes()
+        except OSError as error:
+            outcome.failures.append(Failure(_name(root, path), f"unreadable: {error}"))
+            continue
+        if CRLF in data:
+            outcome.failures.append(
+                Failure(
+                    _name(root, path),
+                    "contains CRLF; .gitattributes marks this path -text because systemd, "
+                    "systemd-tmpfiles and the shell all treat a trailing CR as content",
+                )
+            )
+    outcome.checked = len(paths)
+    outcome.summary = f"{len(paths)} attribute-protected files are LF"
     outcome.result = "FAIL" if outcome.failures else "PASS"
     return outcome
 
@@ -916,6 +973,7 @@ _VALIDATORS: tuple[tuple[str, Callable[[Path], ValidatorOutcome]], ...] = (
     ("Schema validation", _schema_validation),
     ("Python compilation", _python_compilation),
     ("Shell syntax", _shell_syntax),
+    ("Line endings", _line_endings),
     ("ShellCheck", _shellcheck),
     ("Desktop entries", _desktop_entries),
     ("XML and SVG", _xml_and_svg),
