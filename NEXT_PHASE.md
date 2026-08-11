@@ -628,3 +628,80 @@ also found, each of which would have produced a false PASS.
 `BLOCKED`. The vulnerability position, the absent hardware, the absent
 independent reviews, the absent second signer and the absent production key are
 all untouched by this pass.
+
+---
+
+## Update 2026-08-10 (later) — the guest answered; the Companion could never have launched anything
+
+Evidence at `qualification/capsules/evidence/guest-d9a36620044d/` (booted guest)
+and the host directory for the same run. `CAPSULE_RUNTIME_QUALIFICATION_REPORT.md`
+§§9–10 are the record.
+
+**Items 2 and 3 above are done.** The full suite ran inside the booted image as
+`bunny` in a real login session, with SELinux **Enforcing** and the targeted
+policy at version 35. All eight sections then present returned PASS. `MemoryMax`
+is a real boundary on the shipped kernel: the capsule was throttled by
+`MemoryHigh` at 209,715,200 bytes against a 268,435,456 ceiling — 2,934 high
+events, zero max, zero OOM kills — and the control, same ceiling without
+`MemoryHigh`, was killed by the cgroup at 243,269,632. On the WSL host the same
+control took 2 GB and nothing stopped it. L-8 is a property of the development
+host, not of Bunny OS.
+
+**AVC collection is blind in this image and reports itself so.** `journalctl`
+carries no kernel lines, `ausearch` is absent, `kernel.dmesg_restrict` is 1, and
+the buffer is empty even to root. The section refuses to report a denial count
+rather than reporting zero. Adding `audit` to the *qualification* profile is the
+fix and has not been done, because a test profile must not ship.
+
+**Two new blockers, and they are the reason this entry exists.** Every section of
+that suite launches a capsule from a login shell. Nothing in the product does —
+the Companion does, and the Companion is a systemd user unit with a sandbox of
+its own. Asking that question found:
+
+* **L-9.** A capsule was a `systemd-run --user --scope`. A scope is forked by its
+  requester and inherits that process's seccomp filter; both Companion units set
+  `RestrictNamespaces=yes`; bubblewrap's whole mechanism is `unshare(2)`. **Every
+  capsule launch from the Companion failed, always, on every machine.** Fixed by
+  asking the manager for a transient *service*, which the manager spawns.
+* **L-10.** `ProtectHome=read-only` covers the capsule root and the trust store,
+  so the runtime could start a capsule and failed on the first install write.
+  Fixed with `ReadWritePaths=` on the runtime unit only — the window is a client,
+  and a renderer that can write the trust store can mint its own grants — plus a
+  user-tmpfiles rule creating the roots, because a `ReadWritePaths=` path that
+  does not exist fails namespace setup with 226/NAMESPACE before `ExecStart`.
+
+Both are guarded by a new `launcher` qualification section that runs four shapes,
+the fourth of which rebuilds the pre-fix vector and **must still fail**: every
+shape passing is the intended result and is also what a section that had stopped
+measuring anything would report.
+
+### Next, in order
+
+1. **Rebuild the image and re-run the guest qualification.** The guest runs the
+   packages the image installed and only the harness is injected, so `launcher` —
+   and with it both new blockers — is currently HOST RUNTIME VALIDATED only.
+2. **Give the Companion a path to a capsule task at all.** `capsule_bridge.py`
+   has no caller outside the tests. Until it does, L-9 and L-10 are fixes to a
+   route nothing takes, and the §15 journey cannot be driven from the UI.
+3. **Then the graphical work**: login, `BUNNY_SESSION_READY`, the Companion
+   drawn, the Trust prompt raised on screen, the journey and its failure variant.
+   The existing desktop route — `desktop-drive.py`, virtio-tablet pointer
+   injection, AT-SPI — is the harness; it does not need to be rebuilt.
+4. Flatpak on the qualification host; Orca for the accessibility pass; the
+   allowlisted network class decision. All unchanged from the entry above.
+
+### The Phase C stop condition is not met
+
+The phase completes only if a successful graphical vertical slice **and** one
+graphical failure slice both run inside the Bunny OS VM. Neither has run. **Phase
+status: INCOMPLETE**, and the source tests passing does not change that.
+
+### Found and not touched
+
+`tests/companion/test_neural_tts.py::test_provenance_accounts_for_every_selected_tts_byte`
+fails: the bundled voice assets measure 436,604,323 bytes against 436,603,718
+recorded in `assets/voice/PROVENANCE.json`, a 605-byte excess. It predates this
+phase — `assets/voice` was last touched at `a7ba40f`, before this branch's base —
+and it is left alone deliberately. Editing the recorded number to match the files
+would be adjusting the record to the artefact without establishing which of the
+two is wrong.
