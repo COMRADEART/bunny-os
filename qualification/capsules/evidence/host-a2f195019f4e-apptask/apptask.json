@@ -1,8 +1,8 @@
 {
-  "commit": "9927af390bee284ba0b82c577dd0ec523f816929",
-  "explanation": "the Companion route produced holiday-resized.png at 100x50 in 205.1 ms; the original is unchanged, the neighbour was never authorised, and the capsule ran with network unknown",
+  "commit": "a2f195019f4e1c7ef0e5052d0ef65bdc168e80f5",
+  "explanation": "the Companion route produced holiday-resized.png at 100x50 in 170.5 ms; the original is unchanged, the neighbour was never authorised, and the capsule ran with network Off (class none, enforced True)",
   "findings": [],
-  "finishedAt": "2026-08-11T04:30:00.541849Z",
+  "finishedAt": "2026-08-11T04:31:03.338643Z",
   "host": {
     "backends": [
       "bubblewrap",
@@ -33,7 +33,7 @@
     },
     "export": {
       "bytesWritten": 182,
-      "destination": "/tmp/bunny-qualify-r6iljkuq/home/Pictures/holiday-resized.png",
+      "destination": "/tmp/bunny-qualify-u7sgi_xr/home/Pictures/holiday-resized.png",
       "digest": "27b5e614d887aa5360eb4b1b7258345d85073fc99c7bc44fa86fe9e0db572649",
       "display": "Pictures/holiday-resized.png",
       "originalCopy": null,
@@ -44,13 +44,18 @@
       "stillExists": true,
       "unchangedDigest": true
     },
+    "network": {
+      "class": "none",
+      "enforced": true,
+      "shown": "Off"
+    },
     "original": {
       "stillExists": true,
       "unchangedDigest": true
     },
     "outcome": {
       "detail": "Done. The work happened inside Bunny Image Tool's protected space. Your original file wasn't changed. The result is in Pictures/holiday-resized.png.",
-      "elapsedMs": 205.1,
+      "elapsedMs": 170.5,
       "exitStatus": 0,
       "failure": null,
       "ok": true,
@@ -121,43 +126,43 @@
         "mounts": [
           {
             "origin": "capsule",
-            "source": "/tmp/bunny-qualify-r6iljkuq/capsules/art-comrade-bunnyimagetool.88d8725406aed402/cache",
+            "source": "/tmp/bunny-qualify-u7sgi_xr/capsules/art-comrade-bunnyimagetool.88d8725406aed402/cache",
             "target": "/run/bunny/app/cache",
             "writable": true
           },
           {
             "origin": "capsule",
-            "source": "/tmp/bunny-qualify-r6iljkuq/capsules/art-comrade-bunnyimagetool.88d8725406aed402/config",
+            "source": "/tmp/bunny-qualify-u7sgi_xr/capsules/art-comrade-bunnyimagetool.88d8725406aed402/config",
             "target": "/run/bunny/app/config",
             "writable": true
           },
           {
             "origin": "capsule",
-            "source": "/tmp/bunny-qualify-r6iljkuq/capsules/art-comrade-bunnyimagetool.88d8725406aed402/data",
+            "source": "/tmp/bunny-qualify-u7sgi_xr/capsules/art-comrade-bunnyimagetool.88d8725406aed402/data",
             "target": "/run/bunny/app/data",
             "writable": true
           },
           {
             "origin": "capsule",
-            "source": "/tmp/bunny-qualify-r6iljkuq/capsules/art-comrade-bunnyimagetool.88d8725406aed402/exports",
+            "source": "/tmp/bunny-qualify-u7sgi_xr/capsules/art-comrade-bunnyimagetool.88d8725406aed402/exports",
             "target": "/run/bunny/app/exports",
             "writable": true
           },
           {
             "origin": "capsule",
-            "source": "/tmp/bunny-qualify-r6iljkuq/capsules/art-comrade-bunnyimagetool.88d8725406aed402/inbox",
+            "source": "/tmp/bunny-qualify-u7sgi_xr/capsules/art-comrade-bunnyimagetool.88d8725406aed402/inbox",
             "target": "/run/bunny/app/inbox",
             "writable": true
           },
           {
             "origin": "capsule",
-            "source": "/tmp/bunny-qualify-r6iljkuq/capsules/art-comrade-bunnyimagetool.88d8725406aed402/runtime",
+            "source": "/tmp/bunny-qualify-u7sgi_xr/capsules/art-comrade-bunnyimagetool.88d8725406aed402/runtime",
             "target": "/run/bunny/app/runtime",
             "writable": true
           },
           {
             "origin": "capsule",
-            "source": "/tmp/bunny-qualify-r6iljkuq/capsules/art-comrade-bunnyimagetool.88d8725406aed402/tmp",
+            "source": "/tmp/bunny-qualify-u7sgi_xr/capsules/art-comrade-bunnyimagetool.88d8725406aed402/tmp",
             "target": "/run/bunny/app/tmp",
             "writable": true
           },
@@ -169,8 +174,8 @@
           },
           {
             "origin": "grant",
-            "source": "/tmp/bunny-qualify-r6iljkuq/home/Pictures/holiday.png",
-            "target": "/run/bunny/files/fb9e7c290f0b8dfc4942d603b958564b/holiday.png",
+            "source": "/tmp/bunny-qualify-u7sgi_xr/home/Pictures/holiday.png",
+            "target": "/run/bunny/files/4c7fa33e67e8613be638a5abafd9e962/holiday.png",
             "writable": false
           }
         ],
@@ -224,6 +229,6 @@
   },
   "schemaVersion": 1,
   "section": "apptask",
-  "startedAt": "2026-08-11T04:30:00.117142Z",
+  "startedAt": "2026-08-11T04:31:03.087796Z",
   "verdict": "PASS"
 }
