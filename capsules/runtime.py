@@ -77,8 +77,16 @@ __all__ = [
     "Executor",
     "LaunchRecord",
     "RecordingExecutor",
+    "EXIT_STATUS_UNKNOWN",
     "SubprocessExecutor",
 ]
+
+
+#: What :meth:`SubprocessExecutor.poll` reports for a unit that has ended and
+#: whose exit status the manager can no longer produce. Non-zero on purpose:
+#: every caller treats non-zero as "did not succeed", which is the correct
+#: reading of "it ended and nobody can say how".
+EXIT_STATUS_UNKNOWN = -2
 
 
 def _now() -> str:
@@ -196,6 +204,15 @@ class SubprocessExecutor:
         if not plan.confining:
             raise CapsuleIsolationError("refusing to start an application with no confinement")
         environment = dict(plan.launcher_environment)
+        # A unit that failed in a previous launch keeps its name and its failed
+        # state, and systemd refuses to start a unit that is already loaded and
+        # failed. Clearing it here rather than using `--collect` is what lets
+        # `poll` read a real exit status afterwards: a collected unit takes its
+        # status with it.
+        subprocess.run(  # noqa: S603
+            ["systemctl", "--user", "reset-failed", plan.identity.unit_name],
+            stdin=subprocess.DEVNULL, capture_output=True, check=False, env=environment,
+        )
         result = subprocess.run(  # noqa: S603 - argv is a list; no shell anywhere
             list(argv),
             stdin=subprocess.DEVNULL,
@@ -255,9 +272,16 @@ class SubprocessExecutor:
         status = self._show(unit, "ExecMainStatus")
         if status.lstrip("-").isdigit():
             return int(status)
-        # Collected before it could be read. It has ended — which is what the
-        # caller asked — and the code is genuinely unknown, so it is not invented.
-        return 0
+        # The unit has ended and the manager cannot say how. Reported as
+        # :data:`EXIT_STATUS_UNKNOWN` rather than as zero.
+        #
+        # It was zero, once, on the reasoning that "it ended" was what the
+        # caller asked. That turned a program which could not be executed at all
+        # into a program that had succeeded and written nothing — the capsule
+        # unit failed instantly, was garbage-collected before its status could
+        # be read, and the task reported OUTPUT_MISSING. A caller cannot tell an
+        # invented zero from a real one, so this does not invent one.
+        return EXIT_STATUS_UNKNOWN
 
     def wait(self, pid: int, timeout: float | None = None) -> int | None:
         """Wait for a started application. ``None`` if this executor did not start it."""

@@ -351,9 +351,34 @@ class TheCapsuleIsNotAScope(unittest.TestCase):
         self.assertTrue(capsule.identity.unit_name.endswith(".service"))
         self.assertFalse(capsule.identity.unit_name.endswith(".scope"))
 
-    def test_a_failed_capsule_does_not_hold_its_own_name(self) -> None:
-        """``--collect``, or the second launch fails because the first did."""
-        self.assertIn("--collect", self._vector())
+    def test_the_unit_is_not_collected_on_exit(self) -> None:
+        """``--collect`` was here, and it hid a failure as a success.
+
+        A collected unit takes its exit status with it. A capsule whose program
+        could not be executed failed instantly, was garbage-collected before the
+        runtime could read a status, and the executor reported zero — so a
+        program that never ran looked like one that had succeeded and written
+        nothing. The stale name is cleared by ``reset-failed`` immediately
+        before the next launch instead, where the name is needed and the status
+        is not.
+        """
+        self.assertNotIn("--collect", self._vector())
+
+    def test_a_stale_failed_unit_is_cleared_before_a_launch(self) -> None:
+        """The other half: without ``--collect`` a failed unit keeps its name,
+        and systemd refuses to start a name that is loaded and failed."""
+        import inspect
+
+        from capsules.runtime import SubprocessExecutor
+
+        source = inspect.getsource(SubprocessExecutor.start)
+        self.assertIn("reset-failed", source)
+
+    def test_an_unreadable_exit_status_is_not_reported_as_success(self) -> None:
+        from capsules.runtime import EXIT_STATUS_UNKNOWN
+
+        self.assertNotEqual(EXIT_STATUS_UNKNOWN, 0)
+        self.assertTrue(EXIT_STATUS_UNKNOWN < 0)
 
     def test_the_limits_still_ride_on_the_unit(self) -> None:
         """The reason a capsule was wrapped at all. Changing scope to service

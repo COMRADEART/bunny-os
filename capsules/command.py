@@ -66,14 +66,18 @@ def _unit_prefix(plan: IsolationPlan) -> list[str]:
     confined by the plan it declares rather than by whatever its launcher
     happened to be confined by.
 
-    ``--collect`` so a capsule that exits non-zero does not leave a failed unit
-    behind under a name the next launch needs.
+    Deliberately **not** ``--collect``. A collected unit takes its exit status
+    with it, and a capsule that failed instantly was garbage-collected before
+    the runtime could read one — which the executor then reported as a zero, so
+    a program that could not be executed at all looked like one that had
+    succeeded and written nothing. The stale unit is cleared by a
+    ``reset-failed`` immediately before the next launch instead, where the name
+    is needed and the status is not.
     """
     arguments = [
         "systemd-run",
         "--user",
         "--quiet",
-        "--collect",
         f"--unit={plan.identity.unit_name.removesuffix('.service')}",
         f"--description=Bunny capsule for {plan.identity.application_id}",
     ]
