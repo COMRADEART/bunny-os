@@ -1235,10 +1235,26 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
             "debugHead": str(_run(
                 ["/bin/sh", "-c", f"head -n 25 {ORCA_DEBUG} 2>&1"],
                 user=user, timeout=15).get("stdout", ""))[:2000],
-            "debugSpeechLines": str(_run(
+            # A count and the *last* lines.
+            #
+            # The previous version grepped a broad pattern with `-m 20`, which
+            # returns the first twenty matches — every one of them from Orca's
+            # first fraction of a second of startup, none from the journey. A
+            # diagnostic that truncates before the interesting part is the same
+            # failure as the measurements it was added to explain.
+            "speechOutputCount": str(_run(
+                ["/bin/sh", "-c", f"grep -c 'SPEECH OUTPUT' {ORCA_DEBUG} 2>&1"],
+                user=user, timeout=15).get("stdout", "")).strip(),
+            "speechOutputTail": str(_run(
                 ["/bin/sh", "-c",
-                 f"grep -i -m 20 -E 'speech|speak|utterance' {ORCA_DEBUG} 2>&1"],
+                 f"grep 'SPEECH OUTPUT' {ORCA_DEBUG} 2>/dev/null | tail -n 25"],
                 user=user, timeout=15).get("stdout", ""))[:2500],
+            # If Orca never spoke, the reason is more likely here: what it did
+            # with the events it received.
+            "eventTail": str(_run(
+                ["/bin/sh", "-c",
+                 f"grep -E 'FOCUS|focus:|EVENT MANAGER' {ORCA_DEBUG} 2>/dev/null | tail -n 20"],
+                user=user, timeout=15).get("stdout", ""))[:2000],
         },
     }
 
