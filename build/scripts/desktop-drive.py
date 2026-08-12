@@ -642,7 +642,11 @@ def interact(control, qmp, pointer, targets, arguments,
                                   "value": value, "label": label}, timeout=120)
             record = (answer or {}).get("set") or {}
             record.update({"schema": schema, "key": key, "asked": value})
-            record["tookEffect"] = record.get("readBack") == value
+            # gsettings reads a string back in GVariant text form, so an enum
+            # comes back as `'reduce'` and a bare comparison against `reduce`
+            # fails. Stripping the quotes is not leniency about whether the
+            # write took: `wrote` and the value itself are both still checked.
+            record["tookEffect"] = str(record.get("readBack", "")).strip("'\"") == value.strip("'\"")
             step(label, **record)
             return record
 
@@ -725,13 +729,21 @@ def interact(control, qmp, pointer, targets, arguments,
         time.sleep(2)
 
         # --- §15 reduced motion, on its own ----------------------------------
+        #
+        # `reduce`, not `true`. The key is an enum — `no-preference` or
+        # `reduce` — and every previous run of this sweep asked for `true`,
+        # which gsettings refused. The record then carried a reduced-motion
+        # measurement taken on a desktop whose reduced-motion preference had
+        # never been set. `enable-animations` below is the one St actually
+        # reads, and it did take effect, which is why the desktop behaved
+        # correctly while the evidence was measuring nothing.
         changes.append(apply("org.gnome.desktop.a11y.interface", "reduced-motion",
-                             "true", "a11y-set-reduced-motion"))
+                             "reduce", "a11y-set-reduced-motion"))
         changes.append(apply("org.gnome.desktop.interface", "enable-animations",
                              "false", "a11y-set-enable-animations"))
         time.sleep(3)
         screenshot("a11y-02-reduced-motion")
-        apply("org.gnome.desktop.a11y.interface", "reduced-motion", "false",
+        apply("org.gnome.desktop.a11y.interface", "reduced-motion", "no-preference",
               "a11y-restore-reduced-motion")
         apply("org.gnome.desktop.interface", "enable-animations", "true",
               "a11y-restore-enable-animations")
