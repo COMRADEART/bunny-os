@@ -183,7 +183,7 @@ change that.
 | | |
 |---|---|
 | Guest qualification | 11 of 11 sections PASS, suite exit 0 |
-| Test suite | **5074 tests, 0 failures, 9 skipped**, exit 0 — as `bunny` on ext4, from a clone, at HEAD |
+| Test suite | **5076 tests, 0 failures, 9 skipped**, exit 0 — as `bunny` on ext4, from a clone, at HEAD |
 | Capsule cold launch | 16.2 ms |
 | Namespace overhead | ≈ 3.9 MB per running capsule |
 | Capsule disk | 7,305 B |
