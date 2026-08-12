@@ -1094,6 +1094,8 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
     _run(["/usr/bin/env", *environment, "/usr/bin/gsettings", "set",
           "org.gnome.desktop.a11y.applications", "screen-reader-enabled", "true"],
          user=user, timeout=20)
+    # Cleared before the drop-in restarts the service, so the log that is read
+    # afterwards belongs to this run and not to the session's earlier one.
     _run(["/usr/bin/rm", "-f", ORCA_DEBUG, ORCA_OUTPUT], user=user, timeout=10)
 
     # Point speech-dispatcher at the module that needs no sound card.
@@ -1121,35 +1123,38 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
           f'> {config}/speechd.conf'],
          user=user, timeout=10)
 
-    # Stop whatever screen reader is already running before starting ours.
+    # Instrument the session's own Orca rather than starting a private one.
     #
-    # Setting `screen-reader-enabled` is itself enough to make the session start
-    # Orca, so by the time this launches its own there may already be one — and
-    # `orca --replace` then hands over to an instance nobody gave a debug file
-    # to. Every previous run of this probe reported `running: true` from a
-    # `pgrep` that could not tell the two apart, which is exactly how four runs
-    # produced an empty log from a process that was genuinely alive.
-    _run(["/usr/bin/pkill", "-TERM", "-x", "orca"], user=user, timeout=15)
-    time.sleep(3)
-    _run(["/usr/bin/pkill", "-KILL", "-x", "orca"], user=user, timeout=15)
-    time.sleep(1)
-
-    # Detached, and with its own output captured to a file.
+    # Orca is a **systemd user service** here, and it restarts when it dies:
     #
-    # The first version of this ran `setsid --fork orca …` and reported
-    # `started: true` because setsid's *parent* exited zero. Orca then wrote no
-    # debug log and the record said `speaking: false` with `error: null` — an
-    # instrument that had failed and could not say so, which is worse than one
-    # that fails loudly. Whatever Orca prints now lands in ORCA_OUTPUT and is
-    # carried back in the record.
-    launcher = (
-        f"exec /usr/bin/orca --replace --debug --debug-file={ORCA_DEBUG} "
-        f">{ORCA_OUTPUT} 2>&1"
-    )
+    #     orca.service: Main process exited, code=killed, status=9/KILL
+    #     orca.service: Scheduled restart job, restart counter is at 3.
+    #     Started orca.service - Orca Screen Reader.
+    #
+    # That is the whole of why five runs measured nothing. Setting
+    # `screen-reader-enabled` starts the service; the probe then launched a
+    # second Orca with `--debug-file`, `--replace` handed the session over to
+    # it, and systemd — seeing its own unit's process gone — started a *third*
+    # without the flag. `pgrep` found an Orca every time and it was never ours.
+    #
+    # A drop-in is the right answer twice over. It stops the fight with the
+    # service manager, and it means the screen reader being measured is the one
+    # the session actually runs, rather than a private instance whose behaviour
+    # nobody ships.
+    dropin = "/var/home/bunny/.config/systemd/user/orca.service.d"
+    _run(["/usr/bin/mkdir", "-p", dropin], user=user, timeout=10)
+    _run(["/bin/sh", "-c",
+          f'printf "[Service]\\nExecStart=\\n'
+          f'ExecStart=/usr/bin/orca --debug --debug-file={ORCA_DEBUG}\\n'
+          f'StandardOutput=append:{ORCA_OUTPUT}\\nStandardError=append:{ORCA_OUTPUT}\\n" '
+          f'> {dropin}/bunny-debug.conf'],
+         user=user, timeout=10)
+    _run(["/usr/bin/env", *environment, "/usr/bin/systemctl", "--user", "daemon-reload"],
+         user=user, timeout=30)
     started = _run(
-        ["/usr/bin/env", *environment, "/usr/bin/setsid", "--fork",
-         "/bin/sh", "-c", launcher],
-        user=user, timeout=30)
+        ["/usr/bin/env", *environment, "/usr/bin/systemctl", "--user",
+         "restart", "orca.service"],
+        user=user, timeout=60)
 
     deadline = time.monotonic() + wait
     lines = 0
@@ -1177,6 +1182,10 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
     # second, and four runs were spent on the difference.
     running = _run(["/usr/bin/pgrep", "-a", "-u", user, "-x", "orca"], user=user, timeout=10)
     command_line = str(running.get("stdout", "")).strip()
+    unit_command = str(_run(
+        ["/usr/bin/env", *environment, "/usr/bin/systemctl", "--user", "show",
+         "orca.service", "--property=ExecStart"],
+        user=user, timeout=20).get("stdout", ""))
     output = _run(["/usr/bin/cat", ORCA_OUTPUT], user=user, timeout=10)
 
     # Everything needed to tell an instrument fault from a product one, in the
@@ -1186,8 +1195,12 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
         "launched": started.get("returncode") == 0,
         "running": running.get("returncode") == 0,
         # The decisive field: our launch put ORCA_DEBUG on the command line.
-        "isOurInstance": ORCA_DEBUG in command_line,
+        # The service's ExecStart carries the debug path once the drop-in is
+        # in, so this is now a question about the *unit* rather than about a
+        # private process the probe started beside it.
+        "isOurInstance": ORCA_DEBUG in command_line or ORCA_DEBUG in unit_command,
         "commandLine": command_line[:400] or None,
+        "unitExecStart": unit_command[:400] or None,
         "debugLines": lines,
         "speaking": lines > 0,
         "orcaOutput": str(output.get("stdout", ""))[:2000] or None,
