@@ -267,9 +267,108 @@ stylesheet.
 
 **245 tests pass and not one of them can see an ellipsis.**
 
-### 3.3 Text scaling, high contrast and the three slices
+### 3.3 Text scaling and high contrast — the two release blockers
 
-**Status: running.** See §6.
+Measured on the image built from `ae4c24a`, at 1920×1080 under llvmpipe. Each
+preference is applied on its own and reverted before the next, so no figure is
+taken against a desktop another setting has already changed — which the previous
+run's figures were.
+
+| Setting | Before (`b09f523`) | Now (`ae4c24a`) | × noise floor |
+|---|---|---|---|
+| `text-scaling-factor` 1.25 | not measured | **19.1 %** of the screen | 279 |
+| `text-scaling-factor` 1.5 | 0.09 % — *below noise* | **25.7 %** | 375 |
+| `text-scaling-factor` 2.0 | not measured | **29.5 %** | 431 |
+| high contrast | 0.18 % — *at noise* | **39.6 %** | 577 |
+| reduced motion | 0.04 % | 0.066 % | 1.0 — see §3.5 |
+| noise floor (control) | 0.15 % | 0.069 % | — |
+
+The control is a screenshot taken with every setting restored, so it is what
+"nothing changed" looks like on this guest.
+
+Corroborated by control geometry rather than pixels alone. The same named
+controls, measured through AT-SPI before and after:
+
+| Control | 100 % | 125 % | 150 % | 200 % |
+|---|---|---|---|---|
+| `Allow this Bunny action` | 52 | 62 | 73 | **92** |
+| `Applications` | 46 | 60 | 65 | 78 |
+| `Account: Bunny desktop harness user` | 43 | 54 | 65 | 87 |
+| `All apps` | 17 | 21 | 25 | 31 |
+
+Twenty of sixty comparable controls grew at every scale and **none shrank**. The
+forty that did not move are GNOME's own; the walk covers the whole session.
+
+And the desktop **reflows** rather than scaling as a bitmap. At 200 % the
+sidebar collapses to icons, the discretionary cards are shed, and the assistant
+card — the one the permission question appears in — survives, which is what
+`PROTECTED_CARDS` was added for. Photographed: the request and "Done. I made
+Pictures/holiday-resized.png at 100 pixels wide. Your original wasn't changed."
+are both legible at twice the size.
+
+### 3.4 The granted slice still passes
+
+Through the rebuilt Trust component, with the permission answered on screen:
+
+```
+journey-approval    "Allow this Bunny action" found after 248 nodes,
+                    role=button, visible, extents 144x52 at (1630, 617)
+journey-decision    pressed at (1702, 643)
+journey-result      files ["holiday-resized.png"], pixels [100, 50],
+                    sourceDigest 5de7c234… unchanged, ok=true
+final               "Done. I made Pictures/holiday-resized.png at 100 pixels
+                     wide. Your original wasn't changed."
+```
+
+Both controls are focusable and carry their accessible names. §40's routing is
+intact.
+
+### 3.5 Three defects the photograph found, which 245 tests did not
+
+**The structured prompt never reached the screen.** The prompt was drawn with a
+heading and two buttons and nothing else: no application identity, no resource,
+none of "Files: holiday.png only / Network: Off / App data: Isolated". The
+runtime carried it correctly the whole way — `prompt_for()` →
+`ApprovalRequirement` → `ApprovalRequest` → the event payload →
+`ApprovalPresentation.to_json()`, and a local test walks every hop — and
+`bunny-shell-assistant` re-serialises the approval line field by field with six
+fields listed and `prompt` not among them. The component's degraded path is what
+was photographed, working exactly as designed, for a reason that had nothing to
+do with the component.
+
+**The prompt ran off the right of the screen.** `.bunny-trust-action` carried a
+`min-width` of three times the button font size. Two of those plus padding
+exceeded the 304 px card, St grew the panel rather than constraining it, and the
+Deny button — the *safe* answer — was clipped by the screen edge. Width now
+comes from `x_expand`; the height that makes it a comfortable touch target stays.
+
+**Two labels ellipsised where they should have wrapped.** The prompt's heading
+read `Bunny Image Tool want…` — the sentence saying what an application wanted to
+do, cut off in the dialog asking whether to allow it — and at 200 % the greeting
+read `Good evening, B…`, cutting the person's own name. `St.Label` ellipsizes at
+the end by default and a `ClutterText` with both ellipsize and `line_wrap` set
+ellipsizes, so setting `line_wrap` alone had done nothing at all.
+
+All three are fixed at `2421199`, with a test for the first — the one no
+existing test could have caught, because the projection was right, the component
+was right, and the wire between them dropped one key.
+
+### 3.6 Reduced motion has never been measured
+
+`gsettings set org.gnome.desktop.a11y.interface reduced-motion true` is refused:
+the key is an enum, `no-preference` or `reduce`. The read-back in this run is
+`'no-preference'`, so the preference was never set — and every reduced-motion
+figure in every accessibility record before this one was measured on a desktop
+that had not been asked for reduced motion.
+
+The desktop is fine. `enable-animations` is what `St.Settings` exposes and the
+only thing `lib/animation.js` consults, and that one did take effect in this run.
+It was the evidence measuring nothing, which is the worse of the two failures.
+
+Fixed in the harness at `4e11ca2`. Even corrected, a *screenshot* cannot show
+whether a transition happened, so the honest evidence for §15 is that
+`duration()` returns zero when animations are off — which is unit-tested — plus
+a moving-image capture this harness does not take.
 
 ---
 

@@ -52,7 +52,10 @@ export const PANEL_KEYS = [
  */
 const CARD_HEIGHT = {
     systemOverview: 236,
-    quickAccess: 168,
+    // 192, not 168. Quick access tile labels wrap to a second line rather than
+    // ellipsising (see iconTile), so two rows of tiles are taller than they
+    // were and the card has to have room for them.
+    quickAccess: 192,
     media: 132,
     agenda: 196,
     systemMonitor: 200,
