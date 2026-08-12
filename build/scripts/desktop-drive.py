@@ -134,6 +134,9 @@ def main() -> int:
     parser.add_argument("--screen-reader", action="store_true",
                         help="run Orca through the journey and record every "
                              "utterance it produces")
+    parser.add_argument("--performance", action="store_true",
+                        help="idle CPU and memory for the desktop and the "
+                             "Companion, and what a theme change costs")
     parser.add_argument("--journey", default="skip",
                         choices=("skip", "granted", "denied", "failing"),
                         help="drive the image journey through the shell's own Trust surface")
@@ -805,6 +808,42 @@ def interact(control, qmp, pointer, targets, arguments,
         step("a11y-restored", **outcome["restored"])
         screenshot("a11y-05-restored")
         return outcome
+
+    # ---- performance --------------------------------------------------------
+    #
+    # §41 asks what the design-system refactor cost. Four numbers, and the two
+    # that are new this phase are the theme ones: the desktop now renders a
+    # stylesheet and hands it to St whenever a display setting changes, and
+    # nothing before this phase did that at all.
+    def run_performance() -> dict:
+        outcome: dict = {}
+
+        idle = (control.ask({"command": "performance", "seconds": 20,
+                             "label": "performance-idle"}, timeout=180) or {}).get("performance") or {}
+        outcome["idle"] = idle
+        for label, entry in (idle.get("processes") or {}).items():
+            step(f"performance-{label}", **entry)
+
+        # What a settings change costs. Measured from the host, so it includes
+        # the write, the shell noticing, the render, the stylesheet load and the
+        # restyle — which is the whole of what a person waits for.
+        timings = []
+        for value in ("1.5", "1.0"):
+            began = time.monotonic()
+            control.ask({"command": "a11y-set", "schema": "org.gnome.desktop.interface",
+                         "key": "text-scaling-factor", "value": value,
+                         "label": f"performance-scale-{value}"}, timeout=120)
+            # The tree walk is the first thing that can only answer once the
+            # restyle has landed, so it is the honest end of the interval.
+            control.ask({"command": "a11y-tree", "label": f"performance-tree-{value}"}, timeout=300)
+            timings.append({"scale": value, "seconds": round(time.monotonic() - began, 2)})
+        outcome["themeChange"] = timings
+        step("performance-theme-change", timings=timings)
+
+        return outcome
+
+    if arguments.performance:
+        report["performance"] = run_performance()
 
     if arguments.accessibility:
         report["accessibility"] = run_accessibility()

@@ -430,6 +430,9 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
             elif verb == "orca-speech":
                 answer["speech"] = desktop_interaction.screen_reader_speech(
                     user, environment, since=int(request.get("since", 0)))
+            elif verb == "performance":
+                answer["performance"] = desktop_interaction.performance_sample(
+                    user, seconds=float(request.get("seconds", 20.0)))
             elif verb == "character":
                 # What the figure is doing and what the bubble says, both read out
                 # of the accessibility tree. This is how the host watches the state

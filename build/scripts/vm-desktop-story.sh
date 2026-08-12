@@ -178,6 +178,12 @@ if [[ "${interact}" == "1" ]]; then
   if [[ "${BUNNY_DESKTOP_SCREEN_READER:-0}" == "1" ]]; then
     a11y_flag+=(--screen-reader)
   fi
+  # Idle CPU and memory, and what a theme change costs. Also separate: the
+  # sample is twenty seconds of the session doing nothing, and a run that was
+  # driving the desktop through it would be measuring the driver.
+  if [[ "${BUNNY_DESKTOP_PERFORMANCE:-0}" == "1" ]]; then
+    a11y_flag+=(--performance)
+  fi
   if python3 build/scripts/desktop-drive.py \
       --journey "${BUNNY_DESKTOP_JOURNEY:-skip}" \
       "${a11y_flag[@]}" \

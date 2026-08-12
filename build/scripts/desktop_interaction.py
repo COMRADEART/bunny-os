@@ -1101,6 +1101,66 @@ def screen_reader_speech(user: str, environment: list[str], since: int = 0) -> d
     }
 
 
+#: The processes §41 asks about, by the pattern that finds each one.
+PERFORMANCE_TARGETS = {
+    "gnome-shell": "gnome-shell",
+    "companion": "bunny-companion",
+    "orca": "orca",
+}
+
+
+def performance_sample(user: str, seconds: float = 20.0) -> dict:
+    """CPU and memory for the desktop and the Companion, over an idle interval.
+
+    CPU is measured as a *delta* over the interval, not read from `ps`'s `%cpu`.
+    `ps` reports the average since the process started, which on a session that
+    has just done a whole permission journey is a number about the journey, not
+    about the desktop sitting still — and "Companion idle CPU" is the question.
+
+    Read from /proc rather than from a tool: `utime + stime` in clock ticks is
+    the same quantity before and after, and the arithmetic is visible here
+    instead of inside `top`'s idea of an interval.
+    """
+    def snapshot() -> dict:
+        found: dict[str, dict] = {}
+        for label, pattern in PERFORMANCE_TARGETS.items():
+            listing = _run(["/usr/bin/pgrep", "-u", user, "-f", pattern], timeout=15)
+            pids = [line.strip() for line in str(listing.get("stdout", "")).splitlines() if line.strip()]
+            total_ticks, total_rss = 0, 0
+            for pid in pids[:8]:
+                stat = _run(["/usr/bin/cat", f"/proc/{pid}/stat"], timeout=10)
+                status = _run(["/usr/bin/grep", "VmRSS", f"/proc/{pid}/status"], timeout=10)
+                fields = str(stat.get("stdout", "")).split()
+                if len(fields) > 14:
+                    try:
+                        total_ticks += int(fields[13]) + int(fields[14])
+                    except ValueError:
+                        pass
+                parts = str(status.get("stdout", "")).split()
+                if len(parts) > 1 and parts[1].isdigit():
+                    total_rss += int(parts[1])
+            found[label] = {"processes": len(pids), "ticks": total_ticks, "rssKib": total_rss}
+        return found
+
+    first = snapshot()
+    time.sleep(seconds)
+    second = snapshot()
+
+    hertz = 100.0  # USER_HZ; constant on every kernel this image runs on.
+    measured = {}
+    for label in PERFORMANCE_TARGETS:
+        before, after = first[label], second[label]
+        used = (after["ticks"] - before["ticks"]) / hertz
+        measured[label] = {
+            "processes": after["processes"],
+            "rssKib": after["rssKib"],
+            "rssMib": round(after["rssKib"] / 1024, 1) if after["rssKib"] else 0,
+            "cpuSeconds": round(used, 3),
+            "cpuPercent": round(100 * used / seconds, 2) if seconds else None,
+        }
+    return {"ran": True, "intervalSeconds": seconds, "processes": measured}
+
+
 def session_ready(user: str, environment: list[str], wait: float = 120.0) -> dict:
     """The product's own readiness probe, run as it ships.
 
