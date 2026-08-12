@@ -820,8 +820,33 @@ def watch(
     results_reported = False
     approvals_reported: set[str] = set()
     last_event_sequence = 0
+    # The deadline does not run while a person is being asked something.
+    #
+    # An approval is not a slow answer; it is a different kind of answer. This
+    # loop used to hold one clock for both, so a task that reached
+    # `waiting_for_approval` and sat there — because the question was on
+    # somebody's screen, which is the system working — was reported as "the
+    # runtime did not finish within the deadline". The desktop then showed a
+    # warning where a question should have been, and the task waited for an
+    # answer nobody had been asked for.
+    #
+    # Measured in a booted guest: on a cold session under llvmpipe the first
+    # task crosses the deadline before the prompt appears, and a later one in
+    # the same session does not — so this failed intermittently, in the
+    # direction that hides a permission request.
+    #
+    # `waiting` is recomputed every pass from the presentation state below. The
+    # clock is *suspended*, not extended: time spent waiting for a person is not
+    # spent by the runtime, and a task that stops waiting resumes the deadline
+    # it had left rather than being granted a fresh one.
+    waiting_since = 0.0
+    waited_for_a_person = 0.0
     while True:
-        if time.monotonic() > deadline:
+        if waiting_since:
+            elapsed_waiting = time.monotonic() - waiting_since
+        else:
+            elapsed_waiting = 0.0
+        if time.monotonic() - (waited_for_a_person + elapsed_waiting) > deadline:
             emit("error", reason="the runtime did not finish within the deadline", taskId=task_id)
             return 5
         try:
@@ -877,6 +902,14 @@ def watch(
             )
 
         approvals = state.get("approvals", []) if isinstance(state, Mapping) else []
+        # Is a question on somebody's screen right now? If so the deadline is
+        # not running; see the comment where it is checked.
+        unanswered = bool(approvals) and phase == "waiting_for_approval"
+        if unanswered and not waiting_since:
+            waiting_since = time.monotonic()
+        elif not unanswered and waiting_since:
+            waited_for_a_person += time.monotonic() - waiting_since
+            waiting_since = 0.0
         if isinstance(approvals, list):
             for approval in approvals:
                 if not isinstance(approval, Mapping):
