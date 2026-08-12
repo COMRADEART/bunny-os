@@ -225,7 +225,51 @@ phase. Nothing above substitutes for it: §9 of the brief is explicit that
 automated contrast is not an accessibility result, and the last two phases each
 found a defect that every text diagnostic had passed and one photograph caught.*
 
-**Status: pending.** See §6 for what has and has not run.
+### 3.1 The design system loads on a real desktop
+
+The first thing worth knowing, because it was the one genuine unknown: whether
+`St.Theme.load_stylesheet` on a file written at runtime works in GNOME Shell 50,
+and whether unloading the shipped sheet afterwards leaves the desktop styled
+rather than bare.
+
+It does. Photographed at 1920×1080 on the image built from `ae4c24a`: top bar,
+sidebar, both card columns, character, dock and the assistant card all render
+from the generated stylesheet, and the request typed into the assistant entry
+shows the focus ring. At default settings the desktop is indistinguishable from
+the one before this phase, which is the correct result — the default theme is
+the same theme.
+
+### 3.2 A regression this phase introduced, found by looking
+
+Quick Access reads:
+
+```
+Files      Terminal    Bunny       Approvals
+Companion  Diagnosti…  Launcher    Settings
+```
+
+**"Diagnosti…" is ellipsised.** The two smallest type sizes (9 px) were folded
+upward into the `caption` role at 10 px — deliberately, because 9 px is below
+what the rest of the desktop asks anyone to read — while the quick tile stayed
+55 px wide. That is enough to re-break the defect `VISUAL_QA_REPORT.md` §3.1
+fixed by dropping the "Bunny " prefix from these labels.
+
+The arithmetic: the tile gives the label about 47 px of text width, and
+"Diagnostics" at 10 px needs about 60. Three ways out, none free — a wider tile
+drops the grid from four across to three, a two-line label makes the tile taller
+and the card with it, and a smaller label reinstates the size that was removed on
+purpose. It is a P2 and it is not fixed here, because fixing a visual defect
+without being able to photograph the result is how this one arrived.
+
+Both the tile width and the label size are theme values now, so whichever way it
+goes it is one change in `design/tokens.js` rather than a hunt through a
+stylesheet.
+
+**245 tests pass and not one of them can see an ellipsis.**
+
+### 3.3 Text scaling, high contrast and the three slices
+
+**Status: running.** See §6.
 
 ---
 
@@ -281,6 +325,28 @@ Stated so that the matrix above is not read as a plan.
   before and after; none of those numbers exists for the new theme path.
 - **Nothing was seen on hardware.** Every desktop measurement in this project is
   llvmpipe.
+- **The Companion still reads high contrast from Bunny's own settings file.**
+  `companion.settings.AccessibilityPreferences.high_contrast` is populated from
+  Bunny's settings document and from nothing else; no code path reads
+  `org.gnome.desktop.a11y.interface high-contrast` on that side. The desktop
+  shell now does, and the Companion's GTK window is safe by construction because
+  its CSS is written against the system palette — but the *character* renderer
+  takes the preference from the file, so a person who enabled high contrast in
+  GNOME gets an adapted desktop and an unadapted character. §8 says a
+  Bunny-specific preference that ignores the platform one is not a fix; this is
+  the last instance of that pattern in the tree and it is still there.
+
+### 5.1 One thing that was found and deliberately not repaired here
+
+`shell/services/bunny_shell/settings.py` still defines `theme` with the values
+`system` / `bunny-light` / `bunny-dark` / `high-contrast`, and `ui.py` still
+renders it back to the user as a sentence. It is applied by nothing, and after
+this phase it is applied by nothing *and* contradicted by something: the desktop
+follows `color-scheme` and the a11y preference regardless of what that key says.
+
+Removing a settings key is a migration, and doing it in the same change as the
+theme system would have made the migration invisible inside a large diff. It is
+named here so the next phase removes it rather than discovering it.
 
 ---
 

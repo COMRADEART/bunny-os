@@ -332,6 +332,56 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(build("GIMP"), build("GNU Image Manipulation Program"))
 
 
+class BridgeTests(unittest.TestCase):
+    """The hop the first booted run found missing.
+
+    The runtime carried the structured prompt all the way to
+    `ApprovalPresentation.to_json()`, every Python test passed, and the desktop
+    still drew a permission dialog with a heading and two buttons — because
+    `bunny-shell-assistant` re-serialises the approval line field by field and
+    `prompt` was not one of the fields it listed.
+
+    Nothing between the two would have caught it. The projection was right, the
+    component was right, and the wire between them dropped one key.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.source = (ROOT / "shell/services/bin/bunny-shell-assistant").read_text(encoding="utf-8")
+
+    def _emit_block(self) -> str:
+        start = self.source.index('emit(\n                    "approval",')
+        return self.source[start:self.source.index("\n                )", start)]
+
+    def test_the_bridge_passes_the_structured_prompt_through(self) -> None:
+        self.assertIn("prompt=approval.get(\"prompt\")", self._emit_block())
+
+    def test_every_field_the_component_draws_survives_the_bridge(self) -> None:
+        """A field the model reads and the bridge drops is a blank row on screen."""
+        from companion.presentation import PROMPT_FIELDS
+
+        block = self._emit_block()
+        # Passed as a whole rather than key by key: re-listing the allowlist
+        # here would be a second place for a field to go missing, which is the
+        # defect this test exists for.
+        self.assertNotIn("applicationName", block)
+        self.assertIn("prompt=", block)
+        self.assertGreater(len(PROMPT_FIELDS), 0)
+
+    def test_the_prompt_is_bounded_before_it_reaches_the_bridge(self) -> None:
+        """The bridge passes it through, so the bounding has to have happened already."""
+        from companion.presentation import PROMPT_FIELDS, _prompt
+
+        kept = _prompt({field: "z" * 4000 for field in PROMPT_FIELDS})
+        for field, limit in PROMPT_FIELDS.items():
+            with self.subTest(field=field):
+                self.assertLessEqual(len(kept[field]), limit)
+
+    def test_a_non_mapping_prompt_becomes_an_empty_one(self) -> None:
+        """The bridge type-checks rather than forwarding whatever arrived."""
+        self.assertIn("isinstance(approval.get(\"prompt\"), Mapping)", self._emit_block())
+
+
 class HarnessContractTests(NodeBackedTestCase):
     """The three properties the booted-guest slices press.
 

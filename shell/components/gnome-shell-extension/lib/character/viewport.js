@@ -196,10 +196,22 @@ export class CharacterViewport {
             text: `${timeOfDayGreeting()}, ${first}`,
             style_class: 'bunny-greeting-primary',
         });
+        // Wraps rather than ellipsises.
+        //
+        // At 200 % text this label is 48px and read "Good evening, B…" on the
+        // booted desktop: the person's own name was the part that got cut. St
+        // ellipsizes at the end by default, and a name is exactly the kind of
+        // string that has no good truncation — so it wraps to a second line and
+        // the character band, which has the whole middle of the screen, takes it.
         this._prompt = new St.Label({
             text: 'How can I help you today?',
             style_class: 'bunny-greeting-secondary',
         });
+        for (const label of [this._hello, this._prompt]) {
+            label.clutter_text.line_wrap = true;
+            label.clutter_text.set_line_wrap_mode(2);
+            label.clutter_text.ellipsize = 0;
+        }
         column.add_child(this._hello);
         column.add_child(this._prompt);
         return column;

@@ -277,8 +277,7 @@
 .bunny-trust-actions { spacing: 8px; padding-top: 4px; }
 .bunny-trust-action {
   font-size: 11px; font-weight: 600;
-  padding: 8px 20px;
-  min-width: 102px;
+  padding: 8px 12px;
   height: 34px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.36);

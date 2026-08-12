@@ -82,6 +82,14 @@ function wrapping(label) {
     // with no spaces is exactly that token, and this is a security dialog, so
     // running off the edge is not an option.
     label.clutter_text.set_line_wrap_mode(2);
+    // PangoEllipsizeMode.NONE, explicitly.
+    //
+    // St.Label ellipsizes at the end by default, and a ClutterText with both
+    // ellipsize and line_wrap set ellipsizes — wrapping never happens. On the
+    // first booted run the prompt's heading read "Bunny Image Tool want…", so
+    // the sentence saying what an application wanted to do was cut off in the
+    // dialog asking whether to let it.
+    label.clutter_text.ellipsize = 0;
     return label;
 }
 

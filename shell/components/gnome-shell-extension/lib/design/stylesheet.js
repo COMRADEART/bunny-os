@@ -423,11 +423,17 @@ function renderComponents(theme) {
     rule(`.bunny-trust-actions { spacing: ${px(s.sm)}; padding-top: ${px(s.xs)}; }`);
     // Touch targets. §35: the two controls that decide a permission are the
     // last place to optimise for pointer precision.
+    //
+    // Height only. There was a `min-width: target * 3` here, and it is what
+    // pushed the whole prompt past the right edge of the assistant card on the
+    // first booted run: two 102px minimums plus their padding and the column's
+    // came to more than the 304px card, St grew the panel rather than
+    // constraining it, and the Deny button — the safe answer — ran off the
+    // screen. Width comes from `x_expand` sharing whatever the card has.
     const target = Math.max(34, Math.round(theme.type.button.size * 3));
     rule(`.bunny-trust-action {
   ${type(theme, 'button')}
-  padding: ${px(s.sm)} ${px(s.lg)};
-  min-width: ${px(target * 3)};
+  padding: ${px(s.sm)} ${px(s.md)};
   height: ${px(target)};
   border-radius: ${px(r.control)};
   border: 1px solid ${c.borderStrong};

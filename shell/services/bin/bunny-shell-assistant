@@ -930,6 +930,20 @@ def watch(
                     reason=str(approval.get("reason") or state.get("statusText") or "Allow this action?"),
                     destinationDetail=str(approval.get("destinationDetail") or ""),
                     safeDefault=str(approval.get("safeDefault") or "denied"),
+                    # The structured facts the Trust component draws: application
+                    # identity, the resource, the effect, the confinement.
+                    #
+                    # This list is a subset chosen field by field, and that is
+                    # how the structured prompt went missing on its first booted
+                    # run: the runtime carried it all the way to
+                    # ApprovalPresentation.to_json(), every Python test passed,
+                    # and the desktop drew a permission dialog with a heading and
+                    # two buttons because the bridge had never been told to pass
+                    # it on. Passed through as a whole rather than re-listed
+                    # here — it is already an allowlist, bounded and escaped by
+                    # companion.presentation.PROMPT_FIELDS, and re-listing it
+                    # would be a second place for a field to go missing.
+                    prompt=approval.get("prompt") if isinstance(approval.get("prompt"), Mapping) else {},
                 )
 
         summary = str(state.get("resultSummary") or "")
