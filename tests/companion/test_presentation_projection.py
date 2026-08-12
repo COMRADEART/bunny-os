@@ -351,6 +351,35 @@ class MarkupTests(unittest.TestCase):
     def test_escaping_is_idempotent_in_the_sense_that_matters(self) -> None:
         self.assertNotIn("<", escape_markup("<script>alert(1)</script>"))
 
+    def test_an_apostrophe_survives_to_the_screen(self) -> None:
+        """The desktop showed "Your original wasn&#39;t changed." to a person.
+
+        Photographed on a booted guest, at the end of a journey that had just
+        worked. Every view in this product uses `set_text`, so nothing ever
+        turned the entity back, and this product's voice is full of
+        contractions.
+        """
+        sentence = "Your original wasn't changed."
+        self.assertEqual(sentence, escape_markup(sentence))
+        self.assertNotIn("&#39;", escape_markup('He said "no" and didn\'t move.'))
+
+    def test_a_quote_still_cannot_smuggle_markup(self) -> None:
+        """The reason dropping the quote rules is safe, asserted rather than argued.
+
+        Pango markup opens with `<` and an entity opens with `&`. Both are still
+        escaped, so no tag can exist — and a quote only means anything inside a
+        tag. This is what makes the readable sentence and the injection
+        property compatible.
+        """
+        hostile = "<span foreground='red' weight=\"bold\">urgent</span>"
+        escaped = escape_markup(hostile)
+        self.assertNotIn("<", escaped)
+        self.assertNotIn(">", escaped)
+        self.assertIn("&lt;span", escaped)
+        # The quotes survive, and are inert because no tag survives with them.
+        self.assertIn("'red'", escaped)
+        self.assertIn('"bold"', escaped)
+
 
 class PresentationSelectionTests(unittest.TestCase):
     """§11: only implementations that exist may be selected."""

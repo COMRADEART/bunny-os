@@ -304,14 +304,34 @@ def escape_markup(text: str) -> str:
     tools, and "the widget happens not to parse markup" is a property of one
     call site rather than of the value. A later view that used ``set_markup``
     would otherwise turn a task summary into a rendering instruction.
+
+    **Quotes are deliberately left alone.** They were escaped too, and the
+    desktop showed a person this:
+
+        Done. I made Pictures/holiday-resized.png at 100 pixels wide.
+        Your original wasn&#39;t changed.
+
+    Photographed on a booted guest. Every view in this product sets text with
+    ``set_text`` — the GTK transcript and the GNOME Shell panel both say so in
+    their own comments — so nothing ever turned the entity back into an
+    apostrophe, and this product's voice is full of them: wasn't, didn't,
+    you're.
+
+    Dropping the two quote rules costs nothing, because neither character can
+    introduce markup. Pango markup opens with ``<`` and an entity opens with
+    ``&``; both are still escaped, so no tag can exist, and a quote only means
+    anything *inside* a tag. The injection property is unchanged and the
+    sentence is readable.
+
+    The larger point stands and is not fixed here: escaping belongs to the view
+    that parses markup, and no such view exists in this product today. A summary
+    containing a literal ``&`` is still shown as ``&amp;``.
     """
     return (
         str(text)
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
-        .replace('"', "&quot;")
-        .replace("'", "&#39;")
     )
 
 
