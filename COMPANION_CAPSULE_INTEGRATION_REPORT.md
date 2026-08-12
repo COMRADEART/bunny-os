@@ -147,7 +147,9 @@ Rows are the phase's claims; columns are the repository's own five-state ladder
 | The Trust prompt renders | ✅ | ✅ | 🟡 observed | ❌ | ❌ |
 | **The prompt is answered by pressing it** | ✅ | ✅ | ❌ **not established** | ❌ | ❌ |
 | Visible sandbox state | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Accessibility of the Trust prompt | ✅ | 🟡 | ❌ | ❌ | ❌ |
+| Accessibility: names, roles, focus, safe default | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Accessibility: the screen reader is present and starts | ✅ | ✅ | ✅ VM | ❌ | ❌ |
+| **Accessibility: text scaling and high contrast** | ❌ **ignored** | ✅ | ✅ VM *(measured absent)* | ❌ | ❌ |
 | **Performance** |||||
 | Launch, memory, disk, ceilings | ✅ | ✅ | ✅ VM | ❌ | ❌ |
 | GPU / portal latency | — | — | ❌ not measured | ❌ | ❌ |
@@ -185,6 +187,11 @@ being omitted:
    to 23 and made the suite weakest where it looked strongest.
 4. **No hardware.** Everything is `kvm` on one host.
 5. **The approval has never been answered by a person.**
+6. **The desktop ignores text scaling and high contrast.** Measured, not
+   inferred: setting either leaves the screen pixel-identical, because 43 of 43
+   font sizes in the shell stylesheet are absolute pixels and all 143 colour
+   literals are hardcoded. This is the largest accessibility gap in the product
+   and it is not a small fix.
 
 ## 7. The reports
 
@@ -197,7 +204,7 @@ being omitted:
 | `VISUAL_SLICE_REPORT.md` | The journey, and the chain of three defects behind the prompt |
 | `VISUAL_QA_REPORT.md` | Findings from looking at the desktop |
 | `PERFORMANCE_BASELINE_REPORT.md` | The six §24 numbers; five now exist |
-| `ACCESSIBILITY_QUALIFICATION_REPORT.md` | Assistive technology against the booted session |
+| `TRUST_ACCESSIBILITY_REPORT.md` | Assistive technology against the booted session. **Not** `ACCESSIBILITY_QUALIFICATION_REPORT.md`, which is generated from `operations/data/qualification-matrices.json` and must not be hand-edited |
 | **this document** | The route, the defects, and the maturity table |
 
 ## 8. What must happen before this phase can be called complete
