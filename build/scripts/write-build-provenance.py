@@ -29,6 +29,60 @@ def version(argv: list[str]) -> str:
     return result.stdout.strip()[:4096] or "absent"
 
 
+def builder() -> dict:
+    """The machine that made this image, as facts rather than as a name.
+
+    A build record without a builder is missing the variable that has actually
+    changed a result in this project: a hosted runner moved podman 4.9.3 to
+    5.8.4 between two runs an hour apart, and the reproducibility comparison
+    changed with it. "Built from commit X" is not enough to explain a difference
+    between two artifacts; "built from commit X, on kernel Y, with podman Z" is.
+
+    Everything here is read rather than configured, and anything unreadable is
+    recorded as `unknown` rather than omitted — an absent key and an
+    unanswerable question look identical afterwards.
+    """
+    def read(path: str) -> str:
+        try:
+            return Path(path).read_text(encoding="utf-8").strip()[:200] or "unknown"
+        except OSError:
+            return "unknown"
+
+    def command(argv: list[str]) -> str:
+        try:
+            done = subprocess.run(argv, text=True, stdout=subprocess.PIPE,
+                                  stderr=subprocess.DEVNULL, check=False, timeout=20)
+        except (FileNotFoundError, OSError, subprocess.SubprocessError):
+            return "unknown"
+        return done.stdout.strip()[:200] or "unknown"
+
+    distribution = "unknown"
+    try:
+        for line in Path("/etc/os-release").read_text(encoding="utf-8").splitlines():
+            if line.startswith("PRETTY_NAME="):
+                distribution = line.partition("=")[2].strip().strip('"')[:200]
+                break
+    except OSError:
+        pass
+
+    return {
+        "kernel": command(["uname", "-r"]),
+        "architecture": command(["uname", "-m"]),
+        "distribution": distribution,
+        # Whether this is a VM, and which kind. A build inside WSL, a build in a
+        # cloud runner and a build on metal are three different environments and
+        # only one of them is stable across a week.
+        "virtualization": command(["systemd-detect-virt"]),
+        "cpuCount": command(["nproc"]),
+        "containerStorageDriver": command(
+            ["podman", "info", "--format", "{{.Store.GraphDriverName}}"]),
+        # Not the hostname: a hostname is a label somebody chose and two
+        # machines can share one. The boot id is unique per boot and says
+        # nothing about who owns the machine.
+        "bootId": read("/proc/sys/kernel/random/boot_id"),
+    }
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -88,6 +142,7 @@ def main() -> int:
             else "Full build: the OCI archive and every disk image the profile defines."
         ),
         "tools": {"podman": version(["podman", "--version"]), "imageBuilder": version(["image-builder", "version", "--format=json"])},
+        "builder": builder(),
         "artifacts": artifacts,
         "reproducibility": {"repeatedBuildComparisonPerformed": False},
     }
