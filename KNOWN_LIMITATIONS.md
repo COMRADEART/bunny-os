@@ -945,7 +945,7 @@ pixel-identical.
 
 The cause is structural. All 43 `font-size` declarations in the shell
 stylesheet are absolute pixels and none is relative, so there is nothing for a
-scale factor to multiply; and all 143 colour literals are hardcoded with none
+scale factor to multiply; and all 151 colour literals are hardcoded with none
 derived from the theme, so a high-contrast theme has nothing to override.
 `lib/assistant/trustPrompt.js` states that "the stylesheet and the high-contrast
 theme decide the values" — the stylesheet does, the theme does not.

@@ -1,8 +1,8 @@
 # Encryption qualification report
 
-Date: 2026-07-29  
+Date: 2026-08-01T14:31:13Z  
 Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
-Result: **NOT QUALIFIED** — 0 of 9 scenarios resolved, 0 failing, 9 not run.
+Result: **NOT QUALIFIED** — 2 of 9 scenarios resolved, 1 failing, 6 not run.
 
 Nine scenarios covering LUKS password unlock, recovery key, incorrect password, missing recovery key, TPM fallback, Secure Boot interaction, and update, rollback and recovery media access against an encrypted installation.
 
@@ -10,15 +10,15 @@ Nine scenarios covering LUKS password unlock, recovery key, incorrect password, 
 
 | Scenario | Outcome | Method | Evidence |
 |---|---|---|---|
-| `luks-password-unlock` | NOT_RUN | source-inspection | — |
 | `recovery-key` | NOT_RUN | source-inspection | — |
-| `incorrect-password` | NOT_RUN | source-inspection | — |
 | `missing-recovery-key` | NOT_RUN | source-inspection | — |
-| `tpm-fallback` | NOT_RUN | source-inspection | — |
 | `secure-boot-interaction` | NOT_RUN | source-inspection | — |
 | `update-after-encryption` | NOT_RUN | source-inspection | — |
 | `rollback-after-encryption` | NOT_RUN | source-inspection | — |
 | `recovery-media-access` | NOT_RUN | source-inspection | — |
+| `luks-password-unlock` | FAIL | virtual-machine | `qualification/installed-system/evidence/ISQ-20260801-encrypted-first-boot-001/record.json` |
+| `incorrect-password` | PASS | virtual-machine | `qualification/installed-system/evidence/ISQ-20260801-encrypted-wrong-credential-001/record.json` |
+| `tpm-fallback` | PASS | virtual-machine | `qualification/installed-system/evidence/ISQ-20260801-tpm-absent-001/record.json` |
 
 ## Why these scenarios have not run
 
@@ -28,11 +28,8 @@ Depends on a completed installation. build/scripts/vm-encrypted-install.sh state
 
 Each of these is blocking. `NOT_RUN` is not a soft state:
 
-- `luks-password-unlock`
 - `recovery-key`
-- `incorrect-password`
 - `missing-recovery-key`
-- `tpm-fallback`
 - `secure-boot-interaction`
 - `update-after-encryption`
 - `rollback-after-encryption`

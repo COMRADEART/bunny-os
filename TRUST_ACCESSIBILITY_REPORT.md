@@ -86,7 +86,7 @@ changed by 0.18 %, against a 0.15 % noise floor — indistinguishable from the
 gauges ticking.
 
 ```
-colour literals in the stylesheet          : 143
+colour literals in the stylesheet          : 151
     derived from the theme (-st-, var(), currentColor) : 0
 ```
 
@@ -144,7 +144,7 @@ and this report does not say it is.
 |---|---|
 | `text-scaling-factor` has no effect | **VM runtime validated** — set, read back, photographed, and 0.09 % against a 0.15 % control |
 | `high-contrast` has no effect | **VM runtime validated** — 0.18 % against the same control |
-| The stylesheet cannot respond to either | **Tested** — 43/43 absolute, 143/0 hardcoded |
+| The stylesheet cannot respond to either | **Tested** — 43/43 absolute, 151/0 hardcoded |
 | The Trust prompt takes focus, safe default | **Tested**; not yet observed on screen |
 | Orca is installed and starts | **VM runtime validated** |
 | Reduced motion is honoured | **Implemented**; stills cannot show it |

@@ -70,8 +70,9 @@ Thirteen. Every one was found by running something, not by reading it.
 | 13 | **P0: the assistant bridge was committed with CRLF, so its shebang named `/usr/bin/python3\r` and the kernel refused the exec.** The desktop could never start its assistant | **Screenshot**, then asking the image directly |
 
 Three of the last four were found by *looking at a picture*. Nine text-only
-diagnostics had not found #11, and #13 had been true in every image built for at
-least seven commits while eleven guest qualification sections passed.
+diagnostics had not found #11; and #13 was introduced by the fix for #11, one
+commit before the run that exhibited it, which is why the two are told as one
+sequence in §2.1.
 
 ### 2.1 The two that say the most
 
@@ -189,7 +190,7 @@ being omitted:
 5. **The approval has never been answered by a person.**
 6. **The desktop ignores text scaling and high contrast.** Measured, not
    inferred: setting either leaves the screen pixel-identical, because 43 of 43
-   font sizes in the shell stylesheet are absolute pixels and all 143 colour
+   font sizes in the shell stylesheet are absolute pixels and all 151 colour
    literals are hardcoded. This is the largest accessibility gap in the product
    and it is not a small fix.
 
