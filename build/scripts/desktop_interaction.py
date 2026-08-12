@@ -1026,13 +1026,20 @@ ORCA_OUTPUT = "/tmp/bunny-orca-output.txt"
 
 _ORCA_SPEECH = re.compile(r"SPEECH OUTPUT:\s*'(.*)'\s*$")
 
-#: Where speech-dispatcher is told to write its log, and the line that
-#: carries an utterance. At LogLevel 4 the daemon records the text of each
-#: message it is asked to speak.
+#: Where speech-dispatcher is told to write its log, and the line that carries
+#: an utterance.
+#:
+#: `Incoming text: |…|` is the text a client submitted, logged at LogLevel 4.
+#: The pattern is not a guess: the first version looked for "Text to say" and
+#: three other plausible phrasings, matched none of a 1.3 MB log, and reported
+#: zero utterances from a run where the daemon had clearly been busy. These are
+#: the daemon's own format strings, read out of the binary with `strings` rather
+#: than out of a twenty-five-minute guest run.
 SPEECHD_LOG_DIR = "/tmp/bunny-speechd-log"
-_SPEECHD_SPEECH = re.compile(
-    r"(?:Text to say|Message text|message text|Requested data)"
-    r"\s*:?\s*\|?([^|\r\n]{2,300})")
+_SPEECHD_SPEECH = re.compile(r"Incoming text:\s*\|(.*)\|", re.M)
+#: The same utterance again, after speechd has queued it. Kept as a fallback for
+#: a build that logs one and not the other.
+_SPEECHD_QUEUED = re.compile(r"Queueing message \|(.*)\| with priority", re.M)
 
 
 def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -> dict:
@@ -1174,6 +1181,13 @@ def screen_reader_speech(user: str, environment: list[str], since: int = 0) -> d
             utterances.append(said)
     if utterances:
         source = "speech-dispatcher"
+    else:
+        for match in _SPEECHD_QUEUED.finditer(speechd_text):
+            said = match.group(1).strip()
+            if said:
+                utterances.append(said)
+        if utterances:
+            source = "speech-dispatcher-queue"
 
     # Orca's own debug log, second. Kept because when it works it is the
     # canonical record of what Orca decided to say, and because a run where the
