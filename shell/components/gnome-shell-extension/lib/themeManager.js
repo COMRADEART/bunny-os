@@ -221,8 +221,16 @@ export class ThemeManager {
             GLib.mkdir_with_parents(directory, 0o700);
             this._generation += 1;
             const path = GLib.build_filenamev([directory, `bunny-${this._generation}.css`]);
-            GLib.file_set_contents(path, css);
-            return Gio.File.new_for_path(path);
+            const file = Gio.File.new_for_path(path);
+            // replace_contents with an explicit encode, rather than
+            // GLib.file_set_contents: the latter's contents parameter is a byte
+            // array in introspection and whether GJS accepts a bare string for
+            // it has changed between versions. Encoding here is unambiguous in
+            // every version, and this runs during enable().
+            file.replace_contents(
+                new TextEncoder().encode(css), null, false,
+                Gio.FileCreateFlags.REPLACE_DESTINATION, null);
+            return file;
         } catch (error) {
             this._note(`the theme could not be written (${error.message})`);
             return null;
