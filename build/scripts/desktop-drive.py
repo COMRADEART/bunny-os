@@ -300,6 +300,31 @@ def interact(control, qmp, pointer, targets, arguments,
         (before_files or {}).get("state", {}).get("launched") or
         (before_terminal or {}).get("state", {}).get("launched"))
 
+    # Defined before run_journey, not after, because run_journey calls it.
+    #
+    # Python resolves a closure's free variable at call time, so this was a
+    # NameError waiting for the first run in which the journey got past the
+    # approval — and until the Trust prompt could actually be pressed, it
+    # never did. The failure path had been exercised a dozen times; the
+    # success path had never run once.
+    def watch_character(seconds: float, label: str) -> list[dict]:
+        """Poll the character and record every state it passes through."""
+        seen: list[dict] = []
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            answer = control.ask({"command": "character", "label": label}, timeout=120)
+            observation = (answer or {}).get("character") or {}
+            state = observation.get("state", "")
+            if state and (not seen or seen[-1]["state"] != state):
+                seen.append({"state": state, "says": observation.get("says", ""),
+                             "reason": observation.get("reason", "")})
+                # Idle after something happened means the request is over.
+                if state == "idle" and len(seen) > 1:
+                    break
+            time.sleep(2)
+        return seen
+
+
     # ---- the assistant's backend, through the shell's own bridge ----------
     #
     # Run first and reported separately from the interface half. This is the
@@ -719,23 +744,6 @@ def interact(control, qmp, pointer, targets, arguments,
     # moves through the states the request is actually in, and a real answer
     # comes back from the runtime. Every observation is read out of the
     # accessibility tree, which is the same thing a screen reader would see.
-    def watch_character(seconds: float, label: str) -> list[dict]:
-        """Poll the character and record every state it passes through."""
-        seen: list[dict] = []
-        deadline = time.monotonic() + seconds
-        while time.monotonic() < deadline:
-            answer = control.ask({"command": "character", "label": label}, timeout=120)
-            observation = (answer or {}).get("character") or {}
-            state = observation.get("state", "")
-            if state and (not seen or seen[-1]["state"] != state):
-                seen.append({"state": state, "says": observation.get("says", ""),
-                             "reason": observation.get("reason", "")})
-                # Idle after something happened means the request is over.
-                if state == "idle" and len(seen) > 1:
-                    break
-            time.sleep(2)
-        return seen
-
     for label, request in (("factual", arguments.ask), ("action", arguments.ask_action)):
         if not request:
             continue
