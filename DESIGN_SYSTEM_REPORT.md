@@ -531,7 +531,39 @@ named here so the next phase removes it rather than discovering it.
 
 ---
 
-## 6. Standing note on what a passing test here means
+## 6. Against §48, item by item
+
+The brief's own condition first: *"If high contrast and text scaling still fail:
+PHASE STATUS = INCOMPLETE."* They do not fail. Text scaling moves 19–30 % of the
+screen at the three enlarged sizes and high contrast moves 97 %, against a
+0.053 % noise floor. **The release blockers are cleared.**
+
+The rest of §48 is not all met, and the phase is not complete against it.
+
+| §48 requirement | State |
+|---|---|
+| typography responds to system scaling | **met** — 19.2/25.8/29.7 % at 125/150/200 % |
+| 200 % text remains usable | **met** — photographed; the desktop reflows |
+| high contrast produces a real adaptation | **met** — 97.1 % |
+| semantic tokens replace hard-coded colours on core surfaces | **met** for the shell; the GTK surfaces already used the system palette |
+| keyboard flow passes | **partial** — focus lands on the safe answer and both controls are focusable; no full traversal was driven |
+| AT-SPI flow passes | **partial** — 1745 nodes walked, Trust controls named, roled and focusable; **40 interactive controls are unnamed** |
+| Orca can operate the Trust/task flow | **not met** — Orca is installed and its version was read; it was never driven |
+| reduced-motion flow passes | **partial** — the setting takes effect for the first time; the effect is not photographable (§3.7) |
+| Companion full/compact/minimal/text-only truthful | **not met** — not refactored; minimal not built |
+| granted/denied/failed slices still pass | **met** — all three, answered on screen |
+| Trust prompt secure against hostile reason content | **partial** — bounded and escaped in the projection, with tests; never driven with a hostile string on a guest |
+| no critical surface relies on colour or motion alone | **met** for Trust and security standing; notification severity still carries a coloured border whose text counterpart is styled but not yet drawn |
+| core surfaces use the shared design system | **met** for the desktop shell |
+| performance has not materially regressed | **not measured** — §41 was not attempted |
+
+**PHASE STATUS: the release blockers are cleared; the phase is incomplete.**
+Five of fourteen items are unmet or unmeasured, and the largest are Orca, the
+Companion presentation modes, and the performance comparison.
+
+---
+
+## 7. Standing note on what a passing test here means
 
 The static evidence in §2 says the desktop now *computes* different numbers when
 a setting changes. It does not say a person can read the result, and it cannot:
@@ -539,4 +571,17 @@ the previous phase's most expensive defects were a character whose working pose
 was a shrug and an "Assistant offline" message on a desktop whose runtime was
 active, and both passed every assertion in the suite.
 
-§32 and §33 are release blockers for this phase and they are screenshots.
+This phase is the same lesson again, and more expensively. The suite grew from
+245 to 249 passing tests while the desktop was, in order: drawing a permission
+dialog with none of its facts in it, running the Deny button off the edge of the
+screen, ellipsising the sentence that said what an application wanted to do,
+cutting the user's own name out of the greeting at 200 %, and painting a
+high-contrast theme over a purple wallpaper.
+
+**Five defects. One screenshot. Zero failing tests.**
+
+Every one of them is now covered — the bridge hop by a test, the rest by the fact
+that the next run photographs the same surfaces — but the general point stands
+and is the reason §36 and §37 are listed in §5 as missing rather than as nice to
+have. Until a component can be rendered and looked at without a twenty-minute
+boot, looking at it will keep being the last thing anyone does.
