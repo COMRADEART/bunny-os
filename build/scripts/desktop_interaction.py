@@ -1026,6 +1026,14 @@ ORCA_OUTPUT = "/tmp/bunny-orca-output.txt"
 
 _ORCA_SPEECH = re.compile(r"SPEECH OUTPUT:\s*'(.*)'\s*$")
 
+#: Where speech-dispatcher is told to write its log, and the line that
+#: carries an utterance. At LogLevel 4 the daemon records the text of each
+#: message it is asked to speak.
+SPEECHD_LOG_DIR = "/tmp/bunny-speechd-log"
+_SPEECHD_SPEECH = re.compile(
+    r"(?:Text to say|Message text|message text|Requested data)"
+    r"\s*:?\s*\|?([^|\r\n]{2,300})")
+
 
 def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -> dict:
     """Turn Orca on and wait for it to be speaking.
@@ -1060,9 +1068,13 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
     # was audible would need a sound device and a listener.
     config = "/var/home/bunny/.config/speech-dispatcher"
     _run(["/usr/bin/mkdir", "-p", config], user=user, timeout=10)
+    _run(["/usr/bin/mkdir", "-p", SPEECHD_LOG_DIR], user=user, timeout=10)
+    # LogLevel 4 and an explicit LogDir, because speech-dispatcher's own log is
+    # the channel this measurement actually reads. See screen_reader_speech.
     _run(["/bin/sh", "-c",
           f'printf "AddModule \\"dummy\\" \\"sd_dummy\\" \\"\\"\\n'
-          f'DefaultModule dummy\\nLogLevel 3\\n" > {config}/speechd.conf'],
+          f'DefaultModule dummy\\nLogLevel 4\\nLogDir \\"{SPEECHD_LOG_DIR}\\"\\n" '
+          f'> {config}/speechd.conf'],
          user=user, timeout=10)
 
     # Detached, and with its own output captured to a file.
@@ -1116,28 +1128,74 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
 
 
 def screen_reader_speech(user: str, environment: list[str], since: int = 0) -> dict:
-    """Every utterance Orca has produced, in order, from `since` onward.
+    """Every utterance the screen reader produced, in order, from `since` onward.
 
-    Returned as a list rather than a set: §31 asks for what is announced, and
-    "announced twice" is one of the three failures it names. Collapsing repeats
-    here would hide exactly the defect the section is looking for.
+    Read from **speech-dispatcher's** log rather than Orca's.
+
+    Two runs were spent on Orca's `--debug-file`, which produced an empty file
+    both times while `pgrep -x orca` said the process was alive. Whether that is
+    buffering, a flag interaction between `--debug` and `--debug-file`, or
+    something else in Orca 50 was never established — and it does not need to
+    be, because it is the wrong channel. speechd is where the utterance actually
+    goes: Orca decides what to say and hands the text to the speech system, and
+    that hand-off is logged at LogLevel 4 by the daemon whatever Orca's own
+    debugging is doing.
+
+    It is also closer to the question. §31 asks what is announced; a line in
+    speechd's log is a string that was submitted to be spoken, which is one hop
+    nearer to a person's ear than a line in a screen reader's debug output.
+
+    Orca is stopped first. Its own log is read afterwards as a second channel,
+    and stopping it is also what would flush a buffered one.
+
+    Returned as a list rather than a set: "announced twice" is one of the three
+    failures §31 names, and collapsing repeats would hide it.
     """
     if not environment:
         return {"ran": False, "error": "no user session environment"}
-    read = _run(["/usr/bin/cat", ORCA_DEBUG], user=user, timeout=30, limit=8_000_000)
-    if read.get("returncode") != 0:
-        return {"ran": True, "ok": False, "call": read}
-    utterances = []
-    for line in str(read.get("stdout", "")).splitlines():
-        match = _ORCA_SPEECH.search(line)
-        if match:
-            said = match.group(1).strip()
-            if said:
-                utterances.append(said)
+
+    # Stop the screen reader before reading. A log still being written by a live
+    # process is a log that may be missing its last line, and the last line is
+    # the result announcement.
+    _run(["/usr/bin/pkill", "-TERM", "-x", "orca"], user=user, timeout=15)
+    time.sleep(4)
+    _run(["/usr/bin/pkill", "-KILL", "-x", "orca"], user=user, timeout=15)
+
+    utterances: list[str] = []
+    source = None
+
+    # speechd's log: one `set_...`/`speak` exchange per utterance, with the text.
+    listing = _run(["/bin/sh", "-c", f"cat {SPEECHD_LOG_DIR}/*.log 2>/dev/null"],
+                   user=user, timeout=30, limit=8_000_000)
+    speechd_text = str(listing.get("stdout", ""))
+    for match in _SPEECHD_SPEECH.finditer(speechd_text):
+        said = match.group(1).strip()
+        if said:
+            utterances.append(said)
+    if utterances:
+        source = "speech-dispatcher"
+
+    # Orca's own debug log, second. Kept because when it works it is the
+    # canonical record of what Orca decided to say, and because a run where the
+    # two disagree would be worth knowing about.
+    orca_read = _run(["/bin/sh", "-c",
+                      f"cat {ORCA_DEBUG} /var/home/{user}/debug-*.out 2>/dev/null"],
+                     user=user, timeout=30, limit=8_000_000)
+    orca_lines = [m.group(1).strip()
+                  for m in (_ORCA_SPEECH.search(line)
+                            for line in str(orca_read.get("stdout", "")).splitlines())
+                  if m and m.group(1).strip()]
+    if not utterances and orca_lines:
+        utterances = orca_lines
+        source = "orca-debug"
+
     return {
         "ran": True,
-        "ok": True,
+        "ok": bool(utterances),
+        "source": source,
         "total": len(utterances),
+        "orcaDebugUtterances": len(orca_lines),
+        "speechdLogBytes": len(speechd_text),
         # `since` lets a caller ask "what was said after I pressed that", which
         # is the only way to attribute an utterance to an action.
         "utterances": utterances[since:][:400],
