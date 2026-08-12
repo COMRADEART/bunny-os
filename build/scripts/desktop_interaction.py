@@ -1044,6 +1044,27 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
          user=user, timeout=20)
     _run(["/usr/bin/rm", "-f", ORCA_DEBUG, ORCA_OUTPUT], user=user, timeout=10)
 
+    # Point speech-dispatcher at the module that needs no sound card.
+    #
+    # The image configures `espeak-ng`, which wants an audio sink, and this
+    # guest has none — a headless QEMU with no `-device` for sound. A speech
+    # module that cannot open an output is a plausible reason for a screen
+    # reader to start and then produce nothing, and it is not a reason worth
+    # spending a twenty-five-minute run to distinguish from the others.
+    #
+    # `sd_dummy` ships in the image and discards the audio. What it does not
+    # discard is the *utterance*: Orca still decides what to say and still logs
+    # it, which is the only thing this measurement reads. So the record below
+    # says what a screen reader would announce, on a machine that could not have
+    # played it. §31's question is what is announced; a run that also proved it
+    # was audible would need a sound device and a listener.
+    config = "/var/home/bunny/.config/speech-dispatcher"
+    _run(["/usr/bin/mkdir", "-p", config], user=user, timeout=10)
+    _run(["/bin/sh", "-c",
+          f'printf "AddModule \\"dummy\\" \\"sd_dummy\\" \\"\\"\\n'
+          f'DefaultModule dummy\\nLogLevel 3\\n" > {config}/speechd.conf'],
+         user=user, timeout=10)
+
     # Detached, and with its own output captured to a file.
     #
     # The first version of this ran `setsid --fork orca …` and reported
