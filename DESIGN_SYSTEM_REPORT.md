@@ -269,19 +269,26 @@ stylesheet.
 
 ### 3.3 Text scaling and high contrast — the two release blockers
 
-Measured on the image built from `ae4c24a`, at 1920×1080 under llvmpipe. Each
+Measured on the image built from `7edd3fd`, at 1920×1080 under llvmpipe. Each
 preference is applied on its own and reverted before the next, so no figure is
 taken against a desktop another setting has already changed — which the previous
 run's figures were.
 
-| Setting | Before (`b09f523`) | Now (`ae4c24a`) | × noise floor |
-|---|---|---|---|
-| `text-scaling-factor` 1.25 | not measured | **19.1 %** of the screen | 279 |
-| `text-scaling-factor` 1.5 | 0.09 % — *below noise* | **25.7 %** | 375 |
-| `text-scaling-factor` 2.0 | not measured | **29.5 %** | 431 |
-| high contrast | 0.18 % — *at noise* | **39.6 %** | 577 |
-| reduced motion | 0.04 % | 0.066 % | 1.0 — see §3.5 |
-| noise floor (control) | 0.15 % | 0.069 % | — |
+| Setting | Before (`b09f523`) | Now (`7edd3fd`) | × noise floor | Verdict |
+|---|---|---|---|---|
+| `text-scaling-factor` 1.25 | not measured | **19.2 %** of the screen | 363 | PASS |
+| `text-scaling-factor` 1.5 | 0.09 % — *below noise* | **25.8 %** | 486 | PASS |
+| `text-scaling-factor` 2.0 | not measured | **29.7 %** | 560 | PASS |
+| high contrast | 0.18 % — *at noise* | **97.1 %** | 1832 | PASS |
+| reduced motion | 0.04 % | 0.05 % | 1.0 | see §3.6 |
+| noise floor (control) | 0.15 % | 0.053 % | — | — |
+
+High contrast changes 97 % of the screen because the wallpaper goes too. The
+first run of this sweep measured 39.6 % — cyan controls and opaque black panels
+sitting on the ordinary purple wallpaper, because the wallpaper is GNOME's to
+draw and the Bunny scrim over it was only dimming it. At high contrast the scrim
+is now an opaque fill in the theme's ground, and the number is what replacing the
+largest surface on the screen looks like.
 
 The control is a screenshot taken with every setting restored, so it is what
 "nothing changed" looks like on this guest.
@@ -306,22 +313,48 @@ card — the one the permission question appears in — survives, which is what
 Pictures/holiday-resized.png at 100 pixels wide. Your original wasn't changed."
 are both legible at twice the size.
 
-### 3.4 The granted slice still passes
+### 3.4 The Trust component, on screen
 
-Through the rebuilt Trust component, with the permission answered on screen:
+Photographed at `7edd3fd`. Every element §18 names, from the runtime rather than
+from wording composed in the surface:
 
 ```
-journey-approval    "Allow this Bunny action" found after 248 nodes,
-                    role=button, visible, extents 144x52 at (1630, 617)
-journey-decision    pressed at (1702, 643)
+  ◈  Bunny Image Tool                        ← identity: name and id
+     art.comrade.BunnyImageTool
+
+  Bunny Image Tool wants to open             ← the fact, wrapped over three
+  Pictures/holiday.png                          lines rather than truncated
+
+  It will save a copy as holiday-resized.png.   ← the effect
+  Your original file will not be changed.
+
+  Shared with the application:               ← what is disclosed
+  Pictures/holiday.png
+
+  ✓  Files: Pictures/holiday.png only        ← each row a glyph, a word and a
+  ⃠  Network: Off                                colour; none of the three alone
+  ✓  App data: Isolated
+
+     [ Allow ]   [ Deny ]                    ← Deny carries the focus ring
+     Details                                 ← the technical panel, collapsed
+```
+
+The safe answer holds focus, both controls are fully on screen, and nothing
+overflows the card.
+
+And the granted slice still passes through it, with the permission answered by a
+pointer press at the button's own accessibility extents:
+
+```
+journey-approval    "Allow this Bunny action" found after 268 nodes,
+                    role=button, visible, extents 115x52 at (1630, 887)
+journey-decision    pressed at (1687, 913)
 journey-result      files ["holiday-resized.png"], pixels [100, 50],
                     sourceDigest 5de7c234… unchanged, ok=true
-final               "Done. I made Pictures/holiday-resized.png at 100 pixels
-                     wide. Your original wasn't changed."
 ```
 
-Both controls are focusable and carry their accessible names. §40's routing is
-intact.
+Both controls report `focusable: true` and carry their accessible names. §40's
+routing is intact.
 
 ### 3.5 Three defects the photograph found, which 245 tests did not
 
@@ -353,22 +386,45 @@ All three are fixed at `2421199`, with a test for the first — the one no
 existing test could have caught, because the projection was right, the component
 was right, and the wire between them dropped one key.
 
-### 3.6 Reduced motion has never been measured
+Two more from the same photograph, fixed at `381852a` and `7edd3fd`:
+
+**Quick Access read `Diagnosti…` again.** This is the defect
+`VISUAL_QA_REPORT.md` §3.1 fixed once, by dropping the "Bunny " prefix, and it
+came back because this phase folded the 9 px tile label up into the 10 px caption
+role — deliberately, because 9 px is below what the rest of the desktop asks
+anyone to read, with a consequence nobody looked for. The labels wrap now.
+
+**High contrast left the wallpaper alone.** See §3.3: 39.6 % of the screen versus
+97.1 % once the scrim goes opaque.
+
+Five defects, from one screenshot, against a suite that grew from 245 to 249
+passing tests without any of them turning red.
+
+### 3.6 Reduced motion had never been set, and cannot be photographed
+
+Two separate problems, and the first one hid the second.
 
 `gsettings set org.gnome.desktop.a11y.interface reduced-motion true` is refused:
-the key is an enum, `no-preference` or `reduce`. The read-back in this run is
-`'no-preference'`, so the preference was never set — and every reduced-motion
-figure in every accessibility record before this one was measured on a desktop
-that had not been asked for reduced motion.
+the key is an enum, `no-preference` or `reduce`. Every run of this sweep had
+asked for `true`, and the read-back was `'no-preference'` — so every
+reduced-motion figure in every accessibility record was measured on a desktop
+that had never been asked for reduced motion. Fixed at `4e11ca2`; the read-back
+at `7edd3fd` is `'reduce'` and `tookEffect` is true.
 
-The desktop is fine. `enable-animations` is what `St.Settings` exposes and the
-only thing `lib/animation.js` consults, and that one did take effect in this run.
-It was the evidence measuring nothing, which is the worse of the two failures.
+That did not change the number, and it never could have. **A screenshot is a
+still.** A desktop that has stopped animating looks exactly like a desktop that
+has finished animating, so the difference from the baseline sits at the noise
+floor whether the preference is honoured or not — 0.04 % before, when it was not
+being set, and 0.05 % now, when it is. The measurement cannot distinguish the two
+states it exists to distinguish, so the record says
+`NOT_MEASURABLE_BY_SCREENSHOT` rather than `FAIL`.
 
-Fixed in the harness at `4e11ca2`. Even corrected, a *screenshot* cannot show
-whether a transition happened, so the honest evidence for §15 is that
-`duration()` returns zero when animations are off — which is unit-tested — plus
-a moving-image capture this harness does not take.
+What is on the record instead: the setting took effect, `enable-animations` took
+effect, and `lib/animation.js` collapses every duration to zero when it has —
+which is measured under node, not asserted. Evidence that motion actually stopped
+needs a moving-image capture, and this harness does not take one. That gap is
+older than this phase (`ecb26959`, "why reduced motion could not have been
+measured on this guest") and it is not closed here.
 
 ---
 
@@ -382,24 +438,30 @@ a moving-image capture this harness does not take.
 
 | | Implemented | Unit tested | VM validated | Hardware | Release qualified |
 |---|---|---|---|---|---|
-| Design tokens | yes | yes | pending | no | no |
-| Typography scaling | yes | yes | pending | no | no |
-| Light mode | yes | yes | pending | no | no |
-| Dark mode | yes | yes | pending | no | no |
-| High contrast | yes | yes | pending | no | no |
-| Keyboard | unchanged | yes | pending | no | no |
-| AT-SPI | unchanged | yes | pending | no | no |
-| Screen reader | unchanged | no | pending | no | no |
-| Reduced motion | yes | yes | pending | no | no |
-| Companion full | unchanged | yes | pending | no | no |
+| Design tokens | yes | yes | yes | no | no |
+| Typography scaling | yes | yes | **yes** — 19–30 % at 125/150/200 % | no | no |
+| Light mode | yes | yes | no — never selected on a guest | no | no |
+| Dark mode | yes | yes | yes | no | no |
+| High contrast | yes | yes | **yes** — 97.1 % | no | no |
+| Keyboard | unchanged | yes | partial — focus lands on Deny | no | no |
+| AT-SPI | unchanged | yes | partial — 1745 nodes, 551 interactive, 40 unnamed | no | no |
+| Screen reader | unchanged | no | no — Orca present, never driven | no | no |
+| Reduced motion | yes | yes | setting takes; effect not photographable | no | no |
+| Companion full | unchanged | yes | yes | no | no |
 | Companion compact | unchanged | yes | no | no | no |
 | Companion minimal | not built | no | no | no | no |
 | Companion text-only | unchanged | yes | no | no | no |
-| Trust component | yes | yes | pending | no | no |
+| Trust component | yes | yes | **yes** — all §18 elements drawn | no | no |
 | Task component | model only | yes | no | no | no |
 | Result component | model only | yes | no | no | no |
 | Error component | model only | yes | no | no | no |
 | Protected-space component | model only | yes | no | no | no |
+
+Two rows are worth reading carefully. **Light mode has never been rendered on a
+guest** — it is generated, contrast-checked and unit-tested, and no screenshot of
+it exists, so it sits in exactly the position the evergreen palette sat in before
+this phase. And **40 interactive controls in the accessibility tree are unnamed**,
+which is a §30 result this phase measured and did not improve.
 
 "model only" is the honest state for §20–§23: the projections exist and are
 tested, the CSS for them is in the generated stylesheet, and nothing draws them
