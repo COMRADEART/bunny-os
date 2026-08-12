@@ -132,6 +132,36 @@ And the network line is not decorative: the same run recorded `class none,
 enforced true, shown "Off"`. The word the user reads is derived from the class that
 was enforced, so the prompt cannot say "Off" about a capsule that has a network.
 
+## 4.1 Three clocks watch a permission question, and only one may end it
+
+This is written down because not knowing it cost this phase three cycles.
+
+| Clock | Where | Length | While a question is unanswered |
+|---|---|---|---|
+| Consent wait | `companion/service.py`, `DEFAULT_CONSENT_WAIT_SECONDS` | 300 s | **Runs, and must.** Silence is denial; a question nobody answers has to expire |
+| Bridge deadline | `bunny-shell-assistant`, `DEADLINE_SECONDS` | 180 s | **Suspended.** An approval is not a slow answer |
+| Desktop watchdog | `assistant.js`, `WATCHDOG_MS` | 200 s | **Suspended.** Same reason, one layer up |
+
+Only the first is the trust layer's. It is the one that implements the rule in
+§1, and shortening or suspending it would turn "an unanswered question is a
+denial" into "an unanswered question waits for ever".
+
+The other two exist to stop a *stuck runtime* hanging the desktop, and both were
+wrong in the same way: each measured "time since the request" and neither knew
+that a question on screen is the system working. The desktop showed *"the runtime
+did not finish within the deadline"* and later *"The assistant did not answer in
+time"* where a permission question should have been — twice replacing a question
+with a complaint about the person taking too long to answer it.
+
+Both are now suspended while an approval is pending and **rearmed** when the
+phase leaves `waiting_for_approval`, on a full budget for the work that follows
+rather than the remainder of the time somebody spent reading. Suspending, not
+extending: extending only moves the number, and removing lets a genuinely stuck
+request sit behind a thinking animation for ever.
+
+The rule this leaves, for anything added later: **a clock that can end a task may
+not run while a person is being asked, unless it is the consent expiry itself.**
+
 ## 5. The single-use approved surface
 
 `ApprovedActSurface` in `companion/capsule_task_bridge.py` is bound to one
