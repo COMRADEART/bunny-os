@@ -16,8 +16,9 @@ the permission question was **answered on screen**, by a pointer event pressing
 capsule ran and the file appeared. The graphical harness has no code path that
 can resolve an approval any other way.
 
-What remains for §30 is the **denied** and **failing** slices through the same
-surface; until those run, the phase is **INCOMPLETE**.
+All three slices — **granted, denied and failing** — were answered that way.
+§30's condition is met: nothing in this phase's graphical evidence rests on an
+approval a program gave itself.
 
 ---
 
@@ -234,7 +235,9 @@ being omitted:
    capsule ran and `Pictures/holiday-resized.png` appeared at 100×50 with the
    original untouched. `Deny` was pressed in the same way and the desktop said
    *"the request was declined"* with nothing written.
-2. The **failing** slice through the same surface — running as this is written.
+2. ~~The **failing** slice through the same surface.~~ **Done.** Allow pressed
+   on a corrupt image: nothing written, the neighbour untouched, the character
+   in `error`, and the desktop saying *"I could not do that."*
 3. The accessibility run against the prompt **while it is on screen**. The
    prompt's buttons now take focus on the safe default, and that is asserted by
    test, not observed: `--accessibility` measures the tree at the moment the
