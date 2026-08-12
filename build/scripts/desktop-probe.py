@@ -74,10 +74,28 @@ def user_bus_environment(user: str) -> list[str]:
     value = uid.get("stdout", "").strip()
     if not value.isdigit():
         return []
-    return [
+    environment = [
         f"XDG_RUNTIME_DIR=/run/user/{value}",
         f"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{value}/bus",
     ]
+    # And the display, when the session has imported one.
+    #
+    # These two are enough to reach the user bus, which is all this started out
+    # needing. They are not enough for anything that asks *whether there is a
+    # compositor*: the shipped readiness probe reads WAYLAND_DISPLAY and, given
+    # an environment without it, reported "compositor not ready" on a desktop
+    # that was visibly drawing. Read from the user manager rather than assumed
+    # to be wayland-0, because gnome-session imports it at a moment nothing here
+    # can predict and a guess is right until it is not.
+    dump = run(
+        ["/usr/bin/env", *environment, "/usr/bin/systemctl", "--user", "show-environment"],
+        user=user,
+    )
+    for line in dump.get("stdout", "").splitlines():
+        key, _, setting = line.partition("=")
+        if key.strip() in ("WAYLAND_DISPLAY", "DISPLAY", "XDG_SESSION_TYPE"):
+            environment.append(f"{key.strip()}={setting.strip()}")
+    return environment
 
 
 def shell_dbus(user: str, environment: list[str], method: str, body: str) -> dict:
