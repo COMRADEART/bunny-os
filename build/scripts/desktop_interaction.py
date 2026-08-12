@@ -855,6 +855,99 @@ print(json.dumps(out))
 '''
 
 
+_APPROVAL_BUTTONS_PROGRAM = r'''
+"""The Trust prompt's two buttons, found as fast as the tree allows.
+
+`locate_controls` returns every named control in the shell, and over this
+desktop that walk can take minutes. That is fine for an inventory and wrong for
+a race: the prompt is on screen for as long as whatever clock is shortest allows,
+and a walk that outlives the prompt reports an empty desktop and proves nothing.
+
+So this looks for two names and stops the moment it has them. It is additive —
+the full walk is still there and is still what the driver falls back to — because
+the last time this instrument was "improved" in place, the change broke it and
+the only reason anyone noticed was that the previous behaviour had been recorded.
+"""
+import json, sys
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
+
+Atspi.init()
+
+WANTED = {"Allow this Bunny action", "Deny this Bunny action"}
+found = {}
+seen = 0
+
+def extents(node):
+    try:
+        component = node.get_component_iface()
+        if component is None:
+            return None
+        box = component.get_extents(Atspi.CoordType.SCREEN)
+        return {"x": box.x, "y": box.y, "width": box.width, "height": box.height}
+    except Exception:
+        return None
+
+def walk(node, depth, maximum, ancestors=()):
+    global seen
+    if depth > maximum or len(found) == len(WANTED):
+        return
+    try:
+        count = node.get_child_count()
+    except Exception:
+        return
+    for index in range(count):
+        if len(found) == len(WANTED):
+            return
+        try:
+            child = node.get_child_at_index(index)
+        except Exception:
+            continue
+        if child is None:
+            continue
+        try:
+            name = child.get_name() or ""
+            role = child.get_role_name()
+        except Exception:
+            continue
+        seen += 1
+        if name in WANTED and name not in found:
+            found[name] = {"name": name, "role": role, "extents": extents(child),
+                           "path": list(ancestors)}
+        walk(child, depth + 1, maximum, ancestors + (name,) if name else ancestors)
+
+desktop = Atspi.get_desktop(0)
+for index in range(desktop.get_child_count()):
+    application = desktop.get_child_at_index(index)
+    if application is None:
+        continue
+    if (application.get_name() or "") not in ("gnome-shell", "GNOME Shell", "mutter"):
+        continue
+    walk(application, 0, 12)
+
+print(json.dumps({"buttons": found, "nodesVisited": seen,
+                  "complete": len(found) == len(WANTED)}))
+'''
+
+
+def approval_buttons(user: str, environment: list[str]) -> dict:
+    """The Trust prompt's two buttons, or an honest report that they are absent."""
+    if not environment:
+        return {"ok": False, "error": "no user session environment"}
+    outcome = _run(
+        ["/usr/bin/env", *environment, "/usr/bin/python3", "-c", _APPROVAL_BUTTONS_PROGRAM],
+        user=user, timeout=180, limit=1_000_000)
+    if not outcome.get("ran"):
+        return {"ok": False, "error": str(outcome.get("error"))[:300]}
+    if outcome.get("returncode") != 0:
+        return {"ok": False, "error": str(outcome.get("stderr", ""))[-300:]}
+    try:
+        return {"ok": True, **json.loads(str(outcome.get("stdout", "")).strip().splitlines()[-1])}
+    except (ValueError, IndexError) as error:
+        return {"ok": False, "error": f"{type(error).__name__}: {error}"}
+
+
 def task_trace(user: str, environment: list[str]) -> dict:
     """Every task the runtime knows about, and the last events of each."""
     return _as_user_python(_TASK_TRACE_PROGRAM, [], user, environment)

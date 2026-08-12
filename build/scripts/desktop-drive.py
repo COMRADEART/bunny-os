@@ -427,7 +427,38 @@ def interact(control, qmp, pointer, targets, arguments,
         outcome["statesBeforeApproval"] = states
         outcome["sawAskingState"] = asking
 
+        # Photograph the question the moment the shell says it is asking, before
+        # the expensive walk. A tree walk over this desktop can take minutes, and
+        # anything with its own clock — the desktop's watchdog did exactly this —
+        # can take the prompt away in between. Without this shot, "the walk found
+        # no button" cannot be told from "the prompt was there and went".
+        if asking:
+            screenshot("journey-03b-asking")
+
+        # The fast path first: two names, early exit. The full inventory walk
+        # below can take minutes over this tree, and the prompt only lives as
+        # long as the shortest clock watching it — so spending four minutes
+        # cataloguing the desktop before pressing a button is how the button
+        # stops being there.
+        #
+        # Additive, not a replacement. The inventory walk still runs when this
+        # finds nothing, and its diagnostics are still what a failure reports,
+        # because the last in-place "improvement" to this instrument broke it.
+        quick = control.ask({"command": "approval-buttons", "label": "journey-approval-fast"},
+                            timeout=180)
+        fast = (quick or {}).get("buttons") or {}
+        outcome["fastFind"] = {k: v for k, v in fast.items() if k != "buttons"}
+        if fast.get("ok") and wanted in (fast.get("buttons") or {}):
+            entry = fast["buttons"][wanted]
+            if entry.get("extents"):
+                button = entry
+                controls_now = {"controls": list((fast.get("buttons") or {}).values())}
+                step("journey-approval-fast", found=True, button=wanted,
+                     nodesVisited=fast.get("nodesVisited"))
+
         for _ in range(3):
+            if button is not None:
+                break
             answer = control.ask({"command": "controls", "label": "journey-approval"},
                                  timeout=240)
             last_answer = answer

@@ -397,6 +397,11 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 )
             elif verb == "result":
                 answer["result"] = desktop_interaction.journey_result(user, environment)
+            elif verb == "approval-buttons":
+                # The two buttons by name, with an early exit. See
+                # desktop_interaction._APPROVAL_BUTTONS_PROGRAM for why this
+                # exists beside `controls` rather than replacing it.
+                answer["buttons"] = desktop_interaction.approval_buttons(user, environment)
             elif verb == "task-trace":
                 # Which event was written last. "Thinking…" for ever is a
                 # stopped event stream, and the stream is the only thing that
