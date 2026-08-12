@@ -280,7 +280,7 @@ run's figures were.
 | `text-scaling-factor` 1.5 | 0.09 % — *below noise* | **25.8 %** | 486 | PASS |
 | `text-scaling-factor` 2.0 | not measured | **29.7 %** | 560 | PASS |
 | high contrast | 0.18 % — *at noise* | **97.1 %** | 1832 | PASS |
-| reduced motion | 0.04 % | 0.05 % | 1.0 | see §3.6 |
+| reduced motion | 0.04 % | 0.05 % | 1.0 | see §3.7 |
 | noise floor (control) | 0.15 % | 0.053 % | — | — |
 
 High contrast changes 97 % of the screen because the wallpaper goes too. The
@@ -356,7 +356,27 @@ journey-result      files ["holiday-resized.png"], pixels [100, 50],
 Both controls report `focusable: true` and carry their accessible names. §40's
 routing is intact.
 
-### 3.5 Three defects the photograph found, which 245 tests did not
+### 3.5 All three slices, through the rebuilt component
+
+§45. Each answered by a pointer press at the button's own accessibility extents;
+nothing in this harness can call `resolve_approval`.
+
+| Slice | Pressed | Wrote | States after | The desktop said |
+|---|---|---|---|---|
+| granted | `Allow this Bunny action` | `holiday-resized.png`, 100×50 | idle → success → idle | "Done. I made Pictures/holiday-resized.png at 100 pixels wide. Your original wasn't changed." |
+| denied | `Deny this Bunny action` | nothing | idle → warning → idle | — |
+| failing | `Allow this Bunny action` | nothing | idle → **error** | "the task failed" |
+
+The granted slice's source digest is unchanged (`5de7c234…`) and the failing
+slice ran against the corrupt fixture (`4378dd67…`), allowed it, and failed
+honestly rather than reporting a success it did not have.
+
+`qualification/capsules/evidence/slices-7edd3fd/slices.json` records six claims,
+all true: every slice put the question on screen, every slice was answered by a
+pointer press, granted produced the file and left the source alone, denied wrote
+nothing, and failing wrote nothing and said so.
+
+### 3.6 Five defects the photographs found, which the suite did not
 
 **The structured prompt never reached the screen.** The prompt was drawn with a
 heading and two buttons and nothing else: no application identity, no resource,
@@ -400,7 +420,7 @@ anyone to read, with a consequence nobody looked for. The labels wrap now.
 Five defects, from one screenshot, against a suite that grew from 245 to 249
 passing tests without any of them turning red.
 
-### 3.6 Reduced motion had never been set, and cannot be photographed
+### 3.7 Reduced motion had never been set, and cannot be photographed
 
 Two separate problems, and the first one hid the second.
 

@@ -1,0 +1,108 @@
+{
+ "candidateCommit": "7edd3fd",
+ "claims": {
+  "deniedWroteNothing": true,
+  "everySlicePutTheQuestionOnScreen": true,
+  "everySliceWasAnsweredByAPointerPress": true,
+  "failingWroteNothingAndSaidSo": true,
+  "grantedLeftTheSourceUnchanged": true,
+  "grantedProducedTheFile": true
+ },
+ "schemaVersion": 2,
+ "screenshots": {
+  "denied-journey-04-trust-prompt.png": "17b8432a4bb4ca312bd22fd1324f283f293181be8d2098498da56252674f5a43",
+  "denied-journey-07-result.png": "1a71d96951152fe284226b4d24d4f6991472f6b01876465a1a28dabe583729a2",
+  "failing-journey-04-trust-prompt.png": "540ed58c645a82b55bd47a7843e31f146ebb2817f6014b2481f74bd0fb68804a",
+  "failing-journey-07-result.png": "86a828ad51af58866335acb59fc228ea0084ad6eeb6ce5f2e729cf270c12fd4d",
+  "granted-journey-04-trust-prompt.png": "4588140941ce37ef69e81e8c91779a07178d208e1d2b3827978dbb1e6bbe8681",
+  "granted-journey-07-result.png": "2c9ddac350874ff703573429a71d8f4b5df80ab52c109b41c1cb9265bc23e76e"
+ },
+ "section": "visual-slices",
+ "slices": {
+  "denied": {
+   "answeredByPointer": true,
+   "buttonExtents": {
+    "height": 52,
+    "width": 113,
+    "x": 1753,
+    "y": 887
+   },
+   "buttonPressed": "Deny this Bunny action",
+   "buttonRole": "button",
+   "files": [],
+   "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+   "nodesVisited": null,
+   "pixels": null,
+   "pressedAt": {
+    "x": 1809,
+    "y": 913
+   },
+   "promptVisible": true,
+   "says": "the request was declined",
+   "sourceDigest": "5de7c234a1c3bdcf6b194ac44cf2df96",
+   "statesAfterApproval": [
+    "idle",
+    "warning",
+    "idle"
+   ]
+  },
+  "failing": {
+   "answeredByPointer": true,
+   "buttonExtents": {
+    "height": 52,
+    "width": 115,
+    "x": 1630,
+    "y": 887
+   },
+   "buttonPressed": "Allow this Bunny action",
+   "buttonRole": "button",
+   "files": [],
+   "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+   "nodesVisited": null,
+   "pixels": null,
+   "pressedAt": {
+    "x": 1687,
+    "y": 913
+   },
+   "promptVisible": true,
+   "says": "the task failed",
+   "sourceDigest": "4378dd67a339e7eb3eebaf986bf78486",
+   "statesAfterApproval": [
+    "idle",
+    "error"
+   ]
+  },
+  "granted": {
+   "answeredByPointer": true,
+   "buttonExtents": {
+    "height": 52,
+    "width": 115,
+    "x": 1630,
+    "y": 887
+   },
+   "buttonPressed": "Allow this Bunny action",
+   "buttonRole": "button",
+   "files": [
+    "holiday-resized.png"
+   ],
+   "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+   "nodesVisited": null,
+   "pixels": [
+    100,
+    50
+   ],
+   "pressedAt": {
+    "x": 1687,
+    "y": 913
+   },
+   "promptVisible": true,
+   "says": "Done. I made Pictures/holiday-resized.png at 100 pixels wide. Your original wasn't changed.",
+   "sourceDigest": "5de7c234a1c3bdcf6b194ac44cf2df96",
+   "statesAfterApproval": [
+    "idle",
+    "success",
+    "idle"
+   ]
+  }
+ }
+}
