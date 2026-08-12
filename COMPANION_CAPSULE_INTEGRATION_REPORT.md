@@ -84,9 +84,17 @@ test rather than silently shipping an unlaunchable product.
 **#13, the CRLF shebang.** `.gitattributes` names this exact hazard, for this
 exact directory, in a comment that describes the failure mode precisely. It marks
 the path `-text` so git will not *introduce* CRLF — which is a different
-guarantee from the bytes being clean. `-text` reproduces verbatim, so the guard
-meant to prevent the defect is what made it permanent. The guard is now on the
-bytes, checked against what git *stores*.
+guarantee from the bytes being clean. `-text` reproduces verbatim, so once the
+bytes are committed the guard is what keeps them. The guard is now on the bytes,
+checked against what git *stores*.
+
+The bytes were introduced by **the fix for #11**: the shebang was LF at
+`670381a` and CRLF at `1b58edf`, because that file was edited from a Windows
+working copy and every line ending was rewritten. So #11 and #13 are one
+sequence — a real defect, a fix, and a second defect created by the fix, which
+then hid whether the first fix had worked. That is the argument for the byte
+guard existing at all, and for looking at the screen after every change rather
+than after the ones that seem risky.
 
 ## 3. What the qualification did and did not see
 

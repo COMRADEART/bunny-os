@@ -191,6 +191,24 @@ export class AssistantPanel extends Card {
         this._approvalDeny.can_focus = true;
         this._approval.visible = true;
         this.actor.add_style_class_name('bunny-assistant-approval-active');
+
+        // Focus moves to the question, and lands on the *safe* answer.
+        //
+        // The buttons were focusable and nothing focused them, so the entry kept
+        // the focus it took when the panel opened. A keyboard user had to guess
+        // that a question had appeared and then Tab to find it; a screen reader
+        // announced nothing at all, because nothing had changed focus. For an
+        // ordinary control that is an inconvenience. For the surface that
+        // decides whether an application may read someone's files, it is the
+        // difference between being asked and being bypassed.
+        //
+        // Deny, unless the request says otherwise. The trust layer's oldest rule
+        // is that an unanswered question is a denial, and the button under the
+        // finger — the one a reflexive Return presses — has to agree with it.
+        // `safeDefault` travels with every approval for exactly this reason.
+        const safe = String(approval?.safeDefault ?? 'denied');
+        const target = safe === 'allowed' ? this._approvalAllow : this._approvalDeny;
+        target.grab_key_focus();
     }
 
     clearApproval(requestId = '') {

@@ -1687,6 +1687,58 @@ class PointerOwnershipTests(unittest.TestCase):
         self.assertIn("attemptsLeft -= 1", poller, "the bound has to be decremented")
 
 
+class ApprovalPromptFocusTests(unittest.TestCase):
+    """A permission question has to take the focus, and land on the safe answer.
+
+    The two buttons were focusable and nothing ever focused them: the entry kept
+    the focus it took when the panel opened. A keyboard user had to guess that a
+    question had appeared and then Tab to find it, and a screen reader announced
+    nothing at all, because nothing had changed focus.
+
+    For an ordinary control that is an inconvenience. For the surface that
+    decides whether an application may read someone's files it is the difference
+    between being asked and being bypassed.
+    """
+
+    PANEL = "lib/assistant/panel.js"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        text = module_text(cls.PANEL)
+        start = text.index("showApproval(approval, onDecision) {")
+        cls.body = text[start:text.index("\n    }", start)]
+
+    def test_the_question_takes_the_focus(self) -> None:
+        self.assertIn("grab_key_focus()", self.body,
+                      "a permission question appears without taking focus")
+
+    def test_the_focused_button_is_the_safe_default(self) -> None:
+        """Deny unless the request says otherwise.
+
+        The trust layer's oldest rule is that an unanswered question is a
+        denial. The button under the finger — the one a reflexive Return
+        presses — has to agree with it, so the focus follows `safeDefault`
+        rather than being hard-wired to either answer.
+        """
+        self.assertIn("safeDefault", self.body,
+                      "the focused button ignores the request's own safe default")
+        self.assertRegex(
+            self.body, r"safeDefault\s*\?\?\s*'denied'",
+            "an approval arriving without a safe default must fall back to deny")
+        allow_first = self.body.index("_approvalAllow.grab_key_focus") \
+            if "_approvalAllow.grab_key_focus" in self.body else -1
+        self.assertEqual(
+            allow_first, -1,
+            "Allow is focused unconditionally somewhere in this method")
+
+    def test_focus_is_taken_only_once_the_prompt_is_visible(self) -> None:
+        """Focusing a hidden actor does nothing and loses the announcement."""
+        self.assertLess(
+            self.body.index("_approval.visible = true"),
+            self.body.index("grab_key_focus()"),
+            "focus is grabbed before the prompt is shown")
+
+
 class QuickAccessLabelTests(unittest.TestCase):
     """Five of eight launcher labels were unreadable on the booted desktop.
 
@@ -1931,6 +1983,42 @@ class AssistantFlowTests(unittest.TestCase):
         marker = "_failRequest(reason, {retry = null} = {}) {"
         start = shell.index(marker)
         return shell[start:start + 1600]
+
+    def test_the_watchdog_does_not_run_while_a_question_is_on_screen(self) -> None:
+        """The same defect as the bridge's deadline, one layer up.
+
+        Measured on a booted guest: the permission prompt was replaced after 200
+        seconds by "The assistant did not answer in time" — while the answer it
+        was waiting for was the person's, and the person had not been given 200
+        seconds to read a sentence about their own files.
+
+        Fixing only the bridge was not enough, because the desktop keeps its own
+        clock and that clock had never heard of approvals.
+        """
+        service = module_text(self.SERVICE)
+        self.assertIn("_awaitingPerson", service,
+                      "the desktop's watchdog has no notion of waiting for a person")
+        start = service.index("case 'approval':")
+        approval_case = service[start:service.index("case 'reply':", start)]
+        self.assertIn("this._awaitingPerson = true", approval_case)
+        self.assertIn("this._watchdog?.stop()", approval_case,
+                      "the watchdog keeps running while the question is unanswered")
+
+    def test_the_watchdog_is_rearmed_once_the_question_is_answered(self) -> None:
+        """Suspended, not removed.
+
+        Without this, the fix degrades into "a task that ever asked anything can
+        never time out", which is how a genuinely stuck request ends up sitting
+        behind a thinking animation for ever.
+        """
+        service = module_text(self.SERVICE)
+        start = service.index("case 'phase':")
+        phase_case = service[start:service.index("case 'approval':", start)]
+        self.assertIn("_awaitingPerson = false", phase_case)
+        self.assertIn("armWatchdog()", phase_case,
+                      "leaving waiting_for_approval does not restart the clock")
+        self.assertIn("line.phase !== 'waiting_for_approval'", phase_case,
+                      "the clock restarts while the question is still on screen")
 
     def test_availability_is_polled_rather_than_asked_once(self) -> None:
         """A cold boot must not leave the desktop claiming the assistant is off.

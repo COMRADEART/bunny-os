@@ -124,8 +124,21 @@ one byte:
 `.gitattributes` names this hazard, for this directory, in a comment that
 describes the failure exactly. It marks the path `-text` so git will not
 *introduce* CRLF — which is a different guarantee from the bytes being clean.
-`-text` reproduces verbatim, so the guard meant to prevent the defect is what
-made it permanent.
+`-text` reproduces verbatim, so once CRLF bytes are committed the guard is what
+keeps them.
+
+**Where the bytes came from, stated plainly:** the shebang was LF at `670381a`
+and CRLF at `1b58edf`, which is the deadline fix in §3.1. Editing the file from
+the Windows working copy rewrote every line ending, and `-text` then stored that
+faithfully. This was a regression introduced *during this phase*, one commit
+before the run that exhibited it — not a long-standing defect. It affected
+exactly one image generation.
+
+That makes the sequence in §3.1–§3.3 tidier than it looked at the time: the run
+that showed the deadline message had a working bridge and a real deadline defect;
+fixing the deadline broke the shebang; the next run therefore showed a desktop
+that could not start its assistant at all. Two defects, one masking the other,
+and the second created by the fix for the first.
 
 The guard is now on the bytes, checked against what git **stores** rather than
 the working tree, over `shell/services/bin` and `installer/bin`. A working-tree
