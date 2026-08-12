@@ -34,10 +34,38 @@ before the question appears or after it is gone.
 
 ## 2. Findings
 
+### 2.0 How "nothing changed" was measured
+
+"The screenshots look identical" is an eyeball claim, so it was replaced with a
+pixel count — and, by luck of the run's own design, with a control.
+
+The pass restores every preference at the end and photographs the result. That
+final shot is taken at **the same settings as the baseline**, minutes later, so
+whatever differs between those two is drift from the live CPU and network gauges
+and nothing else. That is the noise floor.
+
+| Comparison against the baseline | Pixels differing | Share of screen |
+|---|---:|---:|
+| `a11y-05-restored` — **same settings, the control** | 3,118 | 0.15 % |
+| `a11y-02-reduced-motion` | 860 | 0.04 % |
+| `a11y-03-large-text` (`text-scaling-factor` 1.5) | **1,948** | **0.09 %** |
+| `a11y-04-high-contrast` | 3,693 | 0.18 % |
+
+Setting the text scale to 1.5 changed **less of the screen than leaving the
+settings alone did**. High contrast changed about as much as the gauges did on
+their own. At 1920×1080 with 43 distinct type styles on screen, honouring either
+preference would have redrawn essentially every glyph — several percent at
+minimum, not a tenth of one.
+
+So the finding is not "it looked the same to me". It is that the change
+attributable to the preference is **smaller than the drift from two clocks
+ticking**.
+
 ### 2.1 The desktop ignores `text-scaling-factor` — **P1**
 
-Set to `1.5`. The desktop is pixel-identical: no label, no heading, no button
-text is larger anywhere on screen.
+Set to `1.5`, read back as `1.5`, and the screen changed by 0.09 % — below the
+0.15 % noise floor established by the control above. No label, no heading and no
+button text is larger anywhere.
 
 The cause is structural and exact:
 
@@ -53,8 +81,9 @@ their time in — does not change.
 
 ### 2.2 The desktop ignores high contrast — **P1**
 
-Set `org.gnome.desktop.a11y.interface high-contrast` to `true`. Pixel-identical
-again.
+Set `org.gnome.desktop.a11y.interface high-contrast` to `true`. The screen
+changed by 0.18 %, against a 0.15 % noise floor — indistinguishable from the
+gauges ticking.
 
 ```
 colour literals in the stylesheet          : 143
@@ -113,8 +142,8 @@ and this report does not say it is.
 
 | Claim | Level |
 |---|---|
-| `text-scaling-factor` has no effect | **VM runtime validated** (set, read back, photographed) |
-| `high-contrast` has no effect | **VM runtime validated** |
+| `text-scaling-factor` has no effect | **VM runtime validated** — set, read back, photographed, and 0.09 % against a 0.15 % control |
+| `high-contrast` has no effect | **VM runtime validated** — 0.18 % against the same control |
 | The stylesheet cannot respond to either | **Tested** — 43/43 absolute, 143/0 hardcoded |
 | The Trust prompt takes focus, safe default | **Tested**; not yet observed on screen |
 | Orca is installed and starts | **VM runtime validated** |
