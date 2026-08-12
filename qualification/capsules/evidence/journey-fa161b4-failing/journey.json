@@ -1,0 +1,123 @@
+{
+ "driverError": null,
+ "driverStatus": "complete",
+ "journey": {
+  "activated": true,
+  "activationRoute": "pointer",
+  "activationState": "idle",
+  "approvalLabels": [],
+  "approvalVisible": true,
+  "decision": "granted",
+  "fastFind": {
+   "complete": true,
+   "nodesVisited": 234,
+   "ok": true
+  },
+  "final": {
+   "controlCount": 318,
+   "reason": "The task failed.",
+   "says": "the task failed",
+   "state": "error"
+  },
+  "fixture": {
+   "kind": "corrupt",
+   "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+   "ok": true,
+   "source": "/var/home/bunny/Pictures/holiday.png",
+   "sourceDigest": "4378dd67a339e7eb3eebaf986bf78486"
+  },
+  "ready": {
+   "markerSeen": true,
+   "notReady": [],
+   "ok": true
+  },
+  "result": {
+   "files": [],
+   "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+   "ok": true,
+   "pixels": null,
+   "sourceDigest": "4378dd67a339e7eb3eebaf986bf78486"
+  },
+  "sawAskingState": false,
+  "statesAfterApproval": [
+   "idle",
+   "error"
+  ],
+  "statesBeforeApproval": [
+   "thinking",
+   "warning",
+   "idle"
+  ]
+ },
+ "schemaVersion": 1,
+ "screenshots": [
+  "journey-03-typed.png",
+  "journey-04-trust-prompt.png",
+  "journey-05-decided.png",
+  "journey-06-settled.png",
+  "journey-07-result.png"
+ ],
+ "section": "graphical-journey",
+ "slice": "failing",
+ "steps": [
+  {
+   "markerSeen": true,
+   "notReady": [],
+   "ok": true,
+   "step": "journey-ready"
+  },
+  {
+   "kind": "corrupt",
+   "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+   "ok": true,
+   "source": "/var/home/bunny/Pictures/holiday.png",
+   "sourceDigest": "4378dd67a339e7eb3eebaf986bf78486",
+   "step": "journey-fixture"
+  },
+  {
+   "activated": true,
+   "route": "pointer",
+   "state": "idle",
+   "step": "journey-activate"
+  },
+  {
+   "request": "Resize this to 100 pixels wide.",
+   "step": "journey-asked"
+  },
+  {
+   "button": "Allow this Bunny action",
+   "found": true,
+   "nodesVisited": 234,
+   "step": "journey-approval-fast"
+  },
+  {
+   "button": "Allow this Bunny action",
+   "extents": {
+    "height": 20,
+    "width": 34,
+    "x": 1662,
+    "y": 640
+   },
+   "labels": [],
+   "role": "button",
+   "step": "journey-approval",
+   "visible": true
+  },
+  {
+   "at": {
+    "x": 1679,
+    "y": 650
+   },
+   "pressed": "Allow this Bunny action",
+   "step": "journey-decision"
+  },
+  {
+   "files": [],
+   "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+   "ok": true,
+   "pixels": null,
+   "sourceDigest": "4378dd67a339e7eb3eebaf986bf78486",
+   "step": "journey-result"
+  }
+ ]
+}
