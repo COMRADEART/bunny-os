@@ -1020,6 +1020,10 @@ def screen_reader(user: str, environment: list[str]) -> dict:
 #: answers §31's question, which is whether the right words are produced at all.
 ORCA_DEBUG = "/tmp/bunny-orca-debug.txt"
 
+#: Orca's own stdout and stderr. Empty on a healthy start; the reason on a
+#: failed one — see start_screen_reader for why this exists.
+ORCA_OUTPUT = "/tmp/bunny-orca-output.txt"
+
 _ORCA_SPEECH = re.compile(r"SPEECH OUTPUT:\s*'(.*)'\s*$")
 
 
@@ -1038,13 +1042,23 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
     _run(["/usr/bin/env", *environment, "/usr/bin/gsettings", "set",
           "org.gnome.desktop.a11y.applications", "screen-reader-enabled", "true"],
          user=user, timeout=20)
-    _run(["/usr/bin/rm", "-f", ORCA_DEBUG], user=user, timeout=10)
+    _run(["/usr/bin/rm", "-f", ORCA_DEBUG, ORCA_OUTPUT], user=user, timeout=10)
 
-    # Detached: orca does not return, and the probe has to carry on driving the
-    # desktop while it runs.
+    # Detached, and with its own output captured to a file.
+    #
+    # The first version of this ran `setsid --fork orca …` and reported
+    # `started: true` because setsid's *parent* exited zero. Orca then wrote no
+    # debug log and the record said `speaking: false` with `error: null` — an
+    # instrument that had failed and could not say so, which is worse than one
+    # that fails loudly. Whatever Orca prints now lands in ORCA_OUTPUT and is
+    # carried back in the record.
+    launcher = (
+        f"exec /usr/bin/orca --replace --debug --debug-file={ORCA_DEBUG} "
+        f">{ORCA_OUTPUT} 2>&1"
+    )
     started = _run(
         ["/usr/bin/env", *environment, "/usr/bin/setsid", "--fork",
-         "/usr/bin/orca", "--replace", f"--debug-file={ORCA_DEBUG}"],
+         "/bin/sh", "-c", launcher],
         user=user, timeout=30)
 
     deadline = time.monotonic() + wait
@@ -1055,20 +1069,28 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
             lines = int(str(probe.get("stdout", "0")).split()[0])
         except (ValueError, IndexError):
             lines = 0
-        # A log that is being written is a screen reader that has got past its
-        # imports and reached the accessibility bus.
-        if lines > 40:
+        # Any log at all is a screen reader that has got past its imports and
+        # reached the accessibility bus. The first version wanted forty lines
+        # before it believed it, which is a threshold nobody had measured.
+        if lines > 0:
             break
         time.sleep(1.5)
 
-    running = _run(["/usr/bin/pgrep", "-u", user, "-f", "orca"], user=user, timeout=10)
+    # `pgrep -x`, not `-f`. `-f orca` matches any command line containing the
+    # word — including the sudo wrapper this probe runs things under, so the
+    # old check reported `running: true` for a screen reader that had exited.
+    running = _run(["/usr/bin/pgrep", "-u", user, "-x", "orca"], user=user, timeout=10)
+    output = _run(["/usr/bin/cat", ORCA_OUTPUT], user=user, timeout=10)
     return {
         "ran": True,
-        "started": started.get("returncode") == 0,
+        "launched": started.get("returncode") == 0,
         "running": running.get("returncode") == 0,
         "debugLines": lines,
-        "speaking": lines > 40,
-        "error": str(started.get("stderr", ""))[:200] or None,
+        "speaking": lines > 0,
+        # What Orca itself said. Empty on a healthy start; the reason on a
+        # failed one.
+        "orcaOutput": str(output.get("stdout", ""))[:1500] or None,
+        "error": str(started.get("stderr", ""))[:400] or None,
     }
 
 
