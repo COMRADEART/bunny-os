@@ -28,7 +28,40 @@ resolved programmatically proves the runtime and proves nothing about the
 surface — the GTK window is a client, not a security authority — so a slice that
 answers its own question is not the slice.
 
-## 2. What runs today: three slices, through the protocol
+## 2. The slices
+
+### 2.1 Through the desktop, answered by pressing a button
+
+The claim §30 exists for. Image `fa161b49182b`, driver `complete`.
+
+**granted** — the prompt rendered, the driver found *Allow this Bunny action* in
+the accessibility tree after 234 nodes and pressed it at (1679, 650) with a
+virtio-tablet event:
+
+```
+journey-result   files ["holiday-resized.png"], pixels [100, 50],
+                 sourceDigest 5de7c234… unchanged, ok=true
+statesAfterApproval  ["idle", "success", "idle"]
+```
+
+and the desktop said, in its own words:
+
+> Done. I made Pictures/holiday-resized.png at 100 pixels wide. Your original
+> wasn't changed.
+
+**denied** — the same prompt, *Deny this Bunny action* pressed instead, and the
+desktop said:
+
+> the request was declined
+
+Nothing was written. A refusal that a person made, on screen.
+
+### 2.2 Through the protocol, for comparison
+
+The same three slices with the approval resolved by a protocol client. These
+established the runtime long before the surface worked, and they remain the
+finer-grained record — they carry timings and grant state the graphical run does
+not.
 
 | Slice | Decision | Final state | Elapsed | Result |
 |---|---|---|---|---|
