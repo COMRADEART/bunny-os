@@ -56,6 +56,26 @@ desktop said:
 
 Nothing was written. A refusal that a person made, on screen.
 
+### 2.1.1 Two things the brief asks for that the slice does not show
+
+Stated rather than glossed, because both are visible absences in the pictures
+above and a reader would reasonably assume they were covered.
+
+**There is no application choice.** The brief's journey is "request, *app
+choice*, Trust prompt, …". This image registers exactly one application for
+`image.resize`, so there is nothing to choose between and no chooser is drawn.
+That is honest for this build and it means the choosing surface — and the
+question of what happens when two applications both declare a capability — is
+unexercised, not merely unshown.
+
+**Trust history is not reached.** `trust/audit.py` exists and
+`capsule_task_bridge.py` writes to it, and the desktop has an **Approvals**
+tile in Quick Access. The journey never opens it, so "the person can see what
+they have permitted" is implemented and unobserved. The capsule status surface
+(`companion/capsule_status.py`, 14 tests) is in the same position.
+
+Both belong to the next phase's visual work rather than to this report's claims.
+
 ### 2.2 Through the protocol, for comparison
 
 The same three slices with the approval resolved by a protocol client. These

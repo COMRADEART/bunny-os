@@ -164,7 +164,9 @@ Rows are the phase's claims; columns are the repository's own five-state ladder
 | The Trust prompt renders | ✅ | ✅ | ✅ VM | ❌ | ❌ |
 | **The prompt is answered by pressing it** | ✅ | ✅ | **✅ VM** | ❌ | ❌ |
 | The task completes from that press, and the file appears | ✅ | ✅ | ✅ VM | ❌ | ❌ |
-| Visible sandbox state | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Visible sandbox state | ✅ | ✅ | ❌ not reached on screen | ❌ | ❌ |
+| Trust history is reachable by a person | ✅ | ✅ | ❌ not reached on screen | ❌ | ❌ |
+| A choice between applications | — | — | ❌ **one application registered** | ❌ | ❌ |
 | Accessibility: names, roles, focus, safe default | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Accessibility: the screen reader is present and starts | ✅ | ✅ | ✅ VM | ❌ | ❌ |
 | **Accessibility: text scaling and high contrast** | ❌ **ignored** | ✅ | ✅ VM *(measured absent)* | ❌ | ❌ |
