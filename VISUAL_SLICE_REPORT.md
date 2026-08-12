@@ -316,12 +316,20 @@ possibilities cost three cycles.
 | A failed operation produces a failed task | **VM runtime validated** |
 | The original and the neighbour are untouched | **VM runtime validated** |
 | Allow-once leaves no grant behind | **VM runtime validated** |
-| The Trust prompt renders on screen | **Observed** (photographed on a warm session) |
-| The prompt is answered by pressing it | **Not established** |
-| The desktop can start its assistant at all | **Fixed, not yet observed in an image** |
+| The desktop can start its assistant | **VM runtime validated** |
+| The Trust prompt renders on screen | **VM runtime validated** |
+| **The prompt is answered by pressing it — granted** | **VM runtime validated** |
+| **The prompt is answered by pressing it — denied** | **VM runtime validated** |
+| The prompt is answered by pressing it — failing | *running as this is written* |
+| The prompt's buttons take focus on the safe default | **Tested**; not measured while on screen |
+| An application chooser | **Not applicable yet** — one application is registered |
+| Trust history reached by a person | **Not established** |
 
-Per §30 of the brief, the phase remains **INCOMPLETE** while the approval is
-answered by anything other than a person pressing the button.
+Per §30 of the brief: the granted and denied slices are now answered by a
+pointer press on the Trust surface, and the harness has no code path that could
+answer them any other way. The failing slice is the last of the three.
+
+## 7. Evidence
 
 ## 7. Evidence
 
