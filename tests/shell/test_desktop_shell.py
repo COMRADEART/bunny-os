@@ -420,7 +420,41 @@ class DesignTokenTests(unittest.TestCase):
 
 
 #: Directories whose every tracked file is installed as an executable.
+#:
+#: Kept as a floor, not as the definition. `installed_programs()` derives the
+#: real set from the install table, so a new executable installed from anywhere
+#: is covered without anyone remembering to add its directory here.
 PROGRAM_DIRECTORIES = ("shell/services/bin", "installer/bin")
+
+
+def installed_programs() -> list[str]:
+    """Every repository file the image installs with an executable mode.
+
+    Derived from `INSTALL_ROUTES`, which is the same table `install-root.py`
+    copies from and `build-input-closure.py` classifies against — so this cannot
+    drift from what actually reaches the image, which a hardcoded directory list
+    silently would.
+
+    The defect that motivated it was one file: a CRLF shebang made the kernel
+    refuse the exec, and the guard that existed named two directories by hand.
+    Any executable installed from a third directory would have been unguarded.
+    """
+    paths = set()
+    for directory in PROGRAM_DIRECTORIES:
+        root = ROOT / directory
+        if root.is_dir():
+            for path in root.rglob("*"):
+                if path.is_file() and "__pycache__" not in path.parts:
+                    paths.add(path.relative_to(ROOT).as_posix())
+    for route in routes_for_profile("beta"):
+        # 0o111 — any execute bit. A 0644 data file is not a program and its
+        # line endings are the parser's business, not the kernel's.
+        if getattr(route, "kind", "") != "file" or not (getattr(route, "mode", 0) & 0o111):
+            continue
+        source = getattr(route, "source", "")
+        if source and (ROOT / source).is_file():
+            paths.add(source)
+    return sorted(paths)
 
 
 def tracked_programs() -> list[tuple[str, str]]:
@@ -434,7 +468,7 @@ def tracked_programs() -> list[tuple[str, str]]:
     so the object store is the thing to check.
     """
     result = subprocess.run(
-        ["git", "ls-files", "--eol", "--", *PROGRAM_DIRECTORIES],
+        ["git", "ls-files", "--eol", "--", *installed_programs()],
         capture_output=True, text=True, cwd=ROOT, timeout=60)
     if result.returncode != 0:
         raise unittest.SkipTest(f"git could not list the programs: {result.stderr.strip()}")
