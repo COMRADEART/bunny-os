@@ -422,6 +422,14 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                     str(request.get("value", "")), user, environment)
             elif verb == "screen-reader":
                 answer["screenReader"] = desktop_interaction.screen_reader(user, environment)
+            elif verb == "orca-start":
+                # Turn the screen reader on and wait for it to be speaking. What
+                # it says is read from its own debug log; see ORCA_DEBUG.
+                answer["orca"] = desktop_interaction.start_screen_reader(
+                    user, environment, wait=float(request.get("wait", 25.0)))
+            elif verb == "orca-speech":
+                answer["speech"] = desktop_interaction.screen_reader_speech(
+                    user, environment, since=int(request.get("since", 0)))
             elif verb == "character":
                 # What the figure is doing and what the bubble says, both read out
                 # of the accessibility tree. This is how the host watches the state

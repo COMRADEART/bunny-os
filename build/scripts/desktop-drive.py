@@ -131,6 +131,9 @@ def main() -> int:
     parser.add_argument("--accessibility", action="store_true",
                         help="measure the session against assistive technology: "
                              "names, keyboard reach, reduced motion, text scaling, Orca")
+    parser.add_argument("--screen-reader", action="store_true",
+                        help="run Orca through the journey and record every "
+                             "utterance it produces")
     parser.add_argument("--journey", default="skip",
                         choices=("skip", "granted", "denied", "failing"),
                         help="drive the image journey through the shell's own Trust surface")
@@ -591,10 +594,51 @@ def interact(control, qmp, pointer, targets, arguments,
         screenshot("journey-07-result")
         return outcome
 
+    # ---- the screen reader --------------------------------------------------
+    #
+    # Orca is started *before* the journey and left running through it, so what
+    # follows is the actual announcement stream of a real permission flow rather
+    # than a reading of a static tree. §31 asks what is announced; this is the
+    # only place in the system where that exists as text, because the audio path
+    # is a speech engine and a sound card and neither is qualified here.
+    #
+    # What this cannot answer: pronunciation, rate, whether an utterance was
+    # interrupted, and whether a person could follow it. Those need listening.
+    if arguments.screen_reader:
+        started = (control.ask({"command": "orca-start", "wait": 30,
+                                "label": "orca-start"}, timeout=240) or {}).get("orca") or {}
+        report["orcaStart"] = started
+        step("orca-start", **started)
+        # A run that could not start the screen reader must not go on to report
+        # an empty transcript as "nothing was announced".
+        if not started.get("speaking"):
+            step("orca-not-speaking", note="the journey will run without a screen reader")
+
     if arguments.journey != "skip":
         decision = "denied" if arguments.journey == "denied" else "granted"
         fixture = "corrupt" if arguments.journey == "failing" else "real"
         report["journey"] = run_journey(decision, fixture)
+
+    if arguments.screen_reader:
+        spoken = (control.ask({"command": "orca-speech", "label": "orca-speech"},
+                              timeout=240) or {}).get("speech") or {}
+        report["orcaSpeech"] = spoken
+        utterances = spoken.get("utterances") or []
+        # The phrases §31 names, looked for in what was actually said. Recorded
+        # as found/not-found per phrase rather than as one boolean, because
+        # "the screen reader said something" is not the claim.
+        wanted = {
+            "applicationName": "Bunny Image Tool",
+            "resource": "holiday",
+            "allowControl": "Allow this Bunny action",
+            "denyControl": "Deny this Bunny action",
+        }
+        joined = " • ".join(utterances)
+        report["orcaHeard"] = {
+            key: (phrase in joined) for key, phrase in wanted.items()
+        }
+        step("orca-speech", total=spoken.get("total"),
+             captured=len(utterances), **report["orcaHeard"])
 
     # ---- accessibility ------------------------------------------------------
     #

@@ -54,6 +54,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import time
 
@@ -1006,6 +1007,98 @@ def screen_reader(user: str, environment: list[str]) -> dict:
         "error": str(version.get("stderr", ""))[:200] or None,
     }
 
+
+
+#: Where Orca is asked to write its debug log inside the guest.
+#:
+#: Orca's `--debug-file` turns on a log that contains, among a great deal else,
+#: one line per utterance in the form `SPEECH OUTPUT: 'the words'`. That is the
+#: only place in the system where *what a screen reader actually said* exists as
+#: text: the audio path is a speech engine and a sound card, and neither is
+#: qualified on this guest. Reading the log is not a substitute for listening to
+#: it — a wrong pronunciation or a stuck utterance would not show here — but it
+#: answers §31's question, which is whether the right words are produced at all.
+ORCA_DEBUG = "/tmp/bunny-orca-debug.txt"
+
+_ORCA_SPEECH = re.compile(r"SPEECH OUTPUT:\s*'(.*)'\s*$")
+
+
+def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -> dict:
+    """Turn Orca on and wait for it to be speaking.
+
+    Two steps, and the order matters. The gsetting is what a person would use
+    and what the session watches, so it goes first; `orca --replace` then starts
+    the process with debugging on. Starting Orca without the setting leaves a
+    screen reader running that the session does not believe in, which is a state
+    no user can reach and therefore not one worth measuring.
+    """
+    if not environment:
+        return {"ran": False, "error": "no user session environment"}
+
+    _run(["/usr/bin/env", *environment, "/usr/bin/gsettings", "set",
+          "org.gnome.desktop.a11y.applications", "screen-reader-enabled", "true"],
+         user=user, timeout=20)
+    _run(["/usr/bin/rm", "-f", ORCA_DEBUG], user=user, timeout=10)
+
+    # Detached: orca does not return, and the probe has to carry on driving the
+    # desktop while it runs.
+    started = _run(
+        ["/usr/bin/env", *environment, "/usr/bin/setsid", "--fork",
+         "/usr/bin/orca", "--replace", f"--debug-file={ORCA_DEBUG}"],
+        user=user, timeout=30)
+
+    deadline = time.monotonic() + wait
+    lines = 0
+    while time.monotonic() < deadline:
+        probe = _run(["/usr/bin/wc", "-l", ORCA_DEBUG], user=user, timeout=10)
+        try:
+            lines = int(str(probe.get("stdout", "0")).split()[0])
+        except (ValueError, IndexError):
+            lines = 0
+        # A log that is being written is a screen reader that has got past its
+        # imports and reached the accessibility bus.
+        if lines > 40:
+            break
+        time.sleep(1.5)
+
+    running = _run(["/usr/bin/pgrep", "-u", user, "-f", "orca"], user=user, timeout=10)
+    return {
+        "ran": True,
+        "started": started.get("returncode") == 0,
+        "running": running.get("returncode") == 0,
+        "debugLines": lines,
+        "speaking": lines > 40,
+        "error": str(started.get("stderr", ""))[:200] or None,
+    }
+
+
+def screen_reader_speech(user: str, environment: list[str], since: int = 0) -> dict:
+    """Every utterance Orca has produced, in order, from `since` onward.
+
+    Returned as a list rather than a set: §31 asks for what is announced, and
+    "announced twice" is one of the three failures it names. Collapsing repeats
+    here would hide exactly the defect the section is looking for.
+    """
+    if not environment:
+        return {"ran": False, "error": "no user session environment"}
+    read = _run(["/usr/bin/cat", ORCA_DEBUG], user=user, timeout=30, limit=8_000_000)
+    if read.get("returncode") != 0:
+        return {"ran": True, "ok": False, "call": read}
+    utterances = []
+    for line in str(read.get("stdout", "")).splitlines():
+        match = _ORCA_SPEECH.search(line)
+        if match:
+            said = match.group(1).strip()
+            if said:
+                utterances.append(said)
+    return {
+        "ran": True,
+        "ok": True,
+        "total": len(utterances),
+        # `since` lets a caller ask "what was said after I pressed that", which
+        # is the only way to attribute an utterance to an action.
+        "utterances": utterances[since:][:400],
+    }
 
 
 def session_ready(user: str, environment: list[str], wait: float = 120.0) -> dict:
