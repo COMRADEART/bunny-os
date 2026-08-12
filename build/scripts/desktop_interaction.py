@@ -715,7 +715,22 @@ for index in range(desktop.get_child_count()):
     walk(application, 0, 12)
 
 interactive = [r for r in rows if r["role"] in INTERACTIVE]
-unnamed = [{"role": r["role"], "path": r["path"]} for r in interactive if not r["name"]]
+
+# "Unnamed interactive controls" was one number and had to be two.
+#
+# The first run of this measurement reported forty, which read as forty
+# accessibility defects. Thirty-nine of them were role `text`: the ClutterText
+# inside every St.Label, which AT-SPI exposes as a child of the label that
+# already carries the name. A screen reader reads the label. Naming the inner
+# node as well would make Orca say everything twice, which is one of the three
+# failures §31 names — so "fixing" all forty would have made the desktop worse.
+#
+# The fortieth was a real unnamed button, and it was invisible in the count it
+# was hiding in.
+unnamed_all = [{"role": r["role"], "path": r["path"]} for r in interactive if not r["name"]]
+unnamed_controls = [r for r in unnamed_all if r["role"] != "text"]
+unnamed_text = [r for r in unnamed_all if r["role"] == "text"]
+unnamed = unnamed_controls
 
 # The Trust prompt, by the names the shell gives its two buttons. Looked up by
 # name rather than by position: the point of the check is that the name exists.
@@ -751,8 +766,13 @@ for r in interactive:
 print(json.dumps({
     "nodes": len(rows),
     "interactive": len(interactive),
-    "named": len(interactive) - len(unnamed),
+    "named": len(interactive) - len(unnamed_all),
     "unnamed": unnamed[:40],
+    # Split, because the two mean different things: a control with no name is a
+    # defect, and a label's inner text node with no name is how AT-SPI models a
+    # label.
+    "unnamedControls": len(unnamed_controls),
+    "unnamedTextNodes": len(unnamed_text),
     "byRole": by_role,
     "trustPrompt": trust,
     "sample": dict(sorted(sample.items())[:60]),

@@ -72,6 +72,16 @@ export class AssistantBubble {
             can_focus: true,
             x_align: Clutter.ActorAlign.START,
         });
+        // Named at construction, not only when it becomes visible.
+        //
+        // St.Button takes its accessible name from its label, and this one's
+        // label is empty until there is a truncated answer to offer. AT-SPI
+        // enumerates it regardless of visibility, so the accessibility tree
+        // carried a button with no name at all — the one genuinely unnamed
+        // control in the whole desktop, found by walking the tree rather than
+        // by anyone noticing. `_show` overwrites this with the count once there
+        // is one; what matters is that there is never a moment with neither.
+        this._more.accessible_name = 'Read the rest of the answer';
         this._more.connect('clicked', () => this._onOpenFull?.(this._full));
         this._column.add_child(this._more);
 
