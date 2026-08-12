@@ -448,6 +448,39 @@ measured on this guest") and it is not closed here.
 
 ---
 
+### 3.8 What the design system costs
+
+§41, measured at `7edd3fd` on a session that is not being driven — `--journey
+skip`, because twenty seconds sampled while a harness types into the desktop is
+a measurement of the harness.
+
+| | Idle CPU | Memory |
+|---|---|---|
+| Companion | **0.35 %** | **61.6 MiB** |
+| gnome-shell (4 processes) | **0.80 %** | **391.2 MiB** |
+
+A theme change — the thing this phase added, and which nothing before it did at
+all — takes **1.10 s** going up to 150 % and **1.07 s** coming back down.
+
+That figure is an **upper bound, not the cost**. The interval is closed by an
+AT-SPI tree walk, which is the first thing that can only answer once the restyle
+has landed and is itself expensive; the render and the stylesheet load are
+somewhere inside it. Measuring the render alone would be measuring the part
+that is easy to instrument rather than the part a person waits for, so the
+loose-but-honest number is the one recorded.
+
+There is no before to compare against, because there was no theme change before.
+
+CPU is a delta from `/proc` across the interval rather than `ps %cpu`, which
+reports the average since the process started — on a session that has just
+completed a permission journey that is a number about the journey, and "idle
+CPU" is a question about a desktop sitting still.
+
+**Nothing here is obviously bad**, which is the bar §41 sets, so nothing was
+optimised. Frame behaviour under llvmpipe remains unmeasured: GNOME Shell
+exposes no frame counter outside Looking Glass, and a number invented here would
+be about the instrument. `qualification/design/performance.json`.
+
 ## 4. Maturity matrix
 
 `Implemented` — the code exists and is reachable from a real caller.
