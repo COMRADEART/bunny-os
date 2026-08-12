@@ -111,8 +111,9 @@ character's state, walks the accessibility tree for a control named
 *"Allow this Bunny action"*, and presses it at its own screen coordinates. It
 never calls `resolve_approval`.
 
-It has not yet pressed the button, and the reasons form a chain worth recording
-because each looked like the previous one's fix had failed.
+It now presses the button. Getting it there took four defects, and they are
+recorded in order because each one looked, at the time, like the previous fix
+having failed — which is why the chain is worth more than the individual bugs.
 
 ### 3.1 The deadline that ran while a person was being asked
 
