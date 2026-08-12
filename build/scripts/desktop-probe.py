@@ -365,6 +365,10 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 # program the shell spawns. See desktop_interaction.ask_through_the_bridge.
                 answer["ask"] = desktop_interaction.ask_through_the_bridge(
                     str(request.get("request", "")), user, environment)
+            elif verb == "ready":
+                answer["ready"] = desktop_interaction.session_ready(
+                    user, environment, float(request.get("wait", 120))
+                )
             elif verb == "fixture":
                 # The journey's images, written as the user. A file root created in
                 # /var/home would be owned by root and unreadable through the

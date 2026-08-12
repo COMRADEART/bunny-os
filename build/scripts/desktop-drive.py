@@ -318,6 +318,16 @@ def interact(control, qmp, pointer, targets, arguments,
     # outcome for a Trust prompt nobody can see.
     def run_journey(decision: str, fixture: str) -> dict:
         outcome: dict = {"decision": decision, "fixture": fixture}
+        # Ready first. Asking *first* is not the same as asking *early*: the
+        # same request that came back `warning` when it was the session's first
+        # reached a permission prompt later in the same session. The product
+        # ships a readiness probe that answers eight conditions; this waits on
+        # it rather than on a sleep.
+        ready = control.ask({"command": "ready", "wait": 150, "label": "journey-ready"},
+                            timeout=260)
+        outcome["ready"] = (ready or {}).get("ready") or {}
+        step("journey-ready", **{k: v for k, v in outcome["ready"].items() if k != "checks"})
+
         prepared = control.ask({"command": "fixture", "kind": fixture,
                                 "label": "journey-fixture"}, timeout=180)
         outcome["fixture"] = (prepared or {}).get("fixture") or {}

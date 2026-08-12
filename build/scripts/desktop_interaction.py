@@ -599,6 +599,41 @@ def journey_result(user: str, environment: list[str]) -> dict:
     return _as_user_python(_RESULT_PROGRAM, [], user, environment)
 
 
+
+def session_ready(user: str, environment: list[str], wait: float = 120.0) -> dict:
+    """The product's own readiness probe, run as it ships.
+
+    Not a reimplementation. `/usr/libexec/bunny-session-ready` answers eight
+    conditions — logind, the compositor, the shell extension, the Companion
+    units, its socket, the trust store, a confining capsule backend and the
+    operation's program — and prints BUNNY_SESSION_READY on its own line only
+    when all of them hold.
+
+    The journey needs this because asking first is not the same as asking early:
+    a request submitted before the runtime is up came back `warning`, and the
+    same request later in the same session reached a permission prompt.
+    """
+    outcome = _run(
+        ["/usr/bin/env", *environment, "/usr/libexec/bunny-session-ready",
+         "--wait", str(wait)],
+        user=user, timeout=int(wait) + 60,
+    )
+    if not outcome.get("ran"):
+        return {"ok": False, "error": str(outcome.get("error"))[:300]}
+    out = str(outcome.get("stdout", ""))
+    marker = any(line.strip() == "BUNNY_SESSION_READY" for line in out.splitlines())
+    document = {}
+    try:
+        document = json.loads(out.split("BUNNY_SESSION_READY")[0].strip())
+    except (ValueError, IndexError):
+        pass
+    return {
+        "ok": outcome.get("returncode") == 0 and marker,
+        "markerSeen": marker,
+        "notReady": document.get("notReady", []),
+    }
+
+
 def shell_alive(user: str, environment: list[str]) -> dict:
     """Is GNOME Shell still answering, and is the Bunny extension still enabled?
 
