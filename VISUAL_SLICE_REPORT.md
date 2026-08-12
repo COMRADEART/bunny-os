@@ -4,9 +4,11 @@
 permission, answers on screen, and gets a file — driven through the shell's own
 Trust surface in a booted guest, plus its denied and failing variants.
 
-**Status** The journey runs end to end **through the protocol**. Driving it
-**through the desktop** found a P0 that made the desktop's assistant unstartable,
-and that fix has not yet been observed in a booted image.
+**Status** The permission question has now been **answered on screen** — the
+prompt rendered, a pointer event pressed *Allow this Bunny action* at its own
+screen coordinates, and nothing called `resolve_approval`. Getting there took
+four defects, three of which were found by looking at a photograph of the
+desktop.
 
 ---
 
@@ -144,7 +146,76 @@ The guard is now on the bytes, checked against what git **stores** rather than
 the working tree, over `shell/services/bin` and `installer/bin`. A working-tree
 test would pass on Linux, fail on Windows, and say nothing about the image.
 
-### 3.4 What this says about the qualification, honestly
+### 3.4 The fourth clock, and the press
+
+With the bridge able to start, the next run showed the request submitted, the
+character thinking — and then, where the permission question should have been:
+
+> **The assistant did not answer in time. It may still be working — the Tasks
+> window will show it.**
+
+That is the **desktop's own** watchdog, `WATCHDOG_MS = 200000` in
+`assistant.js`. §3.1 had fixed the *bridge's* clock; the desktop keeps a second
+one, and it had never heard of approvals either. A person has 200 seconds to read
+a sentence about their own files, and then the question is taken away and
+replaced with a complaint that they were slow.
+
+Both are now suspended while an approval is unanswered and rearmed when the phase
+leaves `waiting_for_approval`. `TRUST_RUNTIME_REPORT.md` §4.1 records all three
+clocks that watch a permission question and the one rule that follows: **a clock
+that can end a task may not run while a person is being asked, unless it is the
+consent expiry itself.**
+
+The harness was also spending minutes cataloguing the whole accessibility tree
+before pressing anything — long enough for any of those clocks to win. It now
+looks for the two buttons by name with an early exit, and photographs the screen
+the moment the shell says it is asking.
+
+**With that, the prompt was pressed.** Recorded by the driver:
+
+```
+journey-approval-fast   found=true, button="Allow this Bunny action",
+                        nodesVisited=234
+journey-approval        visible=true, role=button,
+                        extents={x:1662, y:640, width:34, height:20}
+journey-decision        pressed="Allow this Bunny action", at={x:1679, y:650}
+```
+
+and photographed at `journey-04-trust-prompt`:
+
+> Resize this to 100 pixels wide.
+> *Waiting for permission…*
+> **Bunny Image Tool wants to open Pictures/holiday.png. It will save a copy as holiday-resized.p…**
+> **[Deny]** [Allow]
+
+Three things in that picture were fixes landing at once: the prompt is there at
+all (§3.3), it is not a timeout message (§3.4), and **Deny carries the focus
+ring** — the safe default took focus, so a screen reader announces the question
+and a reflexive Return denies it.
+
+The press is a `virtio-tablet` absolute pointer event at the button's own AT-SPI
+extents. The graphical harness contains no call to `resolve_approval` — there is
+no path by which it could answer its own question.
+
+### 3.5 Then the success path failed, because it had never run
+
+Immediately after the press:
+
+```
+NameError: cannot access free variable 'watch_character'
+           where it is not associated with a value in enclosing scope
+```
+
+`watch_character` is a closure defined *after* `run_journey`, and Python resolves
+a free variable at call time. Every previous run returned early at the
+no-approval branch, so **the line that uses it had never executed**. The failure
+path had been exercised a dozen times and the success path not once.
+
+Worth stating plainly because it is the same shape as everything else here: the
+part of the system nobody had reached was the part that was broken, and reaching
+it was the whole difficulty.
+
+### 3.6 What this says about the qualification, honestly
 
 Eleven guest sections passed, the apptask section drove the production route to a
 real file, and the readiness probe reported eight green conditions — on an image
