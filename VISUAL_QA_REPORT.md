@@ -49,15 +49,20 @@ Files      Terminal    Bunny       Bunny App…
 Bunny Co…  Bunny Dia…  Bunny Lau…  Bunny Sett…
 ```
 
-Four of the eight cannot be identified, and three of those share the prefix
+Five of the eight cannot be identified, and four of those share the prefix
 "Bunny " — so the truncation removes exactly the part that distinguishes them.
 "Bunny Co…" could be Bunny Command or Bunny Companion, both of which exist as
 shipped commands.
 
 This is not a font-size problem: the tile is wide enough for "Terminal" and the
-labels are one line. The candidates are a second line for the label, a smaller
+labels are one line. The candidates were a second line for the label, a smaller
 label font in this grid only, or dropping the redundant "Bunny " prefix inside a
-Bunny OS launcher — the last being the one that costs no space at all.
+Bunny OS launcher — the last costs no space at all and is what was done.
+
+**Fixed and observed.** The same grid on the rebuilt image reads
+`Files · Terminal · Bunny · Approvals` / `Companion · Diagnostics · Launcher ·
+Settings` — eight tiles, none ellipsised. The full application name still goes
+to the accessible name, so a screen reader hears "Bunny Companion".
 
 ### 3.2 The suggestion panel floats unanchored — **P3**
 
@@ -114,8 +119,8 @@ nothing reconciles them.
 
 | # | Finding | Priority | State |
 |---|---|---|---|
-| 3.5 | The desktop cannot start its assistant | **P0** | Fixed; awaiting observation in an image |
+| 3.5 | The desktop cannot start its assistant | **P0** | **Fixed and observed** — the suggestion panel now offers real prompts, and a request completes end to end |
 | 3.5 | Availability and activity can contradict each other | P2 | Open |
-| 3.1 | Five of eight launcher labels unreadable | P2 | Open |
+| 3.1 | Five of eight launcher labels unreadable | P2 | **Fixed and observed** |
 | 3.2 | Suggestion panel unanchored | P3 | Open |
 | 3.3 | Network card mostly empty | P3 | Open |

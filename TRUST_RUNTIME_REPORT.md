@@ -176,11 +176,13 @@ This is the piece that keeps §2's replay row honest at the layer above the stor
 **Host runtime validated** and **VM runtime validated** for everything in §2 and §3:
 these ran on a real kernel with SELinux enforcing, as `bunny`, in a booted image.
 
-**Not established here**: that a person can see and answer the question on screen.
-That claim belongs to `VISUAL_SLICE_REPORT.md`; it is made by a run in which the
-approval is submitted by pressing a button in the graphical Trust surface, and by
-nothing else. Until that run exists, everything in this document describes a layer
-that is correct and unobserved by a user.
+**Established elsewhere, since this was written**: that a person can see and
+answer the question on screen. See `VISUAL_SLICE_REPORT.md` §2.1 — the prompt
+rendered, *Allow this Bunny action* and *Deny this Bunny action* were each
+pressed with a pointer event at their own accessibility extents, and the
+graphical harness has no call to `resolve_approval`.
+So the layer this document describes is no longer correct-but-unobserved: a
+person's press is now what moves it.
 
 ## 7. Evidence
 
