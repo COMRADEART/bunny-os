@@ -611,11 +611,18 @@ def interact(control, qmp, pointer, targets, arguments,
         started = (control.ask({"command": "orca-start", "wait": 30,
                                 "label": "orca-start"}, timeout=240) or {}).get("orca") or {}
         report["orcaStart"] = started
-        step("orca-start", **started)
+        # The diagnostics are large and go in the record; the four fields that
+        # decide whether this run can answer anything are printed.
+        step("orca-start", launched=started.get("launched"),
+             running=started.get("running"), isOurInstance=started.get("isOurInstance"),
+             speaking=started.get("speaking"), commandLine=started.get("commandLine"))
         # A run that could not start the screen reader must not go on to report
         # an empty transcript as "nothing was announced".
         if not started.get("speaking"):
-            step("orca-not-speaking", note="the journey will run without a screen reader")
+            step("orca-not-speaking",
+                 note="the journey will run without a screen reader",
+                 orcaOutput=(started.get("orcaOutput") or "")[:300],
+                 journal=((started.get("diagnostics") or {}).get("journal") or "")[-300:])
 
     if arguments.journey != "skip":
         decision = "denied" if arguments.journey == "denied" else "granted"

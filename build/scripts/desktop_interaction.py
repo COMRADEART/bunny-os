@@ -1084,6 +1084,19 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
           f'> {config}/speechd.conf'],
          user=user, timeout=10)
 
+    # Stop whatever screen reader is already running before starting ours.
+    #
+    # Setting `screen-reader-enabled` is itself enough to make the session start
+    # Orca, so by the time this launches its own there may already be one — and
+    # `orca --replace` then hands over to an instance nobody gave a debug file
+    # to. Every previous run of this probe reported `running: true` from a
+    # `pgrep` that could not tell the two apart, which is exactly how four runs
+    # produced an empty log from a process that was genuinely alive.
+    _run(["/usr/bin/pkill", "-TERM", "-x", "orca"], user=user, timeout=15)
+    time.sleep(3)
+    _run(["/usr/bin/pkill", "-KILL", "-x", "orca"], user=user, timeout=15)
+    time.sleep(1)
+
     # Detached, and with its own output captured to a file.
     #
     # The first version of this ran `setsid --fork orca …` and reported
@@ -1119,18 +1132,50 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
     # `pgrep -x`, not `-f`. `-f orca` matches any command line containing the
     # word — including the sudo wrapper this probe runs things under, so the
     # old check reported `running: true` for a screen reader that had exited.
-    running = _run(["/usr/bin/pgrep", "-u", user, "-x", "orca"], user=user, timeout=10)
+    # `pgrep -a` prints the command line, not just the pid.
+    #
+    # "Is a process called orca running" was never the question — the question
+    # is whether the running one is *ours*, the one with a debug file. A
+    # session-started Orca answers the first question and cannot answer the
+    # second, and four runs were spent on the difference.
+    running = _run(["/usr/bin/pgrep", "-a", "-u", user, "-x", "orca"], user=user, timeout=10)
+    command_line = str(running.get("stdout", "")).strip()
     output = _run(["/usr/bin/cat", ORCA_OUTPUT], user=user, timeout=10)
+
+    # Everything needed to tell an instrument fault from a product one, in the
+    # record, so the next diagnosis does not need another twenty-five minutes.
     return {
         "ran": True,
         "launched": started.get("returncode") == 0,
         "running": running.get("returncode") == 0,
+        # The decisive field: our launch put ORCA_DEBUG on the command line.
+        "isOurInstance": ORCA_DEBUG in command_line,
+        "commandLine": command_line[:400] or None,
         "debugLines": lines,
         "speaking": lines > 0,
-        # What Orca itself said. Empty on a healthy start; the reason on a
-        # failed one.
-        "orcaOutput": str(output.get("stdout", ""))[:1500] or None,
+        "orcaOutput": str(output.get("stdout", ""))[:2000] or None,
         "error": str(started.get("stderr", ""))[:400] or None,
+        "diagnostics": {
+            "screenReaderEnabled": str(_run(
+                ["/usr/bin/env", *environment, "/usr/bin/gsettings", "get",
+                 "org.gnome.desktop.a11y.applications", "screen-reader-enabled"],
+                user=user, timeout=15).get("stdout", "")).strip(),
+            "orcaSettings": str(_run(
+                ["/usr/bin/env", *environment, "/usr/bin/dconf", "dump", "/org/gnome/orca/"],
+                user=user, timeout=15).get("stdout", "")).strip()[:600],
+            # Orca's own output as the session captured it, which is where a
+            # session-started instance's messages go.
+            "journal": str(_run(
+                ["/usr/bin/journalctl", "--user", "--since", "-30m", "--no-pager",
+                 "-o", "cat", "-g", "orca"],
+                user=user, timeout=30).get("stdout", "")).strip()[-2500:],
+            "speechdRunning": _run(
+                ["/usr/bin/pgrep", "-a", "-u", user, "-f", "speech-dispatcher"],
+                user=user, timeout=10).get("stdout", "")[:300],
+            "files": str(_run(
+                ["/bin/sh", "-c", f"ls -la {ORCA_DEBUG} {ORCA_OUTPUT} {SPEECHD_LOG_DIR}/ 2>&1"],
+                user=user, timeout=10).get("stdout", ""))[:800],
+        },
     }
 
 
