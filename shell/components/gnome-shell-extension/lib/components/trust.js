@@ -48,6 +48,7 @@ import St from 'gi://St';
 
 import {box} from '../widgets.js';
 import {Icons, themedIcon} from '../icons.js';
+import {currentTheme} from '../design/current.js';
 import {makeActivatable} from '../util.js';
 import {STANDING} from '../design/tokens.js';
 
@@ -59,6 +60,20 @@ const STANDING_ICONS = {
     dash: Icons.UNKNOWN,
     warning: Icons.WARNING,
 };
+
+/**
+ * An icon at a theme-derived size, with its style class.
+ *
+ * `themedIcon`'s second parameter is an options object, and passing a bare
+ * class name to it destructures to nothing: the icon silently keeps the default
+ * 16px and loses its class, which is how an icon ends up the wrong size on a
+ * 200 % desktop and the wrong colour at high contrast. The size is passed
+ * explicitly because St.Icon's `icon-size` property overrides the stylesheet's
+ * `icon-size` once it is set, and `themedIcon` always sets it.
+ */
+function glyph(name, styleClass, size = null) {
+    return themedIcon(name, {size: size ?? currentTheme().icon.medium, styleClass});
+}
 
 function wrapping(label) {
     label.clutter_text.line_wrap = true;
@@ -86,7 +101,7 @@ export class TrustComponent {
 
         // --- identity -----------------------------------------------------
         this._identity = box({style_class: 'bunny-trust-identity'});
-        this._identityIcon = themedIcon(Icons.APPLICATION, 'bunny-trust-risk-glyph');
+        this._identityIcon = glyph(Icons.APPLICATION, 'bunny-trust-risk-glyph');
         this._identityText = box({vertical: true});
         this._identityName = new St.Label({style_class: 'bunny-trust-identity-name'});
         this._identityOrigin = new St.Label({style_class: 'bunny-trust-identity-origin'});
@@ -101,7 +116,7 @@ export class TrustComponent {
         this._column.add_child(this._heading);
 
         this._risk = box({style_class: 'bunny-trust-risk'});
-        this._riskGlyph = themedIcon(Icons.WARNING, 'bunny-trust-risk-glyph');
+        this._riskGlyph = glyph(Icons.WARNING, 'bunny-trust-risk-glyph');
         this._riskLabel = new St.Label({style_class: 'bunny-trust-risk-label'});
         this._risk.add_child(this._riskGlyph);
         this._risk.add_child(this._riskLabel);
@@ -242,8 +257,9 @@ export class TrustComponent {
         for (const row of rows) {
             const standing = STANDING[row.standing] ?? STANDING.unavailable;
             const line = box({style_class: `bunny-standing bunny-standing-${row.standing}`});
-            line.add_child(themedIcon(
-                STANDING_ICONS[standing.glyph] ?? Icons.UNKNOWN, 'bunny-standing-glyph'));
+            line.add_child(glyph(
+                STANDING_ICONS[standing.glyph] ?? Icons.UNKNOWN, 'bunny-standing-glyph',
+                currentTheme().icon.small));
             const text = `${row.label}: ${row.value}`;
             line.add_child(new St.Label({text, style_class: 'bunny-standing-label'}));
             // "Network: Off — enforced" versus "declared, not enforced". §19

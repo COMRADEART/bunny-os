@@ -1,0 +1,295 @@
+# The Design System and Accessibility Foundation
+
+**What this is** The phase that made the Bunny desktop respond to the two
+accessibility settings it had been measured ignoring, and turned the permission
+prompt that was proved on screen last phase into a component that carries the
+facts behind it.
+
+**Where it starts** `qualification/capsules/evidence/a11y-b09f523/accessibility.json`:
+
+> text-scaling-factor 1.5 changed 0.09 % of the screen and high contrast changed
+> 0.18 %, against a 0.15 % noise floor measured from a screenshot taken at the
+> *same* settings as the baseline. The desktop honours neither: all 43 font
+> sizes are absolute pixels and all 151 colour literals are hardcoded.
+
+Two of those three numbers are below the noise floor. The desktop was not
+partially honouring the settings; it was not consulting them.
+
+---
+
+## 1. What was actually wrong
+
+The stylesheet was the visible half and not the whole of it. Five findings, each
+of which is a thing that existed and did nothing.
+
+### 1.1 The text scale was read from a key that never changes
+
+```js
+_textScale() {
+    const match = /(\d+(?:\.\d+)?)\s*$/.exec(St.Settings.get().font_name ?? '');
+    ...  // points / 11
+}
+```
+
+`St.Settings.font_name` comes from `org.gnome.desktop.interface font-name`, which
+is `Cantarell 11` before and after `text-scaling-factor` is changed — GNOME
+applies text scaling through Xft DPI for GTK clients and never rewrites that key.
+So this returned `1` at 125 %, at 150 % and at 200 %. The layout solver was told
+nothing had changed and faithfully redrew the same desktop.
+
+The 43 absolute pixel font sizes were the second half: even with the scale read
+correctly, none of them would have grown.
+
+### 1.2 High contrast was not partially honoured; it was not consulted
+
+No code in the repository read `high-contrast` from
+`org.gnome.desktop.a11y.interface` or `St.Settings.high_contrast`. There was one
+palette in `stylesheet.css` and no code path that could have selected another.
+The 0.18 % that changed was GNOME restyling its own message tray behind the Bunny
+desktop.
+
+### 1.3 There were two Bunny palettes and they shared no colour
+
+| | Source | Accent | Loaded by |
+|---|---|---|---|
+| GTK surfaces | `shell/themes/tokens.json` | mint `#88E7C4` | nothing |
+| Desktop shell | `lib/tokens.js` | violet `#8B5CF6` | the desktop |
+
+`shell/themes/tokens.json` was schema version 2 and carried precisely what this
+phase needed — `elevation`, `focus`, `scrim`, `companion.phase`, `risk`,
+`standing`, contrast thresholds. It was installed to
+`/usr/share/bunny-shell/themes` and its only consumers were two test files. So
+were `bunny-light.css`, `bunny-dark.css` and `bunny-high-contrast.css`, nine
+lines each. `docs/DESIGN_SYSTEM.md` recorded the split and said resolving it "is
+worth doing and is not done yet".
+
+The `theme` setting — `system` / `bunny-light` / `bunny-dark` / `high-contrast` —
+was stored, validated, and rendered back to the user as a sentence in Settings.
+Nothing applied it.
+
+### 1.4 Both halves of the Trust component existed and were not connected
+
+`companion.capsule_task_bridge.CapsuleSupport.prompt_for()` built the structured
+permission prompt — application identity, resource, expected effect, file access,
+network, private app data. **It had no caller anywhere in the repository.**
+
+`shell/.../lib/trustPrompt.js` turned that structure into a drawable model, with
+body ordering, deny-focused defaults and risk tokens by name. **It had no caller
+either**, outside its own tests.
+
+What shipped was `.bunny-assistant-approval`: a strip inside the assistant card
+displaying one string.
+
+```js
+this._approvalLabel.text = String(approval?.reason ?? 'Allow Bunny to perform this action?');
+```
+
+`capsule_task_bridge` concatenated three sentences into `reason` *because* the
+surface could only hold one. `ApprovalPresentation` projected nine fields; the
+drawn surface used one of them.
+
+### 1.5 A contrast figure in the documentation does not reproduce
+
+`docs/DESIGN_SYSTEM.md` justified moving secondary text from `#A9AFBC` to
+`#B4BAC6` because the first "measures 4.36:1 on the primary panel and misses
+WCAG AA". It measures **8.51:1**, and no plausible Bunny backdrop produces 4.36 —
+the closest candidate, the panel over the wallpaper gradient, gives 8.28.
+
+The contrast module reproduces the three standard WCAG worked examples exactly
+(`#767676` on white = 4.54:1, `#777777` = 4.48:1, `#595959` = 7:1), so the
+arithmetic is not in question. The hand-computed figure was wrong by about a
+factor of two. The colour it argued for is fine and stays.
+
+---
+
+## 2. What was built
+
+One token source, `lib/design/tokens.js`. Four themes. The stylesheet is output.
+
+```
+tokens.js ──▶ theme.js ──▶ stylesheet.js ──▶ CSS string
+   │          (resolve       (render, St-safe)      │
+   │           per settings)                        ▼
+   │                                       themeManager.js
+   │                                       (write, load, unload)
+   └──▶ render_design_assets.mjs ──▶ stylesheet.css   (shipped default/fallback)
+                                └──▶ shell/themes/tokens.json (Python consumers)
+```
+
+St's stylesheet language has no custom properties, no `calc()`, no media queries
+and no `var()`. That is why the stylesheet is a function rather than a file:
+everything those features would have done happens in JavaScript before a single
+declaration is written, and what St receives is a flat sheet of literals.
+
+`themeManager.js` watches four settings across three schemas —
+`text-scaling-factor` and `color-scheme` on `org.gnome.desktop.interface`,
+`high-contrast` on `org.gnome.desktop.a11y.interface`, and `enable-animations`
+through `St.Settings` — renders a sheet, writes it to the runtime directory,
+loads it, and only then unloads the shipped one. Every failure path leaves the
+shipped sheet in place and names itself in `degraded`.
+
+### 2.1 Static evidence
+
+Measured by `tests/shell/test_design_system.py`, all under node against the real
+modules.
+
+| Claim | Before | After |
+|---|---|---|
+| `font-size` declarations | 43 | 75 |
+| …that are absolute pixels | 43 of 43 | 0 of 75 |
+| …unchanged between 100 % and 150 % | 43 of 43 | 0 of 75 |
+| Size at 200 % ÷ size at 100 % | 1.00 | 2.00, every declaration |
+| Colour literals in the stylesheet | 151, none theme-derived | every one from a semantic role |
+| Themes | 1 | 4 (light, dark, high-contrast light, high-contrast dark) |
+| Colour roles per theme | — | 24, complete in all four |
+| Contrast pairs checked | 0 | 88, all passing WCAG AA |
+| Narrowest text margin | not measured | 4.88:1 (AA is 4.5:1) |
+| Reactive classes with a `:focus` rule | asserted for 12 | measured for 27, in all four themes |
+
+### 2.2 What the contrast gate found while the palette was being written
+
+Five real problems, none of which was noticed by eye:
+
+| Pair | Measured | Fix |
+|---|---|---|
+| white on accent `#8B5CF6` (dark) | 4.23:1 | accent → `#7C3AED` |
+| `borderStrong` on the panel (dark) | 1.72:1 | alpha 0.18 → 0.36 |
+| `borderStrong` on the panel (light) | 1.87:1 | alpha 0.28 → 0.52 |
+| `blocked` at high contrast (dark) | 9.25:1, *worse* than the ordinary theme's 9.9:1 | `#FF8A8A` → `#FFAFAF` |
+| `blocked`/selection at high contrast (light) | 7.38:1 and 11.54:1, both worse than ordinary | `#B00000` → `#8B0000`, selection `#002060` |
+
+The last two are the ones worth keeping: enabling high contrast would have
+*downgraded* the contrast of exactly the state that says a permission was
+refused. The gate now asserts that no pair gets worse when the setting is enabled
+and that the tightest pair clears WCAG AAA.
+
+### 2.3 What the layout solver found
+
+At 150 % on a 1920×1080 screen the desktop dropped the assistant card — which is
+the card the permission question appears in. Cards were dropped by position
+(last in the column first) and the assistant was last.
+
+Drops now follow importance: `PROTECTED_CARDS` names the assistant, discretionary
+cards are shed first, and the surviving cards keep reading order. The Trust
+surface is present in all twenty resolution × scale combinations measured
+(1366×768, 1280×800, 1920×1080, 2560×1440, 3840×2160 at 100/125/150/200 %), with
+no overlapping pairs and nothing off-screen.
+
+### 2.4 The Trust component
+
+`ApprovalRequirement` now carries `prompt`; `capsule_task_bridge` fills it from
+`prompt_for()`; `ApprovalPresentation` carries it to the surface; `buildApproval`
+turns it into the model; `TrustComponent` draws it.
+
+The prompt is **display-only and outside the consent binding**, for the reason
+`destination_detail` already was: binding a rendering would mean rewording a
+sentence invalidates an answer somebody already gave, while swapping the provider
+behind it might not. `test_two_prompts_with_different_wording_bind_identically`
+holds that.
+
+Its fields are an allowlist (`PROMPT_FIELDS`) bounded and markup-escaped before
+they leave the runtime, because several originate in an application's own
+manifest and are drawn in a security dialog. A requester cannot add a field, and
+a field cannot become long enough to push the buttons off screen.
+
+What the prompt shows now, from the runtime rather than from wording:
+
+```
+GNU Image Manipulation Program            ← identity
+org.gimp.GIMP
+GNU Image Manipulation Program wants to open holiday.png
+It will save a copy as holiday-resized.png. Your original file will not be changed.
+Shared with the application: holiday.png
+  ✓ Files: holiday.png only              ← each row a glyph, a word and a colour
+  ⃠ Network: Off
+  ✓ App data: Isolated
+                            [ Allow ] [ Deny ]
+Details ▸  Request · Operation · Task · Plan · Destination · Data
+```
+
+The accessible names the booted-guest slices press — `Allow this Bunny action`
+and `Deny this Bunny action` — are unchanged, and a test asserts the harness and
+the component still agree on them.
+
+The component is generic: seven future categories (camera, microphone, network,
+screen capture, USB, Bluetooth, background execution) each draw a complete
+question in the tests, and neither the component nor the projection contains the
+words `resize`, `holiday` or `.png` outside their comments.
+
+---
+
+## 3. Runtime qualification
+
+*This section is filled from the booted guest and is the part that decides the
+phase. Nothing above substitutes for it: §9 of the brief is explicit that
+automated contrast is not an accessibility result, and the last two phases each
+found a defect that every text diagnostic had passed and one photograph caught.*
+
+**Status: pending.** See §6 for what has and has not run.
+
+---
+
+## 4. Maturity matrix
+
+`Implemented` — the code exists and is reachable from a real caller.
+`Unit tested` — measured under node or by the Python suite.
+`VM validated` — observed in the booted guest.
+`Hardware` — observed on physical hardware.
+`Release qualified` — signed off against the release matrix.
+
+| | Implemented | Unit tested | VM validated | Hardware | Release qualified |
+|---|---|---|---|---|---|
+| Design tokens | yes | yes | pending | no | no |
+| Typography scaling | yes | yes | pending | no | no |
+| Light mode | yes | yes | pending | no | no |
+| Dark mode | yes | yes | pending | no | no |
+| High contrast | yes | yes | pending | no | no |
+| Keyboard | unchanged | yes | pending | no | no |
+| AT-SPI | unchanged | yes | pending | no | no |
+| Screen reader | unchanged | no | pending | no | no |
+| Reduced motion | yes | yes | pending | no | no |
+| Companion full | unchanged | yes | pending | no | no |
+| Companion compact | unchanged | yes | no | no | no |
+| Companion minimal | not built | no | no | no | no |
+| Companion text-only | unchanged | yes | no | no | no |
+| Trust component | yes | yes | pending | no | no |
+| Task component | model only | yes | no | no | no |
+| Result component | model only | yes | no | no | no |
+| Error component | model only | yes | no | no | no |
+| Protected-space component | model only | yes | no | no | no |
+
+"model only" is the honest state for §20–§23: the projections exist and are
+tested, the CSS for them is in the generated stylesheet, and nothing draws them
+yet.
+
+---
+
+## 5. What this phase did not do
+
+Stated so that the matrix above is not read as a plan.
+
+- **The task, result, error and protected-space components are not drawn.** Their
+  models and styles exist; the desktop still shows its own status strings.
+- **The Companion's four presentation modes were not refactored.** §16 asked for
+  Full / Compact / Minimal / Text-only projecting one task state; the fidelity
+  ladder that exists today is `companionPresence.js`, unchanged by this phase.
+- **There is no story or component harness.** §37's fast visual development loop
+  is not built, so every visual check still costs a boot.
+- **There is no visual-regression manifest.** §36.
+- **No performance comparison was taken.** §41 asks for Companion idle CPU and
+  memory, desktop memory, frame behaviour under llvmpipe and Trust-dialog latency
+  before and after; none of those numbers exists for the new theme path.
+- **Nothing was seen on hardware.** Every desktop measurement in this project is
+  llvmpipe.
+
+---
+
+## 6. Standing note on what a passing test here means
+
+The static evidence in §2 says the desktop now *computes* different numbers when
+a setting changes. It does not say a person can read the result, and it cannot:
+the previous phase's most expensive defects were a character whose working pose
+was a shrug and an "Assistant offline" message on a desktop whose runtime was
+active, and both passed every assertion in the suite.
+
+§32 and §33 are release blockers for this phase and they are screenshots.

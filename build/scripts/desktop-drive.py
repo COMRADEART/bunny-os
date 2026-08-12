@@ -628,75 +628,125 @@ def interact(control, qmp, pointer, targets, arguments,
              focusable=baseline.get("focusable"), withActions=baseline.get("withActions"))
         screenshot("a11y-01-default")
 
-        changes = []
-        for schema, key, value, shot in (
-            ("org.gnome.desktop.a11y.interface", "reduced-motion", "true", "a11y-02-reduced-motion"),
-            ("org.gnome.desktop.interface", "enable-animations", "false", None),
-            ("org.gnome.desktop.interface", "text-scaling-factor", "1.5", "a11y-03-large-text"),
-            ("org.gnome.desktop.a11y.interface", "high-contrast", "true", "a11y-04-high-contrast"),
-        ):
-            answer = control.ask({"command": "a11y-set", "schema": schema,
-                                  "key": key, "value": value,
-                                  "label": f"a11y-set-{key}"}, timeout=120)
+        # One preference at a time, each reverted before the next.
+        #
+        # These used to be applied cumulatively — reduced motion, then no
+        # animations, then 1.5x text, then high contrast — and the screenshot
+        # named "high contrast" was therefore also large-text and reduced-motion.
+        # That confounds exactly the two measurements §32 and §33 are release
+        # blockers for: the 0.18 % of the screen attributed to high contrast was
+        # measured against a desktop that had already been changed twice, and
+        # neither figure could be attributed to the setting it was named after.
+        def apply(schema: str, key: str, value: str, label: str) -> dict:
+            answer = control.ask({"command": "a11y-set", "schema": schema, "key": key,
+                                  "value": value, "label": label}, timeout=120)
             record = (answer or {}).get("set") or {}
             record.update({"schema": schema, "key": key, "asked": value})
             record["tookEffect"] = record.get("readBack") == value
-            changes.append(record)
-            step(f"a11y-set-{key}", **record)
-            if shot:
-                time.sleep(2)
-                screenshot(shot)
+            step(label, **record)
+            return record
+
+        def sample_heights(label: str) -> dict:
+            walk = (control.ask({"command": "a11y-tree", "label": label},
+                                timeout=300) or {}).get("a11y") or {}
+            return walk
+
+        def compare(before: dict, after: dict) -> dict:
+            """The same named controls, before and after, by height.
+
+            Comparing named controls rather than counting roles is what
+            distinguishes "the setting is stored" from "the desktop drew it
+            differently"; a count would not have moved either way.
+            """
+            first = before.get("sample") or {}
+            second = after.get("sample") or {}
+            grew, shrank, same = [], [], []
+            for name, box in first.items():
+                other = second.get(name)
+                if not other:
+                    continue
+                if other["height"] > box["height"]:
+                    grew.append({"name": name, "from": box["height"], "to": other["height"]})
+                elif other["height"] < box["height"]:
+                    shrank.append({"name": name, "from": box["height"], "to": other["height"]})
+                else:
+                    same.append(name)
+            measured = len(grew) + len(shrank) + len(same)
+            return {
+                "controlsComparable": measured,
+                "grew": grew[:12],
+                "grewCount": len(grew),
+                "shrankCount": len(shrank),
+                "unchangedCount": len(same),
+                # Stated rather than concluded: with nothing comparable this
+                # says nothing at all, and must not read as "the desktop
+                # ignored it".
+                "conclusive": measured > 0,
+            }
+
+        changes = []
+        SCALE_SHOTS = {"1.25": "a11y-06-text-125", "1.5": "a11y-03-large-text",
+                       "2.0": "a11y-07-text-200"}
+
+        # --- §32 text scaling, at each of the four sizes the brief names ----
+        scaling = []
+        for value in ("1.25", "1.5", "2.0"):
+            changes.append(apply("org.gnome.desktop.interface", "text-scaling-factor",
+                                 value, f"a11y-set-text-scaling-{value}"))
+            time.sleep(3)
+            screenshot(SCALE_SHOTS[value])
+            walk = sample_heights(f"a11y-tree-text-{value}")
+            measurement = {"scale": value, **compare(baseline, walk)}
+            scaling.append(measurement)
+            step(f"a11y-text-scaling-{value}",
+                 **{k: v for k, v in measurement.items() if k != "grew"})
+        apply("org.gnome.desktop.interface", "text-scaling-factor", "1.0",
+              "a11y-restore-text-scaling")
+        time.sleep(2)
+        outcome["textScalingBySize"] = scaling
+        # The 1.5x figure keeps its old name and shape so the two runs can be
+        # compared directly against each other.
+        outcome["textScaling"] = next(
+            (dict(m) for m in scaling if m["scale"] == "1.5"), {"conclusive": False})
+
+        # --- §33 high contrast, on its own -----------------------------------
+        changes.append(apply("org.gnome.desktop.a11y.interface", "high-contrast",
+                             "true", "a11y-set-high-contrast"))
+        time.sleep(3)
+        screenshot("a11y-04-high-contrast")
+        contrast_walk = sample_heights("a11y-tree-high-contrast")
+        outcome["treeAdapted"] = contrast_walk
+        step("a11y-tree-adapted", ok=contrast_walk.get("ok"),
+             nodes=contrast_walk.get("nodes"),
+             interactive=contrast_walk.get("interactive"),
+             named=contrast_walk.get("named"))
+        apply("org.gnome.desktop.a11y.interface", "high-contrast", "false",
+              "a11y-restore-high-contrast")
+        time.sleep(2)
+
+        # --- §15 reduced motion, on its own ----------------------------------
+        changes.append(apply("org.gnome.desktop.a11y.interface", "reduced-motion",
+                             "true", "a11y-set-reduced-motion"))
+        changes.append(apply("org.gnome.desktop.interface", "enable-animations",
+                             "false", "a11y-set-enable-animations"))
+        time.sleep(3)
+        screenshot("a11y-02-reduced-motion")
+        apply("org.gnome.desktop.a11y.interface", "reduced-motion", "false",
+              "a11y-restore-reduced-motion")
+        apply("org.gnome.desktop.interface", "enable-animations", "true",
+              "a11y-restore-enable-animations")
         outcome["changes"] = changes
 
-        under = (control.ask({"command": "a11y-tree", "label": "a11y-tree-adapted"},
-                             timeout=300) or {}).get("a11y") or {}
-        outcome["treeAdapted"] = under
-        step("a11y-tree-adapted", ok=under.get("ok"), nodes=under.get("nodes"),
-             interactive=under.get("interactive"), named=under.get("named"))
-
-        # Larger text should make controls taller. Comparing the *same named
-        # control* before and after is what distinguishes "the setting is
-        # stored" from "the desktop drew it differently"; a count of roles would
-        # not have moved either way.
-        before_sample = baseline.get("sample") or {}
-        after_sample = under.get("sample") or {}
-        grew, same, measured = [], [], 0
-        for name, before_box in before_sample.items():
-            after_box = after_sample.get(name)
-            if not after_box:
-                continue
-            measured += 1
-            if after_box["height"] > before_box["height"]:
-                grew.append({"name": name, "from": before_box["height"],
-                             "to": after_box["height"]})
-            elif after_box["height"] == before_box["height"]:
-                same.append(name)
-        outcome["textScaling"] = {
-            "controlsComparable": measured,
-            "grew": grew[:12],
-            "grewCount": len(grew),
-            "unchangedCount": len(same),
-            # Stated rather than concluded: with nothing comparable, this says
-            # nothing at all, and must not read as "the desktop ignored it".
-            "conclusive": measured > 0,
-        }
-        step("a11y-text-scaling", **{k: v for k, v in outcome["textScaling"].items()
-                                     if k != "grew"})
-
-        # Put it back, so a later stage of the same run is not measuring a
-        # desktop this stage left large and high-contrast.
-        restored = []
-        for schema, key, value in (
-            ("org.gnome.desktop.a11y.interface", "reduced-motion", "false"),
-            ("org.gnome.desktop.interface", "enable-animations", "true"),
-            ("org.gnome.desktop.interface", "text-scaling-factor", "1.0"),
-            ("org.gnome.desktop.a11y.interface", "high-contrast", "false"),
-        ):
-            answer = control.ask({"command": "a11y-set", "schema": schema, "key": key,
-                                  "value": value, "label": f"a11y-restore-{key}"},
-                                 timeout=120)
-            restored.append({"key": key, **((answer or {}).get("set") or {})})
-        outcome["restored"] = restored
+        # --- the control -----------------------------------------------------
+        # Everything is back where it started, so this screenshot differs from
+        # a11y-01-default only by render noise. It is what every figure above is
+        # measured against, and without it "0.09 % of the screen changed" cannot
+        # be told from "nothing ever changes by more than 0.09 %".
+        time.sleep(3)
+        outcome["restored"] = (control.ask(
+            {"command": "a11y-settings", "label": "a11y-after"}, timeout=120
+        ) or {}).get("settings") or {}
+        step("a11y-restored", **outcome["restored"])
         screenshot("a11y-05-restored")
         return outcome
 
