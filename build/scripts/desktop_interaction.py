@@ -1225,6 +1225,20 @@ def start_screen_reader(user: str, environment: list[str], wait: float = 25.0) -
             "files": str(_run(
                 ["/bin/sh", "-c", f"ls -la {ORCA_DEBUG} {ORCA_OUTPUT} {SPEECHD_LOG_DIR}/ 2>&1"],
                 user=user, timeout=10).get("stdout", ""))[:800],
+            # What Orca is actually writing.
+            #
+            # The run that established the drop-in works produced 2958 debug
+            # lines and zero speech lines, and there was no way to tell whether
+            # Orca was announcing nothing or announcing it in a form this probe
+            # does not recognise. Guessing that difference has already cost six
+            # runs; a sample of the file answers it in one.
+            "debugHead": str(_run(
+                ["/bin/sh", "-c", f"head -n 25 {ORCA_DEBUG} 2>&1"],
+                user=user, timeout=15).get("stdout", ""))[:2000],
+            "debugSpeechLines": str(_run(
+                ["/bin/sh", "-c",
+                 f"grep -i -m 20 -E 'speech|speak|utterance' {ORCA_DEBUG} 2>&1"],
+                user=user, timeout=15).get("stdout", ""))[:2500],
         },
     }
 
