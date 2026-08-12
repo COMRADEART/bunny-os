@@ -419,6 +419,45 @@ class DesignTokenTests(unittest.TestCase):
                 self.assertIn(f"{selector}:focus", css)
 
 
+#: Directories whose every tracked file is installed as an executable.
+PROGRAM_DIRECTORIES = ("shell/services/bin", "installer/bin")
+
+
+def tracked_programs() -> list[tuple[str, str]]:
+    """Each installed program and the line ending **git stores** for it.
+
+    The stored blob, not the working tree. A Windows checkout made before
+    `.gitattributes` marked these `-text` still has CRLF on disk and always
+    will, because `-text` means "reproduce verbatim" — so a test that read the
+    working tree would fail on Windows and pass on Linux while saying nothing
+    about what reaches the image. The build checks out from the object store,
+    so the object store is the thing to check.
+    """
+    result = subprocess.run(
+        ["git", "ls-files", "--eol", "--", *PROGRAM_DIRECTORIES],
+        capture_output=True, text=True, cwd=ROOT, timeout=60)
+    if result.returncode != 0:
+        raise unittest.SkipTest(f"git could not list the programs: {result.stderr.strip()}")
+    programs = []
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        fields = line.split("\t")
+        path = fields[-1].strip()
+        index_eol = fields[0].split()[0].removeprefix("i/")
+        programs.append((path, index_eol))
+    return programs
+
+
+def index_blob(path: str) -> bytes:
+    """The bytes git has for a path, unfiltered."""
+    result = subprocess.run(["git", "show", f":{path}"],
+                            capture_output=True, cwd=ROOT, timeout=60)
+    if result.returncode != 0:
+        raise AssertionError(f"git could not read {path}: {result.stderr[:200]!r}")
+    return result.stdout
+
+
 class InstallTests(unittest.TestCase):
     def test_every_extension_module_reaches_the_image(self) -> None:
         routes = routes_for_profile("beta")
@@ -443,6 +482,52 @@ class InstallTests(unittest.TestCase):
             if installed_destination(route, "shell/services/bin/bunny-shell-assistant")
         ]
         self.assertEqual(destinations, ["/usr/bin/bunny-shell-assistant"])
+
+    def test_no_installed_program_carries_a_carriage_return(self) -> None:
+        """A CRLF blob makes the shebang name an interpreter that does not exist.
+
+        `shell/services/bin/bunny-shell-assistant` was committed with CRLF. It
+        is installed to /usr/bin mode 0555 and begins `#!/usr/bin/python3`, so
+        with a trailing CR the kernel looks for `/usr/bin/python3\\r`, refuses
+        the exec, and reports "no such file or directory" while naming a file
+        that is plainly there.
+
+        The desktop's only route to the companion is
+        `Gio.Subprocess.new([BRIDGE, ...])`, which execs it directly. So the
+        assistant could not be started at all: the suggestion panel showed
+        "Assistant offline", a typed request sat at "Thinking…" for ever, and no
+        permission prompt could ever appear — on a machine whose runtime was
+        active and answering.
+
+        `.gitattributes` marks these paths `-text` so git will not *introduce*
+        CRLF. That is a different guarantee from the bytes being clean, and this
+        checks the bytes. `-text` faithfully reproduces whatever was committed,
+        so the guard that was supposed to prevent this is precisely what made it
+        permanent.
+        """
+        offenders = [
+            path for path, eol in tracked_programs()
+            if eol == "crlf"
+        ]
+        self.assertEqual(
+            [], offenders,
+            "these are installed as executables and will not exec: " + ", ".join(offenders))
+
+    def test_every_installed_program_starts_with_a_usable_shebang(self) -> None:
+        """The positive half. Nothing above would notice a missing `#!` at all."""
+        programs = tracked_programs()
+        self.assertTrue(programs, "no installed programs were found to check")
+        for path, _ in programs:
+            with self.subTest(program=path):
+                first = index_blob(path).split(b"\n", 1)[0]
+                self.assertTrue(first.startswith(b"#!"), f"no shebang: {first[:40]!r}")
+                interpreter = first[2:].split()[0].decode("utf-8", "replace")
+                self.assertTrue(
+                    interpreter.startswith("/"),
+                    f"the interpreter is not an absolute path: {interpreter!r}")
+                self.assertEqual(
+                    interpreter, interpreter.strip(),
+                    f"the interpreter path carries whitespace: {interpreter!r}")
 
     def test_the_wallpaper_the_dconf_default_names_is_installed_there(self) -> None:
         """The default and the route have to agree or the desktop has no wallpaper."""
@@ -1589,9 +1674,17 @@ class PointerOwnershipTests(unittest.TestCase):
         """
         self.assertIn("_watchVoiceAvailability", self.text)
         body = self.text.split("_watchVoiceAvailability() {", 1)[1].split("\n    }", 1)[0]
-        self.assertIn("attemptsLeft", body, "the retry has to be bounded")
         self.assertIn("_voiceHealthTimer", body)
         self.assertIn("setVoiceAvailable", body)
+        # The retry moved into `_pollHealth`, which the assistant now shares, so
+        # the bound is checked where it lives. Still checked, and now once for
+        # both consumers rather than once for the one that had the defect first.
+        self.assertIn("_pollHealth(this.voice,", body, "voice must use the shared poller")
+        poller = self.text.split("_pollHealth(service, report) {", 1)[1].split("\n    }", 1)[0]
+        self.assertIn("attemptsLeft", poller, "the retry has to be bounded")
+        self.assertRegex(poller, r"attemptsLeft\s*=\s*\d+",
+                         "the bound has to be a finite number")
+        self.assertIn("attemptsLeft -= 1", poller, "the bound has to be decremented")
 
 
 class FailureIsolationTests(unittest.TestCase):
