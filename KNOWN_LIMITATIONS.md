@@ -898,3 +898,62 @@ resolved first, and there is currently no way to do so from the printed masks.
 and VRAM size. An unrecognised driver reports `unknown` rather than guessing.
 The classification affects scoring, never usability — usability is decided by
 driver and runtime readiness, which are measured.
+
+## App Capsules and the Trust layer
+
+Measured in a booted guest, SELinux enforcing, at commit `524107e50b2e`. Each of
+these was recorded by the qualification section that found it, alongside its
+pass, rather than being left out. See `CAPSULE_VM_SECURITY_REPORT.md`.
+
+### A capsule's network allowlist is a declaration, not a boundary
+
+Only the `none` class is enforced, and it is enforced absolutely by
+`--unshare-net`: no external host, no DNS, no loopback. Every other class
+currently means "there is a network". A capsule granted `example.com` connected
+to `example.org` in the guest run.
+
+The consequence is a rule for the product, not just a gap: **no user-facing
+string may imply per-domain enforcement.** The one network state that can be
+described in absolute terms today is Off.
+
+### SELinux denials for capsule operations have never been observed
+
+`kernel.dmesg_restrict=1`, `ausearch` is not installed, and `journalctl`
+returned zero kernel lines. The recorded AVC count of `0` means *nobody looked*,
+not *nothing happened*.
+
+What is established is one-directional and still worth having: every expected
+capsule operation succeeded with the policy loaded and Enforcing, which rules
+out policy blocking the capsule. It says nothing about a capsule doing something
+policy would have denied.
+
+### Six isolation checks are inconclusive rather than passing
+
+`camera`, `gpu`, `clipboard`, `granted_file_read`, `other_capsule_secret_read`
+and `own_data_read`: the unconfined control could not reach the resource either,
+because the suite runs on the console with no `/dev/video*` and no
+`WAYLAND_DISPLAY`. A check whose control finds nothing proves nothing about
+confinement, so these are counted separately from the seventeen that are
+isolated. They become meaningful only when the suite runs inside a graphical
+session.
+
+### The desktop ignores text scaling and high contrast
+
+Measured on a booted desktop: setting `text-scaling-factor` to 1.5 and
+`org.gnome.desktop.a11y.interface high-contrast` to true left the screen
+pixel-identical.
+
+The cause is structural. All 43 `font-size` declarations in the shell
+stylesheet are absolute pixels and none is relative, so there is nothing for a
+scale factor to multiply; and all 143 colour literals are hardcoded with none
+derived from the theme, so a high-contrast theme has nothing to override.
+`lib/assistant/trustPrompt.js` states that "the stylesheet and the high-contrast
+theme decide the values" — the stylesheet does, the theme does not.
+
+This is the largest accessibility gap in the desktop and it is not a small fix:
+it means relative type throughout and theme-derived colour throughout, each
+re-validated against the layout suite at every supported resolution.
+
+### Nothing here is hardware validated
+
+Every capsule measurement is `kvm` on one host. There is no device.
