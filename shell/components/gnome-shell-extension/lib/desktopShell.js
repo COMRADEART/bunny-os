@@ -288,8 +288,17 @@ export class DesktopShell {
         // is tri-state and the suggestion panel already treats `null` as
         // "assume it works"; announcing a failure only after the attempts run
         // out is what keeps a cold boot from lying.
+        // Rebuilt on a *change*, not on every attempt. The poll runs thirty
+        // times in a minute at startup, and rebuilding the suggestion panel
+        // thirty times would rebuild it twenty-nine times for nothing — and
+        // visibly, since the panel is on screen while it happens.
+        let lastReported = null;
         this._assistantHealthTimer = this._pollHealth(this.assistant, (available, reason, settled) => {
-            this._suggestions?.rebuild();
+            const shown = available ? true : (settled ? false : null);
+            if (shown !== lastReported) {
+                lastReported = shown;
+                this._suggestions?.rebuild();
+            }
             if (available) {
                 log_('the companion runtime is reachable');
                 return;
