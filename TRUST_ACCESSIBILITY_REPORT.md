@@ -138,6 +138,14 @@ and this report does not say it is.
   `notify::enable-animations`. Motion cannot be judged from stills, so this is
   reported as implemented and observed-in-source, not as validated.
 
+  There is a second reason it could not have been measured here, found in the
+  guest's own log: *"mutter reports rendering is software"* and then
+  *"animations are disabled; the character is drawn in a resting pose"*. Under
+  llvmpipe the desktop turns animations off on its own, so `reduced-motion`
+  had nothing left to switch off. Measuring it needs frame capture **and**
+  hardware rendering, not another screenshot — which is why the matrix row
+  stays `NOT_RUN` rather than being recorded as a pass from source.
+
 ## 4. Evidence level
 
 | Claim | Level |

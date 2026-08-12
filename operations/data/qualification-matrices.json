@@ -117,7 +117,7 @@
    {
     "evidenceReference": null,
     "method": "source-inspection",
-    "notes": "Still NOT_RUN after the 2026-08-12 accessibility pass. The desktop sets its motion budget to 0 under reduced motion in source (companionPresence.js, taskWorkspace.js) and tracks notify::enable-animations, but the pass photographed the screen rather than filming it, and a still cannot show whether a transition animated. Resolving this needs frame capture, not another screenshot.",
+    "notes": "Still NOT_RUN after the 2026-08-12 accessibility pass, for two reasons. The pass photographed the screen rather than filming it, and a still cannot show whether a transition animated. And the guest's own log reads 'mutter reports rendering is software' then 'animations are disabled; the character is drawn in a resting pose' - under llvmpipe the desktop turns animations off by itself, so the preference had nothing left to switch off. Measuring this needs frame capture AND hardware rendering. The desktop does pin its motion budget to 0 under reduced motion in source (companionPresence.js, taskWorkspace.js), but recording a pass from source inspection is what this matrix refuses.",
     "outcome": "NOT_RUN",
     "recordedAt": "2026-07-29T00:00:00Z",
     "scenario": "reduced-motion"
