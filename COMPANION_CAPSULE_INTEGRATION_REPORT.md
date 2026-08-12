@@ -51,7 +51,8 @@ parent re-checked.
 
 ## 2. Defects this phase found and fixed
 
-Thirteen. Every one was found by running something, not by reading it.
+Eighteen. Every one was found by running something, not by reading it — a
+kernel, a compositor, a screenshot or the test suite. None came from review.
 
 | # | Defect | Found by |
 |---|---|---|
@@ -68,11 +69,21 @@ Thirteen. Every one was found by running something, not by reading it.
 | 11 | The shell's `ask` deadline ran while a person was being asked, so a pending permission was reported as "the runtime did not finish within the deadline" | **Screenshot** |
 | 12 | The desktop claimed "Assistant offline" because the health check was asked once, before the companion's socket existed | **Screenshot** |
 | 13 | **P0: the assistant bridge was committed with CRLF, so its shebang named `/usr/bin/python3\r` and the kernel refused the exec.** The desktop could never start its assistant | **Screenshot**, then asking the image directly |
+| 14 | The desktop keeps its *own* 200 s watchdog, which also knew nothing of approvals and replaced the permission prompt with "The assistant did not answer in time" | **Screenshot** |
+| 15 | A permission question appeared without taking focus, so a keyboard user had to hunt for it and a screen reader announced nothing | Accessibility pass |
+| 16 | The desktop ignores `text-scaling-factor` and `high-contrast` entirely | Accessibility pass — *found, not fixed*; see §6 |
+| 17 | Five of eight launcher labels ellipsised, four sharing the prefix that told them apart | Screenshot |
+| 18 | A `guestfish` probe in the qualification injector whose result was never read — an extra VM boot per injection | ShellCheck, in the suite |
 
-Three of the last four were found by *looking at a picture*. Nine text-only
+Five of the last eight were found by *looking at a picture*. Nine text-only
 diagnostics had not found #11; and #13 was introduced by the fix for #11, one
 commit before the run that exhibited it, which is why the two are told as one
 sequence in §2.1.
+
+#11 and #14 are the same defect in two places, which is the more useful
+observation: fixing the bridge's clock did not fix the desktop's, and neither
+knew that a question on somebody's screen is the system working. The rule that
+came out of it is in `TRUST_RUNTIME_REPORT.md` §4.1.
 
 ### 2.1 The two that say the most
 
