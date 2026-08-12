@@ -321,12 +321,24 @@ export class DesktopShell {
         //: still starting" stops being the likely explanation.
         let attemptsLeft = 30;
         let timer = null;
+        // `done` rather than `timer === null`, because the first attempt is made
+        // before the interval exists. `checkHealth` answers asynchronously in
+        // the ordinary case but synchronously when the bridge cannot be spawned
+        // at all — so a first attempt that settles can call stop() while `timer`
+        // is still null, and the interval assigned a line later would then poll
+        // for the life of the session with nothing able to cancel it.
+        let done = false;
         const stop = () => {
+            done = true;
             timer?.stop();
             timer = null;
         };
         const ask = () => {
+            if (done)
+                return;
             service.checkHealth((available, reason) => {
+                if (done)
+                    return;
                 if (available) {
                     stop();
                     report(true, reason, true);
@@ -339,9 +351,13 @@ export class DesktopShell {
             });
         };
         ask();
+        if (done)
+            return null;
         timer = interval(2, () => {
-            if (this._destroyed || attemptsLeft <= 0)
+            if (this._destroyed || done) {
+                stop();
                 return;
+            }
             ask();
         });
         return timer;
