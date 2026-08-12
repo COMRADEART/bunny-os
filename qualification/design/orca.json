@@ -1,0 +1,64 @@
+{
+ "candidateCommit": "7edd3fd",
+ "channelsTried": [
+  {
+   "channel": "orca --debug-file",
+   "result": "file created empty; pgrep -x confirmed the process alive",
+   "runs": 2
+  },
+  {
+   "channel": "orca --debug + --debug-file",
+   "result": "empty; the two options may interact, not established",
+   "runs": 1
+  },
+  {
+   "channel": "orca stdout and stderr, redirected to a file",
+   "result": "empty - Orca printed nothing, including no error",
+   "runs": 2
+  },
+  {
+   "channel": "speech-dispatcher log, LogLevel 4",
+   "result": "1.37 MB written, and within 2 bytes of the same size across two independent 25-minute sessions - consistent with voice enumeration at startup and no client traffic after it",
+   "runs": 2
+  }
+ ],
+ "harnessFaultsFoundAndFixed": [
+  "setsid --fork returns the parent exit status, so started:true meant nothing",
+  "pgrep -f orca matched the sudo wrapper the probe runs everything under",
+  "Orca stdout and stderr went nowhere, so a failed start had no reason attached",
+  "the speechd log pattern was four invented phrasings; the daemon logs \"Incoming text: |%s|\", read later from the binary with strings"
+ ],
+ "nextThingToTry": "Ask Orca what it is doing rather than what it wrote: run it in the foreground under the session and read its stderr live, or check whether it is blocked on first-run setup. Four runs were spent predicting the instrument instead of interrogating it.",
+ "rawSpeech": {
+  "ok": false,
+  "orcaDebugUtterances": 0,
+  "ran": true,
+  "source": null,
+  "speechdLogBytes": 1377279,
+  "total": 0,
+  "utterances": []
+ },
+ "rawStart": {
+  "debugLines": 0,
+  "error": null,
+  "launched": true,
+  "orcaOutput": null,
+  "ran": true,
+  "running": true,
+  "speaking": false
+ },
+ "schemaVersion": 1,
+ "section": "screen-reader",
+ "verdict": "NOT_MEASURED",
+ "whatIsKnownWithoutIt": {
+  "note": "From the AT-SPI walk and the journey record on the same image. That is the half the desktop is responsible for; whether a screen reader speaks it is the half still unmeasured.",
+  "orcaInstalled": true,
+  "orcaStarts": true,
+  "orcaVersion": "orca-50.2-1.fc44",
+  "safeAnswerHoldsFocus": true,
+  "trustControlsFocusable": true,
+  "trustControlsNamed": true
+ },
+ "whatWasEstablished": "Orca is installed (orca-50.2-1.fc44), starts, and stays running: pgrep -x orca finds it after launch. speech-dispatcher runs under the harness config and writes a 1.37 MB log. No utterance was captured on any channel.",
+ "whyThisIsNotAProductFinding": "Orca produced no output at all - not on its debug file, not on stdout, not to speech-dispatcher. A screen reader that had started and was announcing nothing would still log its own startup. The absence of every channel at once points at the instrument or at Orca being blocked before it attaches, not at the desktop failing to expose names: the AT-SPI walk in the same image finds the Trust controls named, roled and focusable."
+}

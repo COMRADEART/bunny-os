@@ -448,7 +448,54 @@ measured on this guest") and it is not closed here.
 
 ---
 
-### 3.8 What the design system costs
+### 3.8 Orca: four runs, no utterance, and it is the instrument
+
+**Verdict: NOT_MEASURED.** `qualification/design/orca.json`.
+
+What was established: Orca is installed (`orca-50.2-1.fc44`), starts, and stays
+running — `pgrep -x orca` finds it after launch. speech-dispatcher runs under the
+harness configuration and writes a 1.37 MB log. **No utterance was captured on
+any channel.**
+
+| Channel | Runs | Result |
+|---|---|---|
+| `orca --debug-file` | 2 | file created, empty |
+| `orca --debug` *and* `--debug-file` | 1 | empty |
+| Orca's stdout and stderr, redirected | 2 | empty — no output at all, including no error |
+| speech-dispatcher log at LogLevel 4 | 2 | 1.37 MB, and within **2 bytes** of the same size across two independent 25-minute sessions |
+
+That last figure is the informative one. Two unrelated sessions producing logs
+within two bytes of each other is not a log of activity; it is a log of
+speech-dispatcher enumerating voices at startup and then receiving nothing.
+
+**This is not a product finding.** A screen reader that had started and was
+announcing the wrong things would still have logged its own startup. Every
+channel being empty at once points at the instrument, or at Orca blocking before
+it attaches — and the AT-SPI walk on the same image finds the Trust controls
+named, roled and focusable with the safe answer holding focus. The half the
+desktop is responsible for is measured; the half a screen reader is responsible
+for is not.
+
+Four faults were found in the harness along the way, each of which failed
+silently:
+
+- `setsid --fork` returns the *parent's* exit status, so `started: true` was true
+  of a screen reader that had not started.
+- `pgrep -f orca` matches the sudo wrapper the probe runs everything under, so
+  `running: true` was true of nothing.
+- Orca's stdout and stderr went nowhere, so a failed start arrived with no reason.
+- The speechd log pattern was four invented phrasings. The daemon logs
+  `Incoming text: |%s|`, which `strings /usr/bin/speech-dispatcher` reports in
+  about a second — a check available from the first run and not taken until the
+  fourth.
+
+**What to do next**, recorded so the fifth run is not the fifth guess: ask Orca
+what it is doing rather than what it wrote. Run it in the foreground under the
+session and read its stderr live, or check whether it is blocked on first-run
+setup. The pattern across all four attempts was predicting the instrument's
+behaviour instead of interrogating it, at twenty-five minutes a prediction.
+
+### 3.9 What the design system costs
 
 §41, measured at `7edd3fd` on a session that is not being driven — `--journey
 skip`, because twenty seconds sampled while a harness types into the desktop is
@@ -498,7 +545,7 @@ be about the instrument. `qualification/design/performance.json`.
 | High contrast | yes | yes | **yes** — 97.1 % | no | no |
 | Keyboard | unchanged | yes | partial — focus lands on Deny | no | no |
 | AT-SPI | unchanged | yes | partial — 1745 nodes, 551 interactive, 40 unnamed | no | no |
-| Screen reader | unchanged | no | no — Orca present, never driven | no | no |
+| Screen reader | unchanged | no | **no — four runs, no utterance; instrument, see §3.8** | no | no |
 | Reduced motion | yes | yes | setting takes; effect not photographable | no | no |
 | Companion full | yes | yes | yes | no | no |
 | Companion compact | yes | yes | no | no | no |
@@ -584,18 +631,28 @@ The rest of §48 is not all met, and the phase is not complete against it.
 | semantic tokens replace hard-coded colours on core surfaces | **met** for the shell; the GTK surfaces already used the system palette |
 | keyboard flow passes | **partial** — focus lands on the safe answer and both controls are focusable; no full traversal was driven |
 | AT-SPI flow passes | **partial** — 1745 nodes walked, Trust controls named, roled and focusable; **40 interactive controls are unnamed** |
-| Orca can operate the Trust/task flow | **not met** — Orca is installed and its version was read; it was never driven |
+| Orca can operate the Trust/task flow | **not met** — driven four times, no utterance captured on any of four channels; the failure is the harness, not the desktop (§3.8) |
 | reduced-motion flow passes | **partial** — the setting takes effect for the first time; the effect is not photographable (§3.7) |
-| Companion full/compact/minimal/text-only truthful | **not met** — not refactored; minimal not built |
+| Companion full/compact/minimal/text-only truthful | **met as a projection** — all four built from one task projection and tested to agree; no surface draws them yet |
 | granted/denied/failed slices still pass | **met** — all three, answered on screen |
 | Trust prompt secure against hostile reason content | **partial** — bounded and escaped in the projection, with tests; never driven with a hostile string on a guest |
 | no critical surface relies on colour or motion alone | **met** for Trust and security standing; notification severity still carries a coloured border whose text counterpart is styled but not yet drawn |
 | core surfaces use the shared design system | **met** for the desktop shell |
-| performance has not materially regressed | **not measured** — §41 was not attempted |
+| performance has not materially regressed | **measured** — §3.9; nothing obviously bad, so nothing optimised |
 
 **PHASE STATUS: the release blockers are cleared; the phase is incomplete.**
-Five of fourteen items are unmet or unmeasured, and the largest are Orca, the
-Companion presentation modes, and the performance comparison.
+
+Three of fourteen items remain unmet, and one of the three is an instrument
+rather than a product gap:
+
+- **Orca** — four runs, no utterance, every channel silent (§3.8). The desktop's
+  half is measured and the screen reader's half is not.
+- **Keyboard and AT-SPI** — partial. Focus lands on the safe answer and the
+  Trust controls are named and focusable; no full traversal was driven, and
+  **40 interactive controls in the tree still carry no name**.
+- **Hostile reason content** — bounded and escaped in the projection with tests,
+  and rendered in the story harness, but never driven with a hostile string on a
+  booted guest.
 
 ---
 
