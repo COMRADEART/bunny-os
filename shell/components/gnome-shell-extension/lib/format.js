@@ -70,3 +70,43 @@ export function formatRate(bytesPerSecond) {
     const formatted = formatBytes(bytesPerSecond, {decimals: 1});
     return formatted === null ? null : `${formatted}/s`;
 }
+
+/**
+ * The name to draw under a tile, which is not always the application's name.
+ *
+ * Photographed on the booted desktop: five of eight labels ellipsised, and four
+ * of those began "Bunny " — so the truncation removed exactly the word that
+ * told them apart. The grid read
+ *
+ *     Files      Terminal    Bunny       Bunny App…
+ *     Bunny Co…  Bunny Dia…  Bunny Lau…  Bunny Sett…
+ *
+ * and "Bunny Co…" is either Bunny Command or Bunny Companion, both of which this
+ * image installs.
+ *
+ * The tile is 55px by deliberate arithmetic (see TILES_PER_ROW), so widening it
+ * is not available. Dropping the prefix inside a Bunny OS launcher costs no
+ * space and no information: everything here is Bunny's. The *accessible* name
+ * keeps the application's real name, because a screen reader has no width limit
+ * and "Companion" alone is worse to hear than to read.
+ *
+ * @param {string} name the application's own name
+ * @returns {string} what to draw
+ */
+export function tileLabel(name) {
+    const trimmed = String(name ?? '').trim();
+    //: An application actually called "Bunny" keeps its name; stripping the
+    //: prefix here would leave an empty label.
+    if (!trimmed.startsWith('Bunny ') || trimmed.length <= 'Bunny '.length)
+        return trimmed;
+    const remainder = trimmed.slice('Bunny '.length).trim();
+    return remainder || trimmed;
+}
+
+//: Tiles per row. The card is a fixed 304px strip (see lib/layout.js) and a
+//: tile is 55px wide plus 8px of padding, so four and their three 6px gaps come
+//: to 270px — the content width once the card's own 17px padding is taken off.
+//: A fifth does not fit, and a single row of eight ran 300px past the card's
+//: right edge and out over the wallpaper on the first machine that had eight
+//: applications installed. Every earlier screenshot had four.
+const TILES_PER_ROW = 4;

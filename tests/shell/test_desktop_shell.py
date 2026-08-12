@@ -1687,6 +1687,75 @@ class PointerOwnershipTests(unittest.TestCase):
         self.assertIn("attemptsLeft -= 1", poller, "the bound has to be decremented")
 
 
+class QuickAccessLabelTests(unittest.TestCase):
+    """Five of eight launcher labels were unreadable on the booted desktop.
+
+    Photographed at 1920x1080:
+
+        Files      Terminal    Bunny       Bunny App…
+        Bunny Co…  Bunny Dia…  Bunny Lau…  Bunny Sett…
+
+    Four of the ellipsised four began "Bunny ", so the truncation removed
+    exactly the word that told them apart — and "Bunny Co…" is either Bunny
+    Command or Bunny Companion, both of which this image installs.
+
+    The tile is 55px by deliberate arithmetic, so the label had to get shorter
+    rather than the tile wider.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        module = (LIB / "format.js").as_uri()
+        cls.labels = run_node("\n".join([
+            f"import {{tileLabel}} from '{module}';",
+            "const names = ['Bunny Companion', 'Bunny Command', 'Bunny Settings',",
+            "  'Bunny Diagnostics', 'Bunny', 'Files', 'Terminal', 'Bunny ', ''];",
+            "console.log(JSON.stringify(Object.fromEntries(",
+            "  names.map(name => [name, tileLabel(name)]))));",
+        ]))
+
+    def test_the_distinguishing_word_survives(self) -> None:
+        self.assertEqual(self.labels["Bunny Companion"], "Companion")
+        self.assertEqual(self.labels["Bunny Command"], "Command")
+        self.assertNotEqual(
+            self.labels["Bunny Companion"], self.labels["Bunny Command"],
+            "the two names that collided when truncated still collide")
+
+    def test_no_label_is_left_empty(self) -> None:
+        """An application actually called "Bunny" must keep a name."""
+        self.assertEqual(self.labels["Bunny"], "Bunny")
+        self.assertEqual(self.labels["Bunny "], "Bunny")
+        for name, label in self.labels.items():
+            if name.strip():
+                with self.subTest(application=name):
+                    self.assertTrue(label, f"{name!r} would draw an empty tile")
+
+    def test_names_that_are_not_prefixed_are_untouched(self) -> None:
+        self.assertEqual(self.labels["Files"], "Files")
+        self.assertEqual(self.labels["Terminal"], "Terminal")
+
+    def test_every_shortened_label_fits_the_tile(self) -> None:
+        """55px at 9px type is about 11 characters before the ellipsis.
+
+        A bound rather than a rendering measurement: this cannot know the font,
+        so it checks the thing that was actually wrong — that the labels the
+        image ships are no longer long enough to lose their distinguishing word.
+        """
+        for name, label in self.labels.items():
+            if not name.strip():
+                continue
+            with self.subTest(application=name):
+                self.assertLessEqual(
+                    len(label), 12,
+                    f"{name!r} still draws {label!r}, which will ellipsise")
+
+    def test_the_full_name_is_what_a_screen_reader_gets(self) -> None:
+        """Drawn short, spoken in full. A screen reader has no width limit."""
+        card = (LIB / "cards/quickAccess.js").read_text(encoding="utf-8")
+        self.assertIn("label: tileLabel(app.get_name())", card)
+        self.assertIn("accessibleName: app.get_name()", card)
+
+
 class FailureIsolationTests(unittest.TestCase):
     """One widget's failure must not be every widget's failure.
 

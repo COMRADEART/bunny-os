@@ -31,6 +31,7 @@ import St from 'gi://St';
 
 import {Card} from './base.js';
 import {iconTile} from '../widgets.js';
+import {tileLabel} from '../format.js';
 
 /**
  * Preferred first, in this order, when the machine actually has them.
@@ -119,7 +120,8 @@ export class QuickAccess extends Card {
                 // something that is not installed.
                 gicon: app.get_icon(),
                 iconSize: 26,
-                label: app.get_name(),
+                // Drawn short, spoken in full. See tileLabel.
+                label: tileLabel(app.get_name()),
                 styleClass: 'bunny-quick-tile',
                 accessibleName: app.get_name(),
                 onActivate: () => app.activate(),
