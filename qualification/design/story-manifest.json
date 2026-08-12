@@ -1,0 +1,624 @@
+{
+ "schemaVersion": 1,
+ "approximate": true,
+ "note": "Structural facts of the story states. Not pixels: §36 forbids pixel equality as the pass condition. Regenerate with `node build/scripts/story.mjs`.",
+ "themes": [
+  {
+   "theme": "dark",
+   "textScale": 1,
+   "highContrast": false,
+   "cardWidth": 304,
+   "typeSizes": {
+    "display": 24,
+    "title": 19,
+    "heading": 14,
+    "body": 12,
+    "bodySmall": 11,
+    "caption": 10,
+    "button": 11,
+    "mono": 11
+   },
+   "panels": [
+    "Trust — the journey prompt",
+    "Trust — every field at its bound",
+    "Trust — hostile content",
+    "Task — working, with stages",
+    "Task — completed",
+    "Task — blocked",
+    "Task — failed",
+    "Result",
+    "Errors — all six kinds",
+    "Protected space",
+    "Companion — four modes"
+   ],
+   "trust": {
+    "identity": true,
+    "bodyLines": 2,
+    "confinementRows": [
+     "Files",
+     "Network",
+     "App data"
+    ],
+    "confinementStandings": [
+     "granted",
+     "blocked",
+     "granted"
+    ],
+    "detailRows": [
+     "Request",
+     "Operation",
+     "Task",
+     "Plan",
+     "Destination",
+     "Data"
+    ],
+    "buttons": [
+     "Allow this Bunny action",
+     "Deny this Bunny action"
+    ],
+    "initialFocus": "deny"
+   },
+   "longPromptBodyLines": 2,
+   "errorKinds": 6,
+   "resultActions": [
+    "open",
+    "reveal"
+   ],
+   "capsuleRows": [
+    "Files",
+    "Network",
+    "App data"
+   ],
+   "companionTruths": [
+    "Waiting for you. Bunny Image Tool wants to open Pictures/holiday.png"
+   ],
+   "companionModes": {
+    "full": {
+     "character": true,
+     "sizePx": 220
+    },
+    "compact": {
+     "character": true,
+     "sizePx": 128
+    },
+    "minimal": {
+     "character": true,
+     "sizePx": 48
+    },
+    "text-only": {
+     "character": false,
+     "sizePx": 0
+    }
+   }
+  },
+  {
+   "theme": "light",
+   "textScale": 1,
+   "highContrast": false,
+   "cardWidth": 304,
+   "typeSizes": {
+    "display": 24,
+    "title": 19,
+    "heading": 14,
+    "body": 12,
+    "bodySmall": 11,
+    "caption": 10,
+    "button": 11,
+    "mono": 11
+   },
+   "panels": [
+    "Trust — the journey prompt",
+    "Trust — every field at its bound",
+    "Trust — hostile content",
+    "Task — working, with stages",
+    "Task — completed",
+    "Task — blocked",
+    "Task — failed",
+    "Result",
+    "Errors — all six kinds",
+    "Protected space",
+    "Companion — four modes"
+   ],
+   "trust": {
+    "identity": true,
+    "bodyLines": 2,
+    "confinementRows": [
+     "Files",
+     "Network",
+     "App data"
+    ],
+    "confinementStandings": [
+     "granted",
+     "blocked",
+     "granted"
+    ],
+    "detailRows": [
+     "Request",
+     "Operation",
+     "Task",
+     "Plan",
+     "Destination",
+     "Data"
+    ],
+    "buttons": [
+     "Allow this Bunny action",
+     "Deny this Bunny action"
+    ],
+    "initialFocus": "deny"
+   },
+   "longPromptBodyLines": 2,
+   "errorKinds": 6,
+   "resultActions": [
+    "open",
+    "reveal"
+   ],
+   "capsuleRows": [
+    "Files",
+    "Network",
+    "App data"
+   ],
+   "companionTruths": [
+    "Waiting for you. Bunny Image Tool wants to open Pictures/holiday.png"
+   ],
+   "companionModes": {
+    "full": {
+     "character": true,
+     "sizePx": 220
+    },
+    "compact": {
+     "character": true,
+     "sizePx": 128
+    },
+    "minimal": {
+     "character": true,
+     "sizePx": 48
+    },
+    "text-only": {
+     "character": false,
+     "sizePx": 0
+    }
+   }
+  },
+  {
+   "theme": "dark @200%",
+   "textScale": 2,
+   "highContrast": false,
+   "cardWidth": 608,
+   "typeSizes": {
+    "display": 48,
+    "title": 38,
+    "heading": 28,
+    "body": 24,
+    "bodySmall": 22,
+    "caption": 20,
+    "button": 22,
+    "mono": 22
+   },
+   "panels": [
+    "Trust — the journey prompt",
+    "Trust — every field at its bound",
+    "Trust — hostile content",
+    "Task — working, with stages",
+    "Task — completed",
+    "Task — blocked",
+    "Task — failed",
+    "Result",
+    "Errors — all six kinds",
+    "Protected space",
+    "Companion — four modes"
+   ],
+   "trust": {
+    "identity": true,
+    "bodyLines": 2,
+    "confinementRows": [
+     "Files",
+     "Network",
+     "App data"
+    ],
+    "confinementStandings": [
+     "granted",
+     "blocked",
+     "granted"
+    ],
+    "detailRows": [
+     "Request",
+     "Operation",
+     "Task",
+     "Plan",
+     "Destination",
+     "Data"
+    ],
+    "buttons": [
+     "Allow this Bunny action",
+     "Deny this Bunny action"
+    ],
+    "initialFocus": "deny"
+   },
+   "longPromptBodyLines": 2,
+   "errorKinds": 6,
+   "resultActions": [
+    "open",
+    "reveal"
+   ],
+   "capsuleRows": [
+    "Files",
+    "Network",
+    "App data"
+   ],
+   "companionTruths": [
+    "Waiting for you. Bunny Image Tool wants to open Pictures/holiday.png"
+   ],
+   "companionModes": {
+    "full": {
+     "character": true,
+     "sizePx": 220
+    },
+    "compact": {
+     "character": true,
+     "sizePx": 128
+    },
+    "minimal": {
+     "character": true,
+     "sizePx": 48
+    },
+    "text-only": {
+     "character": false,
+     "sizePx": 0
+    }
+   }
+  },
+  {
+   "theme": "light @200%",
+   "textScale": 2,
+   "highContrast": false,
+   "cardWidth": 608,
+   "typeSizes": {
+    "display": 48,
+    "title": 38,
+    "heading": 28,
+    "body": 24,
+    "bodySmall": 22,
+    "caption": 20,
+    "button": 22,
+    "mono": 22
+   },
+   "panels": [
+    "Trust — the journey prompt",
+    "Trust — every field at its bound",
+    "Trust — hostile content",
+    "Task — working, with stages",
+    "Task — completed",
+    "Task — blocked",
+    "Task — failed",
+    "Result",
+    "Errors — all six kinds",
+    "Protected space",
+    "Companion — four modes"
+   ],
+   "trust": {
+    "identity": true,
+    "bodyLines": 2,
+    "confinementRows": [
+     "Files",
+     "Network",
+     "App data"
+    ],
+    "confinementStandings": [
+     "granted",
+     "blocked",
+     "granted"
+    ],
+    "detailRows": [
+     "Request",
+     "Operation",
+     "Task",
+     "Plan",
+     "Destination",
+     "Data"
+    ],
+    "buttons": [
+     "Allow this Bunny action",
+     "Deny this Bunny action"
+    ],
+    "initialFocus": "deny"
+   },
+   "longPromptBodyLines": 2,
+   "errorKinds": 6,
+   "resultActions": [
+    "open",
+    "reveal"
+   ],
+   "capsuleRows": [
+    "Files",
+    "Network",
+    "App data"
+   ],
+   "companionTruths": [
+    "Waiting for you. Bunny Image Tool wants to open Pictures/holiday.png"
+   ],
+   "companionModes": {
+    "full": {
+     "character": true,
+     "sizePx": 220
+    },
+    "compact": {
+     "character": true,
+     "sizePx": 128
+    },
+    "minimal": {
+     "character": true,
+     "sizePx": 48
+    },
+    "text-only": {
+     "character": false,
+     "sizePx": 0
+    }
+   }
+  },
+  {
+   "theme": "high contrast dark",
+   "textScale": 1,
+   "highContrast": true,
+   "cardWidth": 304,
+   "typeSizes": {
+    "display": 24,
+    "title": 19,
+    "heading": 14,
+    "body": 12,
+    "bodySmall": 11,
+    "caption": 10,
+    "button": 11,
+    "mono": 11
+   },
+   "panels": [
+    "Trust — the journey prompt",
+    "Trust — every field at its bound",
+    "Trust — hostile content",
+    "Task — working, with stages",
+    "Task — completed",
+    "Task — blocked",
+    "Task — failed",
+    "Result",
+    "Errors — all six kinds",
+    "Protected space",
+    "Companion — four modes"
+   ],
+   "trust": {
+    "identity": true,
+    "bodyLines": 2,
+    "confinementRows": [
+     "Files",
+     "Network",
+     "App data"
+    ],
+    "confinementStandings": [
+     "granted",
+     "blocked",
+     "granted"
+    ],
+    "detailRows": [
+     "Request",
+     "Operation",
+     "Task",
+     "Plan",
+     "Destination",
+     "Data"
+    ],
+    "buttons": [
+     "Allow this Bunny action",
+     "Deny this Bunny action"
+    ],
+    "initialFocus": "deny"
+   },
+   "longPromptBodyLines": 2,
+   "errorKinds": 6,
+   "resultActions": [
+    "open",
+    "reveal"
+   ],
+   "capsuleRows": [
+    "Files",
+    "Network",
+    "App data"
+   ],
+   "companionTruths": [
+    "Waiting for you. Bunny Image Tool wants to open Pictures/holiday.png"
+   ],
+   "companionModes": {
+    "full": {
+     "character": true,
+     "sizePx": 220
+    },
+    "compact": {
+     "character": true,
+     "sizePx": 128
+    },
+    "minimal": {
+     "character": true,
+     "sizePx": 48
+    },
+    "text-only": {
+     "character": false,
+     "sizePx": 0
+    }
+   }
+  },
+  {
+   "theme": "high contrast light",
+   "textScale": 1,
+   "highContrast": true,
+   "cardWidth": 304,
+   "typeSizes": {
+    "display": 24,
+    "title": 19,
+    "heading": 14,
+    "body": 12,
+    "bodySmall": 11,
+    "caption": 10,
+    "button": 11,
+    "mono": 11
+   },
+   "panels": [
+    "Trust — the journey prompt",
+    "Trust — every field at its bound",
+    "Trust — hostile content",
+    "Task — working, with stages",
+    "Task — completed",
+    "Task — blocked",
+    "Task — failed",
+    "Result",
+    "Errors — all six kinds",
+    "Protected space",
+    "Companion — four modes"
+   ],
+   "trust": {
+    "identity": true,
+    "bodyLines": 2,
+    "confinementRows": [
+     "Files",
+     "Network",
+     "App data"
+    ],
+    "confinementStandings": [
+     "granted",
+     "blocked",
+     "granted"
+    ],
+    "detailRows": [
+     "Request",
+     "Operation",
+     "Task",
+     "Plan",
+     "Destination",
+     "Data"
+    ],
+    "buttons": [
+     "Allow this Bunny action",
+     "Deny this Bunny action"
+    ],
+    "initialFocus": "deny"
+   },
+   "longPromptBodyLines": 2,
+   "errorKinds": 6,
+   "resultActions": [
+    "open",
+    "reveal"
+   ],
+   "capsuleRows": [
+    "Files",
+    "Network",
+    "App data"
+   ],
+   "companionTruths": [
+    "Waiting for you. Bunny Image Tool wants to open Pictures/holiday.png"
+   ],
+   "companionModes": {
+    "full": {
+     "character": true,
+     "sizePx": 220
+    },
+    "compact": {
+     "character": true,
+     "sizePx": 128
+    },
+    "minimal": {
+     "character": true,
+     "sizePx": 48
+    },
+    "text-only": {
+     "character": false,
+     "sizePx": 0
+    }
+   }
+  },
+  {
+   "theme": "dark, reduced motion",
+   "textScale": 1,
+   "highContrast": false,
+   "cardWidth": 304,
+   "typeSizes": {
+    "display": 24,
+    "title": 19,
+    "heading": 14,
+    "body": 12,
+    "bodySmall": 11,
+    "caption": 10,
+    "button": 11,
+    "mono": 11
+   },
+   "panels": [
+    "Trust — the journey prompt",
+    "Trust — every field at its bound",
+    "Trust — hostile content",
+    "Task — working, with stages",
+    "Task — completed",
+    "Task — blocked",
+    "Task — failed",
+    "Result",
+    "Errors — all six kinds",
+    "Protected space",
+    "Companion — four modes"
+   ],
+   "trust": {
+    "identity": true,
+    "bodyLines": 2,
+    "confinementRows": [
+     "Files",
+     "Network",
+     "App data"
+    ],
+    "confinementStandings": [
+     "granted",
+     "blocked",
+     "granted"
+    ],
+    "detailRows": [
+     "Request",
+     "Operation",
+     "Task",
+     "Plan",
+     "Destination",
+     "Data"
+    ],
+    "buttons": [
+     "Allow this Bunny action",
+     "Deny this Bunny action"
+    ],
+    "initialFocus": "deny"
+   },
+   "longPromptBodyLines": 2,
+   "errorKinds": 6,
+   "resultActions": [
+    "open",
+    "reveal"
+   ],
+   "capsuleRows": [
+    "Files",
+    "Network",
+    "App data"
+   ],
+   "companionTruths": [
+    "Waiting for you. Bunny Image Tool wants to open Pictures/holiday.png"
+   ],
+   "companionModes": {
+    "full": {
+     "character": true,
+     "sizePx": 220
+    },
+    "compact": {
+     "character": true,
+     "sizePx": 128
+    },
+    "minimal": {
+     "character": true,
+     "sizePx": 48
+    },
+    "text-only": {
+     "character": false,
+     "sizePx": 0
+    }
+   }
+  }
+ ],
+ "findings": []
+}

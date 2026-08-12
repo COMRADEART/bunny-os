@@ -28,7 +28,8 @@ def run_node(script: str) -> object:
         probe.write_text(script, encoding="utf-8")
         result = subprocess.run(
             [shutil.which("node"), str(probe)],
-            capture_output=True, text=True, check=False, cwd=str(ROOT))
+            capture_output=True, text=True, encoding="utf-8",
+            check=False, cwd=str(ROOT))
     if result.returncode != 0:
         raise AssertionError(f"node failed: {result.stderr.strip()}")
     return json.loads(result.stdout.strip().splitlines()[-1])

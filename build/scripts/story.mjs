@@ -483,35 +483,79 @@ ${HORIZONTAL.map(c => `.${c} { display: flex; flex-direction: row; align-items: 
 </style>
 `;
 
-const out = join(ROOT, 'build', 'out', 'story');
-mkdirSync(out, {recursive: true});
-writeFileSync(join(out, 'story.html'), html, 'utf8');
-writeFileSync(join(out, 'story.json'), `${JSON.stringify({
-    // Nothing downstream may promote this to a runtime result.
-    approximate: true,
-    note: 'Rendered from the real models and the real stylesheet, in a browser rather than in St. Structural only.',
-    themes: stories.map(story => ({
-        theme: story.theme,
-        textScale: story.resolved.textScale,
-        highContrast: story.resolved.highContrast,
-        cardWidth: story.resolved.metric.cardWidth,
-        type: story.resolved.type,
-        panels: story.panels.map(panel => panel.title),
-        trustFields: {
-            identity: Boolean(story.models.trust.identity),
-            bodyLines: story.models.trust.body.length,
-            confinementRows: story.models.trust.confinement.length,
-            detailRows: story.models.trust.details.length,
-            buttons: story.models.trust.buttons.map(b => b.accessibleName),
-        },
-        companionTruths: Object.fromEntries(
-            Object.entries(story.models.companions).map(([mode, m]) => [mode, m.announcement])),
-    })),
-    findings,
-}, null, 1)}\n`, 'utf8');
+/**
+ * The visual-regression manifest: the structural facts, and nothing that churns.
+ *
+ * §36 asks for enough to catch large unintended changes and is explicit that
+ * pixel equality must not be the pass condition. So this records *shape* — how
+ * many body lines the Trust prompt has, how many confinement rows, what the
+ * buttons are called, what size each type role is, whether the four Companion
+ * modes still agree — and records no CSS, no colours beyond the ones the checks
+ * already measure, and no rendered bytes.
+ *
+ * The distinction matters for whether the check survives being useful. A
+ * manifest containing the stylesheet would fail on every token change, and a
+ * check that fails on every change is one that gets regenerated without being
+ * read. This one fails when a *field disappears*, when a control loses its
+ * name, when a type role stops scaling, or when the modes start disagreeing —
+ * and those are the five things that went wrong.
+ */
+export function manifest() {
+    return {
+        schemaVersion: 1,
+        approximate: true,
+        note: 'Structural facts of the story states. Not pixels: §36 forbids pixel equality as the pass condition. Regenerate with `node build/scripts/story.mjs`.',
+        themes: stories.map(story => ({
+            theme: story.theme,
+            textScale: story.resolved.textScale,
+            highContrast: story.resolved.highContrast,
+            cardWidth: story.resolved.metric.cardWidth,
+            typeSizes: Object.fromEntries(
+                Object.entries(story.resolved.type).map(([role, spec]) => [role, spec.size])),
+            panels: story.panels.map(panel => panel.title),
+            trust: {
+                identity: Boolean(story.models.trust.identity),
+                bodyLines: story.models.trust.body.length,
+                confinementRows: story.models.trust.confinement.map(row => row.label),
+                confinementStandings: story.models.trust.confinement.map(row => row.standing),
+                detailRows: story.models.trust.details.map(row => row.label),
+                buttons: story.models.trust.buttons.map(button => button.accessibleName),
+                initialFocus: story.models.trust.initialFocus,
+            },
+            longPromptBodyLines: story.models.long.body.length,
+            errorKinds: 6,
+            resultActions: story.models.result.actions.map(action => action.id),
+            capsuleRows: story.models.capsule.rows.map(row => row.label),
+            // One entry, always: four modes that agree produce one announcement.
+            companionTruths: [...new Set(
+                Object.values(story.models.companions).map(model => model.announcement))],
+            companionModes: Object.fromEntries(
+                Object.entries(story.models.companions).map(
+                    ([mode, model]) => [mode, {character: model.parts.character, sizePx: model.parts.sizePx}])),
+        })),
+        findings,
+    };
+}
 
-process.stdout.write(`wrote ${join(out, 'story.html')}\n`);
-process.stdout.write(`wrote ${join(out, 'story.json')}\n`);
-process.stdout.write(findings.length === 0
-    ? `no structural findings across ${stories.length} themes\n`
-    : `${findings.length} finding(s):\n${findings.map(f => `  ${f.theme} · ${f.panel} · ${f.kind} · ${f.detail}`).join('\n')}\n`);
+// Only when run directly; tests/shell/test_story_harness.py imports `manifest`.
+if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+    const out = join(ROOT, 'build', 'out', 'story');
+    mkdirSync(out, {recursive: true});
+    const document = `${JSON.stringify(manifest(), null, 1)}\n`;
+    writeFileSync(join(out, 'story.html'), html, 'utf8');
+    writeFileSync(join(out, 'story.json'), document, 'utf8');
+
+    // The committed copy, written here rather than by a shell redirect: the
+    // redirect used the console codepage and turned every § into a replacement
+    // character, which the regression test then reported as a stale manifest.
+    const reference = join(ROOT, 'qualification', 'design', 'story-manifest.json');
+    mkdirSync(dirname(reference), {recursive: true});
+    writeFileSync(reference, document, 'utf8');
+
+    process.stdout.write(`wrote ${join(out, 'story.html')}\n`);
+    process.stdout.write(`wrote ${join(out, 'story.json')}\n`);
+    process.stdout.write(`wrote ${reference}\n`);
+    process.stdout.write(findings.length === 0
+        ? `no structural findings across ${stories.length} themes\n`
+        : `${findings.length} finding(s):\n${findings.map(f => `  ${f.theme} · ${f.panel} · ${f.kind} · ${f.detail}`).join('\n')}\n`);
+}
