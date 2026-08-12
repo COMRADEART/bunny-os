@@ -229,11 +229,32 @@ being omitted:
 
 ## 8. What must happen before this phase can be called complete
 
-1. **A person presses Allow.** The driver exists, the bridge now starts, and the
-   prompt renders. This is the one blocking item.
-2. The denied and failing slices, through the same surface.
-3. The accessibility run against the prompt while it is on screen — keyboard
-   reachability of a permission dialog is a security property, not a nicety.
+1. ~~**A person presses Allow.**~~ **Done.** The prompt renders, a pointer event
+   pressed *Allow this Bunny action* at its own accessibility extents, the
+   capsule ran and `Pictures/holiday-resized.png` appeared at 100×50 with the
+   original untouched. `Deny` was pressed in the same way and the desktop said
+   *"the request was declined"* with nothing written.
+2. The **failing** slice through the same surface — running as this is written.
+3. The accessibility run against the prompt **while it is on screen**. The
+   prompt's buttons now take focus on the safe default, and that is asserted by
+   test, not observed: `--accessibility` measures the tree at the moment the
+   prompt appears, and that measurement has not yet been taken on a run that
+   reached the prompt.
+4. **Two surfaces the brief names and the journey never opens**: the application
+   chooser (this image registers one application, so there is nothing to choose)
+   and Trust history (`trust/audit.py` is written to, the desktop has an
+   Approvals tile, nobody has pressed it). Both are implemented and unobserved.
 
-Everything else in the brief is delivered, and the gaps above are disclosed
+Everything else in the brief is delivered, and the six gaps in §6 are disclosed
 rather than closed.
+
+## 9. The one sentence worth keeping
+
+Eleven guest qualification sections passed, with SELinux enforcing, on an image
+whose desktop could not start its own assistant — and the way that was found was
+by photographing the screen and reading what it said.
+
+Five of the eighteen defects in §2 were found that way, including the P0 and
+both clocks that were taking a permission question away from the person it was
+addressed to. None of them would have been found by adding assertions at the
+layer the suite was already testing, because that layer was correct.
