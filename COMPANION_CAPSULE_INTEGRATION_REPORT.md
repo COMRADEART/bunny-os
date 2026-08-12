@@ -10,9 +10,14 @@ does not call the Capsule bridge."* The user-facing system and the security
 execution system were disconnected.
 
 **They are now connected**, and the connection has been exercised on a real
-kernel with SELinux enforcing. What is *not* yet established is that a person can
-answer the permission question on screen — and the phase status is therefore
-**INCOMPLETE** by §30 of the brief.
+kernel with SELinux enforcing — including the part §30 of the brief exists for:
+the permission question was **answered on screen**, by a pointer event pressing
+*Allow this Bunny action* at its own accessibility extents, after which the
+capsule ran and the file appeared. The graphical harness has no code path that
+can resolve an approval any other way.
+
+What remains for §30 is the **denied** and **failing** slices through the same
+surface; until those run, the phase is **INCOMPLETE**.
 
 ---
 
@@ -156,8 +161,9 @@ Rows are the phase's claims; columns are the repository's own five-state ladder
 | **The surface** |||||
 | Graphical session reaches readiness | ✅ | ✅ | ✅ VM | ❌ | ❌ |
 | The desktop can start its assistant | ✅ | ✅ | ✅ VM | ❌ | ❌ |
-| The Trust prompt renders | ✅ | ✅ | 🟡 observed | ❌ | ❌ |
-| **The prompt is answered by pressing it** | ✅ | ✅ | ❌ **not established** | ❌ | ❌ |
+| The Trust prompt renders | ✅ | ✅ | ✅ VM | ❌ | ❌ |
+| **The prompt is answered by pressing it** | ✅ | ✅ | **✅ VM** | ❌ | ❌ |
+| The task completes from that press, and the file appears | ✅ | ✅ | ✅ VM | ❌ | ❌ |
 | Visible sandbox state | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Accessibility: names, roles, focus, safe default | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Accessibility: the screen reader is present and starts | ✅ | ✅ | ✅ VM | ❌ | ❌ |
