@@ -1044,7 +1044,24 @@ ORCA_DEBUG = "/tmp/bunny-orca-debug.txt"
 #: failed one — see start_screen_reader for why this exists.
 ORCA_OUTPUT = "/tmp/bunny-orca-output.txt"
 
-_ORCA_SPEECH = re.compile(r"SPEECH OUTPUT:\s*'(.*)'\s*$")
+#: Orca's own record of an utterance.
+#:
+#: The marker was right from the start and the anchor was wrong. Orca's format
+#: strings are
+#:
+#:     f"SPEECH OUTPUT: '{text}' {acss}"
+#:     f"SPEECH OUTPUT: '{text}' {resolved_voice}"
+#:     f"SPEECH OUTPUT: '{context.utterance}'"
+#:
+#: so most lines end with a voice dictionary, and `'(.*)'\s*$` — which demanded
+#: the line stop at the closing quote — matched none of 1461 lines in a debug
+#: file that was full of them. Read out of
+#: /usr/lib/python3.14/site-packages/orca with grep, in seconds, after four runs
+#: of guessing.
+#:
+#: Greedy up to the last quote, because utterances contain apostrophes: this
+#: desktop says "Your original wasn't changed."
+_ORCA_SPEECH = re.compile(r"SPEECH OUTPUT:\s*'(.*)'(?:\s*\{.*)?\s*$")
 
 #: Where speech-dispatcher is told to write its log, and the line that carries
 #: an utterance.
@@ -1236,27 +1253,13 @@ def screen_reader_speech(user: str, environment: list[str], since: int = 0) -> d
     utterances: list[str] = []
     source = None
 
-    # speechd's log: one `set_...`/`speak` exchange per utterance, with the text.
-    listing = _run(["/bin/sh", "-c", f"cat {SPEECHD_LOG_DIR}/*.log 2>/dev/null"],
-                   user=user, timeout=30, limit=8_000_000)
-    speechd_text = str(listing.get("stdout", ""))
-    for match in _SPEECHD_SPEECH.finditer(speechd_text):
-        said = match.group(1).strip()
-        if said:
-            utterances.append(said)
-    if utterances:
-        source = "speech-dispatcher"
-    else:
-        for match in _SPEECHD_QUEUED.finditer(speechd_text):
-            said = match.group(1).strip()
-            if said:
-                utterances.append(said)
-        if utterances:
-            source = "speech-dispatcher-queue"
-
-    # Orca's own debug log, second. Kept because when it works it is the
-    # canonical record of what Orca decided to say, and because a run where the
-    # two disagree would be worth knowing about.
+    # Orca's own log first.
+    #
+    # It is the canonical record of what Orca *decided* to say, and once the
+    # session's own instance is killed first it is written: 1461 lines and
+    # 123 KB on the run that established that. speech-dispatcher is consulted
+    # after it, as corroboration and as the fallback for a build where Orca's
+    # debugging is unavailable.
     orca_read = _run(["/bin/sh", "-c",
                       f"cat {ORCA_DEBUG} /var/home/{user}/debug-*.out 2>/dev/null"],
                      user=user, timeout=30, limit=8_000_000)
@@ -1264,9 +1267,26 @@ def screen_reader_speech(user: str, environment: list[str], since: int = 0) -> d
                   for m in (_ORCA_SPEECH.search(line)
                             for line in str(orca_read.get("stdout", "")).splitlines())
                   if m and m.group(1).strip()]
-    if not utterances and orca_lines:
-        utterances = orca_lines
+    if orca_lines:
+        utterances = list(orca_lines)
         source = "orca-debug"
+
+    # speechd's log: one `set_...`/`speak` exchange per utterance, with the text.
+    listing = _run(["/bin/sh", "-c", f"cat {SPEECHD_LOG_DIR}/*.log 2>/dev/null"],
+                   user=user, timeout=30, limit=8_000_000)
+    speechd_text = str(listing.get("stdout", ""))
+    speechd_lines = [m.group(1).strip() for m in _SPEECHD_SPEECH.finditer(speechd_text)]
+    speechd_lines = [line for line in speechd_lines if line]
+    if not utterances and speechd_lines:
+        utterances = speechd_lines
+        source = "speech-dispatcher"
+    elif not utterances:
+        for match in _SPEECHD_QUEUED.finditer(speechd_text):
+            said = match.group(1).strip()
+            if said:
+                utterances.append(said)
+        if utterances:
+            source = "speech-dispatcher-queue"
 
     return {
         "ran": True,
@@ -1274,6 +1294,7 @@ def screen_reader_speech(user: str, environment: list[str], since: int = 0) -> d
         "source": source,
         "total": len(utterances),
         "orcaDebugUtterances": len(orca_lines),
+        "speechdUtterances": len(speechd_lines),
         "speechdLogBytes": len(speechd_text),
         # `since` lets a caller ask "what was said after I pressed that", which
         # is the only way to attribute an utterance to an action.
