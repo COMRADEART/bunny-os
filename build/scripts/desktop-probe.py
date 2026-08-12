@@ -397,6 +397,19 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 )
             elif verb == "result":
                 answer["result"] = desktop_interaction.journey_result(user, environment)
+            elif verb == "a11y-tree":
+                # Names, roles, focusability and actions for every interactive
+                # control. This is the tree a screen reader would read, asked
+                # for as a screen reader would get it.
+                answer["a11y"] = desktop_interaction.accessibility_tree(user, environment)
+            elif verb == "a11y-settings":
+                answer["settings"] = desktop_interaction.read_a11y_settings(user, environment)
+            elif verb == "a11y-set":
+                answer["set"] = desktop_interaction.set_a11y_setting(
+                    str(request.get("schema", "")), str(request.get("key", "")),
+                    str(request.get("value", "")), user, environment)
+            elif verb == "screen-reader":
+                answer["screenReader"] = desktop_interaction.screen_reader(user, environment)
             elif verb == "character":
                 # What the figure is doing and what the bubble says, both read out
                 # of the accessibility tree. This is how the host watches the state

@@ -20,6 +20,9 @@ the drift does not exist for this pair of languages.
 
 from __future__ import annotations
 
+import contextlib
+import importlib.machinery
+import io
 import json
 from pathlib import Path
 import re
@@ -27,6 +30,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 from tests.support import ROOT
@@ -669,6 +673,139 @@ class AssistantBridgeTests(unittest.TestCase):
             with self.subTest(module=path.relative_to(EXTENSION).as_posix()):
                 self.assertNotIn("bunny-companion/companion.sock", text)
                 self.assertNotIn("UnixSocketAddress", text)
+
+
+def _load_bridge():
+    """Import the bridge as a module, despite it having no ``.py`` suffix."""
+    import importlib.util
+
+    path = ROOT / "shell/services/bin/bunny-shell-assistant"
+    spec = importlib.util.spec_from_loader(
+        "bunny_shell_assistant",
+        importlib.machinery.SourceFileLoader("bunny_shell_assistant", str(path)),
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class ApprovalIsNotASlowAnswerTests(unittest.TestCase):
+    """A task waiting for permission must not be reported as a timeout.
+
+    The desktop showed *"the runtime did not finish within the deadline"* where a
+    permission question should have been. Nothing was broken in the runtime: the
+    task had reached ``waiting_for_approval`` and was waiting for a person, and
+    ``watch`` held one clock for both a slow answer and an unanswered question.
+
+    The test spends real time on purpose. A structural check — "the source
+    mentions ``waiting_since``" — would pass against an implementation that
+    tracked the value and never subtracted it, which is the failure this guards.
+    """
+
+    class _Runtime:
+        """A task that sits in ``waiting_for_approval`` and then completes."""
+
+        def __init__(self, asking_for: float) -> None:
+            self.asking_for = asking_for
+            self.started = time.monotonic()
+            self.revision = 0
+
+        def get_presentation_state(self, task_id: str) -> dict:
+            self.revision += 1
+            if time.monotonic() - self.started < self.asking_for:
+                return {
+                    "revision": self.revision,
+                    "state": {
+                        "phase": "waiting_for_approval",
+                        "statusText": "May I?",
+                        "approvalState": "pending",
+                        "approvals": [{
+                            "requestId": "approval:1",
+                            "decision": "pending",
+                            "action": "launch_application",
+                            "reason": "Bunny Image Tool wants to open a file.",
+                        }],
+                    },
+                }
+            return {
+                "revision": self.revision,
+                "state": {"phase": "success", "resultSummary": "Done."},
+            }
+
+    def _run_watch(self, runtime, budget: float) -> tuple[int, list[dict]]:
+        bridge = _load_bridge()
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = bridge.watch(runtime, "task-1",
+                                deadline=time.monotonic() + budget)
+        events = [json.loads(line) for line in buffer.getvalue().splitlines() if line.strip()]
+        return code, events
+
+    def test_a_question_on_screen_does_not_spend_the_deadline(self) -> None:
+        code, events = self._run_watch(self._Runtime(asking_for=1.2), budget=0.6)
+        reasons = [e.get("reason") for e in events if e.get("event") == "error"]
+        self.assertEqual(
+            [], reasons,
+            "a task waiting for permission was reported as a runtime timeout")
+        self.assertEqual(0, code)
+        self.assertEqual(
+            ["approval:1"],
+            [e["requestId"] for e in events if e.get("event") == "approval"],
+            "the question the person was waiting on was never emitted")
+        self.assertIn("finished", [e.get("event") for e in events])
+
+    def test_the_deadline_still_ends_a_task_that_hangs_without_asking(self) -> None:
+        """The clock is suspended, not removed.
+
+        Without this, the fix for the first test would be "never time out",
+        which would leave a genuinely stuck runtime spinning forever behind a
+        thinking animation.
+        """
+
+        class _Stuck:
+            revision = 0
+
+            def get_presentation_state(self, task_id: str) -> dict:
+                _Stuck.revision += 1
+                return {"revision": _Stuck.revision,
+                        "state": {"phase": "working", "statusText": "…"}}
+
+        code, events = self._run_watch(_Stuck(), budget=0.5)
+        self.assertEqual(5, code)
+        self.assertIn(
+            "the runtime did not finish within the deadline",
+            [e.get("reason") for e in events if e.get("event") == "error"])
+
+    def test_time_spent_asking_is_not_credited_back_as_runtime_budget(self) -> None:
+        """A task that stops waiting resumes the deadline it had left.
+
+        The wrong fix is to restart the clock when the answer arrives, which
+        hands a task a fresh full budget for every question it asks. Here the
+        runtime asks briefly and then hangs; the remaining budget is small, so
+        it must still time out.
+        """
+
+        class _AsksThenHangs:
+            def __init__(self) -> None:
+                self.started = time.monotonic()
+                self.revision = 0
+
+            def get_presentation_state(self, task_id: str) -> dict:
+                self.revision += 1
+                waiting = 0.3 < (time.monotonic() - self.started) < 0.9
+                if waiting:
+                    return {"revision": self.revision, "state": {
+                        "phase": "waiting_for_approval",
+                        "approvals": [{"requestId": "approval:2", "decision": "pending"}],
+                    }}
+                return {"revision": self.revision,
+                        "state": {"phase": "working", "statusText": "…"}}
+
+        code, events = self._run_watch(_AsksThenHangs(), budget=0.8)
+        self.assertEqual(5, code, "a hung task survived because it had asked a question")
+        self.assertIn(
+            "the runtime did not finish within the deadline",
+            [e.get("reason") for e in events if e.get("event") == "error"])
 
 
 # ===========================================================================

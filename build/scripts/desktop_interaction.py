@@ -599,6 +599,244 @@ def journey_result(user: str, environment: list[str]) -> dict:
     return _as_user_python(_RESULT_PROGRAM, [], user, environment)
 
 
+# --------------------------------------------------------------------------
+# Accessibility, asked of the running session
+#
+# Not "is the setting set". A settings echo proves the key exists, which nobody
+# doubted. Each measurement below is a property of what a person using assistive
+# technology would actually meet:
+#
+#   names       an unnamed button is unreadable to a screen reader, whatever it
+#               looks like. Counted by role, and the unnamed ones are listed so
+#               they can be fixed rather than totalled.
+#   keyboard    FOCUSABLE on the Trust prompt's buttons. A permission dialog
+#               that can only be answered with a pointer is a security surface
+#               that excludes people, and no amount of contrast fixes it.
+#   actions     the AT-SPI Action interface. A focusable button with no action
+#               can be reached and not pressed.
+#   motion      enable-animations and a11y reduced-motion, set and read back,
+#               *and* the consequence checked — see below.
+#   text        text-scaling-factor, with the prompt's own height measured
+#               before and after, because the setting changing is not the text
+#               changing.
+#
+# The motion and text checks each carry their own negative control: the value is
+# read at the default first, so "it is 0 because reduced motion is on" cannot be
+# confused with "it is 0 because nothing reports it".
+# --------------------------------------------------------------------------
+
+_A11Y_PROGRAM = r'''
+import json, sys
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
+
+Atspi.init()
+
+INTERACTIVE = {
+    "push button", "button", "toggle button", "check box", "radio button",
+    "menu item", "list item", "entry", "text", "combo box", "slider", "link",
+}
+
+def states(node):
+    try:
+        state = node.get_state_set()
+    except Exception:
+        return {}
+    out = {}
+    for name in ("FOCUSABLE", "FOCUSED", "SENSITIVE", "SHOWING", "VISIBLE", "ENABLED"):
+        try:
+            out[name.lower()] = state.contains(getattr(Atspi.StateType, name))
+        except Exception:
+            out[name.lower()] = None
+    return out
+
+def actions(node):
+    try:
+        iface = node.get_action_iface()
+        if iface is None:
+            return []
+        return [Atspi.Action.get_action_name(iface, i)
+                for i in range(Atspi.Action.get_n_actions(iface))]
+    except Exception:
+        return []
+
+def extents(node):
+    try:
+        component = node.get_component_iface()
+        if component is None:
+            return None
+        box = component.get_extents(Atspi.CoordType.SCREEN)
+        return {"x": box.x, "y": box.y, "width": box.width, "height": box.height}
+    except Exception:
+        return None
+
+rows = []
+
+def walk(node, depth, maximum, ancestors=()):
+    if depth > maximum:
+        return
+    try:
+        count = node.get_child_count()
+    except Exception:
+        return
+    for index in range(count):
+        try:
+            child = node.get_child_at_index(index)
+        except Exception:
+            continue
+        if child is None:
+            continue
+        try:
+            role = child.get_role_name()
+            name = child.get_name() or ""
+            description = child.get_description() or ""
+        except Exception:
+            continue
+        entry = {"role": role, "name": name, "description": description,
+                 "path": list(ancestors)}
+        if role in INTERACTIVE:
+            entry["states"] = states(child)
+            entry["actions"] = actions(child)
+            entry["extents"] = extents(child)
+        rows.append(entry)
+        walk(child, depth + 1, maximum, ancestors + (name,) if name else ancestors)
+
+desktop = Atspi.get_desktop(0)
+for index in range(desktop.get_child_count()):
+    application = desktop.get_child_at_index(index)
+    if application is None:
+        continue
+    if (application.get_name() or "") not in ("gnome-shell", "GNOME Shell", "mutter"):
+        continue
+    # Twelve, for the reason recorded above _ATSPI_PROGRAM: a deeper walk over
+    # this tree does not finish inside the call's timeout.
+    walk(application, 0, 12)
+
+interactive = [r for r in rows if r["role"] in INTERACTIVE]
+unnamed = [{"role": r["role"], "path": r["path"]} for r in interactive if not r["name"]]
+
+# The Trust prompt, by the names the shell gives its two buttons. Looked up by
+# name rather than by position: the point of the check is that the name exists.
+trust = {}
+for r in interactive:
+    if r["name"] in ("Allow this Bunny action", "Deny this Bunny action"):
+        trust[r["name"]] = {
+            "role": r["role"],
+            "states": r.get("states", {}),
+            "actions": r.get("actions", []),
+            "extents": r.get("extents"),
+            "description": r["description"],
+        }
+
+by_role = {}
+for r in interactive:
+    slot = by_role.setdefault(r["role"], {"total": 0, "named": 0})
+    slot["total"] += 1
+    if r["name"]:
+        slot["named"] += 1
+
+# A named sample with its screen rectangle, so the same control can be measured
+# before and after a text-scaling change. A preference that is stored and not
+# drawn leaves these heights identical, and that is the difference between the
+# desktop honouring a setting and merely remembering it.
+sample = {}
+for r in interactive:
+    box = r.get("extents")
+    if r["name"] and box and box.get("height"):
+        sample.setdefault(r["name"], {"role": r["role"],
+                                      "height": box["height"], "width": box["width"]})
+
+print(json.dumps({
+    "nodes": len(rows),
+    "interactive": len(interactive),
+    "named": len(interactive) - len(unnamed),
+    "unnamed": unnamed[:40],
+    "byRole": by_role,
+    "trustPrompt": trust,
+    "sample": dict(sorted(sample.items())[:60]),
+    "focusable": sum(1 for r in interactive if (r.get("states") or {}).get("focusable")),
+    "withActions": sum(1 for r in interactive if r.get("actions")),
+}))
+'''
+
+
+#: The settings an accessibility run reads and writes, as (schema, key).
+_A11Y_SETTINGS = (
+    ("org.gnome.desktop.interface", "enable-animations"),
+    ("org.gnome.desktop.interface", "text-scaling-factor"),
+    ("org.gnome.desktop.interface", "toolkit-accessibility"),
+    ("org.gnome.desktop.a11y.interface", "high-contrast"),
+    ("org.gnome.desktop.a11y.interface", "reduced-motion"),
+    ("org.gnome.desktop.a11y.interface", "show-status-shapes"),
+    ("org.gnome.desktop.a11y.applications", "screen-reader-enabled"),
+)
+
+
+def read_a11y_settings(user: str, environment: list[str]) -> dict:
+    """Every accessibility key this desktop claims to honour, as it stands."""
+    values: dict = {}
+    for schema, key in _A11Y_SETTINGS:
+        outcome = _run(["/usr/bin/env", *environment, "/usr/bin/gsettings",
+                        "get", schema, key], user=user, timeout=20)
+        values[f"{schema}.{key}"] = (
+            str(outcome.get("stdout", "")).strip()
+            if outcome.get("returncode") == 0 else None
+        )
+    return values
+
+
+def set_a11y_setting(schema: str, key: str, value: str,
+                     user: str, environment: list[str]) -> dict:
+    """Set one key and read it straight back, because `set` can succeed and not take."""
+    written = _run(["/usr/bin/env", *environment, "/usr/bin/gsettings",
+                    "set", schema, key, value], user=user, timeout=20)
+    read = _run(["/usr/bin/env", *environment, "/usr/bin/gsettings",
+                 "get", schema, key], user=user, timeout=20)
+    return {
+        "wrote": written.get("returncode") == 0,
+        "error": str(written.get("stderr", ""))[:200] or None,
+        "readBack": str(read.get("stdout", "")).strip(),
+    }
+
+
+def accessibility_tree(user: str, environment: list[str]) -> dict:
+    """Names, roles, focusability and actions for every interactive control."""
+    if not environment:
+        return {"ok": False, "error": "no user session environment"}
+    outcome = _run(
+        ["/usr/bin/env", *environment, "/usr/bin/python3", "-c", _A11Y_PROGRAM],
+        user=user, timeout=180, limit=4_000_000)
+    if not outcome.get("ran"):
+        return {"ok": False, "error": str(outcome.get("error"))[:300]}
+    if outcome.get("returncode") != 0:
+        return {"ok": False, "error": str(outcome.get("stderr", ""))[-300:]}
+    try:
+        return {"ok": True, **json.loads(str(outcome.get("stdout", "")).strip().splitlines()[-1])}
+    except (ValueError, IndexError) as error:
+        return {"ok": False, "error": f"{type(error).__name__}: {error}"}
+
+
+def screen_reader(user: str, environment: list[str]) -> dict:
+    """Whether the shipped screen reader is present and will start.
+
+    Deliberately modest. Starting Orca and capturing what it speaks needs an
+    audio path and a speech engine, and neither is qualified here. What this
+    answers is the pair of questions that must be true before that is even worth
+    attempting: is Orca in the image, and does it run far enough to report its
+    own version rather than dying on an import.
+    """
+    present = _run(["/usr/bin/test", "-x", "/usr/bin/orca"], user=user, timeout=10)
+    version = _run(["/usr/bin/env", *environment, "/usr/bin/orca", "--version"],
+                   user=user, timeout=30) if environment else {"ran": False}
+    return {
+        "installed": present.get("returncode") == 0,
+        "ranVersion": version.get("returncode") == 0,
+        "version": str(version.get("stdout", "")).strip()[:120] or None,
+        "error": str(version.get("stderr", ""))[:200] or None,
+    }
+
+
 
 def session_ready(user: str, environment: list[str], wait: float = 120.0) -> dict:
     """The product's own readiness probe, run as it ships.

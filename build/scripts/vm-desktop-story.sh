@@ -166,8 +166,13 @@ if [[ "${interact}" == "1" ]]; then
   echo "--- interaction (clicking the Bunny UI) ---"
   # The driver blocks until the guest's probe announces itself on the control
   # channel, so it is started after the screenshots rather than racing them.
+  a11y_flag=()
+  if [[ "${BUNNY_DESKTOP_ACCESSIBILITY:-0}" == "1" ]]; then
+    a11y_flag=(--accessibility)
+  fi
   if python3 build/scripts/desktop-drive.py \
       --journey "${BUNNY_DESKTOP_JOURNEY:-skip}" \
+      "${a11y_flag[@]}" \
       --qmp "${qmp}" --control "${control}" \
       --width "${width}" --height "${height}" \
       --screens "${work}/screens" \

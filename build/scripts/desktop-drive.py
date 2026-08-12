@@ -128,6 +128,9 @@ def main() -> int:
     #: answer from the runtime; the second must produce a desktop action.
     parser.add_argument("--ask", default="What files are in my Downloads folder?")
     parser.add_argument("--ask-action", default="Open Files")
+    parser.add_argument("--accessibility", action="store_true",
+                        help="measure the session against assistive technology: "
+                             "names, keyboard reach, reduced motion, text scaling, Orca")
     parser.add_argument("--journey", default="skip",
                         choices=("skip", "granted", "denied", "failing"),
                         help="drive the image journey through the shell's own Trust surface")
@@ -478,6 +481,21 @@ def interact(control, qmp, pointer, targets, arguments,
         step("journey-approval", visible=True, button=wanted,
              extents=button["extents"], role=button.get("role"), labels=labels[:6])
 
+        # The one moment the permission dialog is on screen is the only moment
+        # its accessibility can be measured. A prompt that can be seen but not
+        # reached from a keyboard is a security surface that excludes people,
+        # and it cannot be asked about before it exists or after it is gone.
+        if arguments.accessibility:
+            reached = control.ask({"command": "a11y-tree", "label": "journey-a11y"},
+                                  timeout=300)
+            outcome["approvalAccessibility"] = (reached or {}).get("a11y") or {}
+            prompt = outcome["approvalAccessibility"].get("trustPrompt") or {}
+            step("journey-approval-a11y",
+                 buttonsFound=sorted(prompt),
+                 focusable={k: (v.get("states") or {}).get("focusable")
+                            for k, v in prompt.items()},
+                 actions={k: v.get("actions") for k, v in prompt.items()})
+
         x, y = centre(button["extents"])
         pointer.click(x, y)
         step("journey-decision", pressed=wanted, at={"x": x, "y": y})
@@ -499,6 +517,113 @@ def interact(control, qmp, pointer, targets, arguments,
         decision = "denied" if arguments.journey == "denied" else "granted"
         fixture = "corrupt" if arguments.journey == "failing" else "real"
         report["journey"] = run_journey(decision, fixture)
+
+    # ---- accessibility ------------------------------------------------------
+    #
+    # Each preference is measured the same way: read the default, change it,
+    # read it back, and photograph the desktop under it. The read-back is not
+    # ceremony — `gsettings set` succeeds against a key the running shell never
+    # reads, and a report that recorded only the write would say the desktop
+    # honours a preference it ignores.
+    #
+    # The tree walk at the default is the negative control for the walks after.
+    # Without it, "0 unnamed controls" cannot be told from "the walk returned
+    # nothing", which is a failure this harness has produced before.
+    def run_accessibility() -> dict:
+        outcome: dict = {}
+        outcome["settingsBefore"] = (control.ask(
+            {"command": "a11y-settings", "label": "a11y-before"}, timeout=120
+        ) or {}).get("settings") or {}
+        step("a11y-settings", **outcome["settingsBefore"])
+
+        outcome["screenReader"] = (control.ask(
+            {"command": "screen-reader", "label": "a11y-orca"}, timeout=120
+        ) or {}).get("screenReader") or {}
+        step("a11y-screen-reader", **outcome["screenReader"])
+
+        baseline = (control.ask({"command": "a11y-tree", "label": "a11y-tree-default"},
+                                timeout=300) or {}).get("a11y") or {}
+        outcome["treeAtDefault"] = baseline
+        step("a11y-tree-default", ok=baseline.get("ok"),
+             nodes=baseline.get("nodes"), interactive=baseline.get("interactive"),
+             named=baseline.get("named"), unnamed=len(baseline.get("unnamed") or []),
+             focusable=baseline.get("focusable"), withActions=baseline.get("withActions"))
+        screenshot("a11y-01-default")
+
+        changes = []
+        for schema, key, value, shot in (
+            ("org.gnome.desktop.a11y.interface", "reduced-motion", "true", "a11y-02-reduced-motion"),
+            ("org.gnome.desktop.interface", "enable-animations", "false", None),
+            ("org.gnome.desktop.interface", "text-scaling-factor", "1.5", "a11y-03-large-text"),
+            ("org.gnome.desktop.a11y.interface", "high-contrast", "true", "a11y-04-high-contrast"),
+        ):
+            answer = control.ask({"command": "a11y-set", "schema": schema,
+                                  "key": key, "value": value,
+                                  "label": f"a11y-set-{key}"}, timeout=120)
+            record = (answer or {}).get("set") or {}
+            record.update({"schema": schema, "key": key, "asked": value})
+            record["tookEffect"] = record.get("readBack") == value
+            changes.append(record)
+            step(f"a11y-set-{key}", **record)
+            if shot:
+                time.sleep(2)
+                screenshot(shot)
+        outcome["changes"] = changes
+
+        under = (control.ask({"command": "a11y-tree", "label": "a11y-tree-adapted"},
+                             timeout=300) or {}).get("a11y") or {}
+        outcome["treeAdapted"] = under
+        step("a11y-tree-adapted", ok=under.get("ok"), nodes=under.get("nodes"),
+             interactive=under.get("interactive"), named=under.get("named"))
+
+        # Larger text should make controls taller. Comparing the *same named
+        # control* before and after is what distinguishes "the setting is
+        # stored" from "the desktop drew it differently"; a count of roles would
+        # not have moved either way.
+        before_sample = baseline.get("sample") or {}
+        after_sample = under.get("sample") or {}
+        grew, same, measured = [], [], 0
+        for name, before_box in before_sample.items():
+            after_box = after_sample.get(name)
+            if not after_box:
+                continue
+            measured += 1
+            if after_box["height"] > before_box["height"]:
+                grew.append({"name": name, "from": before_box["height"],
+                             "to": after_box["height"]})
+            elif after_box["height"] == before_box["height"]:
+                same.append(name)
+        outcome["textScaling"] = {
+            "controlsComparable": measured,
+            "grew": grew[:12],
+            "grewCount": len(grew),
+            "unchangedCount": len(same),
+            # Stated rather than concluded: with nothing comparable, this says
+            # nothing at all, and must not read as "the desktop ignored it".
+            "conclusive": measured > 0,
+        }
+        step("a11y-text-scaling", **{k: v for k, v in outcome["textScaling"].items()
+                                     if k != "grew"})
+
+        # Put it back, so a later stage of the same run is not measuring a
+        # desktop this stage left large and high-contrast.
+        restored = []
+        for schema, key, value in (
+            ("org.gnome.desktop.a11y.interface", "reduced-motion", "false"),
+            ("org.gnome.desktop.interface", "enable-animations", "true"),
+            ("org.gnome.desktop.interface", "text-scaling-factor", "1.0"),
+            ("org.gnome.desktop.a11y.interface", "high-contrast", "false"),
+        ):
+            answer = control.ask({"command": "a11y-set", "schema": schema, "key": key,
+                                  "value": value, "label": f"a11y-restore-{key}"},
+                                 timeout=120)
+            restored.append({"key": key, **((answer or {}).get("set") or {})})
+        outcome["restored"] = restored
+        screenshot("a11y-05-restored")
+        return outcome
+
+    if arguments.accessibility:
+        report["accessibility"] = run_accessibility()
 
     # The journey goes first.
     #
