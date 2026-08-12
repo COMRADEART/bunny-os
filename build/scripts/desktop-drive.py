@@ -467,6 +467,28 @@ def interact(control, qmp, pointer, targets, arguments,
                  atspiOk=(controls_now or {}).get("ok"))
             outcome["approvalVisible"] = False
             screenshot("journey-04-no-approval")
+
+            # There are two ways to have no approval on screen, and they need
+            # opposite fixes: the runtime never asked, or it asked and the
+            # desktop did not draw it. Everything above measures the screen, so
+            # this asks the runtime — which event did it write last, and does it
+            # believe there is a pending approval right now.
+            #
+            # Without this the next diagnosis is another guess, and this
+            # particular guess has already cost three cycles.
+            trace = control.ask({"command": "task-trace", "label": "journey-trace"},
+                                timeout=180)
+            outcome["taskTrace"] = (trace or {}).get("trace") or {}
+            unit = control.ask({"command": "companion-state", "label": "journey-companion"},
+                               timeout=180)
+            outcome["companionState"] = (unit or {}).get("companion") or {}
+            for task in (outcome["taskTrace"].get("tasks") or [])[-3:]:
+                step("journey-task-trace",
+                     taskId=task.get("taskId"), phase=task.get("phase"),
+                     status=task.get("status"), approvals=task.get("approvals"),
+                     eventCount=task.get("eventCount"),
+                     lastEvents=[e.get("type") for e in (task.get("events") or [])],
+                     errorSummary=task.get("errorSummary"))
             return outcome
 
         # The prompt is on screen. Photograph it before touching it.

@@ -817,6 +817,83 @@ def accessibility_tree(user: str, environment: list[str]) -> dict:
         return {"ok": False, "error": f"{type(error).__name__}: {error}"}
 
 
+_TASK_TRACE_PROGRAM = r'''
+"""The runtime's own account of the last task, asked of the runtime.
+
+A phase is a projection of an event stream. "Thinking…" for ever means the
+stream stopped, and the only useful question is which event was last written —
+which is a question the runtime can answer and a screenshot cannot.
+"""
+import json, os, sys
+sys.path.insert(0, "/usr/lib/bunny-os/python")
+from companion.protocol import CompanionClient
+
+socket_path = os.path.join(os.environ["XDG_RUNTIME_DIR"], "bunny-companion", "runtime.sock")
+client = CompanionClient(socket_path)
+sessions = client.list_sessions().get("sessions", [])
+out = {"sessions": len(sessions), "tasks": []}
+for session in sessions:
+    listed = client.list_tasks(session["sessionId"]).get("tasks", [])
+    for task in listed:
+        task_id = task.get("taskId")
+        events = client.get_events(task_id=task_id).get("events", [])
+        state = client.get_presentation_state(task_id).get("state", {})
+        out["tasks"].append({
+            "taskId": task_id,
+            "request": str(task.get("request", ""))[:80],
+            "status": task.get("status"),
+            "phase": state.get("phase"),
+            "statusText": state.get("statusText"),
+            "errorSummary": state.get("errorSummary"),
+            "approvals": len(state.get("approvals") or []),
+            "eventCount": len(events),
+            "events": [{"seq": e.get("sequence"), "type": e.get("type"),
+                        "summary": str(e.get("summary", ""))[:120]}
+                       for e in events[-14:]],
+        })
+print(json.dumps(out))
+'''
+
+
+def task_trace(user: str, environment: list[str]) -> dict:
+    """Every task the runtime knows about, and the last events of each."""
+    return _as_user_python(_TASK_TRACE_PROGRAM, [], user, environment)
+
+
+_COMPANION_STATE_PROGRAM = r'''
+"""What the Companion unit is doing, and what it last said."""
+import json, subprocess
+
+def run(argv):
+    try:
+        done = subprocess.run(argv, capture_output=True, text=True, timeout=30)
+        return {"rc": done.returncode, "out": done.stdout[-4000:], "err": done.stderr[-800:]}
+    except Exception as error:
+        return {"rc": None, "error": f"{type(error).__name__}: {error}"}
+
+print(json.dumps({
+    "unit": run(["systemctl", "--user", "show", "bunny-companion.service",
+                 "--property=ActiveState,SubState,NRestarts,ExecMainStatus,MainPID"]),
+    "journal": run(["journalctl", "--user", "-u", "bunny-companion.service",
+                    "-n", "60", "--no-pager", "-o", "cat"]),
+    "capsuleUnits": run(["systemctl", "--user", "list-units", "bunny-capsule-*",
+                         "--all", "--no-legend", "--no-pager"]),
+    # The shell's own complaints. `AssistantService` logs "could not be started"
+    # and "assistant unavailable" here, and those two sentences separate "the
+    # runtime never heard the request" from "the runtime heard it and stopped".
+    "shellLog": run(["journalctl", "--user", "--since", "-30m", "--no-pager", "-o", "cat",
+                     "-g", "bunny|assistant|companion"]),
+    # And whether the shipped bridge runs at all, as the shell would run it.
+    "bridgeHealth": run(["/usr/bin/bunny-shell-assistant", "health"]),
+}))
+'''
+
+
+def companion_state(user: str, environment: list[str]) -> dict:
+    """The unit's state and its recent log, from inside the session."""
+    return _as_user_python(_COMPANION_STATE_PROGRAM, [], user, environment)
+
+
 def screen_reader(user: str, environment: list[str]) -> dict:
     """Whether the shipped screen reader is present and will start.
 

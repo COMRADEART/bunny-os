@@ -255,16 +255,96 @@ export class DesktopShell {
         this.assistant = this._optional('assistant bridge', () => new AssistantService());
         this.voice = this._optional('voice bridge', () => new VoiceService());
 
-        this.assistant?.checkHealth((available, reason) => {
-            this._suggestions?.rebuild();
-            if (!available) {
-                this.characterState.setState('sleeping', {reason});
-                this._bubble?.say(
-                    'I am not connected to my runtime yet. Everything else on this desktop still works.',
-                    {tone: 'warning'});
-            }
-        });
+        this._watchAssistantAvailability();
         this._watchVoiceAvailability();
+    }
+
+    /**
+     * Ask whether the companion is reachable until it is, or until it is not.
+     *
+     * This asked *once*, and once is wrong for the reason written out under
+     * `_watchVoiceAvailability` below: GNOME Shell is the session, and
+     * `bunny-companion.service` is pulled in by `graphical-session.target`,
+     * which is reached after the shell is up. So the first check regularly runs
+     * before the companion has bound its socket.
+     *
+     * The consequence was photographed on a cold guest: with the desktop fully
+     * up and the readiness probe reporting `bunny-companion.service` active and
+     * its socket answering, the suggestion panel showed
+     * "⚠ Assistant offline — open Settings" and the character had been put to
+     * sleep. Every one of those statements was false by the time anyone could
+     * read them, and nothing would have corrected them for the life of the
+     * session.
+     *
+     * The retry is the same shape as voice's — the defect was found on voice,
+     * fixed on voice, and left in place here — so the two now share
+     * `_pollHealth` rather than the fix being carried across by hand a second
+     * time.
+     */
+    _watchAssistantAvailability() {
+        if (!this.assistant)
+            return;
+        // Not shown as offline while it is merely still starting. `available`
+        // is tri-state and the suggestion panel already treats `null` as
+        // "assume it works"; announcing a failure only after the attempts run
+        // out is what keeps a cold boot from lying.
+        this._assistantHealthTimer = this._pollHealth(this.assistant, (available, reason, settled) => {
+            this._suggestions?.rebuild();
+            if (available) {
+                log_('the companion runtime is reachable');
+                return;
+            }
+            if (!settled)
+                return;
+            this.characterState.setState('sleeping', {reason});
+            this._bubble?.say(
+                'I am not connected to my runtime yet. Everything else on this desktop still works.',
+                {tone: 'warning'});
+            log_(`assistant unavailable: ${reason}`);
+        });
+    }
+
+    /**
+     * Ask a service's `checkHealth` until it says yes, or the attempts run out.
+     *
+     * `report` is called after every attempt with `(available, reason, settled)`.
+     * `settled` is true only on the final attempt of a run that never succeeded,
+     * which is the only moment a caller may tell the user something is missing.
+     *
+     * @param {{checkHealth: Function}} service
+     * @param {Function} report
+     * @returns {object|null} the timer, so the caller can keep it for teardown
+     */
+    _pollHealth(service, report) {
+        //: Every two seconds for a minute. A cold companion on this image binds
+        //: its socket in under ten; a minute is the point past which "it is
+        //: still starting" stops being the likely explanation.
+        let attemptsLeft = 30;
+        let timer = null;
+        const stop = () => {
+            timer?.stop();
+            timer = null;
+        };
+        const ask = () => {
+            service.checkHealth((available, reason) => {
+                if (available) {
+                    stop();
+                    report(true, reason, true);
+                    return;
+                }
+                attemptsLeft -= 1;
+                report(false, reason, attemptsLeft <= 0);
+                if (attemptsLeft <= 0)
+                    stop();
+            });
+        };
+        ask();
+        timer = interval(2, () => {
+            if (this._destroyed || attemptsLeft <= 0)
+                return;
+            ask();
+        });
+        return timer;
     }
 
     /**
@@ -290,32 +370,14 @@ export class DesktopShell {
     _watchVoiceAvailability() {
         if (!this.voice)
             return;
-        //: Every two seconds for a minute. A cold companion on this image binds
-        //: its socket in under ten; a minute is the point past which "it is
-        //: still starting" stops being the likely explanation.
-        let attemptsLeft = 30;
-        const ask = () => {
-            this.voice.checkHealth((available, reason) => {
-                this._assistantPanel?.setVoiceAvailable(available, reason);
-                if (available) {
-                    this._voiceHealthTimer?.stop();
-                    this._voiceHealthTimer = null;
-                    log_('push-to-talk is available');
-                    return;
-                }
-                attemptsLeft -= 1;
-                if (attemptsLeft > 0)
-                    return;
-                this._voiceHealthTimer?.stop();
-                this._voiceHealthTimer = null;
-                log_(`push-to-talk unavailable: ${reason}`);
-            });
-        };
-        ask();
-        this._voiceHealthTimer = interval(2, () => {
-            if (this._destroyed || attemptsLeft <= 0)
+        this._voiceHealthTimer = this._pollHealth(this.voice, (available, reason, settled) => {
+            this._assistantPanel?.setVoiceAvailable(available, reason);
+            if (available) {
+                log_('push-to-talk is available');
                 return;
-            ask();
+            }
+            if (settled)
+                log_(`push-to-talk unavailable: ${reason}`);
         });
     }
 
@@ -1747,6 +1809,7 @@ export class DesktopShell {
             this._talkTimer?.stop();
             this._panelTimer?.stop();
             this._voiceHealthTimer?.stop();
+            this._assistantHealthTimer?.stop();
         });
 
         attempt('keybindings', () => {

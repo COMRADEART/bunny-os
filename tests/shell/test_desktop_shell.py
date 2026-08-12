@@ -1770,6 +1770,50 @@ class AssistantFlowTests(unittest.TestCase):
         start = shell.index(marker)
         return shell[start:start + 1600]
 
+    def test_availability_is_polled_rather_than_asked_once(self) -> None:
+        """A cold boot must not leave the desktop claiming the assistant is off.
+
+        Photographed on a booted guest: the suggestion panel read
+        "Assistant offline — open Settings" while the readiness probe reported
+        `bunny-companion.service` active and its socket answering. GNOME Shell
+        *is* the session; the companion is a user unit pulled in by
+        `graphical-session.target`, so the single startup check regularly runs
+        before the socket exists and nothing asked again.
+
+        Both consumers must go through the shared poller, because this exact
+        defect was found on voice, fixed on voice, and left in place for the
+        assistant sitting ten lines above it.
+        """
+        shell = module_text(self.SHELL)
+        self.assertIn("_pollHealth(service, report)", shell,
+                      "the shared health poller is gone; the two consumers will drift again")
+        for consumer in ("this.assistant", "this.voice"):
+            with self.subTest(consumer=consumer):
+                self.assertRegex(
+                    shell, rf"_pollHealth\({re.escape(consumer)},",
+                    f"{consumer} does not poll for availability")
+        # Asking once is the defect. The startup path must not call checkHealth
+        # directly any more.
+        direct = re.findall(r"this\.(assistant|voice)\?\.checkHealth\(", shell)
+        self.assertEqual([], direct,
+                         f"a consumer still asks once at startup: {direct}")
+
+    def test_offline_is_announced_only_after_the_attempts_run_out(self) -> None:
+        """"Still starting" and "not there" are different, and only one is news.
+
+        Announcing the first attempt's failure is what put the character to
+        sleep and printed a warning bubble on a desktop whose runtime came up
+        two seconds later.
+        """
+        shell = module_text(self.SHELL)
+        start = shell.index("_watchAssistantAvailability() {")
+        body = shell[start:shell.index("\n    }", start)]
+        self.assertIn("if (!settled)", body,
+                      "the assistant reports unavailability before the poll has settled")
+        self.assertLess(
+            body.index("if (!settled)"), body.index("setState('sleeping'"),
+            "the character is put to sleep before the poll has settled")
+
     def test_every_request_gets_an_identifier(self) -> None:
         text = module_text(self.SERVICE)
         self.assertIn("this._sequence += 1", text)

@@ -397,6 +397,13 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 )
             elif verb == "result":
                 answer["result"] = desktop_interaction.journey_result(user, environment)
+            elif verb == "task-trace":
+                # Which event was written last. "Thinking…" for ever is a
+                # stopped event stream, and the stream is the only thing that
+                # can say where it stopped.
+                answer["trace"] = desktop_interaction.task_trace(user, environment)
+            elif verb == "companion-state":
+                answer["companion"] = desktop_interaction.companion_state(user, environment)
             elif verb == "a11y-tree":
                 # Names, roles, focusability and actions for every interactive
                 # control. This is the tree a screen reader would read, asked
