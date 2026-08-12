@@ -19,7 +19,6 @@ import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
 
-import {Metric} from './tokens.js';
 import {
     Icons, NETWORK_ICONS, VOLUME_ICONS, batteryIcon, setIconName, themedIcon,
 } from './icons.js';
@@ -341,8 +340,3 @@ export class TopBar {
         return Clutter.EVENT_STOP;
     }
 }
-
-// Referenced so the token module is a declared dependency of the bar's sizing
-// even though the height itself is set in stylesheet.css. Keeps the two from
-// drifting silently: a change here that is not mirrored there fails review.
-export const TOP_BAR_HEIGHT = Metric.TOP_BAR_HEIGHT;

@@ -84,8 +84,10 @@ export function formatRate(bytesPerSecond) {
  * and "Bunny Co…" is either Bunny Command or Bunny Companion, both of which this
  * image installs.
  *
- * The tile is 55px by deliberate arithmetic (see TILES_PER_ROW), so widening it
- * is not available. Dropping the prefix inside a Bunny OS launcher costs no
+ * The tile is sized so that four fit across the card (see `tilesPerRow` in
+ * lib/layout.js), so widening it is not available at any text scale — the card
+ * grows with the type, and so does the tile, and the ratio does not move.
+ * Dropping the prefix inside a Bunny OS launcher costs no
  * space and no information: everything here is Bunny's. The *accessible* name
  * keeps the application's real name, because a screen reader has no width limit
  * and "Companion" alone is worse to hear than to read.
@@ -102,11 +104,3 @@ export function tileLabel(name) {
     const remainder = trimmed.slice('Bunny '.length).trim();
     return remainder || trimmed;
 }
-
-//: Tiles per row. The card is a fixed 304px strip (see lib/layout.js) and a
-//: tile is 55px wide plus 8px of padding, so four and their three 6px gaps come
-//: to 270px — the content width once the card's own 17px padding is taken off.
-//: A fifth does not fit, and a single row of eight ran 300px past the card's
-//: right edge and out over the wallpaper on the first machine that had eight
-//: applications installed. Every earlier screenshot had four.
-const TILES_PER_ROW = 4;

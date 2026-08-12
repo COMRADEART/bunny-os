@@ -18,7 +18,7 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import Shell from 'gi://Shell';
 
-import {Colour} from './tokens.js';
+import {currentTheme} from './design/current.js';
 import {resolveIconName} from './icons.js';
 import {logOnce, makeActivatable} from './util.js';
 
@@ -145,9 +145,17 @@ export class MetricRow {
     }
 }
 
-/** A thin horizontal bar, 0..1, or dimmed and empty when the value is null. */
+/**
+ * A thin horizontal bar, 0..1, or dimmed and empty when the value is null.
+ *
+ * Takes a colour *role* rather than a colour. The fill is an inline style —
+ * St has no way to express "this much of the width" in a stylesheet — so the
+ * value is re-read from the theme on every apply. A meter built once with a
+ * frozen colour is a meter that stays violet on a high-contrast desktop.
+ */
 export class Meter {
-    constructor({height = 6, colour = Colour.ACCENT} = {}) {
+    constructor({height = 6, role = 'accent'} = {}) {
+        this._role = role;
         this.actor = new St.Widget({
             style_class: 'bunny-meter',
             height,
@@ -156,7 +164,6 @@ export class Meter {
         });
         this._fill = new St.Widget({
             style_class: 'bunny-meter-fill',
-            style: `background-color: ${colour};`,
             x_align: Clutter.ActorAlign.START,
         });
         this.actor.add_child(this._fill);
@@ -170,6 +177,7 @@ export class Meter {
     }
 
     _apply() {
+        this._fill.style = `background-color: ${currentTheme().colour[this._role]};`;
         const width = this.actor.get_width();
         if (this._fraction === null) {
             this._fill.set_width(0);

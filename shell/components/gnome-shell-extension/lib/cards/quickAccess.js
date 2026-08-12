@@ -32,6 +32,8 @@ import St from 'gi://St';
 import {Card} from './base.js';
 import {iconTile} from '../widgets.js';
 import {tileLabel} from '../format.js';
+import {tilesPerRow} from '../layout.js';
+import {currentTheme} from '../design/current.js';
 
 /**
  * Preferred first, in this order, when the machine actually has them.
@@ -44,13 +46,26 @@ const PREFERRED = ['files', 'vscode', 'obs', 'blender', 'discord', 'spotify', 't
 
 const MAX_TILES = 8;
 
-//: Tiles per row. The card is a fixed 304px strip (see lib/layout.js) and a
-//: tile is 55px wide plus 8px of padding, so four and their three 6px gaps come
-//: to 270px — the content width once the card's own 17px padding is taken off.
-//: A fifth does not fit, and a single row of eight ran 300px past the card's
-//: right edge and out over the wallpaper on the first machine that had eight
-//: applications installed. Every earlier screenshot had four.
-const TILES_PER_ROW = 4;
+/**
+ * Tiles per row, computed from the theme rather than fixed at four.
+ *
+ * A single row of eight once ran 300px past the card's right edge and out over
+ * the wallpaper, on the first machine that had eight applications installed;
+ * the fix was the constant `TILES_PER_ROW = 4`, derived by hand from a 304px
+ * card and a 55px tile. Both of those numbers now move with the text scale, so
+ * the constant would have been wrong again at the first scaled desktop. The
+ * arithmetic lives in lib/layout.js where it can be measured.
+ */
+function tilesAcross() {
+    const theme = currentTheme();
+    return tilesPerRow({
+        cardWidth: theme.metric.cardWidth,
+        cardPadding: theme.space.md,
+        tileWidth: theme.metric.quickTileWidth,
+        tilePadding: theme.space.xs,
+        gap: theme.metric.quickTileGap,
+    });
+}
 
 export class QuickAccess extends Card {
     constructor({launcher, blur, onSeeAll}) {
@@ -67,8 +82,8 @@ export class QuickAccess extends Card {
             style_class: 'bunny-quick-grid',
             layout_manager: new Clutter.GridLayout({
                 orientation: Clutter.Orientation.HORIZONTAL,
-                column_spacing: 6,
-                row_spacing: 6,
+                column_spacing: currentTheme().metric.quickTileGap,
+                row_spacing: currentTheme().metric.quickTileGap,
             }),
         });
         this.content.add_child(this._grid);
@@ -113,19 +128,21 @@ export class QuickAccess extends Card {
         }
 
         const layout = this._grid.layout_manager;
+        const perRow = tilesAcross();
+        const iconSize = currentTheme().icon.large;
         for (const [position, app] of chosen.entries()) {
             layout.attach(iconTile({
                 // The application's own icon, always. There is no branch here
                 // that draws a placeholder, because there is no tile here for
                 // something that is not installed.
                 gicon: app.get_icon(),
-                iconSize: 26,
+                iconSize,
                 // Drawn short, spoken in full. See tileLabel.
                 label: tileLabel(app.get_name()),
                 styleClass: 'bunny-quick-tile',
                 accessibleName: app.get_name(),
                 onActivate: () => app.activate(),
-            }), position % TILES_PER_ROW, Math.floor(position / TILES_PER_ROW), 1, 1);
+            }), position % perRow, Math.floor(position / perRow), 1, 1);
         }
 
         // An empty card says so rather than being an unexplained blank. This is

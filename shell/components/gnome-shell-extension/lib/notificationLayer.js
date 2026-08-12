@@ -27,7 +27,7 @@ import St from 'gi://St';
 import {box, glass} from './widgets.js';
 import {ease, enter} from './animation.js';
 import {log_, makeActivatable, setAccessibleRole, timeout} from './util.js';
-import {Motion} from './tokens.js';
+import {MOTION} from './design/tokens.js';
 import {NOTIFICATION_ICONS, resolveIconName} from './icons.js';
 
 const DISMISS_AFTER_MS = {info: 4500, warning: 7000, error: 9000};
@@ -95,7 +95,7 @@ export class NotificationLayer {
         this._toasts[index].timer.stop();
         this._toasts.splice(index, 1);
         ease(toast, {opacity: 0, translation_y: -10}, {
-            ms: Motion.PANEL_MS,
+            ms: MOTION.normal,
             onComplete: () => toast.destroy(),
         });
     }

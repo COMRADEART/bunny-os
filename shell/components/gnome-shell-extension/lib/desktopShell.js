@@ -50,6 +50,8 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {solve, LEFT_COLUMN, RIGHT_COLUMN} from './layout.js';
+import {ThemeManager} from './themeManager.js';
+import {setCurrentTheme} from './design/current.js';
 import {box, glass} from './widgets.js';
 import {Icons, resolveIconName} from './icons.js';
 import {enter, ease} from './animation.js';
@@ -98,8 +100,9 @@ const TALKING_DWELL_MS = 6000;
 const TRANSIENT_STATES = new Set(['talking', 'success', 'error', 'warning']);
 
 export class DesktopShell {
-    constructor({settings}) {
+    constructor({settings, dir = null}) {
         this._settings = settings;
+        this._dir = dir;
         this._signals = [];
         this._destroyed = false;
         //: The request the desktop is currently showing. See `_owns`.
@@ -136,6 +139,11 @@ export class DesktopShell {
         // half-built object, so the cleanest guarantee is to tear down what
         // exists and let extension.js see the original error and fall back.
         try {
+            // First, and before any actor exists. Widgets that carry an inline
+            // style — the meters, the character's glow — read the resolved
+            // theme when they are built, so a theme that arrives after them is
+            // a theme half the desktop is not wearing.
+            this._buildTheme();
             this._buildServices();
             this._buildComponents();
             this._placeActors();
@@ -229,6 +237,44 @@ export class DesktopShell {
             this.degraded.push(what);
             return null;
         }
+    }
+
+    /**
+     * Start the design system, or carry on with the shipped stylesheet.
+     *
+     * Guarded rather than structural. If the theme manager cannot start —
+     * unwritable runtime directory, an St API that moved — the desktop still
+     * has `stylesheet.css`, which GNOME loaded when the extension enabled and
+     * which the manager only unloads once a generated sheet is in. That is a
+     * desktop in the default dark theme that does not follow the text scale: a
+     * real regression, named in `degraded` and reported, and not a black screen.
+     */
+    _buildTheme() {
+        this.themeManager = this._optional('the design system', () => new ThemeManager({
+            dir: this._dir,
+            onChanged: theme => {
+                setCurrentTheme(theme);
+                // Metrics changed, so the solver has to run again. Guarded
+                // because this fires from a settings signal, where a throw
+                // would land in GNOME's main loop rather than in the
+                // constructor's catch.
+                try {
+                    if (!this._destroyed && this._desktopLayer)
+                        this._relayout();
+                } catch (error) {
+                    logError_('the desktop could not be laid out for the new theme', error);
+                }
+            },
+        }));
+        if (this.themeManager?.theme)
+            setCurrentTheme(this.themeManager.theme);
+        for (const problem of this.themeManager?.degraded ?? [])
+            this.degraded.push(problem);
+    }
+
+    /** The resolved theme, or null if the design system did not start. */
+    get theme() {
+        return this.themeManager?.theme ?? null;
     }
 
     _buildServices() {
@@ -838,7 +884,9 @@ export class DesktopShell {
         track(Main.layoutManager, 'startup-complete', () => this._dismissOverviewOnce());
         this._dismissOverviewOnce();
 
-        track(St.Settings.get(), 'notify::enable-animations', () => this._relayout());
+        // The font name still matters — it is the family and the base size the
+        // stylesheet inherits — but it is no longer where the text scale comes
+        // from. The theme manager owns the scaling settings and calls back.
         track(St.Settings.get(), 'notify::font-name', () => this._relayout());
 
         this._installedChangedId = this.launcher.connectInstalledChanged(() => {
@@ -901,7 +949,10 @@ export class DesktopShell {
         // are no struts, and using the work area would leave the dock floating
         // above a band of wallpaper on a session that once had a panel.
         const screen = {width: monitor.width, height: monitor.height};
-        const solution = solve(screen, {scale: this._textScale()});
+        const solution = solve(screen, {
+            scale: this._textScale(),
+            metric: this.theme?.metric ?? null,
+        });
         this._solution = solution;
 
         this._desktopLayer.set_position(monitor.x, monitor.y);
@@ -968,15 +1019,21 @@ export class DesktopShell {
      *
      * Cards grow with their text, and a card that grows past the band has to be
      * dropped — so the scale is an input to the layout solver, not a detail of
-     * the stylesheet. GNOME states it as a point size in the font name; 11 is
-     * the Adwaita default and the ratio to it is the factor.
+     * the stylesheet.
+     *
+     * This used to parse the point size out of `St.Settings.font_name` and
+     * divide by 11. That reads a key `text-scaling-factor` does not touch:
+     * GNOME implements text scaling by setting Xft DPI for GTK clients and
+     * leaves `org.gnome.desktop.interface font-name` at "Cantarell 11" for
+     * every scale. So this returned 1.0 at 125 %, at 150 % and at 200 %, the
+     * solver was told nothing had changed, and the accessibility run measured a
+     * desktop that redrew itself identically and called it a failure to honour
+     * the setting. It was, but not for the reason the stylesheet suggested.
+     *
+     * The theme manager reads the setting that moves. This delegates to it.
      */
     _textScale() {
-        const match = /(\d+(?:\.\d+)?)\s*$/.exec(St.Settings.get().font_name ?? '');
-        if (match === null)
-            return 1;
-        const points = Number(match[1]);
-        return Number.isFinite(points) && points > 0 ? Math.max(1, points / 11) : 1;
+        return this.theme?.textScale ?? 1;
     }
 
     _placeBubbles(band) {
@@ -1844,6 +1901,13 @@ export class DesktopShell {
         });
 
         attempt('power menu', () => this._closePowerMenu());
+
+        // Before the actors go, so that the restyle St triggers when the
+        // generated sheet is unloaded lands on actors that still exist.
+        attempt('the design system', () => {
+            this.themeManager?.destroy();
+            this.themeManager = null;
+        });
 
         attempt('signals', () => {
             for (const [object, id] of this._signals ?? []) {

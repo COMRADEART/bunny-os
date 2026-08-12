@@ -110,6 +110,21 @@ class ApprovalRequest:
     #: What happens if nobody answers. Validated below: for a sensitive action
     #: this must be a denial.
     safe_default: str = "denied"
+    #: The structured facts a permission surface draws, when the requester has
+    #: them: application identity, the resource, the effect, what the confinement
+    #: will and will not allow.
+    #:
+    #: Display only, and deliberately so. It is *not* in the consent binding —
+    #: see :meth:`companion.presentation.ApprovalPresentation.binding` — because
+    #: binding a rendering would mean that rewording a sentence invalidates an
+    #: answer somebody already gave, while swapping the provider behind it might
+    #: not. The facts that authorise are the ones already above.
+    #:
+    #: Before this existed, the whole structure was flattened into three
+    #: sentences in ``reason``, and the surface that drew it had one string to
+    #: work with. `companion.capsule_task_bridge.CapsuleSupport.prompt_for`
+    #: built the structured form and had no caller at all.
+    prompt: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.safe_default not in ("denied", "granted"):
@@ -149,6 +164,7 @@ class ApprovalRequest:
             "expiresAtMonotonic": self.expires_at_monotonic,
             "alternatives": list(self.alternatives),
             "safeDefault": self.safe_default,
+            "prompt": dict(self.prompt),
         }
 
 

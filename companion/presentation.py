@@ -422,6 +422,15 @@ class ApprovalPresentation:
     alternatives: tuple[str, ...] = ()
     safe_default: str = "denied"
     decision: str = "pending"
+    #: The structured facts the permission surface draws: application identity,
+    #: resource, effect, and what the confinement does and does not allow.
+    #:
+    #: Display only, like :attr:`destination_detail` and for the same reason: it
+    #: is a rendering, and binding a rendering would mean that rewording a
+    #: sentence invalidates consent somebody already gave. Every value is
+    #: bounded and escaped by :func:`_prompt` before it gets here, because these
+    #: strings originate in an application's own manifest.
+    prompt: Mapping[str, str] = field(default_factory=dict)
 
     def binding(self) -> dict[str, Any]:
         """Exactly the fields a resolution must repeat back, and nothing else.
@@ -453,6 +462,7 @@ class ApprovalPresentation:
             "alternatives": list(self.alternatives),
             "safeDefault": self.safe_default,
             "decision": self.decision,
+            "prompt": dict(self.prompt),
         })
         return value
 
@@ -1121,6 +1131,52 @@ def _observation(payload: Mapping[str, Any], *, disagreement: bool) -> ReviewerP
     )
 
 
+#: The fields a permission surface may draw, and the length each is bounded to.
+#:
+#: An allowlist rather than "whatever the requester sent". These strings reach a
+#: security dialog and several of them originate in an application's own
+#: manifest — `applicationName` and the resource path are chosen by the thing
+#: asking for permission. A surface that rendered every key in the mapping would
+#: let a requester add a field, and a requester who can add a field to a
+#: permission prompt can add a sentence to it.
+#:
+#: The lengths are short on purpose. §48 asks that the prompt stay visually
+#: secure against hostile reason content, and the shape of that attack is a
+#: name long enough to push the buttons off screen or to look like a second
+#: sentence of the dialog's own copy.
+PROMPT_FIELDS: Mapping[str, int] = {
+    "kind": 32,
+    "applicationName": 64,
+    "applicationId": 96,
+    "operationId": 64,
+    "presentation": 200,
+    "expectedEffect": 200,
+    "disclosure": 160,
+    "fileAccess": 96,
+    "network": 32,
+    "privateAppData": 32,
+}
+
+
+def _prompt(payload: Any) -> dict[str, str]:
+    """The structured prompt, reduced to the fields a surface may draw.
+
+    Unknown keys are dropped rather than truncated, and every kept value goes
+    through :func:`_text`, so it is bounded and markup-free by the time it
+    leaves this module. A prompt that arrives as anything but a mapping becomes
+    an empty one: the surface then falls back to `reason`, which is the
+    behaviour every build before this had.
+    """
+    if not isinstance(payload, Mapping):
+        return {}
+    kept: dict[str, str] = {}
+    for field_name, limit in PROMPT_FIELDS.items():
+        value = payload.get(field_name)
+        if isinstance(value, str) and value.strip():
+            kept[field_name] = _text(value, limit=limit)
+    return kept
+
+
 def _approval(
     request: Mapping[str, Any],
     requirement: Mapping[str, Any],
@@ -1153,6 +1209,7 @@ def _approval(
             _text(item) for item in alternatives[:8]
         ) if isinstance(alternatives, list) else (),
         safe_default=str(request.get("safeDefault", "denied")),
+        prompt=_prompt(request.get("prompt")),
     )
 
 

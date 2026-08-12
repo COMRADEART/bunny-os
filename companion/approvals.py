@@ -187,6 +187,10 @@ class ApprovalRequirement:
     #: "remote" in front of a user for opening their own sound settings, which
     #: is the opposite of what the field is there to tell them.
     off_device: bool | None = None
+    #: The structured facts a permission surface draws, when the requester has
+    #: them. Display only; see :class:`capability.apply.approval.ApprovalRequest`
+    #: for why it is not part of the binding.
+    prompt: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.action not in SENSITIVE_ACTIONS:
@@ -589,6 +593,7 @@ def _request_from_json(document: Mapping[str, Any]) -> ApprovalRequest:
         expires_at_monotonic=float(document.get("expiresAtMonotonic", 0.0) or 0.0),
         alternatives=tuple(str(item) for item in document.get("alternatives", ())),
         safe_default=str(document.get("safeDefault", "denied")),
+        prompt=dict(document.get("prompt") or {}),
     )
 
 
@@ -737,6 +742,7 @@ class ApprovalGate:
             expires_at_monotonic=now + self.ttl_seconds,
             alternatives=requirement.alternatives,
             safe_default="denied",
+            prompt=requirement.prompt,
         )
         reference = ApprovalReference(
             request_id=request_id,

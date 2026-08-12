@@ -23,11 +23,11 @@ import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
 
-import {Rgb} from '../tokens.js';
+import {rgb} from '../design/current.js';
 import {box, glass} from '../widgets.js';
 import {ease, animationsEnabled} from '../animation.js';
 import {clamp, logError_, setAccessibleRole} from '../util.js';
-import {Motion} from '../tokens.js';
+import {MOTION} from '../design/tokens.js';
 
 const MAX_WIDTH = 360;
 const MIN_WIDTH = 200;
@@ -136,7 +136,7 @@ export class AssistantBubble {
         if (!this.actor.visible)
             return;
         ease(this.actor, {opacity: 0, translation_y: 8}, {
-            ms: Motion.BUBBLE_MS,
+            ms: MOTION.normal,
             onComplete: () => {
                 this.actor.visible = false;
             },
@@ -196,7 +196,7 @@ export class AssistantBubble {
         this.actor.visible = true;
         this.actor.opacity = 0;
         this.actor.translation_y = 10;
-        ease(this.actor, {opacity: 255, translation_y: 0}, {ms: Motion.BUBBLE_MS});
+        ease(this.actor, {opacity: 255, translation_y: 0}, {ms: MOTION.normal});
     }
 
     _setWave(enabled) {
@@ -229,7 +229,7 @@ export class AssistantBubble {
             const barWidth = 4;
             const gap = 5;
             const total = bars * barWidth + (bars - 1) * gap;
-            const [r, g, b] = Rgb.ACCENT_BRIGHT;
+            const [r, g, b] = rgb('accentText');
             cr.setSourceRGBA(r, g, b, 0.9);
             cr.setLineCap(Cairo.LineCap.ROUND);
             cr.setLineWidth(barWidth);
