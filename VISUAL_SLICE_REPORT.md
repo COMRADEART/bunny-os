@@ -4,9 +4,10 @@
 permission, answers on screen, and gets a file — driven through the shell's own
 Trust surface in a booted guest, plus its denied and failing variants.
 
-**Status** The permission question has now been **answered on screen** — the
-prompt rendered, a pointer event pressed *Allow this Bunny action* at its own
-screen coordinates, and nothing called `resolve_approval`. Getting there took
+**Status** All three slices — **granted, denied and failing** — now run through
+the graphical Trust surface with the permission question **answered on screen**
+by a pointer press at the button's own accessibility extents. Nothing calls
+`resolve_approval`; the harness has no code path that could. Getting there took
 four defects, three of which were found by looking at a photograph of the
 desktop.
 
@@ -55,6 +56,24 @@ desktop said:
 > the request was declined
 
 Nothing was written. A refusal that a person made, on screen.
+
+**failing** — the same prompt, *Allow* pressed, and a corrupt image behind it.
+The person permitted the work; the work could not be done. The desktop said, in
+three steps:
+
+> Resize this to 100 pixels wide.
+> I could not do that.
+> **the task failed**
+
+and put the character into a state that cannot be mistaken for the other two: a
+red ground glow, an alert mark beside the head, and a worried pose, against the
+upright resting pose of success. This is the row §10 of the brief was written
+for — *"a failed operation must never produce a completed task"* — arriving on a
+person's screen in words they did not have to be technical to read.
+
+None of the three slices weakened the boundary to get there: the capsule still
+ran with `--unshare-net`, still read one granted file, and still wrote only into
+its own exports directory.
 
 ### 2.1.1 Two things the brief asks for that the slice does not show
 
@@ -321,7 +340,7 @@ possibilities cost three cycles.
 | The Trust prompt renders on screen | **VM runtime validated** |
 | **The prompt is answered by pressing it — granted** | **VM runtime validated** |
 | **The prompt is answered by pressing it — denied** | **VM runtime validated** |
-| The prompt is answered by pressing it — failing | *running as this is written* |
+| **The prompt is answered by pressing it — failing** | **VM runtime validated** |
 | The prompt's buttons take focus on the safe default | **Tested**; not measured while on screen |
 | An application chooser | **Not applicable yet** — one application is registered |
 | Trust history reached by a person | **Not established** |
