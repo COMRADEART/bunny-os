@@ -467,15 +467,17 @@ measured on this guest") and it is not closed here.
 | AT-SPI | unchanged | yes | partial — 1745 nodes, 551 interactive, 40 unnamed | no | no |
 | Screen reader | unchanged | no | no — Orca present, never driven | no | no |
 | Reduced motion | yes | yes | setting takes; effect not photographable | no | no |
-| Companion full | unchanged | yes | yes | no | no |
-| Companion compact | unchanged | yes | no | no | no |
-| Companion minimal | not built | no | no | no | no |
-| Companion text-only | unchanged | yes | no | no | no |
+| Companion full | yes | yes | yes | no | no |
+| Companion compact | yes | yes | no | no | no |
+| Companion minimal | yes | yes | no | no | no |
+| Companion text-only | yes | yes | no | no | no |
 | Trust component | yes | yes | **yes** — all §18 elements drawn | no | no |
-| Task component | model only | yes | no | no | no |
-| Result component | model only | yes | no | no | no |
-| Error component | model only | yes | no | no | no |
-| Protected-space component | model only | yes | no | no | no |
+| Task component | model + story | yes | no | no | no |
+| Result component | model + story | yes | no | no | no |
+| Error component | model + story | yes | no | no | no |
+| Protected-space component | model + story | yes | no | no | no |
+| Story harness | yes | yes | n/a | n/a | no |
+| Visual regression | yes | yes | n/a | n/a | no |
 
 Two rows are worth reading carefully. **Light mode has never been rendered on a
 guest** — it is generated, contrast-checked and unit-tested, and no screenshot of
@@ -483,9 +485,10 @@ it exists, so it sits in exactly the position the evergreen palette sat in befor
 this phase. And **40 interactive controls in the accessibility tree are unnamed**,
 which is a §30 result this phase measured and did not improve.
 
-"model only" is the honest state for §20–§23: the projections exist and are
-tested, the CSS for them is in the generated stylesheet, and nothing draws them
-yet.
+"model + story" is the honest state for §20–§23: the projections exist, are
+tested, and are rendered by the story harness in all seven themes — and the
+*desktop* still does not draw them. The harness proves the model and the styles
+compose; it does not put them on anyone's screen.
 
 ---
 
@@ -493,17 +496,17 @@ yet.
 
 Stated so that the matrix above is not read as a plan.
 
-- **The task, result, error and protected-space components are not drawn.** Their
-  models and styles exist; the desktop still shows its own status strings.
-- **The Companion's four presentation modes were not refactored.** §16 asked for
-  Full / Compact / Minimal / Text-only projecting one task state; the fidelity
-  ladder that exists today is `companionPresence.js`, unchanged by this phase.
-- **There is no story or component harness.** §37's fast visual development loop
-  is not built, so every visual check still costs a boot.
-- **There is no visual-regression manifest.** §36.
-- **No performance comparison was taken.** §41 asks for Companion idle CPU and
-  memory, desktop memory, frame behaviour under llvmpipe and Trust-dialog latency
-  before and after; none of those numbers exists for the new theme path.
+- **The task, result, error and protected-space components are not drawn by the
+  desktop.** Their models and styles exist and the story harness renders them in
+  all seven themes; the desktop still shows its own status strings.
+- **The Companion's four modes are a projection, not yet a rendered surface.**
+  `lib/companionModes.js` builds Full / Compact / Minimal / Text-only from one
+  task projection and the tests prove all four agree, but neither the desktop's
+  character viewport nor `companion/gtk_shell.py` consumes it yet.
+- **Frame behaviour under llvmpipe is still not measured.** §41 names it and the
+  performance probe does not answer it: GNOME Shell exposes no frame counter
+  outside Looking Glass, and inventing one would be a number about the
+  instrument. Idle CPU, memory and theme-change latency are measured.
 - **Nothing was seen on hardware.** Every desktop measurement in this project is
   llvmpipe.
 - **The Companion still reads high contrast from Bunny's own settings file.**
