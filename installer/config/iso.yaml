@@ -1,18 +1,36 @@
+# The volume label image-builder gives the ISO, derived from the payload ref.
+# Every entry below searches for it, so the two must agree exactly.
 label: "Bunny-OS-Beta"
+
+# ## Why these are LiveOS arguments and not `inst.stage2=`
+#
+# The first boot of this medium dropped to a dracut emergency shell:
+# "Failed to start initrd-switch-root.service". The entries said
+# `inst.stage2=hd:LABEL=Bunny-OS-Beta`, which is correct for an Anaconda
+# boot.iso — and this is not one. image-builder produces a **LiveOS** ISO:
+# /LiveOS/squashfs.img, and an initrd at /images/pxeboot/initrd.img with no
+# anaconda-dracut in it at all (`lsinitrd | grep -c anaconda` = 0).
+#
+# So `inst.stage2` was not failing. It was being ignored, because nothing in
+# that initrd reads it. With no root to switch to, switch-root failed and the
+# medium never reached a session — which is why every entry here had never
+# booted past the GRUB menu.
+#
+# `root=live:CDLABEL=<label> rd.live.image` is what a LiveOS initrd reads.
 grub2:
   entries:
     - name: "Try or Install Bunny OS"
-      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Bunny-OS-Beta inst.webui console=tty0 rhgb quiet"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image console=tty0 rhgb quiet"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Safe Graphics"
-      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Bunny-OS-Beta inst.webui console=tty0 nomodeset rd.driver.blacklist=nouveau quiet"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image console=tty0 nomodeset rd.driver.blacklist=nouveau quiet"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Recovery Tools"
-      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Bunny-OS-Beta systemd.unit=bunny-recovery.target console=tty0"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image systemd.unit=bunny-recovery.target console=tty0"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Verify Installation Media"
-      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Bunny-OS-Beta rd.live.check inst.webui console=tty0"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image rd.live.check console=tty0"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Try or Install Bunny OS (serial console)"
-      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Bunny-OS-Beta inst.webui console=tty0 console=ttyS0,115200n8"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image console=tty0 console=ttyS0,115200n8"
       initrd: "/images/pxeboot/initrd.img"
