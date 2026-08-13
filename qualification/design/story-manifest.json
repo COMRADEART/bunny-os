@@ -89,7 +89,598 @@
      "character": false,
      "sizePx": 0
     }
-   }
+   },
+   "setup": [
+    {
+     "title": "welcome",
+     "key": "welcome",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [],
+     "warningLevels": [],
+     "actions": [
+      "Get started",
+      "Accessibility",
+      "Installation details, for advanced users"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 123,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "language_region",
+     "key": "language_region",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:language",
+      "choice:region",
+      "choice:timezone",
+      "info:detected"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 133,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "keyboard",
+     "key": "keyboard",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:layout",
+      "text:test"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 187,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility — all on",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "network",
+     "key": "network",
+     "authority": "companion",
+     "companion": "working",
+     "fields": [
+      "info:status",
+      "choice:network",
+      "secret:password"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue without network",
+      "Connect"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 221,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 265,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage — long names, existing OS",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "caution",
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 325,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase QEMU HARDDISK — 80.0 GiB — /dev/vda and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 205,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase — existing Windows",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1 and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 297,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "encryption",
+     "key": "encryption",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "toggle:enabled",
+      "secret:passphrase",
+      "secret:passphraseAgain",
+      "info:recoveryKey"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": "enter-passphrase-twice",
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 117,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account — validation errors",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [
+      "caution",
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 211,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "privacy",
+     "key": "privacy",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "toggle:diagnostics",
+      "toggle:crashReports",
+      "toggle:feedback",
+      "toggle:location",
+      "toggle:microphone",
+      "toggle:camera",
+      "toggle:onlineAI",
+      "toggle:remoteProcessing"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "appearance",
+     "key": "appearance",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:scheme",
+      "choice:accent",
+      "choice:wallpaper"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 145,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "companion_behaviour",
+     "key": "companion_behaviour",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "choice:mode",
+      "toggle:voice",
+      "toggle:captions",
+      "toggle:atLogin"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 228,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "applications",
+     "key": "applications",
+     "authority": "companion",
+     "companion": "planning",
+     "fields": [
+      "multi-choice:activities",
+      "multi-choice:applications",
+      "info:permissions"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Skip apps",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 348,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing QEMU HARDDISK — 80.0 GiB — /dev/vda"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 613,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review — long",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10",
+      "info:row-11"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 754,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:active",
+      "security:waiting",
+      "user:waiting",
+      "capsules:waiting",
+      "preferences:waiting",
+      "finalise:waiting"
+     ],
+     "announcementChars": 105,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing — last stage",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:done",
+      "security:done",
+      "user:done",
+      "capsules:done",
+      "preferences:done",
+      "finalise:active"
+     ],
+     "announcementChars": 68,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — before any write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 218,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — after a write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 329,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "complete",
+     "key": "complete",
+     "authority": "companion",
+     "companion": "success",
+     "fields": [
+      "info:next"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Restart",
+      "Installation details"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 162,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 176,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot — long name",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 208,
+     "dangerAnnounced": true
+    }
+   ]
   },
   {
    "theme": "light",
@@ -177,7 +768,598 @@
      "character": false,
      "sizePx": 0
     }
-   }
+   },
+   "setup": [
+    {
+     "title": "welcome",
+     "key": "welcome",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [],
+     "warningLevels": [],
+     "actions": [
+      "Get started",
+      "Accessibility",
+      "Installation details, for advanced users"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 123,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "language_region",
+     "key": "language_region",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:language",
+      "choice:region",
+      "choice:timezone",
+      "info:detected"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 133,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "keyboard",
+     "key": "keyboard",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:layout",
+      "text:test"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 187,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility — all on",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "network",
+     "key": "network",
+     "authority": "companion",
+     "companion": "working",
+     "fields": [
+      "info:status",
+      "choice:network",
+      "secret:password"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue without network",
+      "Connect"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 221,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 265,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage — long names, existing OS",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "caution",
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 325,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase QEMU HARDDISK — 80.0 GiB — /dev/vda and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 205,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase — existing Windows",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1 and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 297,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "encryption",
+     "key": "encryption",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "toggle:enabled",
+      "secret:passphrase",
+      "secret:passphraseAgain",
+      "info:recoveryKey"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": "enter-passphrase-twice",
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 117,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account — validation errors",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [
+      "caution",
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 211,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "privacy",
+     "key": "privacy",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "toggle:diagnostics",
+      "toggle:crashReports",
+      "toggle:feedback",
+      "toggle:location",
+      "toggle:microphone",
+      "toggle:camera",
+      "toggle:onlineAI",
+      "toggle:remoteProcessing"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "appearance",
+     "key": "appearance",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:scheme",
+      "choice:accent",
+      "choice:wallpaper"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 145,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "companion_behaviour",
+     "key": "companion_behaviour",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "choice:mode",
+      "toggle:voice",
+      "toggle:captions",
+      "toggle:atLogin"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 228,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "applications",
+     "key": "applications",
+     "authority": "companion",
+     "companion": "planning",
+     "fields": [
+      "multi-choice:activities",
+      "multi-choice:applications",
+      "info:permissions"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Skip apps",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 348,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing QEMU HARDDISK — 80.0 GiB — /dev/vda"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 613,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review — long",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10",
+      "info:row-11"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 754,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:active",
+      "security:waiting",
+      "user:waiting",
+      "capsules:waiting",
+      "preferences:waiting",
+      "finalise:waiting"
+     ],
+     "announcementChars": 105,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing — last stage",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:done",
+      "security:done",
+      "user:done",
+      "capsules:done",
+      "preferences:done",
+      "finalise:active"
+     ],
+     "announcementChars": 68,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — before any write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 218,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — after a write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 329,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "complete",
+     "key": "complete",
+     "authority": "companion",
+     "companion": "success",
+     "fields": [
+      "info:next"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Restart",
+      "Installation details"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 162,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 176,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot — long name",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 208,
+     "dangerAnnounced": true
+    }
+   ]
   },
   {
    "theme": "dark @200%",
@@ -265,7 +1447,598 @@
      "character": false,
      "sizePx": 0
     }
-   }
+   },
+   "setup": [
+    {
+     "title": "welcome",
+     "key": "welcome",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [],
+     "warningLevels": [],
+     "actions": [
+      "Get started",
+      "Accessibility",
+      "Installation details, for advanced users"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 123,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "language_region",
+     "key": "language_region",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:language",
+      "choice:region",
+      "choice:timezone",
+      "info:detected"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 133,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "keyboard",
+     "key": "keyboard",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:layout",
+      "text:test"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 187,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility — all on",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "network",
+     "key": "network",
+     "authority": "companion",
+     "companion": "working",
+     "fields": [
+      "info:status",
+      "choice:network",
+      "secret:password"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue without network",
+      "Connect"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 221,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 265,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage — long names, existing OS",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "caution",
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 325,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase QEMU HARDDISK — 80.0 GiB — /dev/vda and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 205,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase — existing Windows",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1 and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 297,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "encryption",
+     "key": "encryption",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "toggle:enabled",
+      "secret:passphrase",
+      "secret:passphraseAgain",
+      "info:recoveryKey"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": "enter-passphrase-twice",
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 117,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account — validation errors",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [
+      "caution",
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 211,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "privacy",
+     "key": "privacy",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "toggle:diagnostics",
+      "toggle:crashReports",
+      "toggle:feedback",
+      "toggle:location",
+      "toggle:microphone",
+      "toggle:camera",
+      "toggle:onlineAI",
+      "toggle:remoteProcessing"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "appearance",
+     "key": "appearance",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:scheme",
+      "choice:accent",
+      "choice:wallpaper"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 145,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "companion_behaviour",
+     "key": "companion_behaviour",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "choice:mode",
+      "toggle:voice",
+      "toggle:captions",
+      "toggle:atLogin"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 228,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "applications",
+     "key": "applications",
+     "authority": "companion",
+     "companion": "planning",
+     "fields": [
+      "multi-choice:activities",
+      "multi-choice:applications",
+      "info:permissions"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Skip apps",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 348,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing QEMU HARDDISK — 80.0 GiB — /dev/vda"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 613,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review — long",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10",
+      "info:row-11"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 754,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:active",
+      "security:waiting",
+      "user:waiting",
+      "capsules:waiting",
+      "preferences:waiting",
+      "finalise:waiting"
+     ],
+     "announcementChars": 105,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing — last stage",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:done",
+      "security:done",
+      "user:done",
+      "capsules:done",
+      "preferences:done",
+      "finalise:active"
+     ],
+     "announcementChars": 68,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — before any write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 218,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — after a write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 329,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "complete",
+     "key": "complete",
+     "authority": "companion",
+     "companion": "success",
+     "fields": [
+      "info:next"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Restart",
+      "Installation details"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 162,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 176,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot — long name",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 208,
+     "dangerAnnounced": true
+    }
+   ]
   },
   {
    "theme": "light @200%",
@@ -353,7 +2126,598 @@
      "character": false,
      "sizePx": 0
     }
-   }
+   },
+   "setup": [
+    {
+     "title": "welcome",
+     "key": "welcome",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [],
+     "warningLevels": [],
+     "actions": [
+      "Get started",
+      "Accessibility",
+      "Installation details, for advanced users"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 123,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "language_region",
+     "key": "language_region",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:language",
+      "choice:region",
+      "choice:timezone",
+      "info:detected"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 133,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "keyboard",
+     "key": "keyboard",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:layout",
+      "text:test"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 187,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility — all on",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "network",
+     "key": "network",
+     "authority": "companion",
+     "companion": "working",
+     "fields": [
+      "info:status",
+      "choice:network",
+      "secret:password"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue without network",
+      "Connect"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 221,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 265,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage — long names, existing OS",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "caution",
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 325,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase QEMU HARDDISK — 80.0 GiB — /dev/vda and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 205,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase — existing Windows",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1 and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 297,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "encryption",
+     "key": "encryption",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "toggle:enabled",
+      "secret:passphrase",
+      "secret:passphraseAgain",
+      "info:recoveryKey"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": "enter-passphrase-twice",
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 117,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account — validation errors",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [
+      "caution",
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 211,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "privacy",
+     "key": "privacy",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "toggle:diagnostics",
+      "toggle:crashReports",
+      "toggle:feedback",
+      "toggle:location",
+      "toggle:microphone",
+      "toggle:camera",
+      "toggle:onlineAI",
+      "toggle:remoteProcessing"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "appearance",
+     "key": "appearance",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:scheme",
+      "choice:accent",
+      "choice:wallpaper"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 145,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "companion_behaviour",
+     "key": "companion_behaviour",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "choice:mode",
+      "toggle:voice",
+      "toggle:captions",
+      "toggle:atLogin"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 228,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "applications",
+     "key": "applications",
+     "authority": "companion",
+     "companion": "planning",
+     "fields": [
+      "multi-choice:activities",
+      "multi-choice:applications",
+      "info:permissions"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Skip apps",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 348,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing QEMU HARDDISK — 80.0 GiB — /dev/vda"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 613,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review — long",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10",
+      "info:row-11"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 754,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:active",
+      "security:waiting",
+      "user:waiting",
+      "capsules:waiting",
+      "preferences:waiting",
+      "finalise:waiting"
+     ],
+     "announcementChars": 105,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing — last stage",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:done",
+      "security:done",
+      "user:done",
+      "capsules:done",
+      "preferences:done",
+      "finalise:active"
+     ],
+     "announcementChars": 68,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — before any write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 218,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — after a write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 329,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "complete",
+     "key": "complete",
+     "authority": "companion",
+     "companion": "success",
+     "fields": [
+      "info:next"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Restart",
+      "Installation details"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 162,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 176,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot — long name",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 208,
+     "dangerAnnounced": true
+    }
+   ]
   },
   {
    "theme": "high contrast dark",
@@ -441,7 +2805,598 @@
      "character": false,
      "sizePx": 0
     }
-   }
+   },
+   "setup": [
+    {
+     "title": "welcome",
+     "key": "welcome",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [],
+     "warningLevels": [],
+     "actions": [
+      "Get started",
+      "Accessibility",
+      "Installation details, for advanced users"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 123,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "language_region",
+     "key": "language_region",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:language",
+      "choice:region",
+      "choice:timezone",
+      "info:detected"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 133,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "keyboard",
+     "key": "keyboard",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:layout",
+      "text:test"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 187,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility — all on",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "network",
+     "key": "network",
+     "authority": "companion",
+     "companion": "working",
+     "fields": [
+      "info:status",
+      "choice:network",
+      "secret:password"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue without network",
+      "Connect"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 221,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 265,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage — long names, existing OS",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "caution",
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 325,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase QEMU HARDDISK — 80.0 GiB — /dev/vda and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 205,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase — existing Windows",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1 and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 297,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "encryption",
+     "key": "encryption",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "toggle:enabled",
+      "secret:passphrase",
+      "secret:passphraseAgain",
+      "info:recoveryKey"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": "enter-passphrase-twice",
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 117,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account — validation errors",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [
+      "caution",
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 211,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "privacy",
+     "key": "privacy",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "toggle:diagnostics",
+      "toggle:crashReports",
+      "toggle:feedback",
+      "toggle:location",
+      "toggle:microphone",
+      "toggle:camera",
+      "toggle:onlineAI",
+      "toggle:remoteProcessing"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "appearance",
+     "key": "appearance",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:scheme",
+      "choice:accent",
+      "choice:wallpaper"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 145,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "companion_behaviour",
+     "key": "companion_behaviour",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "choice:mode",
+      "toggle:voice",
+      "toggle:captions",
+      "toggle:atLogin"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 228,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "applications",
+     "key": "applications",
+     "authority": "companion",
+     "companion": "planning",
+     "fields": [
+      "multi-choice:activities",
+      "multi-choice:applications",
+      "info:permissions"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Skip apps",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 348,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing QEMU HARDDISK — 80.0 GiB — /dev/vda"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 613,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review — long",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10",
+      "info:row-11"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 754,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:active",
+      "security:waiting",
+      "user:waiting",
+      "capsules:waiting",
+      "preferences:waiting",
+      "finalise:waiting"
+     ],
+     "announcementChars": 105,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing — last stage",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:done",
+      "security:done",
+      "user:done",
+      "capsules:done",
+      "preferences:done",
+      "finalise:active"
+     ],
+     "announcementChars": 68,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — before any write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 218,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — after a write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 329,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "complete",
+     "key": "complete",
+     "authority": "companion",
+     "companion": "success",
+     "fields": [
+      "info:next"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Restart",
+      "Installation details"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 162,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 176,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot — long name",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 208,
+     "dangerAnnounced": true
+    }
+   ]
   },
   {
    "theme": "high contrast light",
@@ -529,7 +3484,598 @@
      "character": false,
      "sizePx": 0
     }
-   }
+   },
+   "setup": [
+    {
+     "title": "welcome",
+     "key": "welcome",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [],
+     "warningLevels": [],
+     "actions": [
+      "Get started",
+      "Accessibility",
+      "Installation details, for advanced users"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 123,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "language_region",
+     "key": "language_region",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:language",
+      "choice:region",
+      "choice:timezone",
+      "info:detected"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 133,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "keyboard",
+     "key": "keyboard",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:layout",
+      "text:test"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 187,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility — all on",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "network",
+     "key": "network",
+     "authority": "companion",
+     "companion": "working",
+     "fields": [
+      "info:status",
+      "choice:network",
+      "secret:password"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue without network",
+      "Connect"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 221,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 265,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage — long names, existing OS",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "caution",
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 325,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase QEMU HARDDISK — 80.0 GiB — /dev/vda and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 205,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase — existing Windows",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1 and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 297,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "encryption",
+     "key": "encryption",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "toggle:enabled",
+      "secret:passphrase",
+      "secret:passphraseAgain",
+      "info:recoveryKey"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": "enter-passphrase-twice",
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 117,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account — validation errors",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [
+      "caution",
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 211,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "privacy",
+     "key": "privacy",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "toggle:diagnostics",
+      "toggle:crashReports",
+      "toggle:feedback",
+      "toggle:location",
+      "toggle:microphone",
+      "toggle:camera",
+      "toggle:onlineAI",
+      "toggle:remoteProcessing"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "appearance",
+     "key": "appearance",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:scheme",
+      "choice:accent",
+      "choice:wallpaper"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 145,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "companion_behaviour",
+     "key": "companion_behaviour",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "choice:mode",
+      "toggle:voice",
+      "toggle:captions",
+      "toggle:atLogin"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 228,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "applications",
+     "key": "applications",
+     "authority": "companion",
+     "companion": "planning",
+     "fields": [
+      "multi-choice:activities",
+      "multi-choice:applications",
+      "info:permissions"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Skip apps",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 348,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing QEMU HARDDISK — 80.0 GiB — /dev/vda"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 613,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review — long",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10",
+      "info:row-11"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 754,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:active",
+      "security:waiting",
+      "user:waiting",
+      "capsules:waiting",
+      "preferences:waiting",
+      "finalise:waiting"
+     ],
+     "announcementChars": 105,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing — last stage",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:done",
+      "security:done",
+      "user:done",
+      "capsules:done",
+      "preferences:done",
+      "finalise:active"
+     ],
+     "announcementChars": 68,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — before any write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 218,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — after a write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 329,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "complete",
+     "key": "complete",
+     "authority": "companion",
+     "companion": "success",
+     "fields": [
+      "info:next"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Restart",
+      "Installation details"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 162,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 176,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot — long name",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 208,
+     "dangerAnnounced": true
+    }
+   ]
   },
   {
    "theme": "dark, reduced motion",
@@ -617,7 +4163,598 @@
      "character": false,
      "sizePx": 0
     }
-   }
+   },
+   "setup": [
+    {
+     "title": "welcome",
+     "key": "welcome",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [],
+     "warningLevels": [],
+     "actions": [
+      "Get started",
+      "Accessibility",
+      "Installation details, for advanced users"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 123,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "language_region",
+     "key": "language_region",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:language",
+      "choice:region",
+      "choice:timezone",
+      "info:detected"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 133,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "keyboard",
+     "key": "keyboard",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:layout",
+      "text:test"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 187,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "accessibility — all on",
+     "key": "accessibility",
+     "authority": "companion",
+     "companion": "listening",
+     "fields": [
+      "choice:textScale",
+      "toggle:highContrast",
+      "toggle:reducedMotion",
+      "toggle:screenReader",
+      "toggle:captions",
+      "toggle:companionTextOnly"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 262,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "network",
+     "key": "network",
+     "authority": "companion",
+     "companion": "working",
+     "fields": [
+      "info:status",
+      "choice:network",
+      "secret:password"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue without network",
+      "Connect"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 221,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 265,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "storage — long names, existing OS",
+     "key": "storage",
+     "authority": "installer",
+     "companion": "planning",
+     "fields": [
+      "choice:targetDisk"
+     ],
+     "warningLevels": [
+      "caution",
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Review what happens"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 325,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase QEMU HARDDISK — 80.0 GiB — /dev/vda and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 205,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "confirm_erase — existing Windows",
+     "key": "confirm_erase",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "info:disk",
+      "info:action",
+      "info:existing",
+      "info:encryption",
+      "text:phrase"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Erase Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1 and install Bunny OS"
+     ],
+     "confirmation": "type-the-disk-name",
+     "progressStages": [],
+     "announcementChars": 297,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "encryption",
+     "key": "encryption",
+     "authority": "user",
+     "companion": "waiting_for_approval",
+     "fields": [
+      "toggle:enabled",
+      "secret:passphrase",
+      "secret:passphraseAgain",
+      "info:recoveryKey"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": "enter-passphrase-twice",
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 117,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "account — validation errors",
+     "key": "account",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "text:displayName",
+      "text:username",
+      "secret:password",
+      "secret:passwordAgain",
+      "text:deviceName"
+     ],
+     "warningLevels": [
+      "caution",
+      "caution"
+     ],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 211,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "privacy",
+     "key": "privacy",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "toggle:diagnostics",
+      "toggle:crashReports",
+      "toggle:feedback",
+      "toggle:location",
+      "toggle:microphone",
+      "toggle:camera",
+      "toggle:onlineAI",
+      "toggle:remoteProcessing"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 319,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "appearance",
+     "key": "appearance",
+     "authority": "companion",
+     "companion": "understanding",
+     "fields": [
+      "choice:scheme",
+      "choice:accent",
+      "choice:wallpaper"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 145,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "companion_behaviour",
+     "key": "companion_behaviour",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "choice:mode",
+      "toggle:voice",
+      "toggle:captions",
+      "toggle:atLogin"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 228,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "applications",
+     "key": "applications",
+     "authority": "companion",
+     "companion": "planning",
+     "fields": [
+      "multi-choice:activities",
+      "multi-choice:applications",
+      "info:permissions"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Back",
+      "Skip apps",
+      "Continue"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 348,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing QEMU HARDDISK — 80.0 GiB — /dev/vda"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 613,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "review — long",
+     "key": "review",
+     "authority": "companion",
+     "companion": "reviewing",
+     "fields": [
+      "info:row-0",
+      "info:row-1",
+      "info:row-2",
+      "info:row-3",
+      "info:row-4",
+      "info:row-5",
+      "info:row-6",
+      "info:row-7",
+      "info:row-8",
+      "info:row-9",
+      "info:row-10",
+      "info:row-11"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Back",
+      "Install Bunny OS, erasing Samsung SSD 990 PRO with Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 754,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:active",
+      "security:waiting",
+      "user:waiting",
+      "capsules:waiting",
+      "preferences:waiting",
+      "finalise:waiting"
+     ],
+     "announcementChars": 105,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "installing — last stage",
+     "key": "install",
+     "authority": "installer",
+     "companion": "working",
+     "fields": [
+      "info:currentStage",
+      "info:detail"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Cancel the installation"
+     ],
+     "confirmation": null,
+     "progressStages": [
+      "prepare:done",
+      "copy:done",
+      "security:done",
+      "user:done",
+      "capsules:done",
+      "preferences:done",
+      "finalise:active"
+     ],
+     "announcementChars": 68,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — before any write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "caution"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 218,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "failure — after a write",
+     "key": "failure",
+     "authority": "installer",
+     "companion": "error",
+     "fields": [
+      "info:headline",
+      "info:explanation",
+      "info:stage",
+      "info:diskState",
+      "info:diagnostics"
+     ],
+     "warningLevels": [
+      "danger"
+     ],
+     "actions": [
+      "Try again",
+      "Show details",
+      "Shut down"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 329,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "complete",
+     "key": "complete",
+     "authority": "companion",
+     "companion": "success",
+     "fields": [
+      "info:next"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Restart",
+      "Installation details"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 162,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 176,
+     "dangerAnnounced": true
+    },
+    {
+     "title": "first_boot — long name",
+     "key": "first_boot",
+     "authority": "companion",
+     "companion": "idle",
+     "fields": [
+      "info:summary"
+     ],
+     "warningLevels": [],
+     "actions": [
+      "Show me around",
+      "Start using Bunny OS"
+     ],
+     "confirmation": null,
+     "progressStages": [],
+     "announcementChars": 208,
+     "dangerAnnounced": true
+    }
+   ]
   }
  ],
  "findings": []

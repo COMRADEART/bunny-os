@@ -41,7 +41,7 @@
 // runs, and `story.json` records `approximate: true` so nothing downstream can
 // quietly promote it.
 
-import {mkdirSync, writeFileSync} from 'node:fs';
+import {mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
@@ -57,6 +57,30 @@ const contrast = await load('design/contrast.js');
 const {buildApproval} = await load('trustPrompt.js');
 const {buildTaskStatus, buildResult, buildError, buildProtectedSpace} = await load('taskState.js');
 const {everyMode, COMPANION_STATES, PHASE_TO_COMPANION} = await load('companionModes.js');
+
+/**
+ * The setup screens, generated from the real Python builders.
+ *
+ * §35 asks that every installer state be renderable without a VM boot, and the
+ * screens are decided in Python because the authorities they read are Python:
+ * `installer.storage.safety` decides what is dangerous, `catalog.selection`
+ * decides what an application costs. Re-implementing them here would be the
+ * second copy of the erase sentence that `installer/companion_flow.py` opens by
+ * warning against, so this reads what that code produced.
+ *
+ * `build/scripts/render_setup_states.py` writes it and
+ * `tests/installer/test_setup_states.py` fails if it is stale, which is what
+ * stops this from quietly drawing last week's installer.
+ */
+const SETUP = JSON.parse(
+    readFileSync(join(ROOT, 'qualification', 'installer', 'setup-states.json'), 'utf8'));
+
+/**
+ * The smallest screen the setup surface is qualified on, from
+ * `installer/hardware/preflight.py`. The bound for "off-screen", and the reason
+ * §39's 200 % requirement bites: this number does not change when the text does.
+ */
+const SETUP_DISPLAY = SETUP.minimumDisplay;
 
 // ---------------------------------------------------------------- fixtures
 
@@ -244,6 +268,87 @@ function capsuleMarkup(model) {
     </div></div>`;
 }
 
+/**
+ * One setup screen.
+ *
+ * The markup mirrors what the GTK surface builds from the same record, so a
+ * field that is missing here is missing there. Two details are deliberate:
+ *
+ * `aria-label` is written from `accessibleName`, never from the label, because
+ * the check below reads the rendered HTML and a name that fell back to the label
+ * would hide exactly the defect the previous phase found on a booted guest.
+ *
+ * The announcement is rendered *visibly*, in a marked block. It is what a screen
+ * reader is given, so on a page whose whole purpose is looking at things it
+ * should be a thing that can be looked at. §9 asks that all state have an
+ * equivalent accessible text; a story that hid it would make that unverifiable
+ * by the one method this harness has.
+ */
+function setupMarkup(screen) {
+    const warnings = screen.warnings.map(item => `
+      <div class="bunny-setup-warning bunny-setup-warning-${item.level}">
+        <span class="bunny-setup-warning-glyph">${item.level === 'danger' ? '⚠' : 'ⓘ'}</span>
+        <span class="bunny-setup-warning-text">${escape(item.text)}</span>
+      </div>`).join('');
+
+    const fields = screen.fields.map(field => {
+        const options = field.options.length ? `
+          <div class="bunny-setup-options">${field.options.map(option => `
+            <div class="bunny-setup-option${option.available ? '' : ' bunny-setup-option-unavailable'}">
+              <span class="bunny-setup-option-label">${escape(option.label)}</span>
+              ${option.note ? `<span class="bunny-setup-option-note">${escape(option.note)}</span>` : ''}
+            </div>`).join('')}</div>` : '';
+        // A secret field renders as a control with no content, ever. If a value
+        // reached this markup the fixture would be carrying a passphrase.
+        const value = field.kind === 'secret'
+            ? '<span class="bunny-setup-value bunny-setup-secret">••••••••</span>'
+            : field.value !== null && field.value !== undefined && field.value !== ''
+                ? `<span class="bunny-setup-value">${escape(
+                    Array.isArray(field.value) ? field.value.join(', ') : field.value)}</span>`
+                : '';
+        return `
+          <div class="bunny-setup-field bunny-setup-field-${field.kind}">
+            <div class="bunny-setup-label">${escape(field.label)}${
+                field.required ? '<span class="bunny-setup-required"> (required)</span>' : ''}</div>
+            ${field.help ? `<div class="bunny-setup-help">${escape(field.help)}</div>` : ''}
+            ${value}
+            ${options}
+          </div>`;
+    }).join('');
+
+    const progress = screen.progress.length ? `
+      <div class="bunny-setup-progress">${screen.progress.map(row => `
+        <div class="bunny-setup-stage bunny-setup-stage-${row.status}">
+          <span class="bunny-setup-stage-glyph">${
+              row.status === 'done' ? '✓' : row.status === 'active' ? '◆' : '·'}</span>
+          <span class="bunny-setup-stage-label">${escape(row.label)}</span>
+        </div>`).join('')}</div>` : '';
+
+    const actions = screen.actions.map(action => `
+        <button class="bunny-setup-action bunny-setup-action-${action.tone}${
+            action.enabled ? '' : ' bunny-setup-action-disabled'}"
+                aria-label="${escape(action.accessibleName)}">${escape(action.label)}</button>`).join('');
+
+    return `
+    <div class="bunny-setup"><div class="bunny-setup-column">
+      <div class="bunny-setup-companion bunny-setup-companion-${escape(screen.companion)}">
+        <span class="bunny-setup-figure"></span>
+        <span class="bunny-setup-says">${escape(screen.says)}</span>
+      </div>
+      <div class="bunny-setup-heading">${escape(screen.heading)}</div>
+      ${warnings}
+      <div class="bunny-setup-fields">${fields}</div>
+      ${progress}
+      <div class="bunny-setup-actions">${actions}</div>
+      ${screen.advanced.length ? `<div class="bunny-setup-disclosure">Installation details</div>
+        <div class="bunny-setup-advanced">${screen.advanced.map(
+            line => `<div class="bunny-setup-advanced-line">${escape(line)}</div>`).join('')}</div>` : ''}
+      <div class="bunny-setup-announcement">
+        <span class="bunny-setup-announcement-tag">announced</span>
+        ${escape(screen.announcement)}</div>
+    </div></div>`;
+}
+
 function companionMarkup(built) {
     return Object.entries(built).map(([mode, model]) => `
       <div class="story-companion">
@@ -318,10 +423,26 @@ for (const theme of THEMES) {
         reducedMotion: Boolean(theme.options.reducedMotion),
     });
 
+    // The setup surface's own stylesheet, for this exact configuration, rendered
+    // by installer/theme_css.py. Absent means the theme was added here without
+    // regenerating, and an unstyled panel that still "renders" is precisely the
+    // silent pass this harness exists to prevent — so it stops.
+    const setupSheet = SETUP.stylesheets[theme.name];
+    if (!setupSheet) {
+        throw new Error(
+            `no setup stylesheet for theme ${theme.name}; add it to STORY_THEMES in ` +
+            'build/scripts/render_setup_states.py and re-run that script');
+    }
+
     stories.push({
         theme: theme.name,
         resolved,
         css: translate(css),
+        setupCss: setupSheet.css,
+        setupScreens: SETUP.screens,
+        setupPanels: SETUP.screens.map(screen => ({
+            title: `Setup — ${screen.title}`, html: setupMarkup(screen), screen,
+        })),
         panels: [
             {title: 'Trust — the journey prompt', html: trustMarkup(trust)},
             {title: 'Trust — every field at its bound', html: trustMarkup(long)},
@@ -440,6 +561,126 @@ for (const story of stories) {
     // having become a second heading.
     if (models.hostile.heading.includes('[Allow]'))
         note(theme, 'hostile', 'structure', 'prompt content reached the heading');
+
+    // ---------------------------------------------------------------- setup
+    //
+    // §36 asks the capture to catch clipped text, missing content, off-screen
+    // buttons, broken high contrast, scaling failures and spacing regressions.
+    // The installer adds one category the desktop did not have: a screen can be
+    // *correct and still lie*, by softening what is about to happen to a disk.
+    // Checks 8 and 9 are that category.
+
+    // 8. Every screen has an accessible announcement, and every destructive
+    //    consequence is inside it.
+    //
+    //    `Screen.__post_init__` already refuses to construct a screen that
+    //    fails this, so a finding here means the committed JSON was hand-edited
+    //    or generated by older code — which is exactly the stale-fixture case
+    //    the freshness test cannot catch on its own, because a stale file is
+    //    still a *valid* file.
+    for (const screen of story.setupScreens) {
+        if (!screen.announcement || !screen.announcement.trim())
+            note(theme, `setup:${screen.key}`, 'missing-field', 'no accessible announcement');
+        for (const warning of screen.warnings) {
+            if (warning.level === 'danger' && !screen.announcement.includes(warning.text)) {
+                note(theme, `setup:${screen.key}`, 'unannounced-danger',
+                     `a screen reader is not told: ${warning.text}`);
+            }
+        }
+    }
+
+    // 9. §23: no invented percentage. The installer knows its stages and does
+    //    not know how far through one it is, so a progress figure anywhere in
+    //    these screens would be a number nobody measured.
+    for (const screen of story.setupScreens) {
+        const fields = JSON.stringify(screen.fields) + JSON.stringify(screen.progress);
+        if (/"percent"|\d+\s*%/.test(fields))
+            note(theme, `setup:${screen.key}`, 'invented-progress',
+                 'a percentage appears in a screen whose backend reports stages');
+    }
+
+    // 10. §39: no control may be wider than the screen it has to fit on.
+    //
+    //     The first version of this measured the action row against
+    //     `metric.cardWidth`, which is 304px — and reported 40 findings. That
+    //     number is the *desktop's* card, the width of a Trust prompt floating
+    //     over a wallpaper. Setup is not a card on a desktop; it is the whole
+    //     window. Measuring a full-window surface against a floating card's
+    //     width finds a defect in the check.
+    //
+    //     The real bound is the screen, so it is
+    //     `MINIMUM_SETUP_DISPLAY.width` from installer/hardware/preflight.py
+    //     less the surface's own padding — which shrinks at 200 %, because
+    //     padding scales at half rate while the display does not scale at all.
+    //     That asymmetry is the whole of §39: the text gets bigger and the
+    //     screen does not, so things must wrap rather than grow.
+    //
+    //     Wrapping is why this is a *per-button* check rather than a per-row
+    //     one. `.bunny-setup-actions` wraps, so a row that needs two lines is a
+    //     layout, not a defect. A single button whose own label is wider than
+    //     the surface cannot wrap and is clipped — and the widest label in the
+    //     whole flow is the confirmation button, whose accessible name carries
+    //     the entire disk identity.
+    //     Only the **label** is measured. The first version measured the
+    //     accessible name too and reported four findings, all of them on the
+    //     confirmation button — whose name is "Erase Samsung SSD 990 PRO with
+    //     Heatsink 4TB — 3725.3 GiB — /dev/nvme0n1 and install Bunny OS". That
+    //     name is long because it is *good*: §38 asks that Orca announce the
+    //     destructive consequence, and naming the disk is how. An accessible
+    //     name is spoken, not drawn, and has no width at all. A check that
+    //     failed it for length would push the name back towards "Confirm",
+    //     which is a check that gets a worse installer built to satisfy it.
+    const perChar = t.type.button.size * 0.55;            // conservative advance width
+    const available = SETUP_DISPLAY.width - t.space.xl * 2;
+    for (const screen of story.setupScreens) {
+        for (const action of screen.actions) {
+            const needed = action.label.length * perChar;
+            if (needed > available) {
+                note(theme, `setup:${screen.key}`, 'overflow',
+                     `action ${action.id} label "${action.label}" needs ~${Math.round(needed)}px, `
+                     + `${available}px available on a ${SETUP_DISPLAY.width}px screen`);
+            }
+            // The name is checked for substance instead: an accessible name
+            // that is merely the label repeated tells a screen-reader user
+            // nothing the label did not, and on a destructive action that is
+            // the §38 failure.
+            const danger = screen.warnings.some(item => item.level === 'danger');
+            if (danger && action.tone === 'danger' && action.accessibleName === action.label) {
+                note(theme, `setup:${screen.key}`, 'weak-name',
+                     `destructive action ${action.id} is announced only as "${action.label}"`);
+            }
+        }
+    }
+
+    // 11. No secret ever carries a value.
+    for (const screen of story.setupScreens) {
+        for (const field of screen.fields) {
+            if (field.kind === 'secret' && field.value !== null && field.value !== undefined)
+                note(theme, `setup:${screen.key}`, 'secret-leak', `${field.key} carries a value`);
+        }
+    }
+
+    // 12. §40: the destructive warning must stay legible in every theme.
+    //
+    //     The previous phase painted a high-contrast theme over a purple
+    //     wallpaper and measured 39.6 % until the scrim was made opaque. The
+    //     equivalent mistake here is a danger colour chosen against the wrong
+    //     ground, so it is measured against the surface the warning actually
+    //     sits on rather than against the window background.
+    const dangerRatio = contrast.effectiveRatio(
+        t.colour.danger, t.colour.surfaceSecondary, t.colour.surfacePrimary);
+    if (dangerRatio < contrast.AA_BODY)
+        note(theme, 'setup:danger', 'contrast', `danger on surfaceSecondary = ${dangerRatio}:1`);
+
+    // 13. Every setup button carries an accessible name. Same check as 6, run
+    //     over the setup panels, which check 6 does not see.
+    for (const panel of story.setupPanels) {
+        for (const button of panel.html.match(/<button\b[^>]*>/g) ?? []) {
+            const label = /aria-label="([^"]*)"/.exec(button);
+            if (!label || !label[1].trim())
+                note(theme, panel.title, 'unnamed-control', `a button with no accessible name: ${button.slice(0, 60)}`);
+        }
+    }
 }
 
 // ------------------------------------------------------------------- output
@@ -471,6 +712,30 @@ const html = `<!doctype html>
   .story-figure { background: linear-gradient(160deg,#6d4bd8,#3a2a6d); border-radius: 12px; margin: 0 auto 6px; }
   .story-figure-absent { width: auto; height: auto; background: none; border: 1px dashed #556;
                          color: #778; font: 400 10px system-ui; padding: 6px 8px; border-radius: 6px; }
+  .setup-band { font: 700 12px system-ui; letter-spacing: .08em; text-transform: uppercase;
+                color: #9aa; margin: 26px 0 14px; padding-top: 16px; border-top: 1px solid #2a2a30; }
+  /* Setup screens are a full surface rather than a card in a shell, so they get
+     their own width. The card metric still bounds the action row, which is what
+     check 10 measures. */
+  .stage-setup { width: auto; max-width: 460px; }
+  .bunny-setup, .bunny-setup-column, .bunny-setup-fields, .bunny-setup-field,
+  .bunny-setup-options, .bunny-setup-progress, .bunny-setup-advanced {
+      display: flex; flex-direction: column; }
+  .bunny-setup-actions, .bunny-setup-warning, .bunny-setup-stage, .bunny-setup-companion,
+  .bunny-setup-option { display: flex; flex-direction: row; align-items: baseline; gap: 6px; }
+  .bunny-setup-actions { flex-wrap: nowrap; gap: 8px; margin-top: 8px; }
+  .bunny-setup-option { flex-wrap: wrap; }
+  .bunny-setup-figure { display: inline-block; background: linear-gradient(160deg,#6d4bd8,#3a2a6d);
+                        flex: none; }
+  /* The announcement is drawn here and not in GTK. On this page it is the only
+     way to see what a screen reader is given; in the application it is set as
+     the accessible description and has no allocation. */
+  .bunny-setup-announcement { margin-top: 10px; padding: 6px 8px; border: 1px dashed currentColor;
+                              opacity: .75; }
+  .bunny-setup-announcement-tag { font: 700 8px system-ui; text-transform: uppercase;
+                                  letter-spacing: .1em; margin-right: 6px; opacity: .7; }
+  .bunny-setup-option-unavailable { text-decoration: line-through; }
+  .bunny-setup-action-disabled { opacity: .5; }
 </style>
 <h1>Bunny component stories — generated, approximate, not a substitute for the booted runs</h1>
 ${findings.length === 0
@@ -488,6 +753,15 @@ ${stories.map(story => `
     ${story.panels.map(panel => `
       <div class="panel"><h3>${escape(panel.title)}</h3>
         <div class="stage">${panel.html}</div></div>`).join('')}
+  </div>
+  <h2 class="setup-band">Setup — the installer, same theme, real GTK stylesheet</h2>
+  <style>
+    ${story.setupCss.replace(/^([a-z]*\.)/gm, `section[data-s="${escape(story.theme)}"] $1`)}
+  </style>
+  <div class="grid" data-s="${escape(story.theme)}">
+    ${story.setupPanels.map(panel => `
+      <div class="panel"><h3>${escape(panel.title)}</h3>
+        <div class="stage stage-setup">${panel.html}</div></div>`).join('')}
   </div>
 </section>`).join('')}
 <style>
@@ -549,6 +823,27 @@ export function manifest() {
             companionModes: Object.fromEntries(
                 Object.entries(story.models.companions).map(
                     ([mode, model]) => [mode, {character: model.parts.character, sizePx: model.parts.sizePx}])),
+            // The installer, by shape. Recorded per theme because the action row
+            // and the type sizes are what change between them, and a screen that
+            // loses a field or a name at 200 % should fail here rather than on a
+            // booted guest.
+            setup: story.setupScreens.map(screen => ({
+                title: screen.title,
+                key: screen.key,
+                authority: screen.authority,
+                companion: screen.companion,
+                fields: screen.fields.map(field => `${field.kind}:${field.key}`),
+                warningLevels: screen.warnings.map(item => item.level),
+                actions: screen.actions.map(action => action.accessibleName),
+                confirmation: screen.confirmation,
+                progressStages: screen.progress.map(row => `${row.key}:${row.status}`),
+                announcementChars: screen.announcement.length,
+                // The one fact that must never become false: everything a screen
+                // shows in red, a screen reader is told in words.
+                dangerAnnounced: screen.warnings
+                    .filter(item => item.level === 'danger')
+                    .every(item => screen.announcement.includes(item.text)),
+            })),
         })),
         findings,
     };
