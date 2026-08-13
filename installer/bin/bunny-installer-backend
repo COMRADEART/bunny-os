@@ -1,15 +1,113 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""The privileged installer backend.
+
+Serves `installer.backend.service.InstallerService` over a local socket to the
+one live-session user, and injects the Anaconda adapter when this is a real
+installer environment.
+
+The fail-closed gate is unchanged and is the whole point of the `--dry-run`
+switch: without an executor that can install, `install.start` raises
+`BackendUnavailable` and no disk is touched. What decides which one is used is
+whether Anaconda's private bus is present, which is a fact about the environment
+rather than a flag anyone can pass.
+"""
+import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 installed = Path("/usr/lib/bunny-installer")
 sys.path.insert(0, str(installed if installed.is_dir() else Path(__file__).resolve().parents[2]))
 
-print(json.dumps({
-    "schemaVersion": 1,
-    "available": False,
-    "reason": "The reviewed Anaconda adapter is not installed in this source-only build.",
-    "writesPerformed": False
-}, sort_keys=True))
-raise SystemExit(78)
+from installer.backend.anaconda import (
+    AnacondaAdapter, AnacondaDBusExecutor, ExecutorUnavailable, RecordingExecutor,
+)
+from installer.backend.server import SOCKET_PATH, serve
+from installer.storage.probe import discover
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(prog="bunny-installer-backend")
+    parser.add_argument("--live-uid", type=int,
+                        help="the UID of the live session that may connect; read from "
+                             "/run/bunny-installer/live-session when omitted")
+    parser.add_argument("--socket", type=Path, default=SOCKET_PATH)
+    parser.add_argument("--token-path", type=Path, default=Path("/run/bunny-installer/session-token"),
+                        help="where the live session reads the session token from")
+    parser.add_argument("--installation-source",
+                        help="the device or mountpoint the installer booted from, "
+                             "so it can never be offered as a target")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="use the recording executor: no disk is ever written")
+    arguments = parser.parse_args()
+
+    # `bunny-live-session` creates the ephemeral account and records its UID in
+    # the marker file. Reading it beats hardcoding a number: the unit that
+    # hardcoded 989 was wrong — the account is created with UID 1000 — and the
+    # failure would have been an installer that refused its own session.
+    live_uid = arguments.live_uid
+    if live_uid is None:
+        marker = Path("/run/bunny-installer/live-session")
+        try:
+            for line in marker.read_text(encoding="utf-8").splitlines():
+                if line.startswith("uid="):
+                    live_uid = int(line.split("=", 1)[1])
+                    break
+        except (OSError, ValueError):
+            pass
+    if live_uid is None:
+        sys.stderr.write(
+            "no live-session UID: pass --live-uid, or start this after "
+            "bunny-live-session.service has written /run/bunny-installer/live-session
+")
+        return 3
+
+    if os.geteuid() != 0 and not arguments.dry_run:
+        sys.stderr.write("the installer backend must run as root to install\n")
+        return 3
+
+    executor = None
+    reason = ""
+    if arguments.dry_run:
+        executor = RecordingExecutor()
+        reason = "--dry-run: nothing will be written"
+    else:
+        candidate = AnacondaDBusExecutor()
+        try:
+            candidate.preflight()
+            executor = candidate
+        except ExecutorUnavailable as error:
+            # Reported, not fatal. The surface must still start so that a person
+            # can read why their machine cannot be installed to, which is more
+            # use than a live session with no window in it.
+            reason = str(error)
+
+    adapter = None
+    if executor is not None:
+        # The account and the plan arrive per-installation over the protocol;
+        # the adapter is completed then. Constructing it here would need a
+        # password before anyone had typed one.
+        adapter = AnacondaAdapter(executor=executor, choices={}, password_hash="")
+
+    sys.stderr.write(json.dumps({
+        "event": "executor",
+        "available": executor is not None,
+        "reason": reason,
+    }, sort_keys=True) + "\n")
+
+    # The token file is how the unprivileged session authenticates. Written
+    # before the socket is served, 0400, owned by the live user: the surface
+    # must be able to read it and nothing else should.
+    return serve(
+        token_path=arguments.token_path,
+        live_uid=live_uid,
+        probe=lambda: discover(installation_source=arguments.installation_source),
+        adapter=adapter,
+        path=arguments.socket,
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

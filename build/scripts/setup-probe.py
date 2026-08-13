@@ -230,7 +230,8 @@ def atspi_probe(*, screen: str, seconds: float = 6.0) -> dict[str, Any]:
     child = subprocess.Popen(
         [sys.executable, "-c",
          "import sys; sys.path.insert(0, %r);"
-         "from installer.frontend.setup import run; raise SystemExit(run(['--screen', %r]))"
+         "from installer.frontend.setup import run; "
+         "raise SystemExit(run(['--screen', %r, '--offline']))"
          % (str(ROOT), screen)],
         stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, cwd=str(ROOT),
     )

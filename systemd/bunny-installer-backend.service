@@ -1,20 +1,37 @@
 [Unit]
-Description=Bunny OS live installer policy backend
+# The privileged half of the installer. The setup surface runs as the live
+# desktop user and cannot write to a block device; everything that can is here.
+# That division is §2 enforced by the kernel rather than by intent.
+Description=Bunny OS live installer backend
 Documentation=file:///usr/share/doc/bunny-os/INSTALLER_ARCHITECTURE.md
 ConditionPathExists=/run/bunny-installer/live-session
-Before=shutdown.target
+# The surface reads the session token this writes, so it must be listening
+# before the graphical session starts autostarting things.
+Before=gdm.service graphical.target shutdown.target
+# The live account and its UID are created by this, and the marker file it
+# writes is where the backend learns which UID may connect.
+Requires=bunny-live-session.service
+After=bunny-live-session.service
 Conflicts=shutdown.target
 
 [Service]
-Type=oneshot
+Type=simple
+# The UID comes from /run/bunny-installer/live-session, written by
+# bunny-live-session.service. Hardcoding it here was wrong once already.
 ExecStart=/usr/libexec/bunny-installer-backend
+Restart=no
 User=root
 Group=root
 NoNewPrivileges=yes
 PrivateTmp=yes
-PrivateDevices=no
+# The adapter drives Anaconda over its own bus; Anaconda owns the devices. This
+# process never opens one, so it does not need them.
+PrivateDevices=yes
 ProtectSystem=strict
 ProtectHome=yes
+# ProtectSystem=strict makes everything read-only, /run included, and the socket
+# and the token both live there.
+ReadWritePaths=/run/bunny-installer /run/bunny-setup
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes
@@ -25,5 +42,6 @@ LockPersonality=yes
 MemoryDenyWriteExecute=yes
 SystemCallArchitectures=native
 UMask=0077
-TimeoutStartSec=30
 
+[Install]
+WantedBy=graphical.target

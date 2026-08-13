@@ -860,11 +860,76 @@ class SetupApplication:
         }
 
 
+def _installer_context(choices: Choices) -> dict[str, Any]:
+    """Everything the flow needs that comes from outside the surface.
+
+    Storage is probed through the **backend**, never directly. The surface has
+    no capability to read a block device and should not acquire one to draw a
+    list: the disks it shows are the disks the thing that will erase one can
+    see, which is the only list whose absence of an entry means anything.
+
+    A machine with no backend gets an empty context and the screens that say so.
+    That is the development case and it is also §26's argument generalised — a
+    window explaining why beats a session with nothing in it.
+    """
+    from installer.frontend.client import InstallerRefused, connect
+    from installer.storage.models import DiskInfo, ExistingOS, PartitionInfo
+    from installer.storage.safety import assess_target, disk_identity
+
+    client = connect()
+    if client is None:
+        return {}
+
+    context: dict[str, Any] = {"client": client}
+    try:
+        context["backend"] = dict(client.initialize())
+        probed = client.probe()
+    except (InstallerRefused, OSError) as error:
+        context["backendError"] = str(error)
+        return context
+
+    disks: list[DiskInfo] = []
+    for record in probed.get("disks", []):
+        disks.append(DiskInfo(
+            id=record["id"], devicePath=record["devicePath"],
+            sizeBytes=record["sizeBytes"],
+            logicalSectorSize=record.get("logicalSectorSize", 512),
+            physicalSectorSize=record.get("physicalSectorSize", 512),
+            removable=record.get("removable", False),
+            readOnly=record.get("readOnly", False),
+            model=record.get("model"),
+            serialRedacted=record.get("serialRedacted"),
+            rotational=record.get("rotational"),
+            transport=record.get("transport"),
+            partitions=tuple(PartitionInfo(**{
+                key: (tuple(value) if key == "mountPoints" else value)
+                for key, value in item.items()
+            }) for item in record.get("partitions", [])),
+            existingOperatingSystems=tuple(
+                ExistingOS(**item) for item in record.get("existingOperatingSystems", [])),
+            installationMedia=record.get("installationMedia", False),
+            storageStack=record.get("storageStack", "plain"),
+        ))
+
+    context["disks"] = tuple(disks)
+    context["findings"] = {
+        disk.id: assess_target(disk, mode="erase_disk") for disk in disks
+    }
+    # Nothing is preselected. §11 asks for a conservative storage UI, and a
+    # preselected disk is one a hurried person confirms without reading.
+    context["selectedDisk"] = None
+    context["selectedDiskIdentity"] = "no disk selected"
+    context["identityFor"] = disk_identity
+    return context
+
+
 def run(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="bunny-setup", description="Bunny OS setup")
     parser.add_argument("--screen", help="start on one screen, by flow key")
     parser.add_argument("--self-check", action="store_true",
                         help="build every screen, dump the accessibility tree, exit")
+    parser.add_argument("--offline", action="store_true",
+                        help="do not contact the installer backend; for looking at screens")
     parser.add_argument("--text-scale", type=float, default=1.0)
     parser.add_argument("--high-contrast", action="store_true")
     parser.add_argument("--reduced-motion", action="store_true")
@@ -885,7 +950,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write("; ".join(errors) + "\n")
         return 2
 
-    application_state = SetupApplication(Gtk, choices=choices)
+    context = {} if args.offline else _installer_context(choices)
+    application_state = SetupApplication(Gtk, choices=choices, context=context)
 
     if args.self_check:
         sys.stdout.write(json.dumps(application_state.self_check(), indent=1) + "\n")

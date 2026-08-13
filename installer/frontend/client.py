@@ -1,0 +1,133 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""The unprivileged half: how the setup surface asks the backend for things.
+
+Every request this sends is one the backend re-checks. That is not politeness —
+it is the reason the surface can be wrong without a disk being harmed. In
+particular the confirmation phrase is sent as typed and compared *there*, against
+a phrase re-derived from the disk in the validated plan, so the client cannot
+compute a phrase that would pass for a disk it did not select.
+
+## Absent, not broken
+
+`connect` returns ``None`` when there is no backend rather than raising. A
+development workstation has no installer socket, and setup must still start there
+— §26's argument, generalised: the person should get a window that explains,
+never a session with nothing in it. The surface renders a failure screen saying
+it cannot write to a disk, which is true and is better than a traceback.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+import json
+import os
+from pathlib import Path
+import secrets
+import socket
+from typing import Any, Mapping
+
+from installer.backend.server import SOCKET_PATH
+
+__all__ = ["BackendClient", "InstallerRefused", "connect"]
+
+#: Written by the unit that starts the backend, readable only by the live user.
+TOKEN_PATH = Path("/run/bunny-installer/session-token")
+
+
+class InstallerRefused(RuntimeError):
+    """The backend refused, and said why. Nothing was written."""
+
+    def __init__(self, message: str, *, kind: str = "invalid") -> None:
+        super().__init__(message)
+        self.kind = kind
+
+
+class BackendClient:
+    def __init__(self, connection: socket.socket, token: str, *,
+                 installation_id: str | None = None) -> None:
+        self._connection = connection
+        self._token = token
+        self._buffer = b""
+        self.installation_id = installation_id or "install-" + secrets.token_hex(8)
+
+    def call(self, operation: str, **params: Any) -> Mapping[str, Any]:
+        request = {
+            "schemaVersion": 1,
+            "requestId": "req-" + secrets.token_hex(8),
+            "installationId": self.installation_id,
+            "operation": operation,
+            "nonce": secrets.token_urlsafe(24),
+            # The backend refuses a request more than 60 seconds old, so this is
+            # generated per call rather than per session.
+            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "params": params,
+            "sessionToken": self._token,
+        }
+        self._connection.sendall(json.dumps(request).encode("utf-8") + b"\n")
+        while b"\n" not in self._buffer:
+            chunk = self._connection.recv(65536)
+            if not chunk:
+                raise InstallerRefused("the installer backend closed the connection",
+                                       kind="unavailable")
+            self._buffer += chunk
+        line, self._buffer = self._buffer.split(b"\n", 1)
+        response = json.loads(line.decode("utf-8"))
+        if "error" in response:
+            error = response["error"]
+            raise InstallerRefused(str(error.get("message", "refused")),
+                                   kind=str(error.get("kind", "invalid")))
+        return response.get("result", {})
+
+    # -- the operations the surface uses ---------------------------------
+
+    def initialize(self) -> Mapping[str, Any]:
+        return self.call("installer.initialize")
+
+    def probe(self) -> Mapping[str, Any]:
+        return self.call("installer.probe")
+
+    def validate(self, plan: Mapping[str, Any]) -> Mapping[str, Any]:
+        return self.call("installer.plan.validate", plan=dict(plan))
+
+    def start(self, *, acknowledgement: str, second_confirmation: bool,
+              recovery_key_confirmed: bool) -> Mapping[str, Any]:
+        """Ask for the installation to begin.
+
+        ``acknowledgement`` is the phrase the person typed, verbatim. This client
+        does not check it and could not usefully: the comparison that matters
+        happens in `storage.safety.assert_confirmed`, on the other side, against
+        the disk in the plan the backend itself validated.
+        """
+        return self.call(
+            "installer.install.start",
+            acknowledgement=acknowledgement,
+            secondConfirmation=second_confirmation,
+            recoveryKeyConfirmed=recovery_key_confirmed,
+        )
+
+    def status(self) -> Mapping[str, Any]:
+        return self.call("installer.install.status")
+
+    def close(self) -> None:
+        try:
+            self._connection.close()
+        except OSError:
+            pass
+
+
+def connect(*, path: Path = SOCKET_PATH, token_path: Path = TOKEN_PATH) -> BackendClient | None:
+    """A client, or ``None`` when this machine has no installer backend."""
+    try:
+        token = token_path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    if not token:
+        return None
+    try:
+        connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        connection.settimeout(120)
+        connection.connect(str(path))
+    except OSError:
+        return None
+    return BackendClient(connection, token)

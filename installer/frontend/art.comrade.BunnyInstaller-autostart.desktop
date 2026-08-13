@@ -1,7 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=Bunny OS Live Welcome
-Exec=bunny-installer gui
+Name=Set up Bunny OS
+Comment=The Bunny setup experience, started when the live session begins
+Exec=bunny-setup
 Icon=bunny-shell
 Terminal=false
 OnlyShowIn=GNOME;
