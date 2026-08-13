@@ -306,7 +306,21 @@ def install_activation(profile: str) -> None:
     elif profile in {"developer", "desktop", "shell", "shell-test", "live", "beta"}:
         subprocess.run(["/usr/bin/systemctl", "enable", "gdm.service"], check=True)
         if profile == "live":
-            subprocess.run(["/usr/bin/systemctl", "enable", "bunny-live-session.service"], check=True)
+            # Both halves of the live installer. `bunny-live-session` creates the
+            # ephemeral account and writes the marker carrying its UID;
+            # `bunny-installer-backend` reads that marker, serves the installer
+            # protocol on a socket only that UID may open, and publishes the
+            # session token the setup surface authenticates with.
+            #
+            # Without the second, the medium boots into a setup surface that
+            # finds no backend, reports "no disks found" on a machine with a
+            # disk, and can install nothing. The unit shipped with
+            # WantedBy=graphical.target and nothing wanted it — the exact shape
+            # of the brlapi failure this function's docstring is about.
+            subprocess.run([
+                "/usr/bin/systemctl", "enable",
+                "bunny-live-session.service", "bunny-installer-backend.service",
+            ], check=True)
         subprocess.run(["/usr/bin/systemctl", "set-default", "graphical.target"], check=True)
     else:
         subprocess.run(["/usr/bin/systemctl", "set-default", "multi-user.target"], check=True)
@@ -349,6 +363,16 @@ def install_activation(profile: str) -> None:
             "/etc/systemd/user/graphical-session.target.wants/bunny-first-run.service"
         ),
     }
+
+    # Live-only, and asserted the same way: the symlink is the artifact, the
+    # command is only a claim about a command.
+    if profile == "live":
+        required_activation["bunny-installer-backend.service"] = Path(
+            "/etc/systemd/system/graphical.target.wants/bunny-installer-backend.service"
+        )
+        required_activation["bunny-live-session.service"] = Path(
+            "/etc/systemd/system/graphical.target.wants/bunny-live-session.service"
+        )
 
     #: Units that must **not** be activated, and why.
     #:
