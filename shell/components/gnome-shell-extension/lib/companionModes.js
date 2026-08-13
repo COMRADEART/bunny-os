@@ -37,8 +37,20 @@
 import {buildTaskStatus, PHASE_TO_STATE} from './taskState.js';
 import {COMPANION_SIZE} from './design/tokens.js';
 
-/** §16, in the order they shed. */
-export const MODES = ['full', 'compact', 'minimal', 'text-only'];
+/**
+ * §16, in the order they shed.
+ *
+ * `off` is a mode and not an absence. §16 requires the system to remain fully
+ * usable with no Companion presentation, and the setup surface offers it — so
+ * without it here, a person who chose Off during installation would have that
+ * preference silently resolved to `full` by `normaliseMode`, which is the worst
+ * of the available outcomes: the one thing they asked not to see, appearing.
+ *
+ * What `off` still does is carry the state in words. `indicatorText` is
+ * populated for every mode including this one, because Trust prompts and task
+ * failures are the *system* speaking and must not disappear with the character.
+ */
+export const MODES = ['full', 'compact', 'minimal', 'text-only', 'off'];
 
 /**
  * The states §16 requires a Companion mode to be able to show, mapped from the
@@ -123,6 +135,14 @@ export const MODE_PARTS = {
     'text-only': {
         character: false, sizePx: 0,
         caption: true, transcript: true, controls: true, indicator: true,
+    },
+    // Nothing on screen. Not even the indicator: a person who turned the
+    // Companion off did not ask for a smaller Companion. The announcement
+    // survives — see `buildCompanion.indicatorText` — so an assistive
+    // technology and the notification layer still have the words.
+    off: {
+        character: false, sizePx: 0,
+        caption: false, transcript: false, controls: false, indicator: false,
     },
 };
 

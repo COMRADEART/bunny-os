@@ -454,7 +454,7 @@ for (const theme of THEMES) {
             {title: 'Result', html: resultMarkup(result)},
             {title: 'Errors — all six kinds', html: errors.map(errorMarkup).join('')},
             {title: 'Protected space', html: capsuleMarkup(capsule)},
-            {title: 'Companion — four modes', html: companionMarkup(companions)},
+            {title: 'Companion — every mode', html: companionMarkup(companions)},
         ],
         models: {trust, long, hostile, completed, blocked, failed, working, result, capsule, companions},
     });
@@ -522,7 +522,8 @@ for (const story of stories) {
     //    same thing.
     const truths = new Set(Object.values(models.companions).map(m => `${m.state}|${m.label}|${m.announcement}`));
     if (truths.size !== 1)
-        note(theme, 'companion', 'disagreement', `${truths.size} different truths across four modes`);
+        note(theme, 'companion', 'disagreement',
+             `${truths.size} different truths across ${Object.keys(models.companions).length} modes`);
 
     // 6. Every button carries an accessible name.
     //
@@ -817,7 +818,10 @@ export function manifest() {
             errorKinds: 6,
             resultActions: story.models.result.actions.map(action => action.id),
             capsuleRows: story.models.capsule.rows.map(row => row.label),
-            // One entry, always: four modes that agree produce one announcement.
+            // One entry, always: every mode that agrees produces one announcement.
+            // §16 added `off` as a fifth; it draws nothing and still carries the
+            // words, because a Trust prompt is the system speaking rather than
+            // the character, and must not vanish with it.
             companionTruths: [...new Set(
                 Object.values(story.models.companions).map(model => model.announcement))],
             companionModes: Object.fromEntries(
