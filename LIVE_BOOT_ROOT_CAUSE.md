@@ -330,6 +330,74 @@ one that had not.
 
 ---
 
+## 7b. The third fault: a unit cannot create the directory its own sandbox needs
+
+With `enforcing=0`, run 2 (ISO `229dad10…`, commit `7502331`) reached BOOT-7.
+It went on to a **text login prompt**: multi-user, not graphical.
+
+```text
+[FAILED] Failed to start bunny-live-session.service
+[DEPEND] Dependency failed for bunny-installer-backend.service
+[FAILED] Failed to start bootloader-update.service
+[  OK  ] Started gdm.service - GNOME Display Manager
+```
+
+The name of a unit and nothing else, because a unit writes its reason to the
+journal and the journal does not reach a serial console unless asked. So the one
+thing a serial-reading harness could not see was *why* — which is what a
+boot-diagnosis harness is for. `BUNNY_BOOT_APPEND` was added for it, and the
+first version, which typed into GRUB's editor, did not work: GRUB's own
+sixty-second timeout booted the selected entry first and the run came out as an
+ordinary boot. The self-check is the only reason that is known rather than
+assumed — the kernel prints the command line it was given, the appended text was
+not in it, and the run exited 6 instead of being read as the run that was asked
+for. It now extracts the medium's kernel and initramfs and boots them directly.
+
+Run 4, a diagnostic boot of the same medium, answered it in one line:
+
+```text
+bunny-live-session.service: Failed to set up mount namespacing:
+    /run/bunny-installer: No such file or directory
+bunny-live-session.service: Failed at step NAMESPACE spawning
+    /usr/libexec/bunny-live-session: No such file or directory
+bunny-live-session.service: Main process exited, code=exited, status=226/NAMESPACE
+```
+
+systemd builds a unit's mount namespace **before** it runs `ExecStart`. A
+`ReadWritePaths=` naming a path that does not exist fails the unit — and it
+fails whether or not the program would have created that path, because the
+program never runs. `/usr/libexec/bunny-live-session` begins by creating
+`/run/bunny-installer`.
+
+Everything visible on screen was three consequences away from that. The unit
+creates the `bunny-live` account; without it GDM had nobody to log in,
+`bunny-installer-backend` failed on a dependency, `graphical.target` was never
+reached, and the medium offered a text login. Run 2 reported "BOOT-8 failed",
+which was true and was not the fault.
+
+`RuntimeDirectory=` instead, which systemd creates before the namespace,
+preserved because the session unit is a `oneshot` whose marker file the backend
+reads afterwards.
+
+**The same shape, twice more, found by the gate written for it.**
+`tests/boot/test_unit_runtime_directories.py` checks every unit in `systemd/`,
+and found both within a second of being written:
+
+* `bunny-installer-backend.service` named `/run/bunny-setup`, which nothing in
+  the repository creates at all. It would have failed `226/NAMESPACE` the moment
+  the session unit started working — that is, the moment anyone could have seen
+  it.
+* `bunny-update-agent@.service` named `/run/ostree-booted`. ostree-prepare-root
+  creates that before switch-root on a deployment, and an installation medium is
+  not one. `-` prefixed, which is what systemd provides for a path a unit wants
+  only if it exists.
+
+None of these three had ever run. That is the thread through this whole phase:
+the initramfs modules, the SELinux argument, and these units were all shipped,
+all plausible on inspection, and none had ever been executed by anything.
+
+---
+
 ## 7. Prevention
 
 **Build-time.** `build-live-image.sh` fails if the regeneration record is
@@ -362,9 +430,14 @@ screenshot before the first keypress. The previous harness had one outcome —
 `timeout` — which cannot distinguish a machine that never started from one that
 reached a session and idled.
 
-**Tests.** 66 across `tests/image/test_live_initramfs.py`,
-`tests/image/test_iso_boot_artifacts.py` and
-`tests/boot/test_boot_checkpoints.py`. The failure cases are the point: a
+**Unit sandboxes.** `tests/boot/test_unit_runtime_directories.py` fails any unit
+naming a `/run` path in `ReadWritePaths=` without a matching
+`RuntimeDirectory=`. It found two of the three instances itself.
+
+**Tests.** 73 across `tests/image/test_live_initramfs.py`,
+`tests/image/test_iso_boot_artifacts.py`,
+`tests/boot/test_boot_checkpoints.py` and
+`tests/boot/test_unit_runtime_directories.py`. The failure cases are the point: a
 missing `dmsquash-live`; a missing `livenet`; a module named in the manifest
 whose files are absent; a missing `squashfs.ko`; two kernel releases; a wrong
 kernel/initrd mapping; a truncated archive; a stale initrd on an otherwise
@@ -414,16 +487,30 @@ otherwise.
 
 | level | state |
 | --- | --- |
-| IMPLEMENTED | dracut configuration and explicit regeneration exist |
-| UNIT/BUILD TESTED | **met** — 66 tests; the checker fails the shipped artifact and passes the regenerated one |
+| IMPLEMENTED | dracut configuration, explicit regeneration, `enforcing=0`, corrected unit sandboxes |
+| UNIT/BUILD TESTED | **met** — 73 tests; the checker fails the shipped artifact and passes the regenerated one |
 | BOOT ARTIFACT VALIDATED | **met** — the ISO gate runs in the build and refuses an unqualified medium |
-| VM RUNTIME VALIDATED | **partial** — BOOT-1…BOOT-6 met on a real boot, including switch-root. BOOT-7…BOOT-9 not met |
+| VM RUNTIME VALIDATED | **partial** — BOOT-1…BOOT-7 met on a real boot. BOOT-8 and BOOT-9 not met |
 | INSTALLATION VM RUNTIME VALIDATED | **not met** — Journey A has not run |
 
-The middle row is the one worth reading carefully. "The initramfs repair works"
+The fourth row is the one worth reading carefully. "The initramfs repair works"
 is established: a real machine read `root=live:CDLABEL=`, assembled the live
-root and switched into it. "The medium boots" is not, and the two are different
-claims about the same run.
+root, switched into it and reached real userspace. "The medium boots to Bunny
+Setup" is not, and they are different claims about the same run.
+
+### Where each run got to
+
+| run | commit | ISO | reached | stopped on |
+| --- | --- | --- | --- | --- |
+| 1 | `d6047b6` | `e7374d39…` | BOOT-6 | SELinux: PID 1 froze, `Failed to allocate manager object` |
+| 2 | `7502331` | `229dad10…` | BOOT-7 | `bunny-live-session.service` failed; no graphical session |
+| 3 | `6758090` | `229dad10…` | — | harness self-check: the appended arguments never reached the kernel |
+| 4 | `6758090` | `229dad10…` | diagnostic | named the fault: `226/NAMESPACE` |
+| 5 | `138201b` | pending | pending | pending |
+
+Every run's evidence is kept under `build/out/boot/<run>` — serial log,
+screenshots, `run.txt` binding it to a commit and an ISO digest, and
+`checkpoints.json`. No run's evidence was overwritten by the next (§18).
 
 **BOOT-CHAIN REPAIR STATUS = INCOMPLETE.** Bunny Setup has not appeared from a
 rebuilt ISO.
