@@ -130,7 +130,6 @@ echo "==> 3. the requested modules must exist before dracut is asked for them"
 # minutes of work. Checking here means a missing dracut-live is reported as a
 # missing dracut-live.
 missing=()
-declare -A module_path=() module_owner=()
 for module in ${requested}; do
   found="$(find "${modules_dir}" -mindepth 1 -maxdepth 1 -type d \
             -regextype posix-extended -regex ".*/[0-9]{2}${module}" -print -quit)"
@@ -138,10 +137,9 @@ for module in ${requested}; do
     missing+=("${module}")
     continue
   fi
-  module_path["${module}"]="${found}"
-  module_owner["${module}"]="$(rpm -qf --queryformat '%{NAME}-%{VERSION}-%{RELEASE}' \
-                                "${found}" 2>/dev/null || echo 'not owned by a package')"
-  printf '    %-16s %s  (%s)\n' "${module}" "${found}" "${module_owner[${module}]}"
+  owner="$(rpm -qf --queryformat '%{NAME}-%{VERSION}-%{RELEASE}' \
+            "${found}" 2>/dev/null || echo 'not owned by a package')"
+  printf '    %-16s %s  (%s)\n' "${module}" "${found}" "${owner}"
 done
 if [[ ${#missing[@]} -gt 0 ]]; then
   echo "BLOCKED: ${#missing[@]} dracut module(s) requested by ${conf_path}" >&2

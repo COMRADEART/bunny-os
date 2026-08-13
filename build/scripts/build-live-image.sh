@@ -89,8 +89,12 @@ fi
 # The in-image regeneration record, carried out of the image so the ISO's
 # evidence names the kernel, the dracut version and the initramfs digest that
 # went into it (§32) without anyone having to run the container again.
+# Piped rather than redirected, because `sudo cmd > file` opens the file as the
+# *invoking* user and shellcheck is right to say so (SC2024). Under `pipefail`
+# the pipeline still carries podman's exit status, which is the one that matters.
 sudo podman run --rm --entrypoint /usr/bin/cat "${installer_tag}" \
-  /usr/share/bunny-os/live-initramfs.json > "${output}/live-initramfs.json" || {
+  /usr/share/bunny-os/live-initramfs.json \
+  | tee "${output}/live-initramfs.json" >/dev/null || {
     echo "BLOCKED: the live image carries no /usr/share/bunny-os/live-initramfs.json." >&2
     echo "build/scripts/regenerate-live-initramfs.sh writes it on every live build," >&2
     echo "so its absence means the initramfs was never explicitly regenerated and" >&2

@@ -216,6 +216,12 @@ def _squashfs_top_level(path: Path) -> tuple[set[str] | None, bool]:
             if count > 2_000_000:  # a safety valve, never expected to fire
                 break
     finally:
+        # Closing the pipe before killing matters: the loop breaks early by
+        # design, so unsquashfs is usually mid-write and the handle would be
+        # left open. Python reports that as a ResourceWarning, which is exactly
+        # the sort of thing a test suite prints and nobody reads.
+        if process.stdout is not None:
+            process.stdout.close()
         process.kill()
         process.wait()
     return (top or None), nested

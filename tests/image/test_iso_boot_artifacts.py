@@ -11,7 +11,9 @@ those tests build a 34 KB one by hand instead.
 
 from __future__ import annotations
 
+import base64
 import gzip
+import shutil
 import struct
 import subprocess
 import sys
@@ -42,6 +44,40 @@ def _load(path: Path, name: str):
 gate = _load(SCRIPT, "bunny_check_iso_boot_artifacts")
 
 LABEL = "Bunny-OS-Beta"
+
+# Real squashfs images, 4 KB each, gzipped and base64'd so they travel in the
+# file and need no mksquashfs to produce.
+#
+# They are here because the first version of these tests used
+# `b"hsqs" + b"\x00" * 1024` — four bytes of magic and nothing behind them —
+# which passed on a host with no unsquashfs and failed on one with it. That is
+# the wrong way round: the test was green precisely where the checker could not
+# run, and the reference measurement on Linux is what caught it. A fixture that
+# only works when the tool is missing is not a fixture.
+#
+# SQUASHFS_IS_ROOT has a top-level usr/ and no LiveOS/ — the shape this medium
+# actually has, where dmsquash-live uses the squashfs itself as the root.
+# BAD_LIVEOS has a top-level LiveOS/ with no rootfs.img inside it, which is the
+# shape dmsquash-live-root.sh dies on.
+SQUASHFS_IS_ROOT = base64.b64decode("""
+H4sIAAAAAAACA8soLixmY4ABJgZGIMnIIMhwAEiyANkLoDJ+jBDaDUr/h4JiqPw+KC0BlbeA
+0p4utkmleXmVXMqK+kmZefrFGVyeDBW3kpMiDp1gYPXhWdEg3CEpee/QU8mJVzSZDKVn9F44
+37VsOrevPfekukw2S7Y0k8o0laiugzw5dptspCdZruLZx/OGh4eHIfoYW6UbyKiEBgY1i7Mn
+J8SviZ4ya/KsiDlcoikJrEnsG3SMnT0DNWPmsHYIN8wQ1Jg8ZeZxDlG2i1wBD69MesKmwJo0
+TUyckUG/muuFQEMC1P3CDOAgYGCDul8MaENwggMrb4AVo5e1w0vWACkGDQPGhwpQeZYGEOnA
+yDAKRsEoGAWjYBSMglEwCkbBKBgFo2AUDGIAAJGIZ40AEAAA
+""")
+BAD_LIVEOS = base64.b64decode("""
+H4sIAAAAAAACA8soLixmZoABJgZGIMnIIMhwAEiyANkOUBkORigDSv+HgkKo8AIofQtKf4LS
+efklCokKRflAKjM3MT2VS5eh4lZyUsShEwysPjwrHAQ6JCXvHXoqOfHKSSZD41k2xkK6pxWO
+Hjh04ADQTGumv2og5QkNDGoWZ08FTJk1Y9JsLtGEBJYkVoOzpx5Mjpz2Sp6HIZif5aJAQwLU
+RkGoG09A+XxAE4ITHFj5AqQYWCUYEh9BxVkaQOQvhlEwCkbBKBgFo2AUjIJRMApGwSgYBaNg
++AMA3MctowAQAAA=
+""")
+
+
+def squashfs(payload: bytes) -> bytes:
+    return gzip.decompress(payload)
 
 GRUB_TEMPLATE = """
 set timeout=60
@@ -82,7 +118,14 @@ class Medium:
              initrd: str | None = "/images/pxeboot/initrd.img",
              initramfs_contents: dict | None = None,
              kernel_release: str = KERNEL,
-             live_payload: bytes | None = b"hsqs" + b"\x00" * 1024) -> "Medium":
+             live_payload: bytes | None = None,
+             omit_live_payload: bool = False) -> "Medium":
+        # `None` means "the correct payload", and omission has its own flag, so
+        # that "no payload at all" cannot be expressed by accident.
+        if live_payload is None and not omit_live_payload:
+            live_payload = squashfs(SQUASHFS_IS_ROOT)
+        if omit_live_payload:
+            live_payload = None
         medium = cls(root)
         cmdline = cmdline if cmdline is not None else (
             f"root=live:CDLABEL={LABEL} rd.live.image enforcing=0 console=tty0 quiet")
@@ -202,7 +245,7 @@ class MediumTests(unittest.TestCase):
         self.assertTrue(any(name.endswith("/search-label") for name in failed(report)))
 
     def test_a_medium_with_no_live_payload_is_caught(self) -> None:
-        report = self.build(live_payload=None).qualify()
+        report = self.build(omit_live_payload=True).qualify()
         self.assertEqual(report["status"], "FAIL")
         self.assertIn("live-payload/present", failed(report))
 
@@ -210,6 +253,27 @@ class MediumTests(unittest.TestCase):
         report = self.build(live_payload=b"NOTSQUASH" + b"\x00" * 64).qualify()
         self.assertEqual(report["status"], "FAIL")
         self.assertIn("live-payload/shape", failed(report))
+
+    def test_a_payload_with_squashfs_magic_and_nothing_behind_it_is_caught(self) -> None:
+        # The fixture these tests used to ship. It passes on a host with no
+        # unsquashfs and fails on one with it, so it is now a case rather than
+        # a foundation.
+        report = self.build(live_payload=b"hsqs" + b"\x00" * 1024).qualify()
+        if shutil.which("unsquashfs") is None:
+            self.skipTest("unsquashfs unavailable; the shape cannot be determined")
+        self.assertEqual(report["status"], "FAIL")
+        self.assertIn("live-payload/shape", failed(report))
+
+    @unittest.skipIf(shutil.which("unsquashfs") is None, "unsquashfs unavailable")
+    def test_a_liveos_directory_with_no_root_image_inside_it_is_caught(self) -> None:
+        # dmsquash-live-root.sh takes the LiveOS branch on sight of the
+        # directory and then dies with "Failed to find a root filesystem".
+        report = self.build(live_payload=squashfs(BAD_LIVEOS)).qualify()
+        self.assertEqual(report["status"], "FAIL")
+        self.assertIn("live-payload/shape", failed(report))
+        detail = next(c["detail"] for c in report["checks"]
+                      if c["check"] == "live-payload/shape")
+        self.assertIn("rootfs.img", detail)
 
     def test_an_entry_with_no_initrd_line_is_caught(self) -> None:
         report = self.build(initrd=None).qualify()
