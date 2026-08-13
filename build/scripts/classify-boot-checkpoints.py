@@ -191,21 +191,48 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
     ),
     Checkpoint(
         "BOOT-9", "the Bunny setup surface appears",
-        positive=(r"Started Session \d+ of User bunny-live|"
-                  r"user-\d+\.slice|"
+        # The two Bunny units the surface cannot exist without, not the generic
+        # session markers this checkpoint asked for first. `Started Session N of
+        # User bunny-live` and `user-1000.slice` never appear on the console:
+        # systemd stops printing status once graphical.target is reached, and
+        # the autologin session starts after that. So a checkpoint waiting for
+        # them waits for something the console will not carry, and run 11 —
+        # which reached the setup surface — was reported as a failure.
+        #
+        # bunny-live-session.service creates the live account; without it there
+        # is nobody for GDM to log in. bunny-installer-backend.service is the
+        # privileged half the surface talks to; without it the surface draws and
+        # finds no backend. Both are Bunny's own, both are on the console, and
+        # both are prerequisites rather than proxies.
+        # No `\.service` suffix, because systemd truncates its status lines to
+        # the console width and elides the middle:
+        #
+        #   [  OK  ] Finished bunny-live-session.servic…he ephemeral Bunny OS live session.
+        #   [  OK  ] Started bunny-installer-backend.se… - Bunny OS live installer backend.
+        #
+        # A pattern ending in `.service` matches the kmsg copy and not the
+        # console one, and the kmsg copy is only there when the journal is
+        # forwarded. Run 11 reached the setup surface and was reported a failure
+        # for exactly that reason.
+        positive=(r"Finished bunny-live-session|"
+                  r"Started bunny-installer-backend|"
+                  r"Started Session \d+ of User bunny-live|"
                   r"Started User Manager for UID|"
-                  r"gdm-autologin|"
                   r"BunnyInstaller|bunny-setup",),
-        negative=(r"gdm-autologin.*failed|"
+        negative=(r"Failed to start bunny-live-session|"
+                  r"Failed to start bunny-installer-backend|"
+                  r"Dependency failed for bunny-instal|"
+                  r"gdm-autologin.*failed|"
                   r"Failed to start User Manager|"
                   r"oh no! something has gone wrong",),
         after=SWITCH, screenshot="03-session", screenshot_role="required",
-        note="Half of this is unavoidably visual: a session that started is not "
-             "the same as a window that drew. The serial half establishes that "
-             "the live user's session exists; the frame establishes that the "
-             "screen is not blank. Neither says the surface is the right one, "
-             "so this checkpoint keeps needsLook set and the phase is not "
-             "closed on it without somebody opening the png.",
+        note="Half of this is unavoidably visual: units that started are not the "
+             "same as a window that drew. The serial half establishes that the "
+             "live account exists and the installer backend is listening; the "
+             "frame establishes that the screen is not blank. Neither says the "
+             "surface is the *right* one — a display manager's login screen is "
+             "also not blank — so this checkpoint keeps needsLook set and the "
+             "phase is not closed on it without somebody opening the png.",
     ),
 )
 

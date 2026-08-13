@@ -70,10 +70,14 @@ GRAPHICAL = [
     "[   16.100] systemd[1]: Started GNOME Display Manager.",
     "[   17.000] systemd[1]: Reached target graphical.target - Graphical Interface.",
 ]
+# What the console actually carries. systemd stops printing status once
+# graphical.target is reached and the autologin session starts after that, so
+# `Started Session N of User bunny-live` is never seen on a default boot. These
+# two are Bunny's own units, they are prerequisites of the surface rather than
+# proxies for it, and they do appear.
 SESSION = [
-    "[   18.400] systemd[1]: Created slice user-1000.slice - User Slice of UID 1000.",
-    "[   18.900] systemd[1]: Started User Manager for UID 1000.",
-    "[   19.100] systemd[1]: Started Session 1 of User bunny-live.",
+    "[   12.900] systemd[1]: Finished bunny-live-session.service - Prepare the ephemeral Bunny OS live session.",
+    "[   13.100] systemd[1]: Started bunny-installer-backend.service - Bunny OS live installer backend.",
 ]
 
 STAGES = [FIRMWARE, GRUB, KERNEL, INITRAMFS, LIVE_ROOT, SWITCH, REAL_ROOT,
@@ -172,6 +176,37 @@ class ClassifierTests(unittest.TestCase):
         status = self.status(self.classify(log_through(8)))
         self.assertEqual(status["BOOT-8"], "PASS")
         self.assertEqual(status["BOOT-9"], "FAIL")
+
+    def test_systemds_truncated_console_lines_still_match(self) -> None:
+        # systemd elides the middle of its status lines to fit the console:
+        #   [  OK  ] Finished bunny-live-session.servic…he ephemeral Bunny OS live session.
+        # A pattern anchored on ".service" matches the kmsg copy and not this
+        # one, and the kmsg copy only exists when the journal is forwarded.
+        # Run 11 reached the setup surface and was reported a failure for
+        # exactly that reason.
+        truncated = [
+            "[  OK  ] Finished bunny-live-session.servic…he ephemeral Bunny OS live session.",
+            "[  OK  ] Started bunny-installer-backend.se… - Bunny OS live installer backend.",
+        ]
+        text = "\n".join(
+            FIRMWARE + GRUB + KERNEL + INITRAMFS + LIVE_ROOT + SWITCH
+            + REAL_ROOT + GRAPHICAL + truncated) + "\n"
+        report = self.classify(text)
+        self.assertEqual(self.status(report)["BOOT-9"], "PASS")
+        self.assertEqual(report["reached"], "BOOT-9")
+
+    def test_the_live_units_failing_refutes_the_surface(self) -> None:
+        # Runs 2, 5 and 7: graphical.target may or may not arrive, but a failed
+        # bunny-live-session means there is no account to log in and no surface.
+        text = log_through(8, [
+            "[   19.0] systemd[1]: Failed to start bunny-live-session.service - "
+            "Prepare the ephemeral Bunny OS live session.",
+            "[   19.1] systemd[1]: Dependency failed for bunny-installer-backend.service.",
+        ])
+        report = self.classify(text)
+        self.assertEqual(self.status(report)["BOOT-9"], "FAIL")
+        entry = next(r for r in report["checkpoints"] if r["checkpoint"] == "BOOT-9")
+        self.assertIn("bunny-live-session", entry["refutedBy"]["text"])
 
     def test_a_blank_frame_fails_the_checkpoint_that_rests_on_it(self) -> None:
         # The realistic shape: a serial console that never sees GRUB, because
