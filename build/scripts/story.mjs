@@ -228,7 +228,7 @@ function errorMarkup(model) {
       ${model.explanation ? `<div class="bunny-error-explanation">${escape(model.explanation)}</div>` : ''}
       <div class="bunny-error-next">${escape(model.next)}</div>
       <div class="bunny-result-actions">${model.actions.map(a =>
-          `<button class="bunny-error-action">${escape(a.label)}</button>`).join('')}</div>
+          `<button class="bunny-error-action" aria-label="${escape(a.accessibleName)}">${escape(a.label)}</button>`).join('')}</div>
     </div></div>`;
 }
 
@@ -403,7 +403,24 @@ for (const story of stories) {
     if (truths.size !== 1)
         note(theme, 'companion', 'disagreement', `${truths.size} different truths across four modes`);
 
-    // 6. Hostile content must not reach the page as live markup.
+    // 6. Every button carries an accessible name.
+    //
+    // The one genuinely unnamed control in the desktop was a `St.Button` whose
+    // label is empty until there is something to offer — the speech bubble's
+    // "read the rest". St.Button takes its accessible name from its label, so
+    // the accessibility tree carried a button with no name at all, and it took
+    // an AT-SPI walk on a booted guest to find it. A button with no name is
+    // exactly what a screenshot cannot show and a story can.
+    for (const panel of story.panels) {
+        const buttons = panel.html.match(/<button\b[^>]*>/g) ?? [];
+        for (const button of buttons) {
+            const label = /aria-label="([^"]*)"/.exec(button);
+            if (!label || !label[1].trim())
+                note(theme, panel.title, 'unnamed-control', `a button with no accessible name: ${button.slice(0, 60)}`);
+        }
+    }
+
+    // 7. Hostile content must not reach the page as live markup.
     //
     // Asked of the *rendered* panel, not of the model. The model carries
     // whatever the runtime handed it and is right to — escaping belongs where a
