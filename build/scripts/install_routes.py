@@ -584,6 +584,21 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "installer/frontend/art.comrade.BunnyInstaller-autostart.desktop",
         "/etc/xdg/autostart/art.comrade.BunnyInstaller.desktop", 0o644, profiles=LIVE_PROFILES,
     ),
+    # The §42 driver. Almost every other harness in build/scripts stays on the
+    # host and is injected into a disk image with guestfish, which an ISO cannot
+    # be — it is read-only and there is nothing to inject into. So this one
+    # ships, and the thing that drives the installer is the thing the installer
+    # carries. It does nothing unless a kernel argument asks for it.
+    _file_route(
+        "live-setup-driver", "build/scripts/setup-drive.py",
+        "/usr/libexec/bunny-setup-drive", 0o555, profiles=LIVE_PROFILES,
+    ),
+    _file_route(
+        "live-setup-driver-autostart",
+        "installer/frontend/art.comrade.BunnySetupDrive-autostart.desktop",
+        "/etc/xdg/autostart/art.comrade.BunnySetupDrive.desktop", 0o644,
+        profiles=LIVE_PROFILES,
+    ),
 
     # -- unconditional, and last ---------------------------------------------
     _file_route(

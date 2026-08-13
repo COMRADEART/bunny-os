@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Bunny setup qualification driver
+Comment=Drives the setup surface over AT-SPI when a qualification run asks it to
+# Inert unless an SMBIOS OEM string carries bunny.drive=. A person booting the
+# installation medium gets the setup surface and nothing touching it; only a
+# harness that set the string on the virtual machine gets a driven install.
+Exec=/usr/libexec/bunny-setup-drive
+Terminal=false
+OnlyShowIn=GNOME;
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=10
+NoDisplay=true
