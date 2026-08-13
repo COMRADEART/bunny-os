@@ -16,21 +16,56 @@ label: "Bunny-OS-Beta"
 # medium never reached a session — which is why every entry here had never
 # booted past the GRUB menu.
 #
-# `root=live:CDLABEL=<label> rd.live.image` is what a LiveOS initrd reads.
+# `root=live:CDLABEL=<label> rd.live.image` is what a LiveOS initrd reads. It
+# needed the dmsquash-live module to read it, which the initramfs did not have
+# either; see LIVE_BOOT_ROOT_CAUSE.md and
+# build/scripts/regenerate-live-initramfs.sh.
+#
+# ## Why every entry carries `enforcing=0`
+#
+# Because this file replaces image-builder's generated menu entries wholesale,
+# and image-builder's own defaults carry it. From its pipeline configuration,
+# in both the build that produced this file's first version and the one after:
+#
+#     "kernel": { "dir": "/images/pxeboot", "opts": [
+#         "root=live:CDLABEL=Bunny-OS-Beta", "rd.live.image",
+#         "quiet", "rhgb", "enforcing=0" ] }
+#
+# `enforcing=0` is a literal string in the image-builder binary. Overriding the
+# entries dropped it, and the first medium that got far enough to care froze:
+#
+#     Welcome to Bunny OS 0.3.0-beta (development)!
+#     systemd[1]: Failed to set SELinux security context
+#                 system_u:object_r:systemd_unit_file_t:s0 for /run/systemd/units:
+#                 Permission denied
+#     systemd[1]: Failed to allocate manager object: Permission denied
+#     systemd[1]: Freezing execution.
+#
+# The reason is structural rather than a policy bug. The live root is a squashfs
+# of a bootc container tree, and a bootc container carries no SELinux labels at
+# all — `ls -Z /usr/bin/bash` in the image prints `?`, because ostree applies
+# labels when it deploys, and nothing deploys a live medium. So the overlay root
+# is `unlabeled_t`, /etc/selinux/config says `enforcing`, and PID 1 cannot label
+# the /run directories it needs before it has a manager. It freezes before any
+# unit starts.
+#
+# This applies to the installation medium only. The system this medium installs
+# is an ostree deployment that is labelled at deployment time and runs SELinux
+# enforcing; nothing here changes that.
 grub2:
   entries:
     - name: "Try or Install Bunny OS"
-      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image console=tty0 rhgb quiet"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 console=tty0 rhgb quiet"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Safe Graphics"
-      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image console=tty0 nomodeset rd.driver.blacklist=nouveau quiet"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 console=tty0 nomodeset rd.driver.blacklist=nouveau quiet"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Recovery Tools"
-      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image systemd.unit=bunny-recovery.target console=tty0"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 systemd.unit=bunny-recovery.target console=tty0"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Verify Installation Media"
-      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image rd.live.check console=tty0"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 rd.live.check console=tty0"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Try or Install Bunny OS (serial console)"
-      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image console=tty0 console=ttyS0,115200n8"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 console=tty0 console=ttyS0,115200n8"
       initrd: "/images/pxeboot/initrd.img"

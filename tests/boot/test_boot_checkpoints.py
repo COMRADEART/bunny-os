@@ -252,6 +252,28 @@ class ClassifierTests(unittest.TestCase):
         looks = {r["checkpoint"] for r in report["checkpoints"] if r["needsLook"]}
         self.assertEqual(looks, {"BOOT-2", "BOOT-9"})
 
+    def test_systemds_coloured_console_copy_is_matched_too(self) -> None:
+        # The real serial log carries every message twice: plain through kmsg,
+        # and coloured from systemd's own status output. A negative pattern that
+        # only matched the plain copy would keep working right up until the day
+        # a failure appeared in the coloured one alone.
+        coloured = (
+            "\x1b[[0;32m  OK  \x1b[0m] Reached target \x1b[0;1;39minitrd.target\x1b[0m"
+            " - Initrd Default Target.\n"
+            "         Starting \x1b[0;1;39minitrd-switch-root.service\x1b[0m - Switch Root...\n"
+            "[\x1b[0;1;31mFAILED\x1b[0m] Failed to start \x1b[0;1;39minitrd-switch-root.service"
+            "\x1b[0m - Switch Root.\n"
+        )
+        text = "\n".join(FIRMWARE + KERNEL + INITRAMFS + LIVE_ROOT) + "\n" + coloured
+        report = self.classify(text, outcome="boot-failure")
+        status = self.status(report)
+        self.assertEqual(status["BOOT-5"], "PASS")
+        self.assertEqual(status["BOOT-6"], "FAIL")
+        entry = next(r for r in report["checkpoints"] if r["checkpoint"] == "BOOT-6")
+        self.assertIn("Failed to start initrd-switch-root.service",
+                      entry["refutedBy"]["text"])
+        self.assertNotIn("\x1b", entry["refutedBy"]["text"])
+
     def test_an_empty_log_reaches_nothing(self) -> None:
         report = self.classify("")
         self.assertIsNone(report["reached"])

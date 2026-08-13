@@ -187,7 +187,11 @@ while (( SECONDS < deadline )); do
     shot "03-session"
     break
   fi
-  if grep -aqE 'Entering emergency mode|Failed to start initrd-switch-root|dracut-initqueue.*[Tt]imeout|Kernel panic' "${log}" 2>/dev/null; then
+  # Every way this medium is known to stop, plus the shapes a stop takes.
+  # `Failed to allocate manager object` / `Freezing execution` was added after a
+  # run sat for the full fifteen minutes watching a PID 1 that had frozen at
+  # 7.3 seconds: the boot had ended, and only the harness did not know it.
+  if grep -aqE 'Entering emergency mode|Failed to start initrd-switch-root|dracut-initqueue.*[Tt]imeout|Kernel panic|Failed to allocate manager object|Freezing execution|Failed to switch root' "${log}" 2>/dev/null; then
     outcome="boot-failure"
     sleep 5
     shot "99-failure"

@@ -210,9 +210,20 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
 )
 
 
+# systemd writes each message to the console twice: once through kmsg as plain
+# text (`[    3.644867] systemd[1]: Reached target …`) and once as its own status
+# output, coloured — `Failed to start \x1b[0;1;39minitrd-switch-root.service\x1b[0m`.
+# A pattern reading `Failed to start initrd-switch-root` matches the first copy
+# and not the second, which is survivable only for as long as both copies keep
+# appearing. Stripping the escapes first makes every pattern work on either, and
+# makes the line quoted back in the report readable instead of full of \x1b.
+ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]|\x1b[()][A-B0-9]|[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
 def load_lines(path: Path) -> list[str]:
     raw = path.read_bytes()
-    return raw.decode("utf-8", "replace").splitlines()
+    text = raw.decode("utf-8", "replace")
+    return [ANSI.sub("", line).rstrip() for line in text.splitlines()]
 
 
 def first_match(lines: list[str], patterns: tuple[str, ...],

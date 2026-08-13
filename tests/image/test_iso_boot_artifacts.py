@@ -85,7 +85,7 @@ class Medium:
              live_payload: bytes | None = b"hsqs" + b"\x00" * 1024) -> "Medium":
         medium = cls(root)
         cmdline = cmdline if cmdline is not None else (
-            f"root=live:CDLABEL={LABEL} rd.live.image console=tty0 quiet")
+            f"root=live:CDLABEL={LABEL} rd.live.image enforcing=0 console=tty0 quiet")
         (root / "images/pxeboot").mkdir(parents=True)
         (root / "images/pxeboot/vmlinuz").write_bytes(bzimage(kernel_release))
         (root / "images/pxeboot/initrd.img").write_bytes(
@@ -136,6 +136,26 @@ class MediumTests(unittest.TestCase):
             cmdline=f"inst.stage2=hd:LABEL={LABEL} inst.webui console=tty0").qualify()
         self.assertEqual(report["status"], "FAIL")
         self.assertTrue(any(name.endswith("/root") for name in failed(report)))
+
+    def test_a_live_entry_without_enforcing_zero_is_caught(self) -> None:
+        # The second real failure of this medium, and the one that only shows
+        # itself after switch-root: the live root is an unlabelled squashfs, so
+        # PID 1 freezes with "Failed to allocate manager object" the moment it
+        # tries to label /run. image-builder's own entries carry enforcing=0;
+        # Bunny's replace them, so dropping it is a one-line edit away.
+        report = self.build(
+            cmdline=f"root=live:CDLABEL={LABEL} rd.live.image console=tty0 quiet"
+        ).qualify()
+        self.assertEqual(report["status"], "FAIL")
+        self.assertTrue(any(name.endswith("/selinux") for name in failed(report)),
+                        failed(report))
+
+    def test_selinux_zero_is_accepted_as_well(self) -> None:
+        report = self.build(
+            cmdline=f"root=live:CDLABEL={LABEL} rd.live.image selinux=0 console=tty0"
+        ).qualify()
+        self.assertFalse(any(name.endswith("/selinux") for name in failed(report)),
+                         failed(report))
 
     def test_a_missing_initrd_is_caught(self) -> None:
         medium = self.build()

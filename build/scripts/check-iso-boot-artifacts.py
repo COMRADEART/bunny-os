@@ -313,6 +313,31 @@ def qualify(medium: Path, iso: Path | None, expect_label: str | None,
                 continue
             record(f"entry/{relative}/{entry['name']}/root", True,
                    f"root={live}")
+
+            # A live root is a squashfs of a bootc container tree, and a bootc
+            # container carries no SELinux labels: ostree applies them when it
+            # deploys, and nothing deploys a live medium. So the overlay root is
+            # unlabeled_t while /etc/selinux/config says enforcing, and PID 1
+            # cannot label the /run directories it needs before it has a
+            # manager. Measured, on the medium that first got far enough to
+            # care:
+            #
+            #     Welcome to Bunny OS 0.3.0-beta (development)!
+            #     systemd[1]: Failed to allocate manager object: Permission denied
+            #     systemd[1]: Freezing execution.
+            #
+            # image-builder's own generated entries carry enforcing=0 for this
+            # reason. Bunny's replace them wholesale, so the requirement has to
+            # be asserted here or the next edit of installer/config/iso.yaml
+            # drops it again and the medium freezes after switch-root — which is
+            # both further on and harder to read than failing to boot at all.
+            permissive = (cmdline_value(entry["cmdline"], "enforcing") == "0"
+                          or cmdline_value(entry["cmdline"], "selinux") == "0")
+            record(f"entry/{relative}/{entry['name']}/selinux", permissive,
+                   "carries enforcing=0" if permissive else
+                   "carries neither enforcing=0 nor selinux=0; the live root is "
+                   "an unlabelled squashfs and PID 1 will freeze with 'Failed to "
+                   "allocate manager object' after switch-root")
             if live.startswith("live:CDLABEL="):
                 wanted = live[len("live:CDLABEL="):]
                 if label is not None:
