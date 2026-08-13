@@ -47,6 +47,21 @@
 #   BUNNY_INSTALL_ISO      the medium to boot (default: newest under build/out/live)
 #   BUNNY_BOOT_TIMEOUT     seconds to wait for BOOT-9 (default 900)
 #   BUNNY_BOOT_WORK        evidence directory (default build/out/boot/<label>)
+#   BUNNY_BOOT_APPEND      extra kernel arguments, typed into GRUB's editor
+#
+# ## On BUNNY_BOOT_APPEND
+#
+# A unit that fails writes its reason to the journal, and the journal does not
+# reach the serial console unless it is asked to. So the one thing a harness
+# reading serial cannot see is *why* anything failed — which is how a run ends
+# with "[FAILED] Failed to start bunny-live-session.service" and nothing else.
+#
+# This types extra arguments into GRUB's editor rather than adding them to the
+# medium, because they are a property of an investigation and not of the
+# product. `systemd.journald.forward_to_console=1` is the usual one.
+#
+# It verifies itself (§27): the kernel prints its own command line, and the run
+# refuses to be read as a plain boot unless the appended text is in it.
 set -uo pipefail
 
 repository_root="$(git rev-parse --show-toplevel)"
@@ -58,6 +73,7 @@ label="${1:-$(date -u +%Y%m%d-%H%M%S)}"
 seconds="${BUNNY_BOOT_TIMEOUT:-900}"
 width="${BUNNY_BOOT_WIDTH:-1280}"
 height="${BUNNY_BOOT_HEIGHT:-1024}"
+append="${BUNNY_BOOT_APPEND:-}"
 
 bunny_require_commands qemu-system-x86_64 python3 git || exit 3
 
@@ -150,17 +166,32 @@ menu_shot_pid=$!
 # 22, 35 and 50 seconds: three chances, the last ten seconds clear of the
 # deadline. Extra Downs and Returns after a successful selection land in a
 # booting Linux console and do nothing.
+press() {
+  python3 build/scripts/qmp-input.py --socket "${qmp}" \
+    --width "${width}" --height "${height}" --key "$1" >/dev/null 2>&1 || true
+}
+
 (
   previous_at=0
   for at in 22 35 50; do
     sleep $(( at - previous_at )); previous_at="${at}"
-    for _ in 1 2 3 4; do
+    for _ in 1 2 3 4; do press down; done
+    if [[ -n "${append}" ]]; then
+      # `e` opens the entry for editing. Its body is the two commands of the
+      # menuentry, so the linux line is the first; End puts the cursor after
+      # the last argument, and Ctrl-X boots what was typed.
+      press esc            # leave any editor a previous attempt opened
+      press e
+      sleep 2
+      press end
       python3 build/scripts/qmp-input.py --socket "${qmp}" \
-        --width "${width}" --height "${height}" --key down >/dev/null 2>&1 || true
-    done
-    python3 build/scripts/qmp-input.py --socket "${qmp}" \
-      --width "${width}" --height "${height}" --key ret >/dev/null 2>&1 || true
-    shot "02-after-selection-t${at}"
+        --width "${width}" --height "${height}" --type " ${append}" >/dev/null 2>&1 || true
+      shot "02-edited-t${at}"
+      press "ctrl+x"
+    else
+      press ret
+      shot "02-after-selection-t${at}"
+    fi
   done
 ) &
 select_pid=$!
@@ -206,8 +237,28 @@ done
 [[ "${outcome}" == "timeout" ]] && shot "99-timeout"
 kill "${shots_pid}" "${select_pid}" "${menu_shot_pid}" 2>/dev/null
 
-# §17: record what actually happened, from inside the guest's own output.
-grep -aoE '/proc/cmdline.*|Command line: .*' "${log}" | head -3 > "${work}/cmdline.txt" || true
+# §17: record what actually happened, from inside the guest's own output. The
+# kernel prints the command line it was given, which is the only account of it
+# that does not come from the harness.
+grep -aoE 'Command line: .*' "${log}" | head -3 > "${work}/cmdline.txt" || true
+
+# §27: a harness mutation that reports success without having happened is worse
+# than one that fails. If arguments were appended, the kernel has to say so.
+if [[ -n "${append}" ]]; then
+  first_token="${append%% *}"
+  if grep -aq -- "${first_token}" "${work}/cmdline.txt"; then
+    echo "appended kernel arguments confirmed on the guest's own command line:"
+    sed 's/^/  /' "${work}/cmdline.txt"
+  else
+    echo "BLOCKED: BUNNY_BOOT_APPEND was set to '${append}' and the kernel's" >&2
+    echo "reported command line does not contain '${first_token}':" >&2
+    sed 's/^/  /' "${work}/cmdline.txt" >&2
+    echo "The GRUB edit did not take. This run is not the run that was asked" >&2
+    echo "for, and reading it as one is how a harness reports a conclusion it" >&2
+    echo "never tested." >&2
+    exit 6
+  fi
+fi
 
 python3 build/scripts/classify-boot-checkpoints.py \
   --serial "${log}" \
