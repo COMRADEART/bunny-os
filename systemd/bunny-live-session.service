@@ -31,7 +31,23 @@ ProtectHome=read-only
 # file from the same directory and this unit is a oneshot.
 RuntimeDirectory=bunny-installer
 RuntimeDirectoryPreserve=yes
-ReadWritePaths=/home /etc/passwd /etc/shadow /etc/group /etc/gshadow
+# /etc rather than the four files inside it, because useradd does not write them
+# in place. It takes a lock by creating /etc/.pwd.lock and /etc/passwd.lock, and
+# it replaces each database by writing `passwd+` and renaming — both of which
+# need the *directory* writable. Naming the files bind-mounts exactly those four
+# inodes and leaves /etc read-only, so:
+#
+#   bunny-live-session[1255]: useradd: cannot lock /etc/passwd; try again later.
+#   KeyError: "getpwnam(): name not found: 'bunny-live'"
+#
+# Measured on the medium that first got past the namespace fault above. The
+# message names /etc/passwd, which is the one thing that *was* writable, and
+# that is the whole trap: a file-level ReadWritePaths looks like it grants what
+# the program needs and grants the one part it does not use.
+#
+# ProtectSystem=strict still holds everywhere else, and this unit's entire job
+# is to add an account on ephemeral media.
+ReadWritePaths=/home /etc
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes

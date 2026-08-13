@@ -99,6 +99,18 @@ class RuntimeDirectoryTests(unittest.TestCase):
         session = (UNITS / "bunny-live-session.service").read_text(encoding="utf-8")
         self.assertEqual(directives(session, "RuntimeDirectoryPreserve"), ["yes"])
 
+    def test_a_unit_that_runs_useradd_can_write_the_directory_not_just_the_files(self) -> None:
+        # useradd takes a lock by creating /etc/.pwd.lock and /etc/passwd.lock,
+        # and replaces each database by writing `passwd+` and renaming. All of
+        # that needs /etc itself writable. Naming /etc/passwd bind-mounts that
+        # one inode and leaves the directory read-only, which produces
+        # "useradd: cannot lock /etc/passwd" — a message naming the one file
+        # that *was* writable.
+        session = (UNITS / "bunny-live-session.service").read_text(encoding="utf-8")
+        writable = directives(session, "ReadWritePaths")
+        self.assertIn("/etc", writable)
+        self.assertNotIn("/etc/passwd", writable)
+
     def test_the_detector_would_notice_a_regression(self) -> None:
         # The negative control: the rule must fail on the shape it was written
         # for, or it is a test that can only pass.
