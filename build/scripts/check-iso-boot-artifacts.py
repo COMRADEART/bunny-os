@@ -328,9 +328,16 @@ def qualify(medium: Path, iso: Path | None, expect_label: str | None,
                            f"the command line asks for {wanted!r} and GRUB's "
                            f"search sets root from {parsed['searchLabel']!r}")
 
-    if label is not None and expect_label is not None:
+    if expect_label is not None:
+        # A --expect-label that silently checks nothing is worse than no
+        # expectation at all: the caller asked for a label to be verified and
+        # would read a pass as an answer. The volume identifier lives in the
+        # ISO9660 primary volume descriptor, so --root mode cannot supply one.
         record("volume-label/expected", label == expect_label,
-               f"volume label is {label!r}, expected {expect_label!r}")
+               f"volume label is {label!r}, expected {expect_label!r}"
+               if label is not None else
+               "the volume identifier cannot be read from an extracted medium; "
+               "pass --iso to check a label")
 
     record("artifacts/one-kernel", len(referenced_kernels) == 1,
            f"entries reference {len(referenced_kernels)} distinct kernel path(s): "

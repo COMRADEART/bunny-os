@@ -208,6 +208,24 @@ class MediumTests(unittest.TestCase):
                             for name in failed(report)), failed(report))
 
 
+class ExpectedLabelTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.scratch = Path(tempfile.mkdtemp())
+
+    def test_expecting_a_label_on_an_extracted_medium_fails_rather_than_passes(self) -> None:
+        # --root cannot see the volume descriptor. Answering "fine" to a
+        # question it did not ask is how a check reports a property it never
+        # examined.
+        root = self.scratch / "medium"
+        root.mkdir()
+        Medium.good(root)
+        report = gate.qualify(root, None, LABEL, KERNEL)
+        self.assertIn("volume-label/expected", failed(report))
+        detail = next(c["detail"] for c in report["checks"]
+                      if c["check"] == "volume-label/expected")
+        self.assertIn("--iso", detail)
+
+
 class VolumeLabelTests(unittest.TestCase):
     """Reading the ISO9660 primary volume descriptor without a mount."""
 
