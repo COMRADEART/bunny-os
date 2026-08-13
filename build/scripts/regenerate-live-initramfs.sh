@@ -178,9 +178,18 @@ cp -a "${initramfs}" "${work}/original.img"
 dracut_command=(dracut --force --no-hostonly --reproducible
                 --kver "${kver}" "${work}/new.img")
 echo "    ${dracut_command[*]}"
+# `set -o pipefail` at the top is what makes this correct: the pipeline's status
+# is dracut's, not tee's, so `$?` is the number that matters.
+#
+# An earlier version of this line followed it with
+# `status="${PIPESTATUS[0]:-${status}}"`, which looks more careful and is the
+# opposite. `status=$?` is itself a command, and running it resets PIPESTATUS to
+# the assignment's own (0) — so on the one path that matters, a dracut that had
+# just failed, the next line read 0 and the build continued to assemble an ISO
+# around an unqualified initramfs. In a script whose entire purpose is to fail
+# closed.
 status=0
 SOURCE_DATE_EPOCH="${epoch}" "${dracut_command[@]}" 2>&1 | tee "${work}/dracut.log" || status=$?
-status="${PIPESTATUS[0]:-${status}}"
 if [[ "${status}" -ne 0 ]]; then
   echo "BLOCKED: dracut exited ${status}. Full output above and in ${work}/dracut.log." >&2
   exit 2

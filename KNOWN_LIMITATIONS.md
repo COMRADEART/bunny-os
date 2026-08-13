@@ -105,9 +105,18 @@ Fedora's own %ghost paths in the live profile only, verified against the
 rpm-owned originals with `cmp`.
 
 Measured end to end: `image-builder 76.0.0`, `osbuild 185`, exit 0, a 2.0 GB
-bootable ISO whose `BOOTX64.EFI`, `grubx64.efi` and `mmx64.efi` are
-byte-identical to `shim-x64-16.1-5` and `grub2-efi-x64-cdboot-2.12-60.fc44`.
-Secure Boot is unchanged.
+ISO whose `BOOTX64.EFI`, `grubx64.efi` and `mmx64.efi` are byte-identical to
+`shim-x64-16.1-5` and `grub2-efi-x64-cdboot-2.12-60.fc44`. Secure Boot is
+unchanged.
+
+**Corrected 2026-08-13.** That sentence said "a 2.0 GB **bootable** ISO". Both
+measurements behind it were real — image-builder exited 0 and the signed
+binaries matched their rpm-owned originals — and both are about ISO
+*generation*. The medium was never booted. When it was, it reached GRUB and
+failed in the initramfs, and the reason had been present the whole time: the
+initramfs contained no module able to read any root argument the entries could
+have carried. See `LIVE_BOOT_ROOT_CAUSE.md`. "ISO generated" and "installer boot
+validated" are now distinct states with a build gate between them.
 
 **Still outstanding:** that build used the cached *beta* live image. **No Alpha
 ISO has been produced**, because the Alpha payload is not built on any current
