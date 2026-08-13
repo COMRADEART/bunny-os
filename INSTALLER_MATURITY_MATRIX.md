@@ -3,7 +3,7 @@
 §55.13. Every claim this phase could make, and the highest evidence level that
 actually supports it.
 
-Commit `88f6ccdb`. §52's ladder:
+Commit `28f62a24` and later. §52's ladder:
 IMPLEMENTED · UNIT TESTED · HOST RUNTIME VALIDATED · VM RUNTIME VALIDATED ·
 PHYSICAL HARDWARE VALIDATED · RELEASE QUALIFIED.
 
@@ -29,13 +29,13 @@ been looked at on a real display and no further.
 | account creation works | UNIT TESTED | yescrypt hash rendered `--iscrypted`; no account created |
 | privacy preferences persist | IMPLEMENTED | `Choices` round-trips and refuses secrets; nothing has crossed a reboot |
 | appearance preferences persist | IMPLEMENTED | same |
-| Bunny presentation mode persists | IMPLEMENTED | five modes including Off; the shell side still has four |
+| Bunny presentation mode persists | IMPLEMENTED | five modes including Off on both sides now; applied by `first_run/apply.py`, never yet across a real reboot |
 | optional application selection works | HOST RUNTIME VALIDATED | real catalogue; Photoshop and Microsoft 365 correctly unavailable with honest reasons |
 | progress reflects real installer state | UNIT TESTED | engine→Companion map is total; no percentage anywhere |
 | installation completes on a disposable VM disk | **NOT ESTABLISHED** | the §44 requirement |
 | installed system boots | **NOT ESTABLISHED** | |
 | user logs in | **NOT ESTABLISHED** | |
-| first-run experience appears | IMPLEMENTED | `first_run/app.py` still collects nothing — see gaps |
+| first-run experience appears | IMPLEMENTED | `first_run/alpha.py` via `cli.py`; the setup choices are now applied before it draws |
 | personalized desktop reflects setup choices | **NOT ESTABLISHED** | |
 | keyboard-only installation runs | IMPLEMENTED | focus lands on the first control per screen; no run has completed by keyboard alone |
 | Orca-driven representative installation runs | **NOT ESTABLISHED** | AT-SPI walked, Orca not run |
@@ -84,14 +84,26 @@ been looked at on a real display and no further.
 
 ## Known gaps that are not blocked on the VM
 
-1. **`installer/first_run/app.py` still collects nothing.** Thirteen steps of
-   heading-and-paragraph with Back/Next; `FirstRunState.update()` — which does
-   the validation and the secret refusal — is never called from the GUI. §28–§30
-   need real controls, and it must stop re-asking for language, region and
-   keyboard, which §28 forbids.
-2. **`companionModes.js` has four modes; §16 requires five.** The setup screen
-   offers `off` and the desktop cannot resolve it, so that preference would
-   silently become something else on the installed system.
+1. ~~`installer/first_run/app.py` collects nothing.~~ **Corrected.** That was
+   true of the file and misleading about the product: nothing imported `app.py`
+   — it was dead code superseded by `first_run/alpha.py`, which is what
+   `cli.py` runs and which does collect. Reporting it as the first-run
+   experience would have been a defect claimed against a module the system never
+   loads. `app.py` is now deleted rather than left as a second wizard, because
+   two of them is exactly the drift `companion_flow.py` opens by warning about.
+
+   The **real** gap it was hiding: nothing applied the installation choices to
+   the installed system at all. `first_run/apply.py` now does, wired into
+   `cli.py` *before* the wizard draws — so the greeting itself appears at the
+   chosen text size, and a person who dismisses onboarding in the first second
+   still gets the theme, scale and Companion mode they chose. Eleven settings,
+   each recording its own outcome; a `gsettings` schema this build lacks is
+   reported, not raised.
+2. ~~`companionModes.js` has four modes.~~ **Fixed.** `off` is a mode now on
+   both sides. It had to be: `normaliseMode` resolved an unknown mode to
+   `full`, so a person who chose Off during installation would have got the one
+   thing they asked not to see — and only on the installed system, where nobody
+   was looking. All five modes still produce exactly one announcement.
 3. **GTK4's `ScrolledWindow` publishes a nameless focusable node.** Reproduced on
    a stock GTK4 application; not fixable from here. Exempted by name with its
    reason rather than filtered.

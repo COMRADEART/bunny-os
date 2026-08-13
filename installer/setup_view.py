@@ -1041,6 +1041,66 @@ def complete_screen(*, name: str = "") -> Screen:
     )
 
 
+#: §31. Five things, and the section is explicit that it must not become a
+#: twenty-screen slideshow. Each is a fact about how this computer differs from
+#: one the person has used before; nothing here is a feature tour.
+TOUR: tuple[tuple[str, str, str, str], ...] = (
+    ("ask", "Asking Bunny",
+     "Press the Bunny in the corner, or say what you want. Bunny shows you what "
+     "it is doing while it does it.",
+     "listening"),
+    ("trust", "When something needs permission",
+     "Bunny asks in plain words before anything touches your files, your camera "
+     "or the network. You can say no, and you can change your mind later in "
+     "Settings.",
+     "waiting_for_approval"),
+    ("capsules", "Apps run in their own space",
+     "Each app is kept apart from your files and from the other apps until you "
+     "allow it. That is why an app may ask for something you thought it already "
+     "had.",
+     "understanding"),
+    ("files", "Opening things",
+     "Everything you have installed is in Activities. Your files are in Files. "
+     "Bunny can open either for you if you ask.",
+     "presenting_result"),
+    ("settings", "Changing anything",
+     "Settings has everything you chose during setup, and everything you did "
+     "not. Nothing you picked is locked in.",
+     "idle"),
+)
+
+
+def tour_screen(index: int) -> Screen:
+    """One card of the §31 tour.
+
+    Numbered in the heading so a person knows how much is left — a tour whose
+    length is unknowable is a tour people leave. Every card is skippable from
+    every card, because §29 says not to force it.
+    """
+    if not 0 <= index < len(TOUR):
+        raise IndexError(f"no tour card {index}")
+    key, heading, body, companion = TOUR[index]
+    last = index == len(TOUR) - 1
+    return Screen(
+        key=f"tour_{key}",
+        heading=heading,
+        says=body,
+        companion=companion,
+        authority="companion",
+        fields=(Field(f"tour-{key}", "info", heading, help=body),),
+        actions=(
+            Action("back", "Back", tone="quiet", enabled=index > 0),
+            Action("skip", "Skip the tour", tone="safe"),
+            Action("next", "Done" if last else "Next", tone="primary"),
+        ),
+        advanced=(),
+        announcement=(
+            f"{heading}. Step {index + 1} of {len(TOUR)}. {body} "
+            + ("This is the last one." if last else "")
+        ).strip(),
+    )
+
+
 def first_boot_screen(*, name: str, mode: str = "full") -> Screen:
     """§29. A continuation, not a second wizard.
 
