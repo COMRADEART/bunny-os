@@ -421,6 +421,42 @@ grants exactly what the program needs, and grants the part it does not use.
 `ReadWritePaths=/home /etc`. `ProtectSystem=strict` still holds everywhere else,
 and this unit's whole job is to add an account on ephemeral media.
 
+## 7d. The fifth fault: `/home` is a symlink to `/var/home`
+
+The `/etc` repair worked. Run 8's diagnostic boot shows `useradd` getting all
+the way through the databases before it stopped:
+
+```text
+useradd[1266]: new group: name=bunny-live, GID=1000
+useradd[1266]: new user: name=bunny-live, UID=1000, home=/var/home/bunny-live
+bunny-live-session[1266]: useradd: cannot create directory /var/home/bunny-live
+useradd[1266]: failed adding user 'bunny-live', exit code: 12
+```
+
+On an ostree system `/home` is a symlink to `/var/home`.
+`ReadWritePaths=/home` grants the symlink's own path, not the directory anything
+is created in, so `useradd` resolved the home to `/var/home/bunny-live` and met
+a read-only mount. It then rolled its own work back — which is why `getpwnam`
+still raised `KeyError` for an account whose passwd entry had just been written,
+and why the surface error never named the real path.
+
+`ReadWritePaths=/home /var/home /etc`.
+
+### The family
+
+Faults three, four and five are one mistake in three costumes: a sandbox
+declared against the paths the code *appears* to use rather than the ones it
+uses.
+
+| | declared | actually needed |
+| --- | --- | --- |
+| namespace | `ReadWritePaths=/run/bunny-installer` | `RuntimeDirectory=` — the path must exist before ExecStart |
+| lock | `ReadWritePaths=/etc/passwd …` | `/etc`, for `.pwd.lock` and rename-replacement |
+| home | `ReadWritePaths=/home` | `/var/home`, which is what the symlink resolves to |
+
+Each was invisible to inspection, each was found by the first thing that ever
+executed it, and each surfaced only after the one before it was fixed.
+
 ---
 
 ## 7. Prevention
@@ -533,7 +569,9 @@ Setup" is not, and they are different claims about the same run.
 | 4 | `6758090` | `229dad10…` | diagnostic | named the fault: `226/NAMESPACE` |
 | 5 | `138201b` | rebuilt | BOOT-7 | the unit ran at last, and `useradd` could not lock `/etc/passwd` |
 | 6 | `138201b` | run 5's | diagnostic | named the fault: `cannot lock /etc/passwd` |
-| 7 | `d93c674` | pending | pending | pending |
+| 7 | `d93c674` | rebuilt | BOOT-7 | `useradd` wrote the databases, then could not create the home |
+| 8 | `d93c674` | run 7's | diagnostic | named the fault: `/var/home/bunny-live` |
+| 9 | `7e822fe` | pending | pending | pending |
 
 Each run reached one rung further than the last, and each fault was found by the
 first thing that ever executed the code carrying it.
