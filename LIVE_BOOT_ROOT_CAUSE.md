@@ -396,6 +396,31 @@ None of these three had ever run. That is the thread through this whole phase:
 the initramfs modules, the SELinux argument, and these units were all shipped,
 all plausible on inspection, and none had ever been executed by anything.
 
+## 7c. The fourth fault: a file-level ReadWritePaths grants the part useradd does not use
+
+With the namespace corrected, run 5's audit records show the proctitle as
+`(bunny-live-session)` rather than a process that never spawned — the program
+ran for the first time. It failed one line further on, and run 6's diagnostic
+boot has it:
+
+```text
+bunny-live-session[1255]: useradd: cannot lock /etc/passwd; try again later.
+KeyError: "getpwnam(): name not found: 'bunny-live'"
+```
+
+`ReadWritePaths=/etc/passwd /etc/shadow /etc/group /etc/gshadow` bind-mounts
+those four inodes and leaves `/etc` itself read-only. `useradd` does not write
+the databases in place: it takes a lock by creating `/etc/.pwd.lock` and
+`/etc/passwd.lock`, and replaces each file by writing `passwd+` and renaming.
+Every one of those needs the **directory**.
+
+The message names `/etc/passwd`, which is the one thing that *was* writable.
+That is the trap in miniature — a file-level `ReadWritePaths` looks like it
+grants exactly what the program needs, and grants the part it does not use.
+
+`ReadWritePaths=/home /etc`. `ProtectSystem=strict` still holds everywhere else,
+and this unit's whole job is to add an account on ephemeral media.
+
 ---
 
 ## 7. Prevention
@@ -506,7 +531,12 @@ Setup" is not, and they are different claims about the same run.
 | 2 | `7502331` | `229dad10…` | BOOT-7 | `bunny-live-session.service` failed; no graphical session |
 | 3 | `6758090` | `229dad10…` | — | harness self-check: the appended arguments never reached the kernel |
 | 4 | `6758090` | `229dad10…` | diagnostic | named the fault: `226/NAMESPACE` |
-| 5 | `138201b` | pending | pending | pending |
+| 5 | `138201b` | rebuilt | BOOT-7 | the unit ran at last, and `useradd` could not lock `/etc/passwd` |
+| 6 | `138201b` | run 5's | diagnostic | named the fault: `cannot lock /etc/passwd` |
+| 7 | `d93c674` | pending | pending | pending |
+
+Each run reached one rung further than the last, and each fault was found by the
+first thing that ever executed the code carrying it.
 
 Every run's evidence is kept under `build/out/boot/<run>` — serial log,
 screenshots, `run.txt` binding it to a commit and an ISO digest, and
