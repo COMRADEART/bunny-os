@@ -637,11 +637,24 @@ def interact(control, qmp, pointer, targets, arguments,
         # The phrases §31 names, looked for in what was actually said. Recorded
         # as found/not-found per phrase rather than as one boolean, because
         # "the screen reader said something" is not the claim.
+        # The six things §31 asks a screen reader to get across, looked for by
+        # meaning rather than by control name.
+        #
+        # The first version of this looked for "Allow this Bunny action" as a
+        # standalone utterance and reported it missing. Orca announces the
+        # *focused* control, which is Deny by design, and conveys the choice in
+        # the prompt's own announcement — "Allow, or deny. Deny is selected."
+        # A person hears that Allow exists; a check that demanded the button's
+        # accessible name be spoken on appearance was testing a screen reader
+        # behaviour nobody wants.
         wanted = {
             "applicationName": "Bunny Image Tool",
-            "resource": "holiday",
-            "allowControl": "Allow this Bunny action",
-            "denyControl": "Deny this Bunny action",
+            "requestedResource": "holiday.png",
+            "reason": "will save a copy",
+            "confinement": "Network: Off",
+            "bothOptions": "Allow, or deny",
+            "focusedControlIsTheSafeOne": "Deny this Bunny action",
+            "completed": "Done. I made",
         }
         joined = " • ".join(utterances)
         report["orcaHeard"] = {

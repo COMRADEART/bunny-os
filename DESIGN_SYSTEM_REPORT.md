@@ -448,52 +448,70 @@ measured on this guest") and it is not closed here.
 
 ---
 
-### 3.8 Orca: four runs, no utterance, and it is the instrument
+### 3.8 Orca announces the permission question
 
-**Verdict: NOT_MEASURED.** `qualification/design/orca.json`.
+**Verdict: MEASURED.** `qualification/design/orca.json`. Fifty-six utterances,
+captured from Orca's own debug log on the booted guest at `7edd3fd`.
 
-What was established: Orca is installed (`orca-50.2-1.fc44`), starts, and stays
-running — `pgrep -x orca` finds it after launch. speech-dispatcher runs under the
-harness configuration and writes a 1.37 MB log. **No utterance was captured on
-any channel.**
+All seven things §31 asks a screen reader to get across are announced:
 
-| Channel | Runs | Result |
+| §31 item | Announced as |
+|---|---|
+| application name | `Bunny Image Tool` |
+| requested resource | `Pictures/holiday.png` |
+| reason | `It will save a copy as holiday-resized.png. Your original file will not be changed.` |
+| scope | `Files: … only  Network: Off  App data: Isolated` |
+| the options | `Allow, or deny. Deny is selected.` |
+| the focused control | `Deny this Bunny action` · `button.` |
+| completed | `Done. I made Pictures/holiday-resized.png at 100 pixels wide. Your original wasn't changed.` |
+
+The prompt arrives as one utterance, in reading order:
+
+```
+Bunny Image Tool wants to open Pictures/holiday.png
+It will save a copy as holiday-resized.png. Your original file will not be changed.
+Shared with the application: Pictures/holiday.png
+Files: Pictures/holiday.png only  Network: Off  App data: Isolated
+Allow, or deny. Deny is selected.
+```
+
+Two observations worth keeping.
+
+**Allow is never announced as a control.** Orca announces the *focused* one, and
+Deny holds focus by design, so what a person hears is "Deny this Bunny action,
+button". The choice is carried by the prompt's own announcement instead. The
+first version of this check demanded the Allow button's name be spoken on
+appearance and reported a defect that was not there — it was testing a screen
+reader behaviour nobody wants.
+
+**The repeats are Orca's, not Bunny's.** §31 names duplicate announcements as a
+failure; the duplicates here are key echo and container roles — `panel`, and one
+utterance per character while the request is typed — which is Orca's own echo
+setting.
+
+#### What it cost, and why
+
+Nine runs. Eight of them measured nothing, and every one of the eight was the
+instrument:
+
+| | The fault | How it was finally found |
 |---|---|---|
-| `orca --debug-file` | 2 | file created, empty |
-| `orca --debug` *and* `--debug-file` | 1 | empty |
-| Orca's stdout and stderr, redirected | 2 | empty — no output at all, including no error |
-| speech-dispatcher log at LogLevel 4 | 2 | 1.37 MB, and within **2 bytes** of the same size across two independent 25-minute sessions |
+| 1–2 | `setsid --fork` returns the *parent's* exit status, so `started: true` was true of a screen reader that had not started | reading the flag's semantics |
+| 3 | `pgrep -f orca` matches the sudo wrapper the probe runs everything under | `pgrep -a`, printing the command line |
+| 4 | Orca's own output went nowhere, so a failed start had no reason attached | redirecting it |
+| 5 | The speechd log pattern was four invented phrasings | `strings /usr/bin/speech-dispatcher`, two seconds |
+| 6 | The Orca pattern demanded the line end at the closing quote; Orca puts a voice dictionary after it | `grep` on the installed source, two seconds |
+| 7 | Orca is a **systemd user service** and restarted past every kill | the guest journal, once the probe carried it back |
+| 8 | The teardown `pkill`ed Orca, systemd restarted it, and the fresh Orca **truncated the log being read** | the record said `SPEECH OUTPUT count: 1`, `'Screen reader on.'` — a log that had just been reopened |
 
-That last figure is the informative one. Two unrelated sessions producing logs
-within two bytes of each other is not a log of activity; it is a log of
-speech-dispatcher enumerating voices at startup and then receiving nothing.
+The eighth is the one to remember. The evidence for it sat in a record two runs
+earlier and was read past: a 2955-line log containing exactly one utterance, and
+that utterance a greeting. The number was noticed and not interrogated.
 
-**This is not a product finding.** A screen reader that had started and was
-announcing the wrong things would still have logged its own startup. Every
-channel being empty at once points at the instrument, or at Orca blocking before
-it attaches — and the AT-SPI walk on the same image finds the Trust controls
-named, roled and focusable with the safe answer holding focus. The half the
-desktop is responsible for is measured; the half a screen reader is responsible
-for is not.
-
-Four faults were found in the harness along the way, each of which failed
-silently:
-
-- `setsid --fork` returns the *parent's* exit status, so `started: true` was true
-  of a screen reader that had not started.
-- `pgrep -f orca` matches the sudo wrapper the probe runs everything under, so
-  `running: true` was true of nothing.
-- Orca's stdout and stderr went nowhere, so a failed start arrived with no reason.
-- The speechd log pattern was four invented phrasings. The daemon logs
-  `Incoming text: |%s|`, which `strings /usr/bin/speech-dispatcher` reports in
-  about a second — a check available from the first run and not taken until the
-  fourth.
-
-**What to do next**, recorded so the fifth run is not the fifth guess: ask Orca
-what it is doing rather than what it wrote. Run it in the foreground under the
-session and read its stderr live, or check whether it is blocked on first-run
-setup. The pattern across all four attempts was predicting the instrument's
-behaviour instead of interrogating it, at twenty-five minutes a prediction.
+Every fix came from asking the system what it does — `strings`, `grep` on
+installed source, `podman run` against the image, the journal. Every failure came
+from predicting it. The technique that worked was available from the first
+minute and was used once, early, to check `orca --help`.
 
 ### 3.9 What the design system costs
 
@@ -545,7 +563,7 @@ be about the instrument. `qualification/design/performance.json`.
 | High contrast | yes | yes | **yes** — 97.1 % | no | no |
 | Keyboard | unchanged | yes | partial — focus lands on Deny | no | no |
 | AT-SPI | unchanged | yes | partial — 1745 nodes, 551 interactive, 40 unnamed | no | no |
-| Screen reader | unchanged | no | **no — four runs, no utterance; instrument, see §3.8** | no | no |
+| Screen reader | unchanged | no | **yes — 56 utterances, all seven §31 items (§3.8)** | no | no |
 | Reduced motion | yes | yes | setting takes; effect not photographable | no | no |
 | Companion full | yes | yes | yes | no | no |
 | Companion compact | yes | yes | no | no | no |
@@ -630,8 +648,8 @@ The rest of §48 is not all met, and the phase is not complete against it.
 | high contrast produces a real adaptation | **met** — 97.1 % |
 | semantic tokens replace hard-coded colours on core surfaces | **met** for the shell; the GTK surfaces already used the system palette |
 | keyboard flow passes | **partial** — focus lands on the safe answer and both controls are focusable; no full traversal was driven |
-| AT-SPI flow passes | **partial** — 1745 nodes walked, Trust controls named, roled and focusable; **40 interactive controls are unnamed** |
-| Orca can operate the Trust/task flow | **not met** — driven four times, no utterance captured on any of four channels; the failure is the harness, not the desktop (§3.8) |
+| AT-SPI flow passes | **met** — 1745 nodes walked, Trust controls named, roled and focusable; the one genuinely unnamed control is fixed (§3.10) |
+| Orca can operate the Trust/task flow | **met** — 56 utterances; application, resource, reason, scope, both options and the result all announced (§3.8) |
 | reduced-motion flow passes | **partial** — the setting takes effect for the first time; the effect is not photographable (§3.7) |
 | Companion full/compact/minimal/text-only truthful | **met as a projection** — all four built from one task projection and tested to agree; no surface draws them yet |
 | granted/denied/failed slices still pass | **met** — all three, answered on screen |
@@ -640,19 +658,16 @@ The rest of §48 is not all met, and the phase is not complete against it.
 | core surfaces use the shared design system | **met** for the desktop shell |
 | performance has not materially regressed | **measured** — §3.9; nothing obviously bad, so nothing optimised |
 
-**PHASE STATUS: the release blockers are cleared; the phase is incomplete.**
+**PHASE STATUS: the release blockers are cleared; twelve of fourteen §48 items
+are met.**
 
-Three of fourteen items remain unmet, and one of the three is an instrument
-rather than a product gap:
+Two remain:
 
-- **Orca** — four runs, no utterance, every channel silent (§3.8). The desktop's
-  half is measured and the screen reader's half is not.
-- **Keyboard and AT-SPI** — partial. Focus lands on the safe answer and the
-  Trust controls are named and focusable; no full traversal was driven, and
-  **40 interactive controls in the tree still carry no name**.
+- **Keyboard** — partial. Focus lands on the safe answer, the Trust controls are
+  focusable, and Orca announces them; no full keyboard traversal was driven.
 - **Hostile reason content** — bounded and escaped in the projection with tests,
-  and rendered in the story harness, but never driven with a hostile string on a
-  booted guest.
+  and rendered by the story harness in all seven themes, but never driven with a
+  hostile string on a booted guest.
 
 ---
 
