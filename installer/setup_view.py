@@ -514,6 +514,22 @@ def storage_screen(*, disks: Sequence[DiskInfo], selected: DiskInfo | None = Non
         options.append(Option(disk.id, disk_identity(disk), note=note, available=not blocking))
 
     warnings: list[Warning] = []
+    # A machine with no usable disk is a real state and reaching it must not be
+    # a crash. It was: building a `choice` field with an empty option list is
+    # refused by `Field.__post_init__`, and running the surface for the first
+    # time is what found that. §25 wants the installer to stop and explain, so
+    # the empty case is a screen rather than an exception.
+    if not options:
+        options.append(Option(
+            "none", "No disks found",
+            note="Bunny OS needs a disk of at least 40 GiB, connected before setup starts.",
+            available=False))
+        warnings.append(Warning(
+            "caution",
+            "No disk that Bunny OS can install to was found. Check that the drive is "
+            "connected, then restart setup.",
+            blocks=True))
+
     if selected is not None:
         for item in per_disk.get(selected.id, ()):
             level = "danger" if item.severity == "danger" else "caution" if item.severity == "warning" else "caution"
@@ -858,9 +874,39 @@ def apps_screen(*, activities: Sequence[str] = (), choices: Sequence[Mapping[str
     )
 
 
-def review_screen(*, summary: Sequence[tuple[str, str]], disk: DiskInfo,
+def review_screen(*, summary: Sequence[tuple[str, str]], disk: DiskInfo | None,
                   encrypted: bool) -> Screen:
-    """§22. The last screen before anything is written."""
+    """§22. The last screen before anything is written.
+
+    ``disk`` may be ``None``. That is not a state a person reaches by walking the
+    flow forwards — storage comes first — but it is one the surface can be asked
+    to build, and a review screen that raised rather than rendering would take
+    the installer down at the last step before the install. With no disk there is
+    no destructive consequence to state, so there is no danger warning and the
+    Install button is off.
+    """
+    fields = tuple(Field(f"row-{index}", "info", label, help=value)
+                   for index, (label, value) in enumerate(summary))
+    if disk is None:
+        return Screen(
+            key="review",
+            heading="Review",
+            says="I still need to know which disk to install to.",
+            companion="waiting_for_approval",
+            authority="companion",
+            fields=fields,
+            warnings=(Warning("caution", "No disk has been selected yet."),),
+            actions=(
+                _back(),
+                Action("install", "Install Bunny OS", tone="danger", enabled=False),
+            ),
+            advanced=("Full installation plan document",),
+            announcement=(
+                "Review. No disk has been selected yet, so installation cannot start. "
+                "Go back to choose one."
+            ),
+        )
+
     identity = disk_identity(disk)
     consequence = f"Everything on {identity} will be erased. This cannot be undone."
     return Screen(
@@ -869,8 +915,7 @@ def review_screen(*, summary: Sequence[tuple[str, str]], disk: DiskInfo,
         says="Here's everything you chose. Read the part in red before you continue.",
         companion="reviewing",
         authority="companion",
-        fields=tuple(Field(f"row-{index}", "info", label, help=value)
-                     for index, (label, value) in enumerate(summary)),
+        fields=fields,
         warnings=(Warning("danger", consequence),),
         actions=(
             _back(),
