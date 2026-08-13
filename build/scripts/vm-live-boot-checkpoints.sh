@@ -130,26 +130,37 @@ shot() {
   fi
 }
 
-# The menu, before anything is pressed. This is BOOT-2's evidence and it is
-# taken first, because after the keypress the menu is gone.
-( sleep 25; shot "01-grub-menu" ) &
+# The menu, before anything is pressed. This is BOOT-2's whole evidence — GRUB
+# renders to video and writes nothing to serial — so it is taken first, because
+# after the keypress the menu is gone. Two captures because the firmware takes a
+# variable time to reach GRUB and one of them may be too early.
+( sleep 10; shot "00-early"; sleep 8; shot "01-grub-menu" ) &
 menu_shot_pid=$!
 
 # Select "Try or Install Bunny OS (serial console)": the fifth entry, so four
-# Downs and a Return. Sent at increasing delays because the firmware takes a
-# variable time to reach GRUB and a key pressed before the menu exists goes
-# nowhere; the medium declares no timeout, so the menu waits indefinitely and
-# late keys are still in time.
+# Downs and a Return.
+#
+# Every attempt lands inside GRUB's own timeout, and that bound is the reason
+# for these numbers rather than any others. image-builder writes `set timeout=60`
+# into both grub.cfg files, so at 60 seconds GRUB boots the *default* entry —
+# which carries `console=tty0` and no serial console at all. A harness that
+# pressed late would get a booting machine, an empty serial log, and a BOOT-3
+# failure that belonged to the harness rather than the medium.
+#
+# 22, 35 and 50 seconds: three chances, the last ten seconds clear of the
+# deadline. Extra Downs and Returns after a successful selection land in a
+# booting Linux console and do nothing.
 (
-  for delay in 30 20 25; do
-    sleep "${delay}"
+  previous_at=0
+  for at in 22 35 50; do
+    sleep $(( at - previous_at )); previous_at="${at}"
     for _ in 1 2 3 4; do
       python3 build/scripts/qmp-input.py --socket "${qmp}" \
         --width "${width}" --height "${height}" --key down >/dev/null 2>&1 || true
     done
     python3 build/scripts/qmp-input.py --socket "${qmp}" \
       --width "${width}" --height "${height}" --key ret >/dev/null 2>&1 || true
-    shot "02-after-selection-${delay}"
+    shot "02-after-selection-t${at}"
   done
 ) &
 select_pid=$!

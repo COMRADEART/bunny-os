@@ -57,13 +57,24 @@ class Checkpoint(NamedTuple):
     negative: tuple[str, ...]
     after: str | None       # must match later in the log than this checkpoint's line
     screenshot: str | None  # a frame recorded beside this checkpoint
-    # Whether a blank frame refutes the checkpoint, or merely accompanies it.
-    # The distinction is not pedantry: BOOT-1 and BOOT-2 are both photographed
-    # by the same capture, and if a blank frame gated both then a machine that
-    # started and produced no video would be reported as a machine that never
-    # started. BOOT-1 is answered by output of any kind; only BOOT-2 needs the
-    # picture, because GRUB does not write to serial.
-    screenshot_gates: bool
+    # What the frame is worth as evidence. Three roles, because the three cases
+    # are genuinely different and collapsing them gets two checkpoints wrong:
+    #
+    #   supporting  recorded, never changes the verdict. BOOT-1 is answered by
+    #               output of any kind; a machine that started and produced no
+    #               video has not failed to start, and failing it there would
+    #               name the wrong rung.
+    #   sufficient  a non-blank frame establishes the checkpoint on its own.
+    #               BOOT-2 needs this and it is not a convenience: GRUB renders
+    #               to the video console and writes nothing at all to serial, so
+    #               a checkpoint requiring a serial match would fail on every
+    #               correct boot. The corroboration is BOOT-3 — the kernel only
+    #               starts because a menu entry was selected, and a menu that
+    #               was not there could not have been navigated.
+    #   required    both halves. BOOT-9 has serial evidence that a session
+    #               started and frame evidence that something drew, and neither
+    #               alone is the claim being made.
+    screenshot_role: str
     note: str
 
 
@@ -78,7 +89,7 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
         positive=(r"SeaBIOS|BdsDxe|EFI |Booting from|Press \[Tab\]|GNU GRUB|"
                   r"Loading Linux|Linux version",),
         negative=(),
-        after=None, screenshot="01-grub-menu", screenshot_gates=False,
+        after=None, screenshot="01-grub-menu", screenshot_role="supporting",
         note="Any output at all — from the firmware, the bootloader or the "
              "kernel — means the machine started the medium. The screenshot is "
              "the independent half: firmware that renders nothing and says "
@@ -89,7 +100,7 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
         positive=(r"GNU GRUB|Try or Install Bunny OS",),
         negative=(r"error: no such device|error: file .* not found|"
                   r"Entering rescue mode",),
-        after=None, screenshot="01-grub-menu", screenshot_gates=True,
+        after=None, screenshot="01-grub-menu", screenshot_role="sufficient",
         note="GRUB draws to the video console and not to serial, so the "
              "screenshot taken before the first keypress is the primary "
              "evidence. The corroboration is BOOT-3: the kernel only starts "
@@ -100,7 +111,7 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
         "BOOT-3", "the kernel starts",
         positive=(r"Linux version \S+",),
         negative=(r"Kernel panic|not syncing:",),
-        after=None, screenshot=None, screenshot_gates=False,
+        after=None, screenshot=None, screenshot_role="none",
         note="The kernel banner on the serial console. It appears only on the "
              "entry that carries console=ttyS0, which is the one this harness "
              "selects; its absence on other entries is the harness's doing and "
@@ -116,7 +127,7 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
                   r"Warning: Could not boot|"
                   r"Failed to find a root filesystem|"
                   r"Cannot find (a )?root",),
-        after=None, screenshot=None, screenshot_gates=False,
+        after=None, screenshot=None, screenshot_role="none",
         note="The failure this whole repair is about lands here. Every negative "
              "pattern is a way the initramfs says it has no root to switch to: "
              "the by-label warning is what a CDLABEL that matches nothing "
@@ -133,7 +144,7 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
                   r"initrd-root-fs\.target",),
         negative=(r"Failed to mount /sysroot|Timed out waiting for device|"
                   r"Dependency failed for /sysroot",),
-        after=None, screenshot=None, screenshot_gates=False,
+        after=None, screenshot=None, screenshot_role="none",
         note="parse-dmsquash-live.sh prints 'root was live:CDLABEL=…, is now "
              "live:/dev/disk/by-label/…' when it rewrites the argument, which "
              "is the most direct statement that the module read the command "
@@ -146,7 +157,7 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
         negative=(r"Failed to start initrd-switch-root|"
                   r"Failed to start Switch Root|"
                   r"initrd-switch-root\.service: Failed",),
-        after=None, screenshot=None, screenshot_gates=False,
+        after=None, screenshot=None, screenshot_role="none",
         note="The exact line the first boot of this medium showed on screen was "
              "'Failed to start initrd-switch-root.service'. Reaching the "
              "service is not the same as succeeding at it, which is why BOOT-7 "
@@ -161,7 +172,7 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
                   r"Started (D-Bus System Message Bus|Permit User Sessions)",),
         negative=(r"Freezing execution|Kernel panic|"
                   r"Failed to execute /init|Failed to switch root",),
-        after=SWITCH, screenshot=None, screenshot_gates=False,
+        after=SWITCH, screenshot=None, screenshot_role="none",
         note="Every one of these markers can also be produced by the systemd "
              "inside the initramfs, so the pattern alone proves nothing. What "
              "proves it is position: the match has to fall after the switch, "
@@ -173,7 +184,7 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
                   r"Started GNOME Display Manager|Starting GNOME Display Manager",),
         negative=(r"Failed to start GNOME Display Manager|"
                   r"gdm.*Failed to start|Dependency failed for .*[Gg]raphical",),
-        after=SWITCH, screenshot=None, screenshot_gates=False,
+        after=SWITCH, screenshot=None, screenshot_role="none",
         note="GDM is configured for automatic login as bunny-live by "
              "installer/config/gdm-live.conf, so the display manager starting "
              "is the step before a session exists rather than a prompt.",
@@ -188,7 +199,7 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
         negative=(r"gdm-autologin.*failed|"
                   r"Failed to start User Manager|"
                   r"oh no! something has gone wrong",),
-        after=SWITCH, screenshot="03-session", screenshot_gates=True,
+        after=SWITCH, screenshot="03-session", screenshot_role="required",
         note="Half of this is unavoidably visual: a session that started is not "
              "the same as a window that drew. The serial half establishes that "
              "the live user's session exists; the frame establishes that the "
@@ -233,6 +244,15 @@ def screen_evidence(screens: Path, name: str | None) -> dict | None:
     return record
 
 
+def _frame_complaint(checkpoint: Checkpoint, screen: dict | None) -> str:
+    if screen is None or screen.get("stats") is None:
+        return (f"no frame was captured as {checkpoint.screenshot}, and this "
+                "checkpoint has no other evidence")
+    if screen.get("blank") is True:
+        return f"the captured frame {checkpoint.screenshot} is blank"
+    return f"the frame {checkpoint.screenshot} could not be measured"
+
+
 def classify(serial: Path, screens: Path, harness_outcome: str) -> dict:
     lines = load_lines(serial)
     results: list[dict] = []
@@ -241,6 +261,7 @@ def classify(serial: Path, screens: Path, harness_outcome: str) -> dict:
 
     for checkpoint in CHECKPOINTS:
         after_index = indices.get(checkpoint.after) if checkpoint.after else None
+        screen = screen_evidence(screens, checkpoint.screenshot)
         if checkpoint.after and after_index is None:
             # The checkpoint it depends on never matched, so a match here cannot
             # be positioned and cannot be trusted.
@@ -250,29 +271,46 @@ def classify(serial: Path, screens: Path, harness_outcome: str) -> dict:
         else:
             negative_hit = first_match(lines, checkpoint.negative, None)
             positive_hit = first_match(lines, checkpoint.positive, after_index)
+            screen = screen_evidence(screens, checkpoint.screenshot)
+            frame_shows_content = (
+                checkpoint.screenshot_role in {"sufficient", "required"}
+                and screen is not None and screen.get("blank") is False
+            )
+
             if negative_hit is not None:
-                status = "FAIL"
-                matched = None
+                status, matched = "FAIL", None
                 negative = {"line": negative_hit[0] + 1, "text": negative_hit[1]}
+            elif checkpoint.screenshot_role == "required":
+                if positive_hit is None:
+                    status, matched, negative = "FAIL", None, None
+                elif not frame_shows_content:
+                    status = "FAIL"
+                    matched = {"line": positive_hit[0] + 1, "text": positive_hit[1]}
+                    negative = {"line": None, "text": _frame_complaint(checkpoint, screen)}
+                else:
+                    status = "PASS"
+                    matched = {"line": positive_hit[0] + 1, "text": positive_hit[1]}
+                    negative = None
+                    indices[checkpoint.name] = positive_hit[0]
             elif positive_hit is not None:
                 status = "PASS"
                 matched = {"line": positive_hit[0] + 1, "text": positive_hit[1]}
                 negative = None
                 indices[checkpoint.name] = positive_hit[0]
-            else:
-                status = "FAIL"
-                matched = None
+            elif frame_shows_content:
+                # The serial console said nothing, and for this checkpoint it
+                # was never going to. GRUB is the case: it renders to video and
+                # writes no byte to ttyS0, so requiring a serial match here
+                # would fail every correct boot there has ever been.
+                status = "PASS"
+                matched = {"line": None,
+                           "text": f"no serial evidence; established by the frame "
+                                   f"{checkpoint.screenshot}"}
                 negative = None
-
-        screen = screen_evidence(screens, checkpoint.screenshot)
-        # A checkpoint whose evidence includes a frame cannot pass on a blank
-        # one. BOOT-2 is the case that matters: the serial log says nothing
-        # about GRUB, so if the screen was black there is nothing left.
-        if (status == "PASS" and checkpoint.screenshot_gates
-                and screen is not None and screen.get("blank") is True):
-            status = "FAIL"
-            negative = {"line": None,
-                        "text": f"the captured frame {checkpoint.screenshot} is blank"}
+            else:
+                status, matched, negative = "FAIL", None, None
+                if checkpoint.screenshot_role == "sufficient":
+                    negative = {"line": None, "text": _frame_complaint(checkpoint, screen)}
 
         if status == "FAIL":
             already_failed = True
@@ -284,7 +322,11 @@ def classify(serial: Path, screens: Path, harness_outcome: str) -> dict:
             "matched": matched,
             "refutedBy": negative,
             "screen": screen,
-            "needsLook": checkpoint.screenshot_gates,
+            "screenshotRole": checkpoint.screenshot_role,
+            # A measurement can tell a rendered interface from a black screen.
+            # It cannot tell it from the wrong interface, so anything resting on
+            # a frame keeps asking for somebody to open the png.
+            "needsLook": checkpoint.screenshot_role in {"sufficient", "required"},
             "note": checkpoint.note,
         })
 

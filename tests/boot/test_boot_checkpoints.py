@@ -174,14 +174,67 @@ class ClassifierTests(unittest.TestCase):
         self.assertEqual(status["BOOT-9"], "FAIL")
 
     def test_a_blank_frame_fails_the_checkpoint_that_rests_on_it(self) -> None:
-        # BOOT-2 has no serial evidence of its own worth the name, so a black
-        # screen has to be able to fail it even when GRUB text appears.
+        # The realistic shape: a serial console that never sees GRUB, because
+        # GRUB does not write to one, plus a black screen. With no evidence of
+        # either kind there is nothing left to establish the checkpoint, and
+        # passing it would be passing on nothing at all.
         (self.screens / "01-grub-menu.stats.json").write_text(json.dumps(
             {"path": "01-grub-menu.ppm", "distinctColours": 1,
              "standardDeviation": 0.0, "blank": True}))
-        status = self.status(self.classify(log_through(9)))
+        text = "\n".join(FIRMWARE + KERNEL + INITRAMFS) + "\n"
+        report = self.classify(text)
+        status = self.status(report)
+        self.assertEqual(status["BOOT-1"], "PASS")
         self.assertEqual(status["BOOT-2"], "FAIL")
         self.assertEqual(status["BOOT-3"], "NOT-REACHED")
+        entry = next(r for r in report["checkpoints"] if r["checkpoint"] == "BOOT-2")
+        self.assertIn("blank", entry["refutedBy"]["text"])
+
+    def test_grub_text_on_serial_still_establishes_the_menu(self) -> None:
+        # Some firmware/GRUB combinations do echo to serial. When they do, that
+        # is evidence and a blank capture does not overrule it.
+        (self.screens / "01-grub-menu.stats.json").write_text(json.dumps(
+            {"path": "01-grub-menu.ppm", "distinctColours": 1,
+             "standardDeviation": 0.0, "blank": True}))
+        self.assertEqual(self.status(self.classify(log_through(9)))["BOOT-2"], "PASS")
+
+    def test_grub_is_established_by_the_frame_when_serial_says_nothing(self) -> None:
+        # The case that matters on every real run. GRUB renders to the video
+        # console and writes no byte to ttyS0, so a serial log from a perfectly
+        # good boot contains no GRUB text at all. A BOOT-2 that needed one would
+        # fail on every correct medium there has ever been.
+        text = "\n".join(FIRMWARE + KERNEL + INITRAMFS + LIVE_ROOT + SWITCH
+                         + REAL_ROOT + GRAPHICAL + SESSION) + "\n"
+        self.assertNotIn("GNU GRUB", text)
+        report = self.classify(text)
+        status = self.status(report)
+        self.assertEqual(status["BOOT-2"], "PASS")
+        entry = next(r for r in report["checkpoints"] if r["checkpoint"] == "BOOT-2")
+        self.assertIn("established by the frame", entry["matched"]["text"])
+        self.assertEqual(report["status"], "PASS")
+
+    def test_boot_nine_needs_both_the_session_and_the_frame(self) -> None:
+        # A session that started is not a window that drew.
+        (self.screens / "03-session.stats.json").write_text(json.dumps(
+            {"path": "03-session.ppm", "distinctColours": 1,
+             "standardDeviation": 0.0, "blank": True}))
+        report = self.classify(log_through(9))
+        status = self.status(report)
+        self.assertEqual(status["BOOT-8"], "PASS")
+        self.assertEqual(status["BOOT-9"], "FAIL")
+        entry = next(r for r in report["checkpoints"] if r["checkpoint"] == "BOOT-9")
+        self.assertIn("blank", entry["refutedBy"]["text"])
+        # and the serial half is still reported, so the diagnosis is "the
+        # session started and nothing drew" rather than "BOOT-9 failed"
+        self.assertIsNotNone(entry["matched"])
+
+    def test_boot_nine_with_no_frame_at_all_fails(self) -> None:
+        (self.screens / "03-session.stats.json").unlink()
+        (self.screens / "03-session.png").unlink()
+        report = self.classify(log_through(9))
+        self.assertEqual(self.status(report)["BOOT-9"], "FAIL")
+        entry = next(r for r in report["checkpoints"] if r["checkpoint"] == "BOOT-9")
+        self.assertIn("no frame was captured", entry["refutedBy"]["text"])
 
     def test_a_blank_frame_does_not_fail_the_checkpoint_it_only_accompanies(self) -> None:
         # The same capture is BOOT-1's evidence and BOOT-2's. A machine that
@@ -214,7 +267,15 @@ class ClassifierTests(unittest.TestCase):
 class CommandLineTests(unittest.TestCase):
     def setUp(self) -> None:
         self.scratch = Path(tempfile.mkdtemp())
-        (self.scratch / "screens").mkdir()
+        screens = self.scratch / "screens"
+        screens.mkdir()
+        # These exercise the exit-status plumbing, so they need the frames the
+        # ladder now requires — BOOT-9 does not pass on a serial log alone.
+        for name in ("01-grub-menu", "03-session"):
+            (screens / f"{name}.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+            (screens / f"{name}.stats.json").write_text(json.dumps(
+                {"path": f"{name}.ppm", "distinctColours": 4096,
+                 "standardDeviation": 61.4, "blank": False}))
 
     def test_exit_status_reflects_the_ladder(self) -> None:
         serial = self.scratch / "serial.log"
