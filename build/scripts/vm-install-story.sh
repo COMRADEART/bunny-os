@@ -121,6 +121,28 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# GRUB waits. `installer/config/iso.yaml` declares menu entries and no timeout,
+# so the medium draws its menu and sits there — the first run of this harness
+# spent fifty minutes at a menu, wrote 197 KB to an 80 GiB disk, and reported a
+# timeout with no driver events at all. The serial log was nineteen kilobytes of
+# GRUB drawing a box.
+#
+# Pressing Return selects the default entry, "Try or Install Bunny OS". Done
+# here rather than by adding a timeout to the ISO because a person booting this
+# medium *should* get a menu that waits for them; it is the unattended harness
+# that needs a keypress, and that is a property of the harness.
+#
+# Sent more than once, at increasing delays: the firmware takes a variable time
+# to reach GRUB, and a key pressed before the menu exists goes nowhere. Extra
+# Returns land on the selected entry and are harmless.
+(
+  for delay in 12 20 30 45; do
+    sleep "${delay}"
+    python3 build/scripts/qmp-input.py --socket "${qmp}"       --width "${width}" --height "${height}" --key ret >/dev/null 2>&1 || true
+  done
+) &
+grub_pid=$!
+
 # §54: screenshots bound to a run, taken on a schedule rather than guessed at.
 # Taken from outside the guest through QMP, so what is captured is what a
 # monitor plugged into that machine would show.
@@ -166,7 +188,7 @@ while (( SECONDS < deadline )); do
   fi
   sleep 10
 done
-kill "${shots_pid}" 2>/dev/null
+kill "${shots_pid}" "${grub_pid}" 2>/dev/null
 
 echo "--- driver events ---"
 grep -a 'BUNNY-INSTALL' "${log}" | tail -40
