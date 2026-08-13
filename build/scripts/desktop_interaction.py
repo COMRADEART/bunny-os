@@ -1286,12 +1286,25 @@ def screen_reader_speech(user: str, environment: list[str], since: int = 0) -> d
     if not environment:
         return {"ran": False, "error": "no user session environment"}
 
-    # Stop the screen reader before reading. A log still being written by a live
-    # process is a log that may be missing its last line, and the last line is
-    # the result announcement.
-    _run(["/usr/bin/pkill", "-TERM", "-x", "orca"], user=user, timeout=15)
-    time.sleep(4)
-    _run(["/usr/bin/pkill", "-KILL", "-x", "orca"], user=user, timeout=15)
+    # Stop the *unit*, not the process.
+    #
+    # This read used to `pkill` Orca, and that is what destroyed every
+    # transcript. Orca is a systemd user service with a restart policy: killing
+    # the process makes systemd start a fresh one, the fresh one reopens
+    # `--debug-file`, and reopening truncates it. So the sequence was — journey
+    # runs, Orca logs the announcements, probe kills Orca to "flush" the log,
+    # systemd restarts Orca, Orca empties the log, probe reads nothing.
+    #
+    # The diagnostics taken *before* the journey showed the shape of it and it
+    # was read past twice: one SPEECH OUTPUT line, `'Screen reader on.'` — a
+    # freshly started screen reader announcing itself, which is exactly what a
+    # truncated-and-restarted log contains.
+    #
+    # `systemctl stop` is an explicit stop, so the restart policy does not fire
+    # and the file survives to be read.
+    _run(["/usr/bin/env", *environment, "/usr/bin/systemctl", "--user",
+          "stop", "orca.service"], user=user, timeout=60)
+    time.sleep(3)
 
     utterances: list[str] = []
     source = None
