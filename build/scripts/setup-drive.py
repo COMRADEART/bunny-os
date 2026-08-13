@@ -177,8 +177,28 @@ class Surface:
             raise RuntimeError(f"the control {name!r} is present but not sensitive")
         self.activate(row)
 
+    def field_named(self, label: str):
+        """The field whose label is exactly ``label``, not merely contains it.
+
+        `_ScreenView` builds an entry's accessible name as "<label>. <help>", so
+        a substring match for "Password" also matches "Password again" — and the
+        tree order decides which. Typing the password into the confirmation box
+        and leaving the password box empty is a run that fails at account
+        validation for a reason that has nothing to do with the installer.
+
+        So the leading segment is compared exactly.
+        """
+        for row in self.controls():
+            if row["role"] not in {"text", "entry", "password text", "text-box"}:
+                continue
+            head = (row["name"] or "").split(". ", 1)[0].strip()
+            if head == label:
+                return row
+        return None
+
     def type_into(self, name: str, text: str) -> None:
-        row = self.wait_for(lambda: self.find(name=name), f"a field named {name!r}")
+        row = self.wait_for(lambda: self.field_named(name) or self.find(name=name),
+                            f"a field named {name!r}")
         node = row["node"]
         interface = node.get_editable_text_iface()
         if interface is None:

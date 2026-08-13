@@ -25,6 +25,7 @@ import os
 from pathlib import Path
 import secrets
 import socket
+import time
 from typing import Any, Mapping
 
 from installer.backend.server import SOCKET_PATH
@@ -116,18 +117,36 @@ class BackendClient:
             pass
 
 
-def connect(*, path: Path = SOCKET_PATH, token_path: Path = TOKEN_PATH) -> BackendClient | None:
-    """A client, or ``None`` when this machine has no installer backend."""
-    try:
-        token = token_path.read_text(encoding="utf-8").strip()
-    except OSError:
-        return None
-    if not token:
-        return None
-    try:
-        connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        connection.settimeout(120)
-        connection.connect(str(path))
-    except OSError:
-        return None
-    return BackendClient(connection, token)
+def connect(*, path: Path = SOCKET_PATH, token_path: Path = TOKEN_PATH,
+            wait_seconds: float = 30.0) -> BackendClient | None:
+    """A client, or ``None`` when this machine has no installer backend.
+
+    **Waits, briefly.** The backend is a system service and the surface is a
+    session autostart, and there is no ordering between "the socket is listening"
+    and "the desktop starts autostarting things" that either side can rely on —
+    the unit is `Before=gdm.service`, which orders the *start*, not the readiness.
+    A single attempt that lost that race would leave setup permanently convinced
+    the machine has no installer, showing "no disks found" on a machine with a
+    disk, for the rest of the session. Nothing retries it, because nothing was
+    told it failed.
+
+    Thirty seconds, then `None` — which is the honest answer for a workstation
+    with no backend at all, and the surface has a screen that says so.
+    """
+    deadline = time.monotonic() + max(0.0, wait_seconds)
+    while True:
+        try:
+            token = token_path.read_text(encoding="utf-8").strip()
+        except OSError:
+            token = ""
+        if token:
+            try:
+                connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                connection.settimeout(120)
+                connection.connect(str(path))
+                return BackendClient(connection, token)
+            except OSError:
+                pass
+        if time.monotonic() >= deadline:
+            return None
+        time.sleep(0.5)
