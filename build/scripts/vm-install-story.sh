@@ -41,6 +41,11 @@ journey="${BUNNY_JOURNEY:-a}"
 label="${1:-install-${journey}}"
 seconds="${BUNNY_INSTALL_TIMEOUT:-3000}"
 disk_gib="${BUNNY_INSTALL_DISK_GIB:-80}"
+# The screen the guest gets. Declared and *applied* — shellcheck found these
+# set and never used, which would have meant a run at whatever resolution
+# virtio-vga defaults to while the evidence claimed otherwise. Journey B runs at
+# the declared minimum from installer/hardware/preflight.py, because 200 % text
+# on the smallest supported screen is the case §39 exists for.
 width="${BUNNY_INSTALL_WIDTH:-1280}"
 height="${BUNNY_INSTALL_HEIGHT:-1024}"
 shots="${BUNNY_INSTALL_SHOTS:-60 150 300 600 900 1200}"
@@ -85,7 +90,8 @@ rm -f "${qmp}"
 # line, so that one ISO serves all four of §53 without a rebuild.
 case "${journey}" in
   a) drive_args="--passphrase=bunny-disk-passphrase" ;;
-  b) drive_args="--text-scale=2.0 --high-contrast --reduced-motion --passphrase=bunny-disk-passphrase" ;;
+  b) drive_args="--text-scale=2.0 --high-contrast --reduced-motion --passphrase=bunny-disk-passphrase"
+     width="${BUNNY_INSTALL_WIDTH:-1024}"; height="${BUNNY_INSTALL_HEIGHT:-768}" ;;
   c) drive_args="" ;;
   d) drive_args="--expect-refusal" ;;
   *) echo "unknown journey: ${journey} (expected a, b, c or d)" >&2; exit 2 ;;
@@ -99,7 +105,7 @@ qemu-system-x86_64 \
   -drive "file=${disk},format=qcow2,if=virtio" \
   -cdrom "${iso}" \
   -boot d \
-  -device virtio-vga \
+  -device "virtio-vga,xres=${width},yres=${height}" \
   -device virtio-tablet-pci \
   -display none \
   -serial "file:${log}" \
@@ -123,11 +129,17 @@ trap cleanup EXIT
   for at in ${shots}; do
     sleep $(( at - elapsed ))
     elapsed="${at}"
-    python3 build/scripts/qmp-screendump.py "${qmp}" \
-      "${work}/screens/t${at}.ppm" >/dev/null 2>&1 || true
+    # Both helpers take the arguments they take, not the ones that seemed
+    # natural. `qmp-screendump.py` is --socket/--output, and `ppm-to-png.py`
+    # takes files or directories and writes each alongside its source with a
+    # .png suffix — it has no output argument at all. The first version of this
+    # passed positionals to one and an output path to the other, which would
+    # have produced an install run with no screenshots and no error.
+    python3 build/scripts/qmp-screendump.py --socket "${qmp}" \
+      --output "${work}/screens/t${at}.ppm" >/dev/null 2>&1 || true
     if [[ -s "${work}/screens/t${at}.ppm" ]]; then
       python3 build/scripts/ppm-to-png.py "${work}/screens/t${at}.ppm" \
-        "${work}/screens/t${at}.png" >/dev/null 2>&1 || true
+        >/dev/null 2>&1 || true
       rm -f "${work}/screens/t${at}.ppm"
     fi
   done
