@@ -70,7 +70,7 @@ been looked at on a real display and no further.
 |---|---|---|
 | 1 | Installer reuse map | `INSTALLER_REUSE_MAP.md` |
 | 2 | Installer architecture | `INSTALLER_ARCHITECTURE_REPORT.md` |
-| 3 | Setup design-system integration | **not written** |
+| 3 | Setup design-system integration | `INSTALLER_DESIGN_SYSTEM_REPORT.md` |
 | 4 | Storage safety | `INSTALLER_STORAGE_SAFETY_REPORT.md` |
 | 5 | Accessibility installer | `INSTALLER_ACCESSIBILITY_REPORT.md` |
 | 6 | Screen-reader | folded into #5, with its limits stated |
