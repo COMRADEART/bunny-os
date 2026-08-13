@@ -1,10 +1,15 @@
 # Live boot root cause: the installer medium had never reached userspace
 
-Status: **BOOT ARTIFACT VALIDATED**. The medium now boots through switch-root
-into real userspace and starts both installer units. Six distinct faults were
-found and fixed — five uncovered, one introduced by the repair itself and
-recorded as such. See §7a–§7e and §9.
-**VM BOOT VALIDATED is not claimed, and BOOT-9 has not been reached.**
+Status: **VM BOOT VALIDATED.** The installation medium boots to Bunny Setup.
+BOOT-1 through BOOT-9 all pass on run 11 (commit `910bd79`, ISO
+`9c58a74890a2142261db057641cc90d83bf37281d56a89d6ead1ce1ef6a7f761`), and the
+frame has been opened and looked at.
+
+Six distinct faults stood between a medium that had never left GRUB and one that
+reaches its setup surface — five uncovered, one introduced by the repair itself
+and recorded as such. See §7a–§7e.
+
+**Journey A has not run. INSTALLATION VM RUNTIME VALIDATED is not claimed.**
 
 Scope: why the Bunny installation ISO reached a GRUB menu and stopped, in every
 run ever recorded; the two wrong diagnoses made before anyone opened the
@@ -553,13 +558,14 @@ otherwise.
 | IMPLEMENTED | dracut configuration, explicit regeneration, `enforcing=0`, corrected unit sandboxes |
 | UNIT/BUILD TESTED | **met** — 76 tests; the checker fails the shipped artifact and passes the regenerated one |
 | BOOT ARTIFACT VALIDATED | **met** — the ISO gate runs in the build and refuses an unqualified medium |
-| VM RUNTIME VALIDATED | **partial** — BOOT-1…BOOT-7 met on a real boot, and both installer units now start. BOOT-8 and BOOT-9 not met |
+| VM RUNTIME VALIDATED | **met** — BOOT-1…BOOT-9 on run 11; the setup surface was photographed and the frame opened |
 | INSTALLATION VM RUNTIME VALIDATED | **not met** — Journey A has not run |
 
-The fourth row is the one worth reading carefully. "The initramfs repair works"
-is established: a real machine read `root=live:CDLABEL=`, assembled the live
-root, switched into it and reached real userspace. "The medium boots to Bunny
-Setup" is not, and they are different claims about the same run.
+What is established: a real machine read `root=live:CDLABEL=`, assembled the
+live root from the squashfs, switched into it, reached `graphical.target`,
+created the ephemeral account, started the privileged installer backend and drew
+the setup surface. What is not: anything past that first screen. Nothing has
+been installed, no disk has been touched, and Journey A has not begun.
 
 ### Where each run got to
 
@@ -574,7 +580,7 @@ Setup" is not, and they are different claims about the same run.
 | 7 | `d93c674` | rebuilt | BOOT-7 | `useradd` wrote the databases, then could not create the home |
 | 8 | `d93c674` | run 7's | diagnostic | named the fault: `/var/home/bunny-live` |
 | 9 | `7e822fe` | `a07c7086…` | BOOT-7 | both installer units start; `plymouth-quit-wait` never returns |
-| 11 | `910bd79` | pending | pending | pending |
+| 11 | `910bd79` | `9c58a748…` | **BOOT-9** | — the medium reaches Bunny Setup |
 
 Run 9 is where this phase stops. Both Bunny units the medium needs now run:
 
@@ -659,10 +665,30 @@ Every run's evidence is kept under `build/out/boot/<run>` — serial log,
 screenshots, `run.txt` binding it to a commit and an ISO digest, and
 `checkpoints.json`. No run's evidence was overwritten by the next (§18).
 
-**BOOT-CHAIN REPAIR STATUS = INCOMPLETE.** Bunny Setup has not appeared from a
-rebuilt ISO.
+**BOOT-CHAIN REPAIR STATUS = COMPLETE.** Bunny Setup appears from the rebuilt
+ISO. Every exit condition is met: the required dracut modules exist in the build
+root, the Bunny configuration is installed before regeneration, the initramfs is
+explicitly regenerated, the regenerated artifact passes structural checks, the
+final ISO's actual initramfs passes the same checks, GRUB/kernel/initramfs are
+mutually consistent, the VM boots through the initramfs, the live root is found,
+`initrd-switch-root.service` succeeds, graphical userspace starts, and the setup
+surface renders.
 
-**INSTALLER PHASE STATUS = INCOMPLETE.**
+**INSTALLER PHASE STATUS = INCOMPLETE.** Journey A has not run. Nothing has
+probed a disk, nothing has been confirmed, nothing has been written, and no
+installed system has been rebooted into. Boot-medium repair is not installer
+completion.
+
+### What the first screen showed, and what it did not
+
+The surface drew and is legible: "Set up Bunny OS", "Hi. I'm Bunny. I'll help
+set up your computer.", a Welcome heading and three controls — Get started,
+Accessibility, Installation details. Two things about that frame are worth
+recording and are **not** repaired here, because §20 puts UI work outside this
+phase: "Installation details" appears twice, once as a link and once as a
+button, and the "Get started" label is very low-contrast against its own fill.
+Both are for the design pass, and both are now known from a photograph rather
+than from a mock-up.
 
 A boot menu is not a booted operating system. A dracut configuration file is not
 an initramfs. An initramfs file is not enough unless it contains the capability
