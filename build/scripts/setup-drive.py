@@ -358,6 +358,18 @@ def smbios_arguments() -> list[str]:
     inert on a real installation: a person booting the medium gets the setup
     surface and nothing drives it.
     """
+    # The root backend publishes this, because the sysfs entry below is mode
+    # 0400 root and this runs as the live desktop user. Reading the sysfs entry
+    # directly is kept as the path for a run started by hand as root.
+    published = Path("/run/bunny-setup/drive.args")
+    try:
+        value = published.read_text(encoding="utf-8").strip()
+        if value:
+            emit("driver-arguments", source=str(published), arguments=value)
+            return value.split()
+    except OSError:
+        pass
+
     for entry in sorted(Path("/sys/firmware/dmi/entries").glob("11-*/raw")):
         try:
             raw = entry.read_bytes().decode("utf-8", "replace")

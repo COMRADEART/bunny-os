@@ -28,6 +28,36 @@ from installer.backend.server import SOCKET_PATH, serve
 from installer.storage.probe import discover
 
 
+def publish_driver_arguments() -> str:
+    """Copy the qualification driver's arguments somewhere the session can read.
+
+    `/sys/firmware/dmi/entries/*/raw` is mode 0400 root. The §42 driver
+    autostarts in the *live user's* session and therefore cannot read the SMBIOS
+    OEM string the harness sets — it would find nothing, exit 0, and the whole
+    qualification run would sit there looking like an installer nobody touched.
+
+    So the root half publishes it. Written world-readable into /run because it
+    is a harness parameter and not a secret; absent on any real boot, because
+    nothing sets the OEM string on a real machine.
+    """
+    from pathlib import Path as _Path
+
+    for entry in sorted(_Path("/sys/firmware/dmi/entries").glob("11-*/raw")):
+        try:
+            raw = entry.read_bytes().decode("utf-8", "replace")
+        except OSError:
+            continue
+        for field in raw.split(chr(0)):
+            if "bunny.drive=" in field:
+                value = field.split("bunny.drive=", 1)[1].strip()
+                target = _Path("/run/bunny-setup/drive.args")
+                target.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
+                target.write_text(value + chr(10), encoding="utf-8")
+                target.chmod(0o444)
+                return value
+    return ""
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="bunny-installer-backend")
     parser.add_argument("--live-uid", type=int,
@@ -60,8 +90,7 @@ def main() -> int:
     if live_uid is None:
         sys.stderr.write(
             "no live-session UID: pass --live-uid, or start this after "
-            "bunny-live-session.service has written /run/bunny-installer/live-session
-")
+            "bunny-live-session.service has written /run/bunny-installer/live-session\n")
         return 3
 
     if os.geteuid() != 0 and not arguments.dry_run:
@@ -90,6 +119,13 @@ def main() -> int:
         # the adapter is completed then. Constructing it here would need a
         # password before anyone had typed one.
         adapter = AnacondaAdapter(executor=executor, choices={}, password_hash="")
+
+    published = publish_driver_arguments()
+    if published:
+        sys.stderr.write(json.dumps({
+            "event": "driver-arguments", "value": published,
+            "path": "/run/bunny-setup/drive.args",
+        }, sort_keys=True) + chr(10))
 
     sys.stderr.write(json.dumps({
         "event": "executor",
