@@ -567,6 +567,15 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "anaconda-profile", "installer/config/bunny-os.conf",
         "/etc/anaconda/profile.d/bunny-os.conf", 0o444, profiles=LIVE_PROFILES,
     ),
+    # The initramfs modules image-builder requires of a bootc installer medium.
+    # Placing the file is necessary and not sufficient: the initramfs has to be
+    # regenerated afterwards, which build/Containerfile does for the live
+    # profile. See the file's own comment for what happens without it.
+    _file_route(
+        "live-dracut-modules", "installer/config/bunny-live-dracut.conf",
+        "/usr/lib/dracut/dracut.conf.d/95-bunny-live.conf", 0o444,
+        profiles=LIVE_PROFILES,
+    ),
     _file_route(
         "anaconda-defaults", "installer/config/interactive-defaults.ks",
         "/usr/share/anaconda/interactive-defaults.ks", 0o444, profiles=LIVE_PROFILES,
