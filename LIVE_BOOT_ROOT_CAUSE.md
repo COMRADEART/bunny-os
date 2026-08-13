@@ -1,8 +1,10 @@
 # Live boot root cause: the installer medium had never reached userspace
 
 Status: **BOOT ARTIFACT VALIDATED**. The medium now boots through switch-root
-into real userspace, where it meets a second and different fault. See §7a and §9.
-**VM BOOT VALIDATED is not claimed.**
+into real userspace and starts both installer units. Five distinct faults were
+found and fixed, each by the first thing that ever executed it; `graphical.target`
+is the remaining blocker. See §7a–§7d and §9.
+**VM BOOT VALIDATED is not claimed, and BOOT-9 has not been reached.**
 
 Scope: why the Bunny installation ISO reached a GRUB menu and stopped, in every
 run ever recorded; the two wrong diagnoses made before anyone opened the
@@ -551,7 +553,7 @@ otherwise.
 | IMPLEMENTED | dracut configuration, explicit regeneration, `enforcing=0`, corrected unit sandboxes |
 | UNIT/BUILD TESTED | **met** — 73 tests; the checker fails the shipped artifact and passes the regenerated one |
 | BOOT ARTIFACT VALIDATED | **met** — the ISO gate runs in the build and refuses an unqualified medium |
-| VM RUNTIME VALIDATED | **partial** — BOOT-1…BOOT-7 met on a real boot. BOOT-8 and BOOT-9 not met |
+| VM RUNTIME VALIDATED | **partial** — BOOT-1…BOOT-7 met on a real boot, and both installer units now start. BOOT-8 and BOOT-9 not met |
 | INSTALLATION VM RUNTIME VALIDATED | **not met** — Journey A has not run |
 
 The fourth row is the one worth reading carefully. "The initramfs repair works"
@@ -571,7 +573,26 @@ Setup" is not, and they are different claims about the same run.
 | 6 | `138201b` | run 5's | diagnostic | named the fault: `cannot lock /etc/passwd` |
 | 7 | `d93c674` | rebuilt | BOOT-7 | `useradd` wrote the databases, then could not create the home |
 | 8 | `d93c674` | run 7's | diagnostic | named the fault: `/var/home/bunny-live` |
-| 9 | `7e822fe` | pending | pending | pending |
+| 9 | `7e822fe` | `a07c7086…` | BOOT-7 | both installer units start; `graphical.target` still not reached |
+
+Run 9 is where this phase stops. Both Bunny units the medium needs now run:
+
+```text
+[  OK  ] Finished bunny-live-session.service - the ephemeral Bunny OS live session.
+[  OK  ] Started bunny-installer-backend.service - Bunny OS live installer backend.
+[  OK  ] Started gdm.service - GNOME Display Manager.
+```
+
+The live account exists, the privileged backend is listening, and the display
+manager is up — none of which had ever happened before. `graphical.target` is
+still not reached and the medium settles on a text login prompt, so **BOOT-8 and
+BOOT-9 remain open** and that is the next thing to diagnose. `gdm.service`
+starting is not the same as a session existing, and this report does not treat
+it as one.
+
+`bootloader-update.service` also fails on the medium (`bootupctl: error: Finding
+block device from boot or sysroot`) — expected on read-only live media,
+unexamined, and not on the path to BOOT-9.
 
 Each run reached one rung further than the last, and each fault was found by the
 first thing that ever executed the code carrying it.
