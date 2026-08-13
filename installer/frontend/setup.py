@@ -554,6 +554,13 @@ class SetupApplication:
         self.context = dict(context or {})
         self.flow = build_flow(self.choices, context=self.context)
         self.index = 0
+        #: A screen outside the linear flow: the destructive confirmation, the
+        #: progress screen, failure, or completion. When set it is what renders,
+        #: and the flow index cannot reach back past it.
+        self.terminal: Screen | None = None
+        #: The `companion.presentation` phase, derived from installer state by
+        #: `backend.progress.companion_phase_for` and never chosen here.
+        self.companion_phase = "idle"
         self.provider = None
         self.window = None
         self.view: _ScreenView | None = None
@@ -603,6 +610,19 @@ class SetupApplication:
     # -- flow ------------------------------------------------------------
 
     def current_screen(self) -> Screen:
+        """The screen to draw: the terminal one if setup has left the flow.
+
+        The linear flow ends at Review. Everything after it — the destructive
+        confirmation, the progress screen, failure, completion — is *not* a step
+        a person walks back and forth through, and modelling it as one would put
+        a Back button beside a running installation.
+
+        So those four live in :attr:`terminal`, which the flow index cannot
+        reach. Once an install has started there is no index arithmetic that
+        returns to the account screen.
+        """
+        if self.terminal is not None:
+            return self.terminal
         return self.flow[self.index][1]()
 
     def on_change(self, key: str, value: Any) -> None:
@@ -678,16 +698,91 @@ class SetupApplication:
             button.set_sensitive(self.secrets.get("phrase", "") == confirmation_phrase(disk))
 
     def on_action(self, identifier: str) -> None:
+        disk = self.context.get("selectedDisk")
+
         if identifier == "back":
-            self.index = max(0, self.index - 1)
+            # Back out of the confirmation, never out of a running install.
+            if self.terminal is not None and self.terminal.key == "confirm_erase":
+                self.terminal = None
+            elif self.terminal is None:
+                self.index = max(0, self.index - 1)
+            else:
+                return
         elif identifier in {"next", "start", "skip"}:
             self.index = min(len(self.flow) - 1, self.index + 1)
         elif identifier == "accessibility":
             self.index = next(i for i, (key, _) in enumerate(self.flow)
                               if key == "accessibility")
+        elif identifier == "install":
+            # §12: Review does not start an installation. It leads to the one
+            # screen whose authority is `user`, and that screen is not passable
+            # without the typed phrase.
+            if disk is None:
+                return
+            self.secrets.pop("phrase", None)
+            self.terminal = setup_view.confirm_erase_screen(
+                disk=disk, encrypted=self.choices.encryption_enabled)
+        elif identifier == "confirm":
+            if disk is None:
+                return
+            self.begin_installation()
+            return
+        elif identifier == "retry":
+            # §47: retry returns to Review rather than repeating the write. The
+            # plan is re-validated by the backend from there, because the disk
+            # may not be in the state the previous plan assumed.
+            self.terminal = None
+            self.index = next(i for i, (key, _) in enumerate(self.flow) if key == "review")
+        elif identifier in {"restart", "quit", "details", "advanced", "tour"}:
+            # Handled by the host session, not by the flow.
+            return
         else:
             return
         self.render()
+
+    # -- installation ----------------------------------------------------
+
+    def begin_installation(self) -> None:
+        """Hand the confirmed plan to the backend and follow what it reports.
+
+        This method contains no storage logic at all, which is the point of §2:
+        it submits, and then it renders whatever comes back. The typed phrase is
+        sent for the backend to check against the disk in the *validated plan* —
+        `storage.safety.assert_confirmed` re-derives it there — so a surface bug
+        that enabled the button early produces a refusal rather than an erase.
+        """
+        from installer.backend.progress import companion_phase_for, progress_rows
+
+        submit = self.context.get("submit")
+        if submit is None:
+            self.terminal = setup_view.failure_screen(
+                headline="This installer cannot write to a disk.",
+                explanation="No installation backend is connected, so nothing was "
+                            "done. This build can show setup but not perform it.",
+                stage_key="Preparing", wrote_to_disk=False)
+            self.render()
+            return
+
+        def on_state(status: str, stage: str, detail: str, wrote: bool) -> None:
+            if status == "failed":
+                self.terminal = setup_view.failure_screen(
+                    headline=detail or "The installation stopped.",
+                    explanation=self.context.get("failureExplanation", ""),
+                    stage_key=stage, wrote_to_disk=wrote,
+                    diagnostics_path=str(self.context.get("diagnosticsPath", "")))
+            elif status == "complete":
+                self.terminal = setup_view.complete_screen(name=self.choices.display_name)
+            else:
+                self.terminal = setup_view.installing_screen(
+                    stages=progress_rows(stage), current=None, detail=detail)
+                self.companion_phase = companion_phase_for(status, stage)
+            self.render()
+
+        self.terminal = setup_view.installing_screen(
+            stages=progress_rows("Preparing"), current="prepare",
+            detail="Checking the plan")
+        self.render()
+        submit(confirmation=self.secrets.get("phrase", ""), on_state=on_state)
 
     # -- rendering -------------------------------------------------------
 
