@@ -111,6 +111,17 @@ class RuntimeDirectoryTests(unittest.TestCase):
         self.assertIn("/etc", writable)
         self.assertNotIn("/etc/passwd", writable)
 
+    def test_a_unit_that_creates_a_home_grants_the_path_ostree_actually_uses(self) -> None:
+        # On an ostree system /home is a symlink to /var/home, and useradd
+        # resolves it before creating anything. Granting only /home reads as
+        # correct and is not:
+        #
+        #   useradd: new user: name=bunny-live, home=/var/home/bunny-live
+        #   useradd: cannot create directory /var/home/bunny-live
+        session = (UNITS / "bunny-live-session.service").read_text(encoding="utf-8")
+        writable = directives(session, "ReadWritePaths")
+        self.assertIn("/var/home", writable)
+
     def test_the_detector_would_notice_a_regression(self) -> None:
         # The negative control: the rule must fail on the shape it was written
         # for, or it is a test that can only pass.

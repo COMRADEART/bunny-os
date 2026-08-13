@@ -47,7 +47,19 @@ RuntimeDirectoryPreserve=yes
 #
 # ProtectSystem=strict still holds everywhere else, and this unit's entire job
 # is to add an account on ephemeral media.
-ReadWritePaths=/home /etc
+#
+# /var/home as well as /home, because on an ostree system they are not two names
+# for the same declaration. /home is a symlink to /var/home, and useradd resolves
+# it before creating anything:
+#
+#   useradd[1266]: new user: name=bunny-live, UID=1000, home=/var/home/bunny-live
+#   bunny-live-session[1266]: useradd: cannot create directory /var/home/bunny-live
+#   useradd[1266]: failed adding user 'bunny-live', exit code: 12
+#
+# Note what that run did before it failed: it created the group and the passwd
+# entry. The /etc repair above worked, and this is the next path out — which is
+# why the account still did not exist and getpwnam still raised KeyError.
+ReadWritePaths=/home /var/home /etc
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes
