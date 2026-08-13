@@ -22,6 +22,23 @@ config/** -text
 # plainly there. These have no extension, so no `*.sh` rule reaches them.
 shell/services/bin/** -text
 installer/bin/** -text
+# The installation medium's configuration, for the same reason and with a
+# sharper edge than most. `config/**` above covers the top-level directory only;
+# these were left uncovered, and measured on this checkout under
+# core.autocrlf=true four of the six were already CRLF in the working tree while
+# LF in the index — so a build from a Windows checkout installs different bytes
+# than a build from a Linux one, and nothing says so.
+#
+# installer/config/bunny-live-dracut.conf is the file that makes this worse than
+# untidy. dracut *sources* it as shell. With a trailing CR, `hostonly="no"`
+# assigns the string `no\r`, which is not empty — and dmsquash-live's check() is
+#
+#     [[ ${hostonly-} ]] && return 1
+#
+# so dracut would refuse to include the one module this whole medium depends on,
+# and report it as a module that "cannot be found or installed". The build gate
+# would catch it, several minutes later, pointing at the wrong thing.
+installer/config/** -text
 # Byte-attested evidence must bypass content filters.
 #
 # release/evidence.py verifies each record by hashing the file at its
