@@ -1,7 +1,8 @@
 # Live boot root cause: the installer medium had never reached userspace
 
-Status: **BOOT ARTIFACT VALIDATED** at commit `7d33297`.
-**VM BOOT VALIDATED is not claimed.** See §9.
+Status: **BOOT ARTIFACT VALIDATED**. The medium now boots through switch-root
+into real userspace, where it meets a second and different fault. See §7a and §9.
+**VM BOOT VALIDATED is not claimed.**
 
 Scope: why the Bunny installation ISO reached a GRUB menu and stopped, in every
 run ever recorded; the two wrong diagnoses made before anyone opened the
@@ -247,6 +248,88 @@ removing something else on the way is a second, undeclared change.
 
 ---
 
+## 7a. What the repaired medium did, and the second fault
+
+The first boot of the rebuilt ISO (commit `d6047b6`, ISO
+`e7374d39c45d13f5fb9be7d7d2a529ae95042a437a8f1389edffaad430ad94df`) got six
+rungs further than anything before it:
+
+| | | |
+| --- | --- | --- |
+| BOOT-1 | firmware starts the medium | PASS |
+| BOOT-2 | GRUB renders its menu | PASS — five entries, 43 s left on the timeout |
+| BOOT-3 | the kernel starts | PASS — `Linux version 7.1.5-200.fc44.x86_64` |
+| BOOT-4 | the initramfs starts | PASS — `dracut-cmdline`, `dracut-initqueue` |
+| BOOT-5 | the live root is located | PASS — `Reached target initrd-root-fs.target` |
+| BOOT-6 | `initrd-switch-root.service` | **PASS — this had never happened** |
+| BOOT-7 | real userspace is PID 1 | FAIL |
+| BOOT-8 | the graphical target | NOT-REACHED |
+| BOOT-9 | the Bunny setup surface | NOT-REACHED |
+
+The initramfs repair did what it was for. systemd re-executed in the real root,
+loaded SELinux policy in 108 ms, printed
+
+```text
+Welcome to Bunny OS 0.3.0-beta (development)!
+```
+
+and then froze at 7.3 seconds:
+
+```text
+systemd[1]: Failed to set SELinux security context
+            system_u:object_r:systemd_unit_file_t:s0 for /run/systemd/units:
+            Permission denied
+systemd[1]: Failed to allocate manager object: Permission denied
+systemd[1]: Freezing execution.
+```
+
+### Root cause of the second fault
+
+A bootc container carries no SELinux labels. Measured in the image:
+`ls -Z /usr/bin/bash` prints `?`, and `getfattr` reports
+`security.selinux: No such attribute`. ostree applies labels when it deploys,
+and nothing deploys a live medium — so the squashfs of that tree is unlabelled
+and the overlay root is `unlabeled_t`, which the guest's own audit records show:
+
+```text
+avc: denied { module_load } for pid=1 comm="systemd"
+     path="/usr/lib/modules/…/vsock.ko.xz" dev="overlay"
+     tcontext=system_u:object_r:unlabeled_t:s0 permissive=0
+```
+
+`/etc/selinux/config` says `enforcing`, so PID 1 cannot label the `/run`
+directories it needs before it has a manager to do it with, and it freezes
+before any unit starts.
+
+### The evidence that decided it
+
+Not a guess about SELinux. image-builder's own generated kernel options, present
+identically in this build and in the archived one from before
+`installer/config/iso.yaml` existed:
+
+```json
+"kernel": { "dir": "/images/pxeboot", "opts": [
+    "root=live:CDLABEL=Bunny-OS-Beta", "rd.live.image",
+    "quiet", "rhgb", "enforcing=0" ] }
+```
+
+`enforcing=0` is a literal string in the image-builder binary. `iso.yaml`
+replaces the generated entries wholesale, so it replaced that too — silently,
+because nothing had ever booted far enough for it to matter.
+
+This is a property of the installation medium only. The system the medium
+installs is an ostree deployment, labelled at deployment, running SELinux
+enforcing. Nothing here changes that.
+
+### Why the ladder was worth building
+
+The previous harness had one outcome. On this run it would have said `timeout`,
+after fifteen minutes, about a machine whose PID 1 had stopped at 7.3 seconds —
+and the repair that had just succeeded would have been indistinguishable from
+one that had not.
+
+---
+
 ## 7. Prevention
 
 **Build-time.** `build-live-image.sh` fails if the regeneration record is
@@ -256,6 +339,10 @@ returns 23 failures in **0.7 seconds**, naming both faults. An hour of VM time
 is not the right instrument for a question an artifact can answer.
 
 It checks what only the assembled medium can answer:
+
+* every `root=live:` entry carries `enforcing=0` or `selinux=0` — the second
+  fault above, made permanent, because the requirement lives in image-builder's
+  defaults and Bunny overrides those defaults;
 
 * GRUB's kernel and initrd exist on the medium and are one pair;
 * the kernel release in the bzImage header matches the release the initramfs
@@ -275,7 +362,7 @@ screenshot before the first keypress. The previous harness had one outcome —
 `timeout` — which cannot distinguish a machine that never started from one that
 reached a session and idled.
 
-**Tests.** 58 across `tests/image/test_live_initramfs.py`,
+**Tests.** 66 across `tests/image/test_live_initramfs.py`,
 `tests/image/test_iso_boot_artifacts.py` and
 `tests/boot/test_boot_checkpoints.py`. The failure cases are the point: a
 missing `dmsquash-live`; a missing `livenet`; a module named in the manifest
@@ -283,8 +370,9 @@ whose files are absent; a missing `squashfs.ko`; two kernel releases; a wrong
 kernel/initrd mapping; a truncated archive; a stale initrd on an otherwise
 perfect medium; `inst.stage2=` on a LiveOS medium; a label the command line does
 not match; a missing live payload; a payload that is not a squashfs; a blank
-frame where a menu should be; and an initramfs-only boot whose `Reached target
-basic.target` must not be read as real userspace.
+frame where a menu should be; a live entry missing `enforcing=0`; and an
+initramfs-only boot whose `Reached target basic.target` must not be read as real
+userspace.
 
 **Line endings.** `installer/config/** -text`. Under `core.autocrlf=true` four
 of the six files there were already CRLF in the working tree and LF in the
@@ -327,10 +415,15 @@ otherwise.
 | level | state |
 | --- | --- |
 | IMPLEMENTED | dracut configuration and explicit regeneration exist |
-| UNIT/BUILD TESTED | **met** — 58 tests; the checker fails the shipped artifact and passes the regenerated one |
+| UNIT/BUILD TESTED | **met** — 66 tests; the checker fails the shipped artifact and passes the regenerated one |
 | BOOT ARTIFACT VALIDATED | **met** — the ISO gate runs in the build and refuses an unqualified medium |
-| VM RUNTIME VALIDATED | **not met** — no rebuilt ISO has been booted yet |
+| VM RUNTIME VALIDATED | **partial** — BOOT-1…BOOT-6 met on a real boot, including switch-root. BOOT-7…BOOT-9 not met |
 | INSTALLATION VM RUNTIME VALIDATED | **not met** — Journey A has not run |
+
+The middle row is the one worth reading carefully. "The initramfs repair works"
+is established: a real machine read `root=live:CDLABEL=`, assembled the live
+root and switched into it. "The medium boots" is not, and the two are different
+claims about the same run.
 
 **BOOT-CHAIN REPAIR STATUS = INCOMPLETE.** Bunny Setup has not appeared from a
 rebuilt ISO.
