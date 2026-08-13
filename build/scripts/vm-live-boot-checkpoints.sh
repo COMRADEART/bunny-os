@@ -56,12 +56,23 @@
 # reading serial cannot see is *why* anything failed — which is how a run ends
 # with "[FAILED] Failed to start bunny-live-session.service" and nothing else.
 #
-# This types extra arguments into GRUB's editor rather than adding them to the
-# medium, because they are a property of an investigation and not of the
-# product. `systemd.journald.forward_to_console=1` is the usual one.
+# Setting this switches the run to a **diagnostic boot**: the medium's own
+# kernel and initramfs are extracted from the ISO and started directly, with a
+# command line this harness composes. The ISO is still attached, so everything
+# after the bootloader is the medium as built.
 #
-# It verifies itself (§27): the kernel prints its own command line, and the run
-# refuses to be read as a plain boot unless the appended text is in it.
+# The first attempt typed the arguments into GRUB's editor instead, and it did
+# not work — GRUB's own sixty-second timeout booted the selected entry before
+# the editor took, and the run came out as an ordinary boot. That is the whole
+# argument for the self-check below rather than for a cleverer keystroke
+# sequence: the kernel prints the command line it was given, and a run whose
+# command line lacks the appended text exits 6 instead of being read as the run
+# that was asked for.
+#
+# What this mode does not exercise: BOOT-1 and BOOT-2. There is no firmware
+# handoff to a bootloader and no menu, so those checkpoints are reported as not
+# applicable rather than passed. A diagnostic boot answers questions about
+# userspace; the ordinary run is what qualifies the medium.
 set -uo pipefail
 
 repository_root="$(git rev-parse --show-toplevel)"
@@ -111,6 +122,31 @@ qmp="${work}/qmp.sock"
 firmware="$(bunny_firmware)" || exit 3
 rm -f "${qmp}"
 
+# A diagnostic boot needs the medium's own kernel and initramfs as files QEMU
+# can load. They are extracted from the ISO being qualified, not from the build
+# tree, so the run is still about this artifact.
+direct_args=()
+if [[ -n "${append}" ]]; then
+  mountpoint="${work}/medium"
+  mkdir -p "${mountpoint}"
+  if ! mount -o loop,ro "${iso}" "${mountpoint}" 2>/dev/null; then
+    echo "BLOCKED: BUNNY_BOOT_APPEND needs the ISO mounted to extract its kernel" >&2
+    echo "and initramfs, and the loopback mount failed. Run this as root." >&2
+    exit 3
+  fi
+  cp "${mountpoint}/images/pxeboot/vmlinuz" "${work}/vmlinuz"
+  cp "${mountpoint}/images/pxeboot/initrd.img" "${work}/initrd.img"
+  umount "${mountpoint}"; rmdir "${mountpoint}"
+  # The command line of the entry this harness normally selects, plus the
+  # appended arguments. Written down here rather than parsed out of the medium,
+  # and cross-checked against it below, so a drift between the two is visible.
+  direct_cmdline="root=live:CDLABEL=${BUNNY_BOOT_LABEL:-Bunny-OS-Beta} rd.live.image enforcing=0 console=tty0 console=ttyS0,115200n8 ${append}"
+  direct_args=(-kernel "${work}/vmlinuz" -initrd "${work}/initrd.img"
+               -append "${direct_cmdline}")
+  echo "diagnostic boot: the bootloader is skipped and the command line is"
+  echo "  ${direct_cmdline}"
+fi
+
 # No disk is attached. This run must not be able to write to anything: it is
 # asking whether the medium boots, and a harness that could install by accident
 # is a harness that will.
@@ -126,6 +162,7 @@ qemu-system-x86_64 \
   -serial "file:${log}" \
   -qmp "unix:${qmp},server,nowait" \
   -netdev user,id=net0 -device virtio-net-pci,netdev=net0 \
+  "${direct_args[@]}" \
   -no-reboot &
 qemu_pid=$!
 cleanup() { kill "${qemu_pid}" 2>/dev/null; wait "${qemu_pid}" 2>/dev/null; }
@@ -153,6 +190,14 @@ shot() {
 ( sleep 10; shot "00-early"; sleep 8; shot "01-grub-menu" ) &
 menu_shot_pid=$!
 
+# A diagnostic boot has no menu to select from, so the keypresses below are not
+# started at all rather than being sent into a booting kernel.
+if [[ -n "${append}" ]]; then
+  menu_pressing=0
+else
+  menu_pressing=1
+fi
+
 # Select "Try or Install Bunny OS (serial console)": the fifth entry, so four
 # Downs and a Return.
 #
@@ -172,26 +217,13 @@ press() {
 }
 
 (
+  [[ "${menu_pressing}" -eq 1 ]] || exit 0
   previous_at=0
   for at in 22 35 50; do
     sleep $(( at - previous_at )); previous_at="${at}"
     for _ in 1 2 3 4; do press down; done
-    if [[ -n "${append}" ]]; then
-      # `e` opens the entry for editing. Its body is the two commands of the
-      # menuentry, so the linux line is the first; End puts the cursor after
-      # the last argument, and Ctrl-X boots what was typed.
-      press esc            # leave any editor a previous attempt opened
-      press e
-      sleep 2
-      press end
-      python3 build/scripts/qmp-input.py --socket "${qmp}" \
-        --width "${width}" --height "${height}" --type " ${append}" >/dev/null 2>&1 || true
-      shot "02-edited-t${at}"
-      press "ctrl+x"
-    else
-      press ret
-      shot "02-after-selection-t${at}"
-    fi
+    press ret
+    shot "02-after-selection-t${at}"
   done
 ) &
 select_pid=$!
@@ -253,9 +285,8 @@ if [[ -n "${append}" ]]; then
     echo "BLOCKED: BUNNY_BOOT_APPEND was set to '${append}' and the kernel's" >&2
     echo "reported command line does not contain '${first_token}':" >&2
     sed 's/^/  /' "${work}/cmdline.txt" >&2
-    echo "The GRUB edit did not take. This run is not the run that was asked" >&2
-    echo "for, and reading it as one is how a harness reports a conclusion it" >&2
-    echo "never tested." >&2
+    echo "This run is not the run that was asked for, and reading it as one is" >&2
+    echo "how a harness reports a conclusion it never tested." >&2
     exit 6
   fi
 fi
