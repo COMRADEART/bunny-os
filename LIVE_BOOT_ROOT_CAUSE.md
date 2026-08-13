@@ -1,9 +1,9 @@
 # Live boot root cause: the installer medium had never reached userspace
 
 Status: **BOOT ARTIFACT VALIDATED**. The medium now boots through switch-root
-into real userspace and starts both installer units. Five distinct faults were
-found and fixed, each by the first thing that ever executed it; `graphical.target`
-is the remaining blocker. See §7a–§7d and §9.
+into real userspace and starts both installer units. Six distinct faults were
+found and fixed — five uncovered, one introduced by the repair itself and
+recorded as such. See §7a–§7e and §9.
 **VM BOOT VALIDATED is not claimed, and BOOT-9 has not been reached.**
 
 Scope: why the Bunny installation ISO reached a GRUB menu and stopped, in every
@@ -497,7 +497,7 @@ reached a session and idled.
 naming a `/run` path in `ReadWritePaths=` without a matching
 `RuntimeDirectory=`. It found two of the three instances itself.
 
-**Tests.** 73 across `tests/image/test_live_initramfs.py`,
+**Tests.** 76 across `tests/image/test_live_initramfs.py`,
 `tests/image/test_iso_boot_artifacts.py`,
 `tests/boot/test_boot_checkpoints.py` and
 `tests/boot/test_unit_runtime_directories.py`. The failure cases are the point: a
@@ -551,7 +551,7 @@ otherwise.
 | level | state |
 | --- | --- |
 | IMPLEMENTED | dracut configuration, explicit regeneration, `enforcing=0`, corrected unit sandboxes |
-| UNIT/BUILD TESTED | **met** — 73 tests; the checker fails the shipped artifact and passes the regenerated one |
+| UNIT/BUILD TESTED | **met** — 76 tests; the checker fails the shipped artifact and passes the regenerated one |
 | BOOT ARTIFACT VALIDATED | **met** — the ISO gate runs in the build and refuses an unqualified medium |
 | VM RUNTIME VALIDATED | **partial** — BOOT-1…BOOT-7 met on a real boot, and both installer units now start. BOOT-8 and BOOT-9 not met |
 | INSTALLATION VM RUNTIME VALIDATED | **not met** — Journey A has not run |
@@ -573,7 +573,8 @@ Setup" is not, and they are different claims about the same run.
 | 6 | `138201b` | run 5's | diagnostic | named the fault: `cannot lock /etc/passwd` |
 | 7 | `d93c674` | rebuilt | BOOT-7 | `useradd` wrote the databases, then could not create the home |
 | 8 | `d93c674` | run 7's | diagnostic | named the fault: `/var/home/bunny-live` |
-| 9 | `7e822fe` | `a07c7086…` | BOOT-7 | both installer units start; `graphical.target` still not reached |
+| 9 | `7e822fe` | `a07c7086…` | BOOT-7 | both installer units start; `plymouth-quit-wait` never returns |
+| 11 | `910bd79` | pending | pending | pending |
 
 Run 9 is where this phase stops. Both Bunny units the medium needs now run:
 
@@ -593,6 +594,63 @@ it as one.
 `bootloader-update.service` also fails on the medium (`bootupctl: error: Finding
 block device from boot or sysroot`) — expected on read-only live media,
 unexamined, and not on the path to BOOT-9.
+
+## 7e. The sixth fault: plymouth never quits, and the unit waiting for it has no timeout
+
+Found by analysing run 9's own log rather than booting again — pairing every
+`Starting X…` against its result showed one unit that started and never
+returned, at line 1130 of 1833.
+
+```text
+1129:  Starting gdm.service - GNOME Display Manager...
+1130:  Starting plymouth-quit-wait.service - Hold until boot process finishes up...
+1131:  [  OK  ] Started gdm.service - GNOME Display Manager.
+```
+
+From the image:
+
+```text
+plymouth-quit-wait.service   ExecStart=-/usr/bin/plymouth --wait
+                             TimeoutSec=0
+                             (in multi-user.target.wants/)
+gdm.service                  Conflicts=plymouth-quit.service
+```
+
+`plymouth-quit.service` is the unit that ends the splash, and starting gdm
+cancels it. On an installed desktop gdm quits plymouth itself once it holds the
+display; here it did not, and `plymouth --wait` waited with no timeout at all.
+So `multi-user.target` never completed, `graphical.target` — which requires it —
+was never reached, and the medium settled on a text login prompt.
+
+Three consequences between the cause and anything visible. BOOT-8 reported "the
+graphical target did not start", which was true and was not the fault.
+
+### It was partly self-inflicted
+
+plymouth was not on this medium before this branch. The base initramfs carried
+63 dracut modules; the regenerated one carries 77, and dracut's automatic
+detection added fourteen:
+
+```text
+dmsquash-live  livenet  overlayfs  img-lib     <- wanted, or a dependency of one
+plymouth  drm  url-lib  uefi-lib               <- detected
+iscsi  fcoe  fcoe-uefi  multipath              <- detected
+unbound  dnsconfd                              <- detected
+```
+
+They arrive because the live image has more packages installed than the base did
+when its initramfs was built. Four of the fourteen were wanted.
+
+Omitting the module would not have been enough on its own:
+`plymouth-start.service` is in `sysinit.target.wants/` in the real root and would
+have started plymouth there regardless. `plymouth.enable=0` is what
+`plymouth-start.service` tests itself
+(`ConditionKernelCommandLine=!plymouth.enable=0`), so it settles the initramfs
+and the real root in one argument — which is why the repair is a kernel argument
+and not a narrower dracut change.
+
+This is the one fault in the six that this branch introduced rather than
+uncovered, and it is recorded that way.
 
 Each run reached one rung further than the last, and each fault was found by the
 first thing that ever executed the code carrying it.
