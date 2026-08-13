@@ -128,7 +128,7 @@ class Medium:
             live_payload = None
         medium = cls(root)
         cmdline = cmdline if cmdline is not None else (
-            f"root=live:CDLABEL={LABEL} rd.live.image enforcing=0 console=tty0 quiet")
+            f"root=live:CDLABEL={LABEL} rd.live.image enforcing=0 plymouth.enable=0 console=tty0 quiet")
         (root / "images/pxeboot").mkdir(parents=True)
         (root / "images/pxeboot/vmlinuz").write_bytes(bzimage(kernel_release))
         (root / "images/pxeboot/initrd.img").write_bytes(
@@ -193,9 +193,22 @@ class MediumTests(unittest.TestCase):
         self.assertTrue(any(name.endswith("/selinux") for name in failed(report)),
                         failed(report))
 
+    def test_a_live_entry_without_plymouth_disabled_is_caught(self) -> None:
+        # plymouth-quit-wait.service has TimeoutSec=0 and gdm cancels the unit
+        # that would quit the splash, so a medium that starts plymouth never
+        # completes multi-user.target and stops at a text login — three
+        # consequences away from anything the screen says.
+        report = self.build(
+            cmdline=f"root=live:CDLABEL={LABEL} rd.live.image enforcing=0 console=tty0"
+        ).qualify()
+        self.assertEqual(report["status"], "FAIL")
+        self.assertTrue(any(name.endswith("/plymouth") for name in failed(report)),
+                        failed(report))
+
     def test_selinux_zero_is_accepted_as_well(self) -> None:
         report = self.build(
-            cmdline=f"root=live:CDLABEL={LABEL} rd.live.image selinux=0 console=tty0"
+            cmdline=f"root=live:CDLABEL={LABEL} rd.live.image selinux=0 "
+                    "plymouth.enable=0 console=tty0"
         ).qualify()
         self.assertFalse(any(name.endswith("/selinux") for name in failed(report)),
                          failed(report))

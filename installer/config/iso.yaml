@@ -52,20 +52,53 @@ label: "Bunny-OS-Beta"
 # This applies to the installation medium only. The system this medium installs
 # is an ostree deployment that is labelled at deployment time and runs SELinux
 # enforcing; nothing here changes that.
+#
+# ## Why every entry carries `plymouth.enable=0`
+#
+# Because on this medium plymouth starts and nothing ever quits it, and the unit
+# that waits for it to quit has no timeout. From the image:
+#
+#     plymouth-quit-wait.service   ExecStart=-/usr/bin/plymouth --wait
+#                                  TimeoutSec=0
+#                                  (in multi-user.target.wants/)
+#     gdm.service                  Conflicts=plymouth-quit.service
+#
+# `plymouth-quit.service` is the unit that would end the splash, and starting
+# gdm cancels it. On an installed desktop gdm quits plymouth itself once it has
+# the display; on this medium it did not, and `plymouth --wait` waited with
+# TimeoutSec=0. Measured on run 9:
+#
+#     1129:  Starting gdm.service - GNOME Display Manager...
+#     1130:  Starting plymouth-quit-wait.service - Hold until boot process finishes up...
+#     1131:  [  OK  ] Started gdm.service - GNOME Display Manager.
+#     …      plymouth-quit-wait never finished, in 1833 lines
+#
+# So `multi-user.target` never completed and `graphical.target`, which requires
+# it, was never reached. The medium reached a text login prompt with the live
+# account created and the installer backend listening behind it.
+#
+# `plymouth.enable=0` is what `plymouth-start.service` itself tests —
+# `ConditionKernelCommandLine=!plymouth.enable=0` — so this stops the daemon in
+# the initramfs and in the real root with one argument, and `plymouth --wait`
+# then returns at once. A splash is cosmetic; on installation media a boot that
+# does not finish is not.
+#
+# The installed system's boot entries are written by bootupd from the payload
+# and are not these; nothing here removes the splash from Bunny OS as installed.
 grub2:
   entries:
     - name: "Try or Install Bunny OS"
-      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 console=tty0 rhgb quiet"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 plymouth.enable=0 console=tty0 rhgb quiet"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Safe Graphics"
-      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 console=tty0 nomodeset rd.driver.blacklist=nouveau quiet"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 plymouth.enable=0 console=tty0 nomodeset rd.driver.blacklist=nouveau quiet"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Recovery Tools"
-      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 systemd.unit=bunny-recovery.target console=tty0"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 plymouth.enable=0 systemd.unit=bunny-recovery.target console=tty0"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Verify Installation Media"
-      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 rd.live.check console=tty0"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 plymouth.enable=0 rd.live.check console=tty0"
       initrd: "/images/pxeboot/initrd.img"
     - name: "Try or Install Bunny OS (serial console)"
-      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 console=tty0 console=ttyS0,115200n8"
+      linux: "/images/pxeboot/vmlinuz root=live:CDLABEL=Bunny-OS-Beta rd.live.image enforcing=0 plymouth.enable=0 console=tty0 console=ttyS0,115200n8"
       initrd: "/images/pxeboot/initrd.img"

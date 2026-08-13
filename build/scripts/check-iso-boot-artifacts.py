@@ -344,6 +344,27 @@ def qualify(medium: Path, iso: Path | None, expect_label: str | None,
                    "carries neither enforcing=0 nor selinux=0; the live root is "
                    "an unlabelled squashfs and PID 1 will freeze with 'Failed to "
                    "allocate manager object' after switch-root")
+            # plymouth-quit-wait.service is in multi-user.target.wants and runs
+            # `plymouth --wait` with TimeoutSec=0 — no timeout at all. The unit
+            # that would end the splash is plymouth-quit.service, and gdm.service
+            # declares Conflicts=plymouth-quit.service, so starting the display
+            # manager cancels it. On an installed desktop gdm quits plymouth
+            # itself; on this medium it did not, and multi-user.target never
+            # completed, so graphical.target was never reached. Measured on run 9,
+            # which sat at a text login prompt with the live account created and
+            # the installer backend listening behind it.
+            #
+            # plymouth-start.service tests this argument itself
+            # (ConditionKernelCommandLine=!plymouth.enable=0), so it is the one
+            # place that settles it for both the initramfs and the real root.
+            quiet_splash = cmdline_value(entry["cmdline"], "plymouth.enable") == "0"
+            record(f"entry/{relative}/{entry['name']}/plymouth", quiet_splash,
+                   "carries plymouth.enable=0" if quiet_splash else
+                   "does not carry plymouth.enable=0; plymouth-quit-wait.service "
+                   "has TimeoutSec=0 and gdm cancels the unit that would quit the "
+                   "splash, so multi-user.target never completes and the medium "
+                   "stops at a text login")
+
             if live.startswith("live:CDLABEL="):
                 wanted = live[len("live:CDLABEL="):]
                 if label is not None:
