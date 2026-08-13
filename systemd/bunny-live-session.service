@@ -12,7 +12,26 @@ NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/run/bunny-installer /home /etc/passwd /etc/shadow /etc/group /etc/gshadow
+# systemd creates this before it builds the mount namespace, which is the whole
+# point. The unit previously named /run/bunny-installer in ReadWritePaths and
+# left its creation to the program — and a mount namespace is set up *before*
+# ExecStart, so the program that would have created the directory never ran:
+#
+#   bunny-live-session.service: Failed to set up mount namespacing:
+#       /run/bunny-installer: No such file or directory
+#   bunny-live-session.service: Failed at step NAMESPACE spawning
+#       /usr/libexec/bunny-live-session: No such file or directory
+#   bunny-live-session.service: Main process exited, code=exited,
+#       status=226/NAMESPACE
+#
+# Measured on the first medium that reached userspace. Nothing downstream of
+# this unit can work without it: it creates the bunny-live account, so GDM had
+# no one to log in and the medium reached a text login prompt instead of a
+# session. Preserved because bunny-installer-backend.service reads the marker
+# file from the same directory and this unit is a oneshot.
+RuntimeDirectory=bunny-installer
+RuntimeDirectoryPreserve=yes
+ReadWritePaths=/home /etc/passwd /etc/shadow /etc/group /etc/gshadow
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes

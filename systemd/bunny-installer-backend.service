@@ -31,7 +31,20 @@ ProtectSystem=strict
 ProtectHome=yes
 # ProtectSystem=strict makes everything read-only, /run included, and the socket
 # and the token both live there.
-ReadWritePaths=/run/bunny-installer /run/bunny-setup
+#
+# RuntimeDirectory rather than ReadWritePaths, for the reason that stopped
+# bunny-live-session.service dead: a path named in ReadWritePaths must already
+# exist when systemd builds the mount namespace, which happens before ExecStart.
+# /run/bunny-installer is created by bunny-live-session.service, which this unit
+# requires and follows — but /run/bunny-setup is created by nobody at all. It
+# would have failed 226/NAMESPACE the moment the session unit started working,
+# which is to say the moment anyone could have noticed.
+#
+# Naming both here is not redundant: systemd adopts a directory that already
+# exists, and declaring what a unit needs is what makes it true rather than
+# incidental to another unit's ordering.
+RuntimeDirectory=bunny-installer bunny-setup
+RuntimeDirectoryPreserve=yes
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes
