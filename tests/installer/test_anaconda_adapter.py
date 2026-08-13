@@ -220,9 +220,43 @@ class TheDBusExecutorRefusesOffAnISO(unittest.TestCase):
         )
 
     def test_the_required_methods_are_stated_rather_than_assumed(self) -> None:
+        """These three were verified against anaconda-core 44.30-2.fc44.
+
+        Not by booting: the package was downloaded and
+        `pyanaconda/modules/boss/boss_interface.py` read. All three exist with
+        the signatures the adapter relies on. `preflight` still introspects,
+        because the anaconda on the medium is what decides and it need not be
+        this version.
+        """
         self.assertEqual(
             AnacondaDBusExecutor.REQUIRED_BOSS_METHODS,
             ("ReadKickstartFile", "CollectRequirements", "InstallWithTasks"))
+        self.assertEqual(
+            AnacondaDBusExecutor.REQUIRED_TASK_MEMBERS,
+            ("Start", "Finish", "IsRunning", "Name"))
+
+    def test_a_kickstart_report_message_is_flattened_for_a_person(self) -> None:
+        """`ReadKickstartFile` returns a report, and it must not be discarded.
+
+        An earlier version ignored the return value, so a kickstart Anaconda
+        could not parse produced no error and the install proceeded to
+        `InstallWithTasks` regardless. The structure is a KickstartReport whose
+        `error-messages` list being empty is what "valid" means.
+        """
+        flatten = AnacondaDBusExecutor._message
+        self.assertEqual(
+            flatten({"message": "Unknown command: ostreecontainr", "line-number": 12}),
+            "line 12: Unknown command: ostreecontainr")
+        self.assertEqual(flatten({"message": "something", "line-number": 0}), "something")
+        self.assertEqual(flatten({}), "")
+
+        class Variant:
+            def __init__(self, value): self._value = value
+            def unpack(self): return self._value
+
+        self.assertEqual(
+            flatten({"message": Variant("wrapped"), "line-number": Variant(3)}),
+            "line 3: wrapped")
 
 
 if __name__ == "__main__":

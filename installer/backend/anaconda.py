@@ -151,8 +151,26 @@ class AnacondaDBusExecutor:
     that it is wrong at the one moment when discovering it is free.
     """
 
-    #: The Boss methods the installation sequence uses. Checked, never assumed.
+    #: The Boss methods the installation sequence uses.
+    #:
+    #: **Verified against anaconda-core 44.30-2.fc44**, not guessed: the three
+    #: appear in `pyanaconda/modules/boss/boss_interface.py` with the signatures
+    #: this adapter relies on —
+    #:
+    #:     ReadKickstartFile(path: Str) -> Structure   (a KickstartReport)
+    #:     CollectRequirements()        -> List[Structure]
+    #:     InstallWithTasks()           -> List[ObjPath]
+    #:
+    #: `preflight` still introspects and still refuses, because the package on
+    #: the medium is what matters and it is not necessarily this one.
     REQUIRED_BOSS_METHODS = ("ReadKickstartFile", "CollectRequirements", "InstallWithTasks")
+
+    #: Likewise verified: `pyanaconda/modules/common/task/task_interface.py`
+    #: publishes Name, Progress, Steps and IsRunning as properties, and Start,
+    #: Cancel and Finish as methods, with Started/Stopped/Failed/Succeeded
+    #: signals. This adapter polls IsRunning rather than subscribing, because a
+    #: missed signal on a bus it does not own would hang an installation.
+    REQUIRED_TASK_MEMBERS = ("Start", "Finish", "IsRunning", "Name")
 
     BUS_ADDRESS_FILE = Path("/run/anaconda/bus.address")
     BOSS_SERVICE = "org.fedoraproject.Anaconda.Boss"
@@ -241,14 +259,44 @@ class AnacondaDBusExecutor:
 
         boss = self._connect()
         on_stage("Validating storage", f"Handing {kickstart.name} to the installer")
-        boss.call_sync("ReadKickstartFile", GLib.Variant("(s)", (str(kickstart),)),
-                       0, 120_000, None)
+
+        # `ReadKickstartFile` returns a **KickstartReport**, not nothing. An
+        # earlier version discarded it, which meant a kickstart Anaconda could
+        # not parse produced no error here and the install proceeded to
+        # `InstallWithTasks` anyway. The structure is
+        # `{error-messages: [...], warning-messages: [...]}`, each message
+        # carrying module-name, file-name, line-number and message; a report is
+        # valid exactly when the error list is empty.
+        report = boss.call_sync(
+            "ReadKickstartFile", GLib.Variant("(s)", (str(kickstart),)),
+            0, 120_000, None).unpack()[0]
+        errors = [self._message(item) for item in report.get("error-messages", [])]
+        warnings = [self._message(item) for item in report.get("warning-messages", [])]
+        if warnings:
+            on_stage("Validating storage", "; ".join(warnings)[:200])
+        if errors:
+            raise ExecutorUnavailable(
+                "Anaconda refused the installation plan: " + "; ".join(errors)
+                + ". No disk was touched."
+            )
+
         boss.call_sync("CollectRequirements", None, 0, 120_000, None)
         tasks = boss.call_sync("InstallWithTasks", None, 0, 120_000, None).unpack()[0]
         if not tasks:
             raise ExecutorUnavailable(
                 "Anaconda returned no installation tasks; nothing was written")
         self._run_tasks(tasks, on_stage=on_stage)
+
+    @staticmethod
+    def _message(item: Mapping[str, Any]) -> str:
+        """One KickstartMessage, flattened for a person to read."""
+        def value(key: str) -> Any:
+            found = item.get(key)
+            return found.unpack() if hasattr(found, "unpack") else found
+
+        text = str(value("message") or "").strip()
+        line = value("line-number")
+        return f"line {line}: {text}" if line else text
 
     def _run_tasks(self, task_paths: Sequence[str], *, on_stage: Callable[[str, str], None]) -> None:
         """Run each task to completion, reporting its own name as the stage.
@@ -268,10 +316,24 @@ class AnacondaDBusExecutor:
             on_stage(str(label), f"Running {label}")
             proxy.call_sync("Start", None, 0, GLib.MAXINT32, None)
             loop = GLib.MainContext.default()
+            last = ""
             while True:
                 running = proxy.get_cached_property("IsRunning")
                 if running is not None and not running.unpack():
                     break
+                # `Progress` is (step, message). The message is Anaconda's own
+                # sentence about what it is doing, which is the "real installer
+                # state" §23 asks for — the step number is deliberately not
+                # turned into a percentage.
+                progress = proxy.get_cached_property("Progress")
+                if progress is not None:
+                    try:
+                        _step, message = progress.unpack()
+                        if message and message != last:
+                            on_stage(str(label), str(message))
+                            last = str(message)
+                    except (TypeError, ValueError):
+                        pass
                 while loop.pending():
                     loop.iteration(False)
             # Finish re-raises whatever the task failed with, which is what
