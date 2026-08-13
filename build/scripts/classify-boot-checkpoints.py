@@ -217,13 +217,31 @@ CHECKPOINTS: tuple[Checkpoint, ...] = (
 # and not the second, which is survivable only for as long as both copies keep
 # appearing. Stripping the escapes first makes every pattern work on either, and
 # makes the line quoted back in the report readable instead of full of \x1b.
-ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]|\x1b[()][A-B0-9]|[\x00-\x08\x0b\x0c\x0e-\x1f]")
+ANSI = re.compile(r"\x1b\[[0-9;?=<>]*[A-Za-z]|\x1b[()][A-B0-9]|\x1b[]][^\x07\x1b]*"
+                  r"(?:\x07|\x1b\\)?|[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
 def load_lines(path: Path) -> list[str]:
     raw = path.read_bytes()
     text = raw.decode("utf-8", "replace")
     return [ANSI.sub("", line).rstrip() for line in text.splitlines()]
+
+
+def excerpt(line: str, match: re.Match | None, width: int = 110) -> str:
+    """The part of a line around the match, rather than the start of it.
+
+    GRUB positions its cursor with escape sequences and emits no newline, so
+    once the escapes are stripped its entire screen — and the first of the
+    kernel's output after it — is a single line thousands of characters long.
+    Quoting the beginning of that line reported the kernel's start as
+    "Press enter to boot the selected OS", which is not evidence of anything.
+    """
+    if match is None:
+        return line[:width].strip()
+    start = max(0, match.start() - width // 4)
+    end = min(len(line), match.end() + width)
+    text = line[start:end].strip()
+    return ("…" if start > 0 else "") + text + ("…" if end < len(line) else "")
 
 
 def first_match(lines: list[str], patterns: tuple[str, ...],
@@ -233,8 +251,9 @@ def first_match(lines: list[str], patterns: tuple[str, ...],
     combined = re.compile("|".join(patterns))
     start = 0 if after_index is None else after_index + 1
     for index in range(start, len(lines)):
-        if combined.search(lines[index]):
-            return index, lines[index].strip()
+        found = combined.search(lines[index])
+        if found:
+            return index, excerpt(lines[index], found)
     return None
 
 

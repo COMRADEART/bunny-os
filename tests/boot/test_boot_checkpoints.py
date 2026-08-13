@@ -274,6 +274,26 @@ class ClassifierTests(unittest.TestCase):
                       entry["refutedBy"]["text"])
         self.assertNotIn("\x1b", entry["refutedBy"]["text"])
 
+    def test_evidence_is_quoted_around_the_match_not_from_the_start_of_the_line(self) -> None:
+        # GRUB positions with escape sequences and emits no newline, so its
+        # whole screen and the kernel's first output arrive as one line
+        # thousands of characters long. Quoting its beginning reported the
+        # kernel's start as "Press enter to boot the selected OS".
+        collapsed = (
+            "GNU GRUB  version 2.12    Try or Install Bunny OS    Safe Graphics"
+            + "    " * 40
+            + "Press enter to boot the selected OS, `e' to edit the commands."
+            + "    " * 40
+            + "[    0.000000] Linux version 7.1.5-200.fc44.x86_64 (mockbuild@fedora)"
+        )
+        text = collapsed + "\n" + "\n".join(INITRAMFS + LIVE_ROOT + SWITCH
+                                            + REAL_ROOT + GRAPHICAL + SESSION) + "\n"
+        report = self.classify(text)
+        kernel = next(r for r in report["checkpoints"] if r["checkpoint"] == "BOOT-3")
+        self.assertEqual(kernel["status"], "PASS")
+        self.assertIn("Linux version 7.1.5-200.fc44.x86_64", kernel["matched"]["text"])
+        self.assertNotIn("Press enter to boot", kernel["matched"]["text"])
+
     def test_an_empty_log_reaches_nothing(self) -> None:
         report = self.classify("")
         self.assertIsNone(report["reached"])
