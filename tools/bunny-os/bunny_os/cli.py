@@ -10,6 +10,7 @@ from typing import Any
 
 from . import capability_cli as capability_module
 from . import companion_cli as companion_module
+from . import model_cli as model_module
 from . import qualification as qualification_module
 from .client import BrokerClientError, request
 from .info import human as hardware_human, inventory
@@ -86,6 +87,7 @@ def parser() -> argparse.ArgumentParser:
     qualification_module.add_arguments(sub)
     capability_module.add_arguments(sub)
     companion_module.add_arguments(sub)
+    model_module.add_arguments(sub)
     return root
 
 
@@ -152,6 +154,15 @@ def main() -> int:
                 value = companion_module.dispatch(args)
             except companion_module.CompanionError as exc:
                 raise BrokerClientError("companion_refused", str(exc)) from exc
+        elif args.command == "model":
+            # The runtime model bridge. Local and user-owned like capability and
+            # companion, so no broker is involved — and deliberately unable to
+            # skip validation: there is no flag here that turns a refusal into a
+            # load.
+            try:
+                value = model_module.dispatch(args)
+            except model_module.ModelCommandError as exc:
+                raise BrokerClientError("model_refused", str(exc)) from exc
         elif args.command == "media":
             from installer.validation.media import MediaVerificationError, verify_manifest
 

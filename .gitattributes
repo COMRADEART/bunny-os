@@ -103,3 +103,10 @@ assets/voice/runtime/wheels/*.whl filter=lfs diff=lfs merge=lfs -text
 # Linux one makes that accounting platform-dependent — the figure was right on
 # whichever machine happened to produce it and wrong on the other.
 assets/voice/licenses/** -text
+
+# Bunny Model Studio developer command. No extension, and it begins with a
+# `#!/usr/bin/python3` line: a CRLF checkout appends a carriage return to the
+# interpreter path, and the kernel then refuses the exec while naming a file
+# that is plainly there. Neither the `*.sh` rule nor the `installer/bin` one
+# reaches it, because this command is deliberately not installed into the image.
+model_studio/bin/** -text

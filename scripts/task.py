@@ -228,6 +228,7 @@ def main() -> int:
         "test-release", "test-hardware-evidence", "test-accessibility-evidence", "test-pilot-gates",
         "test-capability", "test-companion",
         "test-trust", "test-capsules", "test-app-catalog", "test-capsule-task", "test-capsule-phase",
+        "test-model-studio", "test-model-bridge",
     ))
     args = parser.parse_args()
     if args.command == "audit":
@@ -303,6 +304,16 @@ def main() -> int:
         component_tests("app_catalog")
     elif args.command == "test-capsule-task":
         component_tests("capsule_task")
+    elif args.command == "test-model-bridge":
+        # The runtime model bridge. Needs no model, GPU, inference server or
+        # network; the real runtime slice skips unless
+        # BUNNY_MODEL_BRIDGE_HEAVY=1.
+        component_tests("model_bridge")
+    elif args.command == "test-model-studio":
+        # Bunny Model Studio. Nothing here needs torch, a GPU or the network;
+        # the one test that trains a real model skips unless
+        # BUNNY_MODEL_STUDIO_HEAVY=1, so this target never downloads anything.
+        component_tests("model_studio")
     elif args.command == "test-capsule-phase":
         # The whole of the Companion/Capsule/Trust phase, in the order a failure
         # is cheapest to read: the permission layer first, then what it is used

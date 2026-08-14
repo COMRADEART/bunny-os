@@ -37,7 +37,7 @@ import socket
 import ssl
 import threading
 from dataclasses import dataclass
-from typing import Any, Iterator, Mapping
+from typing import Any, Iterator, Mapping, Sequence
 
 from .errors import AgentSchemaError
 
@@ -185,13 +185,19 @@ class WireSession:
         method: str,
         path: str,
         *,
-        body: Mapping[str, Any] | None = None,
+        body: Mapping[str, Any] | Sequence[Any] | None = None,
         headers: Mapping[str, str] | None = None,
         timeout: float = 10.0,
         request_id: str = "",
         max_response_bytes: int = MAX_RESPONSE_BYTES,
     ) -> tuple[int, Any]:
-        """One request, one bounded JSON response. 3xx is a refusal."""
+        """One request, one bounded JSON response. 3xx is a refusal.
+
+        ``body`` accepts a sequence as well as a mapping because not every
+        endpoint takes an object: llama-server's ``POST /lora-adapters`` takes a
+        JSON array. The encoding was always ``json.dumps`` and is unchanged;
+        only the annotation was too narrow to describe what it already did.
+        """
         connection = self._connect(target, timeout)
         self._register(request_id, connection)
         try:
