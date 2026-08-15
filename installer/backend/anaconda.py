@@ -422,6 +422,35 @@ class AnacondaDBusExecutor:
             # is the fact the failure screen exists to carry.
             raise InstallationFailed(self._flatten_dbus_error(error)) from error
 
+        # Finish the way anaconda itself finishes: tear the target down, so
+        # every late write reaches the disk and the filesystems unmount
+        # cleanly. Run 25 completed without this and the installed system
+        # was missing its user, its locale and its logs' contents: the
+        # executor stopped at the last install task, the target stayed
+        # mounted, the final /etc writes sat in the guest's page cache, and
+        # powering the machine off threw them away — while the six-gigabyte
+        # payload, written early and fsynced by ostree, survived and made
+        # the disk look almost right. The payload module unmounts its binds
+        # first, then storage unmounts and deactivates what it mounted —
+        # anaconda's own order. A teardown failure fails the install: a
+        # disk that cannot be unmounted is a disk whose contents cannot be
+        # promised.
+        on_stage("Finishing", "Unmounting the installed system")
+        for service, path in (
+            ("org.fedoraproject.Anaconda.Modules.Payloads",
+             "/org/fedoraproject/Anaconda/Modules/Payloads"),
+            (self.STORAGE_SERVICE, self.STORAGE_PATH),
+        ):
+            try:
+                teardown = self._bus.call_sync(
+                    service, path, service, "TeardownWithTasks",
+                    None, None, 0, 120_000, None).unpack()[0]
+                self._run_tasks(teardown, on_stage=on_stage, service=service)
+            except Exception as error:                      # GLib.Error
+                raise InstallationFailed(
+                    "the installed system could not be unmounted cleanly: "
+                    + self._flatten_dbus_error(error)) from error
+
     @staticmethod
     def _flatten_dbus_error(error: Exception) -> str:
         """The sentence inside a GLib.Error, for a person.
