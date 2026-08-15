@@ -220,7 +220,8 @@ class ProtocolServer:
             # exception class — run 18's screen said "the installer backend
             # failed: Error" over a disk with six gigabytes on it.
             self.on_event("error", {"traceback": traceback.format_exc(),
-                                    "engineJournal": _engine_journal()})
+                                    "engineJournal": _engine_journal(),
+                                    "engineLogs": _engine_logs()})
             return self._error(str(error), kind="failed")
         except ValueError as error:
             return self._error(str(error), kind="invalid")
@@ -274,6 +275,25 @@ def _engine_journal(unit: str = "bunny-anaconda-bus.service", lines: int = 250) 
         return (completed.stdout or completed.stderr)[-12000:]
     except (OSError, subprocess.SubprocessError) as error:
         return f"journal unavailable: {error}"
+
+
+def _engine_logs() -> dict[str, str]:
+    """Tails of anaconda's own log files, for a failure event.
+
+    The modules write to the real /tmp (their dbus-daemon parent runs
+    unsandboxed), and program.log is the only place the stderr of helpers
+    they ran survives — run 20's journal capture carried the traceback that
+    *wrapped* "Error enabling service chronyd: 1" but not the systemctl
+    stderr underneath it, because that never reaches stderr, only this file.
+    """
+    tails = {}
+    for name in ("program.log", "anaconda.log", "storage.log"):
+        try:
+            body = (Path("/tmp") / name).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        tails[name] = body[-8000:]
+    return tails
 
 
 def serve(*, live_uid: int, probe: Callable[[], list], adapter: object | None,

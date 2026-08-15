@@ -27,7 +27,13 @@ Restart=no
 User=root
 Group=root
 NoNewPrivileges=yes
-PrivateTmp=yes
+# PrivateTmp stood here until run 20. The engine's own logs live in the real
+# /tmp — anaconda's modules write program.log there, and program.log is where
+# the stderr of every helper they ran lands, including the systemctl whose
+# exit code surfaced as "Error enabling service chronyd: 1" with no sentence
+# under it. The socket that originally justified PrivateTmp has lived in /run
+# since run 12, so what the sandbox was protecting no longer exists and what
+# it was hiding turned out to be the diagnosis.
 # PrivateDevices=yes stood here until run 19 ("this process never opens a
 # device") — but on a driven run the backend copies its events, tracebacks
 # included, to the serial console the harness records, because the live
