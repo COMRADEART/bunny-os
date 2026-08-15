@@ -619,6 +619,16 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "installer/config/tmpfiles-live.conf",
         "/usr/lib/tmpfiles.d/bunny-live.conf", 0o644, profiles=LIVE_PROFILES,
     ),
+    # The medium runs permissive, the way Fedora's own installer media do;
+    # the installed system keeps the payload's enforcing config. Run 21: the
+    # services-configuration step's `systemctl enable --root` was denied
+    # under the medium's enforcing policy and the install died after the
+    # disk was erased. The file carries the full reasoning.
+    _file_route(
+        "live-selinux-permissive",
+        "installer/config/selinux-live.conf",
+        "/etc/selinux/config", 0o644, profiles=LIVE_PROFILES,
+    ),
     InstallRoute(
         id="live-installer-payload",
         kind="tree",

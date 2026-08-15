@@ -221,7 +221,8 @@ class ProtocolServer:
             # failed: Error" over a disk with six gigabytes on it.
             self.on_event("error", {"traceback": traceback.format_exc(),
                                     "engineJournal": _engine_journal(),
-                                    "engineLogs": _engine_logs()})
+                                    "engineLogs": _engine_logs(),
+                                    "security": _security_state()})
             return self._error(str(error), kind="failed")
         except ValueError as error:
             return self._error(str(error), kind="invalid")
@@ -275,6 +276,29 @@ def _engine_journal(unit: str = "bunny-anaconda-bus.service", lines: int = 250) 
         return (completed.stdout or completed.stderr)[-12000:]
     except (OSError, subprocess.SubprocessError) as error:
         return f"journal unavailable: {error}"
+
+
+def _security_state() -> dict[str, str]:
+    """SELinux mode and recent kernel AVC denials, for a failure event.
+
+    Run 21's failing `systemctl enable --root` could be reproduced nowhere —
+    same binary, same deployment, exit 0 on every host — because the one
+    condition a repro cannot copy is the live medium's enforcement state.
+    This puts that state, and any denials, in the evidence itself.
+    """
+    state: dict[str, str] = {}
+    for name, command in (
+        ("enforce", ["getenforce"]),
+        ("avc", ["journalctl", "-k", "-g", "avc", "-n", "40",
+                 "--no-pager", "--output", "cat"]),
+    ):
+        try:
+            completed = subprocess.run(command, capture_output=True,
+                                       text=True, timeout=15)
+            state[name] = (completed.stdout or completed.stderr).strip()[-4000:]
+        except (OSError, subprocess.SubprocessError) as error:
+            state[name] = f"unavailable: {error}"
+    return state
 
 
 def _engine_logs() -> dict[str, str]:
