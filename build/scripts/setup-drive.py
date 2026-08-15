@@ -196,6 +196,49 @@ class Surface:
         raise last if last is not None else TimeoutError(
             f"timed out waiting for a {role} named {name!r}")
 
+    def press_first(self, names: tuple[str, ...], *, role: str = "button") -> None:
+        """Press whichever of ``names`` appears first, preferring earlier names.
+
+        The same settling rules as :meth:`press`: absent, insensitive and
+        action-less are transient until the deadline, and each cycle prefers
+        the earliest name so "Continue without network" beats a plain
+        Continue whenever both exist.
+        """
+        deadline = time.time() + self.timeout
+        last: Exception | None = None
+        while time.time() < deadline:
+            for name in names:
+                row = self.find(name=name, role=role)
+                if row is None:
+                    continue
+                if not row["sensitive"]:
+                    last = RuntimeError(f"the control {name!r} is present but not sensitive")
+                    continue
+                try:
+                    self.activate(row)
+                    return
+                except RuntimeError as error:
+                    last = error
+            time.sleep(0.5)
+        raise last if last is not None else TimeoutError(
+            f"timed out waiting for any {role} named {names!r}")
+
+    def wait_for_text(self, needle: str, what: str) -> str:
+        """The screen text once ``needle`` is in it. A page's text renders
+        after the click that navigated to it; a single read decides from
+        whichever frame it happened to land on."""
+        found: dict[str, str] = {}
+
+        def check() -> bool:
+            screen = self.text_on_screen()
+            if needle in screen:
+                found["screen"] = screen
+                return True
+            return False
+
+        self.wait_for(check, what)
+        return found["screen"]
+
     def field_named(self, label: str):
         """The field whose label is exactly ``label``, not merely contains it.
 
@@ -315,8 +358,7 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
 
     for stage in ("language_region", "keyboard", "network"):
         emit("stage", name=stage)
-        row = surface.find(name="Continue without network", role="button")
-        surface.activate(row) if row else surface.press("Continue")
+        surface.press_first(("Continue without network", "Continue"))
 
     emit("stage", name="storage")
     target = verify_target(surface,
@@ -340,24 +382,31 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
 
     for stage in ("privacy", "appearance", "companion", "applications"):
         emit("stage", name=stage)
-        row = surface.find(name="Skip apps", role="button")
-        surface.activate(row) if row else surface.press("Continue")
+        surface.press_first(("Skip apps", "Continue"))
 
     emit("stage", name="review")
-    screen = surface.text_on_screen()
-    if "will be erased" not in screen:
-        raise RuntimeError("§22: the review screen does not state the disk consequence")
+    # Polled like every other page: the consequence sentence renders after the
+    # click that navigated here, and §22's refusal should fire on a screen
+    # that settled without it, not on a screen still being drawn.
+    screen = surface.wait_for_text(
+        "will be erased", "§22: the review screen to state the disk consequence")
     emit("review-consequence", text=[line for line in screen.splitlines()
                                      if "will be erased" in line][:1])
     surface.press("Install Bunny OS")
 
     emit("stage", name="confirm_erase")
-    screen = surface.text_on_screen()
     import re
 
-    phrase = re.search(r"Type (ERASE \S+ [A-F0-9]{6}) to confirm", screen)
-    if not phrase:
-        raise RuntimeError("§12: the confirmation screen does not show a phrase to type")
+    phrase = None
+    deadline = time.time() + surface.timeout
+    while phrase is None:
+        screen = surface.text_on_screen()
+        phrase = re.search(r"Type (ERASE \S+ [A-F0-9]{6}) to confirm", screen)
+        if phrase is None:
+            if time.time() >= deadline:
+                raise RuntimeError(
+                    "§12: the confirmation screen does not show a phrase to type")
+            time.sleep(0.5)
     emit("confirmation-phrase", phrase=phrase.group(1))
 
     if arguments.expect_refusal:
