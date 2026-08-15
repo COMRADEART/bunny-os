@@ -228,9 +228,14 @@ class TheDBusExecutorRefusesOffAnISO(unittest.TestCase):
         because the anaconda on the medium is what decides and it need not be
         this version.
         """
+        # StartModulesWithTask joined the list after run 15 of Journey A: a
+        # bare DBus-activated Boss has no modules, and a module-less Boss
+        # "completed" an installation of nothing. Verified present by
+        # introspecting the Boss inside the built live image.
         self.assertEqual(
             AnacondaDBusExecutor.REQUIRED_BOSS_METHODS,
-            ("ReadKickstartFile", "CollectRequirements", "InstallWithTasks"))
+            ("StartModulesWithTask", "ReadKickstartFile",
+             "CollectRequirements", "InstallWithTasks"))
         self.assertEqual(
             AnacondaDBusExecutor.REQUIRED_TASK_MEMBERS,
             ("Start", "Finish", "IsRunning", "Name"))
