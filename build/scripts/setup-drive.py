@@ -426,7 +426,24 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
                            expected_size_gib=arguments.disk_gib,
                            expected_model=arguments.disk_model,
                            expected_device=arguments.disk_device)
-    surface.activate(target)
+    # Re-found fresh on every attempt - the row verify_target returned can be
+    # a pre-render accessible with an empty action table (run 7 died on
+    # exactly that) - and judged by the one witness that selection actually
+    # happened: the row reporting CHECKED.
+    selection_deadline = time.time() + surface.timeout
+    while True:
+        row = surface.find(name=target["name"], exact=True)
+        if row is not None and row["checked"]:
+            emit("target-selected", disk=row["name"])
+            break
+        if row is not None and row["sensitive"]:
+            try:
+                surface.activate(row)
+            except RuntimeError:
+                pass
+        if time.time() >= selection_deadline:
+            raise RuntimeError(f"§43: could not select the verified target: {target['name']!r}")
+        time.sleep(0.7)
     surface.advance(("Review what happens",))
 
     emit("stage", name="encryption")
