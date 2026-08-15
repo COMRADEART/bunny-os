@@ -426,6 +426,18 @@ class AnacondaDBusExecutor:
         for install tasks, the Storage module's for scan/configure/validate —
         so the owner is a parameter. Returns the last task's proxy, because a
         validation task's verdict is fetched with `GetResult` after `Finish`.
+
+        Completion is witnessed through the task's **signals**, not a proxy's
+        property cache. The first version polled
+        ``proxy.get_cached_property("IsRunning")`` — but a Gio proxy's cache
+        updates only on `PropertiesChanged`, and anaconda's task interface never
+        emits it; tasks speak through `Started`/`Stopped`/`ProgressChanged`
+        signals instead. The cache therefore held its creation-time snapshot —
+        `False`, taken before `Start` — so the loop broke on its first
+        iteration and every task was fired and forgotten. That is the second
+        half of run 17's lying success (the module-start "worked" only because
+        the separate `GetModules` poll covered for it), and why a fifteen-stage
+        install produced exactly one progress message.
         """
         from gi.repository import Gio, GLib  # type: ignore
 
@@ -438,28 +450,58 @@ class AnacondaDBusExecutor:
             name = proxy.get_cached_property("Name")
             label = name.unpack() if name is not None else path.rsplit("/", 1)[-1]
             on_stage(str(label), f"Running {label}")
-            proxy.call_sync("Start", None, 0, GLib.MAXINT32, None)
-            loop = GLib.MainContext.default()
-            last = ""
-            while True:
-                running = proxy.get_cached_property("IsRunning")
-                if running is not None and not running.unpack():
-                    break
-                # `Progress` is (step, message). The message is Anaconda's own
-                # sentence about what it is doing, which is the "real installer
-                # state" §23 asks for — the step number is deliberately not
-                # turned into a percentage.
-                progress = proxy.get_cached_property("Progress")
-                if progress is not None:
+
+            state = {"stopped": False, "last": ""}
+
+            def on_signal(_connection, _sender, _path, _interface, member,
+                          parameters, *, _state=state, _label=label):
+                if member == "Stopped":
+                    _state["stopped"] = True
+                elif member == "ProgressChanged":
+                    # (step, message). The message is Anaconda's own sentence
+                    # about what it is doing — the "real installer state" §23
+                    # asks for. The step number is deliberately not turned
+                    # into a percentage.
                     try:
-                        _step, message = progress.unpack()
-                        if message and message != last:
-                            on_stage(str(label), str(message))
-                            last = str(message)
+                        _step, message = parameters.unpack()
                     except (TypeError, ValueError):
-                        pass
-                while loop.pending():
-                    loop.iteration(False)
+                        return
+                    if message and str(message) != _state["last"]:
+                        on_stage(str(_label), str(message))
+                        _state["last"] = str(message)
+
+            # Subscribed before Start: AddMatch and the Start call travel the
+            # same connection in order, so a Stopped emitted in response to
+            # Start cannot outrun the subscription.
+            subscription = self._bus.signal_subscribe(
+                None, "org.fedoraproject.Anaconda.Task", None, path, None,
+                Gio.DBusSignalFlags.NONE, on_signal)
+            try:
+                proxy.call_sync("Start", None, 0, GLib.MAXINT32, None)
+                context = GLib.MainContext.default()
+                started = time.time()
+                checked = started
+                while not state["stopped"]:
+                    if not context.iteration(False):
+                        time.sleep(0.1)
+                    # Belt against a missed signal: a live IsRunning read (a
+                    # Properties.Get round trip, never the cache). Only after a
+                    # grace period, because is_running is briefly False between
+                    # Start returning and the task's thread existing — the
+                    # exact stale-False this rewrite removes.
+                    now = time.time()
+                    if now - started > 5.0 and now - checked > 2.0:
+                        checked = now
+                        running = self._bus.call_sync(
+                            owner, path, "org.freedesktop.DBus.Properties",
+                            "Get",
+                            GLib.Variant("(ss)", ("org.fedoraproject.Anaconda.Task",
+                                                  "IsRunning")),
+                            None, 0, 30_000, None).unpack()[0]
+                        if not running:
+                            break
+            finally:
+                self._bus.signal_unsubscribe(subscription)
             # Finish re-raises whatever the task failed with, which is what
             # turns an installer error into this phase's failure screen.
             proxy.call_sync("Finish", None, 0, 60_000, None)
