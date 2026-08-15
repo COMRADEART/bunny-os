@@ -614,6 +614,11 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "installer/config/medium.ks",
         "/usr/share/bunny-os/medium.ks", 0o444, profiles=LIVE_PROFILES,
     ),
+    _file_route(
+        "live-tmpfiles",
+        "installer/config/tmpfiles-live.conf",
+        "/usr/lib/tmpfiles.d/bunny-live.conf", 0o644, profiles=LIVE_PROFILES,
+    ),
     InstallRoute(
         id="live-installer-payload",
         kind="tree",
