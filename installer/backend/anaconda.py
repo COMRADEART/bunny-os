@@ -169,7 +169,8 @@ class AnacondaDBusExecutor:
     #:
     #: `preflight` still introspects and still refuses, because the package on
     #: the medium is what matters and it is not necessarily this one.
-    REQUIRED_BOSS_METHODS = ("ReadKickstartFile", "CollectRequirements", "InstallWithTasks")
+    REQUIRED_BOSS_METHODS = ("StartModulesWithTask", "ReadKickstartFile",
+                             "CollectRequirements", "InstallWithTasks")
 
     #: Likewise verified: `pyanaconda/modules/common/task/task_interface.py`
     #: publishes Name, Progress, Steps and IsRunning as properties, and Start,
@@ -264,6 +265,25 @@ class AnacondaDBusExecutor:
         from gi.repository import GLib  # type: ignore
 
         boss = self._connect()
+
+        # The modules first, and this line is run 15's lesson — the worst
+        # failure of the whole journey, because it was a lying success. In
+        # anaconda's own flow the main process calls StartModulesWithTask
+        # before anything else; a bare DBus-activated Boss has no modules, and
+        # a module-less Boss parses a kickstart without errors, returns
+        # non-empty no-op tasks, and "completes" an installation that wrote
+        # nothing while the screen said Bunny OS is ready. The disk was 196 KB.
+        on_stage("Preparing", "Starting the installer's modules")
+        module_task = boss.call_sync(
+            "StartModulesWithTask", None, 0, 120_000, None).unpack()[0]
+        self._run_tasks([module_task], on_stage=on_stage)
+        modules = boss.call_sync("GetModules", None, 0, 120_000, None).unpack()[0]
+        if not modules:
+            raise ExecutorUnavailable(
+                "Anaconda started no modules; a module-less installer parses "
+                "everything and writes nothing. No disk was touched.")
+        on_stage("Preparing", f"{len(modules)} installer modules running")
+
         on_stage("Validating storage", f"Handing {kickstart.name} to the installer")
 
         # `ReadKickstartFile` returns a **KickstartReport**, not nothing. An

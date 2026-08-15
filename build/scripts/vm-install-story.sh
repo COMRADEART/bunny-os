@@ -89,11 +89,12 @@ rm -f "${qmp}"
 # The journey's parameters reach the in-guest driver through the kernel command
 # line, so that one ISO serves all four of §53 without a rebuild.
 case "${journey}" in
-  a) drive_args="--passphrase=bunny-disk-passphrase" ;;
+  a) drive_args="--passphrase=bunny-disk-passphrase"; verify_passphrase="bunny-disk-passphrase" ;;
   b) drive_args="--text-scale=2.0 --high-contrast --reduced-motion --passphrase=bunny-disk-passphrase"
+     verify_passphrase="bunny-disk-passphrase"
      width="${BUNNY_INSTALL_WIDTH:-1024}"; height="${BUNNY_INSTALL_HEIGHT:-768}" ;;
-  c) drive_args="" ;;
-  d) drive_args="--expect-refusal" ;;
+  c) drive_args=""; verify_passphrase="" ;;
+  d) drive_args="--expect-refusal"; verify_passphrase="" ;;
   *) echo "unknown journey: ${journey} (expected a, b, c or d)" >&2; exit 2 ;;
 esac
 echo "driver:  ${drive_args:-<no extra arguments>}"
@@ -222,8 +223,27 @@ PYTHON
 case "${outcome}" in
   done)
     if grep -aq '"outcome": "complete"' "${log}"; then
-      echo "PASS: the guest reported a completed installation"
-      exit 0
+      # The screen's word is not the verdict — run 15's screen said
+      # "Bunny OS is ready" over a 196 KB disk. Completion is claimed by the
+      # guest and PROVEN by the disk, read from outside: a bootloader entry
+      # exists and the verifier found nothing wrong.
+      verify_args=(--disk "${disk}" --output "${work}/installed.json")
+      if [[ -n "${verify_passphrase}" ]]; then
+        verify_args+=(--passphrase "${verify_passphrase}")
+      fi
+      python3 build/scripts/verify-installed-choices.py "${verify_args[@]}" \
+        >"${work}/installed.log" 2>&1 || true
+      if python3 -c "
+import json, sys
+record = json.load(open(sys.argv[1]))
+observed = record.get('observed', {})
+sys.exit(0 if (observed.get('bootEntries') and not record.get('findings')) else 1)
+" "${work}/installed.json"; then
+        echo "PASS: the guest reported completion and the disk carries the installation"
+        exit 0
+      fi
+      echo "FAIL: the guest reported completion and the disk disagrees; see ${work}/installed.json" >&2
+      exit 6
     fi
     if [[ "${journey}" == "d" ]] && grep -aq '"outcome": "refused-as-expected"' "${log}"; then
       echo "PASS: journey D refused as expected and installed nothing"
