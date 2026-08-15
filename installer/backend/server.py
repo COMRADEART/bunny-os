@@ -52,7 +52,7 @@ import threading
 import traceback
 from typing import Any, Callable, Mapping
 
-from installer.backend.anaconda import ExecutorUnavailable
+from installer.backend.anaconda import ExecutorUnavailable, InstallationFailed
 from installer.backend.service import AuthenticationError, BackendUnavailable, InstallerService
 
 __all__ = ["SOCKET_PATH", "ProtocolServer", "serve"]
@@ -212,6 +212,14 @@ class ProtocolServer:
             # to the generic handler replaced that sentence with
             # "the installer backend failed: ExecutorUnavailable".
             return self._error(str(error), kind="unavailable")
+        except InstallationFailed as error:
+            # Anaconda's own sentence about a task that failed past the write
+            # boundary. It reaches the screen as-is; the generic handler below
+            # would replace the one fact a person needs with the name of an
+            # exception class — run 18's screen said "the installer backend
+            # failed: Error" over a disk with six gigabytes on it.
+            self.on_event("error", {"traceback": traceback.format_exc()})
+            return self._error(str(error), kind="failed")
         except ValueError as error:
             return self._error(str(error), kind="invalid")
         except Exception as error:                       # pragma: no cover
@@ -257,9 +265,23 @@ def serve(*, live_uid: int, probe: Callable[[], list], adapter: object | None,
     service = InstallerService(live_uid=live_uid, probe=probe, production_adapter=adapter)
     server = ProtocolServer(service, path=path, live_uid=live_uid)
 
+    drive_arguments = Path("/run/bunny-setup/drive.args")
+
     def announce(name: str, detail: Mapping[str, Any]) -> None:
-        sys.stderr.write(json.dumps({"event": name, **dict(detail)}, sort_keys=True) + "\n")
+        line = json.dumps({"event": name, **dict(detail)}, sort_keys=True)
+        sys.stderr.write(line + "\n")
         sys.stderr.flush()
+        # A driven run — and only a driven run; the marker file exists exactly
+        # when the harness passed SMBIOS drive arguments — also copies events
+        # to the serial console the harness reads. The live journal is tmpfs
+        # and dies with the VM, which is how run 18's failure traceback
+        # vanished while the harness held a serial log the whole time.
+        if drive_arguments.exists():
+            try:
+                with open("/dev/ttyS0", "a", encoding="utf-8") as console:
+                    console.write("BUNNY-BACKEND " + line + "\n")
+            except OSError:
+                pass
 
     server.on_event = announce
 

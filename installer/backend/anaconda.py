@@ -47,6 +47,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import os
 from pathlib import Path
+import re
 import shutil
 import tempfile
 import time
@@ -60,6 +61,7 @@ __all__ = [
     "AnacondaAdapter",
     "AnacondaDBusExecutor",
     "ExecutorUnavailable",
+    "InstallationFailed",
     "RecordingExecutor",
     "read_medium_kickstart",
 ]
@@ -88,6 +90,19 @@ _RUNTIME = Path("/run/bunny-setup")
 
 class ExecutorUnavailable(RuntimeError):
     """Installation cannot proceed, and nothing has been written."""
+
+
+class InstallationFailed(RuntimeError):
+    """An anaconda task failed past the write boundary.
+
+    Carries anaconda's own sentence about what went wrong, flattened from the
+    DBus error, so the failure screen can show the engine's words. It is
+    deliberately not `ExecutorUnavailable`: that class promises "no disk was
+    touched", and this one exists precisely because the disk was. Run 18's
+    version of this reached the screen as "the installer backend failed:
+    Error" — the name of an exception class where the one useful fact
+    should have been.
+    """
 
 
 def read_medium_kickstart(paths: Sequence[Path] = MEDIUM_KICKSTART_PATHS) -> tuple[list[str], Path]:
@@ -392,15 +407,37 @@ class AnacondaDBusExecutor:
             raise
         except Exception as error:                          # GLib.Error
             raise ExecutorUnavailable(
-                f"the storage layout could not be prepared: {error}. "
-                "No disk was touched.") from error
+                "the storage layout could not be prepared: "
+                f"{self._flatten_dbus_error(error)}. No disk was touched.") from error
 
         boss.call_sync("CollectRequirements", None, 0, 120_000, None)
         tasks = boss.call_sync("InstallWithTasks", None, 0, 120_000, None).unpack()[0]
         if not tasks:
             raise ExecutorUnavailable(
                 "Anaconda returned no installation tasks; nothing was written")
-        self._run_tasks(tasks, on_stage=on_stage)
+        try:
+            self._run_tasks(tasks, on_stage=on_stage)
+        except Exception as error:                          # GLib.Error
+            # Past the write boundary an anaconda task's own failure sentence
+            # is the fact the failure screen exists to carry.
+            raise InstallationFailed(self._flatten_dbus_error(error)) from error
+
+    @staticmethod
+    def _flatten_dbus_error(error: Exception) -> str:
+        """The sentence inside a GLib.Error, for a person.
+
+        str(GLib.Error) is "g-io-error-quark: GDBus.Error:org.fedoraproject.
+        Anaconda.…SomeError: the actual sentence (36)". The person needs the
+        sentence; the quark, the interface name and the code are noise on a
+        failure screen.
+        """
+        text = str(error)
+        marker = "GDBus.Error:"
+        if marker in text:
+            text = text.split(marker, 1)[1]
+            if ": " in text:
+                text = text.split(": ", 1)[1]
+        return re.sub(r"\s*\(\d+\)$", "", text).strip()
 
     @staticmethod
     def _message(item: Mapping[str, Any]) -> str:

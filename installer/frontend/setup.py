@@ -684,6 +684,16 @@ class SetupApplication:
                 self.flow = build_flow(self.choices, context=self.context)
                 self.render()
             return
+        if key == "enabled":
+            # The toggle is the decision, and the passphrase fields exist only
+            # inside it. Re-rendering here is what makes switching it on
+            # conjure the fields and switching it off remove them — run 18
+            # typed a passphrase into fields drawn beside an off toggle, the
+            # submit path discarded the secret because the recorded choice
+            # said off, and the installation came out unencrypted.
+            self.choices.encryption_enabled = bool(value)
+            self.render()
+            return
         setters = {
             "textScale": lambda v: setattr(self.choices, "text_scale", float(v)),
             "highContrast": lambda v: setattr(self.choices, "high_contrast", bool(v)),
@@ -697,7 +707,6 @@ class SetupApplication:
             "displayName": lambda v: setattr(self.choices, "display_name", str(v)),
             "username": lambda v: setattr(self.choices, "username", str(v)),
             "deviceName": lambda v: setattr(self.choices, "device_name", str(v)),
-            "enabled": lambda v: setattr(self.choices, "encryption_enabled", bool(v)),
             "scheme": lambda v: setattr(self.choices, "colour_scheme", str(v)),
             "accent": lambda v: setattr(self.choices, "accent", str(v)),
             "wallpaper": lambda v: setattr(self.choices, "wallpaper", str(v)),

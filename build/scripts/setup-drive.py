@@ -464,6 +464,22 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
 
     emit("stage", name="encryption")
     if arguments.passphrase:
+        # §13: the toggle is the decision; the passphrase fields exist only
+        # while it is on. Run 18 typed a passphrase into fields drawn beside
+        # an off toggle, the flow ignored the secret because the choice said
+        # off, and the installation came out unencrypted — so the driver now
+        # does what a person deciding to encrypt does: switch it on first,
+        # and witness the fields appearing before typing into them.
+        toggle = surface.wait_for(
+            lambda: (surface.find(name="Encrypt this disk", role="switch")
+                     or surface.find(name="Encrypt this disk", role="toggle button")
+                     or surface.find(name="Encrypt this disk", role="check box")),
+            "the 'Encrypt this disk' toggle")
+        if not toggle["checked"]:
+            surface.activate(toggle)
+        surface.wait_for(lambda: surface.field_named("Passphrase"),
+                         "the passphrase field the toggle conjures")
+        emit("encryption-enabled", control=toggle["name"])
         surface.type_into("Passphrase", arguments.passphrase)
         surface.type_into("Passphrase again", arguments.passphrase)
     surface.advance(("Continue",))

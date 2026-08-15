@@ -609,30 +609,42 @@ def confirm_erase_screen(*, disk: DiskInfo, encrypted: bool, keeps_data: bool = 
 
 
 def encryption_screen(*, offered: bool = True) -> Screen:
-    """§13. Including the sentence that says nobody can recover it."""
+    """§13. Including the sentence that says nobody can recover it.
+
+    The passphrase fields exist only while the toggle is on. The first driven
+    journey typed a passphrase into fields drawn beside an off toggle; the
+    submit path ignored the secret because the recorded choice said off, and
+    an installation a person gave a passphrase to came out unencrypted. A
+    field that collects input the flow has already decided to discard is not
+    a field — it is a trap, and it is gone.
+    """
     entry = _from("encryption")
-    return Screen(
-        key="encryption",
-        heading=entry.heading,
-        says=entry.says,
-        companion=entry.companion,
-        authority=entry.authority,
-        fields=(
-            Field("enabled", "toggle", "Encrypt this disk", value=offered,
-                  help="Protects what is on the disk if the computer is lost or stolen. "
-                       "It does not protect you while you are logged in."),
+    fields = [
+        Field("enabled", "toggle", "Encrypt this disk", value=offered,
+              help="Protects what is on the disk if the computer is lost or stolen. "
+                   "It does not protect you while you are logged in."),
+    ]
+    if offered:
+        fields += [
             Field("passphrase", "secret", "Passphrase", required=True,
                   help="You will type this every time the computer starts."),
             Field("passphraseAgain", "secret", "Passphrase again", required=True),
             Field("recoveryKey", "info", "Recovery key",
                   help="A recovery key is generated and shown once, before installation begins. "
                        "Write it down. It is the only other way in."),
-        ),
+        ]
+    return Screen(
+        key="encryption",
+        heading=entry.heading,
+        says=entry.says,
+        companion=entry.companion,
+        authority=entry.authority,
+        fields=tuple(fields),
         warnings=(
             Warning("caution",
                     "If you forget the passphrase and lose the recovery key, the data is gone. "
                     "Bunny cannot recover it and neither can anyone else."),
-        ),
+        ) if offered else (),
         actions=(_back(), _next()),
         advanced=entry.advanced,
         confirmation=entry.confirmation,
@@ -641,6 +653,9 @@ def encryption_screen(*, offered: bool = True) -> Screen:
             "shown once before installation begins. If you forget the passphrase and "
             "lose the recovery key, the data is gone: it cannot be recovered by Bunny "
             "or by anyone else."
+        ) if offered else (
+            f"{entry.heading}. {entry.says} Encryption is off. Switch Encrypt this "
+            "disk on to set a passphrase."
         ),
     )
 

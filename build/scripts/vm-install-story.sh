@@ -227,7 +227,18 @@ case "${outcome}" in
       # "Bunny OS is ready" over a 196 KB disk. Completion is claimed by the
       # guest and PROVEN by the disk, read from outside: a bootloader entry
       # exists and the verifier found nothing wrong.
-      verify_args=(--disk "${disk}" --output "${work}/installed.json")
+      # What the journey chose is what the disk must carry. Without
+      # --expected the verifier only checks what it happens to see: run 18's
+      # disk came out unencrypted on an encrypted journey, and this gate
+      # would have called it a PASS had the install finished.
+      expected="${work}/expected.json"
+      if [[ -n "${verify_passphrase}" ]]; then
+        printf '{"encryption": {"enabled": true}}\n' >"${expected}"
+      else
+        printf '{"encryption": {"enabled": false}}\n' >"${expected}"
+      fi
+      verify_args=(--disk "${disk}" --output "${work}/installed.json"
+                   --expected "${expected}")
       if [[ -n "${verify_passphrase}" ]]; then
         verify_args+=(--passphrase "${verify_passphrase}")
       fi
