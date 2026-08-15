@@ -364,6 +364,22 @@ class AnacondaAdapter:
     rendered: str | None = None
     medium_source: Path | None = None
 
+    def configure_installation(self, *, choices: Mapping[str, Any], password_hash: str,
+                               passphrase: str | None,
+                               on_stage: Callable[[str, str], None] | None = None) -> None:
+        """The per-installation half.
+
+        The adapter is constructed empty when the backend starts, because a
+        password cannot exist before a person has typed one. The service calls
+        this once the validated plan and the descriptor-delivered secrets are
+        both in hand, immediately before ``start``.
+        """
+        self.choices = choices
+        self.password_hash = password_hash
+        self.passphrase = passphrase
+        if on_stage is not None:
+            self.on_stage = on_stage
+
     def prepare(self, plan: Mapping[str, Any]) -> str:
         """Everything up to but not including a write. Safe to call twice."""
         base, source = read_medium_kickstart(self.medium_paths)

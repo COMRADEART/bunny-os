@@ -86,18 +86,21 @@ class InstallerService:
         peer_uid: int,
         session_token: str,
         now: datetime | None = None,
+        secret_values: Mapping[str, str] | None = None,
     ) -> dict[str, Any]:
         request = parse_request(payload, now=now or datetime.now(timezone.utc))
         self._authenticate(request, peer_uid=peer_uid, session_token=session_token)
         try:
-            result = self._dispatch(request)
+            result = self._dispatch(request, secret_values or {})
         except Exception as error:
             self._log(request, "denied" if isinstance(error, (ValueError, AuthenticationError, BackendUnavailable)) else "failed", {"errorType": type(error).__name__})
             raise
         self._log(request, "ok")
         return {"schemaVersion": 1, "requestId": request.request_id, "operation": request.operation, "result": result}
 
-    def _dispatch(self, request: InstallerRequest) -> object:
+    def _dispatch(self, request: InstallerRequest,
+                  secret_values: Mapping[str, str] | None = None) -> object:
+        secret_values = secret_values or {}
         operation = request.operation
         if operation == "installer.initialize":
             return {"protocolVersion": 1, "backend": "anaconda-adapter" if self._adapter else "simulation-only", "destructiveExecutionAvailable": self._adapter is not None}
@@ -137,12 +140,53 @@ class InstallerService:
                 raise ValueError("encrypted installation requires recovery-key confirmation")
             if self._adapter is None:
                 raise BackendUnavailable("destructive executor is unavailable; no disk writes were performed")
+            # The per-installation half of the adapter, completed only now:
+            # the account and locale ride the validated plan, and the secret
+            # material arrived beside this request over the descriptor channel
+            # — the JSON protocol itself refuses to carry it. Nothing here
+            # logs, stores, or echoes a resolved value.
+            user_plan = self._plan.get("user")
+            reference = user_plan.get("passwordSecretRef") if isinstance(user_plan, Mapping) else None
+            password = secret_values.get(str(reference or ""))
+            if password is None:
+                raise ValueError("the account password did not arrive over the protected channel")
+            passphrase = None
+            if isinstance(encryption, Mapping) and encryption.get("enabled"):
+                passphrase_reference = str(request.params.get("passphraseSecretRef", ""))
+                passphrase = secret_values.get(passphrase_reference)
+                if passphrase is None:
+                    raise ValueError("the encryption passphrase did not arrive over the protected channel")
+            if hasattr(self._adapter, "configure_installation"):
+                from installer.backend.kickstart import crypt_password
+
+                locale_plan = self._plan.get("locale")
+                network_plan = self._plan.get("network")
+                self._adapter.configure_installation(  # type: ignore[attr-defined]
+                    choices={
+                        "locale": dict(locale_plan) if isinstance(locale_plan, Mapping) else {},
+                        "account": {
+                            "username": str(user_plan.get("username", "")),
+                            "displayName": str(user_plan.get("displayName", "")),
+                            "deviceName": str(network_plan.get("hostname", ""))
+                            if isinstance(network_plan, Mapping) else "",
+                        },
+                    },
+                    password_hash=crypt_password(password),
+                    passphrase=passphrase,
+                    on_stage=self._observe_stage,
+                )
             self._state.start()
             try:
                 self._adapter.start(plan=self._plan, confirmations=dict(request.params))  # type: ignore[attr-defined]
             except Exception:
                 self._state.fail("adapter-start-failed")
                 raise
+            else:
+                # The executor returning without an exception is the
+                # completion evidence; an executor whose stage reports fell
+                # short of the ladder still finished the walk it reported.
+                while self._state.status == "installing":
+                    self._state.advance("finished")
             return self._state.public()
         if operation == "installer.install.status":
             return self._state.public()
@@ -158,3 +202,12 @@ class InstallerService:
                 raise ValueError("recovery preparation requires a completed installation")
             return {"prepared": False, "reason": "production adapter must verify recovery deployment"}
         raise ValueError("operation is not implemented")
+
+    def _observe_stage(self, stage: str, detail: str) -> None:
+        """One executor stage report advances the ladder by one rung."""
+        try:
+            self._state.advance(f"{stage}: {detail}"[:256])
+        except ValueError:
+            # The ladder is finite and the executor's report count is its own;
+            # a report past the top changes nothing.
+            pass

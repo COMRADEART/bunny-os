@@ -974,6 +974,119 @@ def _installer_context(choices: Choices) -> dict[str, Any]:
     return context
 
 
+def _make_submit(application: "SetupApplication", client) -> Callable[..., None]:
+    """The wire from "Erase" to the backend — built only when a backend exists.
+
+    Until this function existed, `_installer_context` supplied everything the
+    flow reads except the one callable `begin_installation` needs, so every
+    confirmed installation ended at "This installer cannot write to a disk."
+    The §42 driver walked all fifteen stages to find that.
+
+    The conversation runs on a worker thread: the backend serves one blocking
+    conversation and the install is its response, and a GTK main loop that
+    waited on it could not repaint the installing screen a person is watching.
+    State lands back on the main loop through ``GLib.idle_add``.
+    """
+    import secrets as secret_tokens
+    import threading
+
+    def submit(*, confirmation: str, on_state) -> None:
+        from gi.repository import GLib  # type: ignore
+
+        def deliver(status: str, stage: str, detail: str, wrote: bool) -> None:
+            def emit() -> bool:
+                on_state(status, stage, detail, wrote)
+                return False
+            GLib.idle_add(emit)
+
+        disk = application.context.get("selectedDisk")
+        choices = application.choices
+        password = str(application.secrets.get("password", ""))
+        passphrase = (str(application.secrets.get("passphrase", ""))
+                      if choices.encryption_enabled else "")
+        if disk is None:
+            deliver("failed", "Preparing", "No disk is selected.", False)
+            return
+        if not password:
+            deliver("failed", "Preparing", "The account password was never captured.", False)
+            return
+        if choices.encryption_enabled and not passphrase:
+            deliver("failed", "Preparing", "The encryption passphrase was never captured.", False)
+            return
+
+        def work() -> None:
+            from installer.frontend.client import InstallerRefused
+            from installer.storage.planning import automatic_plan
+
+            try:
+                plan = automatic_plan(disk, mode="erase_disk",
+                                      encryption=choices.encryption_enabled)
+                # The planner records more than the plan schema admits.
+                plan.pop("operationsAreReversibleAfterWrite", None)
+                plan.pop("warnings", None)
+                plan["installationId"] = client.installation_id
+                password_reference = "installer-secret:" + secret_tokens.token_urlsafe(24)
+                plan["user"] = {
+                    "username": choices.username,
+                    "displayName": choices.display_name,
+                    "passwordSecretRef": password_reference,
+                    "administrator": True,
+                    "autologin": False,
+                    "groups": [],
+                }
+                plan["locale"] = {
+                    "language": choices.language,
+                    "keyboardLayout": choices.keyboard_layout,
+                    "timezone": choices.timezone,
+                }
+                device_name = (choices.device_name or "").strip()
+                plan["network"] = {"hostname": device_name} if device_name else {}
+                plan["recovery"] = {}
+                plan["applicationProfile"] = {}
+
+                outcome = client.validate(plan)
+                if not outcome.get("valid"):
+                    deliver("failed", "Validating storage",
+                            "; ".join(outcome.get("errors", ())) or "The plan was refused.",
+                            False)
+                    return
+
+                secret_values = {password_reference: password}
+                passphrase_reference = None
+                if passphrase:
+                    passphrase_reference = ("installer-secret:"
+                                            + secret_tokens.token_urlsafe(24))
+                    secret_values[passphrase_reference] = passphrase
+
+                result = client.start(
+                    acknowledgement=confirmation,
+                    second_confirmation=True,
+                    recovery_key_confirmed=bool(choices.encryption_enabled),
+                    passphrase_secret_ref=passphrase_reference,
+                    secret_values=secret_values,
+                )
+            except InstallerRefused as error:
+                deliver("failed", "Preparing", str(error), False)
+                return
+            except (OSError, ValueError) as error:
+                deliver("failed", "Preparing",
+                        f"The installer backend could not be reached: {error}", False)
+                return
+
+            status = str(result.get("status", ""))
+            if status == "complete":
+                deliver("complete", "Complete", "", True)
+            else:
+                deliver("failed", str(result.get("stage", "Preparing")),
+                        str(result.get("failure") or result.get("currentOperation")
+                            or "The installation stopped."),
+                        bool(result.get("destructiveWriteStarted")))
+
+        threading.Thread(target=work, daemon=True, name="bunny-install-submit").start()
+
+    return submit
+
+
 def run(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="bunny-setup", description="Bunny OS setup")
     parser.add_argument("--screen", help="start on one screen, by flow key")
@@ -1003,6 +1116,12 @@ def run(argv: Sequence[str] | None = None) -> int:
 
     context = {} if args.offline else _installer_context(choices)
     application_state = SetupApplication(Gtk, choices=choices, context=context)
+    # Wired after construction because the submit closure reads the
+    # application's own context and secrets at call time — the disk a person
+    # selects and the password they type do not exist yet.
+    client = context.get("client")
+    if client is not None:
+        application_state.context["submit"] = _make_submit(application_state, client)
 
     if args.self_check:
         sys.stdout.write(json.dumps(application_state.self_check(), indent=1) + "\n")

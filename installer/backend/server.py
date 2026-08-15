@@ -135,21 +135,62 @@ class ProtocolServer:
             return
 
         buffered = b""
-        while not self._stop.is_set():
-            chunk = connection.recv(65536)
-            if not chunk:
-                return
-            buffered += chunk
-            if len(buffered) > _MAX_REQUEST:
-                connection.sendall(self._error("request too large") + b"\n")
-                return
-            while b"\n" in buffered:
-                line, buffered = buffered.split(b"\n", 1)
-                if not line.strip():
-                    continue
-                connection.sendall(self._respond(line, uid) + b"\n")
+        received_fds: list[int] = []
 
-    def _respond(self, line: bytes, uid: int) -> bytes:
+        def discard_fds() -> None:
+            for fd in received_fds:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+            received_fds.clear()
+
+        try:
+            while not self._stop.is_set():
+                # recv_fds rather than recv: the one thing the JSON protocol
+                # refuses to carry — secret material — arrives as a sealed
+                # memfd alongside the request that references it. A request
+                # with no ancillary data behaves exactly as before.
+                chunk, fds, _flags, _address = socket.recv_fds(connection, 65536, 4)
+                received_fds.extend(fds)
+                if len(received_fds) > 4:
+                    connection.sendall(self._error("too many secret descriptors") + b"\n")
+                    return
+                if not chunk:
+                    return
+                buffered += chunk
+                if len(buffered) > _MAX_REQUEST:
+                    connection.sendall(self._error("request too large") + b"\n")
+                    return
+                while b"\n" in buffered:
+                    line, buffered = buffered.split(b"\n", 1)
+                    if not line.strip():
+                        continue
+                    connection.sendall(self._respond(line, uid, tuple(received_fds)) + b"\n")
+                    # A descriptor accompanies exactly the request it arrived
+                    # with; it does not linger for a later one.
+                    discard_fds()
+        finally:
+            discard_fds()
+
+    @staticmethod
+    def _secret_values(fds: tuple[int, ...]) -> dict[str, str]:
+        """The reference→material map delivered alongside a request."""
+        values: dict[str, str] = {}
+        for fd in fds:
+            try:
+                os.lseek(fd, 0, os.SEEK_SET)
+                raw = os.read(fd, 65536)
+                parsed = json.loads(raw.decode("utf-8"))
+            except (OSError, ValueError, UnicodeDecodeError):
+                continue
+            if isinstance(parsed, dict):
+                for key, value in parsed.items():
+                    if isinstance(key, str) and isinstance(value, str):
+                        values[key] = value
+        return values
+
+    def _respond(self, line: bytes, uid: int, fds: tuple[int, ...] = ()) -> bytes:
         try:
             envelope = json.loads(line.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
@@ -158,7 +199,8 @@ class ProtocolServer:
             return self._error("request must be an object")
         token = envelope.pop("sessionToken", "")
         try:
-            result = self.service.handle(envelope, peer_uid=uid, session_token=str(token))
+            result = self.service.handle(envelope, peer_uid=uid, session_token=str(token),
+                                         secret_values=self._secret_values(fds))
         except AuthenticationError as error:
             self.on_event("refused", {"reason": str(error)})
             return self._error(str(error), kind="authentication")

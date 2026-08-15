@@ -53,6 +53,20 @@ class BackendClient:
         self.installation_id = installation_id or "install-" + secrets.token_hex(8)
 
     def call(self, operation: str, **params: Any) -> Mapping[str, Any]:
+        return self._call(operation, params)
+
+    def _call(self, operation: str, params: Mapping[str, Any], *,
+              secret_values: Mapping[str, str] | None = None,
+              timeout: float | None = 30.0) -> Mapping[str, Any]:
+        """One request, one response line.
+
+        ``secret_values`` never rides the JSON protocol — the protocol refuses
+        any request whose params carry a secret-named field, by design. The
+        values travel as a sealed memfd passed over the socket with
+        ``SCM_RIGHTS``, keyed by the ``installer-secret:`` references the plan
+        carries, so what the protocol logs and audits contains references and
+        never material.
+        """
         request = {
             "schemaVersion": 1,
             "requestId": "req-" + secrets.token_hex(8),
@@ -62,16 +76,32 @@ class BackendClient:
             # The backend refuses a request more than 60 seconds old, so this is
             # generated per call rather than per session.
             "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-            "params": params,
+            "params": dict(params),
             "sessionToken": self._token,
         }
-        self._connection.sendall(json.dumps(request).encode("utf-8") + b"\n")
-        while b"\n" not in self._buffer:
-            chunk = self._connection.recv(65536)
-            if not chunk:
-                raise InstallerRefused("the installer backend closed the connection",
-                                       kind="unavailable")
-            self._buffer += chunk
+        data = json.dumps(request).encode("utf-8") + b"\n"
+        previous_timeout = self._connection.gettimeout()
+        self._connection.settimeout(timeout)
+        try:
+            if secret_values:
+                payload = json.dumps(dict(secret_values)).encode("utf-8")
+                descriptor = os.memfd_create("bunny-installer-secrets")
+                try:
+                    os.write(descriptor, payload)
+                    os.lseek(descriptor, 0, os.SEEK_SET)
+                    socket.send_fds(self._connection, [data], [descriptor])
+                finally:
+                    os.close(descriptor)
+            else:
+                self._connection.sendall(data)
+            while b"\n" not in self._buffer:
+                chunk = self._connection.recv(65536)
+                if not chunk:
+                    raise InstallerRefused("the installer backend closed the connection",
+                                           kind="unavailable")
+                self._buffer += chunk
+        finally:
+            self._connection.settimeout(previous_timeout)
         line, self._buffer = self._buffer.split(b"\n", 1)
         response = json.loads(line.decode("utf-8"))
         if "error" in response:
@@ -92,20 +122,30 @@ class BackendClient:
         return self.call("installer.plan.validate", plan=dict(plan))
 
     def start(self, *, acknowledgement: str, second_confirmation: bool,
-              recovery_key_confirmed: bool) -> Mapping[str, Any]:
-        """Ask for the installation to begin.
+              recovery_key_confirmed: bool,
+              passphrase_secret_ref: str | None = None,
+              secret_values: Mapping[str, str] | None = None) -> Mapping[str, Any]:
+        """Ask for the installation to begin, and wait for it to end.
 
         ``acknowledgement`` is the phrase the person typed, verbatim. This client
         does not check it and could not usefully: the comparison that matters
         happens in `storage.safety.assert_confirmed`, on the other side, against
         the disk in the plan the backend itself validated.
+
+        ``secret_values`` maps the plan's ``installer-secret:`` references to
+        their material; see :meth:`_call` for how it travels. The call blocks
+        for the whole installation — the backend serves one conversation and
+        the write it performs is the response — so it carries no timeout.
         """
-        return self.call(
-            "installer.install.start",
-            acknowledgement=acknowledgement,
-            secondConfirmation=second_confirmation,
-            recoveryKeyConfirmed=recovery_key_confirmed,
-        )
+        params: dict[str, Any] = {
+            "acknowledgement": acknowledgement,
+            "secondConfirmation": second_confirmation,
+            "recoveryKeyConfirmed": recovery_key_confirmed,
+        }
+        if passphrase_secret_ref:
+            params["passphraseSecretRef"] = passphrase_secret_ref
+        return self._call("installer.install.start", params,
+                          secret_values=secret_values, timeout=None)
 
     def status(self) -> Mapping[str, Any]:
         return self.call("installer.install.status")
