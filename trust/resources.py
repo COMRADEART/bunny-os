@@ -60,6 +60,7 @@ __all__ = [
     "MAX_DISPLAY_LENGTH",
     "MAX_IDENTIFIER_LENGTH",
     "NETWORK_CLASSES",
+    "NETWORK_DECLARED_ONLY",
     "Resource",
     "contains",
     "device_resource",
@@ -86,6 +87,13 @@ MAX_DISPLAY_LENGTH = 96
 #: network permission: "may connect to the internet" and "may reach the printer
 #: on your LAN" are different questions and must not share a grant.
 NETWORK_CLASSES = ("none", "loopback", "local-network", "allowlisted", "internet")
+
+#: The classes that are *declarations* in this build: recorded, disclosed, and
+#: mapped onto plain internet access, because nothing here filters by name,
+#: subnet or interface. ``none`` is a kernel boundary and ``internet`` is the
+#: absence of one; everything between is a promise the build cannot keep yet.
+#: Surfaces must speak of these as declarations, never as boundaries.
+NETWORK_DECLARED_ONLY = ("loopback", "local-network", "allowlisted")
 
 _DEVICE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._:+/-]{0,127}\Z")
 _PEER_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")

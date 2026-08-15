@@ -132,6 +132,65 @@ class PolicyTests(unittest.TestCase):
         )
         self.assertEqual(outcome.verdict, "prompt")
 
+    # -- unenforceable categories -----------------------------------------
+
+    def test_an_unenforceable_category_is_refused_before_anyone_is_asked(self) -> None:
+        """clipboard and bluetooth are declared and nothing in this build
+        enforces them; recording a consent the build cannot keep would be worse
+        than refusing to ask."""
+        declaration = PermissionDeclaration(
+            application_id="org.example.PhotoEditor",
+            optional=frozenset({"clipboard", "bluetooth"}),
+        )
+        for category, resource in (
+            ("clipboard", None),
+            ("bluetooth", trust.device_resource("headphones-01")),
+        ):
+            with self.subTest(category=category):
+                outcome = self.resolve(self.request(category, resource=resource), declaration=declaration)
+                self.assertEqual(outcome.verdict, "deny")
+                self.assertEqual(outcome.reason_code, "not-enforceable")
+                self.assertEqual(outcome.offered_scopes, ())
+
+    def test_a_stale_stored_allow_for_an_unenforceable_category_stops_allowing(self) -> None:
+        """A grant written before the category was recognised as unenforceable
+        must not keep allowing: the refusal is checked before standing grants."""
+        from trust.decision import Grant
+        from trust.resources import no_resource
+        from trust.store import utc_now
+
+        declaration = PermissionDeclaration(
+            application_id="org.example.PhotoEditor", optional=frozenset({"clipboard"})
+        )
+        self.world.store.put(
+            Grant(
+                grant_id="g-stale-clipboard",
+                application_id="org.example.PhotoEditor",
+                category="clipboard",
+                resource=no_resource(),
+                purpose="use",
+                scope="always",
+                verdict="allow",
+                source="user",
+                decided_at=utc_now(),
+            )
+        )
+        outcome = self.resolve(self.request("clipboard"), declaration=declaration)
+        self.assertEqual(outcome.verdict, "deny")
+        self.assertEqual(outcome.reason_code, "not-enforceable")
+
+    def test_an_install_consent_never_covers_an_unenforceable_category(self) -> None:
+        """clipboard is medium risk, so required+consented would otherwise ride
+        catalog-default into a grant no mechanism honours."""
+        declaration = PermissionDeclaration(
+            application_id="org.example.PhotoEditor", required=frozenset({"clipboard"})
+        )
+        outcome = self.resolve(
+            self.request("clipboard"), declaration=declaration, install_consent=True
+        )
+        self.assertEqual(outcome.verdict, "deny")
+        self.assertEqual(outcome.reason_code, "not-enforceable")
+
     # -- fail closed ------------------------------------------------------
 
     def test_an_unreadable_store_denies_and_says_so(self) -> None:

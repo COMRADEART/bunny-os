@@ -51,13 +51,15 @@ __all__ = [
     "capsule_status",
 ]
 
-#: How each network class reads to a person. The two this build does not filter
-#: on get a phrase that does not imply a boundary — "the internet" rather than
-#: "only example.com", because only the first is true.
+#: How each network class reads to a person. The classes this build does not
+#: filter on get a phrase that does not imply a boundary — "On" rather than
+#: "Your local network" or "This computer only", because only the first is
+#: true: everything except ``none`` opens the whole network. See
+#: :data:`trust.resources.NETWORK_DECLARED_ONLY`.
 NETWORK_PHRASES: Mapping[str, str] = {
     "none": "Off",
-    "loopback": "This computer only",
-    "local-network": "Your local network",
+    "loopback": "On",
+    "local-network": "On",
     "allowlisted": "On",
     "internet": "On",
 }
@@ -149,8 +151,8 @@ def capsule_status(capsule: Capsule, plan: IsolationPlan) -> CapsuleStatus:
         )
     if not plan.network_enforced and plan.network != "none":
         caveats.append(
-            f"{name} was allowed a named set of addresses, and Bunny cannot restrict it to them. "
-            f"It can reach anything on the internet."
+            f"{name} was allowed a limited network ('{plan.network}'), and Bunny cannot hold it "
+            f"to that limit in this build. It can reach anything on the internet."
         )
     for _grant_id, reason in plan.refusals:
         caveats.append(f"One permission could not be applied: {reason}")

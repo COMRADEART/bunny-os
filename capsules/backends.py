@@ -85,8 +85,11 @@ _PORTAL_CATEGORIES = frozenset({
 })
 
 #: What a filesystem-and-namespace sandbox can enforce by construction.
+#: ``bluetooth`` is deliberately absent: nothing here proxies BlueZ, so listing
+#: it would suppress the grant from ``plan.unenforced`` and make the backend
+#: table disagree with :mod:`trust.categories`, which records it as unenforced.
 _NAMESPACE_CATEGORIES = frozenset({
-    "files", "folders", "network", "gpu", "usb", "bluetooth", "ipc", "credentials",
+    "files", "folders", "network", "gpu", "usb", "ipc", "credentials",
 })
 
 #: What a cgroup can enforce.

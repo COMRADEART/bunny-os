@@ -44,7 +44,7 @@ from .categories import CategoryDescriptor, descriptor
 from .decision import Decision, Resolution
 from .declaration import PermissionDeclaration
 from .request import PermissionRequest, Reason
-from .resources import Resource
+from .resources import NETWORK_DECLARED_ONLY, Resource
 
 __all__ = [
     "DENY_LABEL",
@@ -82,6 +82,15 @@ UNKNOWN_REASON_NOTE = "It didn't say why."
 _ENFORCEMENT_NOTE = (
     "Bunny can record this decision but cannot yet stop {app} doing it. "
     "The restriction is not enforced in this build."
+)
+
+#: Said when the requested network class is a declaration rather than a
+#: boundary. The person deciding must hear what the grant actually opens, not
+#: what the request politely asked for — measured, not assumed: a capsule
+#: granted one domain reached a different one.
+_NETWORK_DECLARED_ONLY_NOTE = (
+    "Bunny cannot hold {app} to that limit in this build. "
+    "Allowing this lets it reach anything on the internet."
 )
 
 #: Where the generic capability note is not specific enough because the *purpose*
@@ -207,6 +216,12 @@ def build_prompt(
     capability_note = _PURPOSE_NOTES.get((request.category, request.purpose), entry.capability_note)
     options = tuple((scope, SCOPE_LABELS[scope]) for scope in resolution.offered_scopes)
     enforcement_note = None if entry.enforced_by_default else _ENFORCEMENT_NOTE.format(app=name)
+    if (
+        enforcement_note is None
+        and request.category == "network"
+        and request.resource.identifier.split(":", 1)[0] in NETWORK_DECLARED_ONLY
+    ):
+        enforcement_note = _NETWORK_DECLARED_ONLY_NOTE.format(app=name)
     spoken_parts = [line, capability_note]
     if reason_text:
         spoken_parts.append(reason_text)
@@ -248,6 +263,7 @@ _DECISION_SENTENCES: Mapping[str, str] = {
     "not-declared": "{app} asked for something it never said it would need, so Bunny said no.",
     "unknown-application": "Bunny has no record of {app}, so it said no.",
     "beyond-ceiling": "{app} asked for more than its listing allows, so Bunny said no.",
+    "not-enforceable": "Bunny can't enforce that in this build, so it won't record permission for it.",
     "user-denied": "You didn't allow this.",
     "user-allowed": "You allowed this.",
     "granted-previously": "You allowed this earlier.",

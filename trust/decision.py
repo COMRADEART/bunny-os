@@ -71,6 +71,7 @@ DECISION_REASONS = (
     "not-declared",
     "unknown-application",
     "beyond-ceiling",
+    "not-enforceable",
     "user-denied",
     "granted-previously",
     "catalog-default",
