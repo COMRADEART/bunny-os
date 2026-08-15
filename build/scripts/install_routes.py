@@ -98,6 +98,7 @@ PACKAGE_SUFFIXES = (".py",)
 #: than noticed: the unit shipped, finalisation removes ``/etc/brlapi.key`` from
 #: the archive, and nothing installed the program that mints it on first boot.
 SYSTEM_SCRIPTS: tuple[str, ...] = (
+    "bunny-anaconda-bus-ready",
     "bunny-health-check",
     "bunny-first-boot",
     "bunny-config-dir",
@@ -607,6 +608,27 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "installer/frontend/art.comrade.BunnySetupDrive-autostart.desktop",
         "/etc/xdg/autostart/art.comrade.BunnySetupDrive.desktop", 0o644,
         profiles=LIVE_PROFILES,
+    ),
+    _file_route(
+        "live-medium-kickstart",
+        "installer/config/medium.ks",
+        "/usr/share/bunny-os/medium.ks", 0o444, profiles=LIVE_PROFILES,
+    ),
+    InstallRoute(
+        id="live-installer-payload",
+        kind="tree",
+        source="build/payload-oci",
+        destination="/usr/share/bunny-os/payload-oci",
+        mode=0o644,
+        profiles=LIVE_PROFILES,
+        note=(
+            "The offline installation payload as an OCI layout, exported by "
+            "build-live-image.sh from the exact payload image this medium is "
+            "built beside. Run 13 of Journey A opened the ISO and found "
+            "neither payload nor kickstart - a LiveOS medium embeds nothing "
+            "by itself - so the install source rides in the live filesystem "
+            "and medium.ks points anaconda at it."
+        ),
     ),
 
     # -- unconditional, and last ---------------------------------------------

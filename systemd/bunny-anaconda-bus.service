@@ -27,10 +27,15 @@ RuntimeDirectory=anaconda
 # backend that must reach it runs under PrivateTmp=yes - the socket existed,
 # the address file named it, and the backend's namespace had no such file.
 # Measured in both directions under the backend's exact sandbox.
-ExecStart=/usr/bin/bash -c 'exec /usr/bin/dbus-daemon --config-file=/usr/share/anaconda/dbus/anaconda-bus.conf --address=unix:path=/run/anaconda/bus.socket --nofork --print-address=3 3>/run/anaconda/bus.address'
+#
+# --print-address writes to stdout and stdout is the address file; the
+# daemon's diagnostics go to stderr, which stays on the journal.
+ExecStart=/usr/bin/dbus-daemon --config-file=/usr/share/anaconda/dbus/anaconda-bus.conf --address=unix:path=/run/anaconda/bus.socket --nofork --print-address
+StandardOutput=file:/run/anaconda/bus.address
+StandardError=journal
 # "Started" must mean "the address is readable": the backend preflights its
 # executor the moment it starts, and ordering alone would race the write.
-ExecStartPost=/usr/bin/bash -c 'for _ in $(seq 100); do [ -s /run/anaconda/bus.address ] && exit 0; sleep 0.1; done; echo "the bus address was never written" >&2; exit 1'
+ExecStartPost=/usr/libexec/bunny-anaconda-bus-ready
 Restart=no
 
 [Install]

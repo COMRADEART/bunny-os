@@ -46,6 +46,19 @@ if ! sudo podman image exists "${payload_tag}"; then
   exit 6
 fi
 
+# The offline payload rides ON the medium, as an OCI layout inside the live
+# filesystem. Run 13 of Journey A opened the ISO and found neither a payload
+# nor a kickstart: image-builder's --bootc-installer-payload-ref embeds
+# nothing in a LiveOS medium, so nothing built before this line could ever
+# have installed from local media. Exported into the build context here;
+# the Containerfile's `COPY build` carries it, and the live install route
+# places it at /usr/share/bunny-os/payload-oci where medium.ks points.
+payload_export="${repository_root}/build/payload-oci"
+sudo rm -rf "${payload_export}"
+sudo skopeo copy "containers-storage:${payload_tag}" "oci:${payload_export}:bunny-payload" \
+  | tail -1
+sudo chown -R "$(id -u):$(id -g)" "${payload_export}"
+
 sudo podman build \
   --file build/Containerfile \
   --tag "${installer_tag}" \

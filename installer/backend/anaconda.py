@@ -67,6 +67,12 @@ __all__ = [
 #: built with. Ordered by how specific each location is; the first readable one
 #: wins and the search is recorded so a failure can say where it looked.
 MEDIUM_KICKSTART_PATHS = (
+    # First and authoritative: Bunny's own medium kickstart, shipped in the
+    # live filesystem beside the payload OCI layout it names. Run 13 proved
+    # the /run/install paths below describe a medium anaconda mounted for
+    # itself — a dmsquash-live boot mounts at /run/initramfs/live and this
+    # medium carries no kickstart of its own at all.
+    Path("/usr/share/bunny-os/medium.ks"),
     Path("/run/install/repo/osbuild.ks"),
     Path("/run/install/repo/ks.cfg"),
     Path("/run/install/repo/kickstart/osbuild.ks"),

@@ -4,6 +4,16 @@
   "recordedAt": "2026-07-30",
   "gaps": [
     {
+      "unit": "bunny-anaconda-bus.service",
+      "program": "/usr/bin/dbus-daemon",
+      "finding": "The unit runs the base image's dbus-daemon with anaconda's own bus configuration; the repository ships the unit and the readiness program but has no reason to ship dbus itself.",
+      "impact": "None expected: dbus is a hard dependency of systemd and anaconda-core, both unconditionally present in every profile this unit ships on. The unit is live-media-only (ConditionPathExists on the live-session marker) and its absence surfaces as 'destructive executor is unavailable', which is the fail-closed path Journey A run 11 measured.",
+      "notFixedHere": "Shipping a second copy of dbus would be wrong, not incomplete.",
+      "blockedBy": "nothing",
+      "owner": "installer workstream",
+      "trackedIn": "INSTALLER_MATURITY_MATRIX.md"
+    },
+    {
       "unit": "bunny-policy-agent.service",
       "program": "/usr/libexec/bunny-policy-agent",
       "finding": "build/scripts/install-root.py copies systemd/ wholesale into /usr/lib/systemd/system, so the unit ships, but no step installs the program it starts. enterprise/policy.py is a library, not an executable.",
