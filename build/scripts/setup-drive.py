@@ -172,10 +172,29 @@ class Surface:
         raise RuntimeError(f"{row['name']!r} has no usable action")
 
     def press(self, name: str, *, role: str = "button") -> None:
-        row = self.wait_for(lambda: self.find(name=name, role=role), f"a {role} named {name!r}")
-        if not row["sensitive"]:
-            raise RuntimeError(f"the control {name!r} is present but not sensitive")
-        self.activate(row)
+        # Re-queried on every attempt rather than found once: a page
+        # mid-transition serves stale accessibles that are present, sensitive,
+        # and expose zero actions — run 3 lost exactly that race on the
+        # keyboard page's Continue. Absent, insensitive and action-less are
+        # all transient until the deadline, and the deadline still fails
+        # closed with the last true reason.
+        deadline = time.time() + self.timeout
+        last: Exception | None = None
+        while time.time() < deadline:
+            row = self.find(name=name, role=role)
+            if row is None:
+                last = TimeoutError(f"timed out waiting for a {role} named {name!r}")
+            elif not row["sensitive"]:
+                last = RuntimeError(f"the control {name!r} is present but not sensitive")
+            else:
+                try:
+                    self.activate(row)
+                    return
+                except RuntimeError as error:
+                    last = error
+            time.sleep(0.5)
+        raise last if last is not None else TimeoutError(
+            f"timed out waiting for a {role} named {name!r}")
 
     def field_named(self, label: str):
         """The field whose label is exactly ``label``, not merely contains it.
@@ -258,8 +277,7 @@ def verify_target(surface: Surface, *, expected_size_gib: float, expected_model:
     return target
 
 
-def journey(arguments: argparse.Namespace) -> int:
-    surface = Surface(timeout=arguments.timeout)
+def journey(arguments: argparse.Namespace, surface: Surface) -> int:
     surface.wait_for_window()
 
     emit("stage", name="welcome")
@@ -438,10 +456,22 @@ def main() -> int:
 
     emit("start", **{key: value for key, value in vars(arguments).items()
                      if key not in {"password", "passphrase"}})
+    surface = None
     try:
-        return journey(arguments)
+        surface = Surface(timeout=arguments.timeout)
+        return journey(arguments, surface)
     except Exception as error:
         emit("error", type=type(error).__name__, message=str(error)[:500])
+        # What the screen held when it went wrong, so the failure names its
+        # own context instead of costing another run to photograph.
+        if surface is not None:
+            try:
+                emit("screen-at-failure",
+                     controls=[f"{row['role']}:{row['name']}"
+                               for row in surface.controls() if row["name"]][:40],
+                     text=surface.text_on_screen()[:800])
+            except Exception:
+                pass
         return 4
 
 
