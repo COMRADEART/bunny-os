@@ -22,7 +22,10 @@ import unittest
 from tests.support import ROOT
 
 LIB = ROOT / "shell/components/gnome-shell-extension/lib"
-MODES = ("full", "compact", "minimal", "text-only")
+#: §16's four presentation modes, plus Off — a mode, not an absence
+#: (28f62a24): a switched-off companion still may not invent a different task
+#: truth, which is exactly why it belongs in the agreement tests below.
+MODES = ("full", "compact", "minimal", "text-only", "off")
 
 #: The ten states §16 names, in its own words.
 REQUIRED_STATES = {
@@ -66,7 +69,7 @@ class NodeBackedTestCase(unittest.TestCase):
 
 
 class ModeTests(NodeBackedTestCase):
-    def test_the_four_modes_the_brief_names_all_exist(self) -> None:
+    def test_every_mode_the_product_ships_is_named_off_included(self) -> None:
         self.assertEqual(constant("MODES"), list(MODES))
 
     def test_every_runtime_phase_maps_to_a_companion_state(self) -> None:
@@ -102,7 +105,7 @@ class OneTruthTests(NodeBackedTestCase):
     PHASES = ("idle", "understanding", "waiting_for_approval", "starting", "working",
               "presenting_result", "success", "blocked", "error", "disconnected")
 
-    def test_all_four_modes_agree_about_every_phase(self) -> None:
+    def test_every_mode_agrees_about_every_phase(self) -> None:
         for phase in self.PHASES:
             with self.subTest(phase=phase):
                 built = call("everyMode", {"phase": phase, "caption": "a sentence"})
@@ -113,7 +116,7 @@ class OneTruthTests(NodeBackedTestCase):
                         len(values), 1,
                         f"{phase}: modes disagree about {field}: {sorted(values)}")
 
-    def test_all_four_modes_share_one_task_projection(self) -> None:
+    def test_every_mode_shares_one_task_projection(self) -> None:
         """Not merely equal — built from one call, so they cannot drift."""
         built = call("everyMode", {"phase": "working", "caption": "Resizing the image"})
         tasks = {json.dumps(built[mode]["task"], sort_keys=True) for mode in MODES}
