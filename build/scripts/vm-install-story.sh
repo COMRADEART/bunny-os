@@ -231,11 +231,15 @@ case "${outcome}" in
       # --expected the verifier only checks what it happens to see: run 18's
       # disk came out unencrypted on an encrypted journey, and this gate
       # would have called it a PASS had the install finished.
+      # The username is the driver's default: every journey creates alex, so
+      # a completion claim whose /etc/passwd lacks alex is a FAIL — run 18
+      # completed users-first tasks and no account existed, and without this
+      # expectation the verifier reports that only as a fact, not a finding.
       expected="${work}/expected.json"
       if [[ -n "${verify_passphrase}" ]]; then
-        printf '{"encryption": {"enabled": true}}\n' >"${expected}"
+        printf '{"encryption": {"enabled": true}, "account": {"username": "alex"}}\n' >"${expected}"
       else
-        printf '{"encryption": {"enabled": false}}\n' >"${expected}"
+        printf '{"encryption": {"enabled": false}, "account": {"username": "alex"}}\n' >"${expected}"
       fi
       verify_args=(--disk "${disk}" --output "${work}/installed.json"
                    --expected "${expected}")

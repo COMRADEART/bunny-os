@@ -47,6 +47,7 @@ import os
 from pathlib import Path
 import socket
 import struct
+import subprocess
 import sys
 import threading
 import traceback
@@ -218,7 +219,8 @@ class ProtocolServer:
             # would replace the one fact a person needs with the name of an
             # exception class — run 18's screen said "the installer backend
             # failed: Error" over a disk with six gigabytes on it.
-            self.on_event("error", {"traceback": traceback.format_exc()})
+            self.on_event("error", {"traceback": traceback.format_exc(),
+                                    "engineJournal": _engine_journal()})
             return self._error(str(error), kind="failed")
         except ValueError as error:
             return self._error(str(error), kind="invalid")
@@ -251,6 +253,27 @@ class ProtocolServer:
                     self.handle(connection)
                 except (ConnectionResetError, BrokenPipeError):
                     continue
+
+
+def _engine_journal(unit: str = "bunny-anaconda-bus.service", lines: int = 250) -> str:
+    """The engine's own words about a failed installation.
+
+    Anaconda's modules are children of the private bus's dbus-daemon, so
+    their stderr — including the stderr of every helper anaconda ran, like
+    the systemctl whose exit code became "Error enabling service chronyd: 1"
+    on run 19b — lands in that unit's journal. The journal is tmpfs on a
+    live medium and dies with the VM; captured at the moment of failure it
+    survives in the backend's event stream, and on a driven run, on the
+    serial console the harness records.
+    """
+    try:
+        completed = subprocess.run(
+            ["journalctl", "-b", "-u", unit, "-n", str(lines),
+             "--no-pager", "--output", "short-iso"],
+            capture_output=True, text=True, timeout=20)
+        return (completed.stdout or completed.stderr)[-12000:]
+    except (OSError, subprocess.SubprocessError) as error:
+        return f"journal unavailable: {error}"
 
 
 def serve(*, live_uid: int, probe: Callable[[], list], adapter: object | None,

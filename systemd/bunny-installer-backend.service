@@ -28,9 +28,12 @@ User=root
 Group=root
 NoNewPrivileges=yes
 PrivateTmp=yes
-# The adapter drives Anaconda over its own bus; Anaconda owns the devices. This
-# process never opens one, so it does not need them.
-PrivateDevices=yes
+# PrivateDevices=yes stood here until run 19 ("this process never opens a
+# device") — but on a driven run the backend copies its events, tracebacks
+# included, to the serial console the harness records, because the live
+# journal is tmpfs and dies with the VM. PrivateDevices replaced /dev with a
+# stub, open("/dev/ttyS0") raised, the except swallowed it, and the one
+# traceback that explained run 19b's failure died with the machine.
 ProtectSystem=strict
 ProtectHome=yes
 # ProtectSystem=strict makes everything read-only, /run included, and the socket

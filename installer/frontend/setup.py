@@ -1075,7 +1075,14 @@ def _make_submit(application: "SetupApplication", client) -> Callable[..., None]
                     secret_values=secret_values,
                 )
             except InstallerRefused as error:
-                deliver("failed", "Preparing", str(error), False)
+                # kind "failed" is the backend's word for an engine task that
+                # failed past the write boundary: the disk has been erased and
+                # partly written, and this screen claiming "Nothing was
+                # written to the disk" over six gigabytes was run 19's second
+                # lie. Every other kind refuses before any write.
+                wrote = getattr(error, "kind", "") == "failed"
+                deliver("failed", "Installing" if wrote else "Preparing",
+                        str(error), wrote)
                 return
             except (OSError, ValueError) as error:
                 deliver("failed", "Preparing",

@@ -179,7 +179,8 @@ findings_file = work / "findings.txt"
 if findings_file.exists():
     findings.extend(findings_file.read_text().split())
 
-partitions = verifier.find_partitions(overlay, passphrase)
+luks_devices = verifier.find_luks_devices(overlay) if passphrase else ()
+partitions = verifier.find_partitions(overlay, passphrase, luks_devices)
 root = partitions.get("root")
 observed_boots = []
 if not root:
@@ -190,7 +191,7 @@ else:
         overlay,
         verifier._script(f"mount-ro {root} /",
                          f"glob tar-out /ostree/deploy/*/var/log/journal {tar_path}"),
-        passphrase=passphrase)
+        passphrase=passphrase, luks_devices=luks_devices)
     if output.startswith("__ERROR__") or not tar_path.exists():
         findings.append(f"the persistent journal could not be extracted: {output[:200]}")
     else:

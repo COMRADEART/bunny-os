@@ -66,14 +66,49 @@ CHECKS = {
 }
 
 
-def guestfish(disk: Path, script: str, *, passphrase: str | None = None) -> str:
-    """Run a guestfish script against the image, read-only."""
+def guestfish(disk: Path, script: str, *, passphrase: str | None = None,
+              luks_devices: tuple[str, ...] = ()) -> str:
+    """Run a guestfish script against the image, read-only.
+
+    Encrypted disks taught this function three things on run 19b, each
+    measured against a real LUKS2/argon2id root:
+
+    * ``--key all:key:…`` does not open the container — ``list-filesystems``
+      silently *drops* the LUKS device instead, so the disk appears to have
+      no encrypted volume at all.
+    * The working mechanism is ``--keys-from-stdin`` with the passphrase as
+      the only thing on stdin (one line per container) and an explicit
+      ``luks-open-ro`` per container — which is why the script travels as
+      **argv commands**: a script fed to stdin becomes cryptsetup's
+      passphrase one line at a time, and ``-f file`` both loses the key the
+      same way ("No key available" on the right passphrase, measured) *and*
+      exits 0 with the error only on stderr, which would turn every failed
+      command into a silent partial success here.
+    * argon2id here costs 1 GiB of memory and the default appliance does not
+      have it, so the appliance is grown; without this the failure reads
+      "No key available with this passphrase" on the right passphrase.
+    """
+    import os
+
     command = ["guestfish", "--ro", "-a", str(disk)]
-    if passphrase:
-        command += ["--key", "all:key:" + passphrase]
+    lines = script.splitlines()
+    opens = [f"luks-open-ro {device} luks{index}"
+             for index, device in enumerate(luks_devices)]
+
+    keys = ""
+    environment = None
+    if luks_devices:
+        command.insert(1, "--keys-from-stdin")
+        keys = "".join((passphrase or "") + "\n" for _ in luks_devices)
+        environment = {**os.environ, "LIBGUESTFS_MEMSIZE": "2048"}
+
+    for line in lines[:1] + opens + lines[1:]:
+        command += line.split() + [":"]
+    command = command[:-1]
+
     try:
-        completed = subprocess.run(command, input=script, capture_output=True,
-                                   text=True, timeout=900)
+        completed = subprocess.run(command, input=keys, capture_output=True,
+                                   text=True, timeout=900, env=environment)
     except (OSError, subprocess.SubprocessError) as error:
         return f"__ERROR__ {type(error).__name__}: {error}"
     if completed.returncode != 0:
@@ -85,9 +120,52 @@ def _script(*lines: str) -> str:
     return "\n".join(("run",) + lines) + "\n"
 
 
-def find_partitions(disk: Path, passphrase: str | None) -> dict[str, str]:
+def find_luks_devices(disk: Path) -> tuple[str, ...]:
+    """The LUKS containers on the disk, found by asking each partition.
+
+    `list-filesystems` cannot be the source: on the libguestfs this ran
+    against it omits crypto_LUKS devices from the listing entirely — with a
+    key registered *and* without one (both measured on run 19b's disk, whose
+    sda3 only ever surfaced through mount's own "unknown filesystem type
+    'crypto_LUKS'" complaint). `vfs-type` answers for one device at a time
+    and does not editorialise.
+    """
+    listing = guestfish(disk, _script("list-partitions"))
+    if listing.startswith("__ERROR__"):
+        return ()
+    found = []
+    for device in listing.split():
+        kind = guestfish(disk, _script(f"vfs-type {device}")).strip()
+        if kind == "crypto_LUKS":
+            found.append(device)
+    return tuple(found)
+
+
+def mounted(disk: Path, device: str, *lines: str, passphrase: str | None = None,
+            luks_devices: tuple[str, ...] = ()) -> str:
+    """Run script lines with ``device`` mounted read-only at /.
+
+    A filesystem interrupted mid-write has a dirty journal, and a read-only
+    mount cannot replay one — the kernel refuses, which turned run 19b's
+    half-written root into "no filesystem carrying an ostree deployment"
+    while the deployment sat right there. ``noload`` skips the replay and
+    reads the last checkpoint: the honest available view of a disk whose
+    install died. A completed install unmounts cleanly, so on the disks this
+    gate passes the fallback never runs.
+    """
+    result = guestfish(disk, _script(f"mount-ro {device} /", *lines),
+                       passphrase=passphrase, luks_devices=luks_devices)
+    if result.startswith("__ERROR__") and "mount" in result:
+        result = guestfish(disk, _script(f"mount-vfs ro,noload ext4 {device} /", *lines),
+                           passphrase=passphrase, luks_devices=luks_devices)
+    return result
+
+
+def find_partitions(disk: Path, passphrase: str | None,
+                    luks_devices: tuple[str, ...] = ()) -> dict[str, str]:
     """Which device is root and which is boot, by looking rather than counting."""
-    listing = guestfish(disk, _script("list-filesystems"), passphrase=passphrase)
+    listing = guestfish(disk, _script("list-filesystems"), passphrase=passphrase,
+                        luks_devices=luks_devices)
     if listing.startswith("__ERROR__"):
         return {"error": listing}
 
@@ -95,30 +173,36 @@ def find_partitions(disk: Path, passphrase: str | None) -> dict[str, str]:
     for line in listing.splitlines():
         name, _, kind = line.partition(":")
         name, kind = name.strip(), kind.strip()
-        if name.startswith("/dev/") and kind not in {"", "unknown", "swap"}:
+        if name.startswith("/dev/") and kind not in {"", "unknown", "swap", "crypto_LUKS"}:
             devices.append(name)
 
     found: dict[str, str] = {}
     for device in devices:
         if "root" in found and "boot" in found:
             break
-        probe = guestfish(disk, _script(f"mount-ro {device} /", "ls /"),
-                          passphrase=passphrase)
+        probe = mounted(disk, device, "ls /",
+                        passphrase=passphrase, luks_devices=luks_devices)
         if probe.startswith("__ERROR__"):
             continue
         entries = set(probe.split())
-        if "ostree" in entries and "root" not in found:
-            found["root"] = device
-        elif "loader" in entries and "boot" not in found:
+        # loader before ostree, and the order is load-bearing: a bootc /boot
+        # carries BOTH (its ostree/ holds the commits the loader entries
+        # name), so checking ostree first labelled the boot partition "root"
+        # on the first disk this ever ran against, and the real root — which
+        # has ostree but no loader — was never looked at.
+        if "loader" in entries and "boot" not in found:
             found["boot"] = device
+        elif "ostree" in entries and "root" not in found:
+            found["root"] = device
     return found
 
 
-def _read(disk: Path, device: str, path: str, passphrase: str | None) -> str:
-    return guestfish(
-        disk,
-        _script(f"mount-ro {device} /", f"glob cat /ostree/deploy/*/deploy/*{path}"),
+def _read(disk: Path, device: str, path: str, passphrase: str | None,
+          luks_devices: tuple[str, ...] = ()) -> str:
+    return mounted(
+        disk, device, f"glob cat /ostree/deploy/*/deploy/*{path}",
         passphrase=passphrase,
+        luks_devices=luks_devices,
     )
 
 
@@ -128,7 +212,9 @@ def inspect(disk: Path, *, passphrase: str | None, expected: dict[str, Any]) -> 
     findings: list[str] = []
     checked: dict[str, Any] = {}
 
-    filesystems = guestfish(disk, _script("list-filesystems"), passphrase=passphrase)
+    # Key-less on purpose: this is where LUKS containers are *visible* — a
+    # registered key makes list-filesystems drop them (measured on run 19b).
+    filesystems = guestfish(disk, _script("list-filesystems"))
     observed["filesystems"] = filesystems.strip().splitlines()
     if filesystems.startswith("__ERROR__"):
         findings.append(f"the disk image could not be read: {filesystems[:200]}")
@@ -136,21 +222,25 @@ def inspect(disk: Path, *, passphrase: str | None, expected: dict[str, Any]) -> 
 
     # §13: an encrypted install must actually have a LUKS header on the target.
     wanted_encryption = bool(expected.get("encryption", {}).get("enabled"))
-    observed["luksPresent"] = "crypto_LUKS" in filesystems
+    luks_devices = find_luks_devices(disk)
+    observed["luksPresent"] = bool(luks_devices)
     if wanted_encryption and not observed["luksPresent"]:
         findings.append("encryption was chosen but no LUKS volume exists on the disk")
     if expected and not wanted_encryption and observed["luksPresent"]:
         findings.append("encryption was not chosen but a LUKS volume exists")
+    if not passphrase:
+        luks_devices = ()
 
-    partitions = find_partitions(disk, passphrase)
+    partitions = find_partitions(disk, passphrase, luks_devices)
     observed["partitions"] = partitions
     boot_device = partitions.get("boot")
     root_device = partitions.get("root")
 
     # The bootloader: an installation that cannot boot is not an installation,
     # and this is the check that separates a real completion from a claimed one.
-    entries = guestfish(disk, _script(f"mount-ro {boot_device} /", "ls /loader/entries"),
-                        passphrase=passphrase) if boot_device else "__ERROR__ no boot filesystem"
+    entries = mounted(disk, boot_device, "ls /loader/entries",
+                      passphrase=passphrase, luks_devices=luks_devices) \
+        if boot_device else "__ERROR__ no boot filesystem"
     observed["bootEntries"] = [] if entries.startswith("__ERROR__") else \
         [line for line in entries.split() if line.endswith(".conf")]
     if not observed["bootEntries"]:
@@ -167,13 +257,13 @@ def inspect(disk: Path, *, passphrase: str | None, expected: dict[str, Any]) -> 
                         "the installation did not complete")
         return {"observed": observed, "findings": findings, "checked": checked}
 
-    deployment = guestfish(
-        disk, _script(f"mount-ro {root_device} /", "glob ls /ostree/deploy/*/deploy/"),
-        passphrase=passphrase)
+    deployment = mounted(
+        disk, root_device, "glob ls /ostree/deploy/*/deploy/",
+        passphrase=passphrase, luks_devices=luks_devices)
     observed["deployment"] = deployment.strip().splitlines()[:3]
 
     for name, (path, pattern) in CHECKS.items():
-        body = _read(disk, root_device, path, passphrase)
+        body = _read(disk, root_device, path, passphrase, luks_devices)
         if body.startswith("__ERROR__"):
             checked[name] = {"read": False, "detail": body[:160]}
             continue
@@ -183,7 +273,7 @@ def inspect(disk: Path, *, passphrase: str | None, expected: dict[str, Any]) -> 
 
     # The account: read from /etc/passwd on the installed system, never from the
     # document that asked for it.
-    passwd = _read(disk, root_device, "/etc/passwd", passphrase)
+    passwd = _read(disk, root_device, "/etc/passwd", passphrase, luks_devices)
     username = expected.get("account", {}).get("username", "")
     checked["account"] = {
         "read": not passwd.startswith("__ERROR__"),
@@ -194,7 +284,7 @@ def inspect(disk: Path, *, passphrase: str | None, expected: dict[str, Any]) -> 
         findings.append(f"the account {username!r} does not exist on the installed system")
 
     # Root must be locked: `rootpw --lock` in the kickstart, verified in shadow.
-    shadow = _read(disk, root_device, "/etc/shadow", passphrase)
+    shadow = _read(disk, root_device, "/etc/shadow", passphrase, luks_devices)
     root_line = next((line for line in shadow.splitlines() if line.startswith("root:")), "")
     locked = root_line.split(":")[1].startswith(("!", "*")) if root_line else None
     checked["rootLocked"] = {"read": bool(root_line), "locked": locked}
@@ -202,10 +292,9 @@ def inspect(disk: Path, *, passphrase: str | None, expected: dict[str, Any]) -> 
         findings.append("the root account is not locked on the installed system")
 
     # §45: what setup wrote, present on the target so first boot can apply it.
-    choices = guestfish(
-        disk, _script(f"mount-ro {root_device} /",
-                      "glob ls /ostree/deploy/*/var/lib/bunny-setup/"),
-        passphrase=passphrase)
+    choices = mounted(
+        disk, root_device, "glob ls /ostree/deploy/*/var/lib/bunny-setup/",
+        passphrase=passphrase, luks_devices=luks_devices)
     checked["choicesOnTarget"] = {
         "read": not choices.startswith("__ERROR__"),
         "files": [] if choices.startswith("__ERROR__") else choices.split(),
