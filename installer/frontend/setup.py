@@ -414,50 +414,74 @@ class _ScreenView:
             return box
 
         # choice and multi-choice
+        #
+        # Plain Gtk.Button, and it is an accessibility decision made twice.
+        # On this GTK a CheckButton's accessible carries an Action interface
+        # with zero actions, so nothing action-based — the §42 driver, or any
+        # assistive tool built on AT-SPI actions — can ever select one:
+        # Journey A run 8 retried its full deadline against that. The obvious
+        # replacement, a grouped ToggleButton, exposes 'click' but loses its
+        # accessible *name* whenever it sits deeper than a window's direct
+        # child, and no ordering of label properties, tooltips or deferred
+        # re-application brought it back on the real screen — all measured.
+        # A plain Button is the one widget whose name and click have worked
+        # in this tree on every run. Selection state is the model's: a click
+        # reports the choice through on_change, the screen re-renders with
+        # the selection applied, and the selected row is marked with a CSS
+        # class. The note rides in the accessible description, applied a
+        # main-loop cycle later because a construction-time description is
+        # dropped on this GTK — also measured.
         options = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         options.add_css_class("bunny-setup-options")
-        group = None
-        # ToggleButton, not CheckButton, and it is an accessibility decision:
-        # on this GTK a CheckButton's accessible carries an Action interface
-        # with zero actions, so nothing action-based - the &#167;42 driver, or any
-        # assistive tool built on AT-SPI actions - can ever select one.
-        # Journey A run 8 retried for its full deadline against that. A grouped
-        # ToggleButton keeps the radio semantics and exposes 'click'; measured
-        # on the exact stack in both directions before this line changed.
+
         for option in field.options:
-            if field.kind == "multi-choice":
-                button = Gtk.ToggleButton(label=option.label)
-                button.set_active(option.value in (field.value or []))
-            else:
-                button = Gtk.ToggleButton(label=option.label)
-                if group is None:
-                    group = button
+            selected = (option.value in (field.value or [])
+                        if field.kind == "multi-choice"
+                        else option.value == field.value)
+            accessible_name = f"{option.label} — selected" if selected else option.label
+            # Built like _actions builds Back and Continue — an explicit
+            # PRESENTATION-role label child, never `Gtk.Button(label=...)` —
+            # and that is the finding this screen paid nine VM runs for: the
+            # internal label child of a constructor-labelled button defeats an
+            # explicit accessible name on this GTK, and the derived name never
+            # materialises for widgets nested below a window's direct children.
+            # Name and note travel in ONE update_property call, because a
+            # later call replaces the whole property set; naming a control and
+            # then describing it leaves it nameless. All measured.
+            button = Gtk.Button()
+            caption = Gtk.Label(label=accessible_name, xalign=0.0)
+            caption.set_wrap(True)
+            self._role(caption, "PRESENTATION")
+            button.set_child(caption)
+            try:
+                if option.note:
+                    button.update_property(
+                        [Gtk.AccessibleProperty.LABEL, Gtk.AccessibleProperty.DESCRIPTION],
+                        [accessible_name, option.note])
                 else:
-                    button.set_group(group)
-                button.set_active(option.value == field.value)
+                    button.update_property(
+                        [Gtk.AccessibleProperty.LABEL], [accessible_name])
+            except Exception:
+                self.unnamed.append(accessible_name)
             button.add_css_class("bunny-setup-option")
+            if selected:
+                button.add_css_class("bunny-setup-option-selected")
             if not option.available:
                 button.set_sensitive(False)
                 button.add_css_class("bunny-setup-option-unavailable")
-            # The note carries the honest detail — the cost, the account
-            # requirement, or why a disk cannot be chosen — so it belongs in the
-            # name rather than only beside it.
-            self._name(button, f"{option.label}. {option.note}".strip()
-                       if option.note else option.label)
             row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
             row.append(button)
             if option.note:
                 note = Gtk.Label(label=option.note, xalign=0.0)
                 note.set_wrap(True)
                 note.add_css_class("bunny-setup-option-note")
-                # Already inside the button's accessible name, just above.
+                # Also in the button's accessible description, just above.
                 self._role(note, "PRESENTATION")
                 row.append(note)
             options.append(row)
-            button.connect("toggled", lambda w, key=field.key, value=option.value,
-                           multi=(field.kind == "multi-choice"):
-                           self.on_change(key, (value, w.get_active()) if multi else value)
-                           if w.get_active() or multi else None)
+            button.connect("clicked", lambda w, key=field.key, value=option.value,
+                           multi=(field.kind == "multi-choice"), was=selected:
+                           self.on_change(key, (value, not was) if multi else value))
         box.append(options)
         return box
 
@@ -639,6 +663,26 @@ class SetupApplication:
             # The confirmation phrase gates its own button, and only that button.
             if key == "phrase":
                 self._refresh_confirm_button()
+            return
+        if key == "targetDisk":
+            # The choice this whole surface exists to collect, and until this
+            # branch existed nothing collected it: on_change dropped the key,
+            # context["selectedDisk"] stayed None from construction, and both
+            # "Install Bunny OS" and "confirm" silently returned on their
+            # disk-is-None guards. Every widget state was correct and the flow
+            # never learned. Found by the §42 driver, which selects a disk the
+            # way a person does. The flow is rebuilt because its screen
+            # builders capture the facts at build time — an updated context
+            # alone leaves review naming "no disk selected".
+            chosen = next((disk for disk in self.context.get("disks", ())
+                           if getattr(disk, "id", None) == value), None)
+            if chosen is not None:
+                self.context["selectedDisk"] = chosen
+                identity = self.context.get("identityFor")
+                if callable(identity):
+                    self.context["selectedDiskIdentity"] = identity(chosen)
+                self.flow = build_flow(self.choices, context=self.context)
+                self.render()
             return
         setters = {
             "textScale": lambda v: setattr(self.choices, "text_scale", float(v)),

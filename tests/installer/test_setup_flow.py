@@ -131,6 +131,34 @@ class FlowTransitions(unittest.TestCase):
         application.on_action("install")
         self.assertIsNone(application.terminal)
 
+    def test_choosing_a_disk_reaches_the_flow_not_only_the_widget(self) -> None:
+        """Until the targetDisk branch existed, on_change dropped the key:
+        context["selectedDisk"] stayed None from construction, every widget
+        state was correct, and both "Install Bunny OS" and "confirm" silently
+        returned on their disk-is-None guards. Found by the §42 driver
+        selecting a disk the way a person does."""
+        from installer.frontend.setup import SetupApplication
+        from installer.storage.safety import disk_identity
+
+        application = SetupApplication(self.Gtk, context={
+            "disks": (DISK,),
+            "findings": {DISK.id: assess_target(DISK, mode="erase_disk")},
+            "selectedDisk": None,
+            "selectedDiskIdentity": "no disk selected",
+            "identityFor": disk_identity,
+        })
+        application.window = None
+        application.on_change("targetDisk", DISK.id)
+        self.assertIs(application.context["selectedDisk"], DISK)
+        self.assertIn("/dev/vda", application.context["selectedDiskIdentity"])
+        # The flow's screen builders capture their facts at build time, so the
+        # selection must survive into a freshly built review screen.
+        keys = [name for name, _ in application.flow]
+        application.index = keys.index("review")
+        application.on_action("install")
+        self.assertIsNotNone(application.terminal)
+        self.assertEqual(application.terminal.key, "confirm_erase")
+
 
 class AccessibilityIsImmediate(unittest.TestCase):
     def setUp(self) -> None:

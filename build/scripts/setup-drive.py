@@ -110,6 +110,7 @@ class Surface:
                 rows.append({
                     "role": node.get_role_name(),
                     "name": node.get_name() or "",
+                    "description": node.get_description() or "",
                     "node": node,
                     "focusable": states.contains(self.Atspi.StateType.FOCUSABLE),
                     "sensitive": states.contains(self.Atspi.StateType.SENSITIVE),
@@ -329,12 +330,18 @@ def verify_target(surface: Surface, *, expected_size_gib: float, expected_model:
     # radio buttons and nothing else. Zero candidates is transient while the
     # page settles; two candidates is real ambiguity and refuses immediately.
     def gather():
+        # Options are plain buttons now, so the roster is filtered by content
+        # (the device-path match below) rather than by widget role.
         rows = [row for row in surface.controls()
-                if row["role"] in {"radio button", "check box", "list item", "toggle button"}
+                if row["role"] in {"radio button", "check box", "list item",
+                                   "toggle button", "button"}
                 and row["name"]]
         candidates = [row for row in rows if expected_device.lower() in row["name"].lower()]
-        media = [row for row in rows if "installation media" in row["name"].lower()
-                 or "iso9660" in row["name"].lower()]
+        # The note rides in the accessible description now, so the medium's
+        # self-identification is matched in both fields.
+        media = [row for row in rows
+                 if any(marker in (row["name"] + " " + row["description"]).lower()
+                        for marker in ("installation media", "iso9660"))]
         return rows, candidates, media
 
     deadline = time.time() + surface.timeout
@@ -401,7 +408,7 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
     emit("stage", name="accessibility")
     if arguments.text_scale != 1.0:
         label = {1.25: "Large", 1.5: "Larger", 2.0: "Largest"}[arguments.text_scale]
-        surface.press(label, role="toggle button")
+        surface.press(label)
     if arguments.high_contrast:
         surface.press("High contrast", role="toggle button") if surface.find(
             name="High contrast", role="toggle button") else surface.press(
@@ -431,16 +438,20 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
                            expected_size_gib=arguments.disk_gib,
                            expected_model=arguments.disk_model,
                            expected_device=arguments.disk_device)
-    # Re-found fresh on every attempt - the row verify_target returned can be
-    # a pre-render accessible with an empty action table (run 7 died on
-    # exactly that) - and judged by the one witness that selection actually
-    # happened: the row reporting CHECKED.
+    # Selection is a model event, not a widget state: clicking an option
+    # reports the choice and the screen re-renders with the chosen row
+    # renamed "… — selected". That rename is the witness — judged from a
+    # fresh walk each attempt, because the clicked row's accessible is
+    # replaced by the re-render.
     selection_deadline = time.time() + surface.timeout
     while True:
-        row = surface.find(name=target["name"], exact=True)
-        if row is not None and row["checked"]:
-            emit("target-selected", disk=row["name"])
+        chosen = next((row for row in surface.controls()
+                       if arguments.disk_device in row["name"]
+                       and "— selected" in row["name"]), None)
+        if chosen is not None:
+            emit("target-selected", disk=chosen["name"])
             break
+        row = surface.find(name=target["name"], exact=True)
         if row is not None and row["sensitive"]:
             try:
                 surface.activate(row)
