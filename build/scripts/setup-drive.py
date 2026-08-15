@@ -233,11 +233,25 @@ def verify_target(surface: Surface, *, expected_size_gib: float, expected_model:
     Returns the option row for the target. Raises on anything ambiguous, and
     ambiguous includes "two disks that both look right".
     """
-    rows = [row for row in surface.controls()
-            if row["role"] in {"radio button", "check box", "list item"} and row["name"]]
-    candidates = [row for row in rows if expected_model.lower() in row["name"].lower()]
-    media = [row for row in rows if "installation media" in row["name"].lower()
-             or "iso9660" in row["name"].lower()]
+    # Polled, not read once: the storage page fills its disk rows from the
+    # backend's probe over the socket, and run 4 took its one look before any
+    # row existed — the tree at that instant still held the language page's
+    # radio buttons and nothing else. Zero candidates is transient while the
+    # page settles; two candidates is real ambiguity and refuses immediately.
+    def gather():
+        rows = [row for row in surface.controls()
+                if row["role"] in {"radio button", "check box", "list item"} and row["name"]]
+        candidates = [row for row in rows if expected_model.lower() in row["name"].lower()]
+        media = [row for row in rows if "installation media" in row["name"].lower()
+                 or "iso9660" in row["name"].lower()]
+        return rows, candidates, media
+
+    deadline = time.time() + surface.timeout
+    while True:
+        rows, candidates, media = gather()
+        if len(candidates) >= 1 or time.time() >= deadline:
+            break
+        time.sleep(0.5)
 
     emit("storage-candidates",
          all=[row["name"][:80] for row in rows],
