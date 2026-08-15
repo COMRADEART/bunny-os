@@ -48,6 +48,11 @@ ProtectHome=yes
 # exists, and declaring what a unit needs is what makes it true rather than
 # incidental to another unit's ordering.
 RuntimeDirectory=bunny-installer bunny-setup
+# The executor connects to Anaconda's private bus socket under /run/anaconda,
+# which bunny-anaconda-bus.service creates Before= this unit. The `-` prefix
+# keeps a boot where that unit did not run at "executor unavailable" instead
+# of 226/NAMESPACE - a unit cannot be built from a directory that is missing.
+ReadWritePaths=-/run/anaconda
 RuntimeDirectoryPreserve=yes
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
