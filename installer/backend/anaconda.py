@@ -49,6 +49,7 @@ import os
 from pathlib import Path
 import shutil
 import tempfile
+import time
 from typing import Any, Callable, Mapping, Protocol, Sequence
 
 from installer.backend.kickstart import KickstartError, redacted, render
@@ -277,11 +278,21 @@ class AnacondaDBusExecutor:
         module_task = boss.call_sync(
             "StartModulesWithTask", None, 0, 120_000, None).unpack()[0]
         self._run_tasks([module_task], on_stage=on_stage)
-        modules = boss.call_sync("GetModules", None, 0, 120_000, None).unpack()[0]
-        if not modules:
-            raise ExecutorUnavailable(
-                "Anaconda started no modules; a module-less installer parses "
-                "everything and writes nothing. No disk was touched.")
+        # Polled, not read once: the boss records its observers through a
+        # succeeded-signal in its own loop, which fires AFTER the task's
+        # Finish returns to this side — measured at about a second. A single
+        # read right after Finish sees an empty list on a boss that started
+        # nine modules, and the guard below then refuses a working installer.
+        deadline = time.time() + 30.0
+        while True:
+            modules = boss.call_sync("GetModules", None, 0, 120_000, None).unpack()[0]
+            if modules:
+                break
+            if time.time() >= deadline:
+                raise ExecutorUnavailable(
+                    "Anaconda started no modules; a module-less installer parses "
+                    "everything and writes nothing. No disk was touched.")
+            time.sleep(0.5)
         on_stage("Preparing", f"{len(modules)} installer modules running")
 
         on_stage("Validating storage", f"Handing {kickstart.name} to the installer")
