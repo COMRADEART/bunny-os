@@ -323,6 +323,22 @@ The `launcher` section post-dates that run and has been measured on the Linux
 host only. Re-running it in the guest needs an image rebuild, because the guest
 runs the packages the image installed and only the harness is injected.
 
+### 9.1 Non-PASS records, and what supersedes them
+
+Evidence is append-only, so a record that later code or a later run answered
+stays on disk saying what it said. The table below is the disposition of every
+non-PASS record under `qualification/capsules/evidence/`, so nobody has to
+re-derive whether a FAIL is live.
+
+| record | verdict | disposition |
+| --- | --- | --- |
+| `37f74c038d41/resources.json` | BLOCKED | Host limitation: that kernel ignores `MemoryMax` (no `memory` cgroup row). Superseded by the guest run in §9, where memory **is** enforced. |
+| `596d9e1bf9eb/resources.json` | BLOCKED | Same cause, same disposition. |
+| `596d9e1bf9eb/selinux.json` | BLOCKED | SELinux Disabled on the qualification host. Superseded by guest records at Enforcing. |
+| `guest-4c6e101bd354/apptask.json` | FAIL | `allowOnceLifetime.ok: false` — a session grant survived its task. Fixed in `39a5c575` (`capsules/runtime.py`, drop moved into `reconcile()`); superseded by `guest-524107e50b2e/apptask.json`, a direct descendant of the fix, which records `allowOnceLifetime.ok: true`, PASS. |
+
+No live FAIL remains in this tree. No evidence file was edited.
+
 ---
 
 ## 10. What to do next, in order
