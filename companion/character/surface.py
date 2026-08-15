@@ -49,11 +49,20 @@ from .bubble import BubbleKind, BubbleLayout, BubbleState, SpeechBubbleControlle
 from .controller import CharacterRendererController, CharacterRendererSnapshot
 from .diagnostics import registry_for, selected_package, signals_from_assessment, three_d_signals
 from .errors import CharacterError
+from .first_run import FirstRunGreeting
 from .integration import bubble_request_for, mapper_input_for
 from .lipsync import LipSyncEvent, LipSyncStatus
 from .mapper import AccessibilityPreferences, map_character_state
 from .package import ValidatedPackage
-from .positioning import Display, PixelRect, Placement, PositionDecision, place_character
+from .positioning import (
+    Display,
+    PixelRect,
+    Placement,
+    PositionDecision,
+    PositionStore,
+    place_character,
+    saved_from_decision,
+)
 
 __all__ = [
     "CharacterPresenter",
@@ -63,6 +72,16 @@ __all__ = [
 
 #: The character's nominal size before the user's scale is applied.
 DEFAULT_CHARACTER_PIXELS = 288
+
+#: Where a dragged position is remembered, beside the character registry.
+#:
+#: Its own file rather than a field in ``settings.json`` because the two answer
+#: different questions and change at different rates: settings hold *what the
+#: user chose* — a named corner, a mode, a scale — and this holds *where the
+#: window ended up on this display*, which is a pixel fraction tied to a display
+#: id. Putting a display-specific fraction in the settings document would make
+#: every settings read a reader of this machine's monitor layout.
+POSITION_FILE_NAME = "character-position.json"
 
 #: How many renderer restarts are permitted inside :data:`_RESTART_WINDOW_SECONDS`
 #: before the presenter stops trying. §15 requires rapid restart loops to be
@@ -136,6 +155,13 @@ class CharacterPresenter:
         placement: Placement = Placement.BOTTOM_RIGHT,
         three_d_context: Any = None,
         three_d_seed: int | None = None,
+        mode: Any = None,
+        performance: str = "automatic",
+        idle_animation: bool = True,
+        animation_intensity: float = 1.0,
+        contextual_reactions: bool = True,
+        scale: float = 1.0,
+        first_run_greeting: bool = False,
     ) -> None:
         self.root = Path(root)
         self.registry = registry_for(self.root)
@@ -158,8 +184,20 @@ class CharacterPresenter:
         #: phase. The 3D rungs are then unreachable and no graphics library is
         #: opened, which is §30.
         self.three_d_context = three_d_context
+        #: The renderer mode, or ``None`` for "no mode ceiling".
+        #:
+        #: ``None`` by default so that every caller written before modes — the
+        #: 3D slice, the diagnostics, the demo — keeps drawing what its
+        #: capability plan permits. The launcher passes the user's setting, and
+        #: that is where the product's pre-rendered default takes effect.
         self.controller = CharacterRendererController(
-            three_d_context=three_d_context, three_d_seed=three_d_seed
+            three_d_context=three_d_context,
+            three_d_seed=three_d_seed,
+            mode=mode,
+            performance=performance,
+            idle_animation=idle_animation,
+            animation_intensity=animation_intensity,
+            contextual_reactions=contextual_reactions,
         )
         self.controller.load_package(package)
         #: Sustained-slowness tracking, so §22's frame-time trigger fires on a
@@ -173,8 +211,36 @@ class CharacterPresenter:
             self.controller.events.append(fallback_event)
         self.bubbles = SpeechBubbleController()
         self.placement = placement
+        #: Where the user dragged the companion, if they ever did.
+        #:
+        #: ``PositionStore`` and ``saved_from_decision`` were written with the
+        #: placement engine and then never called by anything: ``place_character``
+        #: was invoked with a ``placement`` and no ``saved``, so a dragged
+        #: position lasted until the window closed and the companion returned to
+        #: its default corner on every login. §7 asks for a position that
+        #: survives a restart, and this is the wiring that was missing rather
+        #: than a new mechanism.
+        self.position_store = PositionStore(self.root / POSITION_FILE_NAME)
+        #: §5's one-shot first-run greeting, or ``None`` when nobody asked for
+        #: one. Its marker lives beside the character registry, so resetting
+        #: settings does not re-trigger it.
+        #:
+        #: **Off by default**, and that default is load-bearing. Greeting is a
+        #: product behaviour belonging to the thing that opens a session; the
+        #: presenter is the mechanism underneath it. Constructing it
+        #: unconditionally meant every fresh root looked like a first boot — so
+        #: the vertical slice, which builds a presenter over a temporary
+        #: directory, opened on ``greeting`` and failed its step 4 asserting a
+        #: static idle state. That is the same mistake the renderer *mode*
+        #: default made a phase earlier: a mechanism that quietly asserts a
+        #: product policy breaks every caller that only wanted the mechanism.
+        self.greeting = FirstRunGreeting(self.root) if first_run_greeting else None
+        self.saved_position = self.position_store.load()
         self.display = display or Display("headless", PixelRect(0, 0, 1024, 768), primary=True)
-        self.scale = 1.0
+        #: The user's companion size. Taken as a constructor argument so a
+        #: presenter opens at the size the person chose rather than at 1.0 and
+        #: then jumping once something calls ``set_scale``.
+        self.scale = max(0.5, min(3.0, float(scale)))
         self._healthy = True
         self._unhealthy_since: float | None = None
         self._restarts = _RestartGuard()
@@ -195,6 +261,52 @@ class CharacterPresenter:
         self.scale = float(scale)
         if self.controller.renderer is not None:
             self.controller.renderer.set_scale(scale)
+
+    def reposition(self, origin: tuple[int, int], *, persist: bool = True) -> PositionDecision:
+        """Move the companion to a dragged pixel origin and remember it.
+
+        Persisted as a *fraction* of the display work area rather than as
+        coordinates, so a resolution change moves the companion proportionally
+        instead of leaving it off-screen — §6 asks for exactly that and
+        :func:`saved_from_decision` already computed it. What was missing was
+        anyone calling it.
+
+        Snapping happens inside :func:`place_character`, so what is saved is the
+        snapped position and not the raw pointer. A companion that was dragged
+        almost-but-not-quite to the corner should come back in the corner it
+        appeared to land in.
+        """
+        decision = place_character(
+            [self.display],
+            size=(round(DEFAULT_CHARACTER_PIXELS * self.scale),) * 2,
+            placement=Placement.USER_DRAGGED,
+            dragged_origin=origin,
+        )
+        self.placement = Placement.USER_DRAGGED
+        self.saved_position = saved_from_decision(decision, self.display)
+        if persist:
+            try:
+                self.position_store.save(self.saved_position)
+            except OSError as error:
+                # A position that could not be written is not worth refusing the
+                # move over. The companion goes where it was dragged and simply
+                # does not remember next time, which is the failure the user can
+                # see and work around.
+                self.controller.events.append({
+                    "eventType": "character.position-not-saved",
+                    "explanation": f"the companion position could not be written: {error}",
+                    "taskContinues": True,
+                })
+        self.controller.set_position(decision)
+        return decision
+
+    def forget_position(self) -> None:
+        """Drop a saved drag and return to the named placement from settings."""
+        self.saved_position = None
+        try:
+            self.position_store.path.unlink()
+        except OSError:
+            pass
 
     def plan_for(self, state: PresentationState) -> CapabilityPresentationPlan:
         """The allowance, taken from the projection the runtime supplied."""
@@ -222,6 +334,15 @@ class CharacterPresenter:
         self._recover_health(now)
 
         plan = self.plan_for(state)
+        # §5's greeting. Started on the first update this machine ever performs
+        # and timed out by the clock the caller is already passing, so it needs
+        # no timer of its own and nothing waits for it. The mapper ranks
+        # ``greeting`` below everything that needs an answer, so a first boot
+        # that opens on a permission request shows the request.
+        greeting = False
+        if self.greeting is not None:
+            self.greeting.begin(now=now)
+            greeting = self.greeting.active(now=now)
         mapper_input = mapper_input_for(
             state,
             accessibility=accessibility,
@@ -230,6 +351,7 @@ class CharacterPresenter:
             transcribing=transcribing,
             repositioning=repositioning,
             renderer_healthy=self._healthy,
+            greeting=greeting,
         )
         mapped = map_character_state(self.package.manifest, mapper_input)
         # The accessibility preference and the renderer's own health are
@@ -272,6 +394,7 @@ class CharacterPresenter:
             [self.display],
             size=(round(DEFAULT_CHARACTER_PIXELS * self.scale),) * 2,
             placement=self.placement,
+            saved=self.saved_position,
         )
         layout: BubbleLayout | None = None
         if bubble.visible and mapped.bubble_visible:
@@ -423,6 +546,7 @@ class CharacterPresenter:
             [self.display],
             size=(round(DEFAULT_CHARACTER_PIXELS * self.scale),) * 2,
             placement=self.placement,
+            saved=self.saved_position,
         )
         return CharacterUpdate(
             snapshot=snapshot,

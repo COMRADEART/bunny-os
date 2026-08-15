@@ -95,11 +95,56 @@ def _character_presenter(root: Path | None):
     try:
         from .character.surface import CharacterPresenter
 
-        return CharacterPresenter(root)
+        return CharacterPresenter(root, **_companion_settings_arguments(root))
     except Exception:
         # Every character failure is a presentation failure. The window opens,
         # the task runs, and the surface is text.
         return None
+
+
+def _companion_settings_arguments(root: Path) -> dict:
+    """The user's companion settings, as presenter keyword arguments.
+
+    Named at length to keep it distinct from :func:`_character_preferences`
+    above, which translates *accessibility* preferences and is a different
+    thing entirely. The first version of this was called
+    ``_character_preferences`` too and shadowed it — and because both are
+    called for their return value and this one catches every exception, the
+    accessibility translation would have silently become an empty dict and
+    taken reduced motion and high contrast with it.
+
+    This is where §7's "single authoritative settings source" actually takes
+    effect. Before it, the window constructed the presenter with no arguments at
+    all: the renderer mode, the scale, the placement, the animation intensity
+    and the idle-animation preference were all persisted, all validated, and all
+    ignored — the companion drew its defaults on every login however the
+    settings file read.
+
+    Unreadable settings produce defaults rather than an exception. A person
+    whose settings file is damaged should lose their preferences, not their
+    companion.
+    """
+    try:
+        from .settings import load_settings
+
+        character = load_settings(root).character
+        return {
+            "mode": character.mode(),
+            "scale": character.scale,
+            "placement": character.placement(),
+            "performance": character.performance,
+            "idle_animation": character.idle_animation,
+            "animation_intensity": character.animation_intensity,
+            "contextual_reactions": character.contextual_reactions,
+            # §5. Enabled *here* rather than in the presenter: this function
+            # runs when a person opens a session, which is the only context in
+            # which "first run" means anything. A slice, a demo or a diagnostic
+            # building a presenter over a temporary directory is not a first
+            # boot and must not be greeted.
+            "first_run_greeting": True,
+        }
+    except Exception:
+        return {}
 
 
 @dataclass
