@@ -86,6 +86,16 @@ if [[ -z "${iso}" ]]; then
   exit 7
 fi
 
+# The medium carries Bunny's identity, not the toolchain's generic name. The
+# rename must happen before the digest, the provenance and the manifest are
+# written: all three record the path they saw, and the manifest writer refuses
+# a tree that disagrees with the provenance.
+renamed="$(dirname "${iso}")/bunny-os-${live_image_version}-$(uname -m).iso"
+if [[ "${iso}" != "${renamed}" ]]; then
+  mv -- "${iso}" "${renamed}"
+  iso="${renamed}"
+fi
+
 # The in-image regeneration record, carried out of the image so the ISO's
 # evidence names the kernel, the dracut version and the initramfs digest that
 # went into it (§32) without anyone having to run the container again.
@@ -131,7 +141,7 @@ python3 build/scripts/write-build-provenance.py \
   --base-image "${base_image}" \
   --image-reference "${installer_tag}"
 
-python3 build/scripts/write-media-manifest.py --root "${output}" --source-commit "${source_commit}" --image-version "0.3.0-live.${source_commit:0:12}"
+python3 build/scripts/write-media-manifest.py --root "${output}" --source-commit "${source_commit}" --image-version "${live_image_version}"
 if [[ -n "${BUNNY_MEDIA_SIGNING_KEY:-}" ]]; then
   openssl pkeyutl -sign -rawin -inkey "${BUNNY_MEDIA_SIGNING_KEY}" -in "${output}/BUNNY-MANIFEST.json" -out "${output}/BUNNY-MANIFEST.json.sig"
 else
