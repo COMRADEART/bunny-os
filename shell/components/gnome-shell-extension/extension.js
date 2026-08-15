@@ -140,7 +140,7 @@ export default class BunnyShellExtension extends Extension {
             icon_name: Icons.BUNNY,
             style_class: 'system-status-icon bunny-shell-icon',
         }));
-        this._statusItem = new PopupMenu.PopupMenuItem('Bunny OS · status not yet verified', {reactive: false});
+        this._statusItem = new PopupMenu.PopupMenuItem('Bunny OS · status unavailable · security unknown', {reactive: false});
         const title = this._statusItem;
         title.add_style_class_name('bunny-shell-status');
         this._indicator.menu.addMenuItem(title);
