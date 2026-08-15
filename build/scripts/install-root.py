@@ -317,9 +317,15 @@ def install_activation(profile: str) -> None:
             # disk, and can install nothing. The unit shipped with
             # WantedBy=graphical.target and nothing wanted it — the exact shape
             # of the brlapi failure this function's docstring is about.
+            # Three units, not two: the backend's destructive executor drives
+            # Anaconda's Boss over the private bus, and run 11 of Journey A
+            # proved nothing on the medium ever started that bus — every
+            # confirmed installation ended at "destructive executor is
+            # unavailable" with the wire to it working perfectly.
             subprocess.run([
                 "/usr/bin/systemctl", "enable",
                 "bunny-live-session.service", "bunny-installer-backend.service",
+                "bunny-anaconda-bus.service",
             ], check=True)
         subprocess.run(["/usr/bin/systemctl", "set-default", "graphical.target"], check=True)
     else:
@@ -372,6 +378,9 @@ def install_activation(profile: str) -> None:
         )
         required_activation["bunny-live-session.service"] = Path(
             "/etc/systemd/system/graphical.target.wants/bunny-live-session.service"
+        )
+        required_activation["bunny-anaconda-bus.service"] = Path(
+            "/etc/systemd/system/graphical.target.wants/bunny-anaconda-bus.service"
         )
 
     #: Units that must **not** be activated, and why.

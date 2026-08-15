@@ -6,7 +6,11 @@ Description=Bunny OS live installer backend
 Documentation=file:///usr/share/doc/bunny-os/INSTALLER_ARCHITECTURE.md
 ConditionPathExists=/run/bunny-installer/live-session
 # The surface reads the session token this writes, so it must be listening
-# before the graphical session starts autostarting things.
+# before the graphical session starts autostarting things. The executor is
+# chosen at startup by whether Anaconda's private bus is reachable, so the
+# unit that provides that bus must have written its address first.
+Wants=bunny-anaconda-bus.service
+After=bunny-anaconda-bus.service
 Before=gdm.service graphical.target shutdown.target
 # The live account and its UID are created by this, and the marker file it
 # writes is where the backend learns which UID may connect.
