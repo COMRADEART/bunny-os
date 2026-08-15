@@ -62,6 +62,11 @@ RuntimeDirectory=bunny-installer bunny-setup
 # keeps a boot where that unit did not run at "executor unavailable" instead
 # of 226/NAMESPACE - a unit cannot be built from a directory that is missing.
 ReadWritePaths=-/run/anaconda
+# The failure replay (server.py) re-runs the engine's failed helper against
+# the install target under /mnt, from inside this unit. Without this line
+# ProtectSystem=strict would answer that experiment with the sandbox's own
+# EROFS and the replay would measure the backend instead of the failure.
+ReadWritePaths=-/mnt
 RuntimeDirectoryPreserve=yes
 ProtectKernelTunables=yes
 ProtectKernelModules=yes

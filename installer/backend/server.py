@@ -45,6 +45,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import socket
 import struct
 import subprocess
@@ -222,7 +223,8 @@ class ProtocolServer:
             self.on_event("error", {"traceback": traceback.format_exc(),
                                     "engineJournal": _engine_journal(),
                                     "engineLogs": _engine_logs(),
-                                    "security": _security_state()})
+                                    "security": _security_state(),
+                                    "replay": _failure_replay(str(error))})
             return self._error(str(error), kind="failed")
         except ValueError as error:
             return self._error(str(error), kind="invalid")
@@ -276,6 +278,42 @@ def _engine_journal(unit: str = "bunny-anaconda-bus.service", lines: int = 250) 
         return (completed.stdout or completed.stderr)[-12000:]
     except (OSError, subprocess.SubprocessError) as error:
         return f"journal unavailable: {error}"
+
+
+def _failure_replay(message: str) -> dict[str, Any]:
+    """Re-run the failing helper at the moment of failure, and keep its words.
+
+    Anaconda's module processes have no program-log file handler, so the
+    stdout/stderr of helpers they run is logged at INFO into a logger whose
+    only handler is Python's last-resort WARNING gate — it is dropped, not
+    hidden, which is why three runs produced "Error enabling service
+    chronyd: 1" with nothing underneath in any journal or file. The backend
+    lives in the same VM with the same mounts at the same moment, so the
+    honest way left to hear systemctl is to run it again and record
+    everything. The mount table and the wants directory come along because
+    a --root enable is pure file work: whatever is wrong is visible there.
+    """
+    replay: dict[str, Any] = {}
+    match = re.search(r"Error (?:enabling|disabling) service (\S+?):", message)
+    commands: dict[str, list[str]] = {
+        "mounts": ["findmnt", "-R", "-o", "TARGET,SOURCE,FSTYPE,OPTIONS",
+                   "/mnt/sysroot"],
+        "wants": ["ls", "-la",
+                  "/mnt/sysroot/etc/systemd/system/multi-user.target.wants"],
+    }
+    if match:
+        commands["enable"] = ["systemctl", "enable", match.group(1),
+                              "--root", "/mnt/sysroot"]
+    for name, command in commands.items():
+        try:
+            completed = subprocess.run(command, capture_output=True,
+                                       text=True, timeout=30)
+            replay[name] = {"exit": completed.returncode,
+                            "stdout": completed.stdout[-2000:],
+                            "stderr": completed.stderr[-2000:]}
+        except (OSError, subprocess.SubprocessError) as error:
+            replay[name] = {"error": str(error)}
+    return replay
 
 
 def _security_state() -> dict[str, str]:
