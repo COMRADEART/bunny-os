@@ -636,6 +636,17 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "installer/config/anaconda-target-live.conf",
         "/etc/anaconda/conf.d/95-bunny-target.conf", 0o644, profiles=LIVE_PROFILES,
     ),
+    # A medium-only overlay of one anaconda file: enable_service keeps
+    # systemctl's words (module processes drop helper output at birth) and
+    # tolerates a failed enable exactly when the unit is already wanted on
+    # the target's own filesystem — runs 18-24 died at a preset-enabled
+    # chronyd's redundant enable. The overlay file carries the reasoning.
+    _file_route(
+        "live-pyanaconda-service",
+        "installer/overlays/pyanaconda-core-service.py",
+        "/usr/lib64/python3.14/site-packages/pyanaconda/core/service.py",
+        0o644, profiles=LIVE_PROFILES,
+    ),
     InstallRoute(
         id="live-installer-payload",
         kind="tree",

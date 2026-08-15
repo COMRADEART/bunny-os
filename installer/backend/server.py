@@ -297,27 +297,55 @@ def _failure_replay(message: str) -> dict[str, Any]:
     # the conf drop-in (95-bunny-target.conf) points anaconda here for the
     # same reason — systemd's enable --root re-roots that symlink inside the
     # target. Run 23's replay through /mnt/sysroot is how this was learned.
+    #
+    # Every command runs as a transient unit via systemd-run: run 24 proved
+    # this sandboxed backend's own mount namespace lies about the target's
+    # mounts (it showed var and boot binds with no deployment root — a view
+    # no process in the host namespace ever had), so the replay asks PID 1
+    # to run the experiment where the modules actually live.
     sysroot = "/var/mnt/sysroot"
+    host = ["systemd-run", "--wait", "--pipe", "--collect", "--quiet"]
     replay: dict[str, Any] = {}
     match = re.search(r"Error (?:enabling|disabling) service (\S+?):", message)
     commands: dict[str, list[str]] = {
-        "mounts": ["findmnt", "-R", "-o", "TARGET,SOURCE,FSTYPE,OPTIONS",
-                   sysroot],
-        "wants": ["ls", "-la",
-                  f"{sysroot}/etc/systemd/system/multi-user.target.wants"],
+        "mounts": host + ["findmnt", "-R", "-o", "TARGET,SOURCE,FSTYPE,OPTIONS",
+                          sysroot],
+        "wants": host + ["ls", "-la",
+                         f"{sysroot}/etc/systemd/system/multi-user.target.wants"],
     }
     if match:
-        commands["enable"] = ["systemctl", "enable", match.group(1),
-                              "--root", sysroot]
+        commands["enable"] = host + ["systemctl", "enable", match.group(1),
+                                     "--root", sysroot]
     for name, command in commands.items():
         try:
             completed = subprocess.run(command, capture_output=True,
-                                       text=True, timeout=30)
+                                       text=True, timeout=60)
             replay[name] = {"exit": completed.returncode,
-                            "stdout": completed.stdout[-2000:],
-                            "stderr": completed.stderr[-2000:]}
+                            "stdout": completed.stdout[:2400],
+                            "stderr": completed.stderr[:2400]}
         except (OSError, subprocess.SubprocessError) as error:
             replay[name] = {"error": str(error)}
+
+    # The modules' own view: their mountinfo, read straight from /proc. The
+    # engine processes are the dbus-daemon's children; match them by the
+    # anaconda module path in their command line.
+    views: dict[str, str] = {}
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            cmdline = (entry / "cmdline").read_bytes()
+            if b"pyanaconda" not in cmdline and b"anaconda" not in cmdline:
+                continue
+            interesting = [line for line in
+                           (entry / "mountinfo").read_text().splitlines()
+                           if "sysroot" in line]
+            label = cmdline.replace(b"\x00", b" ").decode("utf-8",
+                                                          "replace")[:120]
+            views[f"{entry.name} {label}"] = "\n".join(interesting)[:2400]
+        except OSError:
+            continue
+    replay["moduleMounts"] = views
     return replay
 
 
