@@ -307,11 +307,17 @@ class Surface:
 
 
 def verify_target(surface: Surface, *, expected_size_gib: float, expected_model: str,
-                  tolerance_gib: float = 1.0) -> dict[str, Any]:
+                  expected_device: str, tolerance_gib: float = 1.0) -> dict[str, Any]:
     """§43. Establish that the disk about to be erased is the disposable one.
 
     Returns the option row for the target. Raises on anything ambiguous, and
     ambiguous includes "two disks that both look right".
+
+    The identity is the device path and the size. It was the model string,
+    and run 6 showed why that cannot carry the match: a virtio disk has no
+    model to report, so the surface truthfully said "Unknown model" about
+    the exact disk the harness created, and every disk on the machine said
+    the same words. The model stays enforced whenever the row reports one.
     """
     # Polled, not read once: the storage page fills its disk rows from the
     # backend's probe over the socket, and run 4 took its one look before any
@@ -321,7 +327,7 @@ def verify_target(surface: Surface, *, expected_size_gib: float, expected_model:
     def gather():
         rows = [row for row in surface.controls()
                 if row["role"] in {"radio button", "check box", "list item"} and row["name"]]
-        candidates = [row for row in rows if expected_model.lower() in row["name"].lower()]
+        candidates = [row for row in rows if expected_device.lower() in row["name"].lower()]
         media = [row for row in rows if "installation media" in row["name"].lower()
                  or "iso9660" in row["name"].lower()]
         return rows, candidates, media
@@ -340,12 +346,20 @@ def verify_target(surface: Surface, *, expected_size_gib: float, expected_model:
 
     if len(candidates) != 1:
         raise RuntimeError(
-            f"§43: expected exactly one disk matching {expected_model!r}, found "
+            f"§43: expected exactly one disk at {expected_device!r}, found "
             f"{len(candidates)}. Refusing to choose between disks that may hold data.")
 
     target = candidates[0]
     if not target["sensitive"]:
         raise RuntimeError(f"§43: the expected target is not selectable: {target['name']}")
+
+    if expected_model.lower() not in target["name"].lower():
+        if "unknown model" not in target["name"].lower():
+            raise RuntimeError(
+                f"§43: the disk at {expected_device} calls itself {target['name']!r}, "
+                f"not {expected_model!r}. Refusing a disk that is not what was promised.")
+        emit("model-unreported",
+             detail="the bus exposes no model string; identity carried by device and size")
 
     # The size is in the identity string that `storage.safety.disk_identity`
     # built, e.g. "QEMU HARDDISK — 80.0 GiB — /dev/vda". Parsed rather than
@@ -410,7 +424,8 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
     emit("stage", name="storage")
     target = verify_target(surface,
                            expected_size_gib=arguments.disk_gib,
-                           expected_model=arguments.disk_model)
+                           expected_model=arguments.disk_model,
+                           expected_device=arguments.disk_device)
     surface.activate(target)
     surface.advance(("Review what happens",))
 
@@ -546,6 +561,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--disk-gib", type=float, default=80.0)
     parser.add_argument("--disk-model", default="QEMU HARDDISK")
+    # The §43 identity: a single virtio disk is /dev/vda deterministically,
+    # and virtio reports no model string for the model check to carry.
+    parser.add_argument("--disk-device", default="/dev/vda")
     parser.add_argument("--display-name", default="Alex")
     parser.add_argument("--username", default="alex")
     parser.add_argument("--password", default="bunny-test-password")
