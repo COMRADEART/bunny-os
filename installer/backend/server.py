@@ -52,6 +52,7 @@ import threading
 import traceback
 from typing import Any, Callable, Mapping
 
+from installer.backend.anaconda import ExecutorUnavailable
 from installer.backend.service import AuthenticationError, BackendUnavailable, InstallerService
 
 __all__ = ["SOCKET_PATH", "ProtocolServer", "serve"]
@@ -204,7 +205,12 @@ class ProtocolServer:
         except AuthenticationError as error:
             self.on_event("refused", {"reason": str(error)})
             return self._error(str(error), kind="authentication")
-        except BackendUnavailable as error:
+        except (BackendUnavailable, ExecutorUnavailable) as error:
+            # An executor refusal is a sentence written for the person on the
+            # failure screen ("Anaconda refused the installation plan: …",
+            # always ending in what was not touched). Letting it fall through
+            # to the generic handler replaced that sentence with
+            # "the installer backend failed: ExecutorUnavailable".
             return self._error(str(error), kind="unavailable")
         except ValueError as error:
             return self._error(str(error), kind="invalid")

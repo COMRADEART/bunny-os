@@ -184,6 +184,18 @@ class AnacondaDBusExecutor:
     BOSS_SERVICE = "org.fedoraproject.Anaconda.Boss"
     BOSS_PATH = "/org/fedoraproject/Anaconda/Boss"
 
+    #: The Storage module, addressed directly. Run 17 proved why: the Boss's
+    #: `InstallWithTasks` returns tasks that "complete" against whatever storage
+    #: model the module holds, and a module that has never scanned a device and
+    #: never had a partitioning applied holds nothing — the run reported
+    #: completion over a 196 KB disk. Storage is choreographed here the same way
+    #: anaconda's own `pyanaconda/ui/lib/storage.py` does it: scan, configure,
+    #: validate, apply, and only then install. Tasks returned by this module
+    #: live on this bus name, not the Boss's.
+    STORAGE_SERVICE = "org.fedoraproject.Anaconda.Modules.Storage"
+    STORAGE_PATH = "/org/fedoraproject/Anaconda/Modules/Storage"
+    PARTITIONING_INTERFACE = "org.fedoraproject.Anaconda.Modules.Storage.Partitioning"
+
     def __init__(self, *, bus_address: str | None = None) -> None:
         self._bus_address = bus_address
         self._bus = None
@@ -317,6 +329,72 @@ class AnacondaDBusExecutor:
                 + ". No disk was touched."
             )
 
+        # The storage module now knows what the kickstart *wants*; it has not
+        # yet looked at what the machine *has*, and nothing connects the two on
+        # its own. Run 17 is the proof: without this choreography the install
+        # tasks ran against an empty storage model, reported completion, and
+        # left the disk at 196 KB. This is the sequence anaconda's own UI
+        # performs in `pyanaconda/ui/lib/storage.py::apply_partitioning`: scan
+        # the devices, let the kickstart-created partitioning schedule its
+        # actions against the real model, validate the plan, apply it — every
+        # step able to refuse while the disk is still untouched.
+        def storage_call(method: str, parameters=None):
+            return self._bus.call_sync(
+                self.STORAGE_SERVICE, self.STORAGE_PATH, self.STORAGE_SERVICE,
+                method, parameters, None, 0, 120_000, None)
+
+        try:
+            on_stage("Validating storage", "Scanning the machine's disks")
+            scan_task = storage_call("ScanDevicesWithTask").unpack()[0]
+            self._run_tasks([scan_task], on_stage=on_stage,
+                            service=self.STORAGE_SERVICE)
+
+            # Read fresh through Properties.Get rather than a proxy's cache:
+            # the list was populated by the kickstart read, after any proxy
+            # created at connect time took its snapshot.
+            created = self._bus.call_sync(
+                self.STORAGE_SERVICE, self.STORAGE_PATH,
+                "org.freedesktop.DBus.Properties", "Get",
+                GLib.Variant("(ss)", (self.STORAGE_SERVICE, "CreatedPartitioning")),
+                None, 0, 120_000, None).unpack()[0]
+            if not created:
+                raise ExecutorUnavailable(
+                    "the kickstart produced no partitioning; an installation "
+                    "with no layout writes nothing. No disk was touched.")
+            partitioning = created[-1]
+
+            on_stage("Validating storage", "Planning the partition layout")
+            configure_task = self._bus.call_sync(
+                self.STORAGE_SERVICE, partitioning, self.PARTITIONING_INTERFACE,
+                "ConfigureWithTask", None, None, 0, 120_000, None).unpack()[0]
+            self._run_tasks([configure_task], on_stage=on_stage,
+                            service=self.STORAGE_SERVICE)
+
+            validate_task = self._bus.call_sync(
+                self.STORAGE_SERVICE, partitioning, self.PARTITIONING_INTERFACE,
+                "ValidateWithTask", None, None, 0, 120_000, None).unpack()[0]
+            report_proxy = self._run_tasks([validate_task], on_stage=on_stage,
+                                           service=self.STORAGE_SERVICE)
+            verdict = report_proxy.call_sync(
+                "GetResult", None, 0, 60_000, None).unpack()[0]
+            layout_errors = [str(item) for item in verdict.get("error-messages", [])]
+            layout_warnings = [str(item) for item in verdict.get("warning-messages", [])]
+            if layout_warnings:
+                on_stage("Validating storage", "; ".join(layout_warnings)[:200])
+            if layout_errors:
+                raise ExecutorUnavailable(
+                    "the planned layout failed validation: "
+                    + "; ".join(layout_errors) + ". No disk was touched.")
+
+            storage_call("ApplyPartitioning", GLib.Variant("(o)", (partitioning,)))
+            on_stage("Validating storage", "Partition plan applied")
+        except ExecutorUnavailable:
+            raise
+        except Exception as error:                          # GLib.Error
+            raise ExecutorUnavailable(
+                f"the storage layout could not be prepared: {error}. "
+                "No disk was touched.") from error
+
         boss.call_sync("CollectRequirements", None, 0, 120_000, None)
         tasks = boss.call_sync("InstallWithTasks", None, 0, 120_000, None).unpack()[0]
         if not tasks:
@@ -335,19 +413,28 @@ class AnacondaDBusExecutor:
         line = value("line-number")
         return f"line {line}: {text}" if line else text
 
-    def _run_tasks(self, task_paths: Sequence[str], *, on_stage: Callable[[str, str], None]) -> None:
+    def _run_tasks(self, task_paths: Sequence[str], *,
+                   on_stage: Callable[[str, str], None],
+                   service: str | None = None):
         """Run each task to completion, reporting its own name as the stage.
 
         Anaconda's task names are the engine's truth about what is happening, so
         they are passed through rather than replaced. `backend.progress` maps
         them onto the seven phrases the person sees.
+
+        Tasks live on the bus name of the module that created them — the Boss's
+        for install tasks, the Storage module's for scan/configure/validate —
+        so the owner is a parameter. Returns the last task's proxy, because a
+        validation task's verdict is fetched with `GetResult` after `Finish`.
         """
         from gi.repository import Gio, GLib  # type: ignore
 
+        owner = service or self.BOSS_SERVICE
+        proxy = None
         for path in task_paths:
             proxy = Gio.DBusProxy.new_sync(
                 self._bus, Gio.DBusProxyFlags.NONE, None,
-                self.BOSS_SERVICE, path, "org.fedoraproject.Anaconda.Task", None)
+                owner, path, "org.fedoraproject.Anaconda.Task", None)
             name = proxy.get_cached_property("Name")
             label = name.unpack() if name is not None else path.rsplit("/", 1)[-1]
             on_stage(str(label), f"Running {label}")
@@ -376,6 +463,7 @@ class AnacondaDBusExecutor:
             # Finish re-raises whatever the task failed with, which is what
             # turns an installer error into this phase's failure screen.
             proxy.call_sync("Finish", None, 0, 60_000, None)
+        return proxy
 
 
 @dataclass
