@@ -113,7 +113,11 @@ class Surface:
                     "node": node,
                     "focusable": states.contains(self.Atspi.StateType.FOCUSABLE),
                     "sensitive": states.contains(self.Atspi.StateType.SENSITIVE),
-                    "checked": states.contains(self.Atspi.StateType.CHECKED),
+                    # A toggled ToggleButton reports PRESSED, a checked
+                    # CheckButton reports CHECKED - measured. Either is "this
+                    # option is the selected one".
+                    "checked": (states.contains(self.Atspi.StateType.CHECKED)
+                                or states.contains(self.Atspi.StateType.PRESSED)),
                 })
             except Exception:
                 continue
@@ -326,7 +330,8 @@ def verify_target(surface: Surface, *, expected_size_gib: float, expected_model:
     # page settles; two candidates is real ambiguity and refuses immediately.
     def gather():
         rows = [row for row in surface.controls()
-                if row["role"] in {"radio button", "check box", "list item"} and row["name"]]
+                if row["role"] in {"radio button", "check box", "list item", "toggle button"}
+                and row["name"]]
         candidates = [row for row in rows if expected_device.lower() in row["name"].lower()]
         media = [row for row in rows if "installation media" in row["name"].lower()
                  or "iso9660" in row["name"].lower()]
@@ -396,7 +401,7 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
     emit("stage", name="accessibility")
     if arguments.text_scale != 1.0:
         label = {1.25: "Large", 1.5: "Larger", 2.0: "Largest"}[arguments.text_scale]
-        surface.press(label, role="radio button")
+        surface.press(label, role="toggle button")
     if arguments.high_contrast:
         surface.press("High contrast", role="toggle button") if surface.find(
             name="High contrast", role="toggle button") else surface.press(

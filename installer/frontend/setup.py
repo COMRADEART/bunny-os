@@ -417,12 +417,19 @@ class _ScreenView:
         options = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         options.add_css_class("bunny-setup-options")
         group = None
+        # ToggleButton, not CheckButton, and it is an accessibility decision:
+        # on this GTK a CheckButton's accessible carries an Action interface
+        # with zero actions, so nothing action-based - the &#167;42 driver, or any
+        # assistive tool built on AT-SPI actions - can ever select one.
+        # Journey A run 8 retried for its full deadline against that. A grouped
+        # ToggleButton keeps the radio semantics and exposes 'click'; measured
+        # on the exact stack in both directions before this line changed.
         for option in field.options:
             if field.kind == "multi-choice":
-                button = Gtk.CheckButton(label=option.label)
+                button = Gtk.ToggleButton(label=option.label)
                 button.set_active(option.value in (field.value or []))
             else:
-                button = Gtk.CheckButton(label=option.label)
+                button = Gtk.ToggleButton(label=option.label)
                 if group is None:
                     group = button
                 else:
