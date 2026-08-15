@@ -8,6 +8,15 @@ case "${profile}" in
   *) echo "usage: $0 developer|recovery|shell|shell-test|beta" >&2; exit 2 ;;
 esac
 
+# The live build exports the installation payload into build/payload-oci and
+# the Containerfile's `COPY build` carries it onto the medium. None of the
+# profiles built HERE may ever see that export: a beta built with a previous
+# payload still in the context embeds it inside itself, the next live build
+# exports that beta as the new payload, and the medium grows by one nested
+# payload per iteration. Cleared before every non-live build; the .keep stays
+# because the build-input closure requires every route source to exist.
+find "$(git rev-parse --show-toplevel)/build/payload-oci" -mindepth 1 -not -name '.keep' -delete 2>/dev/null || true
+
 # One of the two channels in docs/PUBLIC_ALPHA_SCOPE.md §40. It is a label on
 # the build, not a profile: the Public Alpha ships the `beta` profile — the
 # installed desktop payload — with the channel set to `alpha`, because the
