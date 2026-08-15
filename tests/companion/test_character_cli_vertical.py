@@ -143,6 +143,11 @@ class CharacterCommandTests(unittest.TestCase):
         self.assertTrue(result["passed"], result["failures"])
         self.assertEqual(len(result["steps"]), 23)
         self.assertEqual(result["commercialProvider"], "none")
+        three_d = result["threeDimensionalRenderer"]
+        self.assertIsInstance(three_d, dict)
+        self.assertTrue(three_d["shipped"])
+        self.assertFalse(three_d["exercisedInThisSlice"])
+        self.assertNotIn("not implemented", json.dumps(result))
 
 
 class VerticalSliceAndPerformanceTests(unittest.TestCase):
@@ -189,6 +194,20 @@ class VerticalSliceAndPerformanceTests(unittest.TestCase):
         self.assertFalse(document["gtkWidgetsExercised"])
         for step in document["steps"]:
             self.assertIn(step.get("ok"), (True, None))
+
+    def test_the_slice_reports_the_shipped_3d_renderer_truthfully(self) -> None:
+        """The 3D renderer ships; a slice that does not exercise it says so.
+
+        This field read "not implemented" for two phases after the renderer
+        landed — evidence emitters must claim the rung they exercised, never
+        deny a capability that ships.
+        """
+        document = self.report.to_json()
+        three_d = document["threeDimensionalRenderer"]
+        self.assertIsInstance(three_d, dict)
+        self.assertTrue(three_d["shipped"])
+        self.assertFalse(three_d["exercisedInThisSlice"])
+        self.assertNotIn("not implemented", json.dumps(document))
 
     def test_performance_measurement_has_every_required_dimension_and_scope(self) -> None:
         package = validate_package_directory(default_character_path())
@@ -298,10 +317,11 @@ class BuildAndBoundaryTests(unittest.TestCase):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, source)
 
-    def test_no_3d_renderer_is_claimed_or_implemented(self) -> None:
+    def test_the_3d_renderer_lives_in_its_package_not_a_top_level_module(self) -> None:
         files = "\n".join(path.name for path in Path("companion/character").glob("*.py"))
         self.assertNotIn("3d_renderer", files.casefold())
         self.assertFalse(Path("companion/character/three_d_renderer.py").exists())
+        self.assertTrue(Path("companion/character/three_d/renderer.py").exists())
 
 
 if __name__ == "__main__":

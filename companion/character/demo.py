@@ -17,6 +17,7 @@ from .controller import CharacterRendererController
 from .defaults import default_character_path
 from .lipsync import LipSyncEvent, MouthShape
 from .mapper import StateMapperInput, map_character_state
+from .modes import DEFAULT_MODE
 from .package import validate_package_directory
 from .performance import measure_renderer_performance
 from .positioning import Display, PixelRect, Placement, place_character
@@ -30,6 +31,13 @@ class CharacterDemoReport:
     passed: bool = True
     failures: list[str] = field(default_factory=list)
     performance: dict[str, Any] | None = None
+    # The slice claims the rung it exercised, never a capability it did not
+    # probe: no GL context exists here, so 3D is shipped-but-unexercised.
+    three_d: dict[str, Any] = field(default_factory=lambda: {
+        "shipped": True,
+        "exercisedInThisSlice": False,
+        "validatedBy": "companion/character/three_d_slice.py",
+    })
 
     def record(self, number: int, name: str, ok: bool, **evidence: Any) -> None:
         self.steps.append({"step": number, "name": name, "ok": bool(ok), **evidence})
@@ -46,7 +54,7 @@ class CharacterDemoReport:
             "performance": self.performance,
             "network": "none",
             "commercialProvider": "none",
-            "threeDimensionalRenderer": "not implemented",
+            "threeDimensionalRenderer": self.three_d,
         }
 
 
@@ -69,6 +77,14 @@ def run_character_demo(
     )
     controller.load_package(package)
     report.record(3, "load the validated default package", bool(package.package_digest), package=package.to_json())
+    report.three_d = {
+        "shipped": True,
+        "exercisedInThisSlice": False,
+        "packageSupports3d": package.model is not None,
+        "defaultMode": DEFAULT_MODE.value,
+        "presentationExercised": Presentation.ANIMATED_2D.value,
+        "validatedBy": "companion/character/three_d_slice.py",
+    }
 
     static = StaticImageRenderer()
     static.load_package(package)

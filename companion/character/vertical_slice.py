@@ -121,7 +121,11 @@ class CharacterSliceReport:
             "network": "none",
             "provider": "none",
             "credentials": "none",
-            "threeDimensionalRenderer": "not implemented, not claimed",
+            "threeDimensionalRenderer": {
+                "shipped": True,
+                "exercisedInThisSlice": False,
+                "validatedBy": "companion/character/three_d_slice.py",
+            },
             "gtkWidgetsExercised": False,
         }
 
