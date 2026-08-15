@@ -22,8 +22,12 @@ def main() -> int:
     try:
         account = pwd.getpwnam(LIVE_USER)
     except KeyError:
+        # dialout: the §42 setup driver autostarts in this account's session and
+        # reports over /dev/ttyS0 (root:dialout 0660). Without the group every
+        # serial write is a swallowed EACCES and the qualification run is mute.
+        # Ephemeral account, live media only; on a real boot nothing writes.
         subprocess.run(
-            ["/usr/sbin/useradd", "--uid", "1000", "--create-home", "--shell", "/usr/bin/bash", "--comment", "Bunny OS Live Session", LIVE_USER],
+            ["/usr/sbin/useradd", "--uid", "1000", "--create-home", "--shell", "/usr/bin/bash", "--groups", "dialout", "--comment", "Bunny OS Live Session", LIVE_USER],
             check=True,
             env={"PATH": "/usr/sbin:/usr/bin", "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"},
         )

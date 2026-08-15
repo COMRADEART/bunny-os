@@ -381,26 +381,37 @@ def smbios_arguments() -> list[str]:
     # The root backend publishes this, because the sysfs entry below is mode
     # 0400 root and this runs as the live desktop user. Reading the sysfs entry
     # directly is kept as the path for a run started by hand as root.
+    #
+    # Polled rather than read once: this autostarts with the session, and the
+    # backend that publishes the file is a system unit with its own startup —
+    # a single read decides "ordinary boot" from whichever side of that race it
+    # landed on. Thirty seconds covers the race; a real boot has no marker to
+    # find and the poll ends with the same quiet exit it always had.
     published = Path("/run/bunny-setup/drive.args")
-    try:
-        value = published.read_text(encoding="utf-8").strip()
-        if value:
-            emit("driver-arguments", source=str(published), arguments=value)
-            return value.split()
-    except OSError:
-        pass
-
-    for entry in sorted(Path("/sys/firmware/dmi/entries").glob("11-*/raw")):
+    deadline = time.monotonic() + 30.0
+    while True:
         try:
-            raw = entry.read_bytes().decode("utf-8", "replace")
-        except OSError:
-            continue
-        for field in raw.split(chr(0)):
-            if "bunny.drive=" in field:
-                value = field.split("bunny.drive=", 1)[1].strip()
-                emit("smbios", arguments=value)
+            value = published.read_text(encoding="utf-8").strip()
+            if value:
+                emit("driver-arguments", source=str(published), arguments=value)
                 return value.split()
-    return []
+        except OSError:
+            pass
+
+        for entry in sorted(Path("/sys/firmware/dmi/entries").glob("11-*/raw")):
+            try:
+                raw = entry.read_bytes().decode("utf-8", "replace")
+            except OSError:
+                continue
+            for field in raw.split(chr(0)):
+                if "bunny.drive=" in field:
+                    value = field.split("bunny.drive=", 1)[1].strip()
+                    emit("smbios", arguments=value)
+                    return value.split()
+
+        if time.monotonic() >= deadline:
+            return []
+        time.sleep(0.5)
 
 
 def main() -> int:
