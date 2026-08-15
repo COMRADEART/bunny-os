@@ -293,17 +293,22 @@ def _failure_replay(message: str) -> dict[str, Any]:
     everything. The mount table and the wants directory come along because
     a --root enable is pure file work: whatever is wrong is visible there.
     """
+    # The real path, symlink-free: /mnt is a symlink on a bootc medium, and
+    # the conf drop-in (95-bunny-target.conf) points anaconda here for the
+    # same reason — systemd's enable --root re-roots that symlink inside the
+    # target. Run 23's replay through /mnt/sysroot is how this was learned.
+    sysroot = "/var/mnt/sysroot"
     replay: dict[str, Any] = {}
     match = re.search(r"Error (?:enabling|disabling) service (\S+?):", message)
     commands: dict[str, list[str]] = {
         "mounts": ["findmnt", "-R", "-o", "TARGET,SOURCE,FSTYPE,OPTIONS",
-                   "/mnt/sysroot"],
+                   sysroot],
         "wants": ["ls", "-la",
-                  "/mnt/sysroot/etc/systemd/system/multi-user.target.wants"],
+                  f"{sysroot}/etc/systemd/system/multi-user.target.wants"],
     }
     if match:
         commands["enable"] = ["systemctl", "enable", match.group(1),
-                              "--root", "/mnt/sysroot"]
+                              "--root", sysroot]
     for name, command in commands.items():
         try:
             completed = subprocess.run(command, capture_output=True,

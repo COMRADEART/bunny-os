@@ -629,6 +629,13 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "installer/config/selinux-live.conf",
         "/etc/selinux/config", 0o644, profiles=LIVE_PROFILES,
     ),
+    # /mnt is a symlink on a bootc medium and systemd's enable --root
+    # re-roots it inside the target (runs 18-23). Anaconda gets real paths.
+    _file_route(
+        "live-anaconda-target",
+        "installer/config/anaconda-target-live.conf",
+        "/etc/anaconda/conf.d/95-bunny-target.conf", 0o644, profiles=LIVE_PROFILES,
+    ),
     InstallRoute(
         id="live-installer-payload",
         kind="tree",
