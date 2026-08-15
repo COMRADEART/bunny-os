@@ -191,6 +191,13 @@ while (( SECONDS < deadline )); do
 done
 kill "${shots_pid}" "${grub_pid}" 2>/dev/null
 
+# The guest has reported its outcome; power the machine off before anything
+# reads the disk. Run 25 completed and the verifier still failed the gate,
+# because the still-running qemu held the image's write lock and qemu-img
+# refused to open it — the machine must be off before its disk is evidence.
+kill "${qemu_pid}" 2>/dev/null
+wait "${qemu_pid}" 2>/dev/null
+
 echo "--- driver events ---"
 grep -a 'BUNNY-INSTALL' "${log}" | tail -40
 
