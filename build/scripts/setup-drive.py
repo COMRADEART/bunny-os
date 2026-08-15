@@ -223,6 +223,43 @@ class Surface:
         raise last if last is not None else TimeoutError(
             f"timed out waiting for any {role} named {names!r}")
 
+    def fingerprint(self) -> str:
+        """What the page is, as its control roster. Cheap and comparable."""
+        return "|".join(f"{row['role']}:{row['name']}" for row in self.controls())
+
+    def advance(self, names: tuple[str, ...], *, role: str = "button") -> None:
+        """Press until the page actually turns.
+
+        The action having fired is not the page having changed: runs 4 and 5
+        each ended with the driver's stage counter two pages ahead of the
+        screen, because a stale accessible from a page already left accepts
+        the action and nothing moves. So navigation is judged by the one
+        thing that cannot lie about it - the control roster changing - and
+        re-pressed until it does or the deadline refuses.
+        """
+        before = self.fingerprint()
+        deadline = time.time() + self.timeout
+        pressed = 0
+        while time.time() < deadline:
+            for name in names:
+                row = self.find(name=name, role=role)
+                if row is None or not row["sensitive"]:
+                    continue
+                try:
+                    self.activate(row)
+                    pressed += 1
+                except RuntimeError:
+                    continue
+                break
+            time.sleep(0.7)
+            now = self.fingerprint()
+            if pressed and now != before:
+                emit("page-turned", presses=pressed,
+                     shows=[part for part in now.split("|")[:6]])
+                return
+        raise TimeoutError(
+            f"pressed {names!r} {pressed} times and the page never changed")
+
     def wait_for_text(self, needle: str, what: str) -> str:
         """The screen text once ``needle`` is in it. A page's text renders
         after the click that navigated to it; a single read decides from
@@ -338,7 +375,7 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
     surface.wait_for_window()
 
     emit("stage", name="welcome")
-    surface.press("Get started")
+    surface.advance(("Get started",))
 
     # §8: accessibility is the second screen, and the harness sets what the
     # journey asked for there rather than through a settings back door.
@@ -354,35 +391,45 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
         row = surface.find(name="Reduce motion", role="switch")
         if row:
             surface.activate(row)
-    surface.press("Continue")
+    surface.advance(("Continue",))
 
     for stage in ("language_region", "keyboard", "network"):
         emit("stage", name=stage)
-        surface.press_first(("Continue without network", "Continue"))
+        # The keyboard page asks for proof the layout types what it says.
+        # Satisfied whenever its check field is on screen, harmless when the
+        # page never asks - the stage name cannot be trusted to know which
+        # page is really current, but the field's presence can.
+        check = surface.field_named("Type here to check it")
+        if check is not None:
+            interface = check["node"].get_editable_text_iface()
+            if interface is not None:
+                surface.Atspi.EditableText.set_text_contents(interface, "bunny layout check")
+                emit("typed", field=check["name"], characters=18)
+        surface.advance(("Continue without network", "Continue"))
 
     emit("stage", name="storage")
     target = verify_target(surface,
                            expected_size_gib=arguments.disk_gib,
                            expected_model=arguments.disk_model)
     surface.activate(target)
-    surface.press("Review what happens")
+    surface.advance(("Review what happens",))
 
     emit("stage", name="encryption")
     if arguments.passphrase:
         surface.type_into("Passphrase", arguments.passphrase)
         surface.type_into("Passphrase again", arguments.passphrase)
-    surface.press("Continue")
+    surface.advance(("Continue",))
 
     emit("stage", name="account")
     surface.type_into("Your name", arguments.display_name)
     surface.type_into("Username", arguments.username)
     surface.type_into("Password", arguments.password)
     surface.type_into("Password again", arguments.password)
-    surface.press("Continue")
+    surface.advance(("Continue",))
 
     for stage in ("privacy", "appearance", "companion", "applications"):
         emit("stage", name=stage)
-        surface.press_first(("Skip apps", "Continue"))
+        surface.advance(("Skip apps", "Continue"))
 
     emit("stage", name="review")
     # Polled like every other page: the consequence sentence renders after the
@@ -392,7 +439,7 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
         "will be erased", "§22: the review screen to state the disk consequence")
     emit("review-consequence", text=[line for line in screen.splitlines()
                                      if "will be erased" in line][:1])
-    surface.press("Install Bunny OS")
+    surface.advance(("Install Bunny OS",))
 
     emit("stage", name="confirm_erase")
     import re
@@ -423,7 +470,7 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
 
     surface.type_into(f"Type {phrase.group(1)} to confirm", phrase.group(1))
     time.sleep(1.0)
-    surface.press("Erase")
+    surface.advance(("Erase",))
 
     emit("stage", name="installing")
     deadline = time.time() + arguments.install_timeout
