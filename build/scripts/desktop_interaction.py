@@ -974,6 +974,82 @@ def approval_buttons(user: str, environment: list[str]) -> dict:
         return {"ok": False, "error": f"{type(error).__name__}: {error}"}
 
 
+_ACTIVATE_PROGRAM = r'''
+"""Find one named control anywhere on the desktop and invoke its action.
+
+Unlike the shell-only walks, this searches every AT-SPI application: the
+first-run wizard is a GTK app, and driving it is the reason this exists. The
+walk stops at the first name match (optionally constrained to a named
+ancestor) and invokes the control's first action — for a GTK button that is
+`click`, delivered by the toolkit itself rather than by synthetic pointer
+coordinates that would break on a moved window.
+"""
+import json, sys
+import gi
+gi.require_version("Atspi", "2.0")
+from gi.repository import Atspi
+
+Atspi.init()
+
+wanted = sys.argv[1]
+within = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else None
+outcome = {"name": wanted, "within": within, "found": False, "activated": False}
+
+def walk(node, depth, maximum, ancestors=()):
+    if depth > maximum or outcome["activated"] or outcome.get("error"):
+        return
+    try:
+        count = node.get_child_count()
+    except Exception:
+        return
+    for index in range(count):
+        if outcome["activated"] or outcome.get("error"):
+            return
+        try:
+            child = node.get_child_at_index(index)
+        except Exception:
+            continue
+        if child is None:
+            continue
+        try:
+            name = child.get_name() or ""
+        except Exception:
+            continue
+        if name == wanted and (within is None or within in ancestors):
+            outcome["found"] = True
+            try:
+                outcome["role"] = child.get_role_name()
+                outcome["path"] = list(ancestors)[:6]
+                action = child.get_action_iface()
+                if action is not None and action.get_n_actions() > 0:
+                    outcome["action"] = action.get_action_name(0)
+                    outcome["activated"] = bool(action.do_action(0))
+                else:
+                    outcome["error"] = "the control has no action interface"
+            except Exception as error:
+                outcome["error"] = f"{type(error).__name__}: {error}"[:200]
+            return
+        walk(child, depth + 1, maximum, ancestors + ((name,) if name else ()))
+
+desktop = Atspi.get_desktop(0)
+for index in range(desktop.get_child_count()):
+    application = desktop.get_child_at_index(index)
+    if application is None:
+        continue
+    walk(application, 0, 14, (application.get_name() or "",))
+    if outcome["activated"] or outcome.get("error"):
+        break
+
+print(json.dumps(outcome))
+'''
+
+
+def activate_control(name: str, within: str | None, user: str,
+                     environment: list[str]) -> dict:
+    """Find one named control in any application and invoke its action."""
+    return _as_user_python(_ACTIVATE_PROGRAM, [name, within or ""], user, environment)
+
+
 def task_trace(user: str, environment: list[str]) -> dict:
     """Every task the runtime knows about, and the last events of each."""
     return _as_user_python(_TASK_TRACE_PROGRAM, [], user, environment)

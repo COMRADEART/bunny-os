@@ -1,0 +1,20 @@
+[
+ {"command": "system", "label": "system-before-walk", "timeout": 240},
+
+ {"command": "activate", "name": "Get started", "label": "step-1", "sleep": 2},
+ {"command": "activate", "name": "Continue", "label": "step-2", "sleep": 2},
+ {"command": "activate", "name": "Looks good", "label": "step-3", "sleep": 2},
+ {"command": "activate", "name": "Skip — I'll type", "label": "step-4-skip-mic",
+  "sleep": 2},
+ {"command": "activate", "name": "Skip — no sound", "label": "step-5-skip-sound",
+  "sleep": 2},
+ {"command": "activate", "name": "Set this up later", "label": "step-6-skip",
+  "sleep": 2},
+ {"command": "activate", "name": "Continue", "label": "step-7", "sleep": 2},
+ {"command": "activate", "name": "Skip — local only", "label": "step-8-skip",
+  "sleep": 2},
+ {"command": "activate", "name": "Understood", "label": "step-9", "sleep": 2},
+ {"command": "activate", "name": "Finish", "label": "step-10-finish", "sleep": 3},
+
+ {"command": "system", "label": "system-after-walk", "timeout": 240}
+]

@@ -411,6 +411,14 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 # desktop_interaction._APPROVAL_BUTTONS_PROGRAM for why this
                 # exists beside `controls` rather than replacing it.
                 answer["buttons"] = desktop_interaction.approval_buttons(user, environment)
+            elif verb == "activate":
+                # One named control, activated through its own AT-SPI action
+                # — any application, not just the shell. The first-run wizard
+                # walk is driven with this.
+                answer["activate"] = desktop_interaction.activate_control(
+                    str(request.get("name", "")),
+                    str(request.get("within", "")) or None,
+                    user, environment)
             elif verb == "task-trace":
                 # Which event was written last. "Thinking…" for ever is a
                 # stopped event stream, and the stream is the only thing that
@@ -545,6 +553,12 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                     "appliedState": run(
                         ["/usr/bin/sudo", "-u", user, "-H", "cat",
                          f"/var/home/{user}/.local/state/bunny-os/applied.json"],
+                        timeout=5),
+                    # Present only after the wizard's Finish: the unit's own
+                    # ConditionPathExists gate, read as evidence.
+                    "firstRunMarker": run(
+                        ["/usr/bin/sudo", "-u", user, "-H", "ls", "-l",
+                         f"/var/home/{user}/.local/state/bunny-os/first-run-complete"],
                         timeout=5),
                     # The companion service's settings root: StateDirectory=
                     # in bunny-companion.service, i.e. the user's state dir.
