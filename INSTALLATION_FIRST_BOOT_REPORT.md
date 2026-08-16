@@ -48,3 +48,21 @@ first-run experience, and the personalization handoff
 (`/var/lib/bunny-setup/choices.json`, absent — see the runtime report's open
 findings) remain NOT ESTABLISHED. One disk (journey A's) was boot-tested;
 journeys B and C's disks were verified from outside but not boot-cycled.
+
+## The old encrypted-first-boot FAIL, revisited on this disk
+
+`ISQ-20260801-encrypted-first-boot-001` failed on two serial-console
+markers: `Reached target …` and `Finished … Bunny OS boot health check`,
+both "absent from the complete log" on a `bootc install`-provisioned disk of
+archive `0258f92a`. On the journey-installed disk, read from the journal
+rather than the serial console, **both markers are present on both boots**:
+`multi-user.target` and `graphical.target` reached, and
+`bunny-health-check.service` finished with `"healthy": true` and every
+required probe true (broker socket, state boundaries writable, network
+stack, root deployment, user homes). The substance of that FAIL does not
+reproduce on the product's real install path.
+
+The matrix row stays FAIL deliberately: it binds to the installed-system
+harness and its context, which the working tree has drifted past. Clearing
+it takes a fresh installed-system round under a new context — future work,
+now with strong evidence about the expected outcome — not an edit.

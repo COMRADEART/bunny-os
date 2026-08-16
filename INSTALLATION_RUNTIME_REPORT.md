@@ -90,9 +90,11 @@ expectation. The evidence README records this correction in full.
   processes have no log handlers. Failure evidence comes from the backend's
   own capture instead (`INSTALLATION_FAILURE_RECOVERY_REPORT.md`).
 - The `encryption/luks-password-unlock` matrix row remains FAIL: it is bound
-  to the installed-system harness's stricter markers and awaits an ISQ re-run
-  on a journey-installed disk. The journey first-boot evidence covers
-  passphrase unlock to `graphical.target`, not those markers.
+  to the installed-system harness and its (now-drifted) context, and clearing
+  it takes a fresh installed-system round. Its *substance* no longer
+  reproduces: both markers the FAIL recorded as absent — target reached and
+  the boot health check finished healthy — are present on both boots of the
+  journey-installed disk (`INSTALLATION_FIRST_BOOT_REPORT.md`).
 - Journey A's exact medium was rebuilt away before its digest was archived;
   every property it demonstrated is re-proven by B and C on the preserved
   medium (sha256 `080b5e07…`, `iso-digest.txt`).
