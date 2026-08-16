@@ -532,6 +532,13 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                     "choicesOnTarget": run(
                         ["cat", "/var/lib/bunny-setup/choices.json"], timeout=5),
                     "sessions": run(["loginctl", "list-sessions"], timeout=15),
+                    # Who is holding shutdown. The Bunny session ignored an
+                    # ACPI power-button press that plain GNOME honoured
+                    # (login-8d/9 vs 1..7); logind defers while a block
+                    # inhibitor on handle-power-key exists, and this names
+                    # the holder rather than leaving it to theory.
+                    "inhibitors": run(["systemd-inhibit", "--list",
+                                       "--no-pager"], timeout=15),
                     "userUnits": run(
                         [*as_user_session, "systemctl", "--user", "--no-pager",
                          "list-units", "bunny-*"], timeout=20),
