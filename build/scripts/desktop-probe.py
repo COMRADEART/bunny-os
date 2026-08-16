@@ -438,6 +438,41 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 # of the accessibility tree. This is how the host watches the state
                 # machine it just started by typing.
                 answer["character"] = desktop_interaction.character_state(user, environment)
+            elif verb == "settings":
+                # The user settings surface, driven through the product's own
+                # CLI as the session user — the same single write path the
+                # window uses, so what this changes is what the next boot
+                # reads. action: "show" (default) or "set" with
+                # section/field/value.
+                argv = ["/usr/bin/bunny-os", "companion", "settings"]
+                if str(request.get("action", "show")) == "set":
+                    argv += ["set", str(request.get("section", "")),
+                             str(request.get("field", "")),
+                             str(request.get("value", ""))]
+                else:
+                    argv += ["show"]
+                answer["settings"] = run(argv, user=user, timeout=60)
+            elif verb == "renderer":
+                # The renderer decision surface, read-only, as the user.
+                view = "explain" if request.get("view") == "explain" else "status"
+                answer["renderer"] = run(
+                    ["/usr/bin/bunny-os", "--json", "companion", "renderer", view],
+                    user=user, timeout=60)
+            elif verb == "character-policy":
+                # The default-character decision, and Phase 3's capability
+                # lever: --eligible reduces what the machine permits through
+                # the product's own mechanism, and --restore is the recovery
+                # path the phase exists to prove. dryRun defaults to true so
+                # a probe request that forgot to say changes nothing.
+                argv = ["/usr/bin/bunny-os", "--json", "companion", "character-policy"]
+                if request.get("dryRun", True):
+                    argv.append("--dry-run")
+                eligible = str(request.get("eligible", ""))
+                if eligible:
+                    argv += ["--eligible", eligible]
+                if request.get("restore"):
+                    argv.append("--restore")
+                answer["characterPolicy"] = run(argv, user=user, timeout=60)
             elif verb == "system":
                 # Phase 3's persistence evidence, read from the RUNNING system:
                 # the hostname and locale as systemd reports them now, the files
