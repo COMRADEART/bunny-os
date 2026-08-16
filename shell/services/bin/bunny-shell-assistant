@@ -765,6 +765,17 @@ def _wait_for_speech(
                     return "cancelled", str(event.get("detail") or "")
                 if kind in ("speech_failed", "speech_rejected"):
                     return "failed", str(event.get("detail") or "speech output failed")
+                if kind == "speech_degraded" and event.get("disposition"):
+                    # A mid-utterance degradation carries no disposition and the
+                    # utterance carries on — that one is NOT terminal (treating
+                    # it so once froze a mouth for 146 frames). A *settled*
+                    # degradation does carry one: the worker has decided the
+                    # caption is the whole of the output. Waiting past it is
+                    # what made "no provider available" indistinguishable from
+                    # a 60-second hang — measured on the Stage 2 artifact, the
+                    # spoken answer arrived and the desktop then sat silent for
+                    # the rest of this loop's deadline.
+                    return "degraded", str(event.get("detail") or "speech degraded to captions")
         time.sleep(0.1)
     return "failed", "speech output did not finish within its time limit"
 
@@ -970,6 +981,11 @@ def watch(
                     # Speech is optional; the task remains a success and the
                     # visible answer remains authoritative.
                     emit("speech_error", reason=detail, taskId=task_id)
+                elif speech_disposition == "degraded":
+                    # The worker settled on captions-only and said why. That is
+                    # a fact the person deserves promptly, not an error: the
+                    # answer on screen is complete.
+                    emit("warning", reason=detail, taskId=task_id)
                 emit("phase", phase="success", statusText="Done", taskId=task_id)
             emit("finished", phase=phase, taskId=task_id)
             return 0

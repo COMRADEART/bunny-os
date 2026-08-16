@@ -14,6 +14,7 @@ import argparse
 import importlib.machinery
 import importlib.util
 import os
+import time
 from pathlib import Path
 from types import SimpleNamespace
 import tempfile
@@ -1057,6 +1058,58 @@ class ShellVoiceBoundaryTests(unittest.TestCase):
         self.assertIn("Show all ${this._fileResultItems.length} results", panel)
         self.assertIn("bunny-assistant-file-results-scroll", panel)
         self.assertIn("max-height: 132px", css)
+
+
+class _ScriptedStatusConnection:
+    """A companion that answers ``voice_status`` from a script."""
+
+    def __init__(self, events: list) -> None:
+        self._events = events
+
+    def call(self, operation: str, params: object) -> dict:
+        assert operation == "voice_status"
+        return {"recentEvents": list(self._events)}
+
+
+class WaitForSpeechDispositionTests(unittest.TestCase):
+    """The wait must end when the worker has already decided.
+
+    On the Stage 2 artifact, "every provider unavailable" produced the text
+    answer immediately and then sixty seconds of silence: the worker settled
+    ``degraded-to-captions`` and said so, and ``_wait_for_speech`` was not
+    listening for that shape — only for finished/cancelled/failed — so it sat
+    out its whole deadline. A *mid-utterance* degradation carries no
+    disposition and must still not end the wait; treating it as terminal is
+    the 146-frame frozen-mouth defect of the voice-closure phase, inverted.
+    """
+
+    def test_a_settled_degradation_ends_the_wait_promptly(self) -> None:
+        bridge = load_bridge()
+        connection = _ScriptedStatusConnection([{
+            "kind": "speech_degraded", "requestId": "speech-degraded-settle",
+            "disposition": "degraded-to-captions",
+            "detail": "no eligible provider; the caption is the whole of the output",
+        }])
+        started = time.monotonic()
+        disposition, detail = bridge._wait_for_speech(
+            connection, "speech-degraded-settle", deadline=time.monotonic() + 30.0,
+        )
+        self.assertEqual(disposition, "degraded")
+        self.assertIn("caption", detail)
+        self.assertLess(time.monotonic() - started, 5.0)
+
+    def test_a_mid_utterance_degradation_does_not_end_the_wait(self) -> None:
+        bridge = load_bridge()
+        connection = _ScriptedStatusConnection([
+            {"kind": "speech_degraded", "requestId": "speech-carries-on",
+             "detail": "one chunk fell back", "stage": "synthesis"},
+            {"kind": "speech_finished", "requestId": "speech-carries-on",
+             "disposition": "played"},
+        ])
+        disposition, _ = bridge._wait_for_speech(
+            connection, "speech-carries-on", deadline=time.monotonic() + 30.0,
+        )
+        self.assertEqual(disposition, "finished")
 
 
 if __name__ == "__main__":

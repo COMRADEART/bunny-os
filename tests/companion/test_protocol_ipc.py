@@ -26,6 +26,7 @@ from companion.protocol import (
     CompanionClientError,
     CompanionServer,
     DuplicateRuntime,
+    ProtocolError,
     default_endpoint_path,
 )
 from companion.service import CompanionService, ServiceOptions
@@ -688,6 +689,59 @@ class EndpointLocationTests(unittest.TestCase):
                 os.environ.pop("XDG_RUNTIME_DIR", None)
             else:
                 os.environ["XDG_RUNTIME_DIR"] = previous
+
+
+class OptionalIdentifierTests(unittest.TestCase):
+    """An optional identifier's declared default must be sendable.
+
+    ``voice_cancel`` declares ``requestId``/``cancellationToken`` as optional
+    identifiers whose default is the empty string — and the shipped bridge
+    sends those fields explicitly, empty, beside a real ``taskId``. Until the
+    Stage 2 voice qualification the validator refused that envelope with
+    "requestId is not a usable identifier", so every interruption the desktop
+    ever requested — the on-screen stop control included — was a no-op and the
+    audio played to its end. These tests pin the repaired contract: empty means
+    absent for an optional identifier, and a *required* identifier still
+    refuses to be empty.
+    """
+
+    def test_voice_cancel_accepts_explicit_empty_optional_identifiers(self) -> None:
+        resolved = OPERATIONS["voice_cancel"].validate({
+            "requestId": "", "taskId": "task-stage2-cancel", "cancellationToken": "",
+        })
+        self.assertEqual(resolved["taskId"], "task-stage2-cancel")
+        self.assertEqual(resolved["requestId"], "")
+        self.assertEqual(resolved["cancellationToken"], "")
+
+    def test_speech_input_cancel_accepts_an_empty_token(self) -> None:
+        resolved = OPERATIONS["speech_input_cancel"].validate({
+            "requestId": "speechreq-stage2", "cancellationToken": "",
+        })
+        self.assertEqual(resolved["requestId"], "speechreq-stage2")
+        self.assertEqual(resolved["cancellationToken"], "")
+
+    def test_a_required_identifier_still_refuses_to_be_empty(self) -> None:
+        with self.assertRaisesRegex(ProtocolError, "requestId is not a usable identifier"):
+            OPERATIONS["speech_input_stop"].validate({"requestId": ""})
+
+    def test_a_present_optional_identifier_is_still_validated_when_non_empty(self) -> None:
+        with self.assertRaisesRegex(ProtocolError, "not a usable identifier"):
+            OPERATIONS["voice_cancel"].validate({
+                "requestId": "not\nan id", "taskId": "task-stage2-cancel",
+            })
+
+
+class VoiceCancelDispatchTests(ServiceTestCase):
+    def test_the_bridge_shaped_cancel_reaches_the_worker(self) -> None:
+        # Exactly the document bunny-shell-assistant sends: empty optional
+        # identifiers spelled out beside the task id. Nothing is speaking, so
+        # the answer reports an empty cancellation — the point is that it is
+        # an *answer*, not a validation refusal.
+        result = self.client.call("voice_cancel", {
+            "requestId": "", "taskId": "task-stage2-never-spoke",
+            "cancellationToken": "",
+        })
+        self.assertIsInstance(dict(result), dict)
 
 
 if __name__ == "__main__":  # pragma: no cover
