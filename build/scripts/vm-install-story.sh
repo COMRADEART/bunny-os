@@ -93,7 +93,12 @@ case "${journey}" in
   b) drive_args="--text-scale=2.0 --high-contrast --reduced-motion --passphrase=bunny-disk-passphrase"
      verify_passphrase="bunny-disk-passphrase"
      width="${BUNNY_INSTALL_WIDTH:-1024}"; height="${BUNNY_INSTALL_HEIGHT:-768}" ;;
-  c) drive_args=""; verify_passphrase="" ;;
+  # Not empty, deliberately: an empty bunny.drive= is indistinguishable from
+  # no marker at all, and the driver treats that as an ordinary person's boot
+  # and exits — journey C spent fifteen minutes at the welcome screen with
+  # nobody driving. Passing the default text scale explicitly is the
+  # sentence "drive this journey, change nothing".
+  c) drive_args="--text-scale=1.0"; verify_passphrase="" ;;
   d) drive_args="--expect-refusal"; verify_passphrase="" ;;
   *) echo "unknown journey: ${journey} (expected a, b, c or d)" >&2; exit 2 ;;
 esac
