@@ -140,6 +140,10 @@ def main() -> int:
     parser.add_argument("--journey", default="skip",
                         choices=("skip", "granted", "denied", "failing"),
                         help="drive the image journey through the shell's own Trust surface")
+    parser.add_argument("--system-report", action="store_true",
+                        help="record the guest's runtime hostname, locale, "
+                             "session list, Bunny user units and persisted "
+                             "settings (the Phase 3 persistence evidence)")
     arguments = parser.parse_args()
 
     steps: list[dict] = []
@@ -180,6 +184,15 @@ def main() -> int:
     report["controlCount"] = ready.get("controlCount")
     print(f"the guest exposes {ready.get('controlCount')} named controls; "
           f"targets: {', '.join(sorted(targets)) or 'none'}")
+
+    if arguments.system_report:
+        # Raw command results from the running guest — hostnamectl, localectl,
+        # the persisted files, the session list and the Bunny user units. Taken
+        # before any interaction so the record shows the system as login left
+        # it, not as the journey reshaped it.
+        answer = control.ask({"command": "system", "label": "system-report"},
+                             timeout=180)
+        report["system"] = (answer or {}).get("system")
 
     try:
         qmp = Qmp(arguments.qmp)

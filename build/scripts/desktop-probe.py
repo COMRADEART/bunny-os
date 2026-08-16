@@ -438,6 +438,47 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 # of the accessibility tree. This is how the host watches the state
                 # machine it just started by typing.
                 answer["character"] = desktop_interaction.character_state(user, environment)
+            elif verb == "system":
+                # Phase 3's persistence evidence, read from the RUNNING system:
+                # the hostname and locale as systemd reports them now, the files
+                # they persist in, the §45 handoff document, and what first run
+                # recorded and the session actually holds. Every entry is a raw
+                # command result — nothing here interprets, so a value that
+                # differs from its file is visible as exactly that.
+                import pwd as _pwd
+
+                try:
+                    uid = _pwd.getpwnam(user).pw_uid
+                except KeyError:
+                    uid = 1000
+                as_user_session = [
+                    "/usr/bin/sudo", "-u", user, "-H", "/usr/bin/env",
+                    f"XDG_RUNTIME_DIR=/run/user/{uid}",
+                    f"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{uid}/bus",
+                ]
+                answer["system"] = {
+                    "hostnamectl": run(["hostnamectl"], timeout=15),
+                    "localectl": run(["localectl", "status"], timeout=15),
+                    "etcHostname": run(["cat", "/etc/hostname"], timeout=5),
+                    "etcLocaleConf": run(["cat", "/etc/locale.conf"], timeout=5),
+                    "etcVconsole": run(["cat", "/etc/vconsole.conf"], timeout=5),
+                    "choicesOnTarget": run(
+                        ["cat", "/var/lib/bunny-setup/choices.json"], timeout=5),
+                    "sessions": run(["loginctl", "list-sessions"], timeout=15),
+                    "userUnits": run(
+                        [*as_user_session, "systemctl", "--user", "--no-pager",
+                         "list-units", "bunny-*"], timeout=20),
+                    "appliedState": run(
+                        ["/usr/bin/sudo", "-u", user, "-H", "cat",
+                         f"/var/home/{user}/.local/state/bunny-os/applied.json"],
+                        timeout=5),
+                    # The companion service's settings root: StateDirectory=
+                    # in bunny-companion.service, i.e. the user's state dir.
+                    "companionSettings": run(
+                        ["/usr/bin/sudo", "-u", user, "-H", "cat",
+                         f"/var/home/{user}/.local/state/bunny-os/companion/settings.json"],
+                        timeout=5),
+                }
             elif verb == "done":
                 transcript.append(answer)
                 channel.send({"reply": answer})
