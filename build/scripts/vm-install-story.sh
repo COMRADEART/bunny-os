@@ -30,6 +30,8 @@
 #   BUNNY_INSTALL_ISO      the medium to boot (default: build/out/live/*.iso)
 #   BUNNY_JOURNEY          a|b|c|d  (§53). Default a.
 #   BUNNY_INSTALL_TIMEOUT  seconds for the whole install (default 3000)
+#   BUNNY_INSTALL_NET      none = no NIC at all (an offline-installation
+#                          evidence run); anything else keeps the user-mode NIC
 set -uo pipefail
 
 repository_root="$(git rev-parse --show-toplevel)"
@@ -104,6 +106,17 @@ case "${journey}" in
 esac
 echo "driver:  ${drive_args:-<no extra arguments>}"
 
+# Offline is a claim that has to be earned, not asserted: the offline evidence
+# run removes the NIC entirely, so nothing in the guest can quietly reach out
+# and the installation either completes from the medium alone or fails where
+# everyone can see it. The default keeps the user-mode NIC the interactive
+# journeys ran with.
+net_args=(-netdev user,id=net0 -device virtio-net-pci,netdev=net0)
+if [[ "${BUNNY_INSTALL_NET:-user}" == "none" ]]; then
+  net_args=(-nic none)
+  echo "network: none (offline evidence run)"
+fi
+
 qemu-system-x86_64 \
   -machine q35,accel=kvm:tcg \
   -cpu max -smp 4 -m 6144 \
@@ -116,7 +129,7 @@ qemu-system-x86_64 \
   -display none \
   -serial "file:${log}" \
   -qmp "unix:${qmp},server,nowait" \
-  -netdev user,id=net0 -device virtio-net-pci,netdev=net0 \
+  "${net_args[@]}" \
   -smbios "type=11,value=bunny.drive=${drive_args}" \
   -no-reboot &
 qemu_pid=$!
