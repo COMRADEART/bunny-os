@@ -68,7 +68,12 @@ After=graphical.target
 Wants=graphical.target
 
 [Service]
-Type=oneshot
+# exec, not oneshot: this probe serves a command queue for the life of the
+# guest. A oneshot is "activating" for its whole runtime, so systemd's start
+# timeout killed the harness channel 15m45s into every boot — measured on the
+# Stage 2 voice run, where it ended a session mid-case. Under exec the unit
+# is only "activating" through ExecStartPre, which the 300 s bound covers.
+Type=exec
 Environment=BUNNY_PROBE_USER=${user}
 # The probe waits for GNOME Shell to answer on its own; this is only the
 # delay before it starts asking, so a cold llvmpipe boot is not polled from
@@ -77,7 +82,7 @@ ExecStartPre=/usr/bin/sleep 45
 ExecStart=/usr/bin/python3 /etc/bunny-desktop-probe.py
 StandardOutput=journal+console
 StandardError=journal+console
-TimeoutStartSec=900
+TimeoutStartSec=300
 
 [Install]
 WantedBy=graphical.target
