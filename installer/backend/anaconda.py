@@ -49,6 +49,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import subprocess
 import tempfile
 import time
 from typing import Any, Callable, Mapping, Protocol, Sequence
@@ -455,6 +456,30 @@ class AnacondaDBusExecutor:
                 raise InstallationFailed(
                     "the installed system could not be unmounted cleanly: "
                     + self._flatten_dbus_error(error)) from error
+
+        # The teardown tasks deactivate what the modules own, but anaconda
+        # leaves the target *mounted* and relies on the reboot a person
+        # clicks to unmount it — run 27 completed, tore down, and still left
+        # a dirty ext4 journal with the last writes (the user account among
+        # them) committed but not checkpointed. This flow has no reboot, so
+        # the unmount is explicit. Through systemd-run, because this process
+        # runs inside a sandboxed unit whose own mount namespace is not the
+        # machine's: an umount here would edit a private view and change
+        # nothing. The paths are the ones the medium's conf drop-in
+        # (95-bunny-target.conf) gives anaconda.
+        for target in ("/var/mnt/sysroot", "/var/mnt/sysimage"):
+            completed = subprocess.run(
+                ["systemd-run", "--wait", "--pipe", "--collect", "--quiet",
+                 "umount", "--recursive", target],
+                capture_output=True, text=True, timeout=120)
+            output = (completed.stderr or "") + (completed.stdout or "")
+            if completed.returncode != 0 and "not mounted" not in output \
+                    and "no mount point" not in output:
+                raise InstallationFailed(
+                    f"the installed system could not be unmounted cleanly: "
+                    f"umount {target}: {output.strip()[:300]}")
+        subprocess.run(["systemd-run", "--wait", "--collect", "--quiet",
+                        "sync"], capture_output=True, timeout=120)
 
     @staticmethod
     def _flatten_dbus_error(error: Exception) -> str:

@@ -90,9 +90,21 @@ def guestfish(disk: Path, script: str, *, passphrase: str | None = None,
     """
     import os
 
-    command = ["guestfish", "--ro", "-a", str(disk)]
+    # No --ro: the caller hands this function a throwaway overlay (see
+    # main()), and the device must be writable inside the appliance so a
+    # dirty ext4 journal REPLAYS on mount. Run 27's disk carried its last
+    # writes — the user account among them — committed in the journal but
+    # not checkpointed; a strictly read-only reader mounted the past and
+    # reported the account missing from a disk that boots with it present.
+    # The replay lands in the overlay; the evidence disk is never written.
+    command = ["guestfish", "-a", str(disk)]
     lines = script.splitlines()
-    opens = [f"luks-open-ro {device} luks{index}"
+    # luks-open, not luks-open-ro: a read-only *mapping* blocks the journal
+    # replay even over a writable device — mount-ro then fails, the noload
+    # fallback serves the pre-replay past, and run 27's account was reported
+    # missing three-for-three from a disk that has it. The mapping's writes
+    # land in the same throwaway overlay as everything else.
+    opens = [f"luks-open {device} luks{index}"
              for index, device in enumerate(luks_devices)]
 
     keys = ""
@@ -100,20 +112,30 @@ def guestfish(disk: Path, script: str, *, passphrase: str | None = None,
     if luks_devices:
         command.insert(1, "--keys-from-stdin")
         keys = "".join((passphrase or "") + "\n" for _ in luks_devices)
-        environment = {**os.environ, "LIBGUESTFS_MEMSIZE": "2048"}
+        # argon2id on these disks costs 1 GiB per unlock. 2048 was measured
+        # to work and then measured to work *intermittently* — the same
+        # verifier run found the root through LUKS once and lost it on the
+        # next invocation, because a marginal appliance fails the KDF as
+        # "No key available with this passphrase" whenever memory luck runs
+        # out. 3072 gives the margin, and the retry below covers the rest.
+        environment = {**os.environ, "LIBGUESTFS_MEMSIZE": "3072"}
 
     for line in lines[:1] + opens + lines[1:]:
         command += line.split() + [":"]
     command = command[:-1]
 
-    try:
-        completed = subprocess.run(command, input=keys, capture_output=True,
-                                   text=True, timeout=900, env=environment)
-    except (OSError, subprocess.SubprocessError) as error:
-        return f"__ERROR__ {type(error).__name__}: {error}"
-    if completed.returncode != 0:
-        return f"__ERROR__ {completed.stderr.strip()[:400]}"
-    return completed.stdout
+    for attempt in (1, 2):
+        try:
+            completed = subprocess.run(command, input=keys, capture_output=True,
+                                       text=True, timeout=900, env=environment)
+        except (OSError, subprocess.SubprocessError) as error:
+            return f"__ERROR__ {type(error).__name__}: {error}"
+        if completed.returncode == 0:
+            return completed.stdout
+        if attempt == 1 and "No key available" in completed.stderr:
+            continue
+        break
+    return f"__ERROR__ {completed.stderr.strip()[:400]}"
 
 
 def _script(*lines: str) -> str:
@@ -336,7 +358,27 @@ def main() -> int:
     if arguments.expected and arguments.expected.is_file():
         expected = json.loads(arguments.expected.read_text(encoding="utf-8"))
 
-    result = inspect(arguments.disk, passphrase=arguments.passphrase, expected=expected)
+    # Every read goes through a throwaway qcow2 overlay: the guest that made
+    # the disk may have died with a dirty journal, and only a writable
+    # device lets the kernel replay it — into the overlay, never into the
+    # evidence. This is what the disk will look like the moment it boots.
+    import os
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="bunny-verify-") as scratch:
+        overlay = Path(scratch) / "read.qcow2"
+        created = subprocess.run(
+            ["qemu-img", "create", "-f", "qcow2",
+             "-b", str(arguments.disk.resolve()), "-F", "qcow2", str(overlay)],
+            capture_output=True, text=True)
+        if created.returncode != 0:
+            sys.stderr.write(f"could not build a read overlay: {created.stderr}\n")
+            return 3
+        # libguestfs runs its appliance through libvirt as its own user, and
+        # a 0700 scratch directory shuts that user out of the overlay it is
+        # supposed to write the journal replay into.
+        os.chmod(scratch, 0o755)
+        os.chmod(overlay, 0o666)
+        result = inspect(overlay, passphrase=arguments.passphrase, expected=expected)
     report = {
         "schemaVersion": 1,
         "note": "Read from the installed filesystem. `expected` is used only to know "
