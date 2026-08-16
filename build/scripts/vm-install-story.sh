@@ -28,7 +28,8 @@
 # agree, on either side of the boundary, and neither is "the harness said so".
 #
 #   BUNNY_INSTALL_ISO      the medium to boot (default: build/out/live/*.iso)
-#   BUNNY_JOURNEY          a|b|c|d  (§53). Default a.
+#   BUNNY_JOURNEY          a|b|c|d|e  (§53; e is Phase 3's full-document
+#                          journey). Default a.
 #   BUNNY_INSTALL_TIMEOUT  seconds for the whole install (default 3000)
 #   BUNNY_INSTALL_NET      none = no NIC at all (an offline-installation
 #                          evidence run); anything else keeps the user-mode NIC
