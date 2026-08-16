@@ -27,6 +27,8 @@
 #   BUNNY_LOGIN_TYPE_AT     LUKS typing delays (default "35 90")
 #   BUNNY_LOGIN_AT          seconds after boot to type the login (default 150)
 #   BUNNY_LOGIN_JOURNEY     desktop-drive journey (default skip)
+#   BUNNY_LOGIN_SESSION_SCRIPT  a phase3-session.py step file; when set it
+#                           replaces desktop-drive as the in-session driver
 #   BUNNY_LOGIN_INTERACT    0 = photograph only, no driver (default 1)
 set -uo pipefail
 
@@ -165,7 +167,17 @@ shot "t$(( elapsed + 19 ))-after-login"
 interaction_status=skipped
 if [[ "${interact}" == "1" ]]; then
   echo "--- the session, through the probe ---"
-  if python3 build/scripts/desktop-drive.py \
+  if [[ -n "${BUNNY_LOGIN_SESSION_SCRIPT:-}" ]]; then
+    if python3 build/scripts/phase3-session.py \
+        --control "${control}" \
+        --script "${BUNNY_LOGIN_SESSION_SCRIPT}" \
+        --output "${work}/interaction.json"; then
+      interaction_status=complete
+    else
+      interaction_status=failed
+      echo "the session driver reported a failure; see ${work}/interaction.json" >&2
+    fi
+  elif python3 build/scripts/desktop-drive.py \
       --journey "${journey}" \
       --system-report \
       --marker "/var/home/${user}/bunny-terminal-typed.txt" \
