@@ -144,14 +144,69 @@ class Applier:
                         "true" if choices.screen_reader else "false",
                         intent="screen reader", name="screenReader")
 
+    def _companion_setting(self, section: str, field: str, value: str) -> tuple[bool, str]:
+        """One write to the companion settings document, through its CLI.
+
+        The document at ``~/.local/state/bunny-os/companion/settings.json`` is
+        the single authority the window, the service and the CLI share; going
+        through ``bunny-os companion settings set`` uses the same guarded
+        read-modify-write they do rather than a second writer.
+        """
+        binary = shutil.which("bunny-os")
+        if binary is None:
+            return False, "bunny-os is not installed"
+        if self.dry_run:
+            # Not applied, same as _gsettings: a dry run changes nothing and
+            # must not be recorded as if it had.
+            return False, "dry run"
+        try:
+            completed = subprocess.run(
+                [binary, "companion", "settings", "set", section, field, value],
+                capture_output=True, text=True, timeout=20,
+            )
+        except (OSError, subprocess.SubprocessError) as error:
+            return False, f"{type(error).__name__}: {error}"[:200]
+        if completed.returncode == 0:
+            return True, f"{section}.{field} = {value}"
+        return False, (completed.stderr or completed.stdout).strip()[:200]
+
     def companion(self, choices: Choices) -> None:
-        self._gsettings("art.comrade.BunnyShell", "companion-mode",
-                        choices.companion_mode,
-                        intent=f"Bunny presentation: {choices.companion_mode}",
-                        name="companionMode")
-        self._gsettings("art.comrade.BunnyShell", "companion-captions",
-                        "true" if choices.companion_captions else "false",
-                        intent="captions", name="companionCaptions")
+        """The companion choices, into the companion's own settings document.
+
+        There is no GSettings schema for the companion — an earlier version of
+        this method wrote to ``art.comrade.BunnyShell``, which never existed
+        anywhere, and every companion choice silently failed on the first real
+        login. The authoritative store is `companion/settings.py`'s document.
+
+        The five setup modes project onto what the document can say: ``off``
+        is §6's Hidden (``character.visible``), ``text-only`` is the
+        accessibility preference. ``compact`` and ``minimal`` have no
+        persisted representation yet; recording them as applied would be the
+        lie §45 forbids, so they apply the shared projection and report
+        honestly that the chrome level did not land anywhere.
+        """
+        mode = choices.companion_mode
+        record = Application(key="companionMode",
+                             intent=f"Bunny presentation: {mode}", value=mode)
+        visible_ok, visible_detail = self._companion_setting(
+            "character", "visible", "false" if mode == "off" else "true")
+        text_ok, text_detail = self._companion_setting(
+            "accessibility", "text_only",
+            "true" if mode == "text-only" else "false")
+        representable = mode in ("full", "text-only", "off")
+        record.applied = visible_ok and text_ok and representable
+        record.detail = f"{visible_detail}; {text_detail}"[:200]
+        if not representable:
+            record.detail = (f"mode {mode!r} has no persisted representation; "
+                             f"{record.detail}")[:200]
+        self.results.append(record)
+
+        captions = Application(key="companionCaptions", intent="captions",
+                               value=choices.companion_captions)
+        captions.applied, captions.detail = self._companion_setting(
+            "accessibility", "captions_always",
+            "true" if choices.companion_captions else "false")
+        self.results.append(captions)
 
     def privacy(self, choices: Choices) -> None:
         """§15: every one off unless it was turned on, and none of them silently.
@@ -196,7 +251,12 @@ class Applier:
             record.detail = f"{type(error).__name__}: {error}"[:200]
             self.results.append(record)
             return
-        link = Path("~/.config/systemd/user/default.target.wants/"
+        # The wants directory follows the unit's [Install] section, which is
+        # WantedBy=graphical-session.target — not default.target. The first
+        # real login found this assertion pointing at default.target.wants:
+        # the enable had succeeded and the report still said the symlink was
+        # absent.
+        link = Path("~/.config/systemd/user/graphical-session.target.wants/"
                     "bunny-companion.service").expanduser()
         exists = link.exists() or link.is_symlink()
         record.applied = exists == bool(choices.companion_at_login)
