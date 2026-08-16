@@ -153,6 +153,41 @@ class TmpfilesRuleTests(unittest.TestCase):
                          f"ReadWritePaths names {missing}, which nothing "
                          "creates before the unit starts")
 
+    def test_every_user_unit_readwritepath_is_created(self):
+        """The class, not the instance: any user unit's home-relative
+        ReadWritePaths must be created before namespace setup.
+
+        bunny-first-run.service declared ``ReadWritePaths=%S/bunny-os`` and no
+        rule created it — the same 226/NAMESPACE failure first boot had, on a
+        different unit, recorded by Stage 2 only as "failed on the session".
+        Checked for every unit so the next ReadWritePaths= line added to any
+        of them meets this test instead of a fresh home.
+        """
+        created = {fields[1] for fields in tmpfiles_lines(TMPFILES_RULE)
+                   if fields[0] == "d"}
+        for unit in sorted((ROOT / "systemd/user").glob("*.service")):
+            for line in unit.read_text(encoding="utf-8").splitlines():
+                stripped = line.strip()
+                if not stripped.startswith("ReadWritePaths="):
+                    continue
+                for path in stripped.split("=", 1)[1].split():
+                    # systemd's own escape: a '-' prefix means the path is
+                    # ignored when missing, which is the unit saying it can
+                    # live without the grant on a home that lacks the path.
+                    if path.startswith("-"):
+                        continue
+                    # %S is the user state directory, which the rules spell
+                    # through the home so no literal user lands in the image.
+                    normalised = path.replace("%S/", "%h/.local/state/")
+                    if not normalised.startswith("%h/"):
+                        continue
+                    with self.subTest(unit=unit.name, path=path):
+                        self.assertIn(
+                            normalised, created,
+                            f"{unit.name} grants {path} and nothing creates it "
+                            "before the sandbox is built; a fresh home fails "
+                            "226/NAMESPACE before ExecStart")
+
     def test_rule_mode_is_not_world_accessible(self):
         """8. World-readable or world-writable directory accepted."""
         for fields in tmpfiles_lines(TMPFILES_RULE):
