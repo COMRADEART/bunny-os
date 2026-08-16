@@ -459,11 +459,16 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                     ["/usr/bin/bunny-os", "--json", "companion", "renderer", view],
                     user=user, timeout=60)
             elif verb == "character-policy":
-                # The default-character decision, and Phase 3's capability
-                # lever: --eligible reduces what the machine permits through
-                # the product's own mechanism, and --restore is the recovery
-                # path the phase exists to prove. dryRun defaults to true so
-                # a probe request that forgot to say changes nothing.
+                # The default-character decision. --eligible pins the rung;
+                # without it the CLI assesses the *environment it runs in*
+                # (three_d_environment reads WAYLAND_DISPLAY/DISPLAY), which
+                # is Phase 3's honest capability instrument: the probe's own
+                # environment has no display — a genuinely reduced
+                # environment — and withDisplay=true re-runs the same
+                # assessment with the session's real Wayland socket, claimed
+                # only when that socket actually exists on disk. dryRun
+                # defaults to true so a request that forgot to say changes
+                # nothing.
                 argv = ["/usr/bin/bunny-os", "--json", "companion", "character-policy"]
                 if request.get("dryRun", True):
                     argv.append("--dry-run")
@@ -472,6 +477,24 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                     argv += ["--eligible", eligible]
                 if request.get("restore"):
                     argv.append("--restore")
+                if request.get("withDisplay"):
+                    import glob as _glob
+                    import pwd as _pwd
+
+                    uid = _pwd.getpwnam(user).pw_uid
+                    sockets = sorted(
+                        s for s in _glob.glob(f"/run/user/{uid}/wayland-*")
+                        if not s.endswith(".lock"))
+                    if sockets:
+                        name = os.path.basename(sockets[0])
+                        argv = ["/usr/bin/env",
+                                f"XDG_RUNTIME_DIR=/run/user/{uid}",
+                                f"WAYLAND_DISPLAY={name}", *argv]
+                        answer["display"] = {"waylandSocket": sockets[0]}
+                    else:
+                        answer["display"] = {"waylandSocket": None,
+                                             "note": "no wayland socket exists; "
+                                                     "ran without a display"}
                 answer["characterPolicy"] = run(argv, user=user, timeout=60)
             elif verb == "system":
                 # Phase 3's persistence evidence, read from the RUNNING system:
