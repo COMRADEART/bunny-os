@@ -54,7 +54,30 @@ _PHASES_AFTER_THE_RECORD = (
     # record that covered a tree still being written to would have to be
     # rewritten on every run, which is the opposite of immutable.
     "qualification/capsules/",
+    # The design-system phase (Orca and screenshot evidence), the installer
+    # phase (journey evidence and the installed-system context), and Stage 2's
+    # voice release each committed their own trees after the record. Declared
+    # when Phase 3 classified the two preservation failures they caused: the
+    # failures fired because later phases existed, not because earlier
+    # evidence changed.
+    "qualification/design/",
+    "qualification/installer/",
+    "qualification/installer-journeys/",
+    "qualification/voice-release/",
+    # Phase 3's own tree.
+    "qualification/phase3/",
 )
+
+#: Maintained tooling that lives under an earlier phase's directory but is not
+#: a record: the matrix importer is edited by every phase that writes matrix
+#: rows (the installer phase grew its ``journey:`` evidence kind), and pinning
+#: it byte-for-byte makes evidence immutability fail whenever the *tooling*
+#: legitimately improves. Evidence stays pinned; the one named script does not.
+#: Named singly rather than as a directory, so a new file appearing beside it
+#: still fails the added-files check until somebody declares it.
+_MAINTAINED_TOOLING = frozenset({
+    "qualification/installed-system/scripts/import_matrix_results.py",
+})
 
 #: Build residue, which is not evidence and is not in the repository.
 #:
@@ -113,7 +136,7 @@ class PreservedEvidence(unittest.TestCase):
         mismatched: list[str] = []
         missing: list[str] = []
         for name, expected in sorted(self.record["preservedEvidence"].items()):
-            if _is_residue(name):
+            if _is_residue(name) or name in _MAINTAINED_TOOLING:
                 continue
             path = _ROOT / name
             if not path.is_file():

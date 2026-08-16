@@ -1,3 +1,11 @@
+# SPDX-FileCopyrightText: 2021 Red Hat, Inc.
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Derived from pyanaconda/core/service.py, which is GPL-2.0-or-later; that
+# licence permits distribution under a later version, and this modified copy
+# is distributed with the rest of installer/ under GPL-3.0-or-later. The
+# original notice follows.
 #
 # Copyright (C) 2021  Red Hat, Inc.  All rights reserved.
 #
