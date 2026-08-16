@@ -295,6 +295,40 @@ PYTHON
       fi
       python3 build/scripts/verify-installed-choices.py "${verify_args[@]}" \
         >"${work}/installed.log" 2>&1 || true
+      # The installation-environment journal the executor preserved onto the
+      # target — the only record of what the engine's tasks did, because the
+      # module processes have no file logs. Best-effort: an older medium has
+      # nothing to extract, and the absence is visible as the absent file.
+      python3 - "${disk}" "${verify_passphrase}" "${work}/install-journal.log" <<'PYTHON' || true
+import importlib.util, subprocess, sys
+from pathlib import Path
+disk, passphrase, out = Path(sys.argv[1]), sys.argv[2] or None, Path(sys.argv[3])
+specification = importlib.util.spec_from_file_location(
+    "verify_installed_choices", "build/scripts/verify-installed-choices.py")
+verifier = importlib.util.module_from_spec(specification)
+specification.loader.exec_module(verifier)
+overlay = out.with_suffix(".overlay.qcow2")
+subprocess.run(["qemu-img", "create", "-q", "-f", "qcow2",
+                "-b", str(disk.resolve()), "-F", "qcow2", str(overlay)], check=True)
+try:
+    luks = verifier.find_luks_devices(overlay) if passphrase else ()
+    partitions = verifier.find_partitions(overlay, passphrase, luks)
+    root = partitions.get("root")
+    if root:
+        text = verifier.guestfish(
+            overlay,
+            verifier._script(
+                f"mount {root} /",
+                "glob download /ostree/deploy/*/var/log/anaconda/"
+                f"bunny-install-journal.log {out}"),
+            passphrase=passphrase, luks_devices=luks)
+        if out.exists():
+            print(f"install journal extracted: {out}")
+        else:
+            print(f"no install journal on the target: {text[:160]}")
+finally:
+    overlay.unlink(missing_ok=True)
+PYTHON
       if python3 -c "
 import json, sys
 record = json.load(open(sys.argv[1]))
