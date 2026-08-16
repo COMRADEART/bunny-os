@@ -161,16 +161,35 @@ class InstallerService:
 
                 locale_plan = self._plan.get("locale")
                 network_plan = self._plan.get("network")
-                self._adapter.configure_installation(  # type: ignore[attr-defined]
-                    choices={
-                        "locale": dict(locale_plan) if isinstance(locale_plan, Mapping) else {},
-                        "account": {
-                            "username": str(user_plan.get("username", "")),
-                            "displayName": str(user_plan.get("displayName", "")),
-                            "deviceName": str(network_plan.get("hostname", ""))
-                            if isinstance(network_plan, Mapping) else "",
-                        },
+                # §45: the full choices document rides the install request so
+                # the executor can place it on the target. Validated through
+                # the same class that wrote it — `Choices.from_record` refuses
+                # a secret-shaped key and an invalid value, and a document
+                # that fails validation refuses the install before any write.
+                setup_document = None
+                raw_choices = request.params.get("setupChoices")
+                if raw_choices is not None:
+                    if not isinstance(raw_choices, Mapping):
+                        raise ValueError("setupChoices must be an object")
+                    from installer.setup_state import Choices
+
+                    try:
+                        setup_document = Choices.from_record(raw_choices).as_record()
+                    except ValueError as error:
+                        raise ValueError(f"the setup choices were refused: {error}") from error
+                choices_payload: dict[str, Any] = {
+                    "locale": dict(locale_plan) if isinstance(locale_plan, Mapping) else {},
+                    "account": {
+                        "username": str(user_plan.get("username", "")),
+                        "displayName": str(user_plan.get("displayName", "")),
+                        "deviceName": str(network_plan.get("hostname", ""))
+                        if isinstance(network_plan, Mapping) else "",
                     },
+                }
+                if setup_document is not None:
+                    choices_payload["setupDocument"] = setup_document
+                self._adapter.configure_installation(  # type: ignore[attr-defined]
+                    choices=choices_payload,
                     password_hash=crypt_password(password),
                     passphrase=passphrase,
                     on_stage=self._observe_stage,

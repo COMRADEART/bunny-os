@@ -489,7 +489,31 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
     surface.type_into("Username", arguments.username)
     surface.type_into("Password", arguments.password)
     surface.type_into("Password again", arguments.password)
+    if arguments.device_name:
+        surface.type_into("Device name", arguments.device_name)
     surface.advance(("Continue",))
+
+    # What this journey expects the disk to carry, spoken as the product's own
+    # record so the host verifier compares against real defaults rather than a
+    # harness's memory of them. Best-effort: a medium whose installer package
+    # moved still drives; the harness then falls back to the reduced form.
+    try:
+        installed = Path("/usr/lib/bunny-os/python")
+        if installed.is_dir() and str(installed) not in sys.path:
+            sys.path.insert(0, str(installed))
+        from installer.setup_state import Choices as _Choices
+
+        emit("expected-choices", record=_Choices(
+            display_name=arguments.display_name,
+            username=arguments.username,
+            device_name=arguments.device_name,
+            encryption_enabled=bool(arguments.passphrase),
+            text_scale=arguments.text_scale,
+            high_contrast=bool(arguments.high_contrast),
+            reduced_motion=bool(arguments.reduced_motion),
+        ).as_record())
+    except Exception as error:  # noqa: BLE001 - evidence, not control flow
+        emit("expected-choices-unavailable", detail=str(error)[:200])
 
     for stage in ("privacy", "appearance", "companion", "applications"):
         emit("stage", name=stage)
@@ -617,6 +641,9 @@ def main() -> int:
     parser.add_argument("--username", default="alex")
     parser.add_argument("--password", default="bunny-test-password")
     parser.add_argument("--passphrase", default="")
+    parser.add_argument("--device-name", default="",
+                        help="typed into the optional Device name field; "
+                             "becomes the installed system's hostname")
     parser.add_argument("--text-scale", type=float, default=1.0)
     parser.add_argument("--high-contrast", action="store_true")
     parser.add_argument("--reduced-motion", action="store_true")

@@ -371,7 +371,14 @@ def render(
         "# Every destructive directive below names the disk the plan targets.",
         "text --non-interactive",
         f"lang {language}.UTF-8",
-        f"keyboard --xlayouts={_quote(layout)}",
+        # --vckeymap as well as --xlayouts: without it Anaconda derives the
+        # console keymap by asking the live session's systemd-localed, and a
+        # medium whose localed is unreachable from the module process writes
+        # no /etc/vconsole.conf at all — measured on journey A's disk, where
+        # the X layout was configured and the console file simply never
+        # appeared. Fedora's kbd ships xkb-converted keymaps under the same
+        # names as the X layouts, so the layout name is a valid KEYMAP value.
+        f"keyboard --xlayouts={_quote(layout)} --vckeymap={_quote(layout)}",
         f"timezone {timezone} --utc",
     ]
     if device_name:

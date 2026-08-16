@@ -102,7 +102,13 @@ case "${journey}" in
   # sentence "drive this journey, change nothing".
   c) drive_args="--text-scale=1.0"; verify_passphrase="" ;;
   d) drive_args="--expect-refusal"; verify_passphrase="" ;;
-  *) echo "unknown journey: ${journey} (expected a, b, c or d)" >&2; exit 2 ;;
+  # Phase 3's primary journey: encrypted, with a device name, and judged
+  # against the full setup-choices document rather than the reduced form —
+  # which is what makes the §45 handoff (choices.json on the target), the
+  # locale and the hostname all part of the verdict.
+  e) drive_args="--passphrase=bunny-disk-passphrase --device-name=warren"
+     verify_passphrase="bunny-disk-passphrase" ;;
+  *) echo "unknown journey: ${journey} (expected a, b, c, d or e)" >&2; exit 2 ;;
 esac
 echo "driver:  ${drive_args:-<no extra arguments>}"
 
@@ -261,10 +267,26 @@ case "${outcome}" in
       # completed users-first tasks and no account existed, and without this
       # expectation the verifier reports that only as a fact, not a finding.
       expected="${work}/expected.json"
-      if [[ -n "${verify_passphrase}" ]]; then
-        printf '{"encryption": {"enabled": true}, "account": {"username": "alex"}}\n' >"${expected}"
-      else
-        printf '{"encryption": {"enabled": false}, "account": {"username": "alex"}}\n' >"${expected}"
+      # The driver speaks the full choices document as the product's own
+      # record; when it did, that is the expectation — locale, hostname and
+      # the §45 handoff all become part of the verdict. The reduced form
+      # remains the fallback so a medium without the emitting driver still
+      # gets the checks the earlier journeys had.
+      if ! python3 - "${work}/result.json" "${expected}" <<'PYTHON'
+import json, sys
+result, out = sys.argv[1:3]
+records = [e.get("record") for e in json.load(open(result)).get("events", [])
+           if e.get("event") == "expected-choices" and isinstance(e.get("record"), dict)]
+if not records:
+    sys.exit(1)
+json.dump(records[-1], open(out, "w", encoding="utf-8"), indent=1)
+PYTHON
+      then
+        if [[ -n "${verify_passphrase}" ]]; then
+          printf '{"encryption": {"enabled": true}, "account": {"username": "alex"}}\n' >"${expected}"
+        else
+          printf '{"encryption": {"enabled": false}, "account": {"username": "alex"}}\n' >"${expected}"
+        fi
       fi
       verify_args=(--disk "${disk}" --output "${work}/installed.json"
                    --expected "${expected}")

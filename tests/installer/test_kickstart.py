@@ -109,6 +109,14 @@ class WhatItNames(unittest.TestCase):
         self.assertEqual(len(payload), 1)
         self.assertIn(payload[0], document)
 
+    def test_the_keyboard_names_the_console_keymap_as_well(self) -> None:
+        """Without --vckeymap Anaconda asks the live session's localed for the
+        conversion, and a medium whose localed is unreachable from the module
+        process writes no /etc/vconsole.conf at all — journey A's disk had the
+        X layout configured and no console file. The directive carries both."""
+        document = _render()
+        self.assertIn("keyboard --xlayouts='gb' --vckeymap='gb'", document)
+
     def test_a_medium_with_no_payload_renders_nothing(self) -> None:
         """The refusal that stops an installer writing the wrong system."""
         with self.assertRaises(KickstartError) as caught:

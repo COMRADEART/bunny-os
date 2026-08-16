@@ -60,8 +60,14 @@ import sys
 from typing import Any
 
 CHECKS = {
-    "language": ("/etc/locale.conf", r"LANG=([\w.@-]+)"),
-    "keyboard": ("/etc/vconsole.conf", r"KEYMAP=([\w-]+)"),
+    # The values may be quoted: Anaconda's LanguageInstallationTask writes
+    # LANG="en_GB.UTF-8" with quotes, the executor's placement writes it
+    # bare, and both are valid to every reader. The first version of this
+    # pattern could not match the quoted form, so a correctly-written locale
+    # would still have read back as null — a verifier defect that would have
+    # marked a working system unproven.
+    "language": ("/etc/locale.conf", r"LANG=\"?([\w.@-]+)\"?"),
+    "keyboard": ("/etc/vconsole.conf", r"KEYMAP=\"?([\w-]+)\"?"),
     "hostname": ("/etc/hostname", r"(.+)"),
 }
 
@@ -322,17 +328,34 @@ def inspect(disk: Path, *, passphrase: str | None, expected: dict[str, Any]) -> 
         "files": [] if choices.startswith("__ERROR__") else choices.split(),
     }
 
-    # Compare what is true against what was chosen.
+    # Compare what is true against what was chosen. When the expectation
+    # carries a value, an unreadable or unmatched file is itself a finding:
+    # "we could not read it" was how the locale gap hid for five journeys.
     locale = expected.get("locale", {})
-    if checked.get("language", {}).get("value") and locale.get("language"):
+    if locale.get("language"):
         want = locale["language"].replace("-", "_")
-        got = checked["language"]["value"]
-        if not got.startswith(want):
-            findings.append(f"language: chose {want}, the system has {got}")
-    if checked.get("keyboard", {}).get("value") and locale.get("keyboardLayout"):
-        if checked["keyboard"]["value"] != locale["keyboardLayout"]:
+        got = checked.get("language", {}).get("value")
+        if not got or not got.startswith(want):
+            findings.append(f"language: chose {want}, the system has {got!r}")
+    if locale.get("keyboardLayout"):
+        got = checked.get("keyboard", {}).get("value")
+        if got != locale["keyboardLayout"]:
             findings.append(f"keyboard: chose {locale['keyboardLayout']}, "
-                            f"the system has {checked['keyboard']['value']}")
+                            f"the system has {got!r}")
+    device_name = expected.get("account", {}).get("deviceName", "")
+    if device_name:
+        got = checked.get("hostname", {}).get("value")
+        if got != device_name:
+            findings.append(f"hostname: chose {device_name}, the system has {got!r}")
+
+    # §45: when the expectation is the full setup document (it carries a
+    # companion section only setup writes), the document itself must have
+    # crossed to the target. Reduced expectations from earlier journeys did
+    # not promise this and are not judged on it.
+    if isinstance(expected.get("companion"), dict):
+        if "choices.json" not in checked["choicesOnTarget"].get("files", []):
+            findings.append("choices.json is not on the installed system; "
+                            "the first-run handoff did not cross the reboot")
 
     return {"observed": observed, "findings": findings, "checked": checked}
 

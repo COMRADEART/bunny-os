@@ -101,3 +101,83 @@ class BackendTests(unittest.TestCase):
         value = redact({"password": "bad", "nested": {"recoveryKey": "worse", "message": "ok"}})
         self.assertNotIn("bad", json.dumps(value))
         self.assertEqual(value["nested"]["message"], "ok")
+
+
+class SetupChoicesOnTheWire(unittest.TestCase):
+    """§45: the full choices document rides install.start, validated or refused."""
+
+    SECRET_REF = "installer-secret:abcdefghijklmnop"
+
+    class _Adapter:
+        def __init__(self) -> None:
+            self.configured: list[dict] = []
+
+        def configure_installation(self, *, choices, password_hash, passphrase, on_stage):
+            self.configured.append(dict(choices))
+
+        def start(self, *, plan, confirmations) -> None:
+            pass
+
+    def setUp(self) -> None:
+        self.disk = parse_lsblk(FIXTURE)[0]
+        self.adapter = self._Adapter()
+        self.service = InstallerService(live_uid=1000, probe=lambda: [self.disk],
+                                        production_adapter=self.adapter)
+        self.token = self.service.issue_session_token(peer_uid=1000)
+        # crypt(3) is not a given off the target platform, and the property
+        # under test is the choices validation, not the hash.
+        import installer.backend.kickstart as kickstart_module
+
+        self._crypt = kickstart_module.crypt_password
+        kickstart_module.crypt_password = lambda password, **kw: "$y$j9T$stubbedhashvalue"
+        self.addCleanup(setattr, kickstart_module, "crypt_password", self._crypt)
+
+    def call(self, operation: str, nonce: str, params: dict[str, object] | None = None,
+             secret_values: dict[str, str] | None = None):
+        return self.service.handle(message(operation, nonce, params), peer_uid=1000,
+                                   session_token=self.token, secret_values=secret_values)
+
+    def _start(self, nonce: str, setup_choices) -> object:
+        from installer.storage.safety import confirmation_phrase as phrase
+
+        self.call("installer.probe", "nonce-probe-sc001")
+        self.call("installer.plan.validate", "nonce-plan-sc0001", {"plan": plan(self.disk)})
+        params: dict[str, object] = {
+            "acknowledgement": phrase(self.disk),
+            "secondConfirmation": True,
+        }
+        if setup_choices is not None:
+            params["setupChoices"] = setup_choices
+        return self.call("installer.install.start", nonce, params,
+                         secret_values={self.SECRET_REF: "a-password"})
+
+    def test_a_valid_document_reaches_the_adapter(self) -> None:
+        from installer.setup_state import Choices
+
+        record = Choices(display_name="Alex", username="alex",
+                        device_name="warren").as_record()
+        self._start("nonce-start-sc001", record)
+        self.assertEqual(len(self.adapter.configured), 1)
+        document = self.adapter.configured[0].get("setupDocument")
+        self.assertIsInstance(document, dict)
+        self.assertEqual(document["account"]["deviceName"], "warren")
+
+    def test_a_secret_shaped_document_is_refused_before_the_adapter(self) -> None:
+        # The protocol layer itself refuses a secret-shaped param, which is
+        # the right place: before authentication logging, before dispatch.
+        from installer.protocol import ProtocolError
+
+        with self.assertRaises((ProtocolError, ValueError)):
+            self._start("nonce-start-sc002", {"schemaVersion": 1, "privacy": {"apiKey": "x"}})
+        self.assertEqual(self.adapter.configured, [])
+
+    def test_an_invalid_document_is_refused_before_the_adapter(self) -> None:
+        with self.assertRaises(ValueError):
+            self._start("nonce-start-sc003",
+                        {"schemaVersion": 1, "companion": {"mode": "holographic"}})
+        self.assertEqual(self.adapter.configured, [])
+
+    def test_no_document_still_installs_with_the_reduced_choices(self) -> None:
+        self._start("nonce-start-sc004", None)
+        self.assertEqual(len(self.adapter.configured), 1)
+        self.assertNotIn("setupDocument", self.adapter.configured[0])

@@ -45,9 +45,11 @@ disk because it has no code that could.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import json
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -132,8 +134,14 @@ class Executor(Protocol):
     def preflight(self) -> None:
         """Raise :class:`ExecutorUnavailable` if this cannot install. No writes."""
 
-    def install(self, kickstart: Path, *, on_stage: Callable[[str, str], None]) -> None:
-        """Perform the installation, calling ``on_stage(stage, detail)`` as it goes."""
+    def install(self, kickstart: Path, *, on_stage: Callable[[str, str], None],
+                handoff: Mapping[str, Any] | None = None) -> None:
+        """Perform the installation, calling ``on_stage(stage, detail)`` as it goes.
+
+        ``handoff`` is the validated choices mapping the adapter holds; an
+        executor that writes a disk places its §45 documents on the target
+        before tearing the mounts down.
+        """
 
 
 @dataclass
@@ -150,13 +158,16 @@ class RecordingExecutor:
     fail_at: str | None = None
     kickstarts: list[str] = field(default_factory=list)
     stages: list[str] = field(default_factory=list)
+    handoffs: list[Mapping[str, Any] | None] = field(default_factory=list)
 
     def preflight(self) -> None:
         if not self.available:
             raise ExecutorUnavailable("the recording executor was configured as unavailable")
 
-    def install(self, kickstart: Path, *, on_stage: Callable[[str, str], None]) -> None:
+    def install(self, kickstart: Path, *, on_stage: Callable[[str, str], None],
+                handoff: Mapping[str, Any] | None = None) -> None:
         self.kickstarts.append(kickstart.read_text(encoding="utf-8"))
+        self.handoffs.append(handoff)
         for stage in STAGES[1:]:
             if self.fail_at is not None and stage == self.fail_at:
                 raise RuntimeError(f"deliberate failure at {stage}")
@@ -290,7 +301,8 @@ class AnacondaDBusExecutor:
                 "No disk was touched."
             )
 
-    def install(self, kickstart: Path, *, on_stage: Callable[[str, str], None]) -> None:
+    def install(self, kickstart: Path, *, on_stage: Callable[[str, str], None],
+                handoff: Mapping[str, Any] | None = None) -> None:
         from gi.repository import GLib  # type: ignore
 
         boss = self._connect()
@@ -423,6 +435,16 @@ class AnacondaDBusExecutor:
             # is the fact the failure screen exists to carry.
             raise InstallationFailed(self._flatten_dbus_error(error)) from error
 
+        # §45: place what setup chose on the target, while it is still
+        # mounted. Anaconda was measured (journey A's disk) leaving
+        # /etc/locale.conf empty, /etc/vconsole.conf and /etc/hostname
+        # absent, and nothing anywhere wrote choices.json — so the executor
+        # does the placement itself and fails the install if it cannot: an
+        # installation that silently dropped the person's choices is the
+        # paper-tested outcome this project exists to refuse.
+        self._place_handoff(handoff, on_stage=on_stage)
+        self._preserve_install_journal(on_stage=on_stage)
+
         # Finish the way anaconda itself finishes: tear the target down, so
         # every late write reaches the disk and the filesystems unmount
         # cleanly. Run 25 completed without this and the installed system
@@ -480,6 +502,116 @@ class AnacondaDBusExecutor:
                     f"umount {target}: {output.strip()[:300]}")
         subprocess.run(["systemd-run", "--wait", "--collect", "--quiet",
                         "sync"], capture_output=True, timeout=120)
+
+    #: Where the medium's conf drop-in (95-bunny-target.conf) mounts the
+    #: deployment root. The same constant the umount step uses; the timezone
+    #: symlink landing under it on journey A's disk is the measurement that
+    #: this is the /etc that boots.
+    TARGET_SYSTEM_ROOT = "/var/mnt/sysroot"
+
+    def _target_shell(self, script: str, *, stdin: str | None = None) -> subprocess.CompletedProcess:
+        """Run a shell line in the machine's own mount namespace.
+
+        This process runs inside a sandboxed unit whose mount namespace is not
+        the machine's (the umount above learned that), so every read and write
+        of the mounted target goes through ``systemd-run``.
+        """
+        return subprocess.run(
+            ["systemd-run", "--wait", "--pipe", "--collect", "--quiet",
+             "bash", "-c", script],
+            input=stdin, capture_output=True, text=True, timeout=120)
+
+    def _read_target_file(self, relative: str) -> str | None:
+        completed = self._target_shell(
+            f"cat {shlex.quote(self.TARGET_SYSTEM_ROOT + relative)}")
+        return completed.stdout if completed.returncode == 0 else None
+
+    def _write_target_file(self, relative: str, content: str, *,
+                           directory_mode: str = "0755") -> None:
+        """Write one file on the target, then read it back and compare.
+
+        The read-back is not decoration: the §45 rule is that a claim about
+        the installed system comes from the installed system, and the claim
+        this method makes — "the choice is on the disk" — is checked against
+        the disk before the method returns.
+        """
+        target = self.TARGET_SYSTEM_ROOT + relative
+        directory = os.path.dirname(target)
+        completed = self._target_shell(
+            f"umask 022 && mkdir -p -m {shlex.quote(directory_mode)} "
+            f"{shlex.quote(directory)} && cat > {shlex.quote(target)} "
+            f"&& chmod 0644 {shlex.quote(target)}",
+            stdin=content)
+        if completed.returncode != 0:
+            raise InstallationFailed(
+                f"the setup choices could not be placed on the installed "
+                f"system: {relative}: {(completed.stderr or '').strip()[:300]}")
+        written = self._read_target_file(relative)
+        if written != content:
+            raise InstallationFailed(
+                f"the setup choices did not read back from the installed "
+                f"system: {relative} holds {len(written or '')} bytes, "
+                f"expected {len(content)}")
+
+    def _place_handoff(self, handoff: Mapping[str, Any] | None,
+                       on_stage: Callable[[str, str], None]) -> None:
+        """§45: the choices cross the reboot as files on the target."""
+        if not handoff:
+            return
+        on_stage("Finishing", "Placing the setup choices on the installed system")
+        locale = handoff.get("locale") or {}
+        account = handoff.get("account") or {}
+
+        language = str(locale.get("language", "")).replace("-", "_")
+        if language:
+            if not re.fullmatch(r"[A-Za-z]{2,8}(_[A-Za-z0-9]{2,8})?", language):
+                raise InstallationFailed(f"invalid language for the target: {language!r}")
+            # Unquoted, which systemd accepts and every reader here expects.
+            self._write_target_file("/etc/locale.conf", f"LANG={language}.UTF-8\n")
+
+        layout = str(locale.get("keyboardLayout", ""))
+        if layout:
+            if not re.fullmatch(r"[a-z0-9-]{1,32}", layout):
+                raise InstallationFailed(f"invalid keyboard layout for the target: {layout!r}")
+            existing = self._read_target_file("/etc/vconsole.conf")
+            # Anaconda's own keyboard task (now given --vckeymap) writes this
+            # file with a FONT line as well; only fill the gap it leaves.
+            if existing is None or "KEYMAP=" not in existing:
+                self._write_target_file("/etc/vconsole.conf", f"KEYMAP={layout}\n")
+
+        device_name = str(account.get("deviceName", "")).strip()
+        if device_name:
+            if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,62}", device_name):
+                raise InstallationFailed(f"invalid device name for the target: {device_name!r}")
+            self._write_target_file("/etc/hostname", f"{device_name}\n")
+
+        document = handoff.get("setupDocument")
+        if isinstance(document, Mapping):
+            rendered = json.dumps(document, indent=1, sort_keys=True) + "\n"
+            self._write_target_file("/var/lib/bunny-setup/choices.json", rendered)
+
+    def _preserve_install_journal(self, on_stage: Callable[[str, str], None]) -> None:
+        """The live system's journal, onto the target it installed.
+
+        The anaconda module processes have no file log handlers (the logs
+        anaconda copies to /var/log/anaconda arrived empty on every journey),
+        so the journal of the installation environment is the only record of
+        what the engine's tasks actually did — including whichever one leaves
+        /etc/locale.conf empty, which is still undiagnosed. Best-effort: a
+        machine that cannot preserve its journal still installed, and the
+        stage detail says the preservation failed rather than nothing.
+        """
+        target = self.TARGET_SYSTEM_ROOT + "/var/log/anaconda/bunny-install-journal.log"
+        completed = self._target_shell(
+            f"mkdir -p {shlex.quote(os.path.dirname(target))} && "
+            f"journalctl --no-pager -b > {shlex.quote(target)} "
+            f"&& chmod 0600 {shlex.quote(target)}")
+        if completed.returncode == 0:
+            on_stage("Finishing", "Preserved the installation journal on the target")
+        else:
+            on_stage("Finishing",
+                     "The installation journal could not be preserved: "
+                     + (completed.stderr or "").strip()[:120])
 
     @staticmethod
     def _flatten_dbus_error(error: Exception) -> str:
@@ -675,7 +807,7 @@ class AnacondaAdapter:
                 stream.flush()
                 os.fsync(stream.fileno())
             os.chmod(path, 0o600)
-            self.executor.install(path, on_stage=self._stage)
+            self.executor.install(path, on_stage=self._stage, handoff=self.choices)
         finally:
             # The passphrase is in this file in the clear. It goes away whether
             # the installation succeeded, failed, or raised on the way in.

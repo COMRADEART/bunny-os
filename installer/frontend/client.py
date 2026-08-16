@@ -124,7 +124,8 @@ class BackendClient:
     def start(self, *, acknowledgement: str, second_confirmation: bool,
               recovery_key_confirmed: bool,
               passphrase_secret_ref: str | None = None,
-              secret_values: Mapping[str, str] | None = None) -> Mapping[str, Any]:
+              secret_values: Mapping[str, str] | None = None,
+              setup_choices: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
         """Ask for the installation to begin, and wait for it to end.
 
         ``acknowledgement`` is the phrase the person typed, verbatim. This client
@@ -144,6 +145,12 @@ class BackendClient:
         }
         if passphrase_secret_ref:
             params["passphraseSecretRef"] = passphrase_secret_ref
+        if setup_choices is not None:
+            # §45: the full non-secret choices record travels with the
+            # request, so the backend can place it on the installed system.
+            # The protocol's secret-shape refusal applies to it like any
+            # other param.
+            params["setupChoices"] = dict(setup_choices)
         return self._call("installer.install.start", params,
                           secret_values=secret_values, timeout=None)
 

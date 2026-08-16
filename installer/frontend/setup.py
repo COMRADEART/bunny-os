@@ -1073,6 +1073,9 @@ def _make_submit(application: "SetupApplication", client) -> Callable[..., None]
                     recovery_key_confirmed=bool(choices.encryption_enabled),
                     passphrase_secret_ref=passphrase_reference,
                     secret_values=secret_values,
+                    # §45: the whole record, so first run finds it on the
+                    # target instead of re-asking for what setup collected.
+                    setup_choices=choices.as_record(),
                 )
             except InstallerRefused as error:
                 # kind "failed" is the backend's word for an engine task that

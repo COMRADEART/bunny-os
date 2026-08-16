@@ -143,6 +143,109 @@ class WhatReachesTheExecutor(unittest.TestCase):
             self.assertIn("[redacted]", body)
 
 
+class TheHandoffReachesTheExecutor(unittest.TestCase):
+    def test_the_executor_receives_the_choices_as_the_handoff(self) -> None:
+        """§45: what the adapter holds is what the placement step gets."""
+        with tempfile.TemporaryDirectory() as name:
+            tmp = Path(name)
+            executor = RecordingExecutor()
+            adapter = _adapter(tmp, executor=executor)
+            adapter.start(plan=automatic_plan(DISK, mode="erase_disk", encryption=True),
+                          confirmations={})
+            self.assertEqual(executor.handoffs, [adapter.choices])
+
+
+class _PlacementFake(AnacondaDBusExecutor):
+    """The placement logic over an in-memory target; no bus, no systemd."""
+
+    def __init__(self) -> None:
+        self.files: dict[str, str] = {}
+        self.stages: list[tuple[str, str]] = []
+
+    def _read_target_file(self, relative: str) -> str | None:
+        return self.files.get(relative)
+
+    def _write_target_file(self, relative: str, content: str, *,
+                           directory_mode: str = "0755") -> None:
+        self.files[relative] = content
+
+    def stage(self, stage: str, detail: str) -> None:
+        self.stages.append((stage, detail))
+
+
+class ThePlacementStep(unittest.TestCase):
+    """§45's crossing, decided file by file."""
+
+    def test_every_choice_lands_as_its_file(self) -> None:
+        executor = _PlacementFake()
+        document = Choices(display_name="Alex", username="alex",
+                           device_name="warren").as_record()
+        executor._place_handoff({
+            "locale": {"language": "en-GB", "keyboardLayout": "gb"},
+            "account": {"username": "alex", "deviceName": "warren"},
+            "setupDocument": document,
+        }, on_stage=executor.stage)
+        self.assertEqual(executor.files["/etc/locale.conf"], "LANG=en_GB.UTF-8\n")
+        self.assertEqual(executor.files["/etc/vconsole.conf"], "KEYMAP=gb\n")
+        self.assertEqual(executor.files["/etc/hostname"], "warren\n")
+        import json as json_module
+
+        parsed = json_module.loads(executor.files["/var/lib/bunny-setup/choices.json"])
+        self.assertEqual(parsed["account"]["deviceName"], "warren")
+
+    def test_a_vconsole_anaconda_already_wrote_is_kept(self) -> None:
+        executor = _PlacementFake()
+        executor.files["/etc/vconsole.conf"] = 'KEYMAP="gb"\nFONT="eurlatgr"\n'
+        executor._place_handoff({
+            "locale": {"language": "en-GB", "keyboardLayout": "gb"},
+            "account": {},
+        }, on_stage=executor.stage)
+        self.assertIn("FONT", executor.files["/etc/vconsole.conf"],
+                      "the placement clobbered a file the engine wrote correctly")
+
+    def test_no_device_name_writes_no_hostname(self) -> None:
+        executor = _PlacementFake()
+        executor._place_handoff({
+            "locale": {"language": "en-GB", "keyboardLayout": "gb"},
+            "account": {"deviceName": ""},
+        }, on_stage=executor.stage)
+        self.assertNotIn("/etc/hostname", executor.files)
+
+    def test_an_invalid_device_name_refuses_the_install(self) -> None:
+        from installer.backend.anaconda import InstallationFailed
+
+        executor = _PlacementFake()
+        with self.assertRaises(InstallationFailed):
+            executor._place_handoff({
+                "locale": {},
+                "account": {"deviceName": "Not A Hostname"},
+            }, on_stage=executor.stage)
+
+    def test_an_empty_handoff_places_nothing(self) -> None:
+        executor = _PlacementFake()
+        executor._place_handoff(None, on_stage=executor.stage)
+        self.assertEqual(executor.files, {})
+        self.assertEqual(executor.stages, [])
+
+    def test_a_write_that_does_not_read_back_refuses(self) -> None:
+        from installer.backend.anaconda import InstallationFailed
+
+        class Truncating(AnacondaDBusExecutor):
+            def __init__(self) -> None:
+                pass
+
+            def _target_shell(self, script, *, stdin=None):
+                import subprocess as sp
+                return sp.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
+
+            def _read_target_file(self, relative):
+                return ""  # the write "succeeded" and the disk holds nothing
+
+        with self.assertRaises(InstallationFailed) as caught:
+            Truncating()._write_target_file("/etc/locale.conf", "LANG=en_GB.UTF-8\n")
+        self.assertIn("did not read back", str(caught.exception))
+
+
 class StageMapping(unittest.TestCase):
     """§6 and §23: the Companion says what the engine is doing, not a guess."""
 
