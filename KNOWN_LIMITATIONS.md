@@ -966,3 +966,42 @@ re-validated against the layout suite at every supported resolution.
 ### Nothing here is hardware validated
 
 Every capsule measurement is `kvm` on one host. There is no device.
+
+
+## User journey qualification additions — 2026-08-16
+
+The first real logins ever driven (installed machine from a journey-E
+encrypted install, GDM greeter, typed credentials) found and fixed: a
+first-run SIGSEGV (MemoryDenyWriteExecute on a Mesa-rendering GTK unit), the
+whole bunny session-unit family starting inside the GDM greeter, companion
+setup choices written to a GSettings schema that exists nowhere, an autostart
+assertion aimed at the wrong wants directory, and — largest — the Bunny
+session that no installed user had ever received: GDM has no DefaultSession
+key, so the custom.conf default was a fiction and every user landed in stock
+GNOME with the Bunny desktop inert. The installer now writes the created
+user's AccountsService record (Session=bunny). What remains open:
+
+- **The ACPI power key does nothing in a Bunny session.** logind logs the
+  press and defers to gsd-media-keys' handle-power-key block; gsd's handler
+  (whose VM branch logs and powers off in a stock GNOME session on the same
+  machine) never runs. Reproduced on every Bunny-session boot, including with
+  the greeter reaped. The Bunny sidebar's own Power entry has not been
+  exercised. Until fixed, an orderly shutdown from inside a Bunny session
+  needs the UI or `systemctl poweroff`.
+- **Only the installer-created user gets the Bunny session.** The
+  AccountsService seeding covers the account the installer creates; a second
+  account added later lands in stock GNOME unless it picks Bunny in the
+  greeter.
+- **`compact` and `minimal` companion modes have no persisted
+  representation.** The applicator records them honestly as not applied;
+  `full`, `text-only` and `off` project onto the settings document.
+- **The character's resting pose needs eyes on it.** The first Bunny-desktop
+  photograph shows the bottom-centre character as two detached shapes; whether
+  that is the authored pose or a rendering defect has not been decided.
+- **The package snapshot does not yet pin glibc-langpack-en.** The Phase 3
+  image installs it from the network (the retained snapshot predates the
+  dependency); the next snapshot refresh should fold it in.
+- **Anaconda module processes read only /etc/anaconda/anaconda.conf.** The
+  medium's conf.d drop-in is read by the main process alone, which is why the
+  target-path redirection lives where it does; module-side path assumptions
+  would regress silently if that file moved.
