@@ -1,0 +1,11 @@
+{"event": "accepted", "taskId": "task-88eb4aac34534886867044e94095e861", "sessionId": "ses-7d6c0d7f24fe4e0ebb6a123a73871959"}
+{"event": "phase", "phase": "starting", "statusText": "Starting...", "approvalState": "not_required", "taskId": "task-88eb4aac34534886867044e94095e861"}
+{"event": "phase", "phase": "understanding", "statusText": "Understanding...", "approvalState": "not_required", "taskId": "task-88eb4aac34534886867044e94095e861"}
+{"event": "phase", "phase": "planning", "statusText": "Planning...", "approvalState": "not_required", "taskId": "task-88eb4aac34534886867044e94095e861"}
+{"event": "phase", "phase": "working", "statusText": "Working...", "approvalState": "not_required", "taskId": "task-88eb4aac34534886867044e94095e861"}
+{"event": "phase", "phase": "planning", "statusText": "Planning...", "approvalState": "not_required", "taskId": "task-88eb4aac34534886867044e94095e861"}
+{"event": "phase", "phase": "working", "statusText": "Working...", "approvalState": "not_required", "taskId": "task-88eb4aac34534886867044e94095e861"}
+{"event": "phase", "phase": "presenting_result", "statusText": "Preparing the response...", "approvalState": "not_required", "taskId": "task-88eb4aac34534886867044e94095e861"}
+{"event": "phase", "phase": "success", "statusText": "Done", "approvalState": "not_required", "taskId": "task-88eb4aac34534886867044e94095e861"}
+{"event": "reply", "text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player — try “Resize this to 1024 pixels wide”, “Open Files” or “How much memory am I using?”. I d…", "taskId": "task-88eb4aac34534886867044e94095e861"}
+{"event": "finished", "phase": "success", "taskId": "task-88eb4aac34534886867044e94095e861"}

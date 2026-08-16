@@ -1,0 +1,58 @@
+{
+  "pocket": {
+    "coldSeconds": 8.093,
+    "warmSeconds": [
+      1.168,
+      1.125
+    ],
+    "peakWorkerRssMiB": 12,
+    "rows": [
+      {
+        "text": "Files is open.",
+        "synthesisSeconds": 8.093,
+        "audioSeconds": 1.68,
+        "realTimeFactor": 4.817
+      },
+      {
+        "text": "Hello. I am Bunny, and your system is ready.",
+        "synthesisSeconds": 1.168,
+        "audioSeconds": 3.84,
+        "realTimeFactor": 0.304
+      },
+      {
+        "text": "You have 7.8 gigabytes of memory available.",
+        "synthesisSeconds": 1.125,
+        "audioSeconds": 3.68,
+        "realTimeFactor": 0.306
+      }
+    ]
+  },
+  "kitten": {
+    "coldSeconds": 1.119,
+    "warmSeconds": [
+      0.928,
+      0.999
+    ],
+    "peakWorkerRssMiB": 12,
+    "rows": [
+      {
+        "text": "Files is open.",
+        "synthesisSeconds": 1.119,
+        "audioSeconds": 2.792,
+        "realTimeFactor": 0.401
+      },
+      {
+        "text": "Hello. I am Bunny, and your system is ready.",
+        "synthesisSeconds": 0.928,
+        "audioSeconds": 4.667,
+        "realTimeFactor": 0.199
+      },
+      {
+        "text": "You have 7.8 gigabytes of memory available.",
+        "synthesisSeconds": 0.999,
+        "audioSeconds": 5.692,
+        "realTimeFactor": 0.175
+      }
+    ]
+  }
+}

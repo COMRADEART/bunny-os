@@ -1,0 +1,33 @@
+===== did Files actually launch? =====
+--- process ---
+4174 /usr/bin/nautilus --gapplication-service
+5016 /bin/bash -lc set -u echo "===== did Files actually launch? =====" echo "--- process ---" pgrep -a -u bunny -f nautilus | head -5 || echo "no nautilus process" echo "--- systemd unit started by the shell ---" systemctl --user list-units --all --no-legend --plain 2>/dev/null | grep -i nautilus | head -5 || echo "no unit" echo "--- session bus name ---" busctl --user list --no-legend --no-pager 2>/dev/null | awk '{print $1}' | grep -i nautilus | head -3 || echo "no bus name" echo "--- window on the accessibility bus ---" python3 - <<'PY' import gi gi.require_version("Atspi", "2.0") from gi.repository import Atspi Atspi.init() desktop = Atspi.get_desktop(0) for i in range(desktop.get_child_count()):     app = desktop.get_child_at_index(i)     if app is None: continue     name = app.get_name() or ""     if name.lower() in ("files", "org.gnome.nautilus", "nautilus"):         for j in range(app.get_child_count()):             frame = app.get_child_at_index(j)             if frame is None: continue             state = frame.get_state_set()             comp = frame.get_component_iface()             ext = comp.get_extents(Atspi.CoordType.SCREEN) if comp else None             print(f"  application={name!r} frame={frame.get_name()!r} role={frame.get_role_name()} "                   f"showing={state.contains(Atspi.StateType.SHOWING)} "                   f"extents={(ext.x, ext.y, ext.width, ext.height) if ext else None}") PY  echo echo "===== which provider spoke? =====" python3 - <<'PY' import json, sys sys.path.insert(0, "/usr/lib/bunny-os/python") from companion.protocol import CompanionClient, default_endpoint_path client = CompanionClient(default_endpoint_path(), timeout=20.0) state = dict(client.call("settings_voice_get", {})) print("configured provider:", state.get("ttsProviderId")) print("last fallback warning:", repr(state.get("ttsFallbackWarning"))) for item in state.get("ttsProviders", []):     print(f"  {item.get('providerId'):18} ready={item.get('ready')!s:5} status={item.get('status')}") PY echo "--- the voice worker's own journal ---" journalctl --user -b --no-pager --since "-8min" -o cat 2>/dev/null \   | grep -iE "pocket|kitten|synthes|provider|voice" | tail -20  echo echo "===== character state, as assistive technology sees it =====" python3 - <<'PY' import gi gi.require_version("Atspi", "2.0") from gi.repository import Atspi Atspi.init() found = [] def walk(node, depth=0):     if depth > 12: return     try: count = node.get_child_count()     except Exception: return     for i in range(count):         try: child = node.get_child_at_index(i)         except Exception: continue         if child is None: continue         name = child.get_name() or ""         if name.startswith("Bunny, your assistant") or name.startswith("Bunny says:") \            or name.startswith("Microphone") or name.startswith("Speak to Bunny") \            or name.startswith("Stop "):             found.append((name, child.get_role_name()))         walk(child, depth + 1) desktop = Atspi.get_desktop(0) for i in range(desktop.get_child_count()):     app = desktop.get_child_at_index(i)     if app is not None and (app.get_name() or "") in ("gnome-shell", "GNOME Shell", "mutter"):         walk(app) for name, role in found:     print(f"  {role:14} {name[:120]!r}") PY 
+--- systemd unit started by the shell ---
+dbus-:1.2-org.gnome.Nautilus@0.service                                                                                 loaded    active   running   dbus-:1.2-org.gnome.Nautilus@0.service
+app-dbus\x2d:1.2\x2dorg.gnome.Nautilus.slice                                                                           loaded    active   active    Slice /app/dbus-:1.2-org.gnome.Nautilus
+--- session bus name ---
+org.gnome.Nautilus
+--- window on the accessibility bus ---
+  application='org.gnome.Nautilus' frame='Home' role=frame showing=True extents=(0, 0, 890, 550)
+
+===== which provider spoke? =====
+configured provider: pocket
+last fallback warning: ''
+  pocket             ready=True  status=READY
+  kitten             ready=False status=MODEL_VERIFIED
+  espeak-ng          ready=True  status=READY
+  speech-dispatcher  ready=True  status=READY
+--- the voice worker's own journal ---
+bunny-desktop: voice input unavailable: the companion runtime is unreachable: [Errno 2] No such file or directory
+Created slice app-dbus\x2d:1.2\x2dorg.gnome.Settings.GlobalShortcutsProvider.slice - Slice /app/dbus-:1.2-org.gnome.Settings.GlobalShortcutsProvider.
+Started dbus-:1.2-org.gnome.Settings.GlobalShortcutsProvider@0.service.
+
+===== character state, as assistive technology sees it =====
+  button         'Bunny, your assistant — idle. returned from a transient state'
+  notification   'Bunny says: Files is open.'
+  button         'Speak to Bunny'
+  button         'Stop Screencast'
+  button         'Stop Screen Sharing'
+  panel          'Microphone inactive'
+  slider         'Microphone'
+  label          'Microphone – Built-in Audio'

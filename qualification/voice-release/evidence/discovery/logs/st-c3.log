@@ -1,0 +1,32 @@
+===== speaking: /tmp/utt-capabilities.raw =====
+microphone open at 05:56:08.808
+utterance queued at 05:56:09.214
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "what can"}
+partial                  {"text": "what can you"}
+partial                  {"text": "what can you do"}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+transcript               {"text": "what can you do", "confidence": 1.0, "providerId": "vosk"}
+accepted                 {"taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+phase                    {"phase": "presenting_result", "statusText": "Preparing the response...", "taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+reply                    {"text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026", "taskId": "task-76e9c7f35e7
+speech_started           {"taskId": "task-76e9c7f35e78470d8040193b315b046a", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+phase                    {"phase": "speaking", "statusText": "Speaking...", "taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+speech_finished          {"taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+phase                    {"phase": "success", "statusText": "Done", "taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+finished                 {"phase": "success", "taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking c2.raw (5.97s)
+mic-daemon: speaking c3.raw (3.94s)

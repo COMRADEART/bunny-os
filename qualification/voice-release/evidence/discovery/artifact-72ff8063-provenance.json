@@ -1,0 +1,42 @@
+{
+  "archiveOnly": false,
+  "artifacts": [
+    {
+      "path": "bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2",
+      "sha256": "7d84078861a8b5957558d3f23b5c0a407f61ce134d53317178bcfbe126b96524",
+      "size": 2965650432
+    },
+    {
+      "path": "bunny-os.oci.tar",
+      "sha256": "3278fd5f89a07214ba0785b67f07cb63fb7a8c6fc3c55268b9461fbfa30b5b3b",
+      "size": 3148021760
+    }
+  ],
+  "baseImage": "localhost/bunny-os-retained-base:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+  "buildModeNote": "Full build: the OCI archive and every disk image the profile defines.",
+  "builder": {
+    "architecture": "x86_64",
+    "bootId": "981f147b-126d-4d9d-8224-8c1c08244957",
+    "containerStorageDriver": "overlay",
+    "cpuCount": "22",
+    "distribution": "Fedora Linux 44 (WSL)",
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "virtualization": "wsl"
+  },
+  "diskImages": [
+    "bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2"
+  ],
+  "imageReference": "localhost/bunny-os-shell-test:72ff80631774",
+  "profile": "shell-test",
+  "recordedAt": "2026-08-16T04:40:18.163238Z",
+  "reproducibility": {
+    "repeatedBuildComparisonPerformed": false
+  },
+  "schemaVersion": 1,
+  "sourceCommit": "72ff806317744608776db6b81840b4bcc8adf964",
+  "sourceDateEpoch": 1786853730,
+  "tools": {
+    "imageBuilder": "{\n  \"image-builder\": {\n    \"version\": \"76.0.0\",\n    \"commit\": \"unknown\",\n    \"dependencies\": {\n      \"images\": \"unknown\",\n      \"osbuild\": \"185\"\n    }\n  }\n}",
+    "podman": "podman version 5.8.4"
+  }
+}

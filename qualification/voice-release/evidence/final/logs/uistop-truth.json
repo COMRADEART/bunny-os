@@ -1,0 +1,27 @@
+{
+  "verdict": "PASS",
+  "graceSeconds": 0.8,
+  "intervals": [
+    {
+      "claim": "listening",
+      "start": 1786862715.8926084,
+      "end": 1786862721.8506188,
+      "seconds": 5.96,
+      "truthSamples": 22,
+      "violations": 0,
+      "ok": true
+    },
+    {
+      "claim": "talking",
+      "start": 1786862728.7327952,
+      "end": 1786862730.4071646,
+      "seconds": 1.67,
+      "truthSamples": 1,
+      "violations": 0,
+      "ok": true
+    }
+  ],
+  "claimViolations": [],
+  "captureWithoutClaim": [],
+  "captureWithoutClaimCount": 0
+}

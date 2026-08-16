@@ -1,0 +1,35 @@
+===== speaking: /tmp/utt-terminal.raw =====
+microphone open at 05:58:50.717
+utterance queued at 05:58:51.122
+allowing approval:task-a42cbbaa418b465ca8f8c352d9f51de4:72ca6d36c28b70ab9785785da7d5c4b7:0:launch_application at 05:58:57.179
+{"event": "approval_resolved", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4", "requestId": "approval:task-a42cbbaa418b465ca8f8c352d9f51de4:72ca6d36c28b70ab9785785da7d5c4b7:0:launch_application", "decision": "granted"}
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "open"}
+partial                  {"text": "open terminal"}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+transcript               {"text": "open terminal", "confidence": 1.0, "providerId": "vosk"}
+accepted                 {"taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+phase                    {"phase": "waiting_for_approval", "statusText": "Waiting for permission...", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+approval                 {"taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4", "action": "launch_application", "reason": "Open Terminal. The application starts and its window appears. Discloses: nothing. This cannot be undone (irreversible)."}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+phase                    {"phase": "presenting_result", "statusText": "Preparing the response...", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+reply                    {"text": "Terminal is open.", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+speech_started           {"taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+phase                    {"phase": "speaking", "statusText": "Speaking...", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+speech_finished          {"taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+phase                    {"phase": "success", "statusText": "Done", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+finished                 {"phase": "success", "taskId": "task-a42cbbaa418b465ca8f8c352d9f51de4"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking c3.raw (3.94s)
+mic-daemon: speaking hda-silent.raw (5.87s)

@@ -1,0 +1,112 @@
+{
+  "tag": "pdfs",
+  "utterance": "/tmp/utt-pdfs.raw",
+  "transitions": [
+    {
+      "state": "listening",
+      "at": 1786855719.524,
+      "sinceClick": 0.66
+    },
+    {
+      "state": "thinking",
+      "at": 1786855726.865,
+      "sinceClick": 8.0
+    },
+    {
+      "state": "talking",
+      "at": 1786855729.867,
+      "sinceClick": 11.0
+    },
+    {
+      "state": "success",
+      "at": 1786855737.35,
+      "sinceClick": 18.48
+    }
+  ],
+  "steps": [
+    {
+      "step": "watcher-started",
+      "at": 1786855718.388,
+      "samples": 1
+    },
+    {
+      "step": "microphone-button",
+      "at": {
+        "x": 1830,
+        "y": 663,
+        "width": 24,
+        "height": 24
+      },
+      "found": true
+    },
+    {
+      "step": "clicked-microphone",
+      "at": {
+        "x": 1842,
+        "y": 675
+      }
+    },
+    {
+      "step": "listening",
+      "at": 1786855719.172,
+      "microphoneIndicator": true
+    },
+    {
+      "step": "allowed",
+      "at": 1786855719.483,
+      "detail": "none"
+    },
+    {
+      "step": "spoke",
+      "at": 1786855720.084,
+      "utterance": "/tmp/utt-pdfs.raw"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855721.003,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855727.018,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855727.929,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855728.546,
+      "detail": "none"
+    },
+    {
+      "step": "talking",
+      "at": 1786855729.452,
+      "says": "Bunny says: I found 2 matching files: bunny-test-one.pdf, bunny-test-two.pdf."
+    },
+    {
+      "step": "allowed",
+      "at": 1786855730.061,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855737.591,
+      "detail": "none"
+    }
+  ],
+  "screens": {
+    "00-idle": "/root/bunny-ops/e2e/runs/s2/screens/pdfs-00-idle.ppm",
+    "01-listening": "/root/bunny-ops/e2e/runs/s2/screens/pdfs-01-listening.ppm",
+    "03-approval": "/root/bunny-ops/e2e/runs/s2/screens/pdfs-03-approval.ppm",
+    "02-talking": "/root/bunny-ops/e2e/runs/s2/screens/pdfs-02-talking.ppm",
+    "04-after": "/root/bunny-ops/e2e/runs/s2/screens/pdfs-04-after.ppm"
+  },
+  "listeningSeen": true,
+  "talkingSeen": true,
+  "approved": false,
+  "finalState": "success",
+  "says": "Bunny says: I found 2 matching files: bunny-test-one.pdf, bunny-test-two.pdf."
+}

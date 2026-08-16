@@ -1,0 +1,35 @@
+===== speaking: /tmp/utt-closeit.raw =====
+microphone open at 05:59:13.882
+utterance queued at 05:59:14.289
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "now"}
+partial                  {"text": "now close"}
+partial                  {"text": "now close it"}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+transcript               {"text": "now close it", "confidence": 0.8309033333333332, "providerId": "vosk"}
+accepted                 {"taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+phase                    {"phase": "presenting_result", "statusText": "Preparing the response...", "taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+reply                    {"text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026", "taskId": "task-c567cc1a90e
+speech_started           {"taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+phase                    {"phase": "speaking", "statusText": "Speaking...", "taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+speech_finished          {"taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+phase                    {"phase": "success", "statusText": "Done", "taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+finished                 {"phase": "success", "taskId": "task-c567cc1a90ea4515a4a0893a76e1b3da"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking c3.raw (3.94s)
+mic-daemon: speaking hda-silent.raw (5.87s)

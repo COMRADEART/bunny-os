@@ -1,0 +1,11 @@
+--- unloading the source out from under the capture ---
+--- events ---
+{"event": "voice_started", "requestId": "speechreq-1f9531cdca49461e93bd19a4504954fc", "sessionId": "ses-15d89330266643808ca99acb97e01512", "cancellationToken": "speechtok-725b0843a7c74768a21d8a907f07597b", "maxCaptureMs": 30000}
+{"event": "microphone", "active": true, "requestId": "speechreq-1f9531cdca49461e93bd19a4504954fc"}
+{"event": "voice_phase", "phase": "listening", "statusText": "Listening...", "requestId": "speechreq-1f9531cdca49461e93bd19a4504954fc"}
+{"event": "microphone", "active": false, "requestId": "speechreq-1f9531cdca49461e93bd19a4504954fc"}
+{"event": "microphone", "active": false, "requestId": "speechreq-1f9531cdca49461e93bd19a4504954fc"}
+{"event": "microphone", "active": false, "requestId": "speechreq-1f9531cdca49461e93bd19a4504954fc"}
+{"event": "microphone", "active": false, "requestId": "speechreq-1f9531cdca49461e93bd19a4504954fc"}
+{"event": "error", "reason": "the input device was lost; no transcript could be preserved; typed input remains available and no task was created", "requestId": "speechreq-1f9531cdca49461e93bd19a4504954fc"}
+--- stderr ---

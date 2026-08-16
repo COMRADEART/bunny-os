@@ -1,0 +1,30 @@
+===== speaking: /tmp/utt-terminal.raw =====
+microphone open at 05:58:34.692
+utterance queued at 05:58:35.096
+allowing approval:task-e786c2e46d9b4534846f5d9ffb79e573:72ca6d36c28b70ab9785785da7d5c4b7:0:launch_application at 05:58:41.147
+{"event": "approval_resolved", "taskId": "task-e786c2e46d9b4534846f5d9ffb79e573", "requestId": "approval:task-e786c2e46d9b4534846f5d9ffb79e573:72ca6d36c28b70ab9785785da7d5c4b7:0:launch_application", "decision": "denied"}
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "open"}
+partial                  {"text": "open terminal"}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+transcript               {"text": "open terminal", "confidence": 1.0, "providerId": "vosk"}
+accepted                 {"taskId": "task-e786c2e46d9b4534846f5d9ffb79e573"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-e786c2e46d9b4534846f5d9ffb79e573"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-e786c2e46d9b4534846f5d9ffb79e573"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-e786c2e46d9b4534846f5d9ffb79e573"}
+phase                    {"phase": "waiting_for_approval", "statusText": "Waiting for permission...", "taskId": "task-e786c2e46d9b4534846f5d9ffb79e573"}
+approval                 {"taskId": "task-e786c2e46d9b4534846f5d9ffb79e573", "action": "launch_application", "reason": "Open Terminal. The application starts and its window appears. Discloses: nothing. This cannot be undone (irreversible)."}
+phase                    {"phase": "blocked", "statusText": "Declined; nothing was done.", "taskId": "task-e786c2e46d9b4534846f5d9ffb79e573"}
+reply                    {"text": "the request was declined", "taskId": "task-e786c2e46d9b4534846f5d9ffb79e573", "kind": "error"}
+finished                 {"phase": "blocked", "taskId": "task-e786c2e46d9b4534846f5d9ffb79e573"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking c3.raw (3.94s)
+mic-daemon: speaking hda-silent.raw (5.87s)

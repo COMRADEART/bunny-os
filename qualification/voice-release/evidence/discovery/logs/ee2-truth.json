@@ -1,0 +1,43 @@
+{
+  "verdict": "FAIL",
+  "graceSeconds": 0.8,
+  "intervals": [
+    {
+      "claim": "listening",
+      "start": 1786855502.773044,
+      "end": 1786855507.5608575,
+      "seconds": 4.79,
+      "truthSamples": 1,
+      "violations": 0,
+      "ok": true
+    },
+    {
+      "claim": "talking",
+      "start": 1786855521.574593,
+      "end": 1786855523.455416,
+      "seconds": 1.88,
+      "truthSamples": 2,
+      "violations": 1,
+      "ok": false
+    }
+  ],
+  "claimViolations": [
+    {
+      "claim": "talking",
+      "start": 1786855521.574593,
+      "end": 1786855523.455416,
+      "violations": [
+        {
+          "at": 1786855523.272,
+          "captureStreams": 0,
+          "sinkStates": [
+            "2ch"
+          ],
+          "playerProcesses": 0
+        }
+      ]
+    }
+  ],
+  "captureWithoutClaim": [],
+  "captureWithoutClaimCount": 0
+}

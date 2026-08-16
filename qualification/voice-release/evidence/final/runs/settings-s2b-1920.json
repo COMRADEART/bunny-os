@@ -1,0 +1,2860 @@
+{
+  "tag": "s2b-1920",
+  "screen": {
+    "width": 1920,
+    "height": 1080
+  },
+  "controlCount": 143,
+  "offScreen": [],
+  "labelsPresent": {
+    "Engine": true,
+    "Voice": true,
+    "Model": false,
+    "Speech speed": false,
+    "Voice input": true,
+    "Speech responses": true,
+    "Speak responses for": true,
+    "Voice performance mode": true
+  },
+  "textSamples": [],
+  "controls": [
+    {
+      "name": "Bunny Settings",
+      "role": "frame",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 980,
+      "height": 753,
+      "path": [
+        "python3"
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 666,
+      "path": [
+        "python3",
+        [
+          "Bunny Settings"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 932,
+      "height": 666,
+      "path": [
+        "python3",
+        [
+          "Bunny Settings"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 666,
+      "path": [
+        [
+          "Bunny Settings"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Network",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Bluetooth",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Displays",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Sound",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Power",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Keyboard",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 40,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Mouse and Touchpad",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 36,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Appearance",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Applications",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Notifications",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Privacy",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Users",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Date and Time",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Storage",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Updates",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Recovery",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Bunny",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Voice",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Local Models",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Plugins",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Permissions",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 22,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "Accessibility",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "list item",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 135,
+      "height": 40,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ]
+      ]
+    },
+    {
+      "name": "System Information",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 131,
+      "height": 36,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "list"
+        ],
+        [
+          "list item"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 5,
+      "height": 666,
+      "path": [
+        [
+          "Bunny Settings"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 666,
+      "path": [
+        [
+          "Bunny Settings"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Voice",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 36,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Push-to-talk is explicit and bounded to 30 seconds. Audio and recognition run outside GNOME Shell, and no model is downloaded automatically.",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 36,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 26,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Voice input",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 78,
+      "height": 26,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Voice input",
+      "role": "switch",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 50,
+      "height": 26,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 26,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Speech responses",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 129,
+      "height": 26,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Speech responses",
+      "role": "switch",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 50,
+      "height": 26,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Speak responses for",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 143,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Voice requests only",
+      "role": "combo box",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 179,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Voice requests only",
+      "role": "toggle button",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 179,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "Voice requests only"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 159,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "Voice requests only"
+        ],
+        [
+          "Voice requests only"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 137,
+      "height": 24,
+      "path": [
+        [
+          "Voice requests only"
+        ],
+        [
+          "Voice requests only"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 137,
+      "height": 24,
+      "path": [
+        [
+          "Voice requests only"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 137,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 137,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Voice requests only",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 137,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Engine",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 48,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Pocket TTS \u2014 Model Verified",
+      "role": "combo box",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 247,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Pocket TTS \u2014 Model Verified",
+      "role": "toggle button",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 247,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "Pocket TTS \u2014 Model Verified"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 227,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "Pocket TTS \u2014 Model Verified"
+        ],
+        [
+          "Pocket TTS \u2014 Model Verified"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 205,
+      "height": 24,
+      "path": [
+        [
+          "Pocket TTS \u2014 Model Verified"
+        ],
+        [
+          "Pocket TTS \u2014 Model Verified"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 205,
+      "height": 24,
+      "path": [
+        [
+          "Pocket TTS \u2014 Model Verified"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 205,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 205,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Pocket TTS \u2014 Model Verified",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 205,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Voice performance mode",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 176,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Automatic",
+      "role": "combo box",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 113,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Automatic",
+      "role": "toggle button",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 113,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "Automatic"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 93,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "Automatic"
+        ],
+        [
+          "Automatic"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 71,
+      "height": 24,
+      "path": [
+        [
+          "Automatic"
+        ],
+        [
+          "Automatic"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 71,
+      "height": 24,
+      "path": [
+        [
+          "Automatic"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 71,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 71,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Automatic",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 71,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Voice",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 39,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Provider default",
+      "role": "combo box",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 153,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Provider default",
+      "role": "toggle button",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 153,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "Provider default"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 133,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "Provider default"
+        ],
+        [
+          "Provider default"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 111,
+      "height": 24,
+      "path": [
+        [
+          "Provider default"
+        ],
+        [
+          "Provider default"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 111,
+      "height": 24,
+      "path": [
+        [
+          "Provider default"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 111,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 111,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Provider default",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 111,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Pocket TTS model and prepared voice passed integrity checks; the isolated worker will load them on first use",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Microphone",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 83,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "System default",
+      "role": "combo box",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 146,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "System default",
+      "role": "toggle button",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 146,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "System default"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 126,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "System default"
+        ],
+        [
+          "System default"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 104,
+      "height": 24,
+      "path": [
+        [
+          "System default"
+        ],
+        [
+          "System default"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 104,
+      "height": 24,
+      "path": [
+        [
+          "System default"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 104,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 104,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "System default",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 104,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Speech recognition model",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 183,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Automatic (smallest installed)",
+      "role": "combo box",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 248,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Automatic (smallest installed)",
+      "role": "toggle button",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 248,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "Automatic (smallest installed)"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 228,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "Automatic (smallest installed)"
+        ],
+        [
+          "Automatic (smallest installed)"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 206,
+      "height": 24,
+      "path": [
+        [
+          "Automatic (smallest installed)"
+        ],
+        [
+          "Automatic (smallest installed)"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 206,
+      "height": 24,
+      "path": [
+        [
+          "Automatic (smallest installed)"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 206,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 206,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Automatic (smallest installed)",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 206,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Language",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 69,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Automatic",
+      "role": "combo box",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 113,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Automatic",
+      "role": "toggle button",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 113,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "Automatic"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 93,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "Automatic"
+        ],
+        [
+          "Automatic"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 71,
+      "height": 24,
+      "path": [
+        [
+          "Automatic"
+        ],
+        [
+          "Automatic"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 71,
+      "height": 24,
+      "path": [
+        [
+          "Automatic"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 71,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 71,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Automatic",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 71,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Push-to-talk shortcut: <Super><Alt>space",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Wake word: Disabled (not available in this milestone)",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 18,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Save voice settings",
+      "role": "button",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 34,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Save voice settings",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 734,
+      "height": 24,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "Save voice settings"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "grouping",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 980,
+      "height": 47,
+      "path": [
+        "python3",
+        [
+          "Bunny Settings"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 968,
+      "height": 46,
+      "path": [
+        "python3",
+        [
+          "Bunny Settings"
+        ],
+        [
+          "grouping"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 968,
+      "height": 46,
+      "path": [
+        [
+          "Bunny Settings"
+        ],
+        [
+          "grouping"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Bunny OS",
+      "role": "label",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 105,
+      "height": 46,
+      "path": [
+        [
+          "grouping"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "panel",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 42,
+      "height": 46,
+      "path": [
+        [
+          "grouping"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "",
+      "role": "grouping",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 41,
+      "height": 46,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ]
+      ]
+    },
+    {
+      "name": "Close",
+      "role": "button",
+      "text": "",
+      "x": 0,
+      "y": 0,
+      "width": 41,
+      "height": 46,
+      "path": [
+        [
+          "panel"
+        ],
+        [
+          "panel"
+        ],
+        [
+          "grouping"
+        ]
+      ]
+    }
+  ]
+}

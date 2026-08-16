@@ -1,0 +1,186 @@
+From /mnt/c/Users/allam/Documents/new/bunny-os
+   24168fbc..375fa830  feature/bunny-companion-capsules-trust -> win/stage2
+375fa830 test(voice): the approval buttons are asserted where they actually live
+python3 scripts/task.py test
++ /usr/sbin/python3 -m unittest discover -s tests -t /home/bunny/bunny-os
+..............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................bunny-image-tool: the input path is outside this app's own space
+.................................................................................................................................................................................................................................................................................................................................s....................................................................................................................s.....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................s.........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................FF.........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................bunny-config-dir: /tmp/tmpa9yhqun5/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.sbunny-config-dir: /tmp/tmpxsnuf58c/.config/bunny-os: is a symbolic link to '/tmp/tmpxsnuf58c/elsewhere'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmppef4k25k/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+bunny-config-dir: /tmp/tmppef4k25k/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmp3xeqfkp7/.config/bunny-os: is a symbolic link to '/tmp/tmp3xeqfkp7/nowhere-at-all'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.sbunny-config-dir: /tmp/tmpqil6j6bm/.config/bunny-os: parent directory is not accessible ([Errno 13] Permission denied: '/tmp/tmpqil6j6bm/.config/bunny-os')
+bunny-config-dir: /tmp/tmpqil6j6bm/.config/systemd/user: parent directory is not accessible ([Errno 13] Permission denied: '/tmp/tmpqil6j6bm/.config/systemd/user')
+.bunny-config-dir: /tmp/tmpp84mo4vb/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmp286l6uhk/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmpoh36o9oe/.config/bunny-os: is a symbolic link to '/tmp/tmp20icp2e9'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmp4wrrs2p5/.config/bunny-os: is a symbolic link to '/tmp/tmp4wrrs2p5/elsewhere'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.....................................................................................................................................................................................................................................................................................check-copy-size: /nonexistent/tree is not a directory
+..check-copy-size: refusing — 3 MB exceeds the 1 MB limit for a source copy.
+  largest directories:
+    assets                                3 MB
+  exclude the generated ones, or raise --limit-mb if this is genuinely source.
+.....................................................................................BLOCKED: capture /tmp/tmpm6kojevd/guest.pcap does not exist. A capture that never started is not evidence of silence.
+.BLOCKED: file is 10 bytes; a pcap global header is 24
+......BLOCKED: /tmp/tmpi7x12d6j/expected.json entry 0 must be {kind: dns|tcp|udp, pattern: <glob>, reason: <non-empty>}
+.............................................F.....F.....................................................................................................ssssssssss............................................................................................................................................................................................................................................sssss.................................................................................................................................................................................................................................................................................................s...............................................................F.F.................F..................................................................................................s.............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+======================================================================
+FAIL: test_every_prior_evidence_file_is_byte_identical (tests.companion.test_three_d_preservation.PreservedEvidence.test_every_prior_evidence_file_is_byte_identical)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/companion/test_three_d_preservation.py", line 126, in test_every_prior_evidence_file_is_byte_identical
+    self.assertEqual(mismatched, [], "prior evidence files changed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['qualification/installed-system/scripts/import_matrix_results.py'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'qualification/installed-system/scripts/import_matrix_results.py'
+
+- ['qualification/installed-system/scripts/import_matrix_results.py']
++ [] : prior evidence files changed
+
+======================================================================
+FAIL: test_no_file_was_added_to_an_earlier_phase_tree (tests.companion.test_three_d_preservation.PreservedEvidence.test_no_file_was_added_to_an_earlier_phase_tree)
+Added means *committed*, so the question is asked of git.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/companion/test_three_d_preservation.py", line 154, in test_no_file_was_added_to_an_earlier_phase_tree
+    self.assertEqual(added, [], "a file was added to an earlier phase's evidence tree")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['qualification/design/orca.json', 'qualif[2486 chars]son'] != []
+
+First list contains 39 additional elements.
+First extra element 0:
+'qualification/design/orca.json'
+
+Diff is 2655 characters long. Set self.maxDiff to None to see it. : a file was added to an earlier phase's evidence tree
+
+======================================================================
+FAIL: test_repository_satisfies_the_gate_as_configured (tests.licensing.test_licence_gate.GateTests.test_repository_satisfies_the_gate_as_configured)
+The real record and the real tree, together, must pass.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/licensing/test_licence_gate.py", line 125, in test_repository_satisfies_the_gate_as_configured
+    self.assertTrue(result.passed, f"unmet: {result.unmet}")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : unmet: ('spdx-identifiers: installer: 1 file(s) declare <missing>, expected GPL-3.0-or-later',)
+
+======================================================================
+FAIL: test_spdx_headers_match_the_declared_split (tests.licensing.test_licence_gate.RepositoryLayoutTests.test_spdx_headers_match_the_declared_split)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/licensing/test_licence_gate.py", line 157, in test_spdx_headers_match_the_declared_split
+    self.assertNotIn("<missing>", counts, f"{directory} has files without an SPDX header")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '<missing>' unexpectedly found in {'GPL-3.0-or-later': 46, '<missing>': 1} : installer has files without an SPDX header
+
+======================================================================
+FAIL: test_this_repository_currently_passes_every_validator (tests.portability.test_repository_validation.EveryRequiredValidatorIsReportedTests.test_this_repository_currently_passes_every_validator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/portability/test_repository_validation.py", line 83, in test_this_repository_currently_passes_every_validator
+    self.assertTrue(report.passed, [o.as_dict() for o in report.failing])
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : [{'validator': 'ShellCheck', 'result': 'FAIL', 'checked': 86, 'summary': '86 scripts, no suppression', 'skipReason': None, 'failures': [{'path': 'build/scripts/vm-install-story.sh:114', 'detail': 'SC2054 (warning): Use spaces, not commas, to separate array elements.'}, {'path': 'build/scripts/vm-install-story.sh:137', 'detail': 'SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).'}, {'path': 'build/scripts/vm-live-boot-checkpoints.sh:168', 'detail': 'SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).'}]}]
+
+======================================================================
+FAIL: test_validate_writes_the_machine_readable_report (tests.portability.test_repository_validation.MachineReadableOutputTests.test_validate_writes_the_machine_readable_report)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/portability/test_repository_validation.py", line 213, in test_validate_writes_the_machine_readable_report
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : repository validation: FAIL
+  ok    JSON parsing                     322 documents parsed
+  ok    Schema validation                55 schemas
+  ok    Python compilation               1021 files compiled in memory
+  ok    Shell syntax                     86 scripts parsed by bash -n
+  ok    Line endings                     120 attribute-protected files are LF
+  FAIL  ShellCheck                       86 scripts, no suppression
+           build/scripts/vm-install-story.sh:114
+             SC2054 (warning): Use spaces, not commas, to separate array elements.
+           build/scripts/vm-install-story.sh:137
+             SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).
+           build/scripts/vm-live-boot-checkpoints.sh:168
+             SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).
+  ok    Desktop entries                  11 entries (2 session, 9 launcher)
+  ok    XML and SVG                      10 XML/SVG assets parsed
+  ok    Licence headers                  921 declarations over 1161 files, all within ['Apache-2.0', 'GPL-3.0-or-later']
+  ok    Workflow YAML                    6 workflows parsed
+  ok    Committed evidence consistency   26 record(s) agree on candidate 79bb99ddb39d
+  ok    GNOME extension syntax           52 modules parsed by node --check, imports resolved
+  skip  systemd units                    requires BUNNY_VERIFY_SYSTEMD=1 and systemd-analyze on an installed Fedora fixture
+  ok    systemd unit programs            24 units, 2 recorded gap(s)
+  ok    Shell layout                     7 required shell directories
+  ok    Capability manifests             14 manifests, 5 essential, 28 MiB essential floor
+wrote build/out/qualification/repository-validation.json
+repository validation failed: ShellCheck
+
+
+======================================================================
+FAIL: test_shellcheck_accepts_every_shell_script (tests.portability.test_shellcheck_portability.ShellCheckPassesTests.test_shellcheck_accepts_every_shell_script)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/portability/test_shellcheck_portability.py", line 81, in test_shellcheck_accepts_every_shell_script
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : 
+In /home/bunny/bunny-os/build/scripts/vm-install-story.sh line 114:
+net_args=(-netdev user,id=net0 -device virtio-net-pci,netdev=net0)
+         ^-- SC2054 (warning): Use spaces, not commas, to separate array elements.
+
+
+In /home/bunny/bunny-os/build/scripts/vm-install-story.sh line 137:
+cleanup() {
+^-- SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).
+
+
+In /home/bunny/bunny-os/build/scripts/vm-live-boot-checkpoints.sh line 168:
+cleanup() { kill "${qemu_pid}" 2>/dev/null; wait "${qemu_pid}" 2>/dev/null; }
+^-- SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).
+
+For more information:
+  https://www.shellcheck.net/wiki/SC2054 -- Use spaces, not commas, to separa...
+  https://www.shellcheck.net/wiki/SC2329 -- This function is never invoked. C...
+
+
+----------------------------------------------------------------------
+Ran 5734 tests in 177.416s
+
+FAILED (failures=7, skipped=22)
+bunny-image-tool: wrote holiday-resized.png at 100x50
+bunny-image-tool: wrote out.png at 100x50
+bunny-image-tool: wrote a.png at 120x60
+bunny-image-tool: wrote b.png at 120x60
+bunny-config-dir: /tmp/tmpiac3w6re/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpiac3w6re/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpjzh09r2f/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpjzh09r2f/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpb6z2qyn4/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpb6z2qyn4/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpbmvacy09/.config/bunny-os: mode 0777 -> 0700
+bunny-config-dir: /tmp/tmpbmvacy09/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp352ndukp/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp352ndukp/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp352ndukp/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmp352ndukp/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpa9yhqun5/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpa9yhqun5/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpa9yhqun5/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpxsnuf58c/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpxsnuf58c/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpxsnuf58c/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmppef4k25k/.config/systemd/user: created
+bunny-config-dir: /tmp/tmppef4k25k/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmp3xeqfkp7/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpp84mo4vb/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp286l6uhk/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpoh36o9oe/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp4wrrs2p5/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpd97pom6f/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpd97pom6f/.config/systemd/user: created
+bunny-config-dir: /tmp/tmppsfvmsbp/.config/bunny-os: created
+bunny-config-dir: /tmp/tmppsfvmsbp/.config/systemd/user: created
+Verified explicit non-functional Bunny placeholder
+make: *** [Makefile:34: test] Error 1

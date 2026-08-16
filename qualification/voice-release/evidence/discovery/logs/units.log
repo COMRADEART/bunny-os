@@ -1,0 +1,8 @@
+bunny-companion.service       loaded active   running Bunny Companion runtime
+bunny-config-dir.service      loaded active   exited  Establish and verify the Bunny OS per-user configuration
+bunny-first-boot.service      loaded inactive dead    Bunny OS per-user first-boot preferences
+bunny-first-run.service       loaded failed   failed  Bunny OS first-run experience
+bunny-mic-daemon.service      loaded active   running [systemd-run] /usr/bin/python3 /tmp/mic-daemon.py /tmp/b
+bunny-settings-window.service loaded active   running [systemd-run] /usr/bin/bunny-settings --section voice
+--- window/renderer processes ---
+19688 /bin/bash -lc set -u systemctl --user list-units --all --no-legend --plain 'bunny*' | cut -c1-110 echo "--- window/renderer processes 

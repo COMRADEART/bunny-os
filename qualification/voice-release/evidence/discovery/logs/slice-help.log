@@ -1,0 +1,6 @@
+usage: bunny-os companion run-voice-renderer-slice [-h]
+                                                   [--slice-root SLICE_ROOT]
+
+options:
+  -h, --help            show this help message and exit
+  --slice-root SLICE_ROOT

@@ -1,0 +1,73 @@
+############ session units and renderer surface inventory ############
+bunny-companion.service       loaded active   running Bunny Companion runtime
+bunny-config-dir.service      loaded active   exited  Establish and verify the Bunny OS per-user configuration
+bunny-first-boot.service      loaded inactive dead    Bunny OS per-user first-boot preferences
+bunny-first-run.service       loaded failed   failed  Bunny OS first-run experience
+bunny-mic-daemon.service      loaded active   running [systemd-run] /usr/bin/python3 /tmp/mic-daemon.py /tmp/b
+bunny-settings-window.service loaded active   running [systemd-run] /usr/bin/bunny-settings --section voice
+--- window/renderer processes ---
+19688 /bin/bash -lc set -u systemctl --user list-units --all --no-legend --plain 'bunny*' | cut -c1-110 echo "--- window/renderer processes 
+############ renderer slice: what the installed CLI offers ############
+usage: bunny-os companion run-voice-renderer-slice [-h]
+                                                   [--slice-root SLICE_ROOT]
+
+options:
+  -h, --help            show this help message and exit
+  --slice-root SLICE_ROOT
+############ voice-renderer slice (installed, default mode) ############
+  File "/usr/lib/bunny-os/python/companion/cli.py", line 1201, in _run_voice_renderer_slice
+    report = run_voice_renderer_slice(root)
+  File "/usr/lib/bunny-os/python/companion/character/voice_slice.py", line 127, in run_voice_renderer_slice
+    service = CompanionService(ServiceOptions(
+        root=Path(root),
+    ...<3 lines>...
+        voice_preferences=VoicePreferences(speak_progress=True),
+    ))
+  File "/usr/lib/bunny-os/python/companion/service.py", line 2151, in __init__
+    self._bring_up()
+    ~~~~~~~~~~~~~~^^
+  File "/usr/lib/bunny-os/python/companion/service.py", line 2158, in _bring_up
+    self._step(step, getattr(self, "_step_" + step.replace("-", "_")))
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/bunny-os/python/companion/service.py", line 2162, in _step
+    action()
+    ~~~~~~^^
+  File "/usr/lib/bunny-os/python/companion/service.py", line 2252, in _step_acquire_singleton
+    singleton.acquire()
+    ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/bunny-os/python/companion/protocol.py", line 942, in acquire
+    raise DuplicateRuntime(
+    ...<2 lines>...
+    ) from exc
+companion.protocol.DuplicateRuntime: another Bunny companion runtime holds /run/user/1000/bunny-companion/runtime.sock.lock; one runtime owns the session
+############ quiescence + CPU: 60s idle sample ############
+{
+ "windowSeconds": 60,
+ "processes": {
+  "gnomeShell": {
+   "pid": 1186,
+   "cpuSecondsOver60s": 0.75,
+   "cpuPercent": 1.25,
+   "rssMiB": 307.2
+  },
+  "companion": {
+   "pid": 9950,
+   "cpuSecondsOver60s": 0.18,
+   "cpuPercent": 0.3,
+   "rssMiB": 238.2
+  },
+  "neuralWorker": {
+   "pid": 19793,
+   "cpuSecondsOver60s": 0.0,
+   "cpuPercent": 0.0,
+   "rssMiB": 9.3
+  }
+ }
+}
+############ CPU during a spoken flow ############
+transcript               {"text": "how much memory am i using", "confidence": 1.0, "providerId": "vosk"}
+speech_started           {"taskId": "task-4d9c46f64d514d7a96fe09c5295f7896", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+speech_finished          {"taskId": "task-4d9c46f64d514d7a96fe09c5295f7896"}
+finished                 {"phase": "success", "taskId": "task-4d9c46f64d514d7a96fe09c5295f7896"}
+[{"t": 1.0, "companion": 0.0, "worker": 0.0}, {"t": 2.0, "companion": 0.01, "worker": 0.0}, {"t": 3.0, "companion": 0.0, "worker": 0.0}, {"t": 4.0, "companion": 0.01, "worker": 0.0}, {"t": 5.0, "companion": 0.0, "worker": 0.0}, {"t": 6.0, "companion": 0.0, "worker": 0.0}, {"t": 7.0, "companion": 0.0, "worker": 0.0}, {"t": 8.0, "companion": 0.01, "worker": 0.0}, {"t": 9.0, "companion": 0.0, "worker": 0.0}, {"t": 10.0, "companion": 0.0, "worker": 0.0}, {"t": 11.0, "companion": 0.0, "worker": 0.0}, {"t": 12.0, "companion": 0.01, "worker": 0.0}, {"t": 13.0, "companion": 0.0, "worker": 0.0}, {"t": 14.0, "companion": 0.0, "worker": 0.0}, {"t": 15.0, "companion": 0.01, "worker": 0.0}, {"t": 16.0, "companion": 0.0, "worker": 0.0}, {"t": 17.0, "companion": 0.0, "worker": 0.0}, {"t": 18.0, "companion": 0.0, "worker": 0.0}, {"t": 19.0, "companion": 0.0, "worker": 0.0}, {"t": 20.0, "companion": 0.01, "worker": 0.0}, {"t": 21.0, "companion": 0.01, "worker": 0.0}, {"t": 22.0, "companion": 0.0, "worker": 0.0}, {"t": 23.0, "companion": 0.0, "worker": 0.0}, {"t": 24.0, "companion": 0.01, "worker": 0.0}, {"t": 25.0, "companion": 0.0, "worker": 0.0}, {"t": 26.0, "companion": 0.0, "worker": 0.0}, {"t": 27.0, "companion": 0.0, "worker": 0.0}, {"t": 28.0, "companion": 0.01, "worker": 0.0}, {"t": 29.0, "companion": 0.0, "worker": 0.0}, {"t": 30.0, "companion": 0.0, "worker": 0.0}, {"t": 31.0, "companion": 0.0, "worker": 0.0}, {"t": 32.0, "companion": 0.01, "worker": 0.0}, {"t": 33.0, "companion": 0.0, "worker": 0.0}, {"t": 34.0, "companion": 0.0, "worker": 0.0}, {"t": 35.0, "companion": 0.01, "worker": 0.0}, {"t": 36.0, "companion": 0.0, "worker": 0.0}, {"t": 37.0, "companion": 0.01, "worker": 0.0}, {"t": 38.0, "companion": 0.0, "worker": 0.0}, {"t": 39.0, "companion": 0.0, "worker": 0.0}, {"t": 40.0, "companion": 0.0, "worker": 0.0}, {"t": 41.0, "companion": 0.01, "worker": 0.0}, {"t": 42.0, "companion": 0.0, "worker": 0.0}, {"t": 43.0, "companion": 0.0, "worker": 0.0}, {"t": 44.1, "companion": 0.01, "worker": 0.0}, {"t": 45.1, "companion": 0.02, "worker": 0.0}]
+############ PHASE6 DONE ############

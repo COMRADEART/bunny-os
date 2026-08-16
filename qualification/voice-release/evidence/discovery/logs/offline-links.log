@@ -1,0 +1,9 @@
+--- links before ---
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP> 
+enp0s1           UP             52:54:00:12:34:56 <BROADCAST,MULTICAST,UP,LOWER_UP> 
+--- taking every non-loopback link down ---
+down: enp0s1
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP> 
+enp0s1           DOWN           52:54:00:12:34:56 <BROADCAST,MULTICAST> 
+--- is anything reachable? ---
+ping: connect: Network is unreachable

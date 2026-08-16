@@ -1,0 +1,37 @@
+===== speaking: /tmp/utt-open-files.raw =====
+microphone open at 06:45:44.958
+utterance queued at 06:45:45.363
+allowing approval:task-b81c9698f8c94e818086d1df54b7f2d2:26e3a72588074be39d2661db554c07ce:0:launch_application at 06:45:50.413
+{"event": "approval_resolved", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2", "requestId": "approval:task-b81c9698f8c94e818086d1df54b7f2d2:26e3a72588074be39d2661db554c07ce:0:launch_application", "decision": "granted"}
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "open"}
+partial                  {"text": "open fire"}
+partial                  {"text": "open files"}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+transcript               {"text": "open files", "confidence": 1.0, "providerId": "vosk"}
+accepted                 {"taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+phase                    {"phase": "waiting_for_approval", "statusText": "Waiting for permission...", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+approval                 {"taskId": "task-b81c9698f8c94e818086d1df54b7f2d2", "action": "launch_application", "reason": "Open Files. The application starts and its window appears. Discloses: nothing. This cannot be undone (irreversible)."}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+phase                    {"phase": "reviewing", "statusText": "A reviewer is looking at the work.", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+phase                    {"phase": "presenting_result", "statusText": "Preparing the response...", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+reply                    {"text": "Files is open.", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+speech_started           {"taskId": "task-b81c9698f8c94e818086d1df54b7f2d2", "providerId": "kitten", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+phase                    {"phase": "speaking", "statusText": "Speaking...", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+speech_finished          {"taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+phase                    {"phase": "success", "statusText": "Done", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+finished                 {"phase": "success", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking uistop.raw (3.94s)
+mic-daemon: speaking fallback.raw (4.19s)

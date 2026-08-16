@@ -1,0 +1,26 @@
+speech started for task-8a83db2a600e4b009d1009c9ebc3566a
+audio stopped 125 ms after the cancel
+--- did anything play afterwards? ---
+sink state: 2ch
+--- events ---
+voice_started        {}
+microphone           {}
+voice_phase          {"phase": "listening"}
+partial              {"text": "what"}
+partial              {"text": "what can"}
+partial              {"text": "what can you"}
+partial              {"text": "what can you do"}
+microphone           {}
+microphone           {}
+microphone           {}
+voice_phase          {"phase": "transcribing"}
+transcript           {"text": "what can you do", "providerId": "vosk"}
+accepted             {}
+phase                {"phase": "starting"}
+phase                {"phase": "understanding"}
+phase                {"phase": "planning"}
+phase                {"phase": "working"}
+phase                {"phase": "presenting_result"}
+reply                {"text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an ac
+speech_started       {"providerId": "pocket"}
+phase                {"phase": "speaking"}

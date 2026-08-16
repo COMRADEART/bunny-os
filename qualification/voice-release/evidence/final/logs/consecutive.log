@@ -1,0 +1,6 @@
+transcript               {"text": "how much memory am i using", "confidence": 1.0, "providerId": "vosk"}
+speech_finished          {"taskId": "task-8d7989521e4249a0b4079a7c73bacec8"}
+transcript               {"text": "find pdf files in downloads", "confidence": 1.0, "providerId": "vosk"}
+speech_finished          {"taskId": "task-21d5a4e538364a6c8423ae8bc08b2954"}
+transcript               {"text": "what can you do", "confidence": 1.0, "providerId": "vosk"}
+speech_finished          {"taskId": "task-9423182b26c0470f9fa235f0a0a99bb1"}

@@ -1,0 +1,55 @@
+===== speaking: /tmp/utt-long.raw =====
+microphone open at 05:53:13.359
+utterance queued at 05:53:13.765
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "please"}
+partial                  {"text": "please tell"}
+partial                  {"text": "please tell me"}
+partial                  {"text": "please tell me how"}
+partial                  {"text": "please tell me how much"}
+partial                  {"text": "please tell me how much memory"}
+partial                  {"text": "please tell me how much memory i"}
+partial                  {"text": "please tell me how much memory i have"}
+partial                  {"text": "please tell me how much memory i am"}
+partial                  {"text": "please tell me how much memory i am using"}
+partial                  {"text": "please tell me how much memory i am using right now"}
+partial                  {"text": "please tell me how much memory i am using right now and"}
+partial                  {"text": "please tell me how much memory i am using right now and also"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell me"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell me whether"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell me whether everything"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell me whether everything on"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell me whether everything on this"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell me whether everything on this computer"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell me whether everything on this computer is"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell me whether everything on this computer is healthy"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell me whether everything on this computer is healthy to"}
+partial                  {"text": "please tell me how much memory i am using right now and also tell me whether everything on this computer is healthy today"}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+transcript               {"text": "please tell me how much memory i am using right now and also tell me whether everything on this computer is healthy today", "confidence": 0.9910068260869566, "providerId": "vosk"}
+accepted                 {"taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+phase                    {"phase": "presenting_result", "statusText": "Preparing the response...", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+reply                    {"text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026", "taskId": "task-c9375a63ad5
+speech_started           {"taskId": "task-c9375a63ad5d45fe823bf0fb3299894d", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+phase                    {"phase": "speaking", "statusText": "Speaking...", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+speech_finished          {"taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+phase                    {"phase": "success", "statusText": "Done", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+finished                 {"phase": "success", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking int6.raw (3.94s)
+mic-daemon: speaking long.raw (12.52s)

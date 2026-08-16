@@ -1,0 +1,36 @@
+===== speaking: /tmp/utt-memory.raw =====
+microphone open at 05:35:58.358
+utterance queued at 05:35:58.762
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "how"}
+partial                  {"text": "how much"}
+partial                  {"text": "how much memory"}
+partial                  {"text": "how much memory and"}
+partial                  {"text": "how much memory am i"}
+partial                  {"text": "how much memory am i using"}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+transcript               {"text": "how much memory am i using", "confidence": 1.0, "providerId": "vosk"}
+accepted                 {"taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+phase                    {"phase": "presenting_result", "statusText": "Preparing the response...", "taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+reply                    {"text": "You are using 1.1 GiB of 5.8 GiB of memory (18%).", "taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+speech_started           {"taskId": "task-65f54c5002144ed1b214e750cd92ab72", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+phase                    {"phase": "speaking", "statusText": "Speaking...", "taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+speech_finished          {"taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+phase                    {"phase": "success", "statusText": "Done", "taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+finished                 {"phase": "success", "taskId": "task-65f54c5002144ed1b214e750cd92ab72"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking notts.raw (5.87s)
+mic-daemon: speaking restored.raw (5.87s)

@@ -1,0 +1,23 @@
+===== virtual microphone =====
+===== the daemon that keeps it alive =====
+mic-daemon: writing to /tmp/bunny-mic.fifo
+===== make it the default, and prove the graph agrees =====
+graph default source: 'bunny-virtual-microphone'
+graph default sink  : 'alsa_output.pci-0000_00_04.0.analog-stereo'
+
+===== what the companion now believes =====
+  pipewire   default='bunny-virtual-microphone' ready=True
+  pulse      default='bunny-virtual-microphone' ready=True
+  alsa       default='hw:0,0' ready=True
+  device pipewire   alsa_input.pci-0000_00_04.0.analog-stereo        default=False monitor=False
+  device pipewire   bunny-virtual-microphone                         default=True monitor=False
+  device pulse      alsa_output.pci-0000_00_04.0.analog-stereo.monitor default=False monitor=True
+  device pulse      alsa_input.pci-0000_00_04.0.analog-stereo        default=False monitor=False
+  device pulse      bunny-virtual-microphone                         default=True monitor=False
+  device alsa       hw:0,0                                           default=True monitor=False
+
+===== utterances to speak =====
+'Open Files.' -> /tmp/utt-open-files.raw: provider=kitten source_rate=24000 frames=42267 seconds=2.64 peak=23781
+'How much memory am I using?' -> /tmp/utt-memory.raw: provider=kitten source_rate=24000 frames=69067 seconds=4.32 peak=17736
+'Open Terminal.' -> /tmp/utt-terminal.raw: provider=kitten source_rate=24000 frames=37467 seconds=2.34 peak=21793
+'Find PDF files in Downloads.' -> /tmp/utt-pdfs.raw: provider=kitten source_rate=24000 frames=70667 seconds=4.42 peak=21089

@@ -1,0 +1,67 @@
+  watcher-started: {"samples": 1}
+  microphone-button: {"found": true, "at": {"x": 1772, "y": 612, "width": 24, "height": 24}}
+  clicked-microphone: {"at": {"x": 1784, "y": 624}}
+  state: listening (+0.6s)
+  listening: {"microphoneIndicator": true}
+  spoke: {"utterance": "/tmp/utt-open-files.raw"}
+  state: thinking (+5.4s)
+  state: warning (+6.4s)
+  allowed: {"detail": "allowing task=task-55cdbc7cfc3f4a49b2b631995a899f50 request=approval:task-55cdbc7cfc3f4a49b2b631995a899f50:26e3a72588074be39d2661db554c07ce:0:launch_application\n{\"event\": \"approval_res
+  state: thinking (+7.4s)
+  state: talking (+19.4s)
+  talking: {"says": "Bunny says: Files is open."}
+  state: success (+21.3s)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/s2-00-desktop.png (1920x1080)
+{
+  "tag": "ee1",
+  "utterance": "/tmp/utt-open-files.raw",
+  "transitions": [
+    {
+      "state": "listening",
+      "at": 1786855502.773,
+      "sinceClick": 0.64
+    },
+    {
+      "state": "thinking",
+      "at": 1786855507.561,
+      "sinceClick": 5.43
+    },
+    {
+      "state": "warning",
+      "at": 1786855508.488,
+      "sinceClick": 6.36
+    },
+    {
+      "state": "thinking",
+      "at": 1786855509.552,
+      "sinceClick": 7.42
+    },
+    {
+      "state": "talking",
+      "at": 1786855521.575,
+      "sinceClick": 19.45
+    },
+    {
+      "state": "success",
+      "at": 1786855523.455,
+      "sinceClick": 21.33
+    }
+  ],
+  "screens": {
+    "00-idle": "/root/bunny-ops/e2e/runs/s2/screens/ee1-00-idle.ppm",
+    "01-listening": "/root/bunny-ops/e2e/runs/s2/screens/ee1-01-listening.ppm",
+    "03-approval": "/root/bunny-ops/e2e/runs/s2/screens/ee1-03-approval.ppm",
+    "02-talking": "/root/bunny-ops/e2e/runs/s2/screens/ee1-02-talking.ppm",
+    "04-after": "/root/bunny-ops/e2e/runs/s2/screens/ee1-04-after.ppm"
+  },
+  "listeningSeen": true,
+  "talkingSeen": true,
+  "approved": true,
+  "finalState": "success",
+  "says": "Bunny says: Files is open."
+}

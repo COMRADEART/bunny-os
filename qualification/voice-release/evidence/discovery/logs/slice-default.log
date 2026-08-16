@@ -1,0 +1,40 @@
+BlockingIOError: [Errno 11] Resource temporarily unavailable
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/sbin/bunny-os", line 18, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/usr/lib/bunny-os/python/bunny_os/cli.py", line 154, in main
+    value = companion_module.dispatch(args)
+  File "/usr/lib/bunny-os/python/bunny_os/companion_cli.py", line 54, in dispatch
+    return companion_cli.dispatch(args)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/lib/bunny-os/python/companion/cli.py", line 417, in dispatch
+    return _run_voice_renderer_slice(args)
+  File "/usr/lib/bunny-os/python/companion/cli.py", line 1201, in _run_voice_renderer_slice
+    report = run_voice_renderer_slice(root)
+  File "/usr/lib/bunny-os/python/companion/character/voice_slice.py", line 127, in run_voice_renderer_slice
+    service = CompanionService(ServiceOptions(
+        root=Path(root),
+    ...<3 lines>...
+        voice_preferences=VoicePreferences(speak_progress=True),
+    ))
+  File "/usr/lib/bunny-os/python/companion/service.py", line 2151, in __init__
+    self._bring_up()
+    ~~~~~~~~~~~~~~^^
+  File "/usr/lib/bunny-os/python/companion/service.py", line 2158, in _bring_up
+    self._step(step, getattr(self, "_step_" + step.replace("-", "_")))
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/bunny-os/python/companion/service.py", line 2162, in _step
+    action()
+    ~~~~~~^^
+  File "/usr/lib/bunny-os/python/companion/service.py", line 2252, in _step_acquire_singleton
+    singleton.acquire()
+    ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/bunny-os/python/companion/protocol.py", line 942, in acquire
+    raise DuplicateRuntime(
+    ...<2 lines>...
+    ) from exc
+companion.protocol.DuplicateRuntime: another Bunny companion runtime holds /run/user/1000/bunny-companion/runtime.sock.lock; one runtime owns the session

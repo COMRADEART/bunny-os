@@ -1,0 +1,66 @@
+  watcher-started: {"samples": 1}
+  microphone-button: {"found": true, "at": {"x": 1772, "y": 633, "width": 24, "height": 24}}
+  clicked-microphone: {"at": {"x": 1784, "y": 645}}
+  state: listening (+0.7s)
+  listening: {"microphoneIndicator": true}
+  allowed: {"detail": "none"}
+  spoke: {"utterance": "/tmp/utt-memory.raw"}
+  allowed: {"detail": "none"}
+  state: thinking (+8.0s)
+  allowed: {"detail": "none"}
+  allowed: {"detail": "none"}
+  allowed: {"detail": "none"}
+  state: talking (+11.0s)
+  talking: {"says": "Bunny says: You are using 1.9 GiB of 5.8 GiB of memory (33%)."}
+  allowed: {"detail": "none"}
+  state: success (+18.1s)
+  allowed: {"detail": "none"}
+/root/bunny-ops/e2e/runs/s2/screens/ee1-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/s2-00-desktop.png (1920x1080)
+{
+  "tag": "mem",
+  "utterance": "/tmp/utt-memory.raw",
+  "transitions": [
+    {
+      "state": "listening",
+      "at": 1786855691.456,
+      "sinceClick": 0.66
+    },
+    {
+      "state": "thinking",
+      "at": 1786855698.824,
+      "sinceClick": 8.02
+    },
+    {
+      "state": "talking",
+      "at": 1786855701.76,
+      "sinceClick": 10.96
+    },
+    {
+      "state": "success",
+      "at": 1786855708.908,
+      "sinceClick": 18.11
+    }
+  ],
+  "screens": {
+    "00-idle": "/root/bunny-ops/e2e/runs/s2/screens/mem-00-idle.ppm",
+    "01-listening": "/root/bunny-ops/e2e/runs/s2/screens/mem-01-listening.ppm",
+    "03-approval": "/root/bunny-ops/e2e/runs/s2/screens/mem-03-approval.ppm",
+    "02-talking": "/root/bunny-ops/e2e/runs/s2/screens/mem-02-talking.ppm",
+    "04-after": "/root/bunny-ops/e2e/runs/s2/screens/mem-04-after.ppm"
+  },
+  "listeningSeen": true,
+  "talkingSeen": true,
+  "approved": false,
+  "finalState": "success",
+  "says": "Bunny says: You are using 1.9 GiB of 5.8 GiB of memory (33%)."
+}

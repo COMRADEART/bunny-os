@@ -1,0 +1,246 @@
+############ waiting for the build ############
+STAGE2_BUILD_DONE rc=0 commit=24168fbcd77c2f88400b8a909596bcfa806196f2
+e302c16d8095835ffa96d48db0520082b179af4d96674849cd3dc6f2dc0f71af  build/out/shell-test/bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2
+############ boot s2b ############
+Running as unit: bunny-explore-s2b.service; invocation ID: edadd709ab554de0b247300018f26853
+tools staged for s2b
+GUEST-READY s2b
+############ settle + health + rig ############
+bunny-desktop: the Bunny desktop is up
+bunny-desktop: assistant unavailable: the companion runtime is unreachable: [Errno 2] No such file or directory — systemctl --user start bunny-companion.service
+bunny-desktop: voice input unavailable: the companion runtime is unreachable: [Errno 2] No such file or directory
+bunny-desktop: the shell left its cover pane over the desktop; hidden, so pointer input reaches it
+bunny-desktop: GNOME's panel hidden after the startup deadline
+bunny-desktop: the companion runtime is reachable
+bunny-desktop: push-to-talk is available
+===== shell JS errors =====
+===== voice health through the shipped bridge =====
+{"event": "voice_health", "available": true, "reason": "", "providerId": "vosk", "implementationId": "vosk/native-c-api-1+vosk-model-small-en-us-0.15", "language": "", "devices": [{"backendId": "pipewire", "default": true, "description": "Built-in Audio Analog Stereo", "deviceId": "alsa_input.pci-0000_00_04.0.analog-stereo", "healthy": true, "monitor": false, "name": "alsa_input.pci-0000_00_04.0.analog-stereo", "sampleSpecification": "", "state": "suspended"}, {"backendId": "pulse", "default": false, "description": "PipeWire", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo.monitor", "healthy": true, "monitor": true, "name": "alsa_output.pci-0000_00_04.0.analog-stereo.monitor", "sampleSpecification": "s16le 2ch 48000Hz", "state": "SUSPENDED"}, {"backendId": "pulse", "default": true, "description": "PipeWire", "deviceId": "alsa_input.pci-0000_00_04.0.analog-stereo", "healthy": true, "monitor": false, "name": "alsa_input.pci-0000_00_04.0.analog-stereo", "sampleSpecification": "s16le 2ch 48000Hz", "state": "SUSPENDED"}, {"backendId": "alsa", "default": true, "description": "card 0: Intel [HDA Intel], device 0: Generic Analog [Generic Analog]", "deviceId": "hw:0,0", "healthy": true, "monitor": false, "name": "hw:0,0", "sampleSpecification": "", "state": ""}], "selectedDevice": "", "readinessState": "STT_READY", "maxCaptureMs": 30000, "wakeWord": "disabled"}
+
+===== the model directory as shipped =====
+total 12
+drwxr-xr-x. 3 root root  66 Jan  1  1970 .
+--- stderr ---
+Running as unit: bunny-mic-daemon.service; invocation ID: 72554b7da2c84d12a5ffdcb372b0be4f
+  device pipewire   alsa_input.pci-0000_00_04.0.analog-stereo        default=False monitor=False
+  device pipewire   bunny-virtual-microphone                         default=True monitor=False
+  device pulse      alsa_output.pci-0000_00_04.0.analog-stereo.monitor default=False monitor=True
+  device pulse      alsa_input.pci-0000_00_04.0.analog-stereo        default=False monitor=False
+  device pulse      bunny-virtual-microphone                         default=True monitor=False
+  device alsa       hw:0,0                                           default=True monitor=False
+
+===== utterances to speak =====
+'Open Files.' -> /tmp/utt-open-files.raw: provider=kitten source_rate=24000 frames=42267 seconds=2.64 peak=23781
+'How much memory am I using?' -> /tmp/utt-memory.raw: provider=kitten source_rate=24000 frames=69067 seconds=4.32 peak=17736
+'Open Terminal.' -> /tmp/utt-terminal.raw: provider=kitten source_rate=24000 frames=37467 seconds=2.34 peak=21793
+'Find PDF files in Downloads.' -> /tmp/utt-pdfs.raw: provider=kitten source_rate=24000 frames=70667 seconds=4.42 peak=21089
+'What can you do?' -> /tmp/utt-capabilities.raw: provider=kitten source_rate=24000 frames=38267 seconds=2.39 peak=16676
+############ EE-1 primary gate ############
+--- stderr ---
+Running as unit: bunny-truth-poller.service; invocation ID: 92dd6badbefe41d6a52dbaf1711344bb
+  state: listening (+0.7s)
+  state: thinking (+5.6s)
+  state: warning (+6.3s)
+  allowed: {"detail": "allowing task=task-20c23e34d5354b04b2228caf40899896 request=approval:task-20c23e34d5354b04b2228caf40899896:26e3a72588074be39d2661db554c07ce:0:launch_application\n{\"event\": \"approval_res
+  state: working (+7.9s)
+  state: thinking (+8.6s)
+  state: talking (+22.5s)
+  talking: {"says": "Bunny says: Files is open."}
+  state: success (+24.2s)
+  "says": "Bunny says: Files is open."
+truth[ee1]: PASS
+--- process ---
+5016 /bin/bash -lc set -u echo "===== did Files actually launch? =====" echo "--- process ---" pgrep -a -u bunny -f nautilus | head -5 || echo "no nautilus process" echo "--- systemd unit started by the shell ---" systemctl --user list-units --all --no-legend --plain 2>/dev/null | grep -i nautilus | head -5 || echo "no unit" echo "--- session bus name ---" busctl --user list --no-legend --no-pager 2>/dev/null | awk '{print $1}' | grep -i nautilus | head -3 || echo "no bus name" echo "--- window on the accessibility bus ---" python3 - <<'PY' import gi gi.require_version("Atspi", "2.0") from gi.repository import Atspi Atspi.init() desktop = Atspi.get_desktop(0) for i in range(desktop.get_child_count()):     app = desktop.get_child_at_index(i)     if app is None: continue     name = app.get_name() or ""     if name.lower() in ("files", "org.gnome.nautilus", "nautilus"):         for j in range(app.get_child_count()):             frame = app.get_child_at_index(j)             if frame is None: continue             state = frame.get_state_set()             comp = frame.get_component_iface()             ext = comp.get_extents(Atspi.CoordType.SCREEN) if comp else None             print(f"  application={name!r} frame={frame.get_name()!r} role={frame.get_role_name()} "                   f"showing={state.contains(Atspi.StateType.SHOWING)} "                   f"extents={(ext.x, ext.y, ext.width, ext.height) if ext else None}") PY  echo echo "===== which provider spoke? =====" python3 - <<'PY' import json, sys sys.path.insert(0, "/usr/lib/bunny-os/python") from companion.protocol import CompanionClient, default_endpoint_path client = CompanionClient(default_endpoint_path(), timeout=20.0) state = dict(client.call("settings_voice_get", {})) print("configured provider:", state.get("ttsProviderId")) print("last fallback warning:", repr(state.get("ttsFallbackWarning"))) for item in state.get("ttsProviders", []):     print(f"  {item.get('providerId'):18} ready={item.get('ready')!s:5} status={item.get('status')}") PY echo "--- the voice worker's own journal ---" journalctl --user -b --no-pager --since "-8min" -o cat 2>/dev/null \   | grep -iE "pocket|kitten|synthes|provider|voice" | tail -20  echo echo "===== character state, as assistive technology sees it =====" python3 - <<'PY' import gi gi.require_version("Atspi", "2.0") from gi.repository import Atspi Atspi.init() found = [] def walk(node, depth=0):     if depth > 12: return     try: count = node.get_child_count()     except Exception: return     for i in range(count):         try: child = node.get_child_at_index(i)         except Exception: continue         if child is None: continue         name = child.get_name() or ""         if name.startswith("Bunny, your assistant") or name.startswith("Bunny says:") \            or name.startswith("Microphone") or name.startswith("Speak to Bunny") \            or name.startswith("Stop "):             found.append((name, child.get_role_name()))         walk(child, depth + 1) desktop = Atspi.get_desktop(0) for i in range(desktop.get_child_count()):     app = desktop.get_child_at_index(i)     if app is not None and (app.get_name() or "") in ("gnome-shell", "GNOME Shell", "mutter"):         walk(app) for name, role in found:     print(f"  {role:14} {name[:120]!r}") PY 
+  application='org.gnome.Nautilus' frame='Home' role=frame showing=True extents=(0, 0, 890, 550)
+configured provider: pocket
+last fallback warning: ''
+played.wav: 2ch 44100Hz 16bit 6.25s peak=13700 nonzero=76738
+  heard: 'files is open'
+############ spoken telemetry + files, with truth ############
+--- stderr ---
+Running as unit: bunny-truth-poller.service; invocation ID: 2017c55a84134a368e9106f3b69f7a0f
+  state: listening (+0.7s)
+  state: thinking (+7.8s)
+  state: talking (+10.7s)
+  talking: {"says": "Bunny says: You are using 1.9 GiB of 5.8 GiB of memory (33%)."}
+  state: success (+18.0s)
+  "says": "Bunny says: You are using 1.9 GiB of 5.8 GiB of memory (33%)."
+truth[mem]: PASS
+/var/home/bunny/Downloads/bunny-test-one.pdf: PDF document, version 1.4
+/var/home/bunny/Downloads/bunny-test-two.pdf: PDF document, version 1.4
+--- stderr ---
+Running as unit: bunny-truth-poller.service; invocation ID: dd364ce04e0344e6a6a4df4be8d03891
+  state: listening (+0.8s)
+  state: thinking (+8.1s)
+  state: talking (+11.0s)
+  talking: {"says": "Bunny says: I found 2 matching files: bunny-test-one.pdf, bunny-test-two.pdf."}
+  state: success (+18.4s)
+  "says": "Bunny says: I found 2 matching files: bunny-test-one.pdf, bunny-test-two.pdf."
+truth[pdfs]: PASS
+############ AG-5 deny (before any terminal exists) ############
+{"event": "approval_resolved", "taskId": "task-e80cfe1a69c1421ab2e84b549ef4f112", "requestId": "approval:task-e80cfe1a69c1421ab2e84b549ef4f112:72ca6d36c28b70ab9785785da7d5c4b7:0:launch_application", "decision": "denied"}
+phase                    {"phase": "blocked", "statusText": "Declined; nothing was done.", "taskId": "task-e80cfe1a69c1421ab2e84b549ef4f112"}
+reply                    {"text": "the request was declined", "taskId": "task-e80cfe1a69c1421ab2e84b549ef4f112", "kind": "error"}
+finished                 {"phase": "blocked", "taskId": "task-e80cfe1a69c1421ab2e84b549ef4f112"}
+9002 /bin/bash -lc pgrep -a -u bunny -f "ptyxis|gnome-terminal|kgx" || echo "no terminal process"
+############ TT-4 interruption, corrected instruments ############
+players before the cancel: 1  sink: RUNNING
+cancel answered: {"event": "speech_output_cancelled", "available": true, "cancelled": ["speech-572377f322f74039a96771e104bcd025"], "captionRetained": true, "count": 1, "taskAffe
+audio stopped 130 ms after the cancel
+sink state: SUSPENDED
+players now: 0
+############ EE-5 the very next interaction speaks ############
+reply                    {"text": "You are using 1.9 GiB of 5.8 GiB of memory (33%).", "taskId": "task-741e338bf7154b039de9d4143ee2bc0a"}
+speech_started           {"taskId": "task-741e338bf7154b039de9d4143ee2bc0a", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+speech_finished          {"taskId": "task-741e338bf7154b039de9d4143ee2bc0a"}
+finished                 {"phase": "success", "taskId": "task-741e338bf7154b039de9d4143ee2bc0a"}
+postint wall seconds: 21
+############ UI stop control, with truth ############
+--- stderr ---
+Running as unit: bunny-truth-poller.service; invocation ID: 9f8afbbb12654ff58f4cfc538e003bc2
+  state: listening (+0.8s)
+  state: thinking (+6.8s)
+  state: talking (+13.7s)
+  talking: {"says": "Bunny says: I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player "}
+  clicked-stop: {"at": {"x": 1842, "y": 696}}
+  state: idle (+15.3s)
+  state: success (+15.5s)
+  "says": "Bunny says: I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026"
+truth[uistop]: PASS
+############ TT-5 fallback ############
+  hidden: /usr/share/bunny-os/voice/pocket
+active
+transcript               {"text": "open files", "confidence": 1.0, "providerId": "vosk"}
+speech_started           {"taskId": "task-b81c9698f8c94e818086d1df54b7f2d2", "providerId": "kitten", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+speech_finished          {"taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+finished                 {"phase": "success", "taskId": "task-b81c9698f8c94e818086d1df54b7f2d2"}
+############ TT-6 all providers gone: fast, honest, text intact ############
+  /usr/bin/spd-say
+active
+reply                    {"text": "You are using 1.3 GiB of 5.8 GiB of memory (22%).", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+speech_finished          {"taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+warning                  {"reason": "no eligible local voice provider; the caption is the whole of the output", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+finished                 {"phase": "success", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+notts wall seconds: 11
+############ restore + recovery ############
+restored: /usr/bin/spd-say
+active
+speech_started           {"taskId": "task-d6c05780352f41ac8b7fd1101e7773de", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+speech_finished          {"taskId": "task-d6c05780352f41ac8b7fd1101e7773de"}
+finished                 {"phase": "success", "taskId": "task-d6c05780352f41ac8b7fd1101e7773de"}
+############ EE-4 offline ############
+enp0s1           DOWN           52:54:00:12:34:56 <BROADCAST,MULTICAST> 
+--- is anything reachable? ---
+ping: connect: Network is unreachable
+{"event": "approval_resolved", "taskId": "task-e1c9534b4dba4fbb8d2024190c3b0dc1", "requestId": "approval:task-e1c9534b4dba4fbb8d2024190c3b0dc1:72ca6d36c28b70ab9785785da7d5c4b7:0:launch_application", "decision": "granted"}
+reply                    {"text": "Terminal is open.", "taskId": "task-e1c9534b4dba4fbb8d2024190c3b0dc1"}
+speech_started           {"taskId": "task-e1c9534b4dba4fbb8d2024190c3b0dc1", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+speech_finished          {"taskId": "task-e1c9534b4dba4fbb8d2024190c3b0dc1"}
+finished                 {"phase": "success", "taskId": "task-e1c9534b4dba4fbb8d2024190c3b0dc1"}
+14466 /usr/libexec/gnome-terminal-server
+14660 /bin/bash -lc pgrep -a -u bunny -f "gnome-terminal|ptyxis|kgx" | head -2 || echo none
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+enp0s1           UP             10.0.2.15/24 fec0::f3d8:cca8:38c2:f5e5/64 fe80::a23a:e5ed:b257:832c/64 
+############ VI matrix: loss, absence, return ############
+{"event": "error", "reason": "the input device was lost; no transcript could be preserved; typed input remains available and no task was created", "requestId": "speechreq-1f9531cdca49461e93bd19a4504954fc"}
+error                    {"reason": "the input device was lost; no transcript could be preserved; typed input remains available and no task was created"}
+--- stderr ---
+Running as unit: bunny-mic-daemon.service; invocation ID: 0089a0345278477caefce358567b51fd
+'How much memory am I using?' -> /tmp/utt-memory.raw: provider=kitten source_rate=24000 frames=69067 seconds=4.32 peak=18482
+'Open Terminal.' -> /tmp/utt-terminal.raw: provider=kitten source_rate=24000 frames=37467 seconds=2.34 peak=21899
+'Find PDF files in Downloads.' -> /tmp/utt-pdfs.raw: provider=kitten source_rate=24000 frames=70667 seconds=4.42 peak=20569
+transcript               {"text": "how much memory am i using", "confidence": 1.0, "providerId": "vosk"}
+speech_finished          {"taskId": "task-6f161138f4e54320b71612248ce16bba"}
+finished                 {"phase": "success", "taskId": "task-6f161138f4e54320b71612248ce16bba"}
+############ ST-7 consecutive ############
+transcript               {"text": "how much memory am i using", "confidence": 1.0, "providerId": "vosk"}
+speech_finished          {"taskId": "task-8d7989521e4249a0b4079a7c73bacec8"}
+transcript               {"text": "find pdf files in downloads", "confidence": 1.0, "providerId": "vosk"}
+speech_finished          {"taskId": "task-21d5a4e538364a6c8423ae8bc08b2954"}
+transcript               {"text": "what can you do", "confidence": 1.0, "providerId": "vosk"}
+speech_finished          {"taskId": "task-9423182b26c0470f9fa235f0a0a99bb1"}
+############ session parity ############
+{"event": "accepted", "taskId": "task-0ff788dd72e54bffad7ad201c28033f0", "sessionId": "ses-15d89330266643808ca99acb97e01512"}
+{"event": "finished", "phase": "success", "taskId": "task-0ff788dd72e54bffad7ad201c28033f0"}
+session: ses-15d89330266643808ca99acb97e01512 'Bunny Desktop' active: ['task-e80cfe1a69c1421ab2e84b549ef4f112'] completed: ['task-20c23e34d5354b04b2228caf40899896', 'task-f0c3a3cf152541a6a663813ee1a5bd4a', 'task-9a8c00e1364244009015a3ab3f9ee9b8', 'task-47ab8068fa02448fae9bc4f377df03b4', 'task-741e338bf7154b039de9d4143ee2bc0a', 'task-7f0e99593b6c4c38881353d9c7bc534b', 'task-b81c9698f8c94e818086d1df54b7f2d2', 'task-d391655a808d4a54894f79b97477cb3e', 'task-d6c05780352f41ac8b7fd1101e7773de', 'task-e1c9534b4dba4fbb8d2024190c3b0dc1', 'task-6f161138f4e54320b71612248ce16bba', 'task-8d7989521e4249a0b4079a7c73bacec8', 'task-21d5a4e538364a6c8423ae8bc08b2954', 'task-9423182b26c0470f9fa235f0a0a99bb1', 'task-0ff788dd72e54bffad7ad201c28033f0']
+--- the store on disk ---
+/var/home/bunny/.local/state/bunny-companion/store/sessions/ses-15d89330266643808ca99acb97e01512/session.json tasks=16
+  title: Bunny Desktop id: ses-15d89330266643808ca99acb97e01512
+############ renderer slice, solo ############
+voice-renderer slice exit: 0
+steps=18 pass=0 other=[]
+active
+############ idle CPU + RSS (60s) ############
+  "gnomeShell": {
+   "pid": 1244,
+   "cpuSecondsOver60s": 4.65,
+   "cpuPercent": 7.75,
+   "rssMiB": 322.3
+  },
+  "companion": {
+   "pid": 16842,
+   "cpuSecondsOver60s": 0.16,
+   "cpuPercent": 0.27,
+   "rssMiB": 62.5
+  },
+  "neuralWorker": {
+   "pid": 16902,
+   "cpuSecondsOver60s": 0.0,
+   "cpuPercent": 0.0,
+   "rssMiB": 9.1
+  }
+ }
+}
+############ settings page ############
+    "Speech responses": true,
+    "Speak responses for": true,
+    "Voice performance mode": true
+  },
+  "textSamples": []
+}
+############ latency table ############
+{
+ "note": "AT-SPI-sampled upper bounds; grain ~0.15s",
+ "rows": [
+  {
+   "tag": "ee1",
+   "utteranceEndToThinkingSeconds": 2.1,
+   "thinkingToTalkingSeconds": 16.83,
+   "utteranceEndToSpokenReplySeconds": 18.93,
+   "approved": true,
+   "finalState": "success"
+  },
+  {
+   "tag": "mem",
+   "utteranceEndToThinkingSeconds": 2.31,
+   "thinkingToTalkingSeconds": 2.86,
+   "utteranceEndToSpokenReplySeconds": 5.17,
+   "approved": false,
+   "finalState": "success"
+  },
+  {
+   "tag": "pdfs",
+   "utteranceEndToThinkingSeconds": 2.45,
+   "thinkingToTalkingSeconds": 2.87,
+   "utteranceEndToSpokenReplySeconds": 5.32,
+   "approved": false,
+   "finalState": "success"
+  },
+  {
+   "tag": "uistop",
+   "utteranceEndToThinkingSeconds": 2.87,
+   "thinkingToTalkingSeconds": 6.88,
+   "utteranceEndToSpokenReplySeconds": 9.75,
+   "approved": false,
+   "finalState": "success"
+  }
+ ]
+}
+############ collect ############
+/root/bunny-ops/e2e/runs/s2b/screens/settings-s2b-1920.png
+/root/bunny-ops/e2e/runs/s2b/screens/uistop-00-idle.png
+/root/bunny-ops/e2e/runs/s2b/screens/uistop-01-listening.png
+/root/bunny-ops/e2e/runs/s2b/screens/uistop-02-talking.png
+/root/bunny-ops/e2e/runs/s2b/screens/uistop-03-approval.png
+/root/bunny-ops/e2e/runs/s2b/screens/uistop-04-after.png
+############ S2B-FINAL DONE ############

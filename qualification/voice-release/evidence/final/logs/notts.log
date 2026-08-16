@@ -1,0 +1,36 @@
+===== speaking: /tmp/utt-memory.raw =====
+microphone open at 06:46:10.786
+utterance queued at 06:46:11.190
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "how"}
+partial                  {"text": "how much"}
+partial                  {"text": "how much memory"}
+partial                  {"text": "how much memory and"}
+partial                  {"text": "how much memory am i"}
+partial                  {"text": "how much memory and"}
+partial                  {"text": "how much memory and i"}
+partial                  {"text": "how much memory am i using"}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+transcript               {"text": "how much memory am i using", "confidence": 1.0, "providerId": "vosk"}
+accepted                 {"taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+phase                    {"phase": "presenting_result", "statusText": "Preparing the response...", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+reply                    {"text": "You are using 1.3 GiB of 5.8 GiB of memory (22%).", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+speech_finished          {"taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+warning                  {"reason": "no eligible local voice provider; the caption is the whole of the output", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+phase                    {"phase": "success", "statusText": "Done", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+finished                 {"phase": "success", "taskId": "task-d391655a808d4a54894f79b97477cb3e"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking fallback.raw (4.19s)
+mic-daemon: speaking notts.raw (5.87s)

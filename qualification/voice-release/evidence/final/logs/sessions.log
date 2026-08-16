@@ -1,0 +1,4 @@
+session: ses-15d89330266643808ca99acb97e01512 'Bunny Desktop' active: ['task-e80cfe1a69c1421ab2e84b549ef4f112'] completed: ['task-20c23e34d5354b04b2228caf40899896', 'task-f0c3a3cf152541a6a663813ee1a5bd4a', 'task-9a8c00e1364244009015a3ab3f9ee9b8', 'task-47ab8068fa02448fae9bc4f377df03b4', 'task-741e338bf7154b039de9d4143ee2bc0a', 'task-7f0e99593b6c4c38881353d9c7bc534b', 'task-b81c9698f8c94e818086d1df54b7f2d2', 'task-d391655a808d4a54894f79b97477cb3e', 'task-d6c05780352f41ac8b7fd1101e7773de', 'task-e1c9534b4dba4fbb8d2024190c3b0dc1', 'task-6f161138f4e54320b71612248ce16bba', 'task-8d7989521e4249a0b4079a7c73bacec8', 'task-21d5a4e538364a6c8423ae8bc08b2954', 'task-9423182b26c0470f9fa235f0a0a99bb1', 'task-0ff788dd72e54bffad7ad201c28033f0']
+--- the store on disk ---
+/var/home/bunny/.local/state/bunny-companion/store/sessions/ses-15d89330266643808ca99acb97e01512/session.json tasks=16
+  title: Bunny Desktop id: ses-15d89330266643808ca99acb97e01512

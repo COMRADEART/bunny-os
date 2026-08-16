@@ -1,0 +1,116 @@
+{
+  "tag": "postint",
+  "utterance": "/tmp/utt-memory.raw",
+  "transitions": [
+    {
+      "state": "listening",
+      "at": 1786855915.995,
+      "sinceClick": 0.66
+    },
+    {
+      "state": "thinking",
+      "at": 1786855925.981,
+      "sinceClick": 10.64
+    },
+    {
+      "state": "working",
+      "at": 1786855926.134,
+      "sinceClick": 10.79
+    },
+    {
+      "state": "thinking",
+      "at": 1786855926.287,
+      "sinceClick": 10.95
+    },
+    {
+      "state": "success",
+      "at": 1786855986.598,
+      "sinceClick": 71.26
+    },
+    {
+      "state": "idle",
+      "at": 1786855989.804,
+      "sinceClick": 74.46
+    }
+  ],
+  "steps": [
+    {
+      "step": "watcher-started",
+      "at": 1786855914.86,
+      "samples": 1
+    },
+    {
+      "step": "microphone-button",
+      "at": {
+        "x": 1830,
+        "y": 684,
+        "width": 24,
+        "height": 24
+      },
+      "found": true
+    },
+    {
+      "step": "clicked-microphone",
+      "at": {
+        "x": 1842,
+        "y": 696
+      }
+    },
+    {
+      "step": "listening",
+      "at": 1786855915.656,
+      "microphoneIndicator": true
+    },
+    {
+      "step": "allowed",
+      "at": 1786855916.262,
+      "detail": "none"
+    },
+    {
+      "step": "spoke",
+      "at": 1786855916.863,
+      "utterance": "/tmp/utt-memory.raw"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855917.485,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855926.511,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855927.432,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855928.343,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855987.221,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786855990.233,
+      "detail": "none"
+    }
+  ],
+  "screens": {
+    "00-idle": "/root/bunny-ops/e2e/runs/s2/screens/postint-00-idle.ppm",
+    "01-listening": "/root/bunny-ops/e2e/runs/s2/screens/postint-01-listening.ppm",
+    "03-approval": "/root/bunny-ops/e2e/runs/s2/screens/postint-03-approval.ppm",
+    "04-after": "/root/bunny-ops/e2e/runs/s2/screens/postint-04-after.ppm"
+  },
+  "listeningSeen": true,
+  "talkingSeen": false,
+  "approved": false,
+  "finalState": "idle",
+  "says": "Bunny says: You are using 2.0 GiB of 5.8 GiB of memory (34%)."
+}
