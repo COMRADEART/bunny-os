@@ -957,8 +957,16 @@ class ShellVoiceBoundaryTests(unittest.TestCase):
         self.assertIn("case 'approval':", assistant)
         self.assertIn("case 'approval':", voice)
         self.assertIn("showApproval(approval", panel)
-        self.assertIn("'Deny'", panel)
-        self.assertIn("'Allow'", panel)
+        # The Allow/Deny controls moved into the trust component when the
+        # permission question became one (lib/components/trust.js, the design
+        # system phase); the panel delegates to it and must keep delegating.
+        # This assertion went stale then and failed on both platforms without
+        # anyone noticing until the Stage 2 full-suite baseline.
+        self.assertIn("TrustComponent", panel)
+        self.assertIn("buildApproval", panel)
+        prompt = (EXTENSION / "lib/trustPrompt.js").read_text(encoding="utf-8")
+        self.assertIn("'Deny'", prompt)
+        self.assertIn("'Allow'", prompt)
         self.assertIn("resolveApproval(", shell)
 
     def test_stop_keeps_indicator_until_companion_confirms_device_closed(self) -> None:
