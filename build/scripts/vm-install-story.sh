@@ -117,9 +117,9 @@ echo "driver:  ${drive_args:-<no extra arguments>}"
 # and the installation either completes from the medium alone or fails where
 # everyone can see it. The default keeps the user-mode NIC the interactive
 # journeys ran with.
-net_args=(-netdev user,id=net0 -device virtio-net-pci,netdev=net0)
+net_args=("-netdev" "user,id=net0" "-device" "virtio-net-pci,netdev=net0")
 if [[ "${BUNNY_INSTALL_NET:-user}" == "none" ]]; then
-  net_args=(-nic none)
+  net_args=("-nic" "none")
   echo "network: none (offline evidence run)"
 fi
 
@@ -219,8 +219,8 @@ kill "${shots_pid}" "${grub_pid}" 2>/dev/null
 # reads the disk. Run 25 completed and the verifier still failed the gate,
 # because the still-running qemu held the image's write lock and qemu-img
 # refused to open it — the machine must be off before its disk is evidence.
-kill "${qemu_pid}" 2>/dev/null
-wait "${qemu_pid}" 2>/dev/null
+cleanup
+trap - EXIT
 
 echo "--- driver events ---"
 grep -a 'BUNNY-INSTALL' "${log}" | tail -40

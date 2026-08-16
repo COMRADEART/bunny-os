@@ -24,10 +24,15 @@ COLLECTOR = ROOT / "scripts/reproducibility/collect-builder-record.sh"
 
 
 def shell_scripts() -> list[Path]:
+    # qualification/*/evidence/ is excluded for the same reason
+    # release/validation.py's _shell_paths excludes it: those scripts are
+    # records of what ran, pinned byte-for-byte by the preservation tests,
+    # and a lint finding there is unfixable without editing evidence.
     return sorted(
         path
         for path in ROOT.rglob("*.sh")
         if "node_modules" not in path.parts and ".git" not in path.parts
+        and not ("qualification" in path.parts and "evidence" in path.parts)
     )
 
 

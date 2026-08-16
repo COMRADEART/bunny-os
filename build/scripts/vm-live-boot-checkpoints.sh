@@ -268,6 +268,10 @@ while (( SECONDS < deadline )); do
 done
 [[ "${outcome}" == "timeout" ]] && shot "99-timeout"
 kill "${shots_pid}" "${select_pid}" "${menu_shot_pid}" 2>/dev/null
+# The guest is done narrating; stop it before the log is read as evidence, so
+# the classification reads a finished file rather than one still being written.
+cleanup
+trap - EXIT
 
 # §17: record what actually happened, from inside the guest's own output. The
 # kernel prints the command line it was given, which is the only account of it

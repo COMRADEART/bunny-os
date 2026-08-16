@@ -27,7 +27,6 @@
 #   BUNNY_LOGIN_TYPE_AT     LUKS typing delays (default "35 90")
 #   BUNNY_LOGIN_AT          seconds after boot to type the login (default 150)
 #   BUNNY_LOGIN_JOURNEY     desktop-drive journey (default skip)
-#   BUNNY_LOGIN_RUN_SECONDS overall in-session budget (default 600)
 #   BUNNY_LOGIN_INTERACT    0 = photograph only, no driver (default 1)
 set -uo pipefail
 
@@ -45,7 +44,6 @@ password="${BUNNY_LOGIN_PASSWORD:-bunny-test-password}"
 type_at="${BUNNY_LOGIN_TYPE_AT:-35 90}"
 login_at="${BUNNY_LOGIN_AT:-150}"
 journey="${BUNNY_LOGIN_JOURNEY:-skip}"
-run_seconds="${BUNNY_LOGIN_RUN_SECONDS:-600}"
 interact="${BUNNY_LOGIN_INTERACT:-1}"
 width=1920
 height=1080
