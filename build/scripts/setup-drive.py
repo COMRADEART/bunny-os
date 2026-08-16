@@ -498,7 +498,9 @@ def journey(arguments: argparse.Namespace, surface: Surface) -> int:
     # harness's memory of them. Best-effort: a medium whose installer package
     # moved still drives; the harness then falls back to the reduced form.
     try:
-        installed = Path("/usr/lib/bunny-os/python")
+        # The installer package routes to /usr/lib/bunny-installer (the
+        # installer-python route), not to the shared python tree.
+        installed = Path("/usr/lib/bunny-installer")
         if installed.is_dir() and str(installed) not in sys.path:
             sys.path.insert(0, str(installed))
         from installer.setup_state import Choices as _Choices
