@@ -1,0 +1,10 @@
+{
+ "bootId": "f4d7522cd1f34641a1b0c5aff7f1b2b4",
+ "checksOnCorrectBoot": {
+  "companionService": true,
+  "gnomeShell": true,
+  "graphicalTarget": true,
+  "sessionOpened": true
+ },
+ "firstRunSegvLines": 3
+}

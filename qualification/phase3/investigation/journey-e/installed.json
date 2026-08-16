@@ -1,0 +1,54 @@
+{
+ "schemaVersion": 1,
+ "note": "Read from the installed filesystem. `expected` is used only to know what to look for; every value below came from a file on the target.",
+ "disk": "build/out/install/journey-e/target.qcow2",
+ "expectedFrom": "build/out/install/journey-e/expected.json",
+ "observed": {
+  "filesystems": [
+   "/dev/sda1: vfat",
+   "/dev/sda2: ext4"
+  ],
+  "luksPresent": true,
+  "partitions": {
+   "root": "/dev/mapper/luks0",
+   "boot": "/dev/sda2"
+  },
+  "bootEntries": [
+   "ostree-1.conf"
+  ],
+  "deployment": [
+   "1ac2a513c13aecf3f15931a7fe490f9e2a4cd6608e4a9d944fce60102112ddd6.0",
+   "1ac2a513c13aecf3f15931a7fe490f9e2a4cd6608e4a9d944fce60102112ddd6.0.origin"
+  ]
+ },
+ "findings": [],
+ "checked": {
+  "language": {
+   "read": true,
+   "value": "en_GB.UTF-8"
+  },
+  "keyboard": {
+   "read": true,
+   "value": "gb"
+  },
+  "hostname": {
+   "read": true,
+   "value": "warren"
+  },
+  "account": {
+   "read": true,
+   "present": true,
+   "username": "alex"
+  },
+  "rootLocked": {
+   "read": true,
+   "locked": true
+  },
+  "choicesOnTarget": {
+   "read": true,
+   "files": [
+    "choices.json"
+   ]
+  }
+ }
+}

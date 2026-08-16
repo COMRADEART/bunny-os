@@ -1,0 +1,28 @@
+{
+ "checksOnCorrectBoot": {
+  "companionService": true,
+  "gdmStarted": true,
+  "gnomeShell": true,
+  "graphicalTarget": true,
+  "sessionOpened": true
+ },
+ "mdweAB": {
+  "bootId": "b7dc9336cc994a10a5ae1345fb03d885",
+  "firstRunLines": [
+   "2026-08-16T14:28:04-04:00 warren systemd[2574]: bunny-first-run.service: Consumed 1.038s CPU time over 2.624s wall clock time, 140.9M memory peak.",
+   "2026-08-16T14:30:01-04:00 warren systemd[3593]: Starting bunny-first-run.service - Bunny OS first-run experience...",
+   "2026-08-16T14:30:01-04:00 warren systemd[3593]: Reload requested from client PID 4523 ('systemctl') (unit bunny-first-run.service)...",
+   "2026-08-16T14:30:03-04:00 warren bunny-first-run[4243]: libEGL warning: failed to get driver name for fd -1",
+   "2026-08-16T14:30:03-04:00 warren bunny-first-run[4243]: libEGL warning: MESA-LOADER: failed to retrieve device information",
+   "2026-08-16T14:30:03-04:00 warren bunny-first-run[4243]: libEGL warning: failed to get driver name for fd -1",
+   "2026-08-16T14:30:03-04:00 warren bunny-first-run[4243]: MESA: error: ZINK: failed to choose pdev",
+   "2026-08-16T14:30:03-04:00 warren bunny-first-run[4243]: libEGL warning: egl: failed to create dri2 screen",
+   "2026-08-16T14:30:25-04:00 warren systemd[3593]: bunny-first-run.service: Main process exited, code=killed, status=15/TERM",
+   "2026-08-16T14:30:25-04:00 warren systemd[3593]: bunny-first-run.service: Failed with result 'signal'.",
+   "2026-08-16T14:30:25-04:00 warren systemd[3593]: Stopped bunny-first-run.service - Bunny OS first-run experience.",
+   "2026-08-16T14:30:25-04:00 warren systemd[3593]: bunny-first-run.service: Consumed 1.146s CPU time over 23.510s wall clock time, 138.8M memory peak."
+  ],
+  "firstRunSegvLines": 3,
+  "firstRunStarts": 2
+ }
+}
