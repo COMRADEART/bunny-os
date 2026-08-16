@@ -1055,6 +1055,21 @@ def interact(control, qmp, pointer, targets, arguments,
     control.close()
     qmp.close()
 
+    # A journey that was requested and did not run is a failed run, not a
+    # complete one. login-8 exited 0 with `ready: {ok: false}` and
+    # `activated: false` in its record — the Trust prompt was never on screen
+    # and the harness still said PASS. Every early return in run_journey leaves
+    # one of these fields telling the truth; this is where the exit code
+    # starts listening to them.
+    if arguments.journey != "skip":
+        journey = report.get("journey") or {}
+        aborted = (not (journey.get("ready") or {}).get("ok")
+                   or not (journey.get("fixture") or {}).get("ok")
+                   or journey.get("activated") is False
+                   or not journey.get("approvalVisible"))
+        if aborted:
+            return save("journey-incomplete")
+
     return save("complete")
 
 

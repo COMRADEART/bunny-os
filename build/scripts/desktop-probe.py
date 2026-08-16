@@ -360,6 +360,15 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
         verb = request.get("command")
         label = request.get("label", "")
         answer: dict = {"command": verb, "label": label}
+        # The environment is rebuilt per request, not captured once. The probe
+        # starts before gnome-session imports WAYLAND_DISPLAY into the user
+        # manager, and a snapshot from that moment reported "compositor not
+        # ready" on a desktop that was visibly drawing — and made the bridge's
+        # desktop adapter refuse every action ("no graphical session") for the
+        # life of the session. login-1 and login-8 both carried that refusal.
+        refreshed = user_bus_environment(user)
+        if refreshed:
+            environment = refreshed
         # Every command is answered, including one that raised.
         #
         # An exception in here used to kill the probe, and the host then read
