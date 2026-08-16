@@ -1,0 +1,8 @@
+[
+ {"command": "system", "label": "system-after-reboot", "timeout": 240},
+ {"command": "settings", "action": "show", "label": "settings-expect-3d"},
+ {"command": "renderer", "label": "renderer-expect-3d"},
+ {"command": "settings", "action": "set", "section": "character",
+  "field": "render_mode", "value": "2d", "label": "select-2d"},
+ {"command": "settings", "action": "show", "label": "settings-now-2d"}
+]
