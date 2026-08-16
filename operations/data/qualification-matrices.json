@@ -1,8 +1,8 @@
 {
  "blockedReasons": {
   "accessibility": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
-  "encryption": "Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.",
-  "installation": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
+  "encryption": "Encrypted installation and passphrase first-boot now carry evidence (installation/encrypted-uefi-installation; qualification/installer-journeys/evidence/first-boot). The remaining NOT_RUN scenarios need scenario work of their own: recovery keys are not yet offered by the setup surface, and update/rollback-after-encryption depend on the update and rollback matrices, which are blocked above.",
+  "installation": "The unattended journey harness (build/scripts/vm-install-story.sh) now drives the shipped setup surface end to end and five installation scenarios carry virtual-machine evidence (qualification/installer-journeys/evidence). The remaining NOT_RUN scenarios each need a journey definition of their own (a second disk, an NVMe/SATA controller variant, a mid-install interruption, an induced bootloader failure, a recovery medium) and none has run.",
   "preservation": "Preservation is measured across an update or rollback. Both are blocked above, so nothing has been preserved or lost yet.",
   "recovery-media": "vm-recovery-test.sh exits 3: BUNNY_RECOVERY_ISO must name an existing recovery image. A recovery OCI archive and QCOW2 were built; no signed recovery ISO exists.",
   "rollback": "vm-rollback-test.sh exits 3: BUNNY_PREVIOUS_BETA_DISK must name an existing QCOW2. There is no previous release to roll back to.",
@@ -189,23 +189,15 @@
     "scenario": "incorrect-password"
    },
    {
-    "evidenceReference": "qualification/installed-system/evidence/ISQ-20260801-tpm-absent-001/record.json",
+    "evidenceReference": "qualification/installed-system/evidence/ISQ-20260801-tpm-absent-002/record.json",
     "method": "virtual-machine",
-    "notes": "QEMU/KVM evidence bound to archive 0258f92af988 (commit 619065e068e2); supporting records: qualification/installed-system/evidence/ISQ-20260801-tpm-absent-001/record.json",
+    "notes": "QEMU/KVM evidence bound to archive 29e54aaf9dd1 (commit b9c317d35b85); supporting records: qualification/installed-system/evidence/ISQ-20260801-tpm-absent-002/record.json",
     "outcome": "PASS",
-    "recordedAt": "2026-08-01T14:31:13Z",
+    "recordedAt": "2026-08-16T04:03:01Z",
     "scenario": "tpm-fallback"
    }
   ],
   "installation": [
-   {
-    "evidenceReference": null,
-    "method": "source-inspection",
-    "notes": "The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.",
-    "outcome": "NOT_RUN",
-    "recordedAt": "2026-07-29T00:00:00Z",
-    "scenario": "offline-installation"
-   },
    {
     "evidenceReference": null,
     "method": "source-inspection",
@@ -263,36 +255,44 @@
     "scenario": "recovery-installation"
    },
    {
-    "evidenceReference": "qualification/installed-system/evidence/installs/blank.json",
-    "method": "virtual-machine",
-    "notes": "QEMU/KVM evidence bound to archive 0258f92af988 (commit 619065e068e2); supporting records: qualification/installed-system/evidence/installs/blank.json, qualification/installed-system/evidence/ISQ-20260801-first-boot-004/record.json",
-    "outcome": "PASS",
-    "recordedAt": "2026-08-01T14:31:13Z",
-    "scenario": "empty-uefi-disk"
-   },
-   {
-    "evidenceReference": "qualification/installed-system/evidence/installs/blank.json",
-    "method": "virtual-machine",
-    "notes": "QEMU/KVM evidence bound to archive 0258f92af988 (commit 619065e068e2); supporting records: qualification/installed-system/evidence/installs/blank.json, qualification/installed-system/evidence/ISQ-20260801-first-boot-004/record.json",
-    "outcome": "PASS",
-    "recordedAt": "2026-08-01T14:31:13Z",
-    "scenario": "unencrypted-installation"
-   },
-   {
-    "evidenceReference": "qualification/installed-system/evidence/installs/encrypted.json",
-    "method": "virtual-machine",
-    "notes": "QEMU/KVM evidence bound to archive 0258f92af988 (commit 619065e068e2); supporting records: qualification/installed-system/evidence/installs/encrypted.json, qualification/installed-system/evidence/ISQ-20260801-encrypted-first-boot-001/record.json",
-    "outcome": "FAIL",
-    "recordedAt": "2026-08-01T14:31:13Z",
-    "scenario": "encrypted-uefi-installation"
-   },
-   {
     "evidenceReference": "qualification/installed-system/evidence/installs/existing-data-protected.json",
     "method": "virtual-machine",
     "notes": "QEMU/KVM evidence bound to archive 0258f92af988 (commit 619065e068e2); supporting records: qualification/installed-system/evidence/installs/existing-data-protected.json, qualification/installed-system/evidence/installs/existing-data-authorized.json",
     "outcome": "PASS",
     "recordedAt": "2026-08-01T14:31:13Z",
     "scenario": "existing-linux-replacement"
+   },
+   {
+    "evidenceReference": "qualification/installer-journeys/evidence/journey-a/installed.json",
+    "method": "virtual-machine",
+    "notes": "unattended \u00a753 journey evidence (provenance: qualification/installer-journeys/evidence/README.md); supporting records: qualification/installer-journeys/evidence/journey-a/installed.json, qualification/installer-journeys/evidence/journey-c/installed.json",
+    "outcome": "PASS",
+    "recordedAt": "2026-08-16T04:03:01Z",
+    "scenario": "empty-uefi-disk"
+   },
+   {
+    "evidenceReference": "qualification/installer-journeys/evidence/journey-c/installed.json",
+    "method": "virtual-machine",
+    "notes": "unattended \u00a753 journey evidence (provenance: qualification/installer-journeys/evidence/README.md); supporting records: qualification/installer-journeys/evidence/journey-c/installed.json",
+    "outcome": "PASS",
+    "recordedAt": "2026-08-16T04:03:01Z",
+    "scenario": "unencrypted-installation"
+   },
+   {
+    "evidenceReference": "qualification/installer-journeys/evidence/journey-c-offline/installed.json",
+    "method": "virtual-machine",
+    "notes": "unattended \u00a753 journey evidence (provenance: qualification/installer-journeys/evidence/README.md); supporting records: qualification/installer-journeys/evidence/journey-c-offline/installed.json",
+    "outcome": "PASS",
+    "recordedAt": "2026-08-16T04:03:01Z",
+    "scenario": "offline-installation"
+   },
+   {
+    "evidenceReference": "qualification/installer-journeys/evidence/journey-a/installed.json",
+    "method": "virtual-machine",
+    "notes": "unattended \u00a753 journey evidence (provenance: qualification/installer-journeys/evidence/README.md); supporting records: qualification/installer-journeys/evidence/journey-a/installed.json, qualification/installer-journeys/evidence/journey-b/installed.json, qualification/installer-journeys/evidence/first-boot/result.json",
+    "outcome": "PASS",
+    "recordedAt": "2026-08-16T04:03:01Z",
+    "scenario": "encrypted-uefi-installation"
    }
   ],
   "preservation": [
@@ -617,6 +617,6 @@
   ]
  },
  "note": "Every scenario that has not been executed is recorded as NOT_RUN with the reason it could not run. NOT_RUN is blocking. A scenario is never resolved by inspecting the code that would handle it.",
- "recordedOn": "2026-08-01T14:31:13Z",
+ "recordedOn": "2026-08-16T04:03:01Z",
  "schemaVersion": 1
 }

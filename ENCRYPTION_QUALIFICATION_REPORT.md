@@ -1,6 +1,6 @@
 # Encryption qualification report
 
-Date: 2026-08-01T14:31:13Z  
+Date: 2026-08-16T04:03:01Z  
 Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
 Result: **NOT QUALIFIED** — 2 of 9 scenarios resolved, 1 failing, 6 not run.
 
@@ -18,11 +18,11 @@ Nine scenarios covering LUKS password unlock, recovery key, incorrect password, 
 | `recovery-media-access` | NOT_RUN | source-inspection | — |
 | `luks-password-unlock` | FAIL | virtual-machine | `qualification/installed-system/evidence/ISQ-20260801-encrypted-first-boot-001/record.json` |
 | `incorrect-password` | PASS | virtual-machine | `qualification/installed-system/evidence/ISQ-20260801-encrypted-wrong-credential-001/record.json` |
-| `tpm-fallback` | PASS | virtual-machine | `qualification/installed-system/evidence/ISQ-20260801-tpm-absent-001/record.json` |
+| `tpm-fallback` | PASS | virtual-machine | `qualification/installed-system/evidence/ISQ-20260801-tpm-absent-002/record.json` |
 
 ## Why these scenarios have not run
 
-Depends on a completed installation. build/scripts/vm-encrypted-install.sh states that encrypted automation needs a reviewed Anaconda test configuration and a protected secret channel, and is interactive-only.
+Encrypted installation and passphrase first-boot now carry evidence (installation/encrypted-uefi-installation; qualification/installer-journeys/evidence/first-boot). The remaining NOT_RUN scenarios need scenario work of their own: recovery keys are not yet offered by the setup surface, and update/rollback-after-encryption depend on the update and rollback matrices, which are blocked above.
 
 ## Unresolved
 

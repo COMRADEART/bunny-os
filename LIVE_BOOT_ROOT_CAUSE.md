@@ -11,6 +11,12 @@ and recorded as such. See §7a–§7e.
 
 **Journey A has not run. INSTALLATION VM RUNTIME VALIDATED is not claimed.**
 
+> **Superseded 2026-08-16.** True when written; no longer. Journey A
+> completed at run 27, journeys B–D and an offline variant followed, and the
+> installed system booted twice on its own. See
+> `INSTALLATION_RUNTIME_REPORT.md`. The root-cause record below stands as
+> written.
+
 Scope: why the Bunny installation ISO reached a GRUB menu and stopped, in every
 run ever recorded; the two wrong diagnoses made before anyone opened the
 artifact; the repair; and the gates that exist so this class of fault is a build

@@ -1,0 +1,19 @@
+{
+ "schemaVersion": 1,
+ "note": "Read from the installed filesystem. `expected` is used only to know what to look for; every value below came from a file on the target.",
+ "disk": "build/out/install/journey-d/target.qcow2",
+ "expectedFrom": null,
+ "observed": {
+  "filesystems": [
+   "/dev/sda: unknown"
+  ],
+  "luksPresent": false,
+  "partitions": {},
+  "bootEntries": []
+ },
+ "findings": [
+  "no bootloader entry was written; the system would not boot",
+  "no filesystem carrying an ostree deployment was found; the installation did not complete"
+ ],
+ "checked": {}
+}
