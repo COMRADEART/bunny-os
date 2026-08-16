@@ -574,9 +574,14 @@ def _as_user_python(program: str, arguments: list[str], user: str,
     # inside the probe's command loop, which killed the probe and turned every
     # answer after it into `null` — a broken harness reading exactly like a
     # broken desktop.
+    # limit raised: this output IS a JSON document to be parsed, and the
+    # default cap cut task-trace and companion-state mid-string on login-13 —
+    # the same shape as the accessibility-tree defect the _run docstring
+    # records. The guest-side programs bound their own field sizes; the
+    # composed document must arrive whole.
     outcome = _run(
         ["/usr/bin/env", *environment, "/usr/bin/python3", "-c", program, *arguments],
-        user=user, timeout=60,
+        user=user, timeout=60, limit=200_000,
     )
     if not outcome.get("ran"):
         return {"ok": False, "error": str(outcome.get("error"))[:300]}
