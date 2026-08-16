@@ -995,9 +995,11 @@ user's AccountsService record (Session=bunny). What remains open:
 - **`compact` and `minimal` companion modes have no persisted
   representation.** The applicator records them honestly as not applied;
   `full`, `text-only` and `off` project onto the settings document.
-- **The character's resting pose needs eyes on it.** The first Bunny-desktop
-  photograph shows the bottom-centre character as two detached shapes; whether
-  that is the authored pose or a rendering defect has not been decided.
+- **The first-run window covers the character.** The desktop character is a
+  full-body figure on a centre-stage dais, and the centred first-run wizard
+  occludes everything but its shoes. Rendering is correct (decided by
+  cropping the photograph); whether the wizard should sit centre-stage over
+  the character is a design question, recorded rather than judged here.
 - **The package snapshot does not yet pin glibc-langpack-en.** The Phase 3
   image installs it from the network (the retained snapshot predates the
   dependency); the next snapshot refresh should fold it in.
