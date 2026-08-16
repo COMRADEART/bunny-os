@@ -442,8 +442,13 @@ class AnacondaDBusExecutor:
             (self.STORAGE_SERVICE, self.STORAGE_PATH),
         ):
             try:
+                # TeardownWithTasks lives on the shared base-module
+                # interface, not on each module's own — introspected on the
+                # running modules after run 26 paid a cycle for assuming
+                # otherwise.
                 teardown = self._bus.call_sync(
-                    service, path, service, "TeardownWithTasks",
+                    service, path, "org.fedoraproject.Anaconda.Modules",
+                    "TeardownWithTasks",
                     None, None, 0, 120_000, None).unpack()[0]
                 self._run_tasks(teardown, on_stage=on_stage, service=service)
             except Exception as error:                      # GLib.Error
