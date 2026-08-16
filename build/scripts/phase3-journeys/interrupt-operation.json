@@ -1,0 +1,6 @@
+[
+ {"command": "system", "label": "system-before-interrupt", "timeout": 240},
+ {"command": "ask", "request": "Open Files",
+  "label": "action-left-pending", "timeout": 12},
+ {"command": "task-trace", "label": "trace-with-pending"}
+]

@@ -1,0 +1,8 @@
+[
+ {"command": "system", "label": "system-after-interrupt", "timeout": 240},
+ {"command": "companion-state", "label": "companion-after-interrupt"},
+ {"command": "task-trace", "label": "trace-after-interrupt"},
+ {"command": "settings", "action": "show", "label": "settings-after-interrupt"},
+ {"command": "ask", "request": "What files are in my Downloads folder?",
+  "label": "companion-answers-again", "timeout": 120}
+]
