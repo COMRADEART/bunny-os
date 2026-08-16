@@ -234,6 +234,63 @@ class VerticalSliceAndPerformanceTests(unittest.TestCase):
         self.assertEqual(decisions["runtime-memory-pressure"], "static-image")
 
 
+class IncidentalRendererFaultTests(unittest.TestCase):
+    """The load flake, pinned: one transient renderer fault must not read as
+    a selector defect.
+
+    Steps 17 and 21 flipped ~2-in-12 on a loaded host across three phases,
+    and the pair reproduces deterministically from a single injected fault:
+    the fault parks the presenter unhealthy for 15 renderer-seconds, the
+    slice advances ~11 synthetic seconds for its whole remainder, and the
+    report blamed the pressure/hysteresis steps without naming the fault.
+    """
+
+    def _run_with_faults(self, fail_calls: set[int] | None, persistent_from: int | None = None):
+        import companion.character.controller as controller_module
+
+        calls = {"n": 0}
+        original = controller_module.CharacterRendererController.apply
+
+        def flaky(inner_self, *args, **kwargs):
+            calls["n"] += 1
+            if fail_calls and calls["n"] in fail_calls:
+                raise RuntimeError("injected transient renderer fault")
+            # Every third call from the threshold, not every call: one update
+            # may retry apply() up to three times on its internal fallback
+            # ladder, and a fault on all of them would break the ladder's own
+            # "text-only cannot fail" contract — a different defect than the
+            # recurring-fault this control simulates.
+            if persistent_from is not None and calls["n"] >= persistent_from \
+                    and (calls["n"] - persistent_from) % 3 == 0:
+                raise RuntimeError("injected recurring renderer fault")
+            return original(inner_self, *args, **kwargs)
+
+        controller_module.CharacterRendererController.apply = flaky
+        self.addCleanup(
+            setattr, controller_module.CharacterRendererController, "apply", original
+        )
+        with tempfile.TemporaryDirectory(prefix="bunny-fault-slice-") as root:
+            return run_character_slice(Path(root))
+
+    def test_one_transient_fault_recovers_and_is_named_in_evidence(self) -> None:
+        report = self._run_with_faults({10})
+        document = report.to_json()
+        self.assertTrue(document["passed"], document["failures"])
+        step_17 = next(s for s in document["steps"] if s["step"] == 17)
+        self.assertTrue(step_17.get("incidentalRendererFault"),
+                        "the fault recovered silently; evidence must name it")
+        self.assertTrue(step_17.get("retryCleanOfFaults"))
+
+    def test_a_persistent_fault_still_fails_and_names_itself(self) -> None:
+        """The negative control: the retry must not absorb a real defect."""
+        report = self._run_with_faults(None, persistent_from=40)
+        document = report.to_json()
+        self.assertFalse(document["passed"])
+        step_17 = next(s for s in document["steps"] if s["step"] == 17)
+        self.assertTrue(step_17.get("incidentalRendererFault"))
+        self.assertFalse(step_17.get("retryCleanOfFaults", True))
+
+
 class BuildAndBoundaryTests(unittest.TestCase):
     def test_installed_image_copies_runtime_renderer_and_data_assets(self) -> None:
         """Asserted against the declaration the installer is driven by.
