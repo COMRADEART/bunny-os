@@ -1,0 +1,7 @@
+[
+ {"command": "system", "label": "system-after-reboot", "timeout": 240},
+ {"command": "settings", "action": "show", "label": "settings-after-reboot"},
+ {"command": "renderer", "label": "renderer-after-reboot"},
+ {"command": "companion-state", "label": "companion-after-reboot"},
+ {"command": "character", "label": "character-after-reboot"}
+]

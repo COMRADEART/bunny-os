@@ -1,0 +1,17 @@
+[
+ {"command": "system", "label": "system-before", "timeout": 240},
+ {"command": "settings", "action": "show", "label": "settings-before"},
+ {"command": "settings", "action": "set", "section": "character",
+  "field": "scale", "value": "1.4", "label": "set-character-scale"},
+ {"command": "settings", "action": "set", "section": "character",
+  "field": "dock", "value": "top-left", "label": "set-character-dock"},
+ {"command": "settings", "action": "set", "section": "character",
+  "field": "animation_intensity", "value": "0.6", "label": "set-animation-intensity"},
+ {"command": "settings", "action": "set", "section": "voice",
+  "field": "speaking_rate", "value": "1.2", "label": "set-voice-rate"},
+ {"command": "settings", "action": "set", "section": "accessibility",
+  "field": "reduced_motion", "value": "true", "label": "set-reduced-motion"},
+ {"command": "settings", "action": "show", "label": "settings-after"},
+ {"command": "renderer", "label": "renderer-after"},
+ {"command": "system", "label": "system-after", "timeout": 240}
+]
