@@ -1,0 +1,49 @@
+{
+ "accessibility": {
+  "captions": false,
+  "highContrast": false,
+  "reducedMotion": false,
+  "screenReader": false,
+  "textScale": 1.0
+ },
+ "account": {
+  "deviceName": "warren",
+  "displayName": "Alex",
+  "username": "alex"
+ },
+ "appearance": {
+  "accent": "violet",
+  "colourScheme": "system",
+  "wallpaper": "bunny-default"
+ },
+ "applications": {
+  "activities": [],
+  "selected": []
+ },
+ "companion": {
+  "atLogin": true,
+  "captions": true,
+  "mode": "full",
+  "voice": false
+ },
+ "encryption": {
+  "enabled": true
+ },
+ "locale": {
+  "keyboardLayout": "gb",
+  "language": "en-GB",
+  "region": "GB",
+  "timezone": "Europe/London"
+ },
+ "privacy": {
+  "camera": false,
+  "crashReports": false,
+  "diagnostics": false,
+  "feedback": false,
+  "location": false,
+  "microphone": false,
+  "onlineAI": false,
+  "remoteProcessing": false
+ },
+ "schemaVersion": 1
+}

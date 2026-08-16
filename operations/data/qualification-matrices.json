@@ -173,14 +173,6 @@
     "scenario": "recovery-media-access"
    },
    {
-    "evidenceReference": "qualification/installed-system/evidence/ISQ-20260801-encrypted-first-boot-001/record.json",
-    "method": "virtual-machine",
-    "notes": "QEMU/KVM evidence bound to archive 0258f92af988 (commit 619065e068e2); supporting records: qualification/installed-system/evidence/ISQ-20260801-encrypted-first-boot-001/record.json",
-    "outcome": "FAIL",
-    "recordedAt": "2026-08-01T14:31:13Z",
-    "scenario": "luks-password-unlock"
-   },
-   {
     "evidenceReference": "qualification/installed-system/evidence/ISQ-20260801-encrypted-wrong-credential-001/record.json",
     "method": "virtual-machine",
     "notes": "QEMU/KVM evidence bound to archive 0258f92af988 (commit 619065e068e2); supporting records: qualification/installed-system/evidence/ISQ-20260801-encrypted-wrong-credential-001/record.json",
@@ -195,6 +187,14 @@
     "outcome": "PASS",
     "recordedAt": "2026-08-16T04:03:01Z",
     "scenario": "tpm-fallback"
+   },
+   {
+    "evidenceReference": "qualification/installer-journeys/evidence/journey-e/installed.json",
+    "method": "virtual-machine",
+    "notes": "unattended \u00a753 journey evidence (provenance: qualification/installer-journeys/evidence/README.md); supporting records: qualification/installer-journeys/evidence/journey-e/installed.json, qualification/installer-journeys/evidence/first-boot-e/result.json",
+    "outcome": "PASS",
+    "recordedAt": "2026-08-16T23:51:39Z",
+    "scenario": "luks-password-unlock"
    }
   ],
   "installation": [
@@ -617,6 +617,6 @@
   ]
  },
  "note": "Every scenario that has not been executed is recorded as NOT_RUN with the reason it could not run. NOT_RUN is blocking. A scenario is never resolved by inspecting the code that would handle it.",
- "recordedOn": "2026-08-16T04:03:01Z",
+ "recordedOn": "2026-08-16T23:51:39Z",
  "schemaVersion": 1
 }
