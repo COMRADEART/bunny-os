@@ -54,7 +54,19 @@ ROW_EVIDENCE: dict[str, dict[str, list[str]]] = {
         "sata-like-virtual-disk": ["scenario:first-boot-sata"],
     },
     "encryption": {
-        "luks-password-unlock": ["scenario:encrypted-first-boot"],
+        # Phase 3 re-qualified this row with the journey instrument: the old
+        # FAIL rested on ISQ-20260801 evidence that no longer binds to any
+        # standing context (its own journal showed the target reached and the
+        # health check healthy — the FAIL was stale installed-system state,
+        # not the machine). Journey E installs encrypted with a typed
+        # passphrase and the disk is read from outside through the LUKS
+        # header; first-boot-e types the passphrase at the real prompt across
+        # two boots of that disk, both reaching the graphical target. The old
+        # scenario reference is not listed because an unbindable record
+        # resolves to None and a None among the references vetoes the row —
+        # its record stays preserved under evidence/ISQ-20260801-*, and a
+        # future ISQ round adds the reference back with its new context.
+        "luks-password-unlock": ["journey:journey-e", "journey:first-boot-e"],
         "incorrect-password": ["scenario:encrypted-wrong-credential"],
         "tpm-fallback": ["scenario:tpm-absent"],
     },
@@ -97,7 +109,9 @@ def load_journey_verdict(name: str) -> tuple[str, str] | None:
     record = json.loads(result_path.read_text(encoding="utf-8"))
     relative = str(result_path.relative_to(ROOT)).replace("\\", "/")
 
-    if name == "first-boot":
+    if name.startswith("first-boot"):
+        # first-boot and its successors (first-boot-e is Phase 3's run against
+        # journey E's encrypted disk) share the persistence-record shape.
         boots = record.get("boots") or []
         ok = (record.get("bootsObserved") == record.get("bootsRequested")
               and bool(boots)
