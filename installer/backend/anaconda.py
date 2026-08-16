@@ -527,7 +527,8 @@ class AnacondaDBusExecutor:
         return completed.stdout if completed.returncode == 0 else None
 
     def _write_target_file(self, relative: str, content: str, *,
-                           directory_mode: str = "0755") -> None:
+                           directory_mode: str = "0755",
+                           file_mode: str = "0644") -> None:
         """Write one file on the target, then read it back and compare.
 
         The read-back is not decoration: the §45 rule is that a claim about
@@ -540,7 +541,7 @@ class AnacondaDBusExecutor:
         completed = self._target_shell(
             f"umask 022 && mkdir -p -m {shlex.quote(directory_mode)} "
             f"{shlex.quote(directory)} && cat > {shlex.quote(target)} "
-            f"&& chmod 0644 {shlex.quote(target)}",
+            f"&& chmod {shlex.quote(file_mode)} {shlex.quote(target)}",
             stdin=content)
         if completed.returncode != 0:
             raise InstallationFailed(
@@ -584,6 +585,25 @@ class AnacondaDBusExecutor:
             if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,62}", device_name):
                 raise InstallationFailed(f"invalid device name for the target: {device_name!r}")
             self._write_target_file("/etc/hostname", f"{device_name}\n")
+
+        # The Bunny session, for the user this install created. GDM starts
+        # plain GNOME for a user with no AccountsService record — its schema
+        # has no DefaultSession key, so a custom.conf default is silently
+        # ignored (measured on login-8b: session "gnome" started with the key
+        # in place, and the extension is inert outside bunny-shell-session).
+        # The supported mechanism is the user's AccountsService record; every
+        # pre-Phase-3 qualification injected one from the harness, which is
+        # how the wrong default stayed invisible. This writes what the
+        # harness wrote. A user's own later choice still wins: GDM updates
+        # the same record when a different session is picked in the greeter.
+        username = str(account.get("username", "")).strip()
+        if username:
+            if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", username):
+                raise InstallationFailed(f"invalid username for the target: {username!r}")
+            self._write_target_file(
+                f"/var/lib/AccountsService/users/{username}",
+                "[User]\nSession=bunny\nXSession=bunny\nSystemAccount=false\n",
+                file_mode="0600")
 
         document = handoff.get("setupDocument")
         if isinstance(document, Mapping):

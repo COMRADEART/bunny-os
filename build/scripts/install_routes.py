@@ -76,11 +76,6 @@ INSTALLER_PROFILES = frozenset({"live", "beta"})
 #: The bootable installation medium.
 LIVE_PROFILES = frozenset({"live"})
 
-#: Desktop profiles for *installed* systems — everything with a session except
-#: the live medium, whose /etc/gdm/custom.conf is the autologin file below and
-#: must not collide with the installed default-session file.
-INSTALLED_DESKTOP_PROFILES = frozenset(DESKTOP_PROFILES - LIVE_PROFILES)
-
 #: Directory names a ``tree`` route never descends into. Build residue: bytecode
 #: that embeds the source path and mtime of the machine that produced it, and
 #: dependency trees that belong to a developer checkout.
@@ -494,17 +489,16 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "wayland-safe-session", "shell/session/bunny-safe.desktop",
         "/usr/share/wayland-sessions/bunny-safe.desktop", 0o644, profiles=DESKTOP_PROFILES,
     ),
-    # A session that ships is not a session anyone gets: without DefaultSession
-    # GDM starts plain GNOME for a user with no AccountsService record, where
-    # the Bunny extension is inert (extension.js requires BUNNY_SHELL_MODE,
-    # which only bunny-shell-session sets). Every pre-Phase-3 login was
-    # harness-injected with the session chosen explicitly, so the gap was
-    # invisible until a real login was driven. Not for the live medium, whose
-    # custom.conf is the autologin file in the live section below.
-    _file_route(
-        "gdm-default-session", "installer/config/gdm-installed.conf",
-        "/etc/gdm/custom.conf", 0o644, profiles=INSTALLED_DESKTOP_PROFILES,
-    ),
+    # A session that ships is not a session anyone gets: GDM starts plain
+    # GNOME for a user with no AccountsService record, where the Bunny
+    # extension is inert (extension.js requires BUNNY_SHELL_MODE, which only
+    # bunny-shell-session sets). The first attempted fix put
+    # DefaultSession=bunny.desktop in /etc/gdm/custom.conf — and login-8b
+    # measured GDM starting session "gnome" with that key in place, because
+    # GDM's own schema (gdm.schemas) has no such key. There is no route for a
+    # gdm default here any more: the mechanism GDM actually reads is the
+    # per-user AccountsService record, which the installer now writes for the
+    # account it creates (installer/backend/anaconda.py, _place_handoff).
     InstallRoute(
         "gnome-shell-extension", "tree", "shell/components/gnome-shell-extension",
         "/usr/share/gnome-shell/extensions/bunny-shell@bunny-os.org", 0o644,

@@ -22,7 +22,7 @@ if str(ROOT) not in sys.path:
 
 from installer.backend.anaconda import (                       # noqa: E402
     AnacondaAdapter, AnacondaDBusExecutor, ExecutorUnavailable,
-    RecordingExecutor, read_medium_kickstart,
+    InstallationFailed, RecordingExecutor, read_medium_kickstart,
 )
 from installer.backend.progress import (                       # noqa: E402
     STAGE_TO_PROGRESS, companion_phase_for, progress_rows,
@@ -166,8 +166,11 @@ class _PlacementFake(AnacondaDBusExecutor):
         return self.files.get(relative)
 
     def _write_target_file(self, relative: str, content: str, *,
-                           directory_mode: str = "0755") -> None:
+                           directory_mode: str = "0755",
+                           file_mode: str = "0644") -> None:
         self.files[relative] = content
+        self.modes = getattr(self, "modes", {})
+        self.modes[relative] = file_mode
 
     def stage(self, stage: str, detail: str) -> None:
         self.stages.append((stage, detail))
@@ -192,6 +195,36 @@ class ThePlacementStep(unittest.TestCase):
 
         parsed = json_module.loads(executor.files["/var/lib/bunny-setup/choices.json"])
         self.assertEqual(parsed["account"]["deviceName"], "warren")
+
+    def test_the_created_user_gets_the_bunny_session(self) -> None:
+        """GDM has no DefaultSession key; the AccountsService record is the
+        mechanism it reads, and login-8b measured plain GNOME starting when
+        only custom.conf claimed a default."""
+        executor = _PlacementFake()
+        executor._place_handoff({
+            "account": {"username": "alex", "deviceName": "warren"},
+        }, on_stage=executor.stage)
+        record = executor.files["/var/lib/AccountsService/users/alex"]
+        self.assertIn("Session=bunny\n", record)
+        self.assertIn("XSession=bunny\n", record)
+        self.assertIn("SystemAccount=false\n", record)
+        # Written 0600: the daemon owns the file; nothing else needs to read it.
+        self.assertEqual(executor.modes["/var/lib/AccountsService/users/alex"],
+                         "0600")
+
+    def test_an_invalid_username_refuses_the_session_record(self) -> None:
+        executor = _PlacementFake()
+        with self.assertRaises(InstallationFailed):
+            executor._place_handoff({
+                "account": {"username": "alex; rm -rf /"},
+            }, on_stage=executor.stage)
+
+    def test_no_username_writes_no_session_record(self) -> None:
+        executor = _PlacementFake()
+        executor._place_handoff({"locale": {"language": "en-GB"}},
+                                on_stage=executor.stage)
+        self.assertFalse([path for path in executor.files
+                          if "AccountsService" in path])
 
     def test_a_vconsole_anaconda_already_wrote_is_kept(self) -> None:
         executor = _PlacementFake()
