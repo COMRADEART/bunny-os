@@ -256,17 +256,28 @@ else:
         journal_dir.mkdir(exist_ok=True)
         with tarfile.open(tar_path) as archive:
             archive.extractall(journal_dir, filter="data")
+        # The boot that owns the newest journal entry IS the boot this run
+        # produced. `-b -1` — used here at first — is an *offset*, and on a
+        # directory holding N boots it selects the second-newest: login-2's
+        # checks silently graded login-1's journal, with identical PIDs in the
+        # extract as the tell. An explicit boot ID cannot repeat that.
+        newest = subprocess.run(
+            ["journalctl", "--directory", str(journal_dir), "--no-pager",
+             "--output", "json", "-n", "1"],
+            capture_output=True, text=True)
+        boot_id = ""
+        try:
+            boot_id = json.loads(newest.stdout.splitlines()[-1]).get("_BOOT_ID", "")
+        except (ValueError, IndexError):
+            pass
+        selector = ["-b", boot_id] if boot_id else []
         completed = subprocess.run(
             ["journalctl", "--directory", str(journal_dir), "--no-pager",
-             "--output", "short-iso", "-b", "-1"],
+             "--output", "short-iso", *selector],
             capture_output=True, text=True)
         text = completed.stdout
         if not text.strip():
-            completed = subprocess.run(
-                ["journalctl", "--directory", str(journal_dir), "--no-pager",
-                 "--output", "short-iso"],
-                capture_output=True, text=True)
-            text = completed.stdout
+            findings.append("journal extraction produced no text for the newest boot")
         (work / "journal-lastboot.log").write_text(text, encoding="utf-8")
         checks = {
             "sessionOpened": f"session opened for user {user}" in text.lower(),
