@@ -44,6 +44,14 @@ def main() -> int:
     parser.add_argument("--script", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--ready-wait", type=float, default=780.0)
+    # For "hostKey" steps: the machine's QMP socket and screen geometry,
+    # passed through from the story. Host-side input is the one thing the
+    # probe's vocabulary must not contain — the probe answers questions from
+    # inside the guest, and a guest that injects its own keystrokes is a
+    # guest simulating a person. The host pressing a key is a person's press.
+    parser.add_argument("--qmp", default="")
+    parser.add_argument("--width", type=int, default=1280)
+    parser.add_argument("--height", type=int, default=800)
     arguments = parser.parse_args()
 
     steps = json.loads(arguments.script.read_text(encoding="utf-8"))
@@ -82,6 +90,32 @@ def main() -> int:
     for index, step in enumerate(steps):
         request = dict(step)
         settle = float(request.pop("sleep", 0) or 0)
+        host_key = request.pop("hostKey", None)
+        if host_key:
+            label = request.get("label", f"step-{index}")
+            print(f"  -> {label}: host key {host_key!r}")
+            entry: dict = {"request": step}
+            if not arguments.qmp:
+                entry["error"] = "hostKey step but no --qmp socket was given"
+                failed = True
+                record["steps"].append(entry)
+                break
+            import subprocess
+
+            completed = subprocess.run(
+                [sys.executable, str(_HERE / "qmp-input.py"),
+                 "--socket", arguments.qmp,
+                 "--width", str(arguments.width),
+                 "--height", str(arguments.height),
+                 "--key", str(host_key)],
+                capture_output=True, text=True, timeout=60)
+            entry["returncode"] = completed.returncode
+            if completed.returncode != 0:
+                entry["stderr"] = (completed.stderr or "")[:400]
+            record["steps"].append(entry)
+            if settle:
+                time.sleep(settle)
+            continue
         label = request.get("label", f"step-{index}")
         print(f"  -> {label}: {request.get('command')}")
         answer = control.ask(request, timeout=float(request.pop("timeout", 300)))

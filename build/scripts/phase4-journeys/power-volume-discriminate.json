@@ -1,0 +1,7 @@
+[
+ {"command": "system", "label": "system-before", "timeout": 240},
+ {"command": "power-trace", "debug": false, "label": "power-trace", "timeout": 120, "sleep": 5},
+ {"hostKey": "volumeup", "label": "volume-press-1", "sleep": 4},
+ {"hostKey": "volumeup", "label": "volume-press-2", "sleep": 4},
+ {"command": "task-trace", "label": "marker-between", "sleep": 2}
+]

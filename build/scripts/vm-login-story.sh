@@ -171,6 +171,7 @@ if [[ "${interact}" == "1" ]]; then
     if python3 build/scripts/phase3-session.py \
         --control "${control}" \
         --script "${BUNNY_LOGIN_SESSION_SCRIPT}" \
+        --qmp "${qmp}" --width "${width}" --height "${height}" \
         --output "${work}/interaction.json"; then
       interaction_status=complete
     else
