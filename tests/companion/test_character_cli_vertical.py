@@ -50,6 +50,13 @@ def diagnose(document: dict) -> str:
             retry=seventeen.get("retryCleanOfFaults"),
         )
     )
+    for reason in seventeen.get("reasons", []):
+        lines.append(f"  reason: {reason}")
+    lines.append(
+        "step 17 extra: heldByHysteresis={h!r} rendererHealthy={r!r}".format(
+            h=seventeen.get("heldByHysteresis"), r=seventeen.get("rendererHealthy")
+        )
+    )
     for event in seventeen.get("rendererEvents", []):
         lines.append(f"  event: {event}")
     twenty_one = steps.get(21, {})
