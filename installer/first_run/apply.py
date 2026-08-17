@@ -178,12 +178,15 @@ class Applier:
         anywhere, and every companion choice silently failed on the first real
         login. The authoritative store is `companion/settings.py`'s document.
 
-        The five setup modes project onto what the document can say: ``off``
-        is §6's Hidden (``character.visible``), ``text-only`` is the
-        accessibility preference. ``compact`` and ``minimal`` have no
-        persisted representation yet; recording them as applied would be the
-        lie §45 forbids, so they apply the shared projection and report
-        honestly that the chrome level did not land anywhere.
+        The five setup modes project onto three fields: ``off`` is §6's
+        Hidden (``character.visible``), ``text-only`` is the accessibility
+        preference, and the chrome level of a shown companion is
+        ``character.companionMode`` (``full``/``compact``/``minimal``).
+        ``Settings.presentation_mode`` resolves the three back into the
+        five-way answer, so the wizard's choice round-trips exactly. A
+        ``text-only`` or ``off`` install leaves the chrome level at its
+        default rather than writing one: neither showed a character, so
+        there is no chrome answer to record.
         """
         mode = choices.companion_mode
         record = Application(key="companionMode",
@@ -193,12 +196,14 @@ class Applier:
         text_ok, text_detail = self._companion_setting(
             "accessibility", "text_only",
             "true" if mode == "text-only" else "false")
-        representable = mode in ("full", "text-only", "off")
-        record.applied = visible_ok and text_ok and representable
-        record.detail = f"{visible_detail}; {text_detail}"[:200]
-        if not representable:
-            record.detail = (f"mode {mode!r} has no persisted representation; "
-                             f"{record.detail}")[:200]
+        details = [visible_detail, text_detail]
+        chrome_ok = True
+        if mode in ("full", "compact", "minimal"):
+            chrome_ok, chrome_detail = self._companion_setting(
+                "character", "companion_mode", mode)
+            details.append(chrome_detail)
+        record.applied = visible_ok and text_ok and chrome_ok
+        record.detail = "; ".join(details)[:200]
         self.results.append(record)
 
         captions = Application(key="companionCaptions", intent="captions",

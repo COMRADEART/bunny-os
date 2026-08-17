@@ -735,7 +735,17 @@ class SetupApplication:
         if key in {"textScale", "highContrast", "reducedMotion"}:
             self.apply_theme()
         if key == "companionTextOnly":
-            self.choices.companion_mode = "text-only" if value else "full"
+            if value:
+                # Remember what the toggle replaces, so turning it back off
+                # restores a chosen compact/minimal rather than silently
+                # promoting it to full — the toggle is an override, not a
+                # second mode picker.
+                if self.choices.companion_mode != "text-only":
+                    self._companion_mode_before_text_only = self.choices.companion_mode
+                self.choices.companion_mode = "text-only"
+            else:
+                self.choices.companion_mode = getattr(
+                    self, "_companion_mode_before_text_only", "full")
             self.render()
 
     def _refresh_confirm_button(self) -> None:

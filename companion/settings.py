@@ -208,6 +208,25 @@ class CharacterSettings:
     #: still readable. Only the interactive renderer can honour a value between
     #: the ends — a frame sequence is authored at one intensity.
     animation_intensity: float = 1.0
+    #: How much surface the *shown* companion takes: ``full``, ``compact`` or
+    #: ``minimal``. This is the chrome-density axis the setup wizard offers as
+    #: "companion mode" — a person's answer to "how much of my screen do I
+    #: want this to take" — and until this field existed, ``compact`` and
+    #: ``minimal`` had no persisted representation at all
+    #: (installer/first_run/apply.py recorded them honestly as not applied).
+    #:
+    #: Deliberately three values, not the wizard's five. ``off`` is
+    #: :attr:`visible` and ``text-only`` is the accessibility preference, both
+    #: of which already exist and are independently meaningful; a five-valued
+    #: field beside them would be a second authority over the same facts. The
+    #: five-way answer is :meth:`Settings.presentation_mode`.
+    #:
+    #: Not to be confused with three neighbours that also say "mode" or
+    #: "compact": :attr:`render_mode` (which of the three renderers),
+    #: ``dock="compact"`` (a legacy alias for the ``compact-floating``
+    #: placement), and the transient window shapes in
+    #: :mod:`companion.presentation` (phase-derived, never persisted).
+    companion_mode: str = "full"
 
     def __post_init__(self) -> None:
         if self.three_d not in ("auto", "off"):
@@ -225,6 +244,12 @@ class CharacterSettings:
             )
         if self.animation not in ("full", "reduced", "none"):
             raise SettingsError("character.animation is 'full', 'reduced' or 'none'")
+        if self.companion_mode not in ("full", "compact", "minimal"):
+            raise SettingsError(
+                "character.companionMode is 'full', 'compact' or 'minimal'; "
+                "'off' is character.visible and 'text-only' is "
+                "accessibility.textOnly"
+            )
         object.__setattr__(self, "scale", _clamp(self.scale, 0.5, 3.0))
         object.__setattr__(self, "animation_intensity", _clamp(self.animation_intensity, 0.0, 1.0))
 
@@ -455,6 +480,24 @@ class Settings:
             model_id=self.speech_input.model_id,
         )
 
+    def presentation_mode(self) -> str:
+        """The five-way companion mode the setup wizard offers, resolved.
+
+        ``off``, ``text-only``, ``full``, ``compact`` or ``minimal`` — the
+        vocabulary of ``installer.setup_state.COMPANION_MODES`` and the
+        shell's ``companionModes.js``. Three settings fields carry it:
+        a hidden companion is ``off`` whatever its chrome level, the
+        accessibility text-only preference overrides the chrome level (an
+        accessibility preference may only ever simplify), and otherwise the
+        answer is ``character.companionMode``. One resolution order, here,
+        so no consumer invents its own.
+        """
+        if not self.character.visible:
+            return "off"
+        if self.accessibility.text_only:
+            return "text-only"
+        return self.character.companion_mode
+
     # -- serialisation -------------------------------------------------------
 
     def to_json(self) -> dict[str, Any]:
@@ -472,6 +515,7 @@ class Settings:
                 "idleAnimation": self.character.idle_animation,
                 "contextualReactions": self.character.contextual_reactions,
                 "animationIntensity": self.character.animation_intensity,
+                "companionMode": self.character.companion_mode,
             },
             "voice": {
                 "enabled": self.voice.enabled,
@@ -572,6 +616,10 @@ class Settings:
                 idle_animation=flag(character, "idleAnimation", True),
                 contextual_reactions=flag(character, "contextualReactions", True),
                 animation_intensity=number(character, "animationIntensity", 1.0),
+                # A file written before this key existed shows the full
+                # companion, which is what every such desktop was already
+                # showing — an upgrade never changes what is on screen.
+                companion_mode=text(character, "companionMode", "full"),
             ),
             voice=VoiceSettings(
                 enabled=flag(voice, "enabled", True),

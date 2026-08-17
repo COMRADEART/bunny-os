@@ -73,6 +73,19 @@ __all__ = [
 #: The character's nominal size before the user's scale is applied.
 DEFAULT_CHARACTER_PIXELS = 288
 
+#: How much room each chrome level gives the figure, as a fraction of
+#: :data:`DEFAULT_CHARACTER_PIXELS`. The ratios are the design tokens'
+#: companion sizes (lib/design/tokens.js ``COMPANION_SIZE``: full 220,
+#: compact 128, minimal 48) — the tokens are the shell's absolute pixels
+#: and these are the same proportions applied to the presenter's base size.
+#: The user's ``scale`` multiplies on top: compact at scale 1.4 is a large
+#: compact companion, not a silent return to full.
+COMPANION_MODE_FACTORS = {
+    "full": 1.0,
+    "compact": 128 / 220,
+    "minimal": 48 / 220,
+}
+
 #: Where a dragged position is remembered, beside the character registry.
 #:
 #: Its own file rather than a field in ``settings.json`` because the two answer
@@ -161,6 +174,7 @@ class CharacterPresenter:
         animation_intensity: float = 1.0,
         contextual_reactions: bool = True,
         scale: float = 1.0,
+        companion_mode: str = "full",
         first_run_greeting: bool = False,
     ) -> None:
         self.root = Path(root)
@@ -241,10 +255,29 @@ class CharacterPresenter:
         #: presenter opens at the size the person chose rather than at 1.0 and
         #: then jumping once something calls ``set_scale``.
         self.scale = max(0.5, min(3.0, float(scale)))
+        #: The chrome-density level (``full``/``compact``/``minimal``) from
+        #: ``character.companionMode``. An unknown value means full, for the
+        #: same reason an unknown dock name means the default corner: this is
+        #: on the path that opens the companion.
+        self.companion_mode = (
+            companion_mode if companion_mode in COMPANION_MODE_FACTORS else "full"
+        )
         self._healthy = True
         self._unhealthy_since: float | None = None
         self._restarts = _RestartGuard()
         self._reported = 0
+
+    def character_pixels(self) -> int:
+        """The rendered square's side: base size × chrome level × user scale.
+
+        One computation, used by every placement call, so the figure cannot
+        be placed at one size and drawn at another.
+        """
+        return round(
+            DEFAULT_CHARACTER_PIXELS
+            * COMPANION_MODE_FACTORS[self.companion_mode]
+            * self.scale
+        )
 
     # -- inputs ------------------------------------------------------------
 
@@ -278,7 +311,7 @@ class CharacterPresenter:
         """
         decision = place_character(
             [self.display],
-            size=(round(DEFAULT_CHARACTER_PIXELS * self.scale),) * 2,
+            size=(self.character_pixels(),) * 2,
             placement=Placement.USER_DRAGGED,
             dragged_origin=origin,
         )
@@ -392,7 +425,7 @@ class CharacterPresenter:
         )
         position = place_character(
             [self.display],
-            size=(round(DEFAULT_CHARACTER_PIXELS * self.scale),) * 2,
+            size=(self.character_pixels(),) * 2,
             placement=self.placement,
             saved=self.saved_position,
         )
@@ -544,7 +577,7 @@ class CharacterPresenter:
         bubble = self.bubbles.state
         position = self.controller.position or place_character(
             [self.display],
-            size=(round(DEFAULT_CHARACTER_PIXELS * self.scale),) * 2,
+            size=(self.character_pixels(),) * 2,
             placement=self.placement,
             saved=self.saved_position,
         )

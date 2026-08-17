@@ -89,11 +89,42 @@ class CompanionSettingsApplicationTests(unittest.TestCase):
                        "accessibility", "text_only", "true"], calls)
         self.assertTrue({r.key: r for r in applier.results}["companionMode"].applied)
 
-    def test_compact_is_reported_honestly_as_unrepresentable(self) -> None:
-        _, applier = self._apply("compact")
+    def test_compact_persists_the_chrome_level(self) -> None:
+        """The Phase 3 honesty record ("no persisted representation") is
+        retired by an actual representation: character.companionMode."""
+        calls, applier = self._apply("compact")
+        self.assertIn(["/usr/bin/bunny-os", "companion", "settings", "set",
+                       "character", "companion_mode", "compact"], calls)
+        record = {r.key: r for r in applier.results}["companionMode"]
+        self.assertTrue(record.applied)
+        self.assertNotIn("no persisted representation", record.detail)
+
+    def test_minimal_persists_the_chrome_level(self) -> None:
+        calls, applier = self._apply("minimal")
+        self.assertIn(["/usr/bin/bunny-os", "companion", "settings", "set",
+                       "character", "companion_mode", "minimal"], calls)
+        self.assertTrue({r.key: r for r in applier.results}["companionMode"].applied)
+
+    def test_off_and_text_only_leave_the_chrome_level_alone(self) -> None:
+        """Neither shows a character, so there is no chrome answer to
+        record — and writing one would overwrite a level the user may pick
+        again later by unhiding the companion."""
+        for mode in ("off", "text-only"):
+            calls, _ = self._apply(mode)
+            written = [call for call in calls if "companion_mode" in call]
+            self.assertEqual(written, [], f"mode {mode!r} wrote a chrome level")
+
+    def test_a_refused_chrome_write_is_not_recorded_as_applied(self) -> None:
+        choices = Choices(companion_mode="compact")
+        applier = Applier()
+        calls: list[list[str]] = []
+        with mock.patch("installer.first_run.apply.shutil.which",
+                        return_value="/usr/bin/bunny-os"), \
+             mock.patch("installer.first_run.apply.subprocess.run",
+                        side_effect=_fake_run(calls, failing=frozenset({"companion_mode"}))):
+            applier.companion(choices)
         record = {r.key: r for r in applier.results}["companionMode"]
         self.assertFalse(record.applied)
-        self.assertIn("no persisted representation", record.detail)
 
     def test_captions_write_captions_always(self) -> None:
         calls, applier = self._apply("full", captions=True)

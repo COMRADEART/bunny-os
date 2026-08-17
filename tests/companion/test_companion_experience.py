@@ -181,6 +181,7 @@ class SettingsPersistenceTests(PresenterFixture):
             "render_mode": "2d", "scale": 1.4, "dock": "dock-left",
             "performance": "low", "idle_animation": False,
             "animation_intensity": 0.25, "contextual_reactions": False,
+            "companion_mode": "compact",
         })
         arguments = _companion_settings_arguments(self.root)
         self.assertIs(arguments["mode"], RenderMode.INTERACTIVE_2D)
@@ -190,6 +191,24 @@ class SettingsPersistenceTests(PresenterFixture):
         self.assertFalse(arguments["idle_animation"])
         self.assertAlmostEqual(arguments["animation_intensity"], 0.25)
         self.assertFalse(arguments["contextual_reactions"])
+        self.assertEqual(arguments["companion_mode"], "compact")
+
+    def test_companion_mode_survives_a_write_and_reload(self) -> None:
+        """Phase 4: select compact, log out, log in — compact remains active.
+
+        The reload is a fresh ``load_settings`` and a fresh presenter, which
+        is what a login does. Until this field existed, ``compact`` and
+        ``minimal`` were the two wizard modes with no persisted
+        representation at all.
+        """
+        from companion.gtk_shell import _companion_settings_arguments
+
+        update_settings(self.root, "character", {"companion_mode": "compact"})
+        reloaded = load_settings(self.root)
+        self.assertEqual(reloaded.character.companion_mode, "compact")
+        self.assertEqual(reloaded.presentation_mode(), "compact")
+        presenter = self.presenter(**_companion_settings_arguments(self.root))
+        self.assertEqual(presenter.companion_mode, "compact")
 
     def test_damaged_settings_cost_preferences_and_not_the_companion(self) -> None:
         """A damaged file yields usable defaults, not an exception and not nothing.
@@ -465,6 +484,75 @@ class RendererBoundaryTests(unittest.TestCase):
         value = mapper_input_for(PresentationState(phase="working"))
         self.assertEqual(value.presentation_phase, "working")
         self.assertFalse(hasattr(value, "renderer"))
+
+
+class CompanionModeTests(PresenterFixture):
+    """Phase 4: compact/minimal gain a persisted representation.
+
+    Three fields carry the wizard's five-way answer — ``visible`` for off,
+    the accessibility text-only preference, and ``companionMode`` for the
+    chrome level of a shown companion — with one resolution order, in
+    ``Settings.presentation_mode``.
+    """
+
+    def test_the_chrome_level_is_three_valued(self) -> None:
+        for level in ("full", "compact", "minimal"):
+            self.assertEqual(
+                CharacterSettings(companion_mode=level).companion_mode, level)
+        for not_a_level in ("off", "text-only", "hidden", ""):
+            with self.assertRaises(SettingsError):
+                CharacterSettings(companion_mode=not_a_level)
+
+    def test_resolution_order_is_hidden_then_accessibility_then_chrome(self) -> None:
+        from dataclasses import replace
+
+        settings = Settings()
+        compact = replace(
+            settings, character=replace(settings.character, companion_mode="compact"))
+        self.assertEqual(compact.presentation_mode(), "compact")
+        hidden = replace(
+            compact, character=replace(compact.character, visible=False))
+        self.assertEqual(hidden.presentation_mode(), "off",
+                         "a hidden companion is off whatever its chrome level")
+        text = replace(
+            compact,
+            accessibility=replace(compact.accessibility, text_only=True))
+        self.assertEqual(text.presentation_mode(), "text-only",
+                         "an accessibility preference may only ever simplify, "
+                         "and it outranks the chrome level")
+
+    def test_a_file_written_before_the_field_shows_the_full_companion(self) -> None:
+        """An upgrade never changes what is on screen: every pre-Phase-4
+        desktop was drawing the full companion."""
+        document = Settings().to_json()
+        del document["character"]["companionMode"]
+        upgraded = Settings.from_json(document)
+        self.assertEqual(upgraded.character.companion_mode, "full")
+        self.assertEqual(upgraded.presentation_mode(), "full")
+
+    def test_each_level_draws_a_smaller_figure_than_the_last(self) -> None:
+        full = self.presenter().character_pixels()
+        compact = self.presenter(companion_mode="compact").character_pixels()
+        minimal = self.presenter(companion_mode="minimal").character_pixels()
+        self.assertEqual(full, DEFAULT_CHARACTER_PIXELS)
+        self.assertLess(compact, full)
+        self.assertLess(minimal, compact)
+
+    def test_the_user_scale_multiplies_the_level_rather_than_replacing_it(self) -> None:
+        scaled = self.presenter(companion_mode="compact", scale=2.0)
+        unscaled = self.presenter(companion_mode="compact")
+        # Within a pixel: the factor is applied before the single final
+        # rounding, so doubling the already-rounded size can differ by one.
+        self.assertAlmostEqual(
+            scaled.character_pixels(), unscaled.character_pixels() * 2, delta=1)
+        self.assertLess(
+            scaled.character_pixels(), DEFAULT_CHARACTER_PIXELS * 2,
+            "compact at any scale is smaller than full at the same scale")
+
+    def test_an_unknown_level_costs_the_preference_not_the_companion(self) -> None:
+        presenter = self.presenter(companion_mode="enormous")
+        self.assertEqual(presenter.companion_mode, "full")
+        self.assertEqual(presenter.character_pixels(), DEFAULT_CHARACTER_PIXELS)
 
 
 if __name__ == "__main__":  # pragma: no cover

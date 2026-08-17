@@ -36,7 +36,7 @@ def _gtk_or_skip():
         raise unittest.SkipTest(f"GTK is not available: {error}")
 
 
-class FlowTransitions(unittest.TestCase):
+class _ApplicationFixture(unittest.TestCase):
     def setUp(self) -> None:
         self.Gtk = _gtk_or_skip()
         from installer.frontend.setup import SetupApplication
@@ -53,6 +53,8 @@ class FlowTransitions(unittest.TestCase):
         # No window, so render() must not try to swap a child.
         self.application.window = None
 
+
+class FlowTransitions(_ApplicationFixture):
     def _goto(self, key: str) -> None:
         keys = [name for name, _ in self.application.flow]
         self.application.index = keys.index(key)
@@ -185,6 +187,34 @@ class AccessibilityIsImmediate(unittest.TestCase):
         contrasted = resolve(**application.choices.theme_options())
         self.assertNotEqual(plain["name"], contrasted["name"])
         self.assertTrue(contrasted["highContrast"])
+
+
+class CompanionTextOnlyToggleTests(_ApplicationFixture):
+    """The accessibility page's text-only toggle is an override, not a
+    second mode picker: turning it back off restores the mode it replaced.
+
+    Before Phase 4, off always wrote ``full`` and silently discarded a
+    ``compact`` or ``minimal`` chosen two pages earlier."""
+
+    def test_off_restores_the_mode_the_toggle_replaced(self) -> None:
+        self.application.on_change("mode", "compact")
+        self.assertEqual(self.application.choices.companion_mode, "compact")
+        self.application.on_change("companionTextOnly", True)
+        self.assertEqual(self.application.choices.companion_mode, "text-only")
+        self.application.on_change("companionTextOnly", False)
+        self.assertEqual(self.application.choices.companion_mode, "compact")
+
+    def test_off_without_a_prior_choice_means_full(self) -> None:
+        self.application.on_change("companionTextOnly", True)
+        self.application.on_change("companionTextOnly", False)
+        self.assertEqual(self.application.choices.companion_mode, "full")
+
+    def test_toggling_on_twice_does_not_forget_the_real_mode(self) -> None:
+        self.application.on_change("mode", "minimal")
+        self.application.on_change("companionTextOnly", True)
+        self.application.on_change("companionTextOnly", True)
+        self.application.on_change("companionTextOnly", False)
+        self.assertEqual(self.application.choices.companion_mode, "minimal")
 
 
 if __name__ == "__main__":
