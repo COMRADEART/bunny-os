@@ -1,0 +1,5 @@
+[
+ {"command": "system", "label": "system-before", "timeout": 240},
+ {"command": "bunny-extension", "action": "enable", "label": "extension-on", "timeout": 60, "sleep": 10},
+ {"command": "power-trace", "debug": false, "label": "power-trace", "timeout": 120, "sleep": 5}
+]
