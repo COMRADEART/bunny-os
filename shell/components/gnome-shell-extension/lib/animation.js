@@ -95,7 +95,7 @@ export function pulse(actor, {low = 140, high = 255, ms = 900} = {}) {
         });
     };
     step();
-    const handle = interval(Math.max(1, Math.round(ms / 1000)), step);
+    const handle = interval(Math.max(1, Math.round(ms / 1000)), step, {name: 'animation.pulse'});
     return {
         stop() {
             handle.stop();

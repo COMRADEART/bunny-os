@@ -62,7 +62,7 @@ export class BottomDock {
         this.actor.add_child(this._row);
 
         this.rebuild();
-        this._timer = interval(3, () => this._refreshRunning());
+        this._timer = interval(3, () => this._refreshRunning(), {name: 'dock.running-apps'});
     }
 
     /**

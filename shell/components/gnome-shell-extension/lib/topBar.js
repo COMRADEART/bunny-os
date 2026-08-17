@@ -48,7 +48,7 @@ export class TopBar {
         row.add_child(this._buildIndicators());
 
         this._startClock();
-        this._pollTimer = interval(5, () => this._refreshIndicators());
+        this._pollTimer = interval(5, () => this._refreshIndicators(), {name: 'topbar.indicators'});
         this._audioUnsubscribe = context.audio?.onChange(() => this._refreshVolume()) ?? null;
         this._refreshIndicators();
     }
@@ -212,7 +212,7 @@ export class TopBar {
         const msToNextMinute = (60 - now.get_second()) * 1000;
         this._alignTimer = timeout(msToNextMinute, () => {
             this._renderClock();
-            this._clockTimer = interval(60, () => this._renderClock());
+            this._clockTimer = interval(60, () => this._renderClock(), {name: 'topbar.clock'});
         });
     }
 

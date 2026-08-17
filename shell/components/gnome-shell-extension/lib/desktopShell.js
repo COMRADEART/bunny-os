@@ -164,7 +164,7 @@ export class DesktopShell {
 
         // Cheap, and it catches the two things no signal reports: an
         // application that stopped running, and midnight.
-        this._housekeeping = interval(30, () => this._onHousekeeping());
+        this._housekeeping = interval(30, () => this._onHousekeeping(), {name: 'shell.housekeeping'});
     }
 
     // ---------------------------------------------------------------- setup
@@ -356,7 +356,7 @@ export class DesktopShell {
                 'I am not connected to my runtime yet. Everything else on this desktop still works.',
                 {tone: 'warning'});
             log_(`assistant unavailable: ${reason}`);
-        });
+        }, 'assistant');
     }
 
     /**
@@ -370,7 +370,7 @@ export class DesktopShell {
      * @param {Function} report
      * @returns {object|null} the timer, so the caller can keep it for teardown
      */
-    _pollHealth(service, report) {
+    _pollHealth(service, report, name = 'health') {
         //: Every two seconds for a minute. A cold companion on this image binds
         //: its socket in under ten; a minute is the point past which "it is
         //: still starting" stops being the likely explanation.
@@ -414,7 +414,7 @@ export class DesktopShell {
                 return;
             }
             ask();
-        });
+        }, {name: `health.${name}`});
         return timer;
     }
 
@@ -449,7 +449,7 @@ export class DesktopShell {
             }
             if (settled)
                 log_(`push-to-talk unavailable: ${reason}`);
-        });
+        }, 'voice');
     }
 
     _buildComponents() {

@@ -80,7 +80,8 @@ export class Card {
         this.resize(rect.width);
         this.refresh();
         if (this._refreshSeconds > 0 && this._timer === null)
-            this._timer = interval(this._refreshSeconds, () => this.refresh());
+            this._timer = interval(this._refreshSeconds, () => this.refresh(),
+                {name: `card.${this.title}`});
         if (!wasLive)
             enter(this.actor, {index});
     }

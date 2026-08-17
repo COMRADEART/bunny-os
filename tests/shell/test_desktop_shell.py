@@ -1724,7 +1724,15 @@ class PointerOwnershipTests(unittest.TestCase):
         # the bound is checked where it lives. Still checked, and now once for
         # both consumers rather than once for the one that had the defect first.
         self.assertIn("_pollHealth(this.voice,", body, "voice must use the shared poller")
-        poller = self.text.split("_pollHealth(service, report) {", 1)[1].split("\n    }", 1)[0]
+        # Matched by shape, not by the exact parameter list. This split on the
+        # literal `_pollHealth(service, report) {` and broke with an IndexError
+        # the moment Phase 5 gave the poller an optional `name` argument for
+        # instrumentation — a change that does not touch the property this test
+        # is about. A test that fails because a signature gained a defaulted
+        # parameter is testing the spelling of the code, not its behaviour.
+        signature = re.search(r"_pollHealth\(service, report[^)]*\) \{", self.text)
+        self.assertIsNotNone(signature, "the shared health poller is gone")
+        poller = self.text[signature.end():].split("\n    }", 1)[0]
         self.assertIn("attemptsLeft", poller, "the retry has to be bounded")
         self.assertRegex(poller, r"attemptsLeft\s*=\s*\d+",
                          "the bound has to be a finite number")
@@ -2104,8 +2112,9 @@ class AssistantFlowTests(unittest.TestCase):
         assistant sitting ten lines above it.
         """
         shell = module_text(self.SHELL)
-        self.assertIn("_pollHealth(service, report)", shell,
-                      "the shared health poller is gone; the two consumers will drift again")
+        self.assertRegex(
+            shell, r"_pollHealth\(service, report[^)]*\) \{",
+            "the shared health poller is gone; the two consumers will drift again")
         for consumer in ("this.assistant", "this.voice"):
             with self.subTest(consumer=consumer):
                 self.assertRegex(
