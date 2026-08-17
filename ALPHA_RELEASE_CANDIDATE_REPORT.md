@@ -52,8 +52,9 @@ Two commits matter here and they are deliberately not the same one.
 and the beta payload were built from, and the only commit any digest in §20
 refers to. It has not moved since the build.
 
-**The final tree commit** is this report's own, which carries the qualification
-evidence, the harness repairs this phase made, and the report itself. It is
+**The final tree commit is `98b8244e`** — this report's own, carrying the
+qualification evidence, the harness repairs this phase made, and the report
+itself. It is
 necessarily later than the artifact: a phase that records what it found cannot
 have recorded it before it finished. The distinction is the point of §20 — the
 candidate is a fixed thing, and the account of it is not.
