@@ -1,7 +1,9 @@
 [
  {"command": "system", "label": "system-before", "timeout": 240},
  {"command": "create-user", "name": "robin", "realName": "Robin Second",
+  "password": "bunny-second-password",
   "label": "create-standard-user", "timeout": 180, "sleep": 5},
  {"command": "create-user", "name": "sam", "realName": "Sam Admin",
-  "administrator": true, "label": "create-administrator", "timeout": 180, "sleep": 5}
+  "administrator": true, "password": "bunny-admin-password",
+  "label": "create-administrator", "timeout": 180, "sleep": 5}
 ]

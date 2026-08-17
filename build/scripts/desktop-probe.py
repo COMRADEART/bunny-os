@@ -696,7 +696,7 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                          path or "/org/freedesktop/Accounts",
                          "org.freedesktop.Accounts.User", "Session"],
                         timeout=30) if path else {"stdout": "", "error": "no object path"}
-                    answer["createUser"] = {
+                    detail = {
                         "name": name,
                         "administrator": bool(kind),
                         "create": created,
@@ -709,6 +709,22 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                             ["ls", "-l", f"/var/lib/AccountsService/users/{name}"],
                             timeout=10),
                     }
+                    # A password, so the account can be logged into at the real
+                    # greeter — which is the only way to find out what session
+                    # the record actually produces. The value is a harness
+                    # fixture on a disposable machine and is not a secret; it
+                    # is hashed here rather than sent to AccountsService's
+                    # SetPassword because that method takes a hash too, and
+                    # this keeps the hashing visible in the record.
+                    secret = str(request.get("password", ""))
+                    if secret:
+                        hashed = run(["openssl", "passwd", "-6", secret], timeout=30)
+                        digest = (hashed.get("stdout") or "").strip()
+                        detail["passwordSet"] = (
+                            run(["usermod", "-p", digest, name], timeout=30)
+                            if digest.startswith("$6$")
+                            else {"error": "no hash was produced"})
+                    answer["createUser"] = detail
             elif verb == "process-audit":
                 # §7/§8: the process table with unit and session attribution
                 # — pid, parent, owner, system unit, user unit — plus the
