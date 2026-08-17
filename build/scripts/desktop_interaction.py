@@ -513,6 +513,19 @@ neighbour = pictures / "private-neighbour.png"
 for stale in list(pictures.glob("*-resized*.png")) + [source, neighbour]:
     if stale.exists():
         stale.unlink()
+# A capsule writes its result into its own exports directory, which lives under
+# the user's XDG data home and therefore survives a reboot. Resetting Pictures
+# alone left a previous journey's holiday-resized.png in there, and the image
+# tool then refused the whole task with "the output already exists" — correctly,
+# it does not clobber. The journey read that as the product failing. Clearing
+# them is what makes a granted journey repeatable on a persistent machine; the
+# names are reported so a run that removed something says so.
+cleared_exports = []
+capsules = Path.home() / ".local" / "share" / "bunny" / "capsules"
+if capsules.is_dir():
+    for stale in sorted(capsules.glob("**/exports/*-resized*.png")):
+        cleared_exports.append(str(stale))
+        stale.unlink()
 import gi
 gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import GdkPixbuf
@@ -536,6 +549,7 @@ print(json.dumps({
     "kind": kind,
     "sourceDigest": hashlib.sha256(source.read_bytes()).hexdigest()[:32],
     "neighbourDigest": hashlib.sha256(neighbour.read_bytes()).hexdigest()[:32],
+    "clearedExports": cleared_exports,
 }))
 """
 

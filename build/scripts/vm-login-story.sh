@@ -315,6 +315,42 @@ interaction_path = work / "interaction.json"
 if interaction_path.exists():
     interaction_report = json.loads(interaction_path.read_text(encoding="utf-8"))
 
+# What the journey actually did, graded.
+#
+# Everything above this point asks whether the *machine* behaved: it booted, a
+# session opened, the journal is there, it shut down cleanly. None of it asks
+# whether the thing the journey went there to do happened. A granted Trust
+# journey whose task ended in an error and produced no file was recorded with
+# `findings: []` — a pass, on a run whose own final state was "error" and whose
+# on-screen result read "the task failed". A journey that cannot fail is not a
+# test, so its outcome is graded here.
+journey = interaction_report.get("journey")
+if isinstance(journey, dict):
+    decision = journey.get("decision")
+    final = journey.get("final") or {}
+    produced = list((journey.get("result") or {}).get("files") or [])
+    if decision not in {"granted", "denied"}:
+        findings.append(f"the journey recorded no decision: {decision!r}")
+    elif decision == "granted":
+        # Permission was given, so the task is required to have happened.
+        if not produced:
+            findings.append(
+                "the journey granted permission and the task produced nothing")
+        if final.get("state") == "error":
+            reason = final.get("reason") or final.get("says") or "no reason recorded"
+            findings.append(f"the granted journey ended in an error state: {reason}")
+    else:
+        # Denied. The one thing that must be true is that nothing was produced.
+        #
+        # The final *state* is deliberately not graded here: what a refusal
+        # should leave on screen — an error, or a calm decline — is a question
+        # no record in this repository answers yet, and a check written from a
+        # guess would fail a correct refusal. It is recorded below so the next
+        # denied run settles it with a measurement instead.
+        if produced:
+            findings.append(
+                f"the journey denied permission and the task still produced {produced}")
+
 result = {
     "schemaVersion": 1,
     "harness": "vm-login-story",
@@ -322,6 +358,13 @@ result = {
     "user": user,
     "interactionStatus": interaction,
     "journalChecks": checks,
+    "journeyVerdict": ({
+        "decision": journey.get("decision"),
+        "finalState": (journey.get("final") or {}).get("state"),
+        "finalSays": (journey.get("final") or {}).get("says"),
+        "produced": list((journey.get("result") or {}).get("files") or []),
+        "pixels": (journey.get("result") or {}).get("pixels"),
+    } if isinstance(interaction_report.get("journey"), dict) else None),
     "systemReport": interaction_report.get("system"),
     "findings": findings,
 }

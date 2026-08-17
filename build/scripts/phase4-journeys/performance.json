@@ -1,0 +1,7 @@
+[
+ {"command": "ready", "label": "session-settled", "wait": 180, "timeout": 210},
+ {"command": "system", "label": "system", "timeout": 240},
+ {"command": "performance", "label": "idle-first", "seconds": 20, "timeout": 90},
+ {"command": "performance", "label": "idle-second", "seconds": 30, "timeout": 130, "sleep": 30},
+ {"command": "companion-state", "label": "companion", "timeout": 60}
+]
