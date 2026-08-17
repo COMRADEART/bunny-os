@@ -617,6 +617,34 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                          "org.gnome.SettingsDaemon.MediaKeys.service",
                          "-p", "ActiveState,ExecMainPID"], timeout=15)
                 answer["powerTrace"] = trace
+            elif verb == "bunny-extension":
+                # The A/B lever for the power-key diagnosis: turn the Bunny
+                # desktop extension off (or back on) in the running session,
+                # so the same boot can answer "does the press work without
+                # it". Bounded to the one extension — this is not a generic
+                # shell hook.
+                import pwd as _pwd
+
+                try:
+                    uid = _pwd.getpwnam(user).pw_uid
+                except KeyError:
+                    uid = 1000
+                action = ("disable" if request.get("action") == "disable"
+                          else "enable")
+                prefix = [
+                    "/usr/bin/sudo", "-u", user, "-H", "/usr/bin/env",
+                    f"XDG_RUNTIME_DIR=/run/user/{uid}",
+                    f"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{uid}/bus",
+                ]
+                answer["extension"] = {
+                    "action": action,
+                    "result": run(
+                        [*prefix, "/usr/bin/gnome-extensions", action,
+                         "bunny-shell@bunny-os.org"], timeout=30),
+                    "state": run(
+                        [*prefix, "/usr/bin/gnome-extensions", "info",
+                         "bunny-shell@bunny-os.org"], timeout=30),
+                }
             elif verb == "done":
                 transcript.append(answer)
                 channel.send({"reply": answer})
