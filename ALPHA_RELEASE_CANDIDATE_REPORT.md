@@ -267,7 +267,33 @@ which session it actually got.
 
 ## 15. Performance measurements
 
-PENDING.
+PENDING for the artifact run (g11). The comparator is chosen in advance so the
+result cannot be graded against whichever baseline flatters it.
+
+**Instrument.** The probe's `performance` verb: CPU as a *delta* in
+`utime + stime` clock ticks read from `/proc` across a fixed idle interval, not
+`ps`'s `%cpu`, which is an average since process start and on a session that
+has just completed a permission journey is a number about the journey. RSS from
+`VmRSS`.
+
+**Baseline** — `qualification/design/performance.json`, candidate `7edd3fd`,
+the same verb and the same 20-second interval, so the two are comparable
+without adjustment:
+
+| Process | Processes | CPU idle | RSS |
+| --- | --- | --- | --- |
+| `gnome-shell` | 4 | 0.80 % | 391.2 MiB |
+| `companion` | 1 | 0.35 % | 61.6 MiB |
+| `orca` | — | 0.00 % | — |
+
+`qualification/voice-release/evidence/final/logs/cpu-idle.json` also carries an
+idle sample (gnome-shell 7.75 %, 322.3 MiB) but over a 60-second window from a
+different instrument on the voice image, so it is **not** used as the
+comparator; it is named here so that a reader who finds it knows why.
+
+g11 samples twice — once when the session settles and again after a further
+idle gap — because a single sample cannot distinguish "idle" from "still
+starting up", and the difference between the two is itself worth recording.
 
 ## 16. Full regression results
 
