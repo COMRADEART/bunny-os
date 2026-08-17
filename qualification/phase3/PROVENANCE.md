@@ -50,5 +50,26 @@ on the builder, log `/root/bunny-ops/voice-phase3-a.log`.
 
 ## Binding artifacts
 
-Recorded when the final sequence completes; the final build runs at commit
-**376acf0e**.
+Built at commit **376acf0e** (image-side delta to later harness commits:
+none — every commit after it touches harness, docs, qualification or
+tests only):
+
+- Live ISO `bunny-os-0.3.0-live.376acf0e076f-x86_64.iso`
+  sha256 `67be977258764543de572e5c27d6cb44cf3973d4e587542e8099a60bb92e0f06`
+- shell-test qcow2
+  sha256 `41bd07c3604e90f54a90124ce73b9e21b033c3944f4226d94f5c1f29a051140c`
+- journey-e target disk
+  sha256 begins `0c7a74bec888b29dcfe828b317e63260014df6d2`
+
+The binding sequence, all at harness 481ac2f9 on a machine created fresh
+from the binding journey-e disk with only the read-only probe injected:
+journey-e (full on-medium expectation, findings []), first-boot-e (2
+encrypted boots, graphical, findings []), login-f1 (first-run walked
+10/10, marker, applied 11/11, Bunny session from the installer's
+AccountsService record, greeter reaped, zero SEGV), login-f2 (configure),
+login-f3 (persistence PASS, marker held), login-f4 (granted Trust
+journey: holiday-resized.png 100×50, source and neighbour digests
+unchanged). Voice: accept-all `phase3-b` against the binding shell-test
+image. Every login story carries the one open finding,
+`unclean-shutdown` — the documented ACPI power-key defect — and nothing
+else.
