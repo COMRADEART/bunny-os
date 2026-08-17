@@ -154,8 +154,27 @@ fi
 sleep $(( login_at - elapsed )); elapsed="${login_at}"
 shot "t${elapsed}-greeter"
 echo "typing the login for ${user} at t=${elapsed}s"
-python3 build/scripts/qmp-input.py --socket "${qmp}" \
-  --width "${width}" --height "${height}" --key ret >/dev/null 2>&1 || true
+# Choosing somebody other than the account the greeter offers.
+#
+# GDM opens on the last user's password prompt, so a story for a second
+# account typed that account's password into the first account's field and
+# recorded a machine that never logged anyone in (g6, first attempt). The
+# chords here walk back to the user list and pick a row — `esc,down,ret` for
+# the account below the offered one — and the photograph taken afterwards is
+# what makes the choice checkable rather than assumed.
+if [[ -n "${BUNNY_LOGIN_SELECT:-}" ]]; then
+  echo "  selecting another account at the greeter: ${BUNNY_LOGIN_SELECT}"
+  IFS=',' read -ra chords <<< "${BUNNY_LOGIN_SELECT}"
+  for chord in "${chords[@]}"; do
+    python3 build/scripts/qmp-input.py --socket "${qmp}" \
+      --width "${width}" --height "${height}" --key "${chord}" >/dev/null 2>&1 || true
+    sleep 3
+  done
+  shot "t${elapsed}-user-chosen"
+else
+  python3 build/scripts/qmp-input.py --socket "${qmp}" \
+    --width "${width}" --height "${height}" --key ret >/dev/null 2>&1 || true
+fi
 sleep 4
 python3 build/scripts/qmp-input.py --socket "${qmp}" \
   --width "${width}" --height "${height}" --type "${password}" >/dev/null 2>&1 || true
