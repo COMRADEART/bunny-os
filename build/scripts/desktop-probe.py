@@ -41,21 +41,36 @@ MARKER_BEGIN = "BUNNY-DESKTOP-RECORD-BEGIN"
 MARKER_END = "BUNNY-DESKTOP-RECORD-END"
 
 
-def run(argv: list[str], *, user: str | None = None, timeout: int = 30) -> dict:
-    """Run a command and record what happened, including when it did not run."""
+def run(argv: list[str], *, user: str | None = None, timeout: int = 30,
+        limit: int = 4000) -> dict:
+    """Run a command and record what happened, including when it did not run.
+
+    ``stdout`` is clipped at ``limit``, and **the clipping is recorded**. It
+    used not to be, and a process audit read the first 4000 characters of
+    ``ps -e`` — twenty-seven kernel threads — while reporting itself as the
+    process table of a running desktop. A record that is quietly partial is
+    the one failure mode a probe must not have, so ``truncated`` says so and
+    ``stdoutBytes`` says how much there was.
+    """
     if user:
         argv = ["/usr/bin/sudo", "-u", user, "-H", *argv]
     try:
         completed = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
     except (OSError, subprocess.TimeoutExpired) as exc:
         return {"argv": argv, "ran": False, "error": str(exc)}
-    return {
+    out = completed.stdout.strip()
+    err = completed.stderr.strip()
+    answer = {
         "argv": argv,
         "ran": True,
         "returncode": completed.returncode,
-        "stdout": completed.stdout.strip()[:4000],
-        "stderr": completed.stderr.strip()[:2000],
+        "stdout": out[:limit],
+        "stderr": err[:2000],
     }
+    if len(out) > limit:
+        answer["truncated"] = True
+        answer["stdoutBytes"] = len(out)
+    return answer
 
 
 def session_user() -> str:
@@ -731,11 +746,34 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 # session list. The probe captures facts; which processes are
                 # duplicates, greeter leftovers or logout survivors is
                 # decided by the reader against this record, not in here.
+                #
+                # The table is large enough to hit the output clip, so the
+                # answer carries the counts computed here from the *whole*
+                # table, and the rows for the session user and for anything
+                # under a bunny unit in full. A reader that only saw the
+                # clipped head would be reading kernel threads.
+                table = run(
+                    ["ps", "-eo",
+                     "pid,ppid,uid,user:16,unit:32,uunit:40,tty,etimes,args",
+                     "--no-headers", "--sort", "uid,pid"],
+                    timeout=20, limit=400_000)
+                rows = (table.get("stdout") or "").splitlines()
+                mine, bunny = [], []
+                for row in rows:
+                    fields = row.split(None, 8)
+                    if len(fields) < 9:
+                        continue
+                    if fields[3] == user:
+                        mine.append(row)
+                    if "bunny" in fields[4] or "bunny" in fields[5] or "bunny" in fields[8]:
+                        bunny.append(row)
                 answer["audit"] = {
-                    "processes": run(
-                        ["ps", "-eo",
-                         "pid,ppid,uid,user:16,unit:32,uunit:40,tty,etimes,args",
-                         "--no-headers", "--sort", "uid,pid"], timeout=20),
+                    "processTotal": len(rows),
+                    "processTruncated": bool(table.get("truncated")),
+                    "sessionUserProcesses": mine,
+                    "sessionUserCount": len(mine),
+                    "bunnyProcesses": bunny,
+                    "bunnyCount": len(bunny),
                     "sessions": run(["loginctl", "list-sessions", "--no-pager"],
                                     timeout=15),
                     "loginctlUsers": run(["loginctl", "list-users", "--no-pager"],
@@ -746,19 +784,22 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                 # does. The hygiene story runs this between two
                 # process-audits: what survives the second audit has, by
                 # definition, outlived the session that owned it.
-                listing = run(["loginctl", "list-sessions", "--no-pager",
-                               "--output=json"], timeout=15)
-                terminated = []
-                try:
-                    for entry in json.loads(listing.get("stdout") or "[]"):
-                        if entry.get("user") == user:
-                            terminated.append(run(
-                                ["loginctl", "terminate-session",
-                                 str(entry.get("session"))], timeout=15))
-                except (ValueError, TypeError) as error:
-                    answer["error"] = f"could not parse sessions: {error}"
-                answer["logout"] = {"listing": listing,
-                                    "terminated": terminated}
+                #
+                # `terminate-user`, not a parse of `list-sessions`. The first
+                # version asked for `--output=json`, which this loginctl
+                # ignores — it printed its ordinary table, the parse failed,
+                # nothing was terminated, and the audit that followed
+                # compared a logged-in machine with itself. One call that
+                # names the user cannot fail that way.
+                before = run(["loginctl", "list-sessions", "--no-pager"], timeout=15)
+                terminated = run(["loginctl", "terminate-user", user], timeout=30)
+                time.sleep(float(request.get("settle", 10)))
+                after = run(["loginctl", "list-sessions", "--no-pager"], timeout=15)
+                answer["logout"] = {
+                    "sessionsBefore": before,
+                    "terminate": terminated,
+                    "sessionsAfter": after,
+                }
             elif verb == "done":
                 transcript.append(answer)
                 channel.send({"reply": answer})
