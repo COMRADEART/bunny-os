@@ -258,6 +258,15 @@ def _pressure_sequence(presenter: CharacterPresenter, state: PresentationState,
         ok=animated.effective_presentation == "animated-2d",
         before=animated.effective_presentation,
         presentation=animated.effective_presentation,
+        # Why the selector landed where it did. Without this the failure is a
+        # step number: this pair has read
+        # `['step 17 ...', 'step 21 ...']` on and off for four phases, and the
+        # selector has been recording its own reasons the whole time. A
+        # degradation that cannot say which rule fired is a degradation nobody
+        # can act on.
+        reasons=list(animated.snapshot.presentation.reasons),
+        heldByHysteresis=animated.snapshot.presentation.held_by_hysteresis,
+        rendererHealthy=animated.renderer_healthy,
     ))
     to_static = presenter.update(
         _visual_state(state), now=clock.advance(),
