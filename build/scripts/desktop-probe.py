@@ -645,6 +645,40 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                         [*prefix, "/usr/bin/gnome-extensions", "info",
                          "bunny-shell@bunny-os.org"], timeout=30),
                 }
+            elif verb == "process-audit":
+                # §7/§8: the process table with unit and session attribution
+                # — pid, parent, owner, system unit, user unit — plus the
+                # session list. The probe captures facts; which processes are
+                # duplicates, greeter leftovers or logout survivors is
+                # decided by the reader against this record, not in here.
+                answer["audit"] = {
+                    "processes": run(
+                        ["ps", "-eo",
+                         "pid,ppid,uid,user:16,unit:32,uunit:40,tty,etimes,args",
+                         "--no-headers", "--sort", "uid,pid"], timeout=20),
+                    "sessions": run(["loginctl", "list-sessions", "--no-pager"],
+                                    timeout=15),
+                    "loginctlUsers": run(["loginctl", "list-users", "--no-pager"],
+                                         timeout=15),
+                }
+            elif verb == "logout":
+                # End the session user's login sessions, the way a logout
+                # does. The hygiene story runs this between two
+                # process-audits: what survives the second audit has, by
+                # definition, outlived the session that owned it.
+                listing = run(["loginctl", "list-sessions", "--no-pager",
+                               "--output=json"], timeout=15)
+                terminated = []
+                try:
+                    for entry in json.loads(listing.get("stdout") or "[]"):
+                        if entry.get("user") == user:
+                            terminated.append(run(
+                                ["loginctl", "terminate-session",
+                                 str(entry.get("session"))], timeout=15))
+                except (ValueError, TypeError) as error:
+                    answer["error"] = f"could not parse sessions: {error}"
+                answer["logout"] = {"listing": listing,
+                                    "terminated": terminated}
             elif verb == "done":
                 transcript.append(answer)
                 channel.send({"reply": answer})
