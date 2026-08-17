@@ -92,6 +92,16 @@ _PHASES_AFTER_THE_RECORD = (
 #: still fails the added-files check until somebody declares it.
 _MAINTAINED_TOOLING = frozenset({
     "qualification/installed-system/scripts/import_matrix_results.py",
+    # Phase 5 made ``qualification/`` a Python package so that
+    # ``qualification.grader`` — the extracted VM journey grader — is
+    # importable. The file is a docstring and nothing else; it is tooling, not
+    # a record, and it sits at the top of the tree rather than inside any
+    # phase's directory, so no prefix in ``_PHASES_AFTER_THE_RECORD`` covers it.
+    #
+    # Named singly, like the importer above, and for the same reason: another
+    # file appearing beside it still fails the added-files check until somebody
+    # declares it deliberately.
+    "qualification/__init__.py",
 })
 
 #: Build residue, which is not evidence and is not in the repository.
@@ -188,6 +198,7 @@ class PreservedEvidence(unittest.TestCase):
             if name not in recorded
             and not name.startswith(_PHASES_AFTER_THE_RECORD)
             and not _is_residue(name)
+            and name not in _MAINTAINED_TOOLING
         ]
         self.assertEqual(added, [], "a file was added to an earlier phase's evidence tree")
 
