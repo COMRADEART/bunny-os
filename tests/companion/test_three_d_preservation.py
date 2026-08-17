@@ -66,6 +66,10 @@ _PHASES_AFTER_THE_RECORD = (
     "qualification/voice-release/",
     # Phase 3's own tree.
     "qualification/phase3/",
+    # Phase 4's, for the same reason: the Alpha hardening phase committed the
+    # power-key investigation and the release-candidate qualification under
+    # its own name. A later phase existing is not an earlier phase changing.
+    "qualification/phase4/",
 )
 
 #: Maintained tooling that lives under an earlier phase's directory but is not
