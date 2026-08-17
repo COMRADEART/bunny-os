@@ -46,8 +46,28 @@ from install_routes import (  # noqa: E402 - the path above is what makes this i
 
 
 def copy_file(source: Path, destination: Path, mode: int) -> None:
-    """The one primitive. Everything installed goes through here."""
+    """The one primitive. Everything installed goes through here.
+
+    The destination is **removed** before it is written, and that is not
+    tidiness. ``shutil.copyfile`` opens the destination for truncation, which
+    writes *through* an existing hardlink — so installing over a file an RPM
+    ships as one member of a hardlink group silently rewrites every other
+    member of that group.
+
+    Measured on the release candidate: Fedora's ``accountsservice`` ships
+    ``/usr/share/accountsservice/user-templates/{standard,administrator}`` as
+    hardlinks to each other, and installing Bunny's two templates over them
+    left both paths holding whichever route ran last — 495 bytes of the
+    administrator template under both names, still sharing one inode. The
+    behaviour happened to survive it (the two templates carry the same
+    ``[User]`` block), which is exactly why a check that only asked "did the
+    session come out right" would have missed it.
+
+    Unlinking first gives each destination its own inode, which is what
+    ``install(1)`` does and what every caller here already assumes.
+    """
     destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.unlink(missing_ok=True)
     shutil.copyfile(source, destination)
     os.chmod(destination, mode)
 
