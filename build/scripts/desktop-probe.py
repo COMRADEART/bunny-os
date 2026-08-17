@@ -567,6 +567,56 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                          f"/var/home/{user}/.local/state/bunny-os/companion/settings.json"],
                         timeout=5),
                 }
+            elif verb == "power-trace":
+                # Phase 4's power-key investigation. Nothing here simulates a
+                # press — the story's own ACPI powerdown at the end is the
+                # press, and this boot's journal is the record. This verb
+                # reads the facts the diagnosis needs (the configured button
+                # action, the virtualisation answer, who holds the
+                # handle-power-key block) and, unless asked not to, restarts
+                # the media-keys handler with its debug voice on, so that a
+                # delivered accelerator and a handler that decided to do
+                # nothing stop looking identical in the journal.
+                import pwd as _pwd
+
+                try:
+                    uid = _pwd.getpwnam(user).pw_uid
+                except KeyError:
+                    uid = 1000
+                as_user = [
+                    "/usr/bin/sudo", "-u", user, "-H", "/usr/bin/env",
+                    f"XDG_RUNTIME_DIR=/run/user/{uid}",
+                    f"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{uid}/bus",
+                ]
+                trace: dict = {
+                    "powerButtonAction": run(
+                        [*as_user, "/usr/bin/gsettings", "get",
+                         "org.gnome.settings-daemon.plugins.power",
+                         "power-button-action"], timeout=15),
+                    "virt": run(["systemd-detect-virt"], timeout=10),
+                    "chassis": run(["hostnamectl", "chassis"], timeout=10),
+                    "inhibitors": run(["systemd-inhibit", "--list",
+                                       "--no-pager"], timeout=15),
+                    "mediaKeysBefore": run(
+                        [*as_user, "systemctl", "--user", "show",
+                         "org.gnome.SettingsDaemon.MediaKeys.service",
+                         "-p", "ActiveState,ExecMainPID,ExecMainStartTimestamp"],
+                        timeout=15),
+                }
+                if request.get("debug", True):
+                    trace["setEnvironment"] = run(
+                        [*as_user, "systemctl", "--user", "set-environment",
+                         "G_MESSAGES_DEBUG=all"], timeout=15)
+                    trace["restart"] = run(
+                        [*as_user, "systemctl", "--user", "restart",
+                         "org.gnome.SettingsDaemon.MediaKeys.service"],
+                        timeout=30)
+                    time.sleep(3.0)
+                    trace["mediaKeysAfter"] = run(
+                        [*as_user, "systemctl", "--user", "show",
+                         "org.gnome.SettingsDaemon.MediaKeys.service",
+                         "-p", "ActiveState,ExecMainPID"], timeout=15)
+                answer["powerTrace"] = trace
             elif verb == "done":
                 transcript.append(answer)
                 channel.send({"reply": answer})

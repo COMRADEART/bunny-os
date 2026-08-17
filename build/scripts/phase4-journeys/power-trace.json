@@ -1,0 +1,4 @@
+[
+ {"command": "system", "label": "system-before", "timeout": 240},
+ {"command": "power-trace", "label": "power-trace", "timeout": 120, "sleep": 5}
+]
