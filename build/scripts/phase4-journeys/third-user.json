@@ -1,0 +1,6 @@
+[
+ {"command": "system", "label": "system-before", "timeout": 240},
+ {"command": "create-user", "name": "casey", "realName": "Casey Third",
+  "password": "bunny-third-password",
+  "label": "create-standard-user-clean-record", "timeout": 180, "sleep": 5}
+]

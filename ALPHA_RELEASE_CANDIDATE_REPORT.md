@@ -161,19 +161,32 @@ comments and asserted by `tests/first_login/test_session_templates.py`.
 
 ## 7. Installation result
 
-PENDING — journey-e (unattended encrypted install driven through the shipped
-setup surface) against the release-candidate medium.
+**PASS.** `journey-e` — an unattended encrypted install driven through the
+shipped setup surface, from the release-candidate ISO
+(`823d50ca…`) — completed with `findings: []`, followed by
+`first-boot-e`: two encrypted boots of the installed disk, each unlocking LUKS
+and reaching a graphical session.
 
 ## 8. Login result
 
-PENDING — first-boot-e (two encrypted boots), then g1: fresh machine, real
-GDM login, first-run wizard walked.
+**PASS.** `g1`: a fresh machine from the installed disk, a real GDM login, and
+the first-run wizard walked through the product's own surface. `findings: []`,
+all five journal checks true, and **11 of 11** first-run choices applied with
+no failures (`applied: 11, failures: []`).
 
 ## 9. Persistence result
 
-PENDING — g2 configures five settings and the compact companion mode; g3
-reads them back after a real reboot and selects minimal; g4 reads minimal
-back after another reboot.
+**PASS**, across four boots rather than asserted once.
+
+| Run | What it did | Outcome |
+| --- | --- | --- |
+| `g2` | configured five settings and chose the **compact** companion mode | written |
+| `g3` | read them back after a real reboot; chose **minimal** | compact survived |
+| `g4` | read back after another reboot | minimal survived |
+
+Each read-back went through the product's own settings surface, not through a
+file the harness had written, so what is demonstrated is that the system
+restores the choice — not that a value can be round-tripped.
 
 ## 10. Companion result
 
@@ -259,11 +272,31 @@ the press is delivered, and the machine powers off cleanly.
 
 ## 14. Multi-user result
 
-PENDING — g5 creates a standard and an administrator account through
-AccountsService's `CreateUser` (the call gnome-control-center's Users entry
-and gnome-initial-setup both make) and reads back the record GDM consults;
-g6 logs the second account in **at the real greeter** and the journal says
-which session it actually got.
+**PASS.** Limitation B is closed, on the artifact, end to end.
+
+`g5` created two accounts through AccountsService's `CreateUser` — the call
+gnome-control-center's Users entry and gnome-initial-setup both make — one
+standard (`robin`), one administrator (`sam`). Both records came back carrying
+`Session=bunny`, and each from the correct template: the standard account from
+`standard`, the administrator from `administrator`. That distinction matters
+because the two template files are byte-identical in content but not in
+purpose, and an earlier build had them crossed by a hardlink (§20).
+
+`g10` then logged `robin` in **at the real greeter**, and the result is a
+photograph rather than an inference: the desktop says *"Good evening, Robin"*,
+with the Bunny shell, dock, Quick Access and the Companion, and the first-run
+wizard opening at step 1 of 10. `findings: []`, `sessionOpened` true for
+`robin(uid=1001)`, every journal check true.
+
+### The first attempt failed, and the failure was the harness's
+
+`g6` — the same story before the fix — exited 6. GDM opens on the last user's
+password prompt, so the story typed robin's password into alex's field and
+recorded a machine that had logged nobody in. The story now walks back to the
+user list, chooses a row, and **photographs the choice** before typing
+(`t150-user-chosen`, showing "Robin Second" with an empty focused password
+field). A blind login is not evidence about a second account; it is evidence
+about whichever account the greeter happened to offer.
 
 ## 15. Performance measurements
 

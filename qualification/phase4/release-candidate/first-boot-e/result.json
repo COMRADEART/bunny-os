@@ -1,0 +1,16 @@
+{
+ "schemaVersion": 1,
+ "bootsRequested": 2,
+ "bootsObserved": 2,
+ "boots": [
+  {
+   "bootId": "1bf2b8cad40c4ed68eeb9a4e0eac468e",
+   "reachedGraphical": true
+  },
+  {
+   "bootId": "73e9350cde7e475a9e0190abe4e0006a",
+   "reachedGraphical": true
+  }
+ ],
+ "findings": []
+}

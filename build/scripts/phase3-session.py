@@ -29,6 +29,35 @@ import time
 
 _HERE = Path(__file__).resolve().parent
 
+#: Request keys whose value is a credential and must never reach the record.
+#:
+#: The record echoes each request beside its answer, which is what makes a
+#: journey readable afterwards — and it echoed the request *verbatim*. The
+#: second-user journey passes the new account's password as a parameter, so
+#: `g5/interaction.json` carried `"password": "bunny-second-password"` in
+#: plaintext into the evidence tree, where evidence is immutable and a secret
+#: therefore cannot be taken back out. Found by
+#: tests/evidence/test_no_credentials_in_evidence.py on its first real run.
+_SECRET_KEYS = frozenset({"password", "passphrase", "secret", "token", "credential"})
+
+_REDACTED = "<redacted>"
+
+
+def _for_the_record(step):
+    """A copy of *step* safe to write down, redacted at every depth.
+
+    Redacting only the top level would be enough for today's journeys and
+    wrong for the first one that nests a request.
+    """
+    if isinstance(step, dict):
+        return {
+            key: (_REDACTED if str(key).lower() in _SECRET_KEYS else _for_the_record(value))
+            for key, value in step.items()
+        }
+    if isinstance(step, list):
+        return [_for_the_record(item) for item in step]
+    return step
+
 
 def _load_drive():
     specification = importlib.util.spec_from_file_location(
@@ -88,13 +117,14 @@ def main() -> int:
 
     failed = False
     for index, step in enumerate(steps):
+        recorded = _for_the_record(step)
         request = dict(step)
         settle = float(request.pop("sleep", 0) or 0)
         host_key = request.pop("hostKey", None)
         if host_key:
             label = request.get("label", f"step-{index}")
             print(f"  -> {label}: host key {host_key!r}")
-            entry: dict = {"request": step}
+            entry: dict = {"request": recorded}
             if not arguments.qmp:
                 entry["error"] = "hostKey step but no --qmp socket was given"
                 failed = True
@@ -119,7 +149,7 @@ def main() -> int:
         label = request.get("label", f"step-{index}")
         print(f"  -> {label}: {request.get('command')}")
         answer = control.ask(request, timeout=float(request.pop("timeout", 300)))
-        record["steps"].append({"request": step, "answer": answer})
+        record["steps"].append({"request": recorded, "answer": answer})
         if answer is None:
             failed = True
             record["error"] = f"no answer to {label}; the session stopped talking"

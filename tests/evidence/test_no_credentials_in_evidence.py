@@ -86,7 +86,9 @@ DECLARED_FIXTURE_SECRETS = {
 # shape the scanner would recognise, so they are named explicitly.
 HARNESS_ACCOUNT_PASSWORDS = (
     "bunny-test-password",  # vm-login-story.sh's default, for the installed account
-    "bunny-second-password",  # the second and third accounts the multi-user story creates
+    "bunny-second-password",  # robin, created by the multi-user story
+    "bunny-admin-password",  # sam, the administrator the same story creates
+    "bunny-third-password",  # casey, created to re-prove the same thing on a clean record
     "bunny-login-password",
 )
 
