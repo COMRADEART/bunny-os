@@ -68,10 +68,41 @@ export default class BunnyShellExtension extends Extension {
 
         this._settings = this.getSettings();
         this._enableIndicator();
-        this._enableDesktop();
+        // The desktop must not be built while the shell is still starting.
+        //
+        // Building it during startup restructures the stage under the
+        // startup animation's feet, one of its awaits never resolves, and
+        // layout.js never reaches _startupAnimationComplete — so
+        // 'startup-complete' never fires, main.js never flips
+        // Main.actionMode from NONE to NORMAL, and windowManager.js's
+        // _filterKeybinding drops *every* keybinding for the life of the
+        // session: the power key, the media keys, and this extension's own
+        // shortcuts alike. Measured on the Phase 3 machine (p4-power-1..8,
+        // qualification/phase4/power-key/): every boot that built the
+        // desktop during startup is missing the "GNOME Shell started"
+        // message that same handler logs and ignored the ACPI power key;
+        // disabling the extension mid-session let the stalled startup
+        // finish seconds later and the very same press then delivered.
+        // Deferring to 'startup-complete' is the upstream pattern for
+        // extensions that restructure the stage, and a desktop built after
+        // startup was measured safe (p4-power-6).
+        if (Main.layoutManager._startingUp) {
+            this._startupCompleteId = Main.layoutManager.connect(
+                'startup-complete', () => {
+                    Main.layoutManager.disconnect(this._startupCompleteId);
+                    this._startupCompleteId = 0;
+                    this._enableDesktop();
+                });
+        } else {
+            this._enableDesktop();
+        }
     }
 
     disable() {
+        if (this._startupCompleteId) {
+            Main.layoutManager.disconnect(this._startupCompleteId);
+            this._startupCompleteId = 0;
+        }
         this._disableDesktop();
         this._disableIndicator();
         this._settings = null;

@@ -2382,5 +2382,62 @@ class CompanionWindowTests(unittest.TestCase):
         self.assertIn("ExecStart=/usr/libexec/bunny-companion-service", unit)
 
 
+class StartupDeferralTests(unittest.TestCase):
+    """The desktop is never built while the shell is still starting.
+
+    Building it during startup restructures the stage under the startup
+    animation, one of layout.js's awaits never resolves, 'startup-complete'
+    never fires, and Main.actionMode stays NONE — where windowManager.js's
+    `_filterKeybinding` drops every keybinding for the life of the session.
+    That was the ACPI power key defect: every Phase 3/4 boot that built the
+    desktop during startup is missing the "GNOME Shell started" message the
+    startup-complete handler logs, and ignored the press; the boots that
+    deferred (or had no desktop) show the message and power off cleanly.
+    Evidence: qualification/phase4/power-key/, runs p4-power-1..8.
+
+    These are text-level assertions on the shipped source with comments
+    stripped, for the same reason test_corrections strips them: an accurate
+    explanation of the defect contains the names of the defect.
+    """
+
+    @staticmethod
+    def _stripped() -> str:
+        text = (EXTENSION / "extension.js").read_text(encoding="utf-8")
+        text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+        return re.sub(r"^\s*//.*$", "", text, flags=re.M)
+
+    @classmethod
+    def _method_body(cls, name: str) -> str:
+        code = cls._stripped()
+        _, _, rest = code.partition(f"{name}() {{")
+        body, _, _ = rest.partition("\n    }")
+        return body
+
+    def test_enable_defers_construction_while_the_shell_is_starting(self) -> None:
+        enable = self._method_body("enable")
+        self.assertIn("_startingUp", enable,
+                      "enable() no longer asks whether the shell is starting; "
+                      "a desktop built during startup stalls the startup "
+                      "animation and every keybinding dies with it")
+        self.assertIn("'startup-complete'", enable,
+                      "the deferred build must ride the same signal that "
+                      "flips Main.actionMode from NONE")
+
+    def test_enable_builds_nothing_before_the_startup_check(self) -> None:
+        enable = self._method_body("enable")
+        before_check, _, _ = enable.partition("_startingUp")
+        self.assertNotIn(
+            "_enableDesktop", before_check,
+            "the desktop is constructed before the startup check — that is "
+            "the exact ordering that killed the power key")
+
+    def test_disable_cancels_a_pending_deferred_build(self) -> None:
+        disable = self._method_body("disable")
+        self.assertIn(
+            "_startupCompleteId", disable,
+            "a logout during startup would leak the deferred build into a "
+            "session that no longer owns it")
+
+
 if __name__ == "__main__":
     unittest.main()
