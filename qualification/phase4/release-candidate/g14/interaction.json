@@ -1,0 +1,429 @@
+{
+ "ready": {
+  "controlCount": 319
+ },
+ "schemaVersion": 1,
+ "script": "build/scripts/phase4-journeys/session-hygiene.json",
+ "status": "complete",
+ "steps": [
+  {
+   "answer": {
+    "command": "system",
+    "label": "system-before",
+    "system": {
+     "appliedState": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "cat",
+       "/var/home/alex/.local/state/bunny-os/applied.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n \"applied\": 11,\n \"dryRun\": false,\n \"failures\": [],\n \"results\": [\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface color-scheme = default\",\n   \"intent\": \"appearance: system\",\n   \"key\": \"colourScheme\",\n   \"value\": \"default\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface gtk-theme = Adwaita\",\n   \"intent\": \"appearance: GTK theme\",\n   \"key\": \"gtkTheme\",\n   \"value\": \"Adwaita\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface text-scaling-factor = 1.0\",\n   \"intent\": \"text size 100%\",\n   \"key\": \"textScale\",\n   \"value\": \"1.0\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.interface high-contrast = false\",\n   \"intent\": \"high contrast\",\n   \"key\": \"highContrast\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface enable-animations = true\",\n   \"intent\": \"reduced motion\",\n   \"key\": \"reducedMotion\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.applications screen-reader-enabled = false\",\n   \"intent\": \"screen reader\",\n   \"key\": \"screenReader\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"character.visible = true; accessibility.text_only = false; character.companion_mode = full\",\n   \"intent\": \"Bunny presentation: full\",\n   \"key\": \"companionMode\",\n   \"value\": \"full\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"accessibility.captions_always = true\",\n   \"intent\": \"captions\",\n   \"key\": \"companionCaptions\",\n   \"value\": true\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.privacy report-technical-problems = false\",\n   \"intent\": \"crash reports\",\n   \"key\": \"crashReports\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.system.location enabled = false\",\n   \"intent\": \"location services\",\n   \"key\": \"location\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"symlink present after enable\",\n   \"intent\": \"start Bunny at login\",\n   \"key\": \"companionAtLogin\",\n   \"value\": true\n  }\n ],\n \"schemaVersion\": 1,\n \"total\": 11\n}"
+     },
+     "choicesOnTarget": {
+      "argv": [
+       "cat",
+       "/var/lib/bunny-setup/choices.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n \"accessibility\": {\n  \"captions\": false,\n  \"highContrast\": false,\n  \"reducedMotion\": false,\n  \"screenReader\": false,\n  \"textScale\": 1.0\n },\n \"account\": {\n  \"deviceName\": \"warren\",\n  \"displayName\": \"Alex\",\n  \"username\": \"alex\"\n },\n \"appearance\": {\n  \"accent\": \"violet\",\n  \"colourScheme\": \"system\",\n  \"wallpaper\": \"bunny-default\"\n },\n \"applications\": {\n  \"activities\": [],\n  \"selected\": []\n },\n \"companion\": {\n  \"atLogin\": true,\n  \"captions\": true,\n  \"mode\": \"full\",\n  \"voice\": false\n },\n \"encryption\": {\n  \"enabled\": true\n },\n \"locale\": {\n  \"keyboardLayout\": \"gb\",\n  \"language\": \"en-GB\",\n  \"region\": \"GB\",\n  \"timezone\": \"Europe/London\"\n },\n \"privacy\": {\n  \"camera\": false,\n  \"crashReports\": false,\n  \"diagnostics\": false,\n  \"feedback\": false,\n  \"location\": false,\n  \"microphone\": false,\n  \"onlineAI\": false,\n  \"remoteProcessing\": false\n },\n \"schemaVersion\": 1\n}"
+     },
+     "companionSettings": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "cat",
+       "/var/home/alex/.local/state/bunny-os/companion/settings.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n  \"accessibility\": {\n    \"captionsAlways\": true,\n    \"highContrast\": false,\n    \"noAnimation\": false,\n    \"reducedMotion\": true,\n    \"textOnly\": false,\n    \"uiScale\": 1.0\n  },\n  \"ai\": {\n    \"allowedRemoteAliases\": [],\n    \"costCeilingUnits\": 0,\n    \"preferredModelId\": \"\",\n    \"preferredProviderId\": \"\",\n    \"remoteEnabled\": false\n  },\n  \"character\": {\n    \"animation\": \"full\",\n    \"animationIntensity\": 0.6,\n    \"companionMode\": \"full\",\n    \"contextualReactions\": true,\n    \"dock\": \"top-left\",\n    \"idleAnimation\": true,\n    \"packageId\": \"\",\n    \"performance\": \"automatic\",\n    \"renderMode\": \"prerendered\",\n    \"scale\": 1.4,\n    \"threeD\": \"auto\",\n    \"visible\": true\n  },\n  \"containsCredentials\": false,\n  \"privacy\": {\n    \"clipboardCeiling\": \"internal\",\n    \"desktopActionApproval\": \"always\",\n    \"historyRetentionDays\": 0,\n    \"remoteTransferCeiling\": \"public\"\n  },\n  \"schemaVersion\": 1,\n  \"speechInput\": {\n    \"deviceId\": \"\",\n    \"enabled\": true,\n    \"language\": \"automatic\",\n    \"modelId\": \"\",\n    \"shortcut\": \"<Super><Alt>space\",\n    \"wakeWord\": \"disabled\"\n  },\n  \"voice\": {\n    \"enabled\": true,\n    \"modelId\": \"\",\n    \"performanceMode\": \"automatic\",\n    \"providerId\": \"pocket\",\n    \"responseMode\": \"voice-only\",\n    \"speakingRate\": 1.2,\n    \"voiceId\": \"\",\n    \"volume\": 1.0\n  }\n}"
+     },
+     "etcHostname": {
+      "argv": [
+       "cat",
+       "/etc/hostname"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "warren"
+     },
+     "etcLocaleConf": {
+      "argv": [
+       "cat",
+       "/etc/locale.conf"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "LANG=en_GB.UTF-8"
+     },
+     "etcVconsole": {
+      "argv": [
+       "cat",
+       "/etc/vconsole.conf"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "KEYMAP=\"gb\"\nFONT=\"eurlatgr\""
+     },
+     "firstRunMarker": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "ls",
+       "-l",
+       "/var/home/alex/.local/state/bunny-os/first-run-complete"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "-rw-------. 1 alex alex 31 Aug 17 20:20 /var/home/alex/.local/state/bunny-os/first-run-complete"
+     },
+     "hostnamectl": {
+      "argv": [
+       "hostnamectl"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "Static hostname: warren\n           Icon name: computer-vm\n             Chassis: vm \ud83d\uddb4\n          Machine ID: 77fac1b0d72e4608932f657cb6f95b20\n             Boot ID: 3eb67703fd274d6fb4c81e7eee50160b\n      Virtualization: kvm\n    Operating System: Bunny OS 0.1.0 (development)\n         CPE OS Name: cpe:/o:fedoraproject:fedora:44\n      OS Support End: Wed 2027-05-19\nOS Support Remaining: 9month\n              Kernel: Linux 7.1.5-201.fc44.x86_64\n        Architecture: x86-64\n     Hardware Vendor: QEMU\n      Hardware Model: Standard PC _Q35 + ICH9, 2009_\n    Hardware Version: pc-q35-10.2\n    Firmware Version: edk2-20260508-6.fc44\n       Firmware Date: Fri 2026-05-08\n        Firmware Age: 3month 1w 3d"
+     },
+     "inhibitors": {
+      "argv": [
+       "systemd-inhibit",
+       "--list",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "WHO            UID  USER PID  COMM           WHAT                                                     WHY                                                         MODE\nNetworkManager 0    root 2331 NetworkManager sleep                                                    NetworkManager needs to turn off networks                   delay\nUPower         0    root 2343 upowerd        sleep                                                    Pause device polling                                        delay\nGNOME Shell    1000 alex 3823 gnome-shell    sleep                                                    GNOME needs to save screen time data                        delay\nalex           1000 alex 3940 gsd-power      handle-lid-switch                                        External monitor attached or configuration changed recently block\nalex           1000 alex 3935 gsd-media-keys handle-power-key:handle-suspend-key:handle-hibernate-key GNOME handling keypresses                                   block\nalex           1000 alex 3935 gsd-media-keys sleep                                                    GNOME handling keypresses                                   delay\nalex           1000 alex 3940 gsd-power      sleep                                                    GNOME needs to lock the screen                              delay\n\n7 inhibitors listed."
+     },
+     "localectl": {
+      "argv": [
+       "localectl",
+       "status"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "System Locale: LANG=en_GB.UTF-8\n    VC Keymap: gb\n   X11 Layout: (unset)"
+     },
+     "sessions": {
+      "argv": [
+       "loginctl",
+       "list-sessions"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "SESSION  UID USER SEAT  LEADER CLASS   TTY  IDLE SINCE\n      2 1000 alex -     3398   manager -    no   -\n      3 1000 alex seat0 3680   user    tty2 no   -\n\n2 sessions listed."
+     },
+     "userUnits": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "/usr/bin/env",
+       "XDG_RUNTIME_DIR=/run/user/1000",
+       "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+       "systemctl",
+       "--user",
+       "--no-pager",
+       "list-units",
+       "bunny-*"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "UNIT                     LOAD   ACTIVE SUB     DESCRIPTION\n  bunny-companion.service  loaded active running Bunny Companion runtime\n  bunny-config-dir.service loaded active exited  Establish and verify the Bunny OS per-user configuration directory\n\nLegend: LOAD   \u2192 Reflects whether the unit definition was properly loaded.\n        ACTIVE \u2192 The high-level unit activation state, i.e. generalization of SUB.\n        SUB    \u2192 The low-level unit activation state, values depend on unit type.\n\n2 loaded units listed. Pass --all to see loaded but inactive units, too.\nTo show all installed unit files use 'systemctl list-unit-files'."
+     }
+    }
+   },
+   "request": {
+    "command": "system",
+    "label": "system-before",
+    "timeout": 240
+   }
+  },
+  {
+   "answer": {
+    "audit": {
+     "bunnyCount": 5,
+     "bunnyProcesses": [
+      "   2434       1     0 root             bunny-system-broker.service      -                                        ?            149 /usr/bin/python3 /usr/libexec/bunny-system-broker",
+      "   3392       1     0 root             bunny-desktop-probe.service      -                                        ?            104 /usr/bin/python3 /etc/bunny-desktop-probe.py",
+      "   5324    3392     0 root             bunny-desktop-probe.service      -                                        ?              0 ps -eo pid,ppid,uid,user:16,unit:32,uunit:40,tty,etimes,args --no-headers --sort uid,pid",
+      "   3740    3680  1000 alex             session-3.scope                  -                                        tty2          21 /usr/libexec/gdm-wayland-session --handle-registration /usr/libexec/bunny-shell-session",
+      "   4056    3398  1000 alex             user@1000.service                bunny-companion.service                  ?             20 /usr/bin/python3 /usr/libexec/bunny-companion-service"
+     ],
+     "loginctlUsers": {
+      "argv": [
+       "loginctl",
+       "list-users",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "UID USER LINGER STATE\n1000 alex no     active\n\n1 users listed."
+     },
+     "processTotal": 231,
+     "processTruncated": false,
+     "sessionUserCount": 64,
+     "sessionUserProcesses": [
+      "   3398       1  1000 alex             user@1000.service                init.scope                               ?            104 /usr/lib/systemd/systemd --user",
+      "   3400    3398  1000 alex             user@1000.service                init.scope                               ?            104 (sd-pam)",
+      "   3416    3398  1000 alex             user@1000.service                mpris-proxy.service                      ?            104 /usr/bin/mpris-proxy",
+      "   3417    3398  1000 alex             user@1000.service                dbus-broker.service                      ?            104 /usr/bin/dbus-broker-launch --scope user",
+      "   3419    3417  1000 alex             user@1000.service                dbus-broker.service                      ?            104 dbus-broker --log 10 --controller 9 --machine-id 77fac1b0d72e4608932f657cb6f95b20 --max-bytes 100000000000000 --max-fds 25000000000000 --max-matches 5000000000",
+      "   3428    3398  1000 alex             user@1000.service                dconf.service                            ?            104 /usr/libexec/dconf-service",
+      "   3721       1  1000 alex             session-3.scope                  -                                        ?             21 /usr/bin/gnome-keyring-daemon --daemonize --login",
+      "   3740    3680  1000 alex             session-3.scope                  -                                        tty2          21 /usr/libexec/gdm-wayland-session --handle-registration /usr/libexec/bunny-shell-session",
+      "   3757    3740  1000 alex             session-3.scope                  -                                        tty2          21 /usr/libexec/gnome-session-init-worker gnome",
+      "   3810    3398  1000 alex             user@1000.service                gnome-session-monitor.service            ?             21 /usr/libexec/gnome-session-ctl --monitor",
+      "   3816    3398  1000 alex             user@1000.service                gnome-session-manager@gnome.service      ?             21 /usr/libexec/gnome-session-service --session=gnome",
+      "   3823    3398  1000 alex             user@1000.service                org.gnome.Shell@user.service             ?             21 /usr/bin/gnome-shell --mode=user",
+      "   3829    3398  1000 alex             user@1000.service                gvfs-daemon.service                      ?             21 /usr/libexec/gvfsd",
+      "   3835    3398  1000 alex             user@1000.service                gvfs-daemon.service                      ?             21 /usr/libexec/gvfsd-fuse /run/user/1000/gvfs -f",
+      "   3865    3398  1000 alex             user@1000.service                at-spi-dbus-bus.service                  ?             20 /usr/libexec/at-spi-bus-launcher",
+      "   3871    3865  1000 alex             user@1000.service                at-spi-dbus-bus.service                  ?             20 /usr/bin/dbus-broker-launch --config-file=/usr/share/defaults/at-spi2/accessibility.conf --scope user",
+      "   3872    3871  1000 alex             user@1000.service                at-spi-dbus-bus.service                  ?             20 dbus-broker --log 10 --controller 9 --machine-id 77fac1b0d72e4608932f657cb6f95b20 --max-bytes 100000000000000 --max-fds 6400000 --max-matches 5000000000",
+      "   3873    3398  1000 alex             user@1000.service                dbus-:1.35-org.a11y.atspi.Registry@0.service ?         20 /usr/libexec/at-spi2-registryd --use-gnome-session",
+      "   3882    3398  1000 alex             user@1000.service                xdg-permission-store.service             ?             20 /usr/libexec/xdg-permission-store",
+      "   3891    3398  1000 alex             user@1000.service                dbus-:1.2-org.gnome.Shell.CalendarServer@0.service ?   20 /usr/libexec/gnome-shell-calendar-server",
+      "   3909    3398  1000 alex             user@1000.service                evolution-source-registry.service        ?             20 /usr/libexec/evolution-source-registry",
+      "   3916    3398  1000 alex             user@1000.service                dbus-:1.2-org.gnome.Shell.Notifications@0.service ?    20 /usr/bin/gjs -m /usr/share/gnome-shell/org.gnome.Shell.Notifications",
+      "   3925    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.A11ySettings.service ?        20 /usr/libexec/gsd-a11y-settings",
+      "   3927    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.Color.service   ?             20 /usr/libexec/gsd-color",
+      "   3928    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.Datetime.service ?            20 /usr/libexec/gsd-datetime",
+      "   3933    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.Housekeeping.service ?        20 /usr/libexec/gsd-housekeeping",
+      "   3934    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.Keyboard.service ?            20 /usr/libexec/gsd-keyboard",
+      "   3935    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.MediaKeys.service ?           20 /usr/libexec/gsd-media-keys",
+      "   3940    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.Power.service   ?             20 /usr/libexec/gsd-power",
+      "   3950    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.PrintNotifications.service ?  20 /usr/libexec/gsd-print-notifications",
+      "   3954    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.Rfkill.service  ?             20 /usr/libexec/gsd-rfkill",
+      "   3955    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.ScreensaverProxy.service ?    20 /usr/libexec/gsd-screensaver-proxy",
+      "   3956    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.Sharing.service ?             20 /usr/libexec/gsd-sharing",
+      "   3957    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.Smartcard.service ?           20 /usr/libexec/gsd-smartcard",
+      "   3960    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.Sound.service   ?             20 /usr/libexec/gsd-sound",
+      "   3961    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.UsbProtection.service ?       20 /usr/libexec/gsd-usb-protection",
+      "   3967    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.Wwan.service    ?             20 /usr/libexec/gsd-wwan",
+      "   4056    3398  1000 alex             user@1000.service                bunny-companion.service                  ?             20 /usr/bin/python3 /usr/libexec/bunny-companion-service",
+      "   4059    3398  1000 alex             user@1000.service                evolution-alarm-notify.service           ?             20 /usr/libexec/evolution-data-server/evolution-alarm-notify",
+      "   4063    3398  1000 alex             user@1000.service                localsearch-3.service                    ?             20 /usr/libexec/localsearch-3",
+      "   4073    3398  1000 alex             user@1000.service                pipewire.service                         ?             20 /usr/bin/pipewire",
+      "   4076    3398  1000 alex             user@1000.service                wireplumber.service                      ?             20 /usr/bin/wireplumber",
+      "   4077    3398  1000 alex             user@1000.service                pipewire-pulse.service                   ?             20 /usr/bin/pipewire-pulse",
+      "   4078    3398  1000 alex             user@1000.service                xdg-desktop-portal.service               ?             20 /usr/libexec/xdg-desktop-portal",
+      "   4092    3398  1000 alex             user@1000.service                dbus-:1.2-org.gnome.ScreenSaver@0.service ?            20 /usr/bin/gjs -m /usr/share/gnome-shell/org.gnome.ScreenSaver",
+      "   4127    3398  1000 alex             user@1000.service                xdg-document-portal.service              ?             20 /usr/libexec/xdg-document-portal",
+      "   4134    3823  1000 alex             user@1000.service                org.gnome.Shell@user.service             ?             20 bwrap --unshare-all --die-with-parent --chdir / --ro-bind /usr /usr --dev /dev --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache --ro-bind-try /nix/store /nix/store --tmpfs /tmp-home --tmpfs /tmp-run --clearenv --setenv HOME /tmp-home --setenv XDG_RUNTIME_DIR /tmp-run --setenv XDG_RUNTIME_DIR /run/user/1000 --symlink /usr/lib /lib --symlink /usr/lib64 /lib64 --ro-bind-try /etc/fonts/conf.d /etc/fonts/conf.d --ro-bind-try /etc/fonts/fonts.conf /etc/fonts/fonts.conf --ro-bind-try /usr/lib/fontconfig/cache /usr/lib/fontconfig/cache --bind-try /home/alex/.cache/glycin/usr/libexec/glycin-loaders/2+/glycin-svg /home/alex/.cache/glycin/usr/libexec/glycin-loaders/2+/glycin-svg --setenv XDG_CACHE_HOME /home/alex/.cache/glycin/usr/libexec/glycin-loaders/2+/glycin-svg --seccomp 71 /usr/libexec/glycin-loaders/2+/glycin-svg --dbus-fd 69",
+      "   4142    4134  1000 alex             user@1000.service                org.gnome.Shell@user.service             ?             20 bwrap --unshare-all --die-with-parent --chdir / --ro-bind /usr /usr --dev /dev --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache --ro-bind-try /nix/store /nix/store --tmpfs /tmp-home --tmpfs /tmp-run --clearenv --setenv HOME /tmp-home --setenv XDG_RUNTIME_DIR /tmp-run --setenv XDG_RUNTIME_DIR /run/user/1000 --symlink /usr/lib /lib --symlink /usr/lib64 /lib64 --ro-bind-try /etc/fonts/conf.d /etc/fonts/conf.d --ro-bind-try /etc/fonts/fonts.conf /etc/fonts/fonts.conf --ro-bind-try /usr/lib/fontconfig/cache /usr/lib/fontconfig/cache --bind-try /home/alex/.cache/glycin/usr/libexec/glycin-loaders/2+/glycin-svg /home/alex/.cache/glycin/usr/libexec/glycin-loaders/2+/glycin-svg --setenv XDG_CACHE_HOME /home/alex/.cache/glycin/usr/libexec/glycin-loaders/2+/glycin-svg --seccomp 71 /usr/libexec/glycin-loaders/2+/glycin-svg --dbus-fd 69",
+      "   4148    4142  1000 alex             user@1000.service                org.gnome.Shell@user.service             ?             20 /usr/libexec/glycin-loaders/2+/glycin-svg --dbus-fd 69",
+      "   4175    3398  1000 alex             user@1000.service                gvfs-udisks2-volume-monitor.service      ?             20 /usr/libexec/gvfs-udisks2-volume-monitor",
+      "   4176    3398  1000 alex             user@1000.service                xdg-desktop-portal-gnome.service         ?             20 /usr/libexec/xdg-desktop-portal-gnome",
+      "   4186    3398  1000 alex             user@1000.service                gvfs-metadata.service                    ?             20 /usr/libexec/gvfsd-metadata",
+      "   4190    3398  1000 alex             user@1000.service                dbus-:1.2-org.gnome.OnlineAccounts@0.service ?         20 /usr/libexec/goa-daemon",
+      "   4230    3398  1000 alex             user@1000.service                gvfs-goa-volume-monitor.service          ?             20 /usr/libexec/gvfs-goa-volume-monitor",
+      "   4237    3398  1000 alex             user@1000.service                evolution-calendar-factory.service       ?             20 /usr/libexec/evolution-calendar-factory",
+      "   4257    3398  1000 alex             user@1000.service                dbus-:1.2-org.gnome.Identity@0.service   ?             20 /usr/libexec/goa-identity-service",
+      "   4290    3398  1000 alex             user@1000.service                evolution-addressbook-factory.service    ?             20 /usr/libexec/evolution-addressbook-factory",
+      "   4439    3823  1000 alex             user@1000.service                org.gnome.Shell@user.service             ?             19 bwrap --unshare-all --die-with-parent --chdir / --ro-bind /usr /usr --dev /dev --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache --ro-bind-try /nix/store /nix/store --tmpfs /tmp-home --tmpfs /tmp-run --clearenv --setenv HOME /tmp-home --setenv XDG_RUNTIME_DIR /tmp-run --setenv XDG_RUNTIME_DIR /run/user/1000 --symlink /usr/lib /lib --symlink /usr/lib64 /lib64 --seccomp 103 /usr/libexec/glycin-loaders/2+/glycin-image-rs --dbus-fd 102",
+      "   4444    4439  1000 alex             user@1000.service                org.gnome.Shell@user.service             ?             19 bwrap --unshare-all --die-with-parent --chdir / --ro-bind /usr /usr --dev /dev --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache --ro-bind-try /nix/store /nix/store --tmpfs /tmp-home --tmpfs /tmp-run --clearenv --setenv HOME /tmp-home --setenv XDG_RUNTIME_DIR /tmp-run --setenv XDG_RUNTIME_DIR /run/user/1000 --symlink /usr/lib /lib --symlink /usr/lib64 /lib64 --seccomp 103 /usr/libexec/glycin-loaders/2+/glycin-image-rs --dbus-fd 102",
+      "   4446    4444  1000 alex             user@1000.service                org.gnome.Shell@user.service             ?             19 /usr/libexec/glycin-loaders/2+/glycin-image-rs --dbus-fd 102",
+      "   4852    3398  1000 alex             user@1000.service                org.gnome.SettingsDaemon.PrintNotifications.service ?  19 /usr/libexec/gsd-printer",
+      "   5144    3398  1000 alex             user@1000.service                dbus-:1.2-org.gnome.Settings.GlobalShortcutsProvider@0.service ? 19 /usr/libexec/gnome-control-center-global-shortcuts-provider",
+      "   5169    3398  1000 alex             user@1000.service                xdg-desktop-portal-gtk.service           ?             18 /usr/libexec/xdg-desktop-portal-gtk",
+      "   5178    3398  1000 alex             user@1000.service                dbus-:1.2-org.freedesktop.secrets@0.service ?          18 /usr/bin/gnome-keyring-daemon --start --foreground --components=secrets"
+     ],
+     "sessions": {
+      "argv": [
+       "loginctl",
+       "list-sessions",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "SESSION  UID USER SEAT  LEADER CLASS   TTY  IDLE SINCE\n      2 1000 alex -     3398   manager -    no   -\n      3 1000 alex seat0 3680   user    tty2 no   -\n\n2 sessions listed."
+     }
+    },
+    "command": "process-audit",
+    "label": "audit-logged-in"
+   },
+   "request": {
+    "command": "process-audit",
+    "label": "audit-logged-in",
+    "timeout": 120
+   }
+  },
+  {
+   "answer": {
+    "command": "logout",
+    "label": "logout",
+    "logout": {
+     "sessionsAfter": {
+      "argv": [
+       "loginctl",
+       "list-sessions",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "SESSION   UID USER        SEAT  LEADER CLASS         TTY  IDLE SINCE\n      4 60579 gdm-greeter -     5414   manager-early -    no   -\n    c38 60579 gdm-greeter seat0 5366   greeter       tty1 no   -\n\n2 sessions listed."
+     },
+     "sessionsBefore": {
+      "argv": [
+       "loginctl",
+       "list-sessions",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "SESSION  UID USER SEAT  LEADER CLASS      TTY  IDLE SINCE\n      2 1000 alex -     3398   manager    -    no   -\n      3 1000 alex seat0 3680   user       tty2 no   -\n    c37 1000 alex -     5329   background -    no   -\n\n3 sessions listed."
+     },
+     "terminate": {
+      "argv": [
+       "loginctl",
+       "terminate-user",
+       "alex"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": ""
+     }
+    }
+   },
+   "request": {
+    "command": "logout",
+    "label": "logout",
+    "sleep": 15,
+    "timeout": 60
+   }
+  },
+  {
+   "answer": {
+    "audit": {
+     "bunnyCount": 3,
+     "bunnyProcesses": [
+      "   2434       1     0 root             bunny-system-broker.service      -                                        ?            175 /usr/bin/python3 /usr/libexec/bunny-system-broker",
+      "   3392       1     0 root             bunny-desktop-probe.service      -                                        ?            129 /usr/bin/python3 /etc/bunny-desktop-probe.py",
+      "   6264    3392     0 root             bunny-desktop-probe.service      -                                        ?              0 ps -eo pid,ppid,uid,user:16,unit:32,uunit:40,tty,etimes,args --no-headers --sort uid,pid"
+     ],
+     "loginctlUsers": {
+      "argv": [
+       "loginctl",
+       "list-users",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "UID USER        LINGER STATE\n 1000 alex        no     closing\n60579 gdm-greeter no     active\n\n2 users listed."
+     },
+     "processTotal": 222,
+     "processTruncated": false,
+     "sessionUserCount": 5,
+     "sessionUserProcesses": [
+      "   6242       1  1000 alex             user@1000.service                init.scope                               ?              0 /usr/lib/systemd/systemd --user",
+      "   6244    6242  1000 alex             user@1000.service                init.scope                               ?              0 (sd-pam)",
+      "   6260    6242  1000 alex             user@1000.service                mpris-proxy.service                      ?              0 /usr/bin/mpris-proxy",
+      "   6262    6242  1000 alex             user@1000.service                dbus-broker.service                      ?              0 /usr/bin/dbus-broker-launch --scope user",
+      "   6265    6262  1000 alex             user@1000.service                dbus-broker.service                      ?              0 dbus-broker --log 10 --controller 9 --machine-id 77fac1b0d72e4608932f657cb6f95b20 --max-bytes 100000000000000 --max-fds 25000000000000 --max-matches 5000000000"
+     ],
+     "sessions": {
+      "argv": [
+       "loginctl",
+       "list-sessions",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "SESSION   UID USER        SEAT  LEADER CLASS         TTY  IDLE SINCE\n      4 60579 gdm-greeter -     5414   manager-early -    no   -\n      5  1000 alex        -     6242   manager       -    no   -\n    c38 60579 gdm-greeter seat0 5366   greeter       tty1 no   -\n\n3 sessions listed."
+     }
+    },
+    "command": "process-audit",
+    "label": "audit-after-logout"
+   },
+   "request": {
+    "command": "process-audit",
+    "label": "audit-after-logout",
+    "sleep": 5,
+    "timeout": 120
+   }
+  },
+  {
+   "answer": {
+    "audit": {
+     "bunnyCount": 3,
+     "bunnyProcesses": [
+      "   2434       1     0 root             bunny-system-broker.service      -                                        ?            180 /usr/bin/python3 /usr/libexec/bunny-system-broker",
+      "   3392       1     0 root             bunny-desktop-probe.service      -                                        ?            134 /usr/bin/python3 /etc/bunny-desktop-probe.py",
+      "   6272    3392     0 root             bunny-desktop-probe.service      -                                        ?              0 ps -eo pid,ppid,uid,user:16,unit:32,uunit:40,tty,etimes,args --no-headers --sort uid,pid"
+     ],
+     "loginctlUsers": {
+      "argv": [
+       "loginctl",
+       "list-users",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "UID USER        LINGER STATE\n 1000 alex        no     closing\n60579 gdm-greeter no     active\n\n2 users listed."
+     },
+     "processTotal": 222,
+     "processTruncated": false,
+     "sessionUserCount": 5,
+     "sessionUserProcesses": [
+      "   6242       1  1000 alex             user@1000.service                init.scope                               ?              5 /usr/lib/systemd/systemd --user",
+      "   6244    6242  1000 alex             user@1000.service                init.scope                               ?              5 (sd-pam)",
+      "   6260    6242  1000 alex             user@1000.service                mpris-proxy.service                      ?              5 /usr/bin/mpris-proxy",
+      "   6262    6242  1000 alex             user@1000.service                dbus-broker.service                      ?              5 /usr/bin/dbus-broker-launch --scope user",
+      "   6265    6262  1000 alex             user@1000.service                dbus-broker.service                      ?              5 dbus-broker --log 10 --controller 9 --machine-id 77fac1b0d72e4608932f657cb6f95b20 --max-bytes 100000000000000 --max-fds 25000000000000 --max-matches 5000000000"
+     ],
+     "sessions": {
+      "argv": [
+       "loginctl",
+       "list-sessions",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "SESSION   UID USER        SEAT  LEADER CLASS         TTY  IDLE SINCE\n      4 60579 gdm-greeter -     5414   manager-early -    no   -\n      5  1000 alex        -     6242   manager       -    no   -\n    c38 60579 gdm-greeter seat0 5366   greeter       tty1 no   -\n\n3 sessions listed."
+     }
+    },
+    "command": "process-audit",
+    "label": "audit-after-close"
+   },
+   "request": {
+    "command": "process-audit",
+    "label": "audit-after-close",
+    "sleep": 40,
+    "timeout": 120
+   }
+  }
+ ]
+}

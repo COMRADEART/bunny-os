@@ -1,0 +1,17 @@
+{
+ "findings": [],
+ "harness": "vm-login-story",
+ "interactionStatus": "complete",
+ "journalChecks": {
+  "companionService": true,
+  "gdmStarted": true,
+  "gnomeShell": true,
+  "graphicalTarget": true,
+  "sessionOpened": true
+ },
+ "journeyVerdict": null,
+ "machine": "build/out/phase3/machine.qcow2",
+ "schemaVersion": 1,
+ "systemReport": null,
+ "user": "alex"
+}

@@ -512,10 +512,77 @@ user list, chooses a row, and **photographs the choice** before typing
 field). A blind login is not evidence about a second account; it is evidence
 about whichever account the greeter happened to offer.
 
+### Proved twice, the second time on a record that was clean when written
+
+`g5`'s record had to be redacted after the fact (§19), which makes it evidence
+with an asterisk. `g15` creates a third account, `casey`, through the fixed
+driver, and its record needed no redaction at all:
+
+    request as recorded: {"command": "create-user", "name": "casey",
+                          "password": "<redacted>", "realName": "Casey Third", …}
+    CreateUser rc  0
+    Session        s "bunny"
+
+with the on-disk AccountsService record showing `[User]` / `Session=bunny`
+under the standard template's own comment header — so the template, not the
+installer, is what put it there.
+
+The staging step's redaction counter is the check on this: it reports **2
+values removed from `g5`** and **none from `g15`**. The driver fix is
+therefore demonstrated by a record that did not need fixing, rather than
+asserted.
+
 ## 15. Performance measurements
 
-PENDING for the artifact run (g11). The comparator is chosen in advance so the
-result cannot be graded against whichever baseline flatters it.
+**Measured (`g11`). Memory flat; the shell's idle CPU is 2.6× the baseline,
+and that is recorded as a real difference rather than explained away.**
+
+| Process | Baseline `7edd3fd` | RC, 20 s sample | RC, 30 s sample |
+| --- | --- | --- | --- |
+| `gnome-shell` (4 procs) | 0.80 % / 391.2 MiB | 1.80 % / 388.7 MiB | **2.07 %** / 387.4 MiB |
+| `companion` (1 proc) | 0.35 % / 61.6 MiB | 0.50 % / 63.1 MiB | **0.47 %** / 63.2 MiB |
+| `orca` | 0.00 % | not running | not running |
+
+**Memory is unchanged.** The shell is 3.8 MiB *lower* than the baseline and
+the Companion 1.6 MiB higher — both inside the noise of a single sample.
+
+**CPU is not.** The shell costs about 1.3 percentage points of one core more
+than it did at `7edd3fd`. Two things rule out the easy dismissals:
+
+- It is **not settling**. That is why two samples were taken with a gap. If
+  the first were merely post-login noise the second would be lower; it is
+  *higher* (1.80 → 2.07 %). This is steady state.
+- It is **not the instrument**. CPU is a delta of `utime + stime` ticks read
+  from `/proc` over a fixed interval — the same arithmetic, the same verb and
+  the same 20-second interval as the baseline.
+
+**Mechanism, named rather than guessed.** The desktop polls on timers, and in
+steady state the tightest of them are:
+
+| What | Cadence |
+| --- | --- |
+| System overview card (CPU, RAM, storage, temperature) | **2 s** |
+| Bottom dock, refreshing which applications are running | 3 s |
+| Top bar indicators | 5 s |
+| Housekeeping | 30 s |
+| Clock | 60 s |
+
+A card that redraws a CPU ring every two seconds is a plausible home for most
+of 1.3 points, and it is the first thing to measure next.
+
+**Judgement: acceptable for Alpha, recorded as a tracked number.** Two per
+cent of one core on a four-vCPU guest is not user-visible, and nothing in this
+phase's brief was performance work. But it is a real regression against the
+only comparable measurement this project has, and calling it noise would be
+the kind of claim §21 exists to refuse.
+
+**What would settle it**, and is not done here: the same verb run against a
+build of `7edd3fd`, so the difference is attributed to a change rather than to
+two different afternoons. That means rebuilding, which discards the qualified
+artifact — so it belongs to the next phase, with the pollers above as the
+first hypothesis.
+
+### The comparator, chosen in advance
 
 **Instrument.** The probe's `performance` verb: CPU as a *delta* in
 `utime + stime` clock ticks read from `/proc` across a fixed idle interval, not
@@ -541,6 +608,8 @@ comparator; it is named here so that a reader who finds it knows why.
 g11 samples twice — once when the session settles and again after a further
 idle gap — because a single sample cannot distinguish "idle" from "still
 starting up", and the difference between the two is itself worth recording.
+It earned that design: the second sample is what shows the shell's cost is
+steady rather than settling.
 
 ## 16. Full regression results
 
@@ -578,7 +647,7 @@ claim of "no regression" can be checked rather than believed.
 | Trust — denied | `files: []` (`journey-b38d51000543-denied`) | **PASS** — `files: []`, and no capsule ever started |
 | Trust — granted | `files: ["holiday-resized.png"]`, `pixels: [100, 50]` | **PASS** — identical: `["holiday-resized.png"]`, `[100, 50]` |
 | Voice acceptance | `voice-phase3-b exit=0`, 17 stages | PENDING |
-| Idle cost | shell 0.80 % / 391.2 MiB; companion 0.35 % / 61.6 MiB (`7edd3fd`) | PENDING g11 |
+| Idle cost | shell 0.80 % / 391.2 MiB; companion 0.35 % / 61.6 MiB (`7edd3fd`) | **memory flat**; shell CPU **2.07 %** (2.6×), companion 0.47 % |
 | Reference suite | 5737 passed, 24 skipped | PENDING uncontended |
 | Installer suite | 172 passed | PENDING uncontended |
 
