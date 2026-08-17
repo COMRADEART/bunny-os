@@ -1,0 +1,8 @@
+[
+ {"command": "system", "label": "system-before", "timeout": 240},
+ {"command": "settings", "action": "show", "label": "verify-after-reboot"},
+ {"command": "character", "label": "character-compact", "timeout": 120},
+ {"command": "settings", "action": "set", "section": "character",
+  "field": "companion_mode", "value": "minimal", "label": "set-minimal"},
+ {"command": "settings", "action": "show", "label": "settings-after"}
+]
