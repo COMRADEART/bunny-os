@@ -30,6 +30,24 @@
 #   BUNNY_LOGIN_SESSION_SCRIPT  a phase3-session.py step file; when set it
 #                           replaces desktop-drive as the in-session driver
 #   BUNNY_LOGIN_INTERACT    0 = photograph only, no driver (default 1)
+#   BUNNY_LOGIN_EXPECT_JOURNEY  granted | denied | none — what this run is FOR,
+#                           declared before it runs and written to
+#                           expectation.json. See the note below; the default
+#                           is `none`, which is a declaration, not a silence.
+#
+# What this script grades, and what it does not
+# ---------------------------------------------
+# Until Phase 5 the grading lived here, in a heredoc, and could only run at the
+# end of a sixteen-minute VM run. It is now `qualification/grader`, which is a
+# library with fixtures and a test suite, and this script is a *collector*: it
+# drives the machine, extracts the journal, and hands a directory to the
+# grader. The one that runs here is the one the tests exercise.
+#
+# The declaration matters as much as the extraction. A run that booted, logged
+# in, photographed a desktop and shut down *without running the journey it was
+# asked for* was recorded as a pass in Phase 4, because nothing in its record
+# said a journey had been requested. Writing the expectation down before the
+# run is what makes that case a failure rather than a silence.
 set -uo pipefail
 
 repository_root="$(git rev-parse --show-toplevel)"
@@ -47,8 +65,14 @@ type_at="${BUNNY_LOGIN_TYPE_AT:-35 90}"
 login_at="${BUNNY_LOGIN_AT:-150}"
 journey="${BUNNY_LOGIN_JOURNEY:-skip}"
 interact="${BUNNY_LOGIN_INTERACT:-1}"
+expect_journey="${BUNNY_LOGIN_EXPECT_JOURNEY:-none}"
 width=1920
 height=1080
+
+case "${expect_journey}" in
+  granted|denied|none) ;;
+  *) echo "BUNNY_LOGIN_EXPECT_JOURNEY must be granted, denied or none" >&2; exit 2 ;;
+esac
 
 bunny_require_commands qemu-system-x86_64 qemu-img guestfish python3 git journalctl || exit 3
 
@@ -57,6 +81,32 @@ if [[ -d "${work}" ]]; then
   mv "${work}" "${work}.archived-$(date -u +%Y%m%d-%H%M%S)"
 fi
 mkdir -p "${work}/screens"
+
+# ------------------------------------------------- what this run is going to do
+#
+# Written now, before the machine boots, and never rewritten afterwards. That
+# ordering is the whole point: a declaration made after the fact could be made
+# to agree with whatever happened.
+python3 - "${work}/expectation.json" "${expect_journey}" "${interact}" "${label}" <<'PYTHON'
+import json
+import sys
+
+path, expect_journey, interact, label = sys.argv[1:5]
+with open(path, "w", encoding="utf-8") as handle:
+    json.dump(
+        {
+            "journey": None if expect_journey == "none" else expect_journey,
+            "interaction": interact == "1",
+            "graphicalSession": True,
+            "label": label,
+        },
+        handle,
+        indent=1,
+        sort_keys=True,
+    )
+    handle.write("\n")
+PYTHON
+echo "declared: journey=${expect_journey} interaction=${interact}"
 
 # ---------------------------------------------------------------- the machine
 if [[ "${BUNNY_LOGIN_FRESH:-0}" == "1" && -f "${machine}" ]]; then
@@ -229,6 +279,12 @@ python3 build/scripts/ppm-to-png.py "${work}/screens" >/dev/null 2>&1 || true
 rm -f "${work}/screens"/*.ppm
 
 echo "--- reading the machine back ---"
+#
+# Collection only. Everything below extracts what the run left behind and
+# writes it down; nothing below decides whether the run passed. That decision
+# is `qualification/grader`, called afterwards, and it is called rather than
+# reimplemented so that the checks running here are the checks the fixtures in
+# `qualification/grader/fixtures/` exercise.
 python3 - "${work}" "${machine}" "${passphrase}" "${user}" "${interaction_status}" <<'PYTHON'
 import importlib.util
 import json
@@ -245,12 +301,11 @@ verifier = importlib.util.module_from_spec(specification)
 specification.loader.exec_module(verifier)
 
 findings = []
-findings_file = work / "findings.txt"
-if findings_file.exists():
-    findings.extend(findings_file.read_text().split())
 
 # Read through a throwaway overlay so the journal replays without the machine
-# disk being written by the reader.
+# disk being written by the reader. The same rule the grader is held to by
+# `test_side_effect_safety`, applied one layer earlier: a probe must not alter
+# the state it is measuring, and a qcow2 opened read-write would.
 overlay = work / "read-overlay.qcow2"
 subprocess.run(["qemu-img", "create", "-q", "-f", "qcow2",
                 "-b", str(machine.resolve()), "-F", "qcow2", str(overlay)], check=True)
@@ -258,10 +313,8 @@ subprocess.run(["qemu-img", "create", "-q", "-f", "qcow2",
 luks_devices = verifier.find_luks_devices(overlay) if passphrase else ()
 partitions = verifier.find_partitions(overlay, passphrase, luks_devices)
 root = partitions.get("root")
-checks = {}
-journal_text = ""
 if not root:
-    findings.append(f"no root filesystem found on the machine: {partitions}")
+    findings.append(f"no-root-filesystem-found:{partitions}")
 else:
     tar_path = work / "journal.tar"
     output = verifier.guestfish(
@@ -270,7 +323,7 @@ else:
                          f"glob tar-out /ostree/deploy/*/var/log/journal {tar_path}"),
         passphrase=passphrase, luks_devices=luks_devices)
     if output.startswith("__ERROR__") or not tar_path.exists():
-        findings.append(f"the persistent journal could not be extracted: {output[:200]}")
+        findings.append("persistent-journal-could-not-be-extracted")
     else:
         import tarfile
         journal_dir = work / "journal"
@@ -278,7 +331,7 @@ else:
         with tarfile.open(tar_path) as archive:
             archive.extractall(journal_dir, filter="data")
         # The boot that owns the newest journal entry IS the boot this run
-        # produced. `-b -1` — used here at first — is an *offset*, and on a
+        # produced. `-b -1` -- used here at first -- is an *offset*, and on a
         # directory holding N boots it selects the second-newest: login-2's
         # checks silently graded login-1's journal, with identical PIDs in the
         # extract as the tell. An explicit boot ID cannot repeat that.
@@ -298,110 +351,73 @@ else:
             capture_output=True, text=True)
         text = completed.stdout
         if not text.strip():
-            findings.append("journal extraction produced no text for the newest boot")
+            findings.append("journal-extraction-produced-no-text")
+        # Written even when empty, so that "extracted and empty" and "never
+        # extracted" are different states on disk. The grader answers NOT_RUN
+        # for the second and FAIL for the first, and it can only tell them
+        # apart if this file's existence means something.
         (work / "journal-lastboot.log").write_text(text, encoding="utf-8")
-        journal_text = text
-        checks = {
-            "sessionOpened": f"session opened for user {user}" in text.lower(),
-            "graphicalTarget": "Graphical Interface" in text,
-            "gnomeShell": "gnome-shell" in text,
-            "companionService": "bunny-companion.service" in text,
-            "gdmStarted": "GNOME Display Manager" in text or "gdm" in text,
-        }
-        for name, value in sorted(checks.items()):
-            if not value:
-                findings.append(f"journal lacks evidence: {name}")
+
+# Appended, never overwritten: the shutdown watchdog may already have written
+# `unclean-shutdown` here, and a collector that clobbered an earlier finding
+# would be deciding what counts, which is the grader's job.
+if findings:
+    with (work / "findings.txt").open("a", encoding="utf-8") as handle:
+        handle.write("
+".join(findings) + "
+")
 
 interaction_report = {}
 interaction_path = work / "interaction.json"
 if interaction_path.exists():
     interaction_report = json.loads(interaction_path.read_text(encoding="utf-8"))
 
-# What the journey actually did, graded.
-#
-# Everything above this point asks whether the *machine* behaved: it booted, a
-# session opened, the journal is there, it shut down cleanly. None of it asks
-# whether the thing the journey went there to do happened. A granted Trust
-# journey whose task ended in an error and produced no file was recorded with
-# `findings: []` — a pass, on a run whose own final state was "error" and whose
-# on-screen result read "the task failed". A journey that cannot fail is not a
-# test, so its outcome is graded here.
-journey = interaction_report.get("journey")
-if isinstance(journey, dict):
-    decision = journey.get("decision")
-    final = journey.get("final") or {}
-    produced = list((journey.get("result") or {}).get("files") or [])
-    # Whether the confined program ran at all, read from the machine's journal
-    # rather than from the outcome. "Nothing was produced" is a weak denial: a
-    # task that crashed before writing also produces nothing. What a refusal
-    # has to mean is that the capsule never started, and that is only a
-    # measurement because the granted run shows the same line present.
-    capsule_started = "Started bunny-capsule" in journal_text
-
-    if decision not in {"granted", "denied"}:
-        findings.append(f"the journey recorded no decision: {decision!r}")
-    elif decision == "granted":
-        # Permission was given, so the task is required to have happened.
-        if not produced:
-            findings.append(
-                "the journey granted permission and the task produced nothing")
-        if not capsule_started:
-            findings.append(
-                "the journey granted permission and no capsule was ever started")
-        if final.get("state") == "error":
-            reason = final.get("reason") or final.get("says") or "no reason recorded"
-            findings.append(f"the granted journey ended in an error state: {reason}")
-    else:
-        # Denied. Nothing produced, and the refusal presented as a refusal.
-        #
-        # The final state is graded now because g8 measured it rather than
-        # guessed: a denial ends `idle`, saying "the request was declined".
-        # That is not an error, and a build that began reporting a refusal as a
-        # failure would be telling somebody something went wrong when the
-        # system had done exactly what they asked.
-        if final.get("state") == "error":
-            findings.append(
-                "the denied journey presented the refusal as an error rather "
-                f"than a decline: {final.get('says')!r}")
-        if produced:
-            findings.append(
-                f"the journey denied permission and the task still produced {produced}")
-        if capsule_started:
-            findings.append(
-                "the journey denied permission and a capsule was started anyway")
-
-result = {
-    "schemaVersion": 1,
+# The collector's own record: what it observed, with no verdict in it.
+(work / "result.json").write_text(json.dumps({
+    "schemaVersion": 2,
     "harness": "vm-login-story",
+    "collector": "vm-login-story.sh",
     "machine": str(machine),
     "user": user,
     "interactionStatus": interaction,
-    "journalChecks": checks,
-    "journeyVerdict": ({
-        "decision": journey.get("decision"),
-        "finalState": (journey.get("final") or {}).get("state"),
-        "finalSays": (journey.get("final") or {}).get("says"),
-        "produced": list((journey.get("result") or {}).get("files") or []),
-        "pixels": (journey.get("result") or {}).get("pixels"),
-        "capsuleStarted": "Started bunny-capsule" in journal_text,
-        "inputUnchanged": ((journey.get("fixture") or {}).get("sourceDigest")
-                           == (journey.get("result") or {}).get("sourceDigest")),
-        "neighbourUnchanged": ((journey.get("fixture") or {}).get("neighbourDigest")
-                               == (journey.get("result") or {}).get("neighbourDigest")),
-    } if isinstance(interaction_report.get("journey"), dict) else None),
     "systemReport": interaction_report.get("system"),
-    "findings": findings,
-}
-(work / "result.json").write_text(json.dumps(result, indent=1, sort_keys=True),
-                                  encoding="utf-8")
+}, indent=1, sort_keys=True), encoding="utf-8")
 overlay.unlink(missing_ok=True)
-print(json.dumps({k: v for k, v in result.items() if k != "systemReport"}, indent=1))
-sys.exit(0 if not findings and interaction != "failed" else 6)
 PYTHON
-status=$?
-if (( status == 0 )); then
-  echo "PASS: the person logged in and the machine says so"
-else
-  echo "FAIL: see ${work}/result.json" >&2
+collect_status=$?
+if (( collect_status != 0 )); then
+  echo "collection failed with ${collect_status}; nothing was graded" >&2
+  exit 8
 fi
+
+# The interaction status the driver reported is not in `interaction.json`, so
+# it is handed to the grader on the command line rather than being re-derived.
+python3 - "${work}/interaction.json" "${interaction_status}" <<'PYTHON'
+import json
+import sys
+from pathlib import Path
+
+path, status = Path(sys.argv[1]), sys.argv[2]
+document = {}
+if path.exists():
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError:
+        document = {}
+if not isinstance(document, dict):
+    document = {}
+document["status"] = status
+path.write_text(json.dumps(document, indent=1, sort_keys=True), encoding="utf-8")
+PYTHON
+
+echo "--- grading ---"
+PYTHONPATH="${repository_root}${PYTHONPATH:+:${PYTHONPATH}}" python3 -m qualification.grader.cli "${work}"   --user "${user}"   --merge-into "${work}/result.json"   --output "${work}/result.json"
+status=$?
+
+case "${status}" in
+  0) echo "PASS: $(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["explanation"])' "${work}/result.json")" ;;
+  6) echo "FAIL: see ${work}/result.json" >&2 ;;
+  7) echo "NOT_RUN: this run measured nothing it could be graded on; see ${work}/result.json" >&2 ;;
+  *) echo "the grader itself failed with ${status}" >&2 ;;
+esac
 exit "${status}"

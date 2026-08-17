@@ -1,0 +1,360 @@
+{
+ "schemaVersion": 1,
+ "note": [
+  "Run shapes no Phase 4 recording contains, written by hand so that every rule has a",
+  "case that fires it. A rule with no failing case is a rule nobody has seen work.",
+  "",
+  "The first case is the important one. It is Phase 4's harness defect 3 in miniature:",
+  "a run that booted, logged in, photographed a desktop and shut down without running the",
+  "journey it was asked for. Under the Phase 4 grader that record was a PASS, because",
+  "nothing in it said a journey had been requested. Here it is a FAIL, and the only thing",
+  "that changed is that the run declared its intent before it ran.",
+  "",
+  "'journal' is written verbatim to journal-lastboot.log; the healthy default carries the",
+  "five lines the machine dimension looks for."
+ ],
+ "healthyJournal": [
+  "Aug 17 17:00:01 warren systemd[1]: Reached target Graphical Interface.",
+  "Aug 17 17:00:02 warren gdm[900]: GNOME Display Manager started",
+  "Aug 17 17:00:30 warren systemd-logind[880]: New session 2 of user alex.",
+  "Aug 17 17:00:30 warren systemd[1]: Session opened for user alex",
+  "Aug 17 17:00:33 warren gnome-shell[1201]: GNOME Shell started at Mon Aug 17 2026",
+  "Aug 17 17:00:41 warren systemd[1180]: Started bunny-companion.service - Bunny Companion."
+ ],
+ "capsuleLine": "Aug 17 17:04:10 warren systemd[1180]: Started bunny-capsule@art-comrade-bunnyimagetool.service.",
+ "cases": [
+  {
+   "id": "declared-journey-never-ran",
+   "why": "Phase 4 harness defect 3. The run was asked for a granted journey and its record contains none.",
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy",
+   "interaction": {"status": "complete", "steps": []},
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ01"]
+   }
+  },
+  {
+   "id": "photograph-only-graded-as-a-journey",
+   "why": "The same defect from the other side: the driver was skipped on a run that declared it wanted one.",
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy",
+   "interaction": {"status": "skipped"},
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "FAIL", "journey": "FAIL"},
+    "blockingRules": ["RI02", "RJ01"]
+   }
+  },
+  {
+   "id": "denied-but-a-capsule-started",
+   "why": "The security regression. Denial must prevent execution, not merely output.",
+   "expectation": {"journey": "denied", "interaction": true},
+   "journal": "healthy+capsule",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "denied", "approvalVisible": true,
+     "final": {"state": "idle", "says": "the request was declined"},
+     "result": {"files": [], "pixels": null, "sourceDigest": "aaa", "neighbourDigest": "bbb"},
+     "fixture": {"clearedExports": [], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ08"]
+   }
+  },
+  {
+   "id": "denied-but-the-file-appeared",
+   "why": "A refusal that still produced output.",
+   "expectation": {"journey": "denied", "interaction": true},
+   "journal": "healthy",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "denied", "approvalVisible": true,
+     "final": {"state": "idle", "says": "the request was declined"},
+     "result": {"files": ["holiday-resized.png"], "pixels": [100, 50], "sourceDigest": "aaa", "neighbourDigest": "bbb"},
+     "fixture": {"clearedExports": [], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ07"]
+   }
+  },
+  {
+   "id": "denied-presented-as-a-failure",
+   "why": "A correct refusal told the person something had gone wrong. Settled by measurement in g8 and g13, so it is graded.",
+   "expectation": {"journey": "denied", "interaction": true},
+   "journal": "healthy",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "denied", "approvalVisible": true,
+     "final": {"state": "error", "says": "the task failed"},
+     "result": {"files": [], "pixels": null, "sourceDigest": "aaa", "neighbourDigest": "bbb"},
+     "fixture": {"clearedExports": [], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ09"]
+   }
+  },
+  {
+   "id": "granted-failed-and-produced-nothing",
+   "why": [
+    "The g7 shape, written by hand as well as pointed at. The recorded fixture grades",
+    "the real bytes; this one keeps RJ04 and RJ06 alive even if that tree ever moved,",
+    "and states the shape in a form a reader can take in at a glance: permission was",
+    "given, a capsule ran, the task ended in an error, and nothing came out.",
+    "Recorded at the time as findings: []."
+   ],
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy+capsule",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "granted", "approvalVisible": true,
+     "final": {"state": "error", "says": "the task failed", "reason": "The task failed."},
+     "result": {"files": [], "pixels": null, "sourceDigest": "aaa", "neighbourDigest": "bbb"},
+     "fixture": {"clearedExports": [], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ04", "RJ06"]
+   }
+  },
+  {
+   "id": "granted-but-no-capsule-started",
+   "why": "Output appeared without the confined program running, which would mean it was not produced under confinement.",
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "granted", "approvalVisible": true,
+     "final": {"state": "idle", "says": "Done."},
+     "result": {"files": ["holiday-resized.png"], "pixels": [100, 50], "sourceDigest": "aaa", "neighbourDigest": "bbb"},
+     "fixture": {"clearedExports": [], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ05"]
+   }
+  },
+  {
+   "id": "granted-changed-the-original",
+   "why": "The prompt promises 'Your original file will not be changed.' This is that promise, graded.",
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy+capsule",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "granted", "approvalVisible": true,
+     "final": {"state": "idle", "says": "Done."},
+     "result": {"files": ["holiday-resized.png"], "pixels": [100, 50], "sourceDigest": "MUTATED", "neighbourDigest": "bbb"},
+     "fixture": {"clearedExports": [], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ10"]
+   }
+  },
+  {
+   "id": "granted-touched-a-file-outside-the-grant",
+   "why": "The grant enumerated 'Files: Pictures/holiday.png only'. A changed neighbour is that grant being exceeded.",
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy+capsule",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "granted", "approvalVisible": true,
+     "final": {"state": "idle", "says": "Done."},
+     "result": {"files": ["holiday-resized.png"], "pixels": [100, 50], "sourceDigest": "aaa", "neighbourDigest": "MUTATED"},
+     "fixture": {"clearedExports": [], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ11"]
+   }
+  },
+  {
+   "id": "no-decision-recorded",
+   "why": "The prompt was drawn and the record does not say it was answered.",
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": null, "approvalVisible": true,
+     "final": {"state": "asking", "says": "waiting"},
+     "result": {"files": [], "pixels": null, "sourceDigest": "aaa", "neighbourDigest": "bbb"},
+     "fixture": {"clearedExports": [], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ02", "RJ03"]
+   }
+  },
+  {
+   "id": "the-run-pressed-the-wrong-control",
+   "why": "g6's shape: a run driving towards one answer records the other. Not a Trust result with a different sign.",
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "denied", "approvalVisible": true,
+     "final": {"state": "idle", "says": "the request was declined"},
+     "result": {"files": [], "pixels": null, "sourceDigest": "aaa", "neighbourDigest": "bbb"},
+     "fixture": {"clearedExports": [], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ03"]
+   }
+  },
+  {
+   "id": "the-prompt-was-never-visible",
+   "why": "A decision recorded against a prompt nobody could see is a decision the product made.",
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy+capsule",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "granted", "approvalVisible": false,
+     "final": {"state": "idle", "says": "Done."},
+     "result": {"files": ["holiday-resized.png"], "pixels": [100, 50], "sourceDigest": "aaa", "neighbourDigest": "bbb"},
+     "fixture": {"clearedExports": [], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ13"]
+   }
+  },
+  {
+   "id": "the-fixture-never-said-what-it-cleared",
+   "why": "Harness defect 2. Without it, 'nothing was produced' and 'the previous run's file is still there' are the same record.",
+   "expectation": {"journey": "denied", "interaction": true},
+   "journal": "healthy",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "denied", "approvalVisible": true,
+     "final": {"state": "idle", "says": "the request was declined"},
+     "result": {"files": [], "pixels": null, "sourceDigest": "aaa", "neighbourDigest": "bbb"},
+     "fixture": {"sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ12"]
+   }
+  },
+  {
+   "id": "the-driver-reported-a-failure",
+   "why": "The instrument itself failed. A journey graded on a run whose driver died is a journey graded on nothing.",
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy",
+   "interaction": {"status": "failed"},
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "FAIL", "journey": "FAIL"},
+    "blockingRules": ["RI01", "RJ01"]
+   }
+  },
+  {
+   "id": "the-machine-was-killed",
+   "why": "No orderly shutdown within the powerdown timeout, recorded by the collector.",
+   "expectation": {"journey": null, "interaction": true},
+   "journal": "healthy",
+   "interaction": {"status": "complete"},
+   "findings": ["unclean-shutdown"],
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "FAIL", "instrument": "PASS", "journey": "NOT_RUN"},
+    "blockingRules": ["RM06"]
+   }
+  },
+  {
+   "id": "the-session-never-opened",
+   "why": "The journal is present and does not carry the lines a graphical session leaves.",
+   "expectation": {"journey": null, "interaction": true},
+   "journal": "Aug 17 17:00:01 warren kernel: Linux version 6.17.0\nAug 17 17:00:09 warren systemd[1]: Reached target Multi-User System.\n",
+   "interaction": {"status": "complete"},
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "FAIL", "instrument": "PASS", "journey": "NOT_RUN"},
+    "blockingRules": ["RM01", "RM02", "RM03", "RM04", "RM05"]
+   }
+  },
+  {
+   "id": "no-journal-was-extracted",
+   "why": "A missing input must not read as a pass. The machine dimension answers NOT_RUN and says so.",
+   "expectation": {"journey": null, "interaction": true},
+   "journal": null,
+   "interaction": {"status": "complete"},
+   "expect": {
+    "outcome": "PASS",
+    "dimensions": {"machine": "NOT_RUN", "instrument": "PASS", "journey": "NOT_RUN"},
+    "blockingRules": [],
+    "note": "PASS on the one dimension that was measured, and the explanation names the two that were not. See test_a_pass_always_names_what_it_did_not_grade."
+   }
+  },
+  {
+   "id": "an-empty-run-directory",
+   "why": "Nothing was recorded at all. The answer is NOT_RUN, never PASS.",
+   "expectation": null,
+   "journal": null,
+   "interaction": null,
+   "expect": {
+    "outcome": "NOT_RUN",
+    "dimensions": {"machine": "NOT_RUN", "instrument": "NOT_RUN", "journey": "NOT_RUN"},
+    "blockingRules": [],
+    "advisoryRules": ["RI03"]
+   }
+  },
+  {
+   "id": "a-clean-granted-journey",
+   "why": "The positive control. Every rule above fires on a defect; this one fires on nothing.",
+   "expectation": {"journey": "granted", "interaction": true},
+   "journal": "healthy+capsule",
+   "interaction": {
+    "status": "complete",
+    "journey": {
+     "decision": "granted", "approvalVisible": true,
+     "final": {"state": "idle", "says": "Done. I made Pictures/holiday-resized.png at 100 pixels wide. Your original wasn't changed."},
+     "result": {"files": ["holiday-resized.png"], "pixels": [100, 50], "sourceDigest": "aaa", "neighbourDigest": "bbb"},
+     "fixture": {"clearedExports": ["/home/alex/.local/share/bunny/capsules/x/exports/holiday-resized.png"], "sourceDigest": "aaa", "neighbourDigest": "bbb"}
+    }
+   },
+   "expect": {
+    "outcome": "PASS",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "PASS"},
+    "blockingRules": []
+   }
+  }
+ ]
+}

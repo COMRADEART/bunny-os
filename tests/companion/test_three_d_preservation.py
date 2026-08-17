@@ -70,6 +70,17 @@ _PHASES_AFTER_THE_RECORD = (
     # power-key investigation and the release-candidate qualification under
     # its own name. A later phase existing is not an earlier phase changing.
     "qualification/phase4/",
+    # Phase 5's baseline record and evidence.
+    "qualification/phase5/",
+    # The grader is not evidence at all — it is the instrument, extracted from
+    # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
+    # recorded runs. It lives under ``qualification/`` because that directory is
+    # not a ``COPY`` root in ``build/Containerfile``: nothing here reaches the
+    # image, so correcting a check does not require a rebuild and a new artifact
+    # identity. Its ``fixtures/`` hold manifests that *point at* earlier phases'
+    # evidence rather than copying it, so this declaration adds a tool, not a
+    # second copy of a record.
+    "qualification/grader/",
 )
 
 #: Maintained tooling that lives under an earlier phase's directory but is not

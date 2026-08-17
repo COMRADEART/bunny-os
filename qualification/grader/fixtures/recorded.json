@@ -1,0 +1,127 @@
+{
+ "schemaVersion": 1,
+ "note": [
+  "Fixtures that point at real Phase 4 evidence in place, rather than at a copy of it.",
+  "A copy would be 6.3 MB of duplicated journal and could drift from the thing it claims",
+  "to be. Evidence in this project is immutable, so the committed tree is a stable target,",
+  "and grading the actual recorded bytes is strictly stronger than grading a snapshot.",
+  "",
+  "The expectation is supplied HERE and not written into qualification/phase4/, because that",
+  "tree is an earlier phase's evidence and no commit may add to it. The runs themselves are",
+  "genuinely undeclared, which is why 'undeclaredVariant' exists below: the same run graded",
+  "without an expectation, to show what an undeclared run costs."
+ ],
+ "fixtures": [
+  {
+   "id": "trust-granted",
+   "run": "qualification/phase4/release-candidate/g12",
+   "user": "alex",
+   "expectation": {"journey": "granted", "interaction": true, "graphicalSession": true, "label": "g12"},
+   "expect": {
+    "outcome": "PASS",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "PASS"},
+    "blockingRules": [],
+    "because": [
+     "decision = granted",
+     "capsule started = true",
+     "task succeeded = true",
+     "expected output exists = true"
+    ]
+   }
+  },
+  {
+   "id": "trust-denied",
+   "run": "qualification/phase4/release-candidate/g13",
+   "user": "alex",
+   "expectation": {"journey": "denied", "interaction": true, "graphicalSession": true, "label": "g13"},
+   "expect": {
+    "outcome": "PASS",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "PASS"},
+    "blockingRules": [],
+    "because": [
+     "decision = denied",
+     "capsule started = false",
+     "input unchanged = true",
+     "output absent = true"
+    ]
+   }
+  },
+  {
+   "id": "historical-false-pass",
+   "run": "qualification/phase4/release-candidate/g7",
+   "user": "alex",
+   "expectation": {"journey": "granted", "interaction": true, "graphicalSession": true, "label": "g7"},
+   "expect": {
+    "outcome": "FAIL",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "FAIL"},
+    "blockingRules": ["RJ04", "RJ06", "RJ12"],
+    "because": [
+     "decision = granted",
+     "final.state = error",
+     "task failed",
+     "findings = [] as recorded by the grader of the day",
+     "",
+     "This run was recorded PASS. It is the reason this package exists. The machine",
+     "dimension still passes, and that is the point: the machine WAS healthy. Health",
+     "was never the question."
+    ],
+    "recordedAtTheTime": {
+     "resultJson": "qualification/phase4/release-candidate/g7/result.json",
+     "findings": [],
+     "journeyVerdict": null,
+     "verdictOfTheDay": "PASS"
+    }
+   }
+  },
+  {
+   "id": "trust-granted-undeclared",
+   "run": "qualification/phase4/release-candidate/g12",
+   "user": "alex",
+   "expectation": null,
+   "expect": {
+    "outcome": "PASS",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "PASS"},
+    "blockingRules": [],
+    "advisoryRules": ["RI03"],
+    "because": [
+     "The same run as trust-granted, graded with no expectation at all.",
+     "It still passes - the journey record is there and is good - but RI03 fires:",
+     "nothing in the record says a journey was asked for, so a run that had skipped",
+     "its journey would have been indistinguishable from a run that was never asked."
+    ]
+   }
+  },
+  {
+   "id": "login-story-no-journey",
+   "run": "qualification/phase4/release-candidate/g1",
+   "user": "alex",
+   "expectation": {"journey": null, "interaction": true, "graphicalSession": true, "label": "g1"},
+   "expect": {
+    "outcome": "PASS",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "NOT_RUN"},
+    "blockingRules": [],
+    "because": [
+     "A first-login story. No journey was asked for and none was recorded, so the",
+     "journey dimension answers NOT_RUN and the run still passes on the two",
+     "dimensions it actually measured. The PASS explanation names what it did not grade."
+    ]
+   }
+  },
+  {
+   "id": "photograph-only-run",
+   "run": "qualification/phase4/release-candidate/g10",
+   "user": "robin",
+   "expectation": {"journey": null, "interaction": false, "graphicalSession": true, "label": "g10"},
+   "expect": {
+    "outcome": "PASS",
+    "dimensions": {"machine": "PASS", "instrument": "PASS", "journey": "NOT_RUN"},
+    "blockingRules": [],
+    "because": [
+     "g10 is a photograph-only run: it proves the second account reaches the Bunny",
+     "desktop and drives nothing. Declared as interaction:false, it passes.",
+     "Graded as interaction:true it would FAIL on RI02 - which is the defect-3 check."
+    ]
+   }
+  }
+ ]
+}
