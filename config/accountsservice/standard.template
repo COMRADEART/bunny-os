@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Applied by accounts-daemon when it first builds a record for a standard
+# account that has none — an account added through the shell's Users panel
+# (gnome-control-center → AccountsService CreateUser), one created by
+# gnome-initial-setup on an OEM device, or one made with useradd. The
+# installer still writes the record for the account it creates
+# (installer/backend/anaconda.py, _place_handoff): that account must land in
+# the Bunny session on its very first login, before accounts-daemon has ever
+# run, and a mechanism that fires "when the daemon first sees the user" is
+# the wrong time for it. This template is for every account that mechanism
+# cannot reach.
+#
+# A user's own later choice still wins: the template seeds the record once,
+# and GDM updates the same record when a different session is picked in the
+# greeter.
+[User]
+Session=bunny
+XSession=bunny
+SystemAccount=false

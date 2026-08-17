@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# The administrator twin of standard.template: accounts-daemon picks the
+# template by account type, and an admin account added later should land in
+# the same Bunny session a standard one does. See standard.template for why
+# this exists and why the installer's own record write remains.
+[User]
+Session=bunny
+XSession=bunny
+SystemAccount=false

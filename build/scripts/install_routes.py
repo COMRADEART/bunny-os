@@ -499,6 +499,28 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
     # gdm default here any more: the mechanism GDM actually reads is the
     # per-user AccountsService record, which the installer now writes for the
     # account it creates (installer/backend/anaconda.py, _place_handoff).
+    #
+    # That write reaches exactly one account. Every other account — added
+    # later through the Users panel, created by gnome-initial-setup on an
+    # OEM device, or made with useradd — used to land in stock GNOME, the
+    # same defect wearing a different user. accounts-daemon's user templates
+    # are the mechanism for those: applied when the daemon first builds a
+    # record for an account that has none, one template per account type.
+    # /usr/share/accountsservice is the vendor half of its search path
+    # (/etc/accountsservice/user-templates is the admin override). Desktop
+    # profiles only, like the session the templates name.
+    _file_route(
+        "accountsservice-standard-template",
+        "config/accountsservice/standard.template",
+        "/usr/share/accountsservice/user-templates/standard.template", 0o644,
+        profiles=DESKTOP_PROFILES,
+    ),
+    _file_route(
+        "accountsservice-administrator-template",
+        "config/accountsservice/administrator.template",
+        "/usr/share/accountsservice/user-templates/administrator.template", 0o644,
+        profiles=DESKTOP_PROFILES,
+    ),
     InstallRoute(
         "gnome-shell-extension", "tree", "shell/components/gnome-shell-extension",
         "/usr/share/gnome-shell/extensions/bunny-shell@bunny-os.org", 0o644,
