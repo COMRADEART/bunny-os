@@ -662,6 +662,53 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                         [*prefix, "/usr/bin/gnome-extensions", "info",
                          "bunny-shell@bunny-os.org"], timeout=30),
                 }
+            elif verb == "create-user":
+                # The second-user question, asked through the surface the
+                # product's own Users entry uses: AccountsService's D-Bus
+                # CreateUser (gnome-control-center calls exactly this, and
+                # so does gnome-initial-setup on an OEM device). The answer
+                # carries the record on disk — the file GDM reads to choose
+                # a session — and the daemon's own Session property, so a
+                # template that wrote nothing cannot look like one that
+                # worked.
+                name = str(request.get("name", ""))
+                if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", name):
+                    answer["error"] = f"refusing an unsafe user name {name!r}"
+                else:
+                    kind = 1 if request.get("administrator") else 0
+                    created = run(
+                        ["busctl", "call", "org.freedesktop.Accounts",
+                         "/org/freedesktop/Accounts", "org.freedesktop.Accounts",
+                         "CreateUser", "ssi", name,
+                         str(request.get("realName", name)), str(kind)],
+                        timeout=90)
+                    found = run(
+                        ["busctl", "call", "org.freedesktop.Accounts",
+                         "/org/freedesktop/Accounts", "org.freedesktop.Accounts",
+                         "FindUserByName", "s", name], timeout=30)
+                    path = ""
+                    match = re.search(r'"(/org/freedesktop/Accounts/User\d+)"',
+                                      found.get("stdout") or "")
+                    if match:
+                        path = match.group(1)
+                    session = run(
+                        ["busctl", "get-property", "org.freedesktop.Accounts",
+                         path or "/org/freedesktop/Accounts",
+                         "org.freedesktop.Accounts.User", "Session"],
+                        timeout=30) if path else {"stdout": "", "error": "no object path"}
+                    answer["createUser"] = {
+                        "name": name,
+                        "administrator": bool(kind),
+                        "create": created,
+                        "objectPath": path,
+                        "sessionProperty": session,
+                        "record": run(
+                            ["cat", f"/var/lib/AccountsService/users/{name}"],
+                            timeout=10),
+                        "sessionsFile": run(
+                            ["ls", "-l", f"/var/lib/AccountsService/users/{name}"],
+                            timeout=10),
+                    }
             elif verb == "process-audit":
                 # §7/§8: the process table with unit and session attribution
                 # — pid, parent, owner, system unit, user unit — plus the
