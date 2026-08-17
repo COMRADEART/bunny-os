@@ -500,25 +500,30 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
     # per-user AccountsService record, which the installer now writes for the
     # account it creates (installer/backend/anaconda.py, _place_handoff).
     #
-    # That write reaches exactly one account. Every other account — added
-    # later through the Users panel, created by gnome-initial-setup on an
-    # OEM device, or made with useradd — used to land in stock GNOME, the
-    # same defect wearing a different user. accounts-daemon's user templates
-    # are the mechanism for those: applied when the daemon first builds a
-    # record for an account that has none, one template per account type.
-    # /usr/share/accountsservice is the vendor half of its search path
-    # (/etc/accountsservice/user-templates is the admin override). Desktop
+    # That write reaches exactly one account. An account added later through
+    # the Users panel or created by gnome-initial-setup on an OEM device used
+    # to land in stock GNOME — the same defect wearing a different user.
+    # accounts-daemon's user templates are the mechanism for those: applied
+    # when the *daemon* creates the account (the D-Bus CreateUser both of
+    # those surfaces call), one template per account type. Measured on
+    # accountsservice 23.13.9/fc44, because the obvious spellings are wrong
+    # twice over: the filename is the bare account type — `standard`, not
+    # `standard.template` — and a template never reaches an account that
+    # already exists (useradd from a shell stays untemplated; the greeter
+    # still offers Bunny to it). /usr/share/accountsservice/user-templates
+    # is the vendor half of the search path and was verified to apply;
+    # /etc/accountsservice/user-templates is the admin override. Desktop
     # profiles only, like the session the templates name.
     _file_route(
         "accountsservice-standard-template",
         "config/accountsservice/standard.template",
-        "/usr/share/accountsservice/user-templates/standard.template", 0o644,
+        "/usr/share/accountsservice/user-templates/standard", 0o644,
         profiles=DESKTOP_PROFILES,
     ),
     _file_route(
         "accountsservice-administrator-template",
         "config/accountsservice/administrator.template",
-        "/usr/share/accountsservice/user-templates/administrator.template", 0o644,
+        "/usr/share/accountsservice/user-templates/administrator", 0o644,
         profiles=DESKTOP_PROFILES,
     ),
     InstallRoute(

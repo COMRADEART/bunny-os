@@ -11,13 +11,18 @@ accounts-daemon's user templates, applied when the daemon first builds a
 record for an account that has none.
 
 These are the static half: the templates ship, name the session that ships,
-and sit in the directory accounts-daemon actually searches. The behavioural
-half is the installed-machine check that a freshly created account is offered
-the Bunny session by GDM.
+and sit in the directory accounts-daemon actually searches under the name it
+actually loads. The behavioural half was measured on the builder
+(accountsservice 23.13.9/fc44): a template named ``standard.template`` is
+silently ignored — the daemon loads the bare account-type name — and a
+template only reaches accounts the daemon itself creates (CreateUser), never
+one that already exists. The installed-machine check that a freshly created
+account lands in the Bunny session is the remaining evidence.
 
 Each test names the way the fix could be faked and rejects it: a template
-that ships but names a session that does not, a template placed in a
-directory the daemon never reads, a template on a profile with no session.
+that ships but names a session that does not, a template installed under a
+name or directory the daemon never reads, a template on a profile with no
+session.
 """
 
 from __future__ import annotations
@@ -117,13 +122,24 @@ class TemplateRouteTests(unittest.TestCase):
     """Where the templates land, checked against the daemon's search path."""
 
     def test_templates_are_routed_to_the_vendor_directory(self) -> None:
+        """Installed as the bare account-type name. `standard.template` is
+        the natural spelling and the daemon silently ignores it — measured,
+        which is why this asserts the destination byte for byte."""
         for account_type in TEMPLATE_SOURCES:
-            route = route_by_destination(
-                f"{INSTALLED_DIR}/{account_type}.template")
+            route = route_by_destination(f"{INSTALLED_DIR}/{account_type}")
             self.assertEqual(
                 route.source, f"config/accountsservice/{account_type}.template")
             self.assertEqual(route.kind, "file")
             self.assertEqual(route.mode, 0o644)
+
+    def test_no_route_installs_a_template_under_the_ignored_name(self) -> None:
+        wrong = [r.destination for r in install_routes()
+                 if r.destination.startswith(INSTALLED_DIR)
+                 and r.destination.endswith(".template")]
+        self.assertEqual(
+            wrong, [],
+            "accounts-daemon loads the bare account-type name; a *.template "
+            "destination ships a file the daemon never reads")
 
     def test_no_template_route_targets_the_admin_override(self) -> None:
         wrong = [r.destination for r in install_routes()
@@ -138,7 +154,7 @@ class TemplateRouteTests(unittest.TestCase):
             "/usr/share/wayland-sessions/bunny.desktop")
         for account_type in TEMPLATE_SOURCES:
             template_route = route_by_destination(
-                f"{INSTALLED_DIR}/{account_type}.template")
+                f"{INSTALLED_DIR}/{account_type}")
             self.assertEqual(
                 template_route.profiles, session_route.profiles,
                 "a template on a profile without the session it names seeds "
