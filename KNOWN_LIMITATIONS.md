@@ -35,6 +35,34 @@ worse than no number; the same rule already applies to CPU-seconds on this host.
 "Unknown image format: application/xml" — the image has no SVG pixbuf loader —
 so GNOME paints the dconf gradient behind the desktop's own contrast scrim.
 
+> **Corrected 2026-08-17 (Phase 5). The clause between the dashes above is
+> wrong, and the original is kept because acting on it would have made things
+> worse.**
+>
+> The image has a loader. `librsvg2-2.62.3-1.fc44` and
+> `glycin-loaders-2.1.5-1.fc44` are both installed in the Alpha Release
+> Candidate — `qualification/phase4/artifact/p4-build.log`, lines 359 and
+> 369 to 371. Adding a package, which is what this sentence points at, would
+> have changed nothing.
+>
+> The loader was never reached. An image loader handed a stream has no filename
+> and identifies the format by sniffing the leading bytes; shared-mime-info
+> matches `image/svg+xml` on a literal `<svg` within the first **256** bytes,
+> and `application/xml` on the `<?xml` at offset 0 whatever follows it. The file
+> carried 1.2 KB of provenance comment between the two, putting `<svg` at byte
+> **1361**.
+>
+> Measured on the Fedora reference target with `Gio.content_type_guess`, on
+> content alone: `bunny-nocturne.svg` → `application/xml`;
+> `bunny-arc-dark.svg`, whose `<svg` is at byte 0 → `image/svg+xml`. The error
+> string names the wrong answer the sniff gave.
+>
+> Fixed in source at `9a34ee81` by moving the prose inside the element (`<svg`
+> now at byte 139), swept across all nine shipped SVGs — which found a second
+> file with the same latent defect that nothing had reported — and covered by
+> `tests/shell/test_svg_assets_are_sniffable.py`. **Not yet qualified on a
+> desktop**: that needs a build, and the artifact is frozen.
+
 **The search results panel is drawn empty.** A 560×13 strip sits under the top
 bar with no rows in it.
 
