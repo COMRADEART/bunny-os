@@ -271,8 +271,22 @@ PENDING.
 
 ## 16. Full regression results
 
-PENDING for the uncontended run. The contended run at `9b1a9354` is recorded
-in §17's classification.
+PENDING for the uncontended run, which is the one that counts. Recorded so far,
+against the Phase 3 close as baseline:
+
+| | Baseline `b0b92482` | Contended `9b1a9354` | Uncontended |
+| --- | --- | --- | --- |
+| Reference suite | 5737 passed, 24 skipped | 5756 run, **4 failed**, 24 skipped | PENDING |
+| Installer sub-suite | 172 passed | 178 passed | PENDING |
+
+The counts rose because this phase added tests (the startup deferral, the
+session templates, the copy primitive and its negative control, the companion
+mode, the text-only toggle, and the evidence credential gate). A rising total
+with a stable pass set is the expected shape; it is stated because a changed
+denominator is exactly what makes "the suite is green" unfalsifiable.
+
+The four failures are classified individually in §17. None is dismissed as
+flaky without a mechanism.
 
 ## 17. Failure classification
 

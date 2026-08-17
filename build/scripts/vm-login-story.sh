@@ -259,6 +259,7 @@ luks_devices = verifier.find_luks_devices(overlay) if passphrase else ()
 partitions = verifier.find_partitions(overlay, passphrase, luks_devices)
 root = partitions.get("root")
 checks = {}
+journal_text = ""
 if not root:
     findings.append(f"no root filesystem found on the machine: {partitions}")
 else:
@@ -299,6 +300,7 @@ else:
         if not text.strip():
             findings.append("journal extraction produced no text for the newest boot")
         (work / "journal-lastboot.log").write_text(text, encoding="utf-8")
+        journal_text = text
         checks = {
             "sessionOpened": f"session opened for user {user}" in text.lower(),
             "graphicalTarget": "Graphical Interface" in text,
@@ -329,6 +331,13 @@ if isinstance(journey, dict):
     decision = journey.get("decision")
     final = journey.get("final") or {}
     produced = list((journey.get("result") or {}).get("files") or [])
+    # Whether the confined program ran at all, read from the machine's journal
+    # rather than from the outcome. "Nothing was produced" is a weak denial: a
+    # task that crashed before writing also produces nothing. What a refusal
+    # has to mean is that the capsule never started, and that is only a
+    # measurement because the granted run shows the same line present.
+    capsule_started = "Started bunny-capsule" in journal_text
+
     if decision not in {"granted", "denied"}:
         findings.append(f"the journey recorded no decision: {decision!r}")
     elif decision == "granted":
@@ -336,20 +345,30 @@ if isinstance(journey, dict):
         if not produced:
             findings.append(
                 "the journey granted permission and the task produced nothing")
+        if not capsule_started:
+            findings.append(
+                "the journey granted permission and no capsule was ever started")
         if final.get("state") == "error":
             reason = final.get("reason") or final.get("says") or "no reason recorded"
             findings.append(f"the granted journey ended in an error state: {reason}")
     else:
-        # Denied. The one thing that must be true is that nothing was produced.
+        # Denied. Nothing produced, and the refusal presented as a refusal.
         #
-        # The final *state* is deliberately not graded here: what a refusal
-        # should leave on screen — an error, or a calm decline — is a question
-        # no record in this repository answers yet, and a check written from a
-        # guess would fail a correct refusal. It is recorded below so the next
-        # denied run settles it with a measurement instead.
+        # The final state is graded now because g8 measured it rather than
+        # guessed: a denial ends `idle`, saying "the request was declined".
+        # That is not an error, and a build that began reporting a refusal as a
+        # failure would be telling somebody something went wrong when the
+        # system had done exactly what they asked.
+        if final.get("state") == "error":
+            findings.append(
+                "the denied journey presented the refusal as an error rather "
+                f"than a decline: {final.get('says')!r}")
         if produced:
             findings.append(
                 f"the journey denied permission and the task still produced {produced}")
+        if capsule_started:
+            findings.append(
+                "the journey denied permission and a capsule was started anyway")
 
 result = {
     "schemaVersion": 1,
@@ -364,6 +383,11 @@ result = {
         "finalSays": (journey.get("final") or {}).get("says"),
         "produced": list((journey.get("result") or {}).get("files") or []),
         "pixels": (journey.get("result") or {}).get("pixels"),
+        "capsuleStarted": "Started bunny-capsule" in journal_text,
+        "inputUnchanged": ((journey.get("fixture") or {}).get("sourceDigest")
+                           == (journey.get("result") or {}).get("sourceDigest")),
+        "neighbourUnchanged": ((journey.get("fixture") or {}).get("neighbourDigest")
+                               == (journey.get("result") or {}).get("neighbourDigest")),
     } if isinstance(interaction_report.get("journey"), dict) else None),
     "systemReport": interaction_report.get("system"),
     "findings": findings,
