@@ -347,16 +347,38 @@ figure. That is a limitation, recorded in §18, not a claim.
 
 ## 11. Voice result
 
-PENDING — the Stage 2 primary acceptance (`accept-all.sh`) against the
-release-candidate shell-test image (`83c31d06…`).
+**PASS — no regression.** The Stage 2 primary acceptance (`accept-all.sh`) run
+against the release-candidate shell-test image, whose digest the runner prints
+before it starts: `83c31d0640e4aef6…`, the value in `ARTIFACT.md`.
 
-**Baseline**: the same acceptance on the Phase 3 image, `voice-phase3-b`,
-`exit=0` across its seventeen stages — boot, audio devices in the session,
-microphone and utterances, three spoken requests, what opened and which engine
-spoke, the speaker's own recording read back, interruption, performance, voice
-settings, the provider-unavailable ladder (Pocket → Kitten → every provider
-unavailable → restored), and offline. The RC run is compared stage for stage
-against that, not merely on its exit code.
+    voice-e2e phase3-b  exit=0      (baseline)
+    voice-e2e phase4-rc exit=0      (release candidate)
+
+**Compared stage for stage, not on the exit code.** Both runs execute the same
+nineteen stages, and the *only* difference between the two stage lists is the
+one that carries the run's own name:
+
+    in the baseline but not the candidate:  boot phase3-b  at 1920x1080
+    in the candidate but not the baseline:  boot phase4-rc at 1920x1080
+
+The nineteen: boot, settle, the desktop photographed, audio devices in the
+session, microphone and utterances, three spoken requests (*Open Files*, *how
+much memory am I using*, *find PDF files in Downloads*), what opened and which
+engine spoke, the speaker's own recording read back, interruption,
+performance, voice settings, then the provider-unavailable ladder — Pocket
+unavailable → Kitten, every provider unavailable, providers restored — and
+offline, before collecting.
+
+Speech was synthesised by the `kitten` provider at 24 kHz and played back into
+the guest's microphone, so the recognition path was exercised on real audio
+rather than injected text.
+
+**Nothing in the run reports a failure.** The only lines matching failure
+words are three benign ones, each named here so a reader grepping the log is
+not left guessing: an empty `'error': <''>` field, `no thermal sensor found;
+temperature reports Unavailable` (a QEMU guest has none — this is the
+`Temp — Unavailable` visible in every desktop screenshot), and `libEGL`
+warnings from llvmpipe software rendering.
 
 ## 12. Trust result
 
@@ -646,7 +668,7 @@ claim of "no regression" can be checked rather than believed.
 | Second account | *lands in stock GNOME* | **PASS** — robin gets the Bunny desktop |
 | Trust — denied | `files: []` (`journey-b38d51000543-denied`) | **PASS** — `files: []`, and no capsule ever started |
 | Trust — granted | `files: ["holiday-resized.png"]`, `pixels: [100, 50]` | **PASS** — identical: `["holiday-resized.png"]`, `[100, 50]` |
-| Voice acceptance | `voice-phase3-b exit=0`, 17 stages | PENDING |
+| Voice acceptance | `voice-phase3-b exit=0`, 19 stages | **PASS** — `exit=0`, same 19 stages |
 | Idle cost | shell 0.80 % / 391.2 MiB; companion 0.35 % / 61.6 MiB (`7edd3fd`) | **memory flat**; shell CPU **2.07 %** (2.6×), companion 0.47 % |
 | Reference suite | 5737 passed, 24 skipped | PENDING uncontended |
 | Installer suite | 172 passed | PENDING uncontended |
@@ -838,8 +860,14 @@ run in this phase, with the durable fix named and left to the operator.
 
 ## 19. Evidence inventory
 
-Everything below is committed under `qualification/phase4/`. Counts are filled
-in when the last run lands.
+**166 files, 35 MB**, all committed under `qualification/phase4/`.
+
+| Directory | Files | What it holds |
+| --- | --- | --- |
+| `release-candidate/` | 126 | the qualification chain on the artifact |
+| `power-key/` | 34 | the eleven-boot investigation and its finding |
+| `artifact/` | 3 | the identity record, its correction, and the build log |
+| `track-1b/` | 3 | the retained-input publication |
 
 ### `artifact/` — what was built, and what the record got wrong
 

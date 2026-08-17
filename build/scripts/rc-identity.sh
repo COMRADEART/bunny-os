@@ -20,7 +20,7 @@
 #      `localhost/bunny-os-beta:localhost/bunny-os-beta:…` — not a reference
 #      anything can pull.
 set -uo pipefail
-cd /root/bunny-os
+cd /root/bunny-os || { echo "rc-identity: no /root/bunny-os to describe" >&2; exit 1; }
 
 out="${1:?usage: rc-identity.sh <output-directory> [build-log]}"
 build_log="${2:-}"
@@ -61,7 +61,9 @@ image="localhost/bunny-os-beta:${short}"
     if [ -z "${dirty}" ]; then
       echo "    clean"
     else
-      echo "${dirty}" | sed 's/^/    /'
+      while IFS= read -r entry; do
+        printf '    %s\n' "${entry}"
+      done <<< "${dirty}"
     fi
   fi
   echo
