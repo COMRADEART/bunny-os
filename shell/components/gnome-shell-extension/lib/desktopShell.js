@@ -1080,6 +1080,26 @@ export class DesktopShell {
     _dismissOverviewOnce() {
         if (this._overviewDismissed)
             return;
+        // Never while the shell is still starting, and this is the whole of
+        // the ACPI power-key defect.
+        //
+        // GNOME opens the overview as its startup animation, and
+        // overviewControls' runStartupAnimation awaits
+        // `layout_manager.ensureAllocation()` — a promise that settles only
+        // when the controls actor is first allocated. Hiding the overview
+        // before that allocation happens leaves the promise unsettled for
+        // ever: layout.js never reaches _startupAnimationComplete,
+        // 'startup-complete' never fires, main.js never flips
+        // Main.actionMode from NONE to NORMAL, and windowManager's
+        // _filterKeybinding then drops *every* keybinding for the life of
+        // the session — the power key, the media keys, and this desktop's
+        // own shortcuts alike. Measured across ten boots in
+        // qualification/phase4/power-key/.
+        //
+        // The flag is deliberately not set here: the startup-complete
+        // handler calls this again, and that is the call that dismisses.
+        if (Main.layoutManager._startingUp)
+            return;
         this._overviewDismissed = true;
         if (!Main.overview.visible)
             return;

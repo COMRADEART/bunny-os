@@ -2438,6 +2438,44 @@ class StartupDeferralTests(unittest.TestCase):
             "a logout during startup would leak the deferred build into a "
             "session that no longer owns it")
 
+    @staticmethod
+    def _dismiss_body() -> str:
+        text = (LIB / "desktopShell.js").read_text(encoding="utf-8")
+        text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+        text = re.sub(r"^\s*//.*$", "", text, flags=re.M)
+        _, _, rest = text.partition("_dismissOverviewOnce() {")
+        body, _, _ = rest.partition("\n    }")
+        return body
+
+    def test_the_overview_is_never_hidden_during_startup(self) -> None:
+        """The precise mechanism: overviewControls' runStartupAnimation
+        awaits ensureAllocation(), which never settles if the overview is
+        hidden before its first allocation — and every keybinding in the
+        session dies with that promise."""
+        body = self._dismiss_body()
+        self.assertIn(
+            "_startingUp", body,
+            "the overview is dismissed without asking whether the shell is "
+            "still starting; that hang is what killed the power key")
+        guard, _, after = body.partition("_startingUp")
+        self.assertNotIn(
+            "Main.overview.hide()", guard,
+            "the overview is hidden before the startup guard is consulted")
+        self.assertNotIn(
+            "_overviewDismissed = true", guard,
+            "the once-flag is set before the startup guard, so the "
+            "startup-complete retry would find the work already 'done' and "
+            "the overview would stay open for ever")
+        self.assertIn("Main.overview.hide()", after,
+                      "nothing dismisses the overview after the guard")
+
+    def test_the_startup_complete_retry_exists(self) -> None:
+        """The guard defers the dismissal, so something must come back for
+        it. Without this connection a guarded dismissal is a dismissal that
+        never happens."""
+        text = (LIB / "desktopShell.js").read_text(encoding="utf-8")
+        self.assertIn("'startup-complete', () => this._dismissOverviewOnce()", text)
+
 
 if __name__ == "__main__":
     unittest.main()
