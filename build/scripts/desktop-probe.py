@@ -604,14 +604,31 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
                         timeout=15),
                 }
                 if request.get("debug", True):
-                    trace["setEnvironment"] = run(
-                        [*as_user, "systemctl", "--user", "set-environment",
-                         "G_MESSAGES_DEBUG=all"], timeout=15)
-                    trace["restart"] = run(
-                        [*as_user, "systemctl", "--user", "restart",
-                         "org.gnome.SettingsDaemon.MediaKeys.service"],
+                    # The gsd user units are dependency-only
+                    # (RefuseManualStart) — `systemctl --user restart` was
+                    # refused when this verb first ran. A drop-in plus a
+                    # kill is the route systemd honours: the manager
+                    # respawns the unit under the new environment.
+                    dropin = (f"/var/home/{user}/.config/systemd/user/"
+                              "org.gnome.SettingsDaemon.MediaKeys.service.d")
+                    trace["dropin"] = run(
+                        ["/usr/bin/sudo", "-u", user, "-H", "/usr/bin/bash",
+                         "-c",
+                         f"mkdir -p {dropin} && "
+                         f"printf '[Service]\\nEnvironment=G_MESSAGES_DEBUG=all\\n'"
+                         f" > {dropin}/50-debug.conf"], timeout=15)
+                    trace["daemonReload"] = run(
+                        [*as_user, "systemctl", "--user", "daemon-reload"],
                         timeout=30)
-                    time.sleep(3.0)
+                    old_pid = ""
+                    for line in (trace["mediaKeysBefore"].get("stdout") or "").splitlines():
+                        if line.startswith("ExecMainPID="):
+                            old_pid = line.partition("=")[2].strip()
+                    if old_pid and old_pid != "0":
+                        trace["kill"] = run(
+                            ["/usr/bin/sudo", "-u", user, "-H", "/usr/bin/kill",
+                             old_pid], timeout=15)
+                    time.sleep(5.0)
                     trace["mediaKeysAfter"] = run(
                         [*as_user, "systemctl", "--user", "show",
                          "org.gnome.SettingsDaemon.MediaKeys.service",
