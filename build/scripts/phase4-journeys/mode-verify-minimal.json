@@ -1,0 +1,6 @@
+[
+ {"command": "settings", "action": "show", "label": "verify-minimal"},
+ {"command": "settings", "action": "set", "section": "character",
+  "field": "companion_mode", "value": "full", "label": "restore-full"},
+ {"command": "settings", "action": "show", "label": "settings-restored"}
+]

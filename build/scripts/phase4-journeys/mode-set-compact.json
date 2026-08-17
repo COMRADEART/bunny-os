@@ -1,0 +1,6 @@
+[
+ {"command": "settings", "action": "show", "label": "settings-before"},
+ {"command": "settings", "action": "set", "section": "character",
+  "field": "companion_mode", "value": "compact", "label": "set-compact"},
+ {"command": "settings", "action": "show", "label": "settings-after"}
+]
