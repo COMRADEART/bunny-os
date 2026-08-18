@@ -56,7 +56,8 @@ payload reference is `localhost/bunny-os-beta:e906a48793d7` singly.
 
 ## 2. Changes made
 
-Eleven commits, 52 files, +7414/−146.
+Sixteen commits. Every one of them is either a fix with a negative control or
+evidence with its scope stated.
 
 | Commit | What |
 | --- | --- |
@@ -67,7 +68,11 @@ Eleven commits, 52 files, +7414/−146.
 | `49cd25f8`, `8f862ea3` | The slice records *why* the selector degraded — the diagnostic that found the cause |
 | `ea3d6bf9` | Security disposition, signing conformance, hardware track, feedback plan, gate tracker |
 | **`30f11a6d`** | **The isolation root cause: the host's own memory pressure, and the pin that closes it** |
-| `852fbdc3`, `fcba6def`, `e2b7bc6f` | This report, the cause, and what is proved against what is inferred |
+| `551e4198` | The candidate scanned by a no-copy route; 183 matches are 56 advisories |
+| `893ad65d` | The grader's CLI was rewriting the collector's `schemaVersion`; 9 CLI tests |
+| `324cae32` | The reference-suite gate certified CLEAN, and the candidate's SBOM |
+| `fe971ca7` | The shellcheck gate was linting files that are not in the repository |
+| `852fbdc3`, `fcba6def`, `e2b7bc6f`, `49cd25f8` | This report, and what is proved against what is inferred |
 
 **No product behaviour was changed except two asset files.** The poller work
 adds measurement and changes no cadence; §10's warning against sacrificing
@@ -261,6 +266,27 @@ Negative controls: removing the pin fails 6 of 10; step 18 must still degrade
 on declared pressure and step 19 must still reach `text-only`, so a fix that
 disabled the assertion fails too; and step 17 must reach `animated-2d` **with
 no pressure reason**, so pinning to an arbitrary value would not satisfy it.
+
+### A third coverage finding: the gate was linting files that are not in the repository
+
+`shell_scripts()` walked the filesystem with `rglob("*.sh")`, so the shellcheck
+gate checked every `.sh` *present* rather than every `.sh` **committed** — on a
+working machine that is dozens of untracked operational scripts, and this
+repository's own `.gitignore` carries `.ops-*` for exactly them. Three of them
+failed it on `SC2012`.
+
+The effect: **the gate passed in CI and on a fresh clone, and failed on the
+machine where the work happens.** That is the wrong way round.
+
+Repaired the same way, with the same sentence, as the evidence-preservation
+check before it: *added means committed, so the question is asked of git.* 92
+tracked scripts instead of several hundred filesystem files; 93 seconds down to
+9. No git, no skip — it falls back to the filesystem, because a gate that
+silently checks nothing is worse than one that checks too much. Negative
+control run.
+
+This is also why the certification below is unaffected: those runs are from a
+fresh `git clone`, which has no `.ops-*` files in it.
 
 ### Certification — §8, and it is clean
 
@@ -810,20 +836,36 @@ package to the artifact anyone would actually review.
 ### What this phase is worth being judged on
 
 Phase 4's finding was that its instrument was wrong more often than its product
-was. Phase 5's is narrower and the same shape: **three of the four defects
-found this phase were in things that measure, not in things that run.**
+was. Phase 5's is the same shape and larger: **seven defects, and six of them
+were in things that measure rather than in things that run.**
 
-* A grader that could not fail a journey — now a library with a fixture that
-  fails, a fixture that passes, and 31 tests.
-* 153 tests that nothing executed, one of them cited in a shipped unit file as
-  the guard on a defect that has actually occurred.
-* A feedback taxonomy that could not name three of the product's four
-  distinguishing subsystems.
-* And a diagnosis in `KNOWN_LIMITATIONS.md` that named the wrong cause of a
-  real defect.
+| # | Defect | Subject |
+| --- | --- | --- |
+| 1 | A grader that could not fail a journey | instrument |
+| 2 | 153 tests that nothing executed — one cited in a shipped unit file as the guard on a defect that has actually occurred | instrument |
+| 3 | The reference suite reading the host's memory pressure and blaming the product | instrument |
+| 4 | A feedback taxonomy that could not name three of the product's four distinguishing subsystems | instrument |
+| 5 | The grader's own CLI silently rewriting the collector's `schemaVersion` | instrument |
+| 6 | The shellcheck gate linting untracked files, so it was weakest on the machine where the code is written | instrument |
+| 7 | The wallpaper, misdiagnosed in `KNOWN_LIMITATIONS.md` as a missing loader | **product** |
 
-None of those would have been found by running the suite, because in three of
-the four cases the suite was the thing that was wrong.
+**One product defect.** The wallpaper — and even that one's recorded *diagnosis*
+was wrong in a way that would have sent the next person to add a package that
+already ships.
+
+None of the six would have been found by running the suite, because in every
+case the suite, or something it depends on, was the thing that was wrong. Three
+were found by running an instrument against a case it should fail; two by
+running something nothing had run before; one by reading a field the report had
+always carried and nothing had ever printed.
+
+**Two were found by my own checks failing on their first run**, which is the
+part I would point at. The grader's coverage test found that RJ04 and RJ06 — the
+two rules that fail the historical false pass — fired on recorded evidence and
+on no hand-written case at all. The suite-coverage check's first version was
+itself wrong, accusing two directories that legitimately use `load_tests`; it is
+documented as wrong in the file that replaced it, because a check that fails a
+legitimate pattern gets deleted rather than fixed.
 
 **Optimise for a release process where a PASS actually means PASS.** The number
 I would most like a reader to check is `psi_avg10 = 0.71` on the eighth
