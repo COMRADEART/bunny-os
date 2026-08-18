@@ -1,0 +1,38 @@
+== deployment identifiers ==
+  dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d
+  2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404
+== default deployment boots ==
+  observed: system reached a boot target
+  observed: Bunny OS boot health check finished
+  default deployment: 2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404
+  rollback target:    dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d
+== selecting the previous deployment ==
+== previous deployment boots ==
+  observed: system reached a boot target
+  observed: Bunny OS boot health check finished
+  booted the wrong deployment
+    expected: dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d
+    observed: 2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404
+
+This harness cannot select a deployment on this image.
+Writing saved_entry into /grub2/grubenv does not change what boots here, with a
+correctly padded 1024-byte environment block or without one, and the machine came
+up on its default deployment. That is a gap in this harness, not a failure of the
+product: 'bootc rollback' followed by a reboot does roll back, which
+qualification/phase5/update/rollback-real.sh measures on this same disk.
+
+NOT_RUN: no deployment switch was exercised.
+EXIT=5
+--- the json it wrote ---
+{
+  "mode": "deployment-rollback",
+  "deploymentEntries": 2,
+  "defaultDeployment": "2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404",
+  "rollbackTarget": "dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d",
+  "defaultDeploymentBoots": true,
+  "previousDeploymentBoots": false,
+  "liveDeploymentSwitchTested": false,
+  "outcome": "NOT_RUN",
+  "note": "The machine reached a healthy boot target and it was not the rollback target: this harness could not select the previous deployment. Reported as an absent capability rather than a product failure, because the product's own rollback path is separately demonstrated - see qualification/phase5/update/rollback-real.sh, where 'bootc rollback' followed by a reboot does bring up the previous deployment."
+}
+NOTRUN-CHECK-DONE status=5

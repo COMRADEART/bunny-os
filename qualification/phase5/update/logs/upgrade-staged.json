@@ -1,0 +1,6 @@
+{
+  "mode": "staged",
+  "deploymentEntries": 2,
+  "stagedDeploymentBoots": true,
+  "rollbackTargetRetained": true
+}

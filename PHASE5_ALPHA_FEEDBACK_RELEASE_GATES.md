@@ -7,11 +7,14 @@ plus 178 installer tests each, zero failures and zero errors; eight consecutive
 `tests/companion` runs, zero slice failures. Its root cause was found and fixed.
 That is the one required gate Phase 5 could close by itself, and it is closed.
 
-Not `ALPHA HARDENED`, for a reason that has nothing to do with the suite:
-**Phase 5 built no artifact.** The wallpaper fix, the poller instrumentation and
-the isolation fix are in source. The Alpha that exists — `e906a487` — is
-exactly as hard as Phase 4 left it. A hardened tree is not a hardened Alpha, and
-the build is blocked on host storage.
+**Phase 5 built an artifact** — `e501218f2fe0.1787016937`, its own identity,
+nothing of Phase 4's reused — and the two repaired assets are verified in it
+with a negative control. It is not a release candidate and makes no
+reproducibility claim; it exists to answer questions one image cannot be asked.
+
+Not `ALPHA HARDENED`. The new build is unqualified: none of the journey
+evidence the Phase 4 candidate carries has been re-run against it, and a fresh
+image is not a hardened Alpha either.
 
 Not `RELEASE GATE READY`: five required gates remain outstanding and four of
 them cannot be closed from inside this repository at all.
@@ -19,9 +22,10 @@ them cannot be closed from inside this repository at all.
 Never `STABLE RELEASE`.
 
 **The Phase 4 Alpha Release Candidate `e906a487` is untouched and remains READY
-as an Alpha Release Candidate and nothing else.** Phase 5 built no artifact,
-changed no digest in `qualification/phase4/`, and did not re-grade the
-candidate under a different name.
+as an Alpha Release Candidate and nothing else.** Its build output was moved
+intact when the output directory had to be cleared, its qcow2 still hashes to
+the digest its own manifest records, no digest in `qualification/phase4/`
+changed, and it was not re-graded under a different name.
 
 ---
 
@@ -56,8 +60,8 @@ payload reference is `localhost/bunny-os-beta:e906a48793d7` singly.
 
 ## 2. Changes made
 
-Sixteen commits. Every one of them is either a fix with a negative control or
-evidence with its scope stated.
+22 commits so far, counting from `e4d01389`. Every one of them is either a
+fix with a negative control or evidence with its scope stated.
 
 | Commit | What |
 | --- | --- |
@@ -72,12 +76,21 @@ evidence with its scope stated.
 | `893ad65d` | The grader's CLI was rewriting the collector's `schemaVersion`; 9 CLI tests |
 | `324cae32` | The reference-suite gate certified CLEAN, and the candidate's SBOM |
 | `fe971ca7` | The shellcheck gate was linting files that are not in the repository |
-| `852fbdc3`, `fcba6def`, `e2b7bc6f`, `49cd25f8` | This report, and what is proved against what is inferred |
+| `513c6a9b`, `e501218f` | The report; the reference suite removed from the blocker list once it was closed |
+| `a3b684ab` | The seven Criticals did not go away — the scanner stopped reporting them |
+| `738e53df` | The disk blocker was never real; the Phase 5 build; the archive scan that corrects the security account |
+| `3bf6a6e6` | Boot parity, and the update path's real posture: no trust root in the image |
+| *this commit* | A real staged update and a real rollback — and the rollback harness that was passing without one |
 
 **No product behaviour was changed except two asset files.** The poller work
 adds measurement and changes no cadence; §10's warning against sacrificing
 correctness for a benchmark has more force once the obvious suspect is cleared,
 and an optimisation made now would be one made for no measured gain.
+
+Two changes landed in `build/scripts/` **after** the Phase 5 build: the
+rollback harness repair and the deployment helpers it needed. They are
+measurement, not product, and the artifact predates them — recorded here rather
+than left for a reader to discover from a digest that no longer matches.
 
 ---
 
@@ -800,29 +813,109 @@ evidence and not a live deployment switch**, and nothing here upgrades that
 claim: rolling back to an image that does not boot is not a rollback, so this
 is the thing that has to be true first.
 
-### The live switch
+### The live switch, and a harness that was passing without one
 
-A freshly built image carries exactly one deployment, and both
-`vm-upgrade-test.sh staged` and `vm-rollback-test.sh deployment-rollback`
-refuse to pass on one — they exit 5 and say why. The missing input was never
-the harness; it was a disk with a staged update.
+`qualification/phase5/update/stage-update.sh` boots N with the Phase 5 OCI
+directory on a second drive and lets the **shipped `bootc`** stage it. Nothing
+is simulated. The disk went from one deployment to two, and
+`vm-upgrade-test.sh staged` then **PASSED** — the new deployment boots and a
+rollback target is retained, attributed independently by the per-deployment
+`os-release` commit.
 
-`qualification/phase5/update/stage-update.sh` makes one: it boots N with the
-Phase 5 OCI archive attached as a second drive and lets the **shipped `bootc`**
-stage it (`bootc switch --transport oci-archive`). Nothing is simulated — the
-staging is done by the binary a device would use, on the disk layout a device
-has. The injection follows the rules `capsule-qualify-inject.sh` established:
-guestfish rather than `virt-customize`, writes confined to the deployment's
-`/etc` and the stateroot's `/var` because `/usr` is a sealed composefs image,
-and an explicit SELinux label on every created file.
+`vm-rollback-test.sh deployment-rollback` also reported PASS. **It was wrong.**
 
-### The acceptance criterion, recorded before the run
+> Rollback PASSED: the previous deployment was selected and reached a healthy
+> target.
 
-§20 is sharpest here and it is quoted rather than paraphrased: **a rollback
-that boots but loses user state is not automatically a PASS.** User data,
-settings, companion modes, voice settings, permissions and Trust state are each
-to be checked individually, and a rollback that boots cleanly while losing any
-of them is a FAIL.
+Three consecutive runs said that, and every one of those boots came up on the
+**default** deployment: identical `os-release commit=e501218f2fe0…`, identical
+`ostree=` argument on the kernel command line, `bootc` reporting the rollback
+target sitting there untouched.
+
+**Cause.** The selection wrote a 40-byte file where GRUB requires a fixed
+1024-byte environment block padded with `#`. GRUB ignored it. **Why it passed
+anyway:** the only check was *did the machine reach a healthy target*, and a
+machine that never rolled back reaches one perfectly well. That is §5 of this
+brief word for word.
+
+**Repair, in two halves**, because fixing only the first would leave a harness
+that still could not tell:
+
+1. the block is written in the format GRUB requires;
+2. the deployment that booted is **identified**, from the `ostree=` argument the
+   kernel prints to the serial console — `bunny_deployment_checksums` reads the
+   candidates from the BLS entries, `bunny_require_booted_deployment` asserts
+   which came up. The comparison is on the 64-character checksum, because bootc
+   rewrites the `boot.N` component when the order changes and comparing whole
+   strings would report a correct rollback as a failure.
+
+Run against the same disk, the repaired harness catches it and classifies it
+honestly: **exit 5, NOT_RUN**, `previousDeploymentBoots: false`, with the note
+that this is a gap in the harness rather than a product failure. Reporting a
+harness limitation as a product FAIL would be the mirror image of the mistake
+being fixed.
+
+### The product does roll back
+
+`rollback-real.sh` uses the route a device uses — `bootc rollback`, then reboot.
+
+| boot | `os-release` commit | kernel `ostree=` | `bootc booted=` |
+| --- | --- | --- | --- |
+| 1 | `e501218f2fe0…` (N+1) | `boot.0/…2d358243…` | `…candidate:e501218f2fe0` |
+| 2 | **`e906a48793d7…` (N)** | `boot.1/…dd339603…` | `localhost/bunny-os-beta:e906a48793d7` |
+
+Three independent readings agree and the booted/rollback roles have swapped.
+**PASS.**
+
+### §20's actual criterion: user state
+
+> *A rollback that boots but loses user state is not automatically a PASS.*
+
+Five files were written **before** the switch — user data, settings, companion
+mode, voice settings, Trust grants — and read back on every subsequent boot by a
+unit reporting to the serial console.
+
+| boot | deployment | all five present |
+| --- | --- | ---: |
+| staged deployment | N+1 | yes |
+| rollback default | N+1 | yes |
+| after `bootc rollback` | **N** | **yes** |
+
+Nothing was lost, and the mechanism is structural rather than lucky: `/var`
+belongs to the stateroot, which every deployment shares.
+
+**One honest caveat.** The staging unit stayed enabled and ran again on the
+first boot of the rollback run, rewriting the five files, so the copies read
+after the rollback are timestamped `03:32` rather than the original `03:15`.
+The pre-switch write is observed surviving the *switch*; the post-rollback
+reading is of state written on N+1 surviving the rollback to N. Both halves are
+measured, on two different writes. A unit that performs a one-shot action should
+disable itself when it is done — `rollback.sh` does, `stage.sh` should.
+
+### Where the two gates stand
+
+| | |
+| --- | --- |
+| Boot parity, N and N+1 | **PASS** |
+| Staged update exists (`bootc switch --transport oci`) | **PASS** |
+| `vm-upgrade-test.sh` staged | **PASS** |
+| `vm-rollback-test.sh` deployment-rollback | **NOT_RUN** — repaired to say so |
+| Rollback by `bootc rollback` | **PASS** — attributed three ways |
+| User state across the rollback | **PASS** — five of five |
+| Manifest verification | **NOT_RUN** — no trust root in the image, by design |
+| `interrupted-download`, `expired-metadata` | **NOT_RUN** — need a registry |
+
+Neither gate closes. The update gate cannot while the image ships no trust
+root, and that is the correct posture until a production key exists. What
+changed is that both now fail for measured reasons rather than inherited ones,
+and one harness has stopped reporting a PASS it had not earned.
+
+Full record: `qualification/phase5/update/UPDATE_AND_ROLLBACK.md`.
+
+One more thing the run found: **`bootc switch --transport oci-archive` is
+advertised in `--help` and not implemented** — the guest answered `unsupported
+transport "oci-archive" for looking up local images`. `--transport oci` against
+a directory works, which is what the staging harness uses.
 
 ---
 
@@ -879,107 +972,135 @@ produces a number true of neither.
 | Security review | NOT DONE | REQUIRED |
 | Physical hardware | NOT RUN | REQUIRED |
 | Production signing | NOT DONE | REQUIRED |
-| Update | NOT RUN | REQUIRED |
-| Rollback | NOT RUN | REQUIRED |
+| Update | NOT_RUN — the image ships no update trust root, by design | REQUIRED |
+| Rollback | PASS by `bootc rollback`, state intact / NOT_RUN by the harness | REQUIRED |
 | Owner approvals | NOT DONE | REQUIRED |
 
 `scripts/release.py gate --kind qualification-candidate` → **BLOCKED**, verbatim
 in the tracker. No "required" was changed.
 
-Two rows deserve a second reading: the accessibility matrix carries two
-**FAIL**s, the only outright failures anywhere in the matrices; and "second
+Three rows deserve a second reading. The accessibility matrix carries two
+**FAIL**s, the only outright failures anywhere in the matrices. "Second
 production signer" is `BLOCKED` rather than `NOT_RUN` — it waits on a person,
-not on work.
+not on work. And **rollback carries two verdicts on purpose**: the product
+rolls back and keeps user state, measured three ways; the harness that was
+supposed to prove it was passing without rolling back at all, and now reports
+NOT_RUN. Collapsing those into one row would hide whichever half the reader
+most needs.
 
 ---
 
 ## 18. Remaining blockers
 
-### Engineering, and immediately actionable once storage is back
+### Engineering, and immediately actionable
 
-1. **The Phase 5 build.** Blocked on host storage — see below. Required by §3
-   for the two changed assets, and it unblocks 2 and 4.
-2. **Update and rollback.** Need N+1 to exist. The harness was never the
-   blocker; having only one build was.
-3. **The review package rebinding.** The re-scan is **done** — see §12; the
-   overlay-mount route needs no disk. What remains is the request itself: it is
-   bound to `80df25b09f65`, and intake rejects a scope commit other than the
-   candidate's, so sending it as written would produce a record intake refuses.
-   Its 24 reachability bundles are also built against the July advisory set,
-   not the 56 measured here. And it predates App Capsules and Trust — the two
-   boundaries a reviewer of *this* product would most want to see.
-4. **One `oci-archive:` scan**, to settle the 8-against-1 Critical
-   discrepancy. Also blocked on disk.
-
-**The reference suite is no longer on this list.** It was the only required gate
-Phase 5 could close by itself, and §4 records the five clean runs that closed
-it.
+1. **Qualify the Phase 5 build.** It exists and boots; none of the journey
+   evidence the Phase 4 candidate carries has been re-run against it. That is
+   the gap between "a build" and "a candidate".
+2. **The review package rebinding.** The re-scan is **done** — see §12. What
+   remains is the request itself: it is bound to `80df25b09f65`, intake rejects
+   a scope commit other than the candidate's, and its 24 reachability bundles
+   are built against the July advisory set rather than the 80 measured now. It
+   also predates App Capsules and Trust — the two boundaries a reviewer of
+   *this* product would most want to see. And the question it asks is now the
+   wrong one: §12 has a specific, checkable claim to put in front of a reviewer
+   instead.
+3. **Deployment selection in `vm-rollback-test.sh`.** The harness no longer
+   passes without rolling back, but it still cannot select a deployment on
+   these images. Either teach it the `bootc rollback` route the product
+   actually uses, or leave it reporting NOT_RUN and treat
+   `qualification/phase5/update/rollback-real.sh` as the rollback harness.
+4. **`stage.sh` should disable itself after running.** It re-ran on a later
+   boot and rewrote the state markers, which cost the user-state result a clean
+   timestamp chain. `rollback.sh` already does this; the pattern should be the
+   default for anything one-shot.
 
 ### Not engineering
 
 5. **Independent security review** — by definition excludes the people here.
 6. **Physical hardware** — a purchase.
-7. **Production signing** — a second person.
+7. **Production signing** — a second person. Until there is one, the image ships
+   no update trust root, which is why §14 reads NOT_RUN and why that is the
+   correct posture rather than a defect.
 8. **Owner approvals** — a decision.
 
-### The storage blocker, measured
-
-Windows `C:` has **8.6 GB free**. The WSL guest reports 607 GB, which is the
-illusion this project has hit before: `ext4.vhdx` is **731.5 GB** on disk
-against **350 GB** used, so roughly 380 GB is trapped and reclaimable only by
-an elevated compaction. A build writes about 30 GB.
-
-It has already bitten twice this phase — once as `KNOWN_LIMITATIONS.md`
-predicted (podman block-layer I/O errors), and once as grype's layer cache
-filling `/tmp`. The second was **worked around rather than waited on**: mounting
-the image's overlay in place costs no disk at all, and that is how §12 got its
-scan. The build has no equivalent trick; it genuinely needs the space.
+**Nothing is blocked on host storage.** That claim stood for a week and was
+false; §21 records how it was made and how it was measured away.
 
 ---
 
 ## 19. Artifact identities
 
-**Phase 5 produced no artifact.** No digest in this report is new, and none in
-`qualification/phase4/` was altered.
+**Phase 5 produced one artifact, with its own identity.** It does not replace,
+rename or re-tag the Phase 4 candidate, and Phase 4's output was moved intact
+rather than deleted when its output directory had to be cleared.
 
-The Phase 4 identity stands as recorded in §1. §24 is satisfied by
-subtraction: there is no Phase 5 result attached to the Phase 4 artifact,
-because the only Phase 5 results that touch it — the grader's re-grading of
-`g7`, `g12` and `g13` — are explicitly a **re-analysis of existing evidence**,
-which §24 permits in those words.
+| | Phase 4 (frozen) | Phase 5 |
+| --- | --- | --- |
+| Source commit | `e906a48793d74544b39c14cc3e35e0654f5311e2` | `e501218f2fe0105e5fc92bdf94fd6b3c87d6c470` |
+| Build id | `e906a48793d7.1786986334` | `e501218f2fe0.1787016937` |
+| Image | `localhost/bunny-os-beta:e906a48793d7` | `localhost/bunny-os-beta:e501218f2fe0` |
+| Image id | `6f3bbb9af38dae1636ff5c02dc79b07d3b09774bcacddc15308ae8e80bf3c8b2` | `70f677701e1a16efd740f075cb05b14a6a04304e38141576e893b23655543d58` |
+| qcow2 | `497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867` | `b4dd95f3cb3f7d4b4419c120e04e4375f4a176f0fd0a0ee5f2c91ba5de99dcef` |
+| raw | `a6ee06dcbc0ed3aa22c9ea07c339882eb97c7f16ce906b654c9a1e1119849d46` | `7fadbec459fe9cd92c461db70b676876bd9774c3875c467bbf2b5724245a77f0` |
+| oci.tar | `205a77f1b6cdf33915bce3afceb0914d6af25f97b434cf2128aec04d199b43dd` | `6ea132359756e48e3ff98f941a2c5286537a92210f38581debca4028be556536` |
 
-Everything else Phase 5 changed lives outside the image (`qualification/`,
-`tests/`) or is a source change awaiting a build (`shell/assets/`,
-`shell/components/`, `build/scripts/`).
+The Phase 4 tree is at
+`/root/bunny-build-archive/beta-phase4-rc-e906a48793d7-20260818T014208Z` on the
+builder, and its qcow2 still hashes to the digest its own manifest records —
+checked at the top of the rollback run, not assumed.
+
+**The Phase 5 build is not a release candidate and makes no reproducibility
+claim.** The build script says so in its own output and `provenance.json`
+records `repeatedBuildComparisonPerformed: false`. It exists to answer two
+questions Phase 4 could not: whether the two repaired assets are repaired *as
+installed*, and what happens when a machine is offered a second image.
+
+§24 is satisfied directly: no Phase 5 result is attached to the Phase 4
+artifact except the grader's re-grading of `g7`, `g12` and `g13`, which is
+explicitly a **re-analysis of existing evidence**, and the security re-scan,
+which is a fresh measurement of that artifact reported under its own identity
+and its own date rather than folded into Phase 4's record.
+
+Everything Phase 5 changed after the build — the report, the evidence, the
+rollback-harness repair — postdates `e501218f2fe0` and is not in it.
 
 ---
 
 ## 20. Evidence inventory
 
-`qualification/phase5/` — 13 files:
+`qualification/phase5/` — the Phase 5 record. Nothing in `qualification/phase4/`
+was written to; `git status` on it is clean after every grading run and the
+grader's own tests assert it byte-for-byte.
 
 | Path | What |
 | --- | --- |
 | `baseline/BASELINE.md`, `baseline.json` | The Phase 4 baseline, written before any change |
-| `gates/RELEASE_GATES.md` | The tracker, both columns, with the gate tool's verbatim output |
+| `gates/RELEASE_GATES.md` | The tracker, both columns, the gate tool's verbatim output, and the one gate change proposed rather than made |
 | `isolation/TEST_ISOLATION_INVESTIGATION.md` | Rates, conditions, the controlled injection, what it is not |
-| `performance/POLLER_DATA_SOURCE_COST.md` | The measurement that refutes the leading hypothesis |
-| `performance/poller-bench.js`, `poller-bench-host.txt` | The instrument and its output |
-| `security/SECURITY_DISPOSITION.md` | The disposition, both scans, and the counting |
-| `security/candidate-disposition-matrix.json`, `build_candidate_matrix.py` | 56 advisories on the **candidate**, all PENDING_REVIEW, regenerable |
-| `security/disposition-matrix.json`, `build_disposition_matrix.py` | The July set, 37 rows, kept with its own scope and its measured reachability |
-| `security/scan/candidate-fixed.json`, `image-id.txt`, `grype-version.txt` | The raw scan of `e906a48793d7` |
+| `isolation/certification/verify.log` | The five clean full-suite runs |
+| `performance/POLLER_DATA_SOURCE_COST.md` + `poller-bench.js`, `poller-bench-host.txt` | The measurement that refutes the leading hypothesis, and its instrument |
+| `security/SECURITY_DISPOSITION.md` | The disposition, the three scans, and the counting |
+| `security/SCAN_ROUTE_DISCREPANCY.md` | Why 8 became 1 and is still 8, measured step by step — including this document's own first, wrong answer |
+| `security/candidate-disposition-matrix.json` + `build_candidate_matrix.py` | 80 advisories on the **candidate**, all PENDING_REVIEW, regenerable |
+| `security/disposition-matrix.json` + `build_disposition_matrix.py` | The July set, 37 rows, kept with its own scope and its measured reachability |
+| `security/scan/` | The raw scans: `oci-archive`, mounted filesystem, SBOM, and the two stderr files whose one-line difference is the whole finding |
+| `security/route/` | The isolation experiments: the symbol probe, the SBOM control, the advisory qualifiers, the binary probe, the four-route comparison |
+| `sbom/retention-manifest.json` | The candidate's SPDX SBOM: 6451 packages, 70 MB, digest-chained on the builder |
+| `build/BUILD_IDENTITY.md`, `provenance.json`, `SHA256SUMS`, `normalisation.json` | The Phase 5 artifact, and how Phase 4's was preserved |
+| `assets/ASSET_VERIFICATION.md` + `sniff.log`, `sniff-check.py`, `sniff-verify.sh` | The two repaired assets in the built image, with the negative control |
+| `update/UPDATE_AND_ROLLBACK.md` + `logs/`, five harness scripts | Boot parity, a real staged update, a real rollback, user state across it, and the harness that was passing without rolling back |
 | `signing/SIGNING_CONFORMANCE.md` | Conformance, and the refusals measured |
 | `hardware/HARDWARE_TRACK.md` | The track, bound to the candidate |
 | `feedback/ALPHA_FEEDBACK_PLAN.md` | The instrument, and the zero |
 | `ux/GREETER_DISPOSITION.md` | The §12A decision, with what "yes" would cost |
 
-`qualification/grader/` — the instrument, with fixtures and 31 tests, declared
+`qualification/grader/` — the instrument, with fixtures and 40 tests, declared
 in `_PHASES_AFTER_THE_RECORD` as a tool rather than a record.
 
-Phase 4's 166 files are unchanged. Verified: `git status` on
-`qualification/phase4/` is clean after every grading run, and the grader's own
-test suite asserts it byte-for-byte.
+Bulky evidence stays on the builder with a digest chain rather than in the
+repository: the 70 MB SBOM, the 2.9 GB staged disk, the archived Phase 4 build
+tree. Each is named by digest in the document that relies on it.
 
 ---
 
@@ -994,16 +1115,20 @@ Phase 4 attached and one fewer excuse: the wallpaper defect it shipped is
 understood and fixed in source, and the diagnosis it recorded was wrong in a
 way that would have wasted the next person's time.
 
-**The next action is 8.6 GB of disk**, and it is not a small thing to say. Four
-of this phase's open items are downstream of one elevated compaction: the
-build, update, rollback, and the security re-scan that rebinds the review
-package to the artifact anyone would actually review.
+**The next action was recorded for a week as "8.6 GB of disk", and that was
+wrong.** Four of this phase's open items — the build, update, rollback, and the
+security re-scan — were held behind an environment claim nobody re-measured.
+The original failure was `grype podman:` filling **/tmp, which is tmpfs — RAM**,
+and the diagnosis then conflated Windows `C:` with the ext4 volume the builder
+writes to. Writing 20 GiB inside WSL moves the VHDX by zero bytes. All four
+items ran. An inherited claim about the environment is still a claim.
 
 ### What this phase is worth being judged on
 
 Phase 4's finding was that its instrument was wrong more often than its product
-was. Phase 5's is the same shape and larger: **seven defects, and six of them
-were in things that measure rather than in things that run.**
+was. Phase 5's is the same shape and larger: **eleven defects, and ten of them
+were in things that measure, describe or decide rather than in things that
+run.**
 
 | # | Defect | Subject |
 | --- | --- | --- |
@@ -1013,11 +1138,24 @@ were in things that measure rather than in things that run.**
 | 4 | A feedback taxonomy that could not name three of the product's four distinguishing subsystems | instrument |
 | 5 | The grader's own CLI silently rewriting the collector's `schemaVersion` | instrument |
 | 6 | The shellcheck gate linting untracked files, so it was weakest on the machine where the code is written | instrument |
-| 7 | The wallpaper, misdiagnosed in `KNOWN_LIMITATIONS.md` as a missing loader | **product** |
+| 7 | **`vm-rollback-test.sh` reporting "the previous deployment was selected" for three runs that never left the default deployment** | instrument |
+| 8 | `vm-upgrade-test.sh` manifest mode calling a three-parameter validator with one argument, so it could never have produced a verdict | instrument |
+| 9 | The update agent reporting `"configured": true` on a machine where updates are disabled — the field is `CONFIG_PATH.exists()` | instrument |
+| 10 | "Blocked on 8.6 GB of disk", inherited for a week, measured false in two minutes | **the record** |
+| 11 | The wallpaper, misdiagnosed in `KNOWN_LIMITATIONS.md` as a missing loader | **product** |
 
 **One product defect.** The wallpaper — and even that one's recorded *diagnosis*
 was wrong in a way that would have sent the next person to add a package that
 already ships.
+
+Number 7 is the one worth dwelling on, because it is §5 of this brief happening
+in the present tense. The rollback harness wrote a 40-byte file where GRUB
+requires a padded 1024-byte record, so nothing was ever selected; its only check
+was whether the machine reached a healthy target; and a machine that has not
+rolled back reaches one perfectly well. It printed PASS three times. The repair
+is not the grubenv format — that alone would have produced a harness that still
+could not tell — it is making the harness **name the deployment that booted**,
+from the kernel's own command line. Against the same disk it now says NOT_RUN.
 
 None of the six would have been found by running the suite, because in every
 case the suite, or something it depends on, was the thing that was wrong. Three
@@ -1033,12 +1171,14 @@ itself wrong, accusing two directories that legitimately use `load_tests`; it is
 documented as wrong in the file that replaced it, because a check that fails a
 legitimate pattern gets deleted rather than fixed.
 
-**Optimise for a release process where a PASS actually means PASS.** The number
-I would most like a reader to check is `psi_avg10 = 0.71` on the eighth
-companion run of the certification. It is the host crossing the threshold that
-used to break the slice, seven times over, on a run that passed — which is the
-difference between a defect avoided and a defect fixed.
+**Optimise for a release process where a PASS actually means PASS.** Two
+numbers I would like a reader to check. `psi_avg10 = 2.02`, on a companion run
+at HEAD that passed: the host crossing the threshold that used to break the
+slice, twenty times over, which is the difference between a defect avoided and
+a defect fixed. And `os-release commit=e906a48793d7…` on the second boot of
+`rollback-real.sh` — the line that proves a rollback happened, and whose absence
+is what three PASSes had been hiding.
 
-The second is the one that has not moved: **five required gates outstanding,
-four of them unreachable from inside this repository.** A clean suite is not a
-release, and this phase closed exactly one gate.
+The one that has not moved: **five required gates outstanding, four of them
+unreachable from inside this repository.** A clean suite is not a release, and
+this phase closed exactly one gate.

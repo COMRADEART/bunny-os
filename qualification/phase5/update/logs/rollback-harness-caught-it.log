@@ -1,0 +1,18 @@
+== deployment identifiers ==
+  ostree=/ostree/boot.0/default/dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d/0
+  ostree=/ostree/boot.0/default/2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404/0
+== default deployment boots ==
+  observed: system reached a boot target
+  observed: Bunny OS boot health check finished
+  default deployment: ostree=/ostree/boot.0/default/2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404/0
+  rollback target:    ostree=/ostree/boot.0/default/dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d/0
+== selecting the previous deployment ==
+== previous deployment boots ==
+  observed: system reached a boot target
+  observed: Bunny OS boot health check finished
+  booted the wrong deployment
+    expected: ostree=/ostree/boot.0/default/dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d/0
+    observed: ostree=/ostree/boot.0/default/2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404/0
+
+Rollback FAILED: the machine booted, but not into the previous deployment.
+EXIT=1

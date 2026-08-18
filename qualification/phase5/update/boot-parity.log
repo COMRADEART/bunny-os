@@ -1,0 +1,19 @@
+previous  (N):   /root/bunny-build-archive/beta-phase4-rc-e906a48793d7-20260818T014208Z/bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2
+candidate (N+1): /root/bunny-os/build/out/beta/bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-e501218f2fe0.1787016937-x86_64.qcow2
+497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867  /root/bunny-build-archive/beta-phase4-rc-e906a48793d7-20260818T014208Z/bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2
+b4dd95f3cb3f7d4b4419c120e04e4375f4a176f0fd0a0ee5f2c91ba5de99dcef  /root/bunny-os/build/out/beta/bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-e501218f2fe0.1787016937-x86_64.qcow2
+== previous release boots ==
+qemu-system-x86_64: terminating on signal 15 from pid 10081 (timeout)
+  observed: system reached a boot target
+  observed: Bunny OS boot health check finished
+== candidate boots ==
+qemu-system-x86_64: terminating on signal 15 from pid 10459 (timeout)
+  observed: system reached a boot target
+  observed: Bunny OS boot health check finished
+== candidate deployment entries: 1 ==
+  ostree-1.conf
+
+Rollback boot parity PASSED. Both images boot healthy.
+This is prerequisite evidence, not a live deployment switch.
+vm-rollback-test exit=0
+ROLLBACK-PARITY-DONE status=0

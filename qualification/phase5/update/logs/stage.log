@@ -1,0 +1,47 @@
+== inputs ==
+  N       : /root/bunny-build-archive/beta-phase4-rc-e906a48793d7-20260818T014208Z/bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2
+  N+1 tar : /root/bunny-os/build/out/beta/bunny-os.oci.tar
+497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867  /root/bunny-build-archive/beta-phase4-rc-e906a48793d7-20260818T014208Z/bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2
+6ea132359756e48e3ff98f941a2c5286537a92210f38581debca4028be556536  /root/bunny-os/build/out/beta/bunny-os.oci.tar
+
+== a writable copy of N (N itself stays pristine) ==
+  image: /home/bunny/p5-work/stage/staged.qcow2
+  file format: qcow2
+  virtual size: 12.8 GiB (13758365696 bytes)
+  disk size: 196 KiB
+  cluster_size: 65536
+
+== a second drive carrying the candidate as an OCI directory ==
+  -rw-r--r-- 1 root root 12884901888 Aug 17 23:03 /home/bunny/p5-work/stage/update.img
+
+== the deployment to write into ==
+  deployment: /ostree/deploy/default/deploy/1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a.0
+  stateroot:  /ostree/deploy/default
+
+== injecting ==
+== labelling ==
+
+== booting N with the candidate attached ==
+  firmware: /usr/share/edk2/ovmf/OVMF_CODE.fd
+  qemu exit=0
+
+== what the guest said ==
+  [    8.087602] bash[1133]: BUNNY-P5-STAGE: begin 2026-08-18T03:15:08+00:00
+  [    8.088925] bash[1135]: BUNNY-P5-STAGE: current deployment:
+  [    8.187432] bash[1166]: BUNNY-P5-STAGE: writing pre-switch state
+  [    8.284797] bash[1176]: BUNNY-P5-STAGE: state written:
+  [    8.297255] bash[1181]: BUNNY-P5-STAGE: control marker written to /etc (per-deployment, expected to be lost on rollback)
+  [    8.299798] bash[1183]: BUNNY-P5-STAGE: free space before:
+  [    8.364577] bash[1198]: BUNNY-P5-STAGE: mounted /dev/vdb
+  [    8.396505] bash[1203]: BUNNY-P5-STAGE: attempt 1: bootc switch --transport oci /run/p5update/candidate:e501218f2fe0
+  [   73.188803] bash[2021]: BUNNY-P5-STAGE: attempt 1 SUCCEEDED
+  [   73.191147] bash[2023]: BUNNY-P5-STAGE: deployments after:
+  [   73.391409] bash[2037]: BUNNY-P5-STAGE: free space after:
+  [   73.394620] bash[2042]: BUNNY-P5-STAGE: done
+  [   73.416439] bash[1126]: BUNNY-P5-STAGE: wrapper exit=0
+
+== deployment entries on the staged disk ==
+  /ostree/deploy/default/deploy/1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a.0/
+  /ostree/deploy/default/deploy/18fd8a7d9673e9107658a90afc06714c707ad9f5303675d89318399653ea1df6.0/
+  entries: 2
+STAGE-UPDATE-DONE entries=2 qemu=0
