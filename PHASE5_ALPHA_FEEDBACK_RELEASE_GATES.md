@@ -705,39 +705,124 @@ ceremony should publish alongside the entry.
 
 ## 14. Update status
 
-**NOT_RUN**, 1 of 13 scenarios passing (`invalid-signature`).
+**NOT_RUN as a delivered capability — and the reason is no longer the harness,
+the missing manifest, or the missing N+1.** All three of those were recorded
+blockers; all three are now gone or shown not to be the obstacle. What is left
+is what the image itself ships.
 
-The recorded blocker is exact: *"`vm-upgrade-test.sh` exits 3:
-`BUNNY_UPDATE_MANIFEST` must name a signed update manifest."*
+### What the image ships
 
-**The blocker was never the harness.** Read together with rollback's, those two
-sentences say something the tracker had never said out loud: the project had
-only ever had **one build**. "Update to the next candidate" is not a question a
-single artifact can be asked.
+Both the Phase 4 candidate and the Phase 5 build carry:
 
-Phase 5 changes that in principle — §3 requires a new build identity for any
-code change, and Phase 5 changed code — and could not in practice, because the
-build is blocked on storage. Once an artifact exists, N is `e906a487` (retained,
-still in the builder's store) and N+1 is the Phase 5 artifact, and a
-development-signed manifest can be produced with `dev-update-drill1`, whose
-format is already exercised and passing.
+```
+/etc/bunny-os/update.json
+  { "enabled": false,
+    "channel": "developer",
+    "manifestUrl": "https://updates.invalid.bunny-os.example/developer/x86_64/manifest.json",
+    "imageRepositories": ["quay.io/comradeart/bunny-os"] }
+
+/usr/share/bunny-os/update-keys/
+  revoked-keys.json          {"schemaVersion": 1, "revokedKeyIds": []}
+```
+
+**There is no trusted signing key in the image.** Only the revocation list is
+installed, and `build/scripts/install_routes.py` has exactly one route into
+that directory — `revoked-update-keys` — so this is by construction, not by
+accident.
+
+Running the shipped agent, in a container made from the image, at the paths it
+expects:
+
+| action | result |
+| --- | --- |
+| `status` | `{"configured": true, "state": "idle"}` |
+| `check` | `{"error": {"code": "not_configured", "message": "OS update checks are disabled"}}` |
+| `stage` | `{"error": {"code": "not_configured", "message": "OS update checks are disabled"}}` |
+
+So the update path refuses at the first gate. Had it not, `_verify_signature`
+would refuse every manifest at the second: `KEY_DIR / f"{key_id}.pem"` cannot
+exist for any key id.
+
+**This is fail-closed and it is right.** §13 and §19 say there is no production
+signing key and that creating one would be wrong; an image that shipped a
+trusted key with no ceremony behind it would be worse than one that updates
+nothing. But it means the honest status of the update gate is not "blocked on
+infrastructure" — it is **the Alpha does not update, by design, and the refusal
+is verified**.
+
+### Two defects behind the recorded blocker
+
+Neither would have been found without pushing past "the input is missing".
+
+1. **`vm-upgrade-test.sh` manifest mode could never have passed.** It searches
+   the agent for `validate_manifest`, `_validate_manifest` or
+   `verify_manifest` and calls `validator(document)`. The only one that exists
+   is `_validate_manifest(manifest, config, enforce_new_sequence)` — three
+   parameters. A supplied manifest would have produced a `TypeError`, not a
+   verdict. The agent also reads `/etc/bunny-os/update.json`,
+   `/usr/share/bunny-os/update-keys/` and `/var/lib/bunny-os/update` as
+   absolute paths, so the mode cannot run on a builder at all.
+2. **`status` reports `"configured": true` on an image where updates are
+   disabled.** The field is `CONFIG_PATH.exists()` — it means *the file is
+   there*, and it reads as *this machine is set up to update*. Alongside
+   `check`'s "OS update checks are disabled", the two answers contradict each
+   other. Recorded, not fixed: the built artifact would no longer match its
+   commit.
+
+### What did run
+
+`vm-upgrade-test.sh staged` needs a disk with an update already staged. §15
+records how one was made and what came of it, because the same disk answers
+both questions.
 
 Scenarios needing a reachable registry (`interrupted-download`,
-`expired-metadata`) stay NOT_RUN regardless.
+`expired-metadata`) remain NOT_RUN, and no manifest scenario can be run against
+this image while the trust store is empty.
 
 ---
 
 ## 15. Rollback status
 
-**NOT_RUN**, 0 of 5.
+**Boot parity: PASS.** For the first time the project has two images, so the
+question can be asked at all.
 
-*"`vm-rollback-test.sh` exits 3: `BUNNY_PREVIOUS_BETA_DISK` must name an
-existing QCOW2. There is no previous release to roll back to."*
+| | disk | sha256 |
+| --- | --- | --- |
+| N | Phase 4 candidate `e906a48793d7` | `497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867` |
+| N+1 | Phase 5 build `e501218f2fe0` | `b4dd95f3cb3f7d4b4419c120e04e4375f4a176f0fd0a0ee5f2c91ba5de99dcef` |
 
-Same root cause, same unblock. §20's sharpest requirement is recorded as the
-acceptance criterion for when it runs: **a rollback that boots but loses user
-state is not automatically a PASS** — user data, settings, companion modes,
-voice settings, permissions and Trust state each checked individually.
+N's digest is the one `BUNNY-MANIFEST.json` recorded in Phase 4, so the
+archived artifact is the artifact — verified, not assumed.
+
+`vm-rollback-test.sh` in `boot-parity` mode boots each and requires a healthy
+target. The harness is explicit in its own output that this is **prerequisite
+evidence and not a live deployment switch**, and nothing here upgrades that
+claim: rolling back to an image that does not boot is not a rollback, so this
+is the thing that has to be true first.
+
+### The live switch
+
+A freshly built image carries exactly one deployment, and both
+`vm-upgrade-test.sh staged` and `vm-rollback-test.sh deployment-rollback`
+refuse to pass on one — they exit 5 and say why. The missing input was never
+the harness; it was a disk with a staged update.
+
+`qualification/phase5/update/stage-update.sh` makes one: it boots N with the
+Phase 5 OCI archive attached as a second drive and lets the **shipped `bootc`**
+stage it (`bootc switch --transport oci-archive`). Nothing is simulated — the
+staging is done by the binary a device would use, on the disk layout a device
+has. The injection follows the rules `capsule-qualify-inject.sh` established:
+guestfish rather than `virt-customize`, writes confined to the deployment's
+`/etc` and the stateroot's `/var` because `/usr` is a sealed composefs image,
+and an explicit SELinux label on every created file.
+
+### The acceptance criterion, recorded before the run
+
+§20 is sharpest here and it is quoted rather than paraphrased: **a rollback
+that boots but loses user state is not automatically a PASS.** User data,
+settings, companion modes, voice settings, permissions and Trust state are each
+to be checked individually, and a rollback that boots cleanly while losing any
+of them is a FAIL.
 
 ---
 
