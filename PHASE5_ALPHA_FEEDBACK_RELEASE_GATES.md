@@ -2,10 +2,12 @@
 
 ## STATUS: **PHASE 5 — RELEASE CANDIDATE BLOCKED**
 
-**The reference-suite gate is CLEAN.** Five consecutive full runs, 5979 tests
-plus 178 installer tests each, zero failures and zero errors; eight consecutive
-`tests/companion` runs, zero slice failures. Its root cause was found and fixed.
-That is the one required gate Phase 5 could close by itself, and it is closed.
+**The reference-suite gate is CLEAN.** Five consecutive full runs at the fix
+commit and three more at HEAD — 5988 tests plus 178 installer tests each, zero
+failures and zero errors; sixteen consecutive `tests/companion` runs, zero
+slice failures, the last eight under host memory pressure twenty times the
+threshold that used to break them. Its root cause was found and fixed. That is
+the one required gate Phase 5 could close by itself, and it is closed.
 
 **Phase 5 built an artifact** — `e501218f2fe0.1787016937`, its own identity,
 nothing of Phase 4's reused — and the two repaired assets are verified in it
@@ -147,6 +149,33 @@ pass — firing on recorded evidence and on no hand-written case at all.
 `vm-login-story.sh` is now a collector that calls the library rather than a
 heredoc that reimplements it, so the checks that run are the checks the
 fixtures exercise.
+
+### The same repair, applied twice more, on harnesses that were already green
+
+The grader was the first priority because Phase 4 nominated it. Two more
+instruments turned out to have the same shape, and both were found by running
+them against something they should not pass.
+
+**`vm-rollback-test.sh`** printed *"the previous deployment was selected and
+reached a healthy target"* for three runs in which the machine booted its
+default deployment every time. Its only check was `bunny_boot_health`, and a
+machine that has not rolled back reaches a healthy target perfectly well. The
+repair is the grader's repair in another file: **the harness now names what it
+measured.** `bunny_deployment_checksums` reads the candidates from the BLS
+entries, `bunny_require_booted_deployment` asserts which one the kernel was
+actually told to boot — evidence that was already in the serial log and that
+nothing had ever read. §15 has the detail.
+
+**My own certification script** defaulted its commit to `FETCH_HEAD`, checked
+out a commit from a different branch, and reported three clean runs of a suite
+that discovered **1555 tests where this one has 5988**. Nothing in the output
+said so, because "0 failures" looks identical whatever it ran. It now requires
+the commit, asserts `HEAD` afterwards, refuses a dirty worktree, and carries a
+**test-count floor** — a collapsed discovery passes, and passing on a shrunken
+suite is the same false PASS wearing different clothes.
+
+Three instruments, one defect: **a result that does not identify what produced
+it cannot be a PASS.**
 
 `qualification/` is not a `COPY` root, so none of this reaches the image and no
 artifact digest moves. The grader work is a **re-analysis of existing
@@ -311,8 +340,17 @@ On the reference target, as `bunny`, from an ext4 clone, at `30f11a6d`:
 | | Runs | Failures |
 | --- | ---: | ---: |
 | `tests/companion` | 8 | **0** |
-| Full reference suite (5979 tests) | 5 | **0** |
+| Full reference suite (5988 tests) | 5 at the fix, 3 at HEAD | **0** |
 | Installer sub-suite (178 tests) | 5 | **0** |
+
+**Certified twice, at two commits.** Five runs at `30f11a6d`, where the fix
+landed, and three more at `c923169d` — the current HEAD, after the security
+evidence, the build records, the rollback-harness repair and two files in
+`build/scripts` had all changed. Evidence:
+`qualification/phase5/isolation/certification/verify.log` and
+`verify-at-c923169d.log`. The second script asserts the commit it checked out
+and the number of tests it discovered, because the first one did neither and
+reported three clean runs of a different branch.
 
 **0 unexplained failures, 0 unexplained errors.**
 
@@ -343,7 +381,9 @@ that guards a unit's `RuntimeDirectory`/`ReadWritePaths` pairing — the exact
 defect that produced 226/NAMESPACE. It had never executed in the suite.
 
 Both pass, which is the only reason this is a coverage finding and not a defect
-ledger. 5803 → 5956 discovered at the time; 5979 now, with Phase 5's own tests.
+ledger. 5803 → 5956 discovered at the time; **5988** now, with Phase 5's own
+tests. The count is asserted rather than reported: the certification script
+carries a floor, because a discovery that collapses passes.
 
 The project had already named this failure mode for hyphenated directories and
 repaired it by renaming them — the symptom. `tests/test_suite_coverage.py`
@@ -968,7 +1008,7 @@ produces a number true of neither.
 | Persistence | PASS (journey) / NOT_RUN (matrix) | PASS |
 | Companion | PASS | PASS |
 | Shutdown | PASS | PASS |
-| **Reference suite** | **CLEAN** — 5/5 full runs, 0 failures; root cause fixed | **CLEAN** ✓ |
+| **Reference suite** | **CLEAN** — 8/8 full runs across two commits, 0 failures; root cause fixed | **CLEAN** ✓ |
 | Security review | NOT DONE | REQUIRED |
 | Physical hardware | NOT RUN | REQUIRED |
 | Production signing | NOT DONE | REQUIRED |
