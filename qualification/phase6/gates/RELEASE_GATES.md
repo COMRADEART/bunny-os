@@ -42,6 +42,27 @@ That the tool did not move is the point. Phase 6 took a product decision that
 changes what the release must demonstrate; it did not relabel anything the tool
 counts.
 
+**Measured, not eyeballed.** `gate-invariance-check.sh` clones the repository
+twice — at `0d5381c6` (pre-Phase-6) and at `dc60d33b` — asserts the commit each
+clone actually checked out, runs the gate in each, and diffs:
+
+    before: 0d5381c6080ee1158a3dfe234f7403bd65fbcd7b   gate exit: 2
+    after:  dc60d33b2fb835aea8835785921a7731aeaacf96   gate exit: 2
+
+    d1fd9ff5c4f9bfdb31e984d4d9ba7c3d50a8a5aa2c60c6c0400625b5493a13b5  gate-before.txt
+    d1fd9ff5c4f9bfdb31e984d4d9ba7c3d50a8a5aa2c60c6c0400625b5493a13b5  gate-after.txt
+
+    IDENTICAL -- the gate did not move
+    control OK -- a single flipped row is detected
+
+The control matters: the script also compares the "before" output against a copy
+with one row flipped from `BLOCKED NOT_RUN` to `ok PASS`, and requires that
+difference to be detected. Without it, "the two files are identical" is equally
+consistent with a comparison that cannot tell anything apart.
+
+Evidence: `evidence/gate-before.txt`, `evidence/gate-after.txt`,
+`evidence/SHA256SUMS`.
+
 ---
 
 ## 2. The matrix

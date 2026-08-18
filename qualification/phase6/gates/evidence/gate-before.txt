@@ -1,0 +1,17 @@
+qualification candidate gate: BLOCKED
+  ok      PASS                     Licence gate passed
+  BLOCKED PENDING_EXTERNAL_REVIEW  Vulnerability gate passed
+  ok      PASS                     Independent reproducibility passed
+  ok      PASS                     Development signing drill passed
+  BLOCKED NOT_RUN                  Independent recovery media passed
+  BLOCKED NOT_RUN                  Installation matrix passed
+  BLOCKED NOT_RUN                  Encryption matrix passed
+  BLOCKED NOT_RUN                  Update matrix passed
+  BLOCKED NOT_RUN                  Rollback matrix passed
+  BLOCKED PENDING_HARDWARE         Physical hardware evidence passed
+  BLOCKED PENDING_EXTERNAL_REVIEW  Accessibility evidence passed
+  BLOCKED PENDING_EXTERNAL_REVIEW  Independent reviews passed
+  BLOCKED BLOCKED                  Second production signer available
+  BLOCKED PENDING_OWNER            Protected approvals complete
+
+No artifact may be labelled release-qualified. Building a candidate for examination remains permitted; calling one qualified does not.

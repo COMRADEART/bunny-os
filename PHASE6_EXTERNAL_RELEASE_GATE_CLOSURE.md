@@ -36,8 +36,13 @@ with a negative control that failed as it was required to.
 **What Phase 6 deliberately did not do.** It did not mark a single update-matrix
 scenario `NOT_APPLICABLE`. That move was available, it would have turned a
 blocking row green, and it was refused: the matrix records what was executed,
-and nothing was. `python scripts/release.py gate --kind qualification-candidate`
-produces **byte-identical** output before and after every change in this phase.
+and nothing was.
+
+`python scripts/release.py gate --kind qualification-candidate` produces
+**byte-identical** output at `0d5381c6` and at `dc60d33b` — same sha256
+`d1fd9ff5…`, verified by cloning the repository at both commits and diffing,
+with a control that flips one row to confirm the comparison can detect a
+change.
 
 **The Phase 4 Alpha Release Candidate `e906a487` remains READY as an Alpha
 Release Candidate and nothing else.** Its digests were re-verified from the
