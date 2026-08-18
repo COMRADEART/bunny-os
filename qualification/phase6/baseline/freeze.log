@@ -1,0 +1,80 @@
+=== Phase 6 baseline freeze — started 2026-08-18T04:37:04Z ===
+
+--- Phase 4 Alpha RC (Phase 6 subject artifact) ---
+dir: /root/bunny-build-archive/beta-phase4-rc-e906a48793d7-20260818T014208Z
+beta-build.log	228939
+bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2	2770075648
+bootc-fedora-44-raw-x86_64/bootc-fedora-44-raw-x86_64.raw	13758365696
+BUNNY-MANIFEST.json	1621
+bunny-os.oci.tar	2962257920
+image-builder.log	60835
+normalisation.json	1647
+oci-build.log	175141
+oci-inspect.json	47652
+provenance.json	1845
+SHA256SUMS	337
+
+recomputing digests for every image and archive under the Phase 4 dir:
+497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867  ./bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2
+a6ee06dcbc0ed3aa22c9ea07c339882eb97c7f16ce906b654c9a1e1119849d46  ./bootc-fedora-44-raw-x86_64/bootc-fedora-44-raw-x86_64.raw
+205a77f1b6cdf33915bce3afceb0914d6af25f97b434cf2128aec04d199b43dd  ./bunny-os.oci.tar
+
+SHA256SUMS as the build recorded them:
+497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867  bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2
+a6ee06dcbc0ed3aa22c9ea07c339882eb97c7f16ce906b654c9a1e1119849d46  bootc-fedora-44-raw-x86_64/bootc-fedora-44-raw-x86_64.raw
+205a77f1b6cdf33915bce3afceb0914d6af25f97b434cf2128aec04d199b43dd  bunny-os.oci.tar
+
+--- Phase 5 build (update/rollback N+1 counterpart) ---
+dir: /root/bunny-os/build/out/beta
+bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-e501218f2fe0.1787016937-x86_64.qcow2	2761657344
+bootc-fedora-44-raw-x86_64/bunny-os-0.1.0-alpha-e501218f2fe0.1787016937-x86_64.raw	13721665536
+BUNNY-MANIFEST.json	1670
+bunny-os.oci.tar	2953932800
+image-builder.log	60835
+normalisation.json	1647
+oci-build.log	168024
+oci-inspect.json	47097
+provenance.json	1874
+SHA256SUMS	385
+
+recomputing digests:
+b4dd95f3cb3f7d4b4419c120e04e4375f4a176f0fd0a0ee5f2c91ba5de99dcef  ./bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-e501218f2fe0.1787016937-x86_64.qcow2
+7fadbec459fe9cd92c461db70b676876bd9774c3875c467bbf2b5724245a77f0  ./bootc-fedora-44-raw-x86_64/bunny-os-0.1.0-alpha-e501218f2fe0.1787016937-x86_64.raw
+6ea132359756e48e3ff98f941a2c5286537a92210f38581debca4028be556536  ./bunny-os.oci.tar
+
+SHA256SUMS as the build recorded them:
+b4dd95f3cb3f7d4b4419c120e04e4375f4a176f0fd0a0ee5f2c91ba5de99dcef  bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-e501218f2fe0.1787016937-x86_64.qcow2
+7fadbec459fe9cd92c461db70b676876bd9774c3875c467bbf2b5724245a77f0  bootc-fedora-44-raw-x86_64/bunny-os-0.1.0-alpha-e501218f2fe0.1787016937-x86_64.raw
+6ea132359756e48e3ff98f941a2c5286537a92210f38581debca4028be556536  bunny-os.oci.tar
+
+--- Installation medium for the subject artifact ---
+dir: /root/bunny-os/build/out/live/bootc-fedora-44-bootc-generic-iso-x86_64
+total 5957940
+drwxr-xr-x 2 root root       4096 Aug 17 13:36 .
+drwxr-xr-x 3 root root       4096 Aug 17 13:36 ..
+-rw-r--r-- 1 root root 6100916224 Aug 17 13:35 bunny-os-0.3.0-live.e906a48793d7-x86_64.iso
+
+recomputing ISO digest (this is the medium a physical machine would boot):
+823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421  ./bunny-os-0.3.0-live.e906a48793d7-x86_64.iso
+
+--- Base image identity, as the local store holds it ---
+localhost/bunny-os-beta:e501218f2fe0 sha256:a0454c56c886fca66017908d38837eef3e8cb9989ffa6ba46ce2db1509d9303d 70f677701e1a
+localhost/bunny-os-beta:e906a48793d7 sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d 6f3bbb9af38d
+localhost/bunny-os-shell-test:e906a48793d7 sha256:9d3ae744ea633ecd52ea338b4e60422b3823b18323f8e9ecf776c90375cdf536 b3681f96a1e8
+localhost/bunny-os-live:e906a48793d7 sha256:6c617a759d429967f446f976b77d4df715b2c0596b9021afa6e3126c4fa5ff44 b0626bf9dae7
+quay.io/fedora/fedora-bootc:44 sha256:f51e9dca468f0c9d4b2f534d576818d2c4be8bfe225e1eb887ff10101082ecf3 cc168c30b308
+localhost/bunny-os-beta:376acf0e076f sha256:175d3695931dcd915ad98e4698c5de540c96c8d9977ba4f5fc5ba3de3c1bd8fa 870c320b4671
+localhost/bunny-os-live:376acf0e076f sha256:fbf83a67f5fd5b97c7285f34c9831821d4eaac412f629bcf0a7d42c59c77cd38 7bd80be970d5
+localhost/bunny-os-shell-test:376acf0e076f sha256:84bff3629f8ce84f51985676d9f1a3f5289520aa285942797c142595c4761e8d b58e17547533
+localhost/bunny-os-live:8eb1a9dc4901 sha256:064bbd9d03b807ee1861188198da4685d92c0cd140010fb21e1a18b3f7f540e7 145fe0d72fe9
+localhost/bunny-os-shell-test:8eb1a9dc4901 sha256:4918ba1179c9b8ce4557db6e93e2ca939bb3c1619d04bad5fbf77232156eab7b 71a0c6677b0d
+localhost/bunny-os-beta:8eb1a9dc4901 sha256:34021eae720d888c8efd2171b3726f9ab1a60740e5919ff70a0fbcc6d0061e5c 5b74475933e2
+localhost/bunny-os-shell-test:603fcf46bb63 sha256:3f688688494573423e3b552cacd48ce3c373a4856241184ebcf9ca93be62ba2a a8a772b983a2
+localhost/bunny-os-live:603fcf46bb63 sha256:caebc2a3d14fa34ee4f156859a5d4264d064b354747365b763b50739d8fd3fe7 0fcf560a0b06
+localhost/bunny-os-beta:603fcf46bb63 sha256:498c62cff2b8bc59820d89f38df00d098b77cd473f8dfcef7c00e248cf8852b6 aad96558f589
+localhost/bunny-os-shell-test:24168fbcd77c sha256:4869ecc06be153ab1809a2ce6f773df78ec7abc975c7a5b19496b52c20bd297d 4f2c972cbda2
+localhost/bunny-os-shell-test:72ff80631774 sha256:080078b066599b462b22c9a75b0208a4eacc032cec8a79ccfec7fc3c5ff36490 c725860e180c
+localhost/bunny-os-package-snapshot:fedora-44-beta-20260810-tts sha256:648636edf40e290be0425984370837859b1eaa1b5d9a56a6cd01623e4aed7195 e68a1860bf2f
+localhost/bunny-os-retained-base:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844 sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844 e0925ed8bc2b
+
+=== finished 2026-08-18T04:37:40Z ===
