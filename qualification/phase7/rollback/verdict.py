@@ -75,12 +75,24 @@ def parse_log(text: str) -> dict:
                 if found:
                     facts["ostreeAfterDefault"] = found.group(1)
             continue
+        if "BUNNY-P7: ostree-after-default=" in raw:
+            value = _after(raw, "ostree-after-default=")
+            if re.fullmatch(r"[a-f0-9]{64}", value):
+                # The short marker wins over whatever the block scan saw: the
+                # block is a multi-line record and its first checksum can come
+                # from a split line.
+                facts["ostreeAfterDefault"] = value
+            continue
         if "BUNNY-P7-SHA: " in raw:
             payload = _after(raw, "BUNNY-P7-SHA: ")
             parts = payload.split(None, 1)
             if len(parts) == 2:
                 sha, path = parts
-                facts["markers"][path.strip()] = sha
+                # Lines are emitted twice and any one can be split; keep only
+                # a well-formed value, and never let a mangled copy overwrite
+                # a well-formed one already seen.
+                if re.fullmatch(r"[a-f0-9]{64}", sha) or sha == "ABSENT":
+                    facts["markers"][path.strip()] = sha
             continue
         if "BUNNY-P7: " not in raw:
             continue
@@ -101,8 +113,18 @@ def parse_log(text: str) -> dict:
             found = _CMDLINE_OSTREE.search(line)
             if found:
                 facts["cmdlineBootChecksum"] = found.group(1)
+        elif line.startswith("bootc-booted-checksum="):
+            value = line.split("=", 1)[1].strip()
+            if re.fullmatch(r"[a-f0-9]{64}", value):
+                facts["bootcBootedChecksum"] = value
+        elif line.startswith("bootc-booted-image="):
+            value = line.split("=", 1)[1].strip()
+            if value and value != "UNREADABLE":
+                facts["bootcBootedImage"] = value
         elif line.startswith("etc-identity="):
-            facts["etcIdentity"] = line.split("=", 1)[1]
+            value = line.split("=", 1)[1]
+            if re.fullmatch(r"[a-f0-9]{64}", value) or value == "ABSENT":
+                facts["etcIdentity"] = value
         elif line.startswith("hostname-file="):
             facts["hostnameFile"] = line.split("=", 1)[1]
         elif line.startswith("locale="):
@@ -112,7 +134,10 @@ def parse_log(text: str) -> dict:
                 facts["rollbackExit"] = int(line.split("=", 1)[1])
             except ValueError:
                 facts["rollbackExit"] = -1
-    if bootc_lines:
+    if bootc_lines and facts["bootcBootedChecksum"] is None:
+        # Fallback only: the short in-guest markers are authoritative, and a
+        # 2 KB single-line JSON on a shared serial console is exactly the
+        # artifact run 2 lost to interleaving.
         try:
             status = json.loads("\n".join(bootc_lines))
             booted = status.get("status", {}).get("booted") or {}

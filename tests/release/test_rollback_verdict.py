@@ -80,6 +80,12 @@ def make_log(
     bootc = {"status": {"booted": {"ostree": {"checksum": bootc_commit},
                                    "image": {"image": {"image": "oci"}}}}}
     lines += [f"BUNNY-P7-BOOTC: {line}" for line in json.dumps(bootc, indent=1).splitlines()]
+    lines += [
+        f"BUNNY-P7: bootc-booted-checksum={bootc_commit}",
+        f"BUNNY-P7: bootc-booted-checksum={bootc_commit}",
+        "BUNNY-P7: bootc-booted-image=oci",
+        "BUNNY-P7: bootc-booted-image=oci",
+    ]
     if marker_sha is not None:
         lines.append(f"BUNNY-P7-SHA: {marker_sha}  {MARKER}")
     else:
@@ -89,6 +95,8 @@ def make_log(
         lines.append(f"BUNNY-P7: rollback exit={rollback_exit}")
     if ostree_after is not None:
         lines.append(f"BUNNY-P7-OSTREE-AFTER: * default {ostree_after}.0")
+        lines.append(f"BUNNY-P7: ostree-after-default={ostree_after}")
+        lines.append(f"BUNNY-P7: ostree-after-default={ostree_after}")
     if healthy:
         lines.append("[  OK  ] Reached target Multi-User System.")
     lines.append(f"BUNNY-P7: END step={step}")
@@ -245,6 +253,23 @@ class RollbackVerdict(unittest.TestCase):
             f"BUNNY-P7: cmdline-bootcsum={BOOT_A[:20]}\nBUNNY-P7: cmdline-bootcsum={BOOT_A}",
             1,
         )
+        result = self.grade(nominal_rollback_log(), log)
+        self.assertEqual(result["verdict"], "PASS", result["reasons"])
+
+    def test_a_split_bootc_json_is_survivable_with_the_short_markers(self) -> None:
+        # Run 2 of the real journey: the 2 KB single-line bootc JSON was cut
+        # by a kernel message. The short markers must carry the identity.
+        log = nominal_verify_log().replace(
+            f'"checksum": "{COMMIT_A}"', '"checksum": "SPLIT[   17.4] SELinux: ...'
+        )
+        result = self.grade(nominal_rollback_log(), log)
+        self.assertEqual(result["verdict"], "PASS", result["reasons"])
+
+    def test_the_json_fallback_still_reads_a_log_without_short_markers(self) -> None:
+        log = "\n".join(
+            line for line in nominal_verify_log().splitlines()
+            if not line.startswith("BUNNY-P7: bootc-booted-")
+        ) + "\n"
         result = self.grade(nominal_rollback_log(), log)
         self.assertEqual(result["verdict"], "PASS", result["reasons"])
 
