@@ -22,7 +22,28 @@ EXPECT_COMMIT="${1:?the commit to certify must be named}"
 FLOOR=5900
 
 mkdir -p "$OUT"
-LOG="$OUT/verify.log"
+
+# One run at a time, or the record is worthless.
+#
+# Two invocations were started against different commits, both truncated and
+# appended to the same verify.log, and the result was a log carrying one
+# commit's header and the other's test output. It was caught because the
+# per-run lines did not add up -- but a contaminated log that happens to look
+# consistent is exactly the artefact this project keeps finding.
+#
+# The lock is not politeness. A second run must FAIL, loudly, rather than
+# quietly interleave.
+LOCK="$OUT/.lock"
+if ! mkdir "$LOCK" 2>/dev/null; then
+  echo "REFUSED: another certification run holds $LOCK" >&2
+  echo "  Two runs sharing one log produce a record of neither." >&2
+  exit 6
+fi
+trap 'rmdir "$LOCK" 2>/dev/null' EXIT
+
+# A distinct log per commit, so a later run can never overwrite an earlier
+# one's record even if the lock is removed by hand.
+LOG="$OUT/verify-${1:-unknown}.log"
 : > "$LOG"
 
 say() { printf '%s\n' "$*" | tee -a "$LOG"; }
@@ -82,4 +103,4 @@ say "--- installer sub-suite ---"
 say ""
 say "=== finished $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
 say "commit=$ACTUAL discovered=$DISCOVERED run1=$RUN1 run2=$RUN2"
-touch "$OUT/.done"
+touch "$OUT/.done-$ACTUAL"
