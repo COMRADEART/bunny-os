@@ -174,6 +174,14 @@ labels+=(: lsetxattr security.selinux "system_u:object_r:user_home_t:s0" 0 "${va
 
 while read -r commit; do
   entry="/ostree/deploy/default/deploy/${commit}.0"
+  # The journey owns the boot. The staged disk still carries Phase 5's
+  # oneshot units in its deployments' /etc, and bunny-p5-stage.service ends
+  # in `systemctl poweroff` — run 3 of this journey lost `bootc rollback`
+  # mid-command to that poweroff racing it. A harness that shares the machine
+  # with another harness's leftovers measures the race, not the product.
+  for leftover in bunny-p5-stage.service bunny-p5-rollback.service bunny-p5-state.service; do
+    commands+=(: rm-f "${entry}/etc/systemd/system/multi-user.target.wants/${leftover}")
+  done
   commands+=(: mkdir-p "${entry}/etc/bunny-p7")
   commands+=(: upload "${guest_script}" "${entry}/etc/bunny-p7/journey-guest.sh")
   commands+=(: chmod 0644 "${entry}/etc/bunny-p7/journey-guest.sh")
