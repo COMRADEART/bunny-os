@@ -18,8 +18,11 @@ Not `ALPHA HARDENED`. The new build is unqualified: none of the journey
 evidence the Phase 4 candidate carries has been re-run against it, and a fresh
 image is not a hardened Alpha either.
 
-Not `RELEASE GATE READY`: five required gates remain outstanding and four of
-them cannot be closed from inside this repository at all.
+Not `RELEASE GATE READY`: five required gates remain outstanding, and **five**
+of the six now sit outside this repository — the update gate joined them once
+it was clear it cannot close while the image ships no update trust root, and no
+trust root can exist until a production key does. Rollback is the only one left
+that engineering can move, and only its harness half: the product half passes.
 
 Never `STABLE RELEASE`.
 
@@ -62,7 +65,7 @@ payload reference is `localhost/bunny-os-beta:e906a48793d7` singly.
 
 ## 2. Changes made
 
-22 commits so far, counting from `e4d01389`. Every one of them is either a
+26 commits, counting from `e4d01389`. Every one of them is either a
 fix with a negative control or evidence with its scope stated.
 
 | Commit | What |
@@ -82,7 +85,8 @@ fix with a negative control or evidence with its scope stated.
 | `a3b684ab` | The seven Criticals did not go away — the scanner stopped reporting them |
 | `738e53df` | The disk blocker was never real; the Phase 5 build; the archive scan that corrects the security account |
 | `3bf6a6e6` | Boot parity, and the update path's real posture: no trust root in the image |
-| *this commit* | A real staged update and a real rollback — and the rollback harness that was passing without one |
+| `8a4f884e` | A real staged update and a real rollback — and the rollback harness that was passing without one |
+| `c923169d`, `2e681370`, `b4555ae9` | The shellcheck gate catching its author; certification at HEAD; the tracker corrected |
 
 **No product behaviour was changed except two asset files.** The poller work
 adds measurement and changes no cadence; §10's warning against sacrificing
