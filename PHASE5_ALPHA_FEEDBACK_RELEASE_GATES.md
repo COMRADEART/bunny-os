@@ -735,26 +735,29 @@ not on work.
 ### Engineering, and immediately actionable once storage is back
 
 1. **The Phase 5 build.** Blocked on host storage — see below. Required by §3
-   for the two changed assets, and it unblocks 3, 4 and 6.
-2. **The reference suite.** ≈1/14, cause narrowed to a non-health rung cap; the
-   diagnostic that will name it is in place and a hunt is running.
-3. **Update and rollback.** Need N+1 to exist.
-4. **The review package rebinding.** The re-scan is **done** — see §12; the
+   for the two changed assets, and it unblocks 2 and 4.
+2. **Update and rollback.** Need N+1 to exist. The harness was never the
+   blocker; having only one build was.
+3. **The review package rebinding.** The re-scan is **done** — see §12; the
    overlay-mount route needs no disk. What remains is the request itself: it is
    bound to `80df25b09f65`, and intake rejects a scope commit other than the
    candidate's, so sending it as written would produce a record intake refuses.
    Its 24 reachability bundles are also built against the July advisory set,
    not the 56 measured here. And it predates App Capsules and Trust — the two
    boundaries a reviewer of *this* product would most want to see.
-5. **One `oci-archive:` scan**, to settle the 8-against-1 Critical discrepancy.
-   This is the one item still genuinely blocked on disk.
+4. **One `oci-archive:` scan**, to settle the 8-against-1 Critical
+   discrepancy. Also blocked on disk.
+
+**The reference suite is no longer on this list.** It was the only required gate
+Phase 5 could close by itself, and §4 records the five clean runs that closed
+it.
 
 ### Not engineering
 
-6. **Independent security review** — by definition excludes the people here.
-7. **Physical hardware** — a purchase.
-8. **Production signing** — a second person.
-9. **Owner approvals** — a decision.
+5. **Independent security review** — by definition excludes the people here.
+6. **Physical hardware** — a purchase.
+7. **Production signing** — a second person.
+8. **Owner approvals** — a decision.
 
 ### The storage blocker, measured
 
