@@ -10,14 +10,14 @@ The subject artifact is `e906a48793d7`
 Evidence for any row below must identify it, or the new artifact that
 supersedes it under the §21 policy.
 
-| Gate | Status | Owner needed | Evidence |
+| Gate | Status | Owner needed | Readiness (what Phase 7 added) |
 | --- | --- | --- | --- |
-| Independent security review | NOT_RUN | external reviewer, no project principal | — |
-| Critical/High finding dispositions | BLOCKED on review | external reviewer | `evidence/vulnerability/` inventory |
-| Physical hardware qualification | NOT_RUN | a physical x86-64 UEFI machine | three `expectation.json` under `qualification/phase6/hardware/` await one |
-| Production signing | NOT_RUN | key authority | zero `.sig` files exist; measured in Phase 6 |
+| Independent security review | NOT_RUN | external reviewer, no project principal | `qualification/phase7/security/REVIEW_PACKAGE_ADDENDUM.md` — the 18 Go High findings answered per binary on the subject artifact; six rows split podman/skopeo |
+| Critical/High finding dispositions | BLOCKED on review | external reviewer | version half complete for all Go Highs; 3 pseudo-version rows named as the reviewer's commit-level question |
+| Physical hardware qualification | NOT_RUN | a physical x86-64 UEFI machine | three `expectation.json` under `qualification/phase6/hardware/` still await one |
+| Production signing | NOT_RUN | key authority | zero `.sig` files exist; measured in Phase 6, unchanged |
 | Second signer / approval | NOT_RUN | a second person | — |
-| Alpha validation | NOT_RUN | Alpha testers | protocol: `qualification/phase7/alpha/` |
+| Alpha validation | NOT_RUN | Alpha testers | `qualification/phase7/alpha/ALPHA_TEST_PROTOCOL.md` — five journeys, digest binding, measured/user-reported separation, triage classes |
 
 What Phase 7 can move here is **readiness**: a review package an external
 party can reproduce, an Alpha protocol a tester can execute, and signing
