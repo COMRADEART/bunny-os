@@ -1,0 +1,2064 @@
+{
+ "allowedReviewOutcomes": [
+  "APPROVED",
+  "APPROVED_WITH_CONDITIONS",
+  "BLOCKED",
+  "MORE_EVIDENCE_REQUIRED"
+ ],
+ "artifact": {
+  "frozen": true,
+  "identifier": "e906a48793d7",
+  "imageDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "isoSha256": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "ociTarSha256": "205a77f1b6cdf33915bce3afceb0914d6af25f97b434cf2128aec04d199b43dd",
+  "provenance": "BUNNY-MANIFEST.json and provenance.json in the retained archive; digests recomputed from bytes 2026-08-18 (qualification/phase7/baseline/freeze.log)",
+  "qcow2Sha256": "497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867",
+  "rawSha256": "a6ee06dcbc0ed3aa22c9ea07c339882eb97c7f16ce906b654c9a1e1119849d46",
+  "signingStatus": "UNSIGNED",
+  "sourceCommit": "e906a48793d74544b39c14cc3e35e0654f5311e2",
+  "sourceDateEpoch": 1786986334
+ },
+ "counts": {
+  "critical": 8,
+  "dispositionRequiresReview": 41,
+  "dispositionUnknown": 3,
+  "high": 36
+ },
+ "dispositionVocabulary": [
+  "AFFECTED",
+  "NOT_AFFECTED",
+  "REQUIRES_REVIEW",
+  "UNKNOWN"
+ ],
+ "findings": [
+  {
+   "advisory": "GHSA-5cgq-3rg8-m6cv",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [],
+     "symbolsPresent": [
+      "hostKeyDB.IsRevoked"
+     ],
+     "vulnerableSymbolsNamed": 1,
+     "vulnerableSymbolsPresent": 1
+    },
+    "/usr/bin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "hostKeyDB.IsRevoked"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 1,
+     "vulnerableSymbolsPresent": 0
+    },
+    "/usr/sbin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [],
+     "symbolsPresent": [
+      "hostKeyDB.IsRevoked"
+     ],
+     "vulnerableSymbolsNamed": 1,
+     "vulnerableSymbolsPresent": 1
+    },
+    "/usr/sbin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "hostKeyDB.IsRevoked"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 1,
+     "vulnerableSymbolsPresent": 0
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "symbol-level: the advisory's named vulnerable functions were searched in each binary's bytes in both linker spellings (qualification/phase6/security/symbol_probe.py)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "severity": "Critical"
+  },
+  {
+   "advisory": "GHSA-89gr-r52h-f8rx",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [
+      "CertChecker.Authenticate",
+      "NewServerConn",
+      "connection.serverAuthenticate"
+     ],
+     "symbolsPresent": [
+      "CertChecker.CheckCert",
+      "CertChecker.CheckHostKey",
+      "Certificate.Verify",
+      "Dial",
+      "NewClientConn",
+      "skECDSAPublicKey.Verify",
+      "skEd25519PublicKey.Verify"
+     ],
+     "vulnerableSymbolsNamed": 10,
+     "vulnerableSymbolsPresent": 7
+    },
+    "/usr/bin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "CertChecker.Authenticate",
+      "CertChecker.CheckCert",
+      "CertChecker.CheckHostKey",
+      "Certificate.Verify",
+      "Dial",
+      "NewClientConn",
+      "NewServerConn",
+      "connection.serverAuthenticate",
+      "skECDSAPublicKey.Verify",
+      "skEd25519PublicKey.Verify"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 10,
+     "vulnerableSymbolsPresent": 0
+    },
+    "/usr/sbin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [
+      "CertChecker.Authenticate",
+      "NewServerConn",
+      "connection.serverAuthenticate"
+     ],
+     "symbolsPresent": [
+      "CertChecker.CheckCert",
+      "CertChecker.CheckHostKey",
+      "Certificate.Verify",
+      "Dial",
+      "NewClientConn",
+      "skECDSAPublicKey.Verify",
+      "skEd25519PublicKey.Verify"
+     ],
+     "vulnerableSymbolsNamed": 10,
+     "vulnerableSymbolsPresent": 7
+    },
+    "/usr/sbin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "CertChecker.Authenticate",
+      "CertChecker.CheckCert",
+      "CertChecker.CheckHostKey",
+      "Certificate.Verify",
+      "Dial",
+      "NewClientConn",
+      "NewServerConn",
+      "connection.serverAuthenticate",
+      "skECDSAPublicKey.Verify",
+      "skEd25519PublicKey.Verify"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 10,
+     "vulnerableSymbolsPresent": 0
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "symbol-level: the advisory's named vulnerable functions were searched in each binary's bytes in both linker spellings (qualification/phase6/security/symbol_probe.py)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "severity": "Critical"
+  },
+  {
+   "advisory": "GHSA-f5wc-c3c7-36mc",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [],
+     "symbolsPresent": [
+      "client.Add",
+      "keyring.Add"
+     ],
+     "vulnerableSymbolsNamed": 2,
+     "vulnerableSymbolsPresent": 2
+    },
+    "/usr/bin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "client.Add",
+      "keyring.Add"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 2,
+     "vulnerableSymbolsPresent": 0
+    },
+    "/usr/sbin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [],
+     "symbolsPresent": [
+      "client.Add",
+      "keyring.Add"
+     ],
+     "vulnerableSymbolsNamed": 2,
+     "vulnerableSymbolsPresent": 2
+    },
+    "/usr/sbin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "client.Add",
+      "keyring.Add"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 2,
+     "vulnerableSymbolsPresent": 0
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "symbol-level: the advisory's named vulnerable functions were searched in each binary's bytes in both linker spellings (qualification/phase6/security/symbol_probe.py)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "severity": "Critical"
+  },
+  {
+   "advisory": "GHSA-jppx-rxg9-jmrx",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [],
+     "symbolsPresent": [
+      "keyring.Add"
+     ],
+     "vulnerableSymbolsNamed": 1,
+     "vulnerableSymbolsPresent": 1
+    },
+    "/usr/bin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "keyring.Add"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 1,
+     "vulnerableSymbolsPresent": 0
+    },
+    "/usr/sbin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [],
+     "symbolsPresent": [
+      "keyring.Add"
+     ],
+     "vulnerableSymbolsNamed": 1,
+     "vulnerableSymbolsPresent": 1
+    },
+    "/usr/sbin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "keyring.Add"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 1,
+     "vulnerableSymbolsPresent": 0
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "symbol-level: the advisory's named vulnerable functions were searched in each binary's bytes in both linker spellings (qualification/phase6/security/symbol_probe.py)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "severity": "Critical"
+  },
+  {
+   "advisory": "GHSA-p77j-4mvh-x3m3",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "embeddedVersions": [
+      "v1.72.2"
+     ],
+     "fixedVersion": "v1.73.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [],
+     "symbolsPresent": [
+      "Server.Serve",
+      "Server.ServeHTTP",
+      "Server.handleStream"
+     ],
+     "vulnerableSymbolsNamed": 3,
+     "vulnerableSymbolsPresent": 3
+    },
+    "/usr/bin/skopeo": {
+     "embeddedVersions": [
+      "v1.79.3"
+     ],
+     "fixedVersion": "v1.73.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [],
+     "symbolsPresent": [
+      "Server.Serve",
+      "Server.ServeHTTP",
+      "Server.handleStream"
+     ],
+     "vulnerableSymbolsNamed": 3,
+     "vulnerableSymbolsPresent": 3
+    },
+    "/usr/sbin/podman": {
+     "embeddedVersions": [
+      "v1.72.2"
+     ],
+     "fixedVersion": "v1.73.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [],
+     "symbolsPresent": [
+      "Server.Serve",
+      "Server.ServeHTTP",
+      "Server.handleStream"
+     ],
+     "vulnerableSymbolsNamed": 3,
+     "vulnerableSymbolsPresent": 3
+    },
+    "/usr/sbin/skopeo": {
+     "embeddedVersions": [
+      "v1.79.3"
+     ],
+     "fixedVersion": "v1.73.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [],
+     "symbolsPresent": [
+      "Server.Serve",
+      "Server.ServeHTTP",
+      "Server.handleStream"
+     ],
+     "vulnerableSymbolsNamed": 3,
+     "vulnerableSymbolsPresent": 3
+    }
+   },
+   "affectedPackages": [
+    "google.golang.org/grpc v1.72.2"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "symbol-level: the advisory's named vulnerable functions were searched in each binary's bytes in both linker spellings (qualification/phase6/security/symbol_probe.py)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "1.79.3"
+   ],
+   "severity": "Critical"
+  },
+  {
+   "advisory": "GHSA-rm3j-f69w-wqmq",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [
+      "NewServerConn",
+      "Session.CombinedOutput",
+      "Session.Output",
+      "Session.Shell"
+     ],
+     "symbolsPresent": [
+      "Dial",
+      "NewClientConn",
+      "Session.Run",
+      "Session.Start",
+      "channel.Write",
+      "channel.WriteExtended",
+      "curve25519sha256.Client",
+      "curve25519sha256.Server",
+      "dhGEXSHA.Client",
+      "dhGEXSHA.Server",
+      "dhGroup.Client",
+      "dhGroup.Server",
+      "ecdh.Client",
+      "ecdh.Server",
+      "extChannel.Write",
+      "mlkem768WithCurve25519sha256.Client",
+      "mlkem768WithCurve25519sha256.Server"
+     ],
+     "vulnerableSymbolsNamed": 21,
+     "vulnerableSymbolsPresent": 17
+    },
+    "/usr/bin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "Dial",
+      "NewClientConn",
+      "NewServerConn",
+      "Session.CombinedOutput",
+      "Session.Output",
+      "Session.Run",
+      "Session.Shell",
+      "Session.Start",
+      "channel.Write",
+      "channel.WriteExtended",
+      "curve25519sha256.Client",
+      "curve25519sha256.Server",
+      "dhGEXSHA.Client",
+      "dhGEXSHA.Server",
+      "dhGroup.Client",
+      "dhGroup.Server",
+      "ecdh.Client",
+      "ecdh.Server",
+      "extChannel.Write",
+      "mlkem768WithCurve25519sha256.Client",
+      "mlkem768WithCurve25519sha256.Server"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 21,
+     "vulnerableSymbolsPresent": 0
+    },
+    "/usr/sbin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [
+      "NewServerConn",
+      "Session.CombinedOutput",
+      "Session.Output",
+      "Session.Shell"
+     ],
+     "symbolsPresent": [
+      "Dial",
+      "NewClientConn",
+      "Session.Run",
+      "Session.Start",
+      "channel.Write",
+      "channel.WriteExtended",
+      "curve25519sha256.Client",
+      "curve25519sha256.Server",
+      "dhGEXSHA.Client",
+      "dhGEXSHA.Server",
+      "dhGroup.Client",
+      "dhGroup.Server",
+      "ecdh.Client",
+      "ecdh.Server",
+      "extChannel.Write",
+      "mlkem768WithCurve25519sha256.Client",
+      "mlkem768WithCurve25519sha256.Server"
+     ],
+     "vulnerableSymbolsNamed": 21,
+     "vulnerableSymbolsPresent": 17
+    },
+    "/usr/sbin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "Dial",
+      "NewClientConn",
+      "NewServerConn",
+      "Session.CombinedOutput",
+      "Session.Output",
+      "Session.Run",
+      "Session.Shell",
+      "Session.Start",
+      "channel.Write",
+      "channel.WriteExtended",
+      "curve25519sha256.Client",
+      "curve25519sha256.Server",
+      "dhGEXSHA.Client",
+      "dhGEXSHA.Server",
+      "dhGroup.Client",
+      "dhGroup.Server",
+      "ecdh.Client",
+      "ecdh.Server",
+      "extChannel.Write",
+      "mlkem768WithCurve25519sha256.Client",
+      "mlkem768WithCurve25519sha256.Server"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 21,
+     "vulnerableSymbolsPresent": 0
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "symbol-level: the advisory's named vulnerable functions were searched in each binary's bytes in both linker spellings (qualification/phase6/security/symbol_probe.py)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "severity": "Critical"
+  },
+  {
+   "advisory": "GHSA-vgwf-h737-ff37",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [
+      "Client.Listen",
+      "Client.ListenTCP",
+      "Client.ListenUnix",
+      "NewServerConn",
+      "Session.CombinedOutput",
+      "Session.Output",
+      "Session.RequestPty",
+      "Session.SendRequest",
+      "Session.Setenv",
+      "Session.Shell",
+      "Session.Signal",
+      "Session.WindowChange",
+      "tcpListener.Close",
+      "unixListener.Close"
+     ],
+     "symbolsPresent": [
+      "Dial",
+      "NewClientConn",
+      "Session.RequestSubsystem",
+      "Session.Run",
+      "Session.Start",
+      "channel.SendRequest",
+      "channel.handlePacket",
+      "mux.SendRequest",
+      "mux.handleGlobalPacket"
+     ],
+     "vulnerableSymbolsNamed": 23,
+     "vulnerableSymbolsPresent": 9
+    },
+    "/usr/bin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "Client.Listen",
+      "Client.ListenTCP",
+      "Client.ListenUnix",
+      "Dial",
+      "NewClientConn",
+      "NewServerConn",
+      "Session.CombinedOutput",
+      "Session.Output",
+      "Session.RequestPty",
+      "Session.RequestSubsystem",
+      "Session.Run",
+      "Session.SendRequest",
+      "Session.Setenv",
+      "Session.Shell",
+      "Session.Signal",
+      "Session.Start",
+      "Session.WindowChange",
+      "channel.SendRequest",
+      "channel.handlePacket",
+      "mux.SendRequest",
+      "mux.handleGlobalPacket",
+      "tcpListener.Close",
+      "unixListener.Close"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 23,
+     "vulnerableSymbolsPresent": 0
+    },
+    "/usr/sbin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [
+      "Client.Listen",
+      "Client.ListenTCP",
+      "Client.ListenUnix",
+      "NewServerConn",
+      "Session.CombinedOutput",
+      "Session.Output",
+      "Session.RequestPty",
+      "Session.SendRequest",
+      "Session.Setenv",
+      "Session.Shell",
+      "Session.Signal",
+      "Session.WindowChange",
+      "tcpListener.Close",
+      "unixListener.Close"
+     ],
+     "symbolsPresent": [
+      "Dial",
+      "NewClientConn",
+      "Session.RequestSubsystem",
+      "Session.Run",
+      "Session.Start",
+      "channel.SendRequest",
+      "channel.handlePacket",
+      "mux.SendRequest",
+      "mux.handleGlobalPacket"
+     ],
+     "vulnerableSymbolsNamed": 23,
+     "vulnerableSymbolsPresent": 9
+    },
+    "/usr/sbin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "Client.Listen",
+      "Client.ListenTCP",
+      "Client.ListenUnix",
+      "Dial",
+      "NewClientConn",
+      "NewServerConn",
+      "Session.CombinedOutput",
+      "Session.Output",
+      "Session.RequestPty",
+      "Session.RequestSubsystem",
+      "Session.Run",
+      "Session.SendRequest",
+      "Session.Setenv",
+      "Session.Shell",
+      "Session.Signal",
+      "Session.Start",
+      "Session.WindowChange",
+      "channel.SendRequest",
+      "channel.handlePacket",
+      "mux.SendRequest",
+      "mux.handleGlobalPacket",
+      "tcpListener.Close",
+      "unixListener.Close"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 23,
+     "vulnerableSymbolsPresent": 0
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "symbol-level: the advisory's named vulnerable functions were searched in each binary's bytes in both linker spellings (qualification/phase6/security/symbol_probe.py)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "severity": "Critical"
+  },
+  {
+   "advisory": "GHSA-x527-x647-q7gg",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [
+      "NewServerConn",
+      "connection.serverAuthenticate"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 2,
+     "vulnerableSymbolsPresent": 0
+    },
+    "/usr/bin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "NewServerConn",
+      "connection.serverAuthenticate"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 2,
+     "vulnerableSymbolsPresent": 0
+    },
+    "/usr/sbin/podman": {
+     "embeddedVersions": [
+      "v0.53.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": true,
+     "symbolsAbsent": [
+      "NewServerConn",
+      "connection.serverAuthenticate"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 2,
+     "vulnerableSymbolsPresent": 0
+    },
+    "/usr/sbin/skopeo": {
+     "embeddedVersions": [
+      "v0.46.0"
+     ],
+     "fixedVersion": "v0.52.0",
+     "importPathPresent": false,
+     "symbolsAbsent": [
+      "NewServerConn",
+      "connection.serverAuthenticate"
+     ],
+     "symbolsPresent": [],
+     "vulnerableSymbolsNamed": 2,
+     "vulnerableSymbolsPresent": 0
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "symbol-level: the advisory's named vulnerable functions were searched in each binary's bytes in both linker spellings (qualification/phase6/security/symbol_probe.py)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "severity": "Critical"
+  },
+  {
+   "advisory": "CVE-2020-27815",
+   "affectedBinaries": {},
+   "affectedPackages": [
+    "linux-kernel 7.1.5-201.fc44.x86_64"
+   ],
+   "artifactTypes": [
+    "UnknownPackage"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "the scanner mapped this advisory to no package type; the installed kernel is named in affectedPackages and its version exceeds every listed fixed version - recorded as a fact for the reviewer, decided by nobody here",
+   "fixedVersions": [
+    "4.14.213",
+    "4.19.164",
+    "4.9.249",
+    "5.10.4",
+    "5.4.86"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-11822",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "sqlite-libs 3.51.2-1.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "sqlite-libs": {
+     "installedVersion": "3.51.2-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "sqlite-libs|(none)|3.51.2|1.fc44|x86_64"
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "0:3.51.2-2.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-11824",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "sqlite-libs 3.51.2-1.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "sqlite-libs": {
+     "installedVersion": "3.51.2-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "sqlite-libs|(none)|3.51.2|1.fc44|x86_64"
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "0:3.51.2-2.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-11856",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "curl 8.18.0-7.fc44",
+    "libcurl 8.18.0-7.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "curl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "curl|(none)|8.18.0|7.fc44|x86_64"
+    },
+    "libcurl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libcurl|(none)|8.18.0|7.fc44|x86_64"
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "0:8.18.0-8.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-52791",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "fuse-overlayfs 1.16-2.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "fuse-overlayfs": {
+     "installedVersion": "1.16-2.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "fuse-overlayfs|(none)|1.16|2.fc44|x86_64"
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "0:1.17-1.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-58216",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "libldb 2:4.24.4-1.fc44",
+    "libsmbclient 2:4.24.4-1.fc44",
+    "libwbclient 2:4.24.4-1.fc44",
+    "samba-client-libs 2:4.24.4-1.fc44",
+    "samba-common 2:4.24.4-1.fc44",
+    "samba-core-libs 2:4.24.4-1.fc44",
+    "samba-ndr-libs 2:4.24.4-1.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "libldb": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libldb|2|4.24.4|1.fc44|x86_64"
+    },
+    "libsmbclient": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libsmbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "libwbclient": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libwbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-client-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "samba-client-libs|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-common": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "samba-common|2|4.24.4|1.fc44|noarch"
+    },
+    "samba-core-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    },
+    "samba-ndr-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "2:4.24.5-1.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-58218",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "libldb 2:4.24.4-1.fc44",
+    "libsmbclient 2:4.24.4-1.fc44",
+    "libwbclient 2:4.24.4-1.fc44",
+    "samba-client-libs 2:4.24.4-1.fc44",
+    "samba-common 2:4.24.4-1.fc44",
+    "samba-core-libs 2:4.24.4-1.fc44",
+    "samba-ndr-libs 2:4.24.4-1.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "libldb": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libldb|2|4.24.4|1.fc44|x86_64"
+    },
+    "libsmbclient": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libsmbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "libwbclient": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libwbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-client-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "samba-client-libs|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-common": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "samba-common|2|4.24.4|1.fc44|noarch"
+    },
+    "samba-core-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    },
+    "samba-ndr-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "2:4.24.5-1.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-58221",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "libldb 2:4.24.4-1.fc44",
+    "libsmbclient 2:4.24.4-1.fc44",
+    "libwbclient 2:4.24.4-1.fc44",
+    "samba-client-libs 2:4.24.4-1.fc44",
+    "samba-common 2:4.24.4-1.fc44",
+    "samba-core-libs 2:4.24.4-1.fc44",
+    "samba-ndr-libs 2:4.24.4-1.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "libldb": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libldb|2|4.24.4|1.fc44|x86_64"
+    },
+    "libsmbclient": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libsmbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "libwbclient": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libwbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-client-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "samba-client-libs|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-common": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "samba-common|2|4.24.4|1.fc44|noarch"
+    },
+    "samba-core-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    },
+    "samba-ndr-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "2:4.24.5-1.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-58222",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "libldb 2:4.24.4-1.fc44",
+    "libsmbclient 2:4.24.4-1.fc44",
+    "libwbclient 2:4.24.4-1.fc44",
+    "samba-client-libs 2:4.24.4-1.fc44",
+    "samba-common 2:4.24.4-1.fc44",
+    "samba-core-libs 2:4.24.4-1.fc44",
+    "samba-ndr-libs 2:4.24.4-1.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "libldb": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libldb|2|4.24.4|1.fc44|x86_64"
+    },
+    "libsmbclient": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libsmbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "libwbclient": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libwbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-client-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "samba-client-libs|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-common": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "samba-common|2|4.24.4|1.fc44|noarch"
+    },
+    "samba-core-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    },
+    "samba-ndr-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "2:4.24.5-1.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-6949",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "libldb 2:4.24.4-1.fc44",
+    "libsmbclient 2:4.24.4-1.fc44",
+    "libwbclient 2:4.24.4-1.fc44",
+    "samba-client-libs 2:4.24.4-1.fc44",
+    "samba-common 2:4.24.4-1.fc44",
+    "samba-core-libs 2:4.24.4-1.fc44",
+    "samba-ndr-libs 2:4.24.4-1.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "libldb": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libldb|2|4.24.4|1.fc44|x86_64"
+    },
+    "libsmbclient": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libsmbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "libwbclient": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libwbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-client-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "samba-client-libs|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-common": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "samba-common|2|4.24.4|1.fc44|noarch"
+    },
+    "samba-core-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    },
+    "samba-ndr-libs": {
+     "installedVersion": "2:4.24.4-1.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "2:4.24.5-1.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-7009",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "curl 8.18.0-7.fc44",
+    "libcurl 8.18.0-7.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "curl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "curl|(none)|8.18.0|7.fc44|x86_64"
+    },
+    "libcurl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libcurl|(none)|8.18.0|7.fc44|x86_64"
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "0:8.18.0-8.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-7168",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "curl 8.18.0-7.fc44",
+    "libcurl 8.18.0-7.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "curl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "curl|(none)|8.18.0|7.fc44|x86_64"
+    },
+    "libcurl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libcurl|(none)|8.18.0|7.fc44|x86_64"
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "0:8.18.0-8.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-8924",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "curl 8.18.0-7.fc44",
+    "libcurl 8.18.0-7.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "curl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "curl|(none)|8.18.0|7.fc44|x86_64"
+    },
+    "libcurl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libcurl|(none)|8.18.0|7.fc44|x86_64"
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "0:8.18.0-8.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-8926",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "curl 8.18.0-7.fc44",
+    "libcurl 8.18.0-7.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "curl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "curl|(none)|8.18.0|7.fc44|x86_64"
+    },
+    "libcurl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libcurl|(none)|8.18.0|7.fc44|x86_64"
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "0:8.18.0-8.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "CVE-2026-9547",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "curl 8.18.0-7.fc44",
+    "libcurl 8.18.0-7.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "curl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "curl|(none)|8.18.0|7.fc44|x86_64"
+    },
+    "libcurl": {
+     "installedVersion": "8.18.0-7.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "libcurl|(none)|8.18.0|7.fc44|x86_64"
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "0:8.18.0-8.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "FEDORA-2026-c3d9971785",
+   "affectedBinaries": {
+    "rpm-owned files": "the package's own binary/library set; per-file attribution not derived - the rpm record above is the unit"
+   },
+   "affectedPackages": [
+    "kernel 7.1.5-201.fc44",
+    "kernel-core 7.1.5-201.fc44",
+    "kernel-modules 7.1.5-201.fc44",
+    "kernel-modules-core 7.1.5-201.fc44"
+   ],
+   "affectedPackagesDetail": {
+    "kernel": {
+     "installedVersion": "7.1.5-201.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "kernel|(none)|7.1.5|201.fc44|x86_64"
+    },
+    "kernel-core": {
+     "installedVersion": "7.1.5-201.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "kernel-core|(none)|7.1.5|201.fc44|x86_64"
+    },
+    "kernel-modules": {
+     "installedVersion": "7.1.5-201.fc44",
+     "presenceMeasured": true,
+     "rpmRecord": "kernel-modules|(none)|7.1.5|201.fc44|x86_64"
+    },
+    "kernel-modules-core": {
+     "installedVersion": "7.1.5-201.fc44",
+     "presenceMeasured": null,
+     "rpmRecord": null
+    }
+   },
+   "artifactTypes": [
+    "rpm"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "installed on the image, confirmed by rpm query in a container from the image (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "0:7.1.7-200.fc44"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-4c29-8rgm-jvjj",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "github.com/moby/buildkit": {
+      "installedVersion": "v0.25.1",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "github.com/moby/buildkit v0.25.1"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.28.1"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-4vrq-3vrq-g6gg",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "github.com/moby/buildkit": {
+      "installedVersion": "v0.25.1",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "github.com/moby/buildkit v0.25.1"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.28.1"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-65gg-3w2w-hr4h",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "github.com/containers/podman/v5": {
+      "installedVersion": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "versionVerdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    },
+    "/usr/libexec/podman/quadlet": {
+     "github.com/containers/podman/v5": {
+      "installedVersion": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "versionVerdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    },
+    "/usr/libexec/podman/rootlessport": {
+     "github.com/containers/podman/v5": {
+      "installedVersion": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "versionVerdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    }
+   },
+   "affectedPackages": [
+    "github.com/containers/podman/v5 v5.0.0-20260626000000-d5ac989fc69c+dirty"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "UNKNOWN",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "5.5.2"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-7gcm-g887-7qv7",
+   "affectedBinaries": {
+    "python distributions": {
+     "google.protobuf": [
+      "/usr/lib/python3.14/site-packages/google/protobuf"
+     ],
+     "protobuf": [
+      "/usr/lib/python3.14/site-packages/protobuf-3.19.6-py3.14-nspkg.pth",
+      "/usr/lib/python3.14/site-packages/protobuf-3.19.6.dist-info"
+     ]
+    }
+   },
+   "affectedPackages": [
+    "protobuf 3.19.6"
+   ],
+   "artifactTypes": [
+    "python"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "distribution present under /usr/lib/python3.14/site-packages (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "5.29.6"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-8qvm-5x2c-j2w7",
+   "affectedBinaries": {
+    "python distributions": {
+     "google.protobuf": [
+      "/usr/lib/python3.14/site-packages/google/protobuf"
+     ],
+     "protobuf": [
+      "/usr/lib/python3.14/site-packages/protobuf-3.19.6-py3.14-nspkg.pth",
+      "/usr/lib/python3.14/site-packages/protobuf-3.19.6.dist-info"
+     ]
+    }
+   },
+   "affectedPackages": [
+    "protobuf 3.19.6"
+   ],
+   "artifactTypes": [
+    "python"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available",
+   "exposure": "distribution present under /usr/lib/python3.14/site-packages (Phase 6 exposure probe)",
+   "fixedVersions": [
+    "4.25.8"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-cgrx-mc8f-2prm",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "github.com/opencontainers/selinux": {
+      "installedVersion": "v1.13.1",
+      "versionVerdict": "AT_OR_ABOVE_FIX"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "github.com/opencontainers/selinux": {
+      "installedVersion": "v1.12.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "github.com/opencontainers/selinux v1.12.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "1.13.0"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-f5mr-q85p-6hh6",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "github.com/sigstore/fulcio": {
+      "installedVersion": "v1.7.1",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "github.com/sigstore/fulcio": {
+      "installedVersion": "v1.7.1",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "github.com/sigstore/fulcio v1.7.1"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "1.8.6"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-f83f-xpx7-ffpw",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "github.com/sigstore/fulcio": {
+      "installedVersion": "v1.7.1",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "github.com/sigstore/fulcio": {
+      "installedVersion": "v1.7.1",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "github.com/sigstore/fulcio v1.7.1"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "1.8.3"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-hrxh-6v49-42gf",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "google.golang.org/grpc": {
+      "installedVersion": "v1.72.2",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "google.golang.org/grpc": {
+      "installedVersion": "v1.79.3",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "google.golang.org/grpc v1.72.2",
+    "google.golang.org/grpc v1.79.3"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "1.82.1"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-mh2q-q3fh-2475",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "go.opentelemetry.io/otel": {
+      "installedVersion": "v1.36.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "go.opentelemetry.io/otel": {
+      "installedVersion": "v1.39.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "go.opentelemetry.io/otel v1.36.0",
+    "go.opentelemetry.io/otel v1.39.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "1.41.0"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-q4h4-gmj2-qvw2",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/crypto": {
+      "installedVersion": "v0.53.0",
+      "versionVerdict": "AT_OR_ABOVE_FIX"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/crypto": {
+      "installedVersion": "v0.46.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-w879-237q-wc7r",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/crypto": {
+      "installedVersion": "v0.53.0",
+      "versionVerdict": "AT_OR_ABOVE_FIX"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/crypto": {
+      "installedVersion": "v0.46.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-wp3j-xq48-xpjw",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "github.com/containers/podman/v5": {
+      "installedVersion": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "versionVerdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    },
+    "/usr/libexec/podman/quadlet": {
+     "github.com/containers/podman/v5": {
+      "installedVersion": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "versionVerdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    },
+    "/usr/libexec/podman/rootlessport": {
+     "github.com/containers/podman/v5": {
+      "installedVersion": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "versionVerdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    }
+   },
+   "affectedPackages": [
+    "github.com/containers/podman/v5 v5.0.0-20260626000000-d5ac989fc69c+dirty"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "UNKNOWN",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "5.6.1"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GHSA-x744-4wpc-v9h2",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "github.com/docker/docker": {
+      "installedVersion": "v28.5.1+incompatible",
+      "versionVerdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "github.com/docker/docker": {
+      "installedVersion": "v28.5.1+incompatible",
+      "versionVerdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    }
+   },
+   "affectedPackages": [
+    "github.com/docker/docker v28.5.1+incompatible"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "UNKNOWN",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "29.3.1"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GO-2026-4918",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/net": {
+      "installedVersion": "v0.55.0",
+      "versionVerdict": "AT_OR_ABOVE_FIX"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/net": {
+      "installedVersion": "v0.48.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/net v0.48.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.53.0"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GO-2026-5026",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/net": {
+      "installedVersion": "v0.55.0",
+      "versionVerdict": "AT_OR_ABOVE_FIX"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/net": {
+      "installedVersion": "v0.48.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/net v0.48.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.55.0"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GO-2026-5942",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/net": {
+      "installedVersion": "v0.55.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/net": {
+      "installedVersion": "v0.48.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/net v0.48.0",
+    "golang.org/x/net v0.55.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.56.0"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GO-2026-5970",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/text": {
+      "installedVersion": "v0.38.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/text": {
+      "installedVersion": "v0.32.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/text v0.21.0",
+    "golang.org/x/text v0.32.0",
+    "golang.org/x/text v0.38.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.39.0"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GO-2026-6179",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/mod": {
+      "installedVersion": "v0.36.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/mod v0.20.0",
+    "golang.org/x/mod v0.36.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.40.0"
+   ],
+   "severity": "High"
+  },
+  {
+   "advisory": "GO-2026-6180",
+   "affectedBinaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/mod": {
+      "installedVersion": "v0.36.0",
+      "versionVerdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "affectedPackages": [
+    "golang.org/x/mod v0.20.0",
+    "golang.org/x/mod v0.36.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "disposition": "REQUIRES_REVIEW",
+   "exploitability": "none available (symbols not named in shipped evidence for High findings)",
+   "exposure": "modules embedded in the named binaries; the binaries are present on the image. Reachability is the reviewer's question - see qualification/phase6/security/REVIEW_PACKAGE.md section 4 for the one advisory (grpc server-side) where the project explicitly offers no view",
+   "fixedVersions": [
+    "0.40.0"
+   ],
+   "severity": "High"
+  }
+ ],
+ "purpose": "independent security review of the frozen Alpha candidate",
+ "reproduction": {
+  "criticalSymbols": "qualification/phase6/security/evidence/symbols.json + symbol_probe.py",
+  "exposure": "qualification/phase6/security/evidence/exposure.json + exposure_probe.py",
+  "inventory": "qualification/phase5/security/candidate-disposition-matrix.json",
+  "perBinaryHighAnalysis": "qualification/phase7/security/high-go-version-analysis.json + analyze_high_go.py (deterministic)",
+  "thisPackage": "qualification/phase8/security-review/build_package.py (deterministic; rerun and diff)"
+ },
+ "schemaVersion": 1
+}
