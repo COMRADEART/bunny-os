@@ -15,7 +15,7 @@
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-cd "${root}"
+cd "${root}" || exit 1
 
 victim="qualification/phase5/update/rollback-boot-parity.json"
 planted="qualification/phase6/negative-control-planted.tmp"
