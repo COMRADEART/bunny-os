@@ -1,0 +1,30 @@
+{
+ "schemaVersion": 1,
+ "testerId": "T-NNN",
+ "artifactDigest": "<sha256 of the ISO, computed by the tester on their machine>",
+ "journey": "A|B|C|D|E|exploratory",
+ "environment": {
+  "kind": "vm|physical",
+  "detail": "hypervisor+version, or the PII-free hardware record fields"
+ },
+ "date": "YYYY-MM-DD",
+ "steps": [
+  {"name": "<protocol step>", "status": "COMPLETED|FAILED|SKIPPED", "notes": ""}
+ ],
+ "measured": [
+  {"what": "<crash|cpu|memory|boot|voice|trust|persistence|latency>", "value": "", "evidence": "<file/journal excerpt reference>"}
+ ],
+ "userReported": [
+  {"aboutStep": "<step>", "impression": "<the tester's words, kept as words>"}
+ ],
+ "findings": [
+  {
+   "description": "",
+   "category": "SECURITY|PRIVACY|DATA_LOSS|RELEASE_BLOCKER|ACCESSIBILITY|FUNCTIONAL|PERFORMANCE|UX|HARDWARE|HARNESS|ENVIRONMENT",
+   "severity": "critical|high|medium|low",
+   "reproductionConfidence": "CONFIRMED|LIKELY|REPORTED|UNREPRODUCED",
+   "reproduction": "",
+   "evidence": ""
+  }
+ ]
+}
