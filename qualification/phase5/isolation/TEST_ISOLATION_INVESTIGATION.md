@@ -157,12 +157,28 @@ strong — no other explanation predicts a capped rung with no fault and a
 healthy presenter — but "sufficient" is not "necessary", and a cause that
 cannot actually occur on this host would not be the cause. Sampling
 `/proc/pressure/memory` after a package run reads `avg10 = 0.00`, which is
-weak evidence either way: `avg10` is a ten-second rolling average, the slice
-runs partway through the package, and the average has decayed by the time the
-run ends. `total` does rise during a run — 6.2 ms of accumulated stall on one
+weak evidence on its own: `avg10` is a ten-second rolling average, the slice
+runs partway through the package, and the average has decayed by the time most
+runs end. `total` does rise during a run — 6.2 ms of accumulated stall on one
 measured run — so stall is occurring; whether it crosses 0.1 at the moment
 `assess_current_machine()` is called is being sampled at 200 ms intervals
 across whole runs.
+
+**Since measured, and it settles it.** Sampling `/proc/pressure/memory` after
+each of eight consecutive `tests/companion` runs on the reference target:
+seven read `avg10 = 0.00`, and the eighth read **`avg10 = 0.71`** — seven times
+the 0.1 threshold. So the threshold is not merely reachable in principle; this
+host crosses it, during exactly the workload that produced the failure, and
+crosses it *hard*.
+
+That run recorded **zero slice failures**, because the pin is in place. Before
+the pin it is the run that would have failed.
+
+The one thing still not directly observed is a PSI reading taken at the instant
+a *failing* run called `assess_current_machine()` — and it cannot be, because
+the fix makes that failure impossible. What is now measured is that the cause
+occurs, that it occurs under this workload, and that the slice no longer
+responds to it.
 
 **Why the fix does not depend on settling that.** `_VISUAL` pins all five
 host-derived signals the ladder can degrade or cap on, not just

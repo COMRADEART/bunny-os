@@ -44,91 +44,131 @@ refactor from doing so.
 
 ---
 
-## 2. Scope, stated first because it is the matrix's largest limitation
+## 2. The candidate, scanned
 
-**This matrix is not about the Alpha Release Candidate.**
+The first attempt at this matrix was built from the 2026-07-29 record, which is
+a scan of `localhost/bunny-os-beta:79bb99ddb39d` — **not the candidate**. A
+re-scan of `e906a48793d7` failed for want of disk: `grype podman:` hands the
+image to stereoscope, which writes every layer out as a tarball and needs tens
+of gigabytes against a 7.8 GB tmpfs and 7.9 GB free on the host volume.
+
+It succeeded on the second attempt by a different route. `podman create` +
+`podman mount` assembles the image's overlay **in place** and hands back a
+merged directory; `grype dir:` then reads the RPM database and the filesystem
+directly. Measured free space before, during and after: unchanged. **No copy,
+no tarball, no disk.**
 
 | | |
 | --- | --- |
-| Image | `localhost/bunny-os-beta:79bb99ddb39d` |
-| Source commit | `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8` |
-| Scanned | 2026-07-29T23:23:00Z, grype 0.116.1 |
-| **The candidate** | **`e906a48793d74544b39c14cc3e35e0654f5311e2`** |
+| Image | `localhost/bunny-os-beta:e906a48793d7` |
+| Image ID | `6f3bbb9af38dae1636ff5c02dc79b07d3b09774bcacddc15308ae8e80bf3c8b2` |
+| Candidate commit | `e906a48793d74544b39c14cc3e35e0654f5311e2` |
+| Scanner database | built 2026-08-17T06:19:33Z, `valid` |
+| Scope | `--only-fixed`, the same scope as `build/scripts/security-scan.sh` |
 
-A re-scan of the candidate was attempted in Phase 5 and **failed**:
+Evidence: `scan/candidate-fixed.json`, `scan/image-id.txt`,
+`scan/grype-version.txt`. Matrix: `candidate-disposition-matrix.json`,
+regenerable with `build_candidate_matrix.py`.
 
-    failed to catalog: an error occurred attempting to resolve
-    'localhost/bunny-os-beta:e906a48793d7': podman: unable to populate layer
-    cache … : no space left on device
+### The counting, because it is where a reader will go wrong
 
-The image is present in the builder's store and grype's database is current
-(built 2026-08-17T06:19:33Z, `valid`). What is absent is disk: the Windows host
-volume has 8.6 GB free, and grype's layer cache filled `/tmp` while expanding a
-6 GB image. The blocker is the same one that stops the Phase 5 build, and it is
-recorded in `RELEASE_GATES.md` §4.
+The scan reports **183 matches**. That is **not 183 vulnerabilities.**
 
-**The counts below must not be quoted as the candidate's.** Phase 4's own
-figure for the candidate — 59 fixable findings, 8 Critical and 28 High — comes
-from a `--only-fixed` scan and is a different measurement from this one.
+It is **56 distinct advisories**, each counted once per affected package.
+`FEDORA-2026-c53019ed4f` alone accounts for **15** of them, all from the same
+`rpmdb.sqlite` and all the same advisory. Five advisories account for 43
+matches between them.
+
+| | |
+| --- | ---: |
+| Raw matches | 183 |
+| Distinct advisories | **56** |
+| Distinct (advisory, package) pairs | 119 |
+
+By artifact type the raw matches split 89 `rpm`, 85 `go-module`, 7 `python`,
+2 `linux-kernel`.
+
+**Every figure below counts distinct advisories**, because that is the unit an
+independent reviewer dispositions. Quoting 183 would inflate the number more
+than threefold, and 183 is the first number anyone re-running the scan will
+see.
+
+### Result
+
+| Severity | Distinct advisories |
+| --- | ---: |
+| **Critical** | **1** |
+| High | 31 |
+| Medium | 19 |
+| Low | 5 |
+| **Total** | **56** |
+
+The single Critical is `GHSA-p77j-4mvh-x3m3` in `google.golang.org/grpc
+v1.72.2`, fixed upstream in 1.79.3 — a Go module linked into base-image
+binaries, which is the same class as every other finding here.
+
+### Against Phase 4's figure — a discrepancy, not a correction
+
+Phase 4 reports **"59 fixable findings (8 Critical, 28 High)"**.
+
+| | Total | Critical | High |
+| --- | ---: | ---: | ---: |
+| Phase 4 | 59 | 8 | 28 |
+| Measured here | 56 | **1** | 31 |
+
+The totals are close. **The Critical counts are not: 8 against 1.**
+
+**This is recorded as a discrepancy to resolve, not as a correction of Phase
+4.** Three things differ at once — the scanner database, the cataloguing method
+(`dir:` against `oci-archive:`), and possibly what Phase 4 counted — and with
+three variables moving, attributing the difference to any one of them would be
+a guess. Resolving it takes a single `oci-archive:` scan of this image, which
+takes disk this host does not have.
+
+It matters more than an ordinary counting question, because **Critical is the
+severity that cannot be dispositioned without an independent review**. Whether
+the candidate carries eight of them or one changes what that review costs.
+
+### One thing the scan does settle
+
+The identical scan of a **different** Bunny build,
+`localhost/bunny-os-beta:376acf0e076f` — different image ID, different commit —
+returns **identical counts**: 183 raw, 2 Critical, 106 High, 70 Medium, 5 Low.
+
+Two independently built images with the same vulnerability surface is exactly
+what "every finding comes from the base image" predicts, and it is here
+**demonstrated rather than asserted**. Nothing Bunny builds adds to this
+surface.
 
 ---
 
 ## 3. The matrix
 
-Full rows in `disposition-matrix.json`, regenerable with
-`python qualification/phase5/security/build_disposition_matrix.py`.
-
 | | Count |
 | --- | ---: |
-| Total findings | 37 |
-| Critical | 8 |
-| High | 16 |
-| Medium | 13 |
-| **Status `PENDING_REVIEW`** | **37** |
-| With a bounded reachability package prepared for the reviewer | 24 |
+| Distinct advisories | 56 |
+| **Status `PENDING_REVIEW`** | **56** |
 
-Every finding, without exception:
+Every row, without exception, for the reasons in §1.
 
-* comes from the base image (`fromBaseImage: true`, 37 of 37)
-* has **no network exposure** (`networkExposure: none`, 37 of 37)
-* is **not waiver-eligible** (`waiverEligible: false`, 37 of 37)
+### The Bunny impact column
 
-By runtime reachability: **35 installed-not-executed**, 2 executed-by-default
-(both `linux-kernel`, privilege level `kernel`).
+The candidate matrix records it as **not determined**, and that is deliberate.
+The measured reachability evidence — which binaries carry the module, whether
+any enabled unit reaches them, file modes, SELinux state — was derived for the
+2026-07-29 advisory set and covers 24 of those advisories with a bounded
+question package each. It has **not** been re-derived for these 56.
 
-By package, the concentration is stark: `golang.org/x/crypto` carries 13 of the
-37, `github.com/containers/podman/v5` a further 6. Two thirds of the matrix is
-a handful of Go modules linked into `podman`, `skopeo` and `bootc`.
-
-### The Bunny impact column, and what it is made of
-
-§17 asks for "Bunny impact". Every value in that column is read from a measured
-field, never inferred. For example, `GHSA-5cgq-3rg8-m6cv`:
-
-* **exploit prerequisites** — "A local user must invoke podman, skopeo, bootc
-  or toolbox and drive it to the affected code path; no unit is enabled that
-  reaches it automatically."
-* **mitigation** — "`/etc/systemd/system` contains no podman or bootc symlink,
-  `podman.socket` is not in `sockets.target.wants`, and
-  `bootc-fetch-apply-updates.timer` is not enabled. Binaries are 0755
-  root:root with no setuid bit. SELinux targeted policy is enforcing."
-
-Those are checks that were run, with the evidence files named
-(`evidence/reachability/beta-binaries.txt` and siblings). **They reduce
-exposure. They do not dispose of the finding**, and this matrix does not let
-them: the status stays `PENDING_REVIEW`.
+Carrying it across would have been the easy thing and the wrong one: an
+advisory that did not exist when that evidence was gathered would inherit a
+reachability answer nobody measured for it. The older matrix
+(`disposition-matrix.json`) keeps its evidence and its scope; this one says
+what it does not know.
 
 ### The owner column
 
-§17 asks for an owner. Every row reads:
-
-> unassigned — the project has one principal and the review must be independent
-> of them
-
-That is the honest entry. Intake *rejects any reviewer whose name or
-organisation matches a project principal*, so the owner of these rows cannot be
-the person who would otherwise be assigned them. Writing a name in that column
-would be writing a name that intake would refuse.
+Unchanged and unchangeable: *"unassigned — the project has one principal and
+the review must be independent of them"*.
 
 ---
 

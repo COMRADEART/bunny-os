@@ -46,7 +46,7 @@ payload reference is `localhost/bunny-os-beta:e906a48793d7` singly.
 
 ## 2. Changes made
 
-Seven commits, 49 files, +6269/−146.
+Eleven commits, 52 files, +7414/−146.
 
 | Commit | What |
 | --- | --- |
@@ -54,8 +54,10 @@ Seven commits, 49 files, +6269/−146.
 | `9a34ee81` | The wallpaper defect: root cause corrected and fixed, swept across all shipped SVGs |
 | `f830ca3a` | 153 tests recovered into the reference suite; feedback taxonomy extended |
 | `d548d100` | Poller instrumentation; the leading performance hypothesis measured and cleared |
-| `49cd25f8`, `8f862ea3` | The slice records *why* the selector degraded |
+| `49cd25f8`, `8f862ea3` | The slice records *why* the selector degraded — the diagnostic that found the cause |
 | `ea3d6bf9` | Security disposition, signing conformance, hardware track, feedback plan, gate tracker |
+| **`30f11a6d`** | **The isolation root cause: the host's own memory pressure, and the pin that closes it** |
+| `852fbdc3`, `fcba6def`, `e2b7bc6f` | This report, the cause, and what is proved against what is inferred |
 
 **No product behaviour was changed except two asset files.** The poller work
 adds measurement and changes no cadence; §10's warning against sacrificing
@@ -195,12 +197,28 @@ strong — no other explanation predicts a capped rung with no fault and a
 healthy presenter — but "sufficient" is not "necessary", and a cause that
 cannot actually occur on this host would not be the cause. Sampling
 `/proc/pressure/memory` after a package run reads `avg10 = 0.00`, which is
-weak evidence either way: `avg10` is a ten-second rolling average, the slice
-runs partway through the package, and the average has decayed by the time the
-run ends. `total` does rise during a run — 6.2 ms of accumulated stall on one
+weak evidence on its own: `avg10` is a ten-second rolling average, the slice
+runs partway through the package, and the average has decayed by the time most
+runs end. `total` does rise during a run — 6.2 ms of accumulated stall on one
 measured run — so stall is occurring; whether it crosses 0.1 at the moment
 `assess_current_machine()` is called is being sampled at 200 ms intervals
 across whole runs.
+
+**Since measured, and it settles it.** Sampling `/proc/pressure/memory` after
+each of eight consecutive `tests/companion` runs on the reference target:
+seven read `avg10 = 0.00`, and the eighth read **`avg10 = 0.71`** — seven times
+the 0.1 threshold. So the threshold is not merely reachable in principle; this
+host crosses it, during exactly the workload that produced the failure, and
+crosses it *hard*.
+
+That run recorded **zero slice failures**, because the pin is in place. Before
+the pin it is the run that would have failed.
+
+The one thing still not directly observed is a PSI reading taken at the instant
+a *failing* run called `assess_current_machine()` — and it cannot be, because
+the fix makes that failure impossible. What is now measured is that the cause
+occurs, that it occurs under this workload, and that the slice no longer
+responds to it.
 
 **Why the fix does not depend on settling that.** `_VISUAL` pins all five
 host-derived signals the ladder can degrade or cap on, not just
@@ -249,7 +267,7 @@ that guards a unit's `RuntimeDirectory`/`ReadWritePaths` pairing — the exact
 defect that produced 226/NAMESPACE. It had never executed in the suite.
 
 Both pass, which is the only reason this is a coverage finding and not a defect
-ledger. 5803 → 5969 discovered.
+ledger. 5803 → 5956 discovered at the time; 5979 now, with Phase 5's own tests.
 
 The project had already named this failure mode for hyphenated directories and
 repaired it by renaming them — the symptom. `tests/test_suite_coverage.py`
