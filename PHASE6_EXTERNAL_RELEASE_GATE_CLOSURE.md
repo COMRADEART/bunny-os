@@ -340,6 +340,33 @@ executed* into *passed by absence of failure*.
 
 Repository validation: **PASS**, 16 validators.
 
+### The evidence-immutability guard protects less than its name suggests
+
+`tests/companion/test_three_d_preservation.py` asserts that no file is added to
+an earlier phase's evidence tree. Phase 6 declared `qualification/phase6/` in
+its exempt list, exactly as phases 3, 4 and 5 each declared their own — the
+maintenance the guard is designed for.
+
+Negative-controlling that edit found something. A file staged under
+`qualification/phase5/` **does not fail the guard**, because
+`qualification/phase5/` is itself on the exempt list. Staging one under
+`qualification/tpm/` does fail it.
+
+The record was cut at `fa49380` and pins **4 676 files across thirteen trees**.
+Phase 4's, Phase 5's and now Phase 6's trees are declared later phases and are
+**not pinned by anything**. The guard's name promises more than its coverage
+delivers.
+
+**This does not weaken any Phase 6 claim, but it does change what supports one.**
+The statement that Phase 4 and Phase 5 evidence is unmodified rests on
+`git diff 0d5381c6..HEAD -- qualification/phase4 qualification/phase5` returning
+empty — not on this test, which would have passed either way.
+
+Recorded as a finding, not fixed. Extending the record to cover phases 4–6 is a
+change to a check during a release phase, and the argument for whether those
+trees *should* be pinned — they are still being written to — is the same
+argument the exempt list's own comments make.
+
 ---
 
 ## 17. Remaining limitations
@@ -364,8 +391,11 @@ Repository validation: **PASS**, 16 validators.
    released.
 10. **The refusal qualification ran in a container, not a booted system.** It
     does not exercise systemd activation, the timer, or a real network stack.
-11. **The Phase 5 build has no installation medium**, and no journey evidence.
-12. **Eleven known limitations L1–L11** carry forward unchanged.
+11. **The evidence-immutability guard does not cover phases 4, 5 or 6.** Their
+    trees are declared later phases and nothing pins them; the guard's record
+    ends at `fa49380`.
+12. **The Phase 5 build has no installation medium**, and no journey evidence.
+13. **Eleven known limitations L1–L11** carry forward unchanged.
 
 ---
 

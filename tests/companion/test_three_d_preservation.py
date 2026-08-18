@@ -72,6 +72,15 @@ _PHASES_AFTER_THE_RECORD = (
     "qualification/phase4/",
     # Phase 5's baseline record and evidence.
     "qualification/phase5/",
+    # Phase 6's, for the same reason. Its tree is where the external-gate work
+    # lives: the baseline freeze, the blocking conditions, the update-refusal
+    # qualification and its negative control, the security review package, and
+    # three hardware journeys whose expectations were written before any machine
+    # existed. Note that Phase 6 also carries a *correction* to Phase 5's
+    # security evidence — and it is a correction record under this prefix, not
+    # an edit to Phase 5's files, which is why the byte-identity check above
+    # still passes unchanged.
+    "qualification/phase6/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is
