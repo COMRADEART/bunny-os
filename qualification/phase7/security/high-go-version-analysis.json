@@ -1,0 +1,455 @@
+{
+ "counts": {
+  "affectedByVersionSomewhere": 15,
+  "goHighFindings": 18,
+  "notEmbeddedInAnyGoBinary": 0,
+  "undeterminedPseudoVersions": 3
+ },
+ "deployCommit": "1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a",
+ "inputs": {
+  "buildinfo": "qualification/phase7/security/go-binaries-buildinfo.json",
+  "inventory": "qualification/phase5/security/candidate-disposition-matrix.json"
+ },
+ "rows": [
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "github.com/moby/buildkit": {
+      "embedded": "v0.25.1",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GHSA-4c29-8rgm-jvjj",
+   "fixedVersions": [
+    "0.28.1"
+   ],
+   "modules": [
+    "github.com/moby/buildkit"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "github.com/moby/buildkit": {
+      "embedded": "v0.25.1",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GHSA-4vrq-3vrq-g6gg",
+   "fixedVersions": [
+    "0.28.1"
+   ],
+   "modules": [
+    "github.com/moby/buildkit"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "github.com/containers/podman/v5": {
+      "embedded": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "verdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    },
+    "/usr/libexec/podman/quadlet": {
+     "github.com/containers/podman/v5": {
+      "embedded": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "verdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    },
+    "/usr/libexec/podman/rootlessport": {
+     "github.com/containers/podman/v5": {
+      "embedded": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "verdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    }
+   },
+   "finding": "GHSA-65gg-3w2w-hr4h",
+   "fixedVersions": [
+    "5.5.2"
+   ],
+   "modules": [
+    "github.com/containers/podman/v5"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "github.com/opencontainers/selinux": {
+      "embedded": "v1.13.1",
+      "verdict": "AT_OR_ABOVE_FIX"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "github.com/opencontainers/selinux": {
+      "embedded": "v1.12.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GHSA-cgrx-mc8f-2prm",
+   "fixedVersions": [
+    "1.13.0"
+   ],
+   "modules": [
+    "github.com/opencontainers/selinux"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "github.com/sigstore/fulcio": {
+      "embedded": "v1.7.1",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "github.com/sigstore/fulcio": {
+      "embedded": "v1.7.1",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GHSA-f5mr-q85p-6hh6",
+   "fixedVersions": [
+    "1.8.6"
+   ],
+   "modules": [
+    "github.com/sigstore/fulcio"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "github.com/sigstore/fulcio": {
+      "embedded": "v1.7.1",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "github.com/sigstore/fulcio": {
+      "embedded": "v1.7.1",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GHSA-f83f-xpx7-ffpw",
+   "fixedVersions": [
+    "1.8.3"
+   ],
+   "modules": [
+    "github.com/sigstore/fulcio"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "google.golang.org/grpc": {
+      "embedded": "v1.72.2",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "google.golang.org/grpc": {
+      "embedded": "v1.79.3",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GHSA-hrxh-6v49-42gf",
+   "fixedVersions": [
+    "1.82.1"
+   ],
+   "modules": [
+    "google.golang.org/grpc"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "go.opentelemetry.io/otel": {
+      "embedded": "v1.36.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "go.opentelemetry.io/otel": {
+      "embedded": "v1.39.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GHSA-mh2q-q3fh-2475",
+   "fixedVersions": [
+    "1.41.0"
+   ],
+   "modules": [
+    "go.opentelemetry.io/otel"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/crypto": {
+      "embedded": "v0.53.0",
+      "verdict": "AT_OR_ABOVE_FIX"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/crypto": {
+      "embedded": "v0.46.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GHSA-q4h4-gmj2-qvw2",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "modules": [
+    "golang.org/x/crypto"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/crypto": {
+      "embedded": "v0.53.0",
+      "verdict": "AT_OR_ABOVE_FIX"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/crypto": {
+      "embedded": "v0.46.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GHSA-w879-237q-wc7r",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "modules": [
+    "golang.org/x/crypto"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "github.com/containers/podman/v5": {
+      "embedded": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "verdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    },
+    "/usr/libexec/podman/quadlet": {
+     "github.com/containers/podman/v5": {
+      "embedded": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "verdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    },
+    "/usr/libexec/podman/rootlessport": {
+     "github.com/containers/podman/v5": {
+      "embedded": "v5.0.0-20260626000000-d5ac989fc69c+dirty",
+      "verdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    }
+   },
+   "finding": "GHSA-wp3j-xq48-xpjw",
+   "fixedVersions": [
+    "5.6.1"
+   ],
+   "modules": [
+    "github.com/containers/podman/v5"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "github.com/docker/docker": {
+      "embedded": "v28.5.1+incompatible",
+      "verdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "github.com/docker/docker": {
+      "embedded": "v28.5.1+incompatible",
+      "verdict": "UNDETERMINED_BY_VERSION (pseudo-version; needs commit-level comparison)"
+     }
+    }
+   },
+   "finding": "GHSA-x744-4wpc-v9h2",
+   "fixedVersions": [
+    "29.3.1"
+   ],
+   "modules": [
+    "github.com/docker/docker"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/net": {
+      "embedded": "v0.55.0",
+      "verdict": "AT_OR_ABOVE_FIX"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/net": {
+      "embedded": "v0.48.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GO-2026-4918",
+   "fixedVersions": [
+    "0.53.0"
+   ],
+   "modules": [
+    "golang.org/x/net"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/net": {
+      "embedded": "v0.55.0",
+      "verdict": "AT_OR_ABOVE_FIX"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/net": {
+      "embedded": "v0.48.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GO-2026-5026",
+   "fixedVersions": [
+    "0.55.0"
+   ],
+   "modules": [
+    "golang.org/x/net"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/net": {
+      "embedded": "v0.55.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/net": {
+      "embedded": "v0.48.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GO-2026-5942",
+   "fixedVersions": [
+    "0.56.0"
+   ],
+   "modules": [
+    "golang.org/x/net"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/text": {
+      "embedded": "v0.38.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    },
+    "/usr/bin/skopeo": {
+     "golang.org/x/text": {
+      "embedded": "v0.32.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GO-2026-5970",
+   "fixedVersions": [
+    "0.39.0"
+   ],
+   "modules": [
+    "golang.org/x/text"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/mod": {
+      "embedded": "v0.36.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GO-2026-6179",
+   "fixedVersions": [
+    "0.40.0"
+   ],
+   "modules": [
+    "golang.org/x/mod"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  },
+  {
+   "binaries": {
+    "/usr/bin/podman": {
+     "golang.org/x/mod": {
+      "embedded": "v0.36.0",
+      "verdict": "AFFECTED_BY_VERSION"
+     }
+    }
+   },
+   "finding": "GO-2026-6180",
+   "fixedVersions": [
+    "0.40.0"
+   ],
+   "modules": [
+    "golang.org/x/mod"
+   ],
+   "position": null,
+   "symbols": "not named in shipped evidence"
+  }
+ ],
+ "schemaVersion": 1,
+ "subjectArtifact": "e906a48793d7"
+}
