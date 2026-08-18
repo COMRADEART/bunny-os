@@ -1,0 +1,9 @@
+{
+ "artifactRole": "recovery medium",
+ "bootEnvironment": "qemu q35 UEFI (OVMF), virtio disk",
+ "buildCommit": "b812e48e9a1aa4342a9c91f910a81c0ca1e26c54",
+ "creationMethod": "build/scripts/build-image.sh recovery (podman + image-builder)",
+ "manifest": {},
+ "qcow2": "build/out/recovery/bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2",
+ "qcow2Sha256": "40dd7d2d1bf6b69ca6199013641b08bbb04a53e94ad12f5c6496c99eb5a3e648"
+}

@@ -1,0 +1,7 @@
+{
+ "instrumentation": "qualification/phase7/recovery/recover.sh driver unit; documented operator steps, no console interaction",
+ "instrumentedOverlaySha256": "ae2dfc92d8a51d5fd9265dc9e9e249cdc5ac7151a429afd7c68dd0a8189c9d88",
+ "pristineMedium": "/root/bunny-os/build/out/recovery/bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2",
+ "pristineSha256": "40dd7d2d1bf6b69ca6199013641b08bbb04a53e94ad12f5c6496c99eb5a3e648",
+ "signature": "NONE - production signing is an external gate; this run is engineering evidence for the journey, not release evidence for the medium"
+}

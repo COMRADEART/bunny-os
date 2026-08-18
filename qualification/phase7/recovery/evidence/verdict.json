@@ -1,0 +1,19 @@
+{
+ "journey": "phase7-recovery",
+ "reasons": [
+  "PASS: the machine could not boot, recovery booted independently, inspected the installation, repaired the boot entry from on-disk truth, and the repaired machine boots its own deployment"
+ ],
+ "steps": {
+  "cannotBootNormally": true,
+  "installationInspected": [
+   "1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a"
+  ],
+  "outcomeVerified": "dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d",
+  "recoveryMediaBooted": true,
+  "repairPerformed": {
+   "after": "/boot/ostree/default-dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d/vmlinuz-7.1.5-201.fc44.x86_64",
+   "before": "/boot/ostree/default-0000000000000000000000000000000000000000000000000000000000000bad/vmlinuz-7.1.5-201.fc44.x86_64"
+  }
+ },
+ "verdict": "PASS"
+}
