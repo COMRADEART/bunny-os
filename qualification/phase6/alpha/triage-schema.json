@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.example/schemas/phase6-alpha-triage.json",
+  "title": "Alpha finding triage record",
+  "description": "One record per Alpha finding. Section 15 requires a classification, a reproduction, an affected artifact, severity, evidence, an owner and a disposition. The classification vocabulary is closed so that a finding cannot be filed under a label invented to make it less blocking, and the four blocking classes are named in the schema rather than left to a reader's judgement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "findingId",
+    "reportedAt",
+    "classification",
+    "severity",
+    "affectedArtifactDigest",
+    "reproduction",
+    "evidence",
+    "owner",
+    "disposition"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "findingId": {
+      "type": "string",
+      "pattern": "^A[0-9]{3}$",
+      "description": "Stable for the life of the finding. Reclassification never changes it."
+    },
+    "reportedAt": { "type": "string", "format": "date-time" },
+    "reporter": {
+      "type": "string",
+      "description": "Pseudonymous tester identifier. Never a name, never an email address; the importer redacts before storage."
+    },
+    "classification": {
+      "type": "string",
+      "enum": [
+        "RELEASE BLOCKER",
+        "SECURITY",
+        "DATA LOSS / CORRUPTION",
+        "PRIVACY",
+        "FUNCTIONAL DEFECT",
+        "PERFORMANCE",
+        "UX",
+        "COSMETIC",
+        "HARNESS / MEASUREMENT",
+        "ENVIRONMENT"
+      ]
+    },
+    "classificationHistory": {
+      "type": "array",
+      "description": "Every classification this finding has held, appended never rewritten. A finding that turns out to be an instrument defect is reclassified, not deleted.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["classification", "changedAt", "because"],
+        "properties": {
+          "classification": { "type": "string" },
+          "changedAt": { "type": "string", "format": "date-time" },
+          "because": { "type": "string", "minLength": 20 }
+        }
+      }
+    },
+    "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+    "affectedArtifactDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "The digest of the image the tester actually ran. Not a version string, which two builds can share, and not a branch. Section 14 forbids mixing feedback from multiple artifacts without labelling them, and this field is the label."
+    },
+    "reproduction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps", "observed", "expected"],
+      "properties": {
+        "steps": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "observed": { "type": "string", "minLength": 1 },
+        "expected": { "type": "string", "minLength": 1 },
+        "reproducible": {
+          "type": "string",
+          "enum": ["always", "intermittent", "once", "not-reproduced"],
+          "description": "not-reproduced is a real value. A finding nobody could reproduce stays open as not-reproduced rather than being closed as absent."
+        }
+      }
+    },
+    "evidenceClass": {
+      "type": "string",
+      "enum": ["user-feedback", "measured-telemetry"],
+      "description": "Kept apart deliberately. Subjective feedback never becomes an objective performance claim, and a tester reporting that something felt fast is not evidence that it was."
+    },
+    "evidence": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "environmentMeasurement": {
+      "type": "string",
+      "description": "Required when classification is ENVIRONMENT. An environment classification names what was measured, never what was inferred: a claim about the host carried for a week here once turned out never to have been measured at all."
+    },
+    "owner": { "type": "string", "minLength": 1 },
+    "disposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["OPEN", "FIXED", "MITIGATED", "NOT_APPLICABLE", "ACCEPTED", "DUPLICATE", "NOT_REPRODUCED"]
+        },
+        "because": { "type": "string" },
+        "fixCommit": { "type": "string" },
+        "approvedBy": {
+          "type": "string",
+          "description": "Required for ACCEPTED. A named person, not a role."
+        },
+        "closedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "classification": { "const": "ENVIRONMENT" } }, "required": ["classification"] },
+      "then": { "required": ["environmentMeasurement"] }
+    },
+    {
+      "if": {
+        "properties": { "disposition": { "properties": { "state": { "const": "ACCEPTED" } }, "required": ["state"] } },
+        "required": ["disposition"]
+      },
+      "then": {
+        "properties": { "disposition": { "required": ["approvedBy", "because"] } }
+      }
+    }
+  ],
+  "x-blockingClassifications": [
+    "RELEASE BLOCKER",
+    "SECURITY",
+    "DATA LOSS / CORRUPTION",
+    "PRIVACY"
+  ],
+  "x-blockingNote": "Blocking condition 9 is unmet while any finding in x-blockingClassifications has disposition.state OPEN. The remaining classifications are recorded and do not block. Zero findings does not satisfy the condition: zero testers means it is unmet, not vacuously met."
+}

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "journey": "H3-voice",
+  "title": "Voice on real audio hardware",
+  "writtenBefore": "execution",
+  "status": "NOT_RUN",
+  "notRunReason": "No physical machine is available. Every voice result this project holds used a synthetic pipe source or WSLg RDPSink, neither of which is a microphone.",
+
+  "boundTo": {
+    "artifactCommit": "e906a48793d74544b39c14cc3e35e0654f5311e2",
+    "imageManifestDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d"
+  },
+
+  "prerequisite": "H1 must have reached H1.7.",
+
+  "steps": [
+    {
+      "id": "H3.1", "step": "microphone permission is requested and the prompt is answerable",
+      "expect": "the prompt is drawn on the real panel and can be answered with the real input devices",
+      "evidence": ["photograph", "journal"],
+      "failIf": "the prompt is drawn but cannot be pressed -- a prompt that exists and cannot be answered has been the defect before"
+    },
+    {
+      "id": "H3.2", "step": "permission DENIAL is handled",
+      "expect": "denial is respected, the refusal is explained, and no capture occurs",
+      "evidence": ["journal", "audio device open attempts"],
+      "failIf": "capture proceeds, or the failure is silent",
+      "orderNote": "Denial is tested BEFORE grant. Testing grant first leaves a granted permission in place and makes the denial path unreachable without a reset."
+    },
+    {
+      "id": "H3.3", "step": "microphone capture from a real device",
+      "expect": "audio is captured from the machine's own microphone at its native rate",
+      "evidence": ["captured waveform", "device identification from the audio stack"],
+      "failIf": "the source is a monitor, a null sink, or a loopback. A capture that works because something is looping playback back into the input is not a microphone result."
+    },
+    {
+      "id": "H3.4", "step": "speech recognition on real captured audio",
+      "expect": "spoken input is recognised",
+      "evidence": ["transcript alongside what was actually said"],
+      "failIf": "the transcript is compared only against itself"
+    },
+    {
+      "id": "H3.5", "step": "speech synthesis and playback through real output",
+      "expect": "audible speech through the machine's own output device",
+      "evidence": ["recording of the output", "player program and arguments as invoked"],
+      "failIf": "the player resolved to a sibling of a multi-call binary. paplay resolving to pacat once played 0.73s of noise and exited 0 with every gate green."
+    },
+    {
+      "id": "H3.6", "step": "interruption",
+      "expect": "speaking over the Companion interrupts it",
+      "evidence": ["recording", "control-plane state"],
+      "failIf": "playback continues to completion"
+    },
+    {
+      "id": "H3.7", "step": "cancellation",
+      "expect": "cancelling stops synthesis and the control plane records the cancellation",
+      "evidence": ["the control plane's own answer, not only the absence of sound"],
+      "failIf": "only the effect is captured. Voice-cancel had never worked while the instrument reported that it had; capture what the control plane says, not just what the speaker does."
+    },
+    {
+      "id": "H3.8", "step": "offline operation",
+      "expect": "recognition and synthesis work with no network",
+      "evidence": ["journal with the interface down"],
+      "failIf": "either degrades or blocks"
+    }
+  ],
+
+  "measurements": {
+    "required": [
+      "end-to-end latency: end of speech to start of response audio",
+      "recognition latency alone",
+      "synthesis latency alone"
+    ],
+    "conditions": [
+      "Recorded separately from the VM figures and never merged with them.",
+      "Functional correctness is the requirement; timing is characterisation. A latency number from a journey that did not establish correctness is not a result."
+    ]
+  },
+
+  "gradingRules": [
+    "A capture path that is a monitor or loopback grades H3.3 NOT_RUN, not PASS.",
+    "Every step must resolve.",
+    "H3.2 precedes H3.1's grant. Recorded in the expectation so the order is not decided at run time by whoever is holding the machine."
+  ]
+}

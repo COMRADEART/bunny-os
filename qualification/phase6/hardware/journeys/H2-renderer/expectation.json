@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "journey": "H2-renderer",
+  "title": "Companion renderer modes, capability loss and capability restoration, on a real GPU",
+  "writtenBefore": "execution",
+  "status": "NOT_RUN",
+  "notRunReason": "No physical machine with a real GPU is available. Every renderer measurement this project holds was taken under llvmpipe.",
+
+  "boundTo": {
+    "artifactCommit": "e906a48793d74544b39c14cc3e35e0654f5311e2",
+    "imageManifestDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d"
+  },
+
+  "prerequisite": "H1 must have reached H1.7. A renderer result on a live-booted system is not a result about an installed one.",
+
+  "steps": [
+    {
+      "id": "H2.1", "step": "3D available: user selects 3D",
+      "expect": "the 3D renderer starts on the real GPU and interaction works",
+      "evidence": ["photograph", "GL vendor/renderer string", "companion journal"],
+      "failIf": "the GL renderer string names llvmpipe or softpipe -- that is not a real-GPU result and must be recorded as such rather than as a 3D pass"
+    },
+    {
+      "id": "H2.2", "step": "capability loss: rendering capability becomes unavailable while 3D is the preference",
+      "expect": "a safe fallback activates AND the stored 3D preference is NOT destroyed",
+      "evidence": ["stored preference before and after", "photograph", "the recorded degradation reason"],
+      "failIf": "the preference is rewritten to the fallback mode. Silently destroying the preference is the defect this step exists to catch, and a system that falls back cleanly while forgetting what the user chose FAILS."
+    },
+    {
+      "id": "H2.3", "step": "capability restored",
+      "expect": "the preferred mode can recover, either automatically or by an action the user can find",
+      "evidence": ["photograph", "companion journal"],
+      "failIf": "recovery requires editing a file, or the preference has to be re-set by hand"
+    },
+    {
+      "id": "H2.4", "step": "pre-rendered mode",
+      "expect": "renders and animates correctly on the real panel",
+      "evidence": ["photograph", "frame capture"],
+      "failIf": "frames are identical across an animation, or the character's working pose is wrong -- coverage assertions have passed on a shrug before"
+    },
+    {
+      "id": "H2.5", "step": "procedural 2D mode",
+      "expect": "renders and animates correctly",
+      "evidence": ["photograph", "frame capture"],
+      "failIf": "as H2.4"
+    },
+    {
+      "id": "H2.6", "step": "renderer switching",
+      "expect": "switching between all three modes works in both directions without a restart",
+      "evidence": ["photograph per transition", "journal"],
+      "failIf": "any transition requires a restart, or leaves the previous renderer's resources allocated"
+    }
+  ],
+
+  "measurements": {
+    "required": [
+      "startup time to first frame, per mode",
+      "idle CPU with the Companion HIDDEN",
+      "idle CPU with the Companion VISIBLE",
+      "resident memory, per mode",
+      "interaction latency (input to visible response)",
+      "renderer switch time, per transition"
+    ],
+    "conditions": [
+      "Each measurement records the GL vendor and renderer string alongside it. A number without that string cannot be compared with anything.",
+      "Hidden and visible idle are measured separately and never averaged. The whole open performance question is whether redraw cost explains the regression, and averaging the two destroys the only signal that could answer it.",
+      "The VM comparator is recorded next to each figure and labelled llvmpipe, so no reader mistakes one for the other."
+    ]
+  },
+
+  "gradingRules": [
+    "A measurement taken under llvmpipe may NEVER be presented as a real-GPU result. If H2.1 finds llvmpipe, every measurement in this journey is a VM measurement and the journey is NOT_RUN for its stated purpose.",
+    "H2.2 fails on preference destruction even if the fallback itself is flawless.",
+    "Every step must resolve. A mode not exercised is NOT_RUN."
+  ]
+}

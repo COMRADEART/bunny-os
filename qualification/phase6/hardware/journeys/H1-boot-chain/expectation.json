@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "journey": "H1-boot-chain",
+  "title": "Installation medium to persistent installed system, on physical hardware",
+  "writtenBefore": "execution",
+  "status": "NOT_RUN",
+  "notRunReason": "No physical machine is available to this project. Every result it holds is QEMU with software rendering.",
+
+  "boundTo": {
+    "artifactCommit": "e906a48793d74544b39c14cc3e35e0654f5311e2",
+    "imageManifestDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+    "installationMedium": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso",
+    "installationMediumSha256": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421"
+  },
+
+  "preconditions": [
+    {
+      "id": "P1",
+      "requirement": "The device record is complete and recorded BEFORE first boot.",
+      "because": "A machine described after a failure is described by somebody with a theory."
+    },
+    {
+      "id": "P2",
+      "requirement": "The ISO digest is verified on the writing host AND re-read from the written medium, both matching 823d50ca.",
+      "because": "A stick written from a corrupted download produces a hardware report about something that is not the candidate. Verifying only on the host does not detect a bad write."
+    },
+    {
+      "id": "P3",
+      "requirement": "Secure Boot state, TPM presence and firmware version are recorded as found, not as configured for convenience.",
+      "because": "Disabling Secure Boot to make an install succeed produces a result about a different configuration."
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "H1.1", "step": "physical boot from the medium",
+      "expect": "firmware hands off to the medium's bootloader; the Bunny Setup surface is reached",
+      "evidence": ["photograph of the screen", "firmware boot-order record"],
+      "failIf": "a shim/GRUB fallback path runs, or the medium is not offered by firmware"
+    },
+    {
+      "id": "H1.2", "step": "installer reaches disk selection",
+      "expect": "real storage devices are enumerated with correct sizes and controller types",
+      "evidence": ["photograph", "installer log"],
+      "failIf": "NVMe or SATA devices are missing, or sizes are wrong"
+    },
+    {
+      "id": "H1.3", "step": "encrypted installation completes",
+      "expect": "LUKS2 volume created; installation completes with findings: []",
+      "evidence": ["installer log", "anaconda log"],
+      "failIf": "any finding is recorded, or the install completes unencrypted when encryption was chosen"
+    },
+    {
+      "id": "H1.4", "step": "first boot from disk, passphrase unlock",
+      "expect": "the LUKS passphrase prompt appears on the real console and unlock succeeds",
+      "evidence": ["photograph", "journal"],
+      "failIf": "unlock takes longer than the VM baseline by more than a factor of two without explanation (see KNOWN_LIMITATIONS L-LUKS)"
+    },
+    {
+      "id": "H1.5", "step": "login through the real greeter",
+      "expect": "greeter renders on the panel's native resolution; typed password authenticates",
+      "evidence": ["photograph", "journal"],
+      "failIf": "the greeter renders at a fallback resolution, or the session fails to start"
+    },
+    {
+      "id": "H1.6", "step": "Bunny desktop reaches a usable state",
+      "expect": "the shell extension loads; the desktop is laid out for the panel's actual resolution",
+      "evidence": ["photograph", "gnome-shell journal"],
+      "failIf": "the layout solver produces overlapping or offscreen elements on a resolution other than 1920x1080 or 1366x768, the only two ever tested"
+    },
+    {
+      "id": "H1.7", "step": "the Companion appears and responds",
+      "expect": "the Companion autostarts and responds to interaction",
+      "evidence": ["photograph", "companion journal"],
+      "failIf": "the Companion is absent, or the selected renderer mode is silently degraded without a recorded reason"
+    },
+    {
+      "id": "H1.8", "step": "reboot",
+      "expect": "clean shutdown, unlock, login, desktop",
+      "evidence": ["journal across the boundary"],
+      "failIf": "shutdown hangs, or any earlier step regresses"
+    },
+    {
+      "id": "H1.9", "step": "persistence",
+      "expect": "companion mode, scale and position, voice configuration, permissions, locale, hostname and user data all survive",
+      "evidence": ["per-setting before/after record"],
+      "failIf": "any recorded setting differs, including a difference that looks like an improvement"
+    }
+  ],
+
+  "gradingRules": [
+    "A successful live boot alone is NOT an installation result. H1.1 passing while H1.3 is NOT_RUN grades the journey NOT_RUN.",
+    "Every step must resolve. A step with no evidence is NOT_RUN, never PASS.",
+    "One machine produces one row. No result here generalises to a class of hardware.",
+    "A photograph is required wherever the expectation is about what a person sees. A journal line saying a surface started is not evidence that it rendered."
+  ],
+
+  "whatAPassWouldAndWouldNotEstablish": {
+    "would": "That this exact artifact installs and persists on one identified machine.",
+    "wouldNot": "That it installs on any other machine, that performance figures transfer, or that any measurement taken under llvmpipe applies to this machine's GPU."
+  }
+}
