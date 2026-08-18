@@ -1,0 +1,24 @@
+GHSA-5cgq-3rg8-m6cv  golang.org/x/crypto  cves=CVE-2026-42508
+    import golang.org/x/crypto/ssh/knownhosts
+      symbols: hostKeyDB.IsRevoked
+GHSA-89gr-r52h-f8rx  golang.org/x/crypto  cves=CVE-2026-39831
+    import golang.org/x/crypto/ssh
+      symbols: CertChecker.Authenticate, CertChecker.CheckCert, CertChecker.CheckHostKey, Certificate.Verify, Dial, NewClientConn, NewServerConn, connection.serverAuthenticate, skECDSAPublicKey.Verify, skEd25519PublicKey.Verify
+GHSA-f5wc-c3c7-36mc  golang.org/x/crypto  cves=CVE-2026-39832
+    import golang.org/x/crypto/ssh/agent
+      symbols: client.Add, keyring.Add
+GHSA-jppx-rxg9-jmrx  golang.org/x/crypto  cves=CVE-2026-39833
+    import golang.org/x/crypto/ssh/agent
+      symbols: keyring.Add
+GHSA-rm3j-f69w-wqmq  golang.org/x/crypto  cves=CVE-2026-39834
+    import golang.org/x/crypto/ssh
+      symbols: Dial, NewClientConn, NewServerConn, Session.CombinedOutput, Session.Output, Session.Run, Session.Shell, Session.Start, channel.Write, channel.WriteExtended, curve25519sha256.Client, curve25519sha256.Server, dhGEXSHA.Client, dhGEXSHA.Server, dhGroup.Client, dhGroup.Server, ecdh.Client, ecdh.Server, extChannel.Write, mlkem768WithCurve25519sha256.Client, mlkem768WithCurve25519sha256.Server
+GHSA-vgwf-h737-ff37  golang.org/x/crypto  cves=CVE-2026-39830
+    import golang.org/x/crypto/ssh
+      symbols: Client.Listen, Client.ListenTCP, Client.ListenUnix, Dial, NewClientConn, NewServerConn, Session.CombinedOutput, Session.Output, Session.RequestPty, Session.RequestSubsystem, Session.Run, Session.SendRequest, Session.Setenv, Session.Shell, Session.Signal, Session.Start, Session.WindowChange, channel.SendRequest, channel.handlePacket, mux.SendRequest, mux.handleGlobalPacket, tcpListener.Close, unixListener.Close
+GHSA-x527-x647-q7gg  golang.org/x/crypto  cves=CVE-2026-46595
+    import golang.org/x/crypto/ssh
+      symbols: NewServerConn, connection.serverAuthenticate
+GHSA-p77j-4mvh-x3m3  google.golang.org/grpc  cves=CVE-2026-33186
+    import google.golang.org/grpc
+      symbols: Server.Serve, Server.ServeHTTP, Server.handleStream

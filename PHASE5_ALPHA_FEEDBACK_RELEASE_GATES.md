@@ -526,133 +526,133 @@ the fallback, not on the screen.
 `SCAN_ROUTE_DISCREPANCY.md`, `candidate-disposition-matrix.json`, and the raw
 scans under `scan/` and `route/`.
 
-**The candidate itself was scanned, three ways, and the three ways disagree.**
-Resolving that disagreement is the substance of this section, and it ends
-somewhere other than where it started.
+**The candidate was scanned three ways and the answers differ by seven Critical
+findings.** Resolving that is the substance of this section.
 
-### The first answer was wrong, and it was wrong in the flattering direction
+### The first answer was wrong, and wrong in the flattering direction
 
-The first re-scan mounted the image's overlay in place and scanned the mounted
-directory. It reported **183 matches, 56 distinct advisories, 1 Critical**,
-against Phase 4's recorded 8. That was written down here as *a discrepancy to
-resolve, not a correction* — three things differed at once and none had been
-held still.
+The first re-scan mounted the image's overlay and scanned it: **56 distinct
+advisories, 1 Critical**, against Phase 4's 8. That was recorded here as *a
+discrepancy to resolve, not a correction* — three things differed at once and
+none had been held still.
 
-Resolved, it is this: **nothing improved.** Seven Critical findings stopped
-being reported because of how the scanner was pointed at the image.
+Resolved: **nothing about the product improved.**
 
-The chain, each step measured, in `SCAN_ROUTE_DISCREPANCY.md`:
+| scan | route | database | distinct | Critical |
+| --- | --- | --- | ---: | ---: |
+| Phase 4 | `oci-archive:` | July | 114 | **8** |
+| Phase 5 | `oci-archive:` — the gate's own route | 2026-08-17 | 56 | **1** |
+| Phase 5 | `dir:` over the mounted overlay | 2026-08-17 | 56 | **1** |
+| Phase 5 | `sbom:` over the candidate's own SPDX | 2026-08-17 | 80 | **8** |
+
+The two routes that read the binaries agree **advisory for advisory**, so the
+route was never the variable — an intermediate version of this section said it
+was, on the strength of the one scan not yet run. What differs is what the
+scanner could read, and what the database gave it to read with.
+
+### The mechanism, named
 
 1. `golang.org/x/crypto v0.46.0` is **still in the candidate**, in
-   `/usr/bin/skopeo` — from the candidate's own SPDX SBOM, which lists
-   catalogued packages whether or not anything matched them.
-2. The seven advisories are **still in the database, still Critical, still
-   ranged `<0.52.0`** — `grype db search`, one row per advisory.
-3. The **matcher is fine**: those exact package records, lifted verbatim out of
-   the candidate's SBOM into a minimal SPDX document, produce all seven.
-4. The mechanism, isolated to one binary — same grype, same database, same
-   file, same minute:
+   `/usr/bin/skopeo` — from the candidate's own SBOM, which lists what was
+   catalogued whether or not anything matched it.
+2. The seven advisories are **still Critical in the database, still ranged
+   `<0.52.0`**.
+3. The **matcher is fine**: those package records, lifted verbatim into a
+   minimal SPDX document, produce all seven.
+4. The current database carries a **`qualifiers.go_imports`** list on each —
+   for `GHSA-5cgq-3rg8-m6cv`, `golang.org/x/crypto/ssh/knownhosts` →
+   `hostKeyDB.IsRevoked`. All seven name symbols in the SSH stack.
+5. Neither `/usr/bin/skopeo` nor `/usr/bin/podman` **contains those packages**.
+   Both link `x/crypto` for its ciphers — cast5, chacha20, cryptobyte, argon2,
+   blake2b — and none of `ssh`, `ssh/agent`, `ssh/knownhosts`.
+6. So given a binary, grype applies the qualifier and excludes them. Given an
+   SBOM with no symbol capture it cannot, warns on stderr that module
+   granularity *"may report false positives"*, and reports all seven.
 
-   | route | distinct | Critical |
-   | --- | ---: | ---: |
-   | `grype file:/usr/bin/skopeo` | 12 | **0** |
-   | `grype sbom:` of a syft catalogue of that same file | 37 | **7** |
+Isolated to one file — same scanner, same database, same minute:
 
-   And grype says why, on the second run's stderr only: *"go binary packages
-   were found but none carry function symbols; go vulnerability matching falls
-   back to module granularity and may report false positives."* Given the
-   binary it matches at **function** granularity and drops advisories whose
-   vulnerable functions are not linked in; given an SBOM it matches at
-   **module** granularity and reports them all.
+| | distinct | Critical |
+| --- | ---: | ---: |
+| `grype file:/usr/bin/skopeo` | 12 | **0** |
+| `grype sbom:` of a syft catalogue of that same file | 37 | **7** |
 
-The two routes are not two attempts at one measurement. Phase 4 measured at
-module granularity; the first Phase 5 re-scan measured at function granularity;
-the numbers were then compared as though they were the same measurement.
+The exclusions are not indiscriminate: the one Critical still reported,
+`GHSA-p77j-4mvh-x3m3` against `google.golang.org/grpc`, names `Server.Serve`,
+`Server.ServeHTTP` and `Server.handleStream` — and podman runs a gRPC server.
+
+**Phase 4's 8 and the function-level 1 are both correct answers to different
+questions.** The July database had no symbol qualifiers, so every route
+reported at module granularity. Nothing about the image changed.
 
 ### The position, correctly stated
 
-Distinct advisories, `--only-fixed`, the scope `build/scripts/security-scan.sh`
-uses:
+At module granularity — the granularity Phase 4's number is in, and the
+conservative one — the candidate carries **80 distinct fixable advisories: 8
+Critical, 36 High, 29 Medium, 6 Low, 1 Unknown.**
 
-| route | granularity | distinct | Critical | High | Medium | Low | Unknown |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Phase 4, `oci-archive`, beta `79bb99dd` | module | 114 | 8 | 39 | 61 | 5 | 1 |
-| Phase 5, mounted filesystem, candidate | function | 56 | 1 | 31 | 19 | 5 | 0 |
-| **Phase 5, SBOM, candidate** | **module** | **80** | **8** | **36** | **29** | **6** | **1** |
-
-The disagreement between the two Phase 5 routes is one-directional: **24
-advisories reported by the SBOM route only, none the other way**, all of them
-Go modules, twelve of them Critical or High.
-
-**The Critical count is 8, exactly as Phase 4 recorded it.** Seven of the eight
-are the `golang.org/x/crypto` findings. They are not fixed, not withdrawn, and
-not waived.
-
-Like for like — module granularity, Go modules only, nineteen days apart, which
-is the only comparison where nothing but time varies:
+Like for like, Go modules only, nineteen days apart:
 
 | | distinct | Critical | High | Medium |
 | --- | ---: | ---: | ---: | ---: |
 | Phase 4 (beta, `oci-archive`) | 40 | 8 | 17 | 14 |
 | Phase 5 (candidate, SBOM) | 45 | 8 | 18 | 17 |
 
-Five new advisories in nineteen days; Criticals unchanged. That is the drift
-§17 asked for.
+Five new advisories in nineteen days; **Criticals unchanged at 8**.
 
-### Phase 4's scan never looked at an RPM
+### The July feed had no Fedora 44 data
 
-`evidence/vulnerability/beta-grype.json`, retained and re-read, is 143 matches:
-74 `linux-kernel`, 40 `go-module`, and **zero rpm**. So are `base-grype.json`
-and `beta-minimised-grype.json`.
+Phase 4's retained scan is 74 `linux-kernel` and 40 `go-module` findings and
+**zero rpm**. The identical `oci-archive:` route against the current database
+returns **26 distinct rpm advisories**, plus 7 python, and the kernel's 74
+generic findings are now largely expressed as RPM advisories against `kernel`,
+`kernel-core` and `kernel-modules`.
 
-The Phase 5 scans of the candidate find **26 distinct RPM advisories (15 High,
-8 Medium, 3 Low)** plus 7 Python, from `/usr/share/rpm/rpmdb.sqlite` — a 61 MB
-file that is really there, with `/usr/lib/sysimage/rpm` a symlink to it.
+The route could always read `/usr/share/rpm/rpmdb.sqlite` — a 61 MB file that
+is really in the image. There was nothing in the feed to match it against.
+Phase 4's *"59 fixable findings, all inherited from the base image"* was an
+accurate reading of the data available; it was never a full picture of the
+image, and it has not been one at any point since.
 
-The gate's stated position — *59 fixable findings, 8 Critical, 28 High, all
-inherited* — was produced by an instrument that could not see one distribution
-package: not glibc, not openssl, not systemd. This is recorded as measured;
-**why** the archive route catalogued no RPM is not established, and the
-`oci-archive:` scan that would settle it is queued.
-
-### Raw match counts measure the deployment layout, not the image
+### Raw match counts measure the deployment layout
 
 `/usr/bin/podman` and `/sysroot/ostree/repo/objects/8c/c9b024….file` are inode
-95288 with a link count of 2 — the same file. A filesystem scan therefore
-catalogues every Go binary twice: **44 of the 183 raw matches arrived through
-an ostree object path.** Every figure in this section is distinct advisories.
+95288 with a link count of 2 — the same file. A filesystem scan catalogues
+every Go binary twice: **44 of the 183 `dir:` matches arrived through an ostree
+object path**. Every figure here is distinct advisories.
 
 ### What this changes, and what it does not
 
 **It does not change the gate.** Eight Critical findings, all blocking, all
 `PENDING_REVIEW`. `release/vulnerability.py` permits a Critical to become
 non-blocking only through a completed independent review reference; a
-scanner's symbol analysis is a measurement, not a review, and grype itself
-frames the module-granularity result as the conservative one. Nothing here is
-a waiver or a downgrade.
+scanner's symbol analysis is a measurement, not a review. Nothing here is a
+waiver or a downgrade. The disposition matrix is built from the module-level
+result for exactly that reason.
 
-**It changes the question for the reviewer.** §18's independent review would
-have been handed 24 reachability bundles asserting `installed-not-executed` on
-the strength of an argument. There is now a measurement to hand over instead:
-*grype's function-level analysis reports that the vulnerable symbols of these
-seven advisories are not linked into `/usr/bin/skopeo` — confirm or refute.*
-That is the strongest material this project has ever had for the disposition
-Phase 4 wanted and could not justify.
+**It changes the question for the reviewer.** §18's review would have been
+handed 24 bundles asserting `installed-not-executed` on the strength of an
+argument. It can now be handed a checkable claim: *these seven advisories are
+scoped by their own upstream data to functions in `golang.org/x/crypto/ssh`,
+`.../ssh/agent` and `.../ssh/knownhosts`; the two binaries that carry the
+module contain none of those packages; confirm or refute.* That is the
+strongest material this project has had for the disposition Phase 4 wanted and
+could not justify.
 
-**It adds a gate defect.** Two runs of the same gate, on the same image, with
-the same scanner, can differ by seven Critical findings depending on what the
-scanner was pointed at — and neither `grype.json` nor `vulnerability-report.md`
-records which. A result that does not say how it was measured is not
-interpretable.
+**It leaves a gate defect.** Two runs of the same gate, same image, same
+scanner, differ by seven Critical findings depending on what the database
+carries and whether symbols were readable — and neither `grype.json` nor
+`vulnerability-report.md` records either fact. A result that does not say how
+it was measured is not interpretable. Recorded as a recommendation in
+`../gates/RELEASE_GATES.md`; `build/scripts/security-scan.sh` is unchanged.
 
 ### What the scan still settles
 
-The filesystem-route scan of a **different** build (`376acf0e076f`, different
-image ID, different commit) returns **identical counts**. Two independently
-built images with the same vulnerability surface is what "every finding comes
-from the base image" predicts, here demonstrated rather than asserted.
-**Nothing Bunny builds adds to this surface.** That conclusion survives the
-route correction: it is a comparison of one route against itself.
+The `dir:`-route scan of a **different** build (`376acf0e076f`, different image
+ID, different commit) returns **identical counts**. Two independently built
+images with the same vulnerability surface is what "every finding comes from
+the base image" predicts, here demonstrated rather than asserted. **Nothing
+Bunny builds adds to this surface.** The conclusion survives everything above:
+it compares one route against itself.
 
 ### Every row is `PENDING_REVIEW`, and that is correct
 

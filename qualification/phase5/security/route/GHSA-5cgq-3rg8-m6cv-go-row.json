@@ -1,0 +1,189 @@
+[
+ {
+  "vulnerability": {
+   "id": "GHSA-5cgq-3rg8-m6cv",
+   "description": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+   "refs": [
+    {
+     "url": "https://github.com/advisories/GHSA-5cgq-3rg8-m6cv"
+    },
+    {
+     "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-42508"
+    },
+    {
+     "url": "https://go.dev/cl/781220"
+    },
+    {
+     "url": "https://go.dev/issue/79568"
+    },
+    {
+     "url": "https://groups.google.com/g/golang-announce/c/a082jnz-LvI"
+    },
+    {
+     "url": "https://pkg.go.dev/vuln/GO-2026-5021"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:23262"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:23264"
+    },
+    {
+     "url": "https://access.redhat.com/security/cve/CVE-2026-42508"
+    },
+    {
+     "url": "https://bugzilla.redhat.com/show_bug.cgi?id=2480688"
+    },
+    {
+     "url": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-42508.json"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:26546"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:26547"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:35833"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:36648"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:37123"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:37072"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:36808"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:36797"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:36796"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:36651"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:37387"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:40262"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:40138"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:40118"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:41066"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:41064"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:41036"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:41031"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:41019"
+    },
+    {
+     "url": "https://access.redhat.com/errata/RHSA-2026:40945"
+    }
+   ],
+   "aliases": [
+    "CVE-2026-42508"
+   ],
+   "severities": [
+    {
+     "scheme": "CHML",
+     "value": "critical",
+     "rank": 0
+    },
+    {
+     "scheme": "CVSS",
+     "value": {
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+      "version": "3.1",
+      "metrics": {
+       "baseScore": 9.1,
+       "exploitabilityScore": 3.9,
+       "impactScore": 5.2
+      }
+     },
+     "rank": 0
+    }
+   ],
+   "modifications": [
+    {
+     "url": "https://vuln.go.dev/ID/GO-2026-5021.json",
+     "changes": [
+      "added vulnerable go symbols for import golang.org/x/crypto/ssh/knownhosts to affected package golang.org/x/crypto"
+     ]
+    }
+   ],
+   "severity": "critical",
+   "provider": "github",
+   "status": "active",
+   "published_date": "2026-06-25T22:22:04Z",
+   "modified_date": "2026-07-17T15:32:15Z",
+   "epss": [
+    {
+     "cve": "CVE-2026-42508",
+     "epss": 0.00568,
+     "percentile": 0.44395,
+     "date": "2026-08-16"
+    }
+   ]
+  },
+  "packages": [
+   {
+    "package": {
+     "name": "golang.org/x/crypto",
+     "ecosystem": "go-module"
+    },
+    "namespace": "github:language:go",
+    "detail": {
+     "cves": [
+      "CVE-2026-42508"
+     ],
+     "qualifiers": {
+      "go_imports": [
+       {
+        "path": "golang.org/x/crypto/ssh/knownhosts",
+        "symbols": [
+         "hostKeyDB.IsRevoked"
+        ]
+       }
+      ]
+     },
+     "ranges": [
+      {
+       "version": {
+        "type": "go",
+        "constraint": "<0.52.0"
+       },
+       "fix": {
+        "version": "0.52.0",
+        "state": "fixed",
+        "detail": {
+         "available": {
+          "date": "2026-07-07",
+          "kind": "first-observed"
+         }
+        }
+       }
+      }
+     ]
+    }
+   }
+  ]
+ }
+]

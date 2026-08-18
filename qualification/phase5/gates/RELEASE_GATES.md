@@ -50,7 +50,7 @@ of them would be misleading whichever it chose.
 | Companion | **PASS** — modes survive two reboots | — | PASS | none |
 | Shutdown | **PASS** — clean ACPI on every boot of the chain | — | PASS | none |
 | Reference suite | **CLEAN** — 5/5 full runs, 0 failures | — | **CLEAN** ✓ | **closed** — root cause found and fixed; see §3 |
-| Security review | **NOT DONE** | `PENDING_EXTERNAL_REVIEW` | REQUIRED | disposition matrix built; **rebinding to the candidate NOT done** — it needs the re-scan, which is blocked on disk |
+| Security review | **NOT DONE** | `PENDING_EXTERNAL_REVIEW` | REQUIRED | candidate re-scanned; matrix rebound to `e906a48793d7` at module granularity, 8 Critical unchanged. The review request itself is still bound to `80df25b09f65` and asks the wrong question — see below |
 | Physical hardware | **NOT RUN** | `PENDING_HARDWARE` | REQUIRED | none — no machine |
 | Production signing | **NOT DONE** | `BLOCKED` (second signer) | REQUIRED | workflow specified; no key created |
 | Update | **NOT RUN** | **NOT_RUN** — 1 PASS / 12 of 13 | REQUIRED | **blocker identified and removable** — see §4 |
@@ -238,15 +238,46 @@ rollback — are engineering, and §4 says what they need.
 
 ---
 
-## 6. Status
+## 6. One gate should record how it measured
+
+`build/scripts/security-scan.sh` runs `grype oci-archive: --only-fixed
+--fail-on high` and writes `grype.json`; `release/vulnerability.py` turns that
+into `vulnerability-report.md`. Neither output records the vulnerability
+database version, nor whether Go findings were matched at function or module
+granularity.
+
+Those two facts decide the answer. The same route, on the same image, with the
+same grype binary, reports **8 Critical** against a July database and **1**
+against the 2026-08-17 one — because the newer database carries
+`qualifiers.go_imports` naming the vulnerable functions, and the binaries do
+not contain them. See `../security/SCAN_ROUTE_DISCREPANCY.md`.
+
+A gate result that does not say how it was measured cannot be compared with
+the next one. **No change is made here**: changing the release gate's scanner
+invocation during a release phase, on the strength of one observation, is
+precisely the kind of edit that should be proposed and reviewed rather than
+slipped in. Recorded as a recommendation:
+
+1. record `descriptor.db.built` and `descriptor.db.schemaVersion` from the
+   grype output into `vulnerability-report.md`;
+2. record whether the run emitted the "none carry function symbols" warning,
+   which is the one-line signal for granularity;
+3. keep scanning the image, not an SBOM — but state the granularity, because
+   the conservative number is the one a Critical disposition must be argued
+   against.
+
+---
+
+## 7. Status
 
 **PHASE 5 — RELEASE CANDIDATE BLOCKED.**
 
-Not "ALPHA HARDENED" — and no longer for the reason that would have applied an
-hour ago. The reference-suite gate **is** clean. The reason is that **Phase 5
-built no artifact**: the wallpaper fix, the poller instrumentation and the
-isolation fix are all in source, and the Alpha that exists is exactly as hard as
-Phase 4 left it. A hardened tree is not a hardened Alpha.
+Not "ALPHA HARDENED". Phase 5 has now built an artifact —
+`e501218f2fe0.1787016937`, see `../build/BUILD_IDENTITY.md` — and the two
+repaired assets are verified in it with a negative control. But that build is
+new, unqualified, and carries none of the journey evidence the Phase 4
+candidate does; a fresh image is not a hardened Alpha either. Five required
+gates remain outstanding.
 
 Not "RELEASE GATE READY", because five required gates are outstanding and four
 of them cannot be closed from inside this repository.

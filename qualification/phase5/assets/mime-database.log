@@ -1,0 +1,116 @@
+image:     localhost/bunny-os-beta:e501218f2fe0
+mounted:   /var/lib/containers/storage/overlay/3e0cc3c7fd537c445dbbb4677685f7bf0995330c5cae8e7882631f98a890929b/merged
+image id:  70f677701e1a16efd740f075cb05b14a6a04304e38141576e893b23655543d58
+
+== every svg the image installs ==
+  12 found
+
+  /usr/share/backgrounds/bunny-os/bunny-arc-dark.svg
+     size 915 bytes, '<svg' at byte 0
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/backgrounds/bunny-os/bunny-arc-light.svg
+     size 908 bytes, '<svg' at byte 0
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/backgrounds/bunny-os/bunny-nocturne.svg
+     size 7026 bytes, '<svg' at byte 139
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/bunny-shell/companion/default-bunny.svg
+     size 2900 bytes, '<svg' at byte 139
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/icons/hicolor/scalable/apps/bunny-approvals.svg
+     size 331 bytes, '<svg' at byte 0
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/icons/hicolor/scalable/apps/bunny-settings.svg
+     size 288 bytes, '<svg' at byte 0
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/icons/hicolor/scalable/apps/bunny-shell.svg
+     size 350 bytes, '<svg' at byte 0
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/icons/hicolor/scalable/apps/bunny-workspaces.svg
+     size 298 bytes, '<svg' at byte 0
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/icons/hicolor/scalable/status/bunny-shell-symbolic.svg
+     size 207 bytes, '<svg' at byte 0
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/libwacom/layouts/wacom-cintiq-companion-2.svg
+     size 5098 bytes, '<svg' at byte 259
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/libwacom/layouts/wacom-cintiq-companion-hybrid.svg
+     size 4367 bytes, '<svg' at byte 262
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+  /usr/share/libwacom/layouts/wacom-cintiq-companion.svg
+     size 4346 bytes, '<svg' at byte 255
+     libmagic:          image/svg+xml
+     shared-mime-info:  image/svg+xml
+     XML:               parses, root is {http://www.w3.org/2000/svg}svg
+
+== does the image carry its own mime database? ==
+  /usr/share/mime/mime.cache: 160164 bytes
+
+== release identity as the image reports it ==
+  {
+    "architecture": "x86_64",
+    "baseDistribution": "Fedora",
+    "baseImageReference": "quay.io/fedora/fedora-bootc:44",
+    "baseVersion": "44",
+    "brokerVersion": "0.1.0",
+    "buildId": "e501218f2fe0.1787016937",
+    "buildTimestamp": "2026-08-18T01:35:37Z",
+    "buildTool": "OCI Containerfile + unified image-builder",
+    "bunnyArtifactStatus": "placeholder",
+    "bunnyProtocolVersion": 3,
+    "bunnyVersion": "0.2.0",
+    "contractVersion": "1.0.0",
+    "imageVersion": "0.1.0-beta.e501218f2fe0",
+    "osVersion": "0.1.0",
+    "profile": "beta",
+    "recoveryVersion": "0.1.0",
+    "releaseChannel": "alpha",
+    "schemaVersion": 1,
+    "sourceCommit": "e501218f2fe0105e5fc92bdf94fd6b3c87d6c470",
+  os-release: VERSION="44 (Forty Four)"
+  os-release: VERSION_ID=44
+  os-release: VERSION_CODENAME=""
+  os-release: NAME="Bunny OS"
+  os-release: PRETTY_NAME="Bunny OS Alpha 0.1"
+  os-release: VARIANT="Bunny OS Alpha 0.1"
+  os-release: VARIANT_ID=alpha
+  os-release: BUNNY_OS_VERSION=0.1.0
+  os-release: BUNNY_OS_CHANNEL=alpha
+  os-release: BUNNY_OS_BUILD_ID=e501218f2fe0.1787016937
+  os-release: BUNNY_OS_COMMIT=e501218f2fe0105e5fc92bdf94fd6b3c87d6c470
+  os-release: BUNNY_OS_PROFILE=beta
+ASSET-VERIFY-DONE

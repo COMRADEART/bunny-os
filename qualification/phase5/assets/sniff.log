@@ -1,0 +1,49 @@
+image:   localhost/bunny-os-beta:e501218f2fe0
+mime db: /var/lib/containers/storage/overlay/45034d3edbd8bbfa59f6ddb46908519f1e4bb888b16ef4a0c2b7687911addc3c/merged/usr/share/mime/mime.cache
+
+== the repaired assets, as installed in the image ==
+/var/lib/containers/storage/overlay/45034d3edbd8bbfa59f6ddb46908519f1e4bb888b16ef4a0c2b7687911addc3c/merged/usr/share/backgrounds/bunny-os/bunny-arc-dark.svg
+    '<svg' at byte 0 of the first 915
+    filename only:      image/svg+xml (uncertain=False)
+    content only:       image/svg+xml (uncertain=False)
+    filename + content: image/svg+xml (uncertain=False)
+    content-only verdict: PASS
+/var/lib/containers/storage/overlay/45034d3edbd8bbfa59f6ddb46908519f1e4bb888b16ef4a0c2b7687911addc3c/merged/usr/share/backgrounds/bunny-os/bunny-arc-light.svg
+    '<svg' at byte 0 of the first 908
+    filename only:      image/svg+xml (uncertain=False)
+    content only:       image/svg+xml (uncertain=False)
+    filename + content: image/svg+xml (uncertain=False)
+    content-only verdict: PASS
+/var/lib/containers/storage/overlay/45034d3edbd8bbfa59f6ddb46908519f1e4bb888b16ef4a0c2b7687911addc3c/merged/usr/share/backgrounds/bunny-os/bunny-nocturne.svg
+    '<svg' at byte 139 of the first 4096
+    filename only:      image/svg+xml (uncertain=False)
+    content only:       image/svg+xml (uncertain=False)
+    filename + content: image/svg+xml (uncertain=False)
+    content-only verdict: PASS
+
+== where the companion portrait ended up ==
+  /usr/share/bunny-shell/companion/default-bunny.svg
+  (nothing above means the image does not install it)
+
+== NEGATIVE CONTROL: the same files as they were before the repair ==
+  recovered shell/assets/wallpapers/bunny-nocturne.svg at e906a48793d7
+  recovered shell/assets/companion/default-bunny.svg at e906a48793d7
+/home/bunny/p5-evidence/assets/control/bunny-nocturne.svg
+    '<svg' at byte 1361 of the first 4096
+    filename only:      image/svg+xml (uncertain=False)
+    content only:       application/xml (uncertain=False)
+    filename + content: image/svg+xml (uncertain=False)
+    content-only verdict: FAIL
+/home/bunny/p5-evidence/assets/control/default-bunny.svg
+    '<svg' at byte 520 of the first 2134
+    filename only:      image/svg+xml (uncertain=False)
+    content only:       application/xml (uncertain=False)
+    filename + content: image/svg+xml (uncertain=False)
+    content-only verdict: FAIL
+SNIFF-VERIFY-DONE
+/var/lib/containers/storage/overlay/c1d2f74ce066173dee122e3f99db61faa91ef2863d87c0e533cee94fb08e474b/merged/usr/share/bunny-shell/companion/default-bunny.svg
+    '<svg' at byte 139 of the first 2900
+    filename only:      image/svg+xml (uncertain=False)
+    content only:       image/svg+xml (uncertain=False)
+    filename + content: image/svg+xml (uncertain=False)
+    content-only verdict: PASS

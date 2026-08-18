@@ -8,12 +8,15 @@ from ``operations/data/vulnerability-disposition.json`` — a 2026-07-29 scan of
 
 The second was built from a ``grype dir:`` scan of the candidate's overlay,
 mounted in place. That route reported **one** Critical finding where Phase 4
-had eight, and the difference was not the product improving. grype matches Go
-findings at *function* granularity when it can read the binary and at *module*
-granularity when it is handed an SBOM, and the seven ``golang.org/x/crypto``
-Criticals fall out at function granularity. The package is still in the image,
-the advisories are still Critical in the database, and the ranges still apply
-— ``SCAN_ROUTE_DISCREPANCY.md`` has the chain.
+had eight, and the difference was not the product improving. The current
+database carries a ``qualifiers.go_imports`` list on each of those advisories,
+naming the vulnerable functions -- all seven in ``golang.org/x/crypto/ssh``,
+``.../ssh/agent`` or ``.../ssh/knownhosts`` -- and neither ``/usr/bin/skopeo``
+nor ``/usr/bin/podman`` contains those packages. Given a binary grype applies
+the qualifier and excludes them; given an SBOM with no symbol capture it cannot
+and reports all seven. The gate's own ``oci-archive:`` route agrees with
+``dir:`` advisory for advisory, so the route was never the variable.
+``SCAN_ROUTE_DISCREPANCY.md`` has the chain.
 
 So this matrix is built from the **SBOM** scan: module granularity, which is
 the granularity Phase 4's number is in, the granularity the release gate has
@@ -128,22 +131,30 @@ def main() -> int:
                       "from the image's overlay mounted in place (podman create + podman "
                       "mount). Module granularity.",
             "matchGranularity": "module",
-            "whyNotTheFilesystemRoute": (
-                "grype dir: over the same mounted overlay matches Go findings at function "
-                "granularity and reports 1 Critical instead of 8, excluding the seven "
-                "golang.org/x/crypto advisories because their vulnerable functions are not "
-                "linked into /usr/bin/skopeo. The package is present, the advisories are "
-                "active and Critical in the database, and the ranges apply. A scanner's "
-                "symbol analysis is not the independent review release/vulnerability.py "
-                "requires, so the conservative granularity is the one recorded. See "
-                "SCAN_ROUTE_DISCREPANCY.md."
+            "whyNotABinaryReadingRoute": (
+                "Both routes that read the binaries - grype oci-archive: and grype dir: - "
+                "report 1 Critical instead of 8, and they agree with each other advisory "
+                "for advisory. They exclude the seven golang.org/x/crypto advisories "
+                "because the database scopes each to functions in golang.org/x/crypto/ssh, "
+                ".../ssh/agent or .../ssh/knownhosts, and neither /usr/bin/skopeo nor "
+                "/usr/bin/podman contains those packages. The module is present, the "
+                "advisories are active and Critical, and the version ranges apply. A "
+                "scanner's symbol analysis is not the independent review "
+                "release/vulnerability.py requires, so the conservative granularity is "
+                "the one recorded. See SCAN_ROUTE_DISCREPANCY.md."
             ),
             "methodDiffersFromPhase4": (
-                "build/scripts/security-scan.sh uses grype oci-archive: on an exported "
-                "archive. That is also module granularity, so the Critical counts are "
-                "comparable. It is not equivalent in coverage: the retained Phase 4 scans "
-                "contain zero rpm findings, and this one contains 26 distinct rpm "
-                "advisories from /usr/share/rpm/rpmdb.sqlite."
+                "build/scripts/security-scan.sh uses grype oci-archive:. Run against this "
+                "candidate with the current database it returns the function-granularity "
+                "answer, identical to grype dir:. Phase 4's run of the same route returned "
+                "the module-granularity answer because the July database carried no symbol "
+                "qualifiers. The route is constant; the database is not."
+            ),
+            "coverageDiffersFromPhase4": (
+                "The retained Phase 4 scans contain zero rpm findings; every Phase 5 scan "
+                "contains 26 distinct rpm advisories from /usr/share/rpm/rpmdb.sqlite. The "
+                "route could always read that database - the July feed had no Fedora 44 "
+                "advisory data."
             ),
             "scope": "--only-fixed, the same scope as security-scan.sh",
         },
@@ -191,7 +202,8 @@ def main() -> int:
                 "Phase 5 figure of 1 was a function-granularity measurement compared "
                 "against a module-granularity baseline and is withdrawn as a statement "
                 "about this candidate's position. The larger totals here are coverage, "
-                "not drift: Phase 4's scan catalogued no rpm at all."
+                "not drift: the July advisory feed had no Fedora 44 data, so Phase 4's "
+                "scan reported no rpm finding at all."
             ),
         },
         "identicalAcrossBuilds": {
