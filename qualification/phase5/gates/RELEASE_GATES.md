@@ -9,7 +9,8 @@ file. Where this file and the tool disagree, the tool is right and this file is
 stale — which is why every machine-checked row names the command that produces
 it.
 
-Last reconciled against the tool: Phase 5, at `9a34ee81`.
+Last reconciled against the tool: Phase 5, at `9a34ee81`. Reference-suite row
+certified at `30f11a6d`.
 
 ---
 
@@ -48,7 +49,7 @@ of them would be misleading whichever it chose.
 | Persistence | **PASS** — `g2`→`g3`→`g4`, two reboots | **NOT_RUN** — preservation matrix 0 PASS / 10 | PASS | none |
 | Companion | **PASS** — modes survive two reboots | — | PASS | none |
 | Shutdown | **PASS** — clean ACPI on every boot of the chain | — | PASS | none |
-| Reference suite | **INTERMITTENT** | — | **CLEAN** | **quantified** — see §3 |
+| Reference suite | **CLEAN** — 5/5 full runs, 0 failures | — | **CLEAN** ✓ | **closed** — root cause found and fixed; see §3 |
 | Security review | **NOT DONE** | `PENDING_EXTERNAL_REVIEW` | REQUIRED | disposition matrix built; **rebinding to the candidate NOT done** — it needs the re-scan, which is blocked on disk |
 | Physical hardware | **NOT RUN** | `PENDING_HARDWARE` | REQUIRED | none — no machine |
 | Production signing | **NOT DONE** | `BLOCKED` (second signer) | REQUIRED | workflow specified; no key created |
@@ -93,7 +94,7 @@ work, it is waiting on a person.
 
 ## 3. Reference suite — the one gate Phase 5 could close by itself
 
-Required: **CLEAN**. Entering state: **INTERMITTENT**.
+Required: **CLEAN**. Entering state: **INTERMITTENT**. **Now: CLEAN.**
 
 Measured on the Fedora reference target, as `bunny`, from an ext4 clone — the
 conditions the runbook requires, because `/mnt/c` produces nine false failures
@@ -148,12 +149,28 @@ with a reason. Negative controls: removing the pin fails 6 of 10; the
 degradation checks must still fire; and step 17 must reach `animated-2d` *with
 no pressure reason*, so pinning to an arbitrary value would not satisfy it.
 
-### Certification
+### Certification — clean
 
-§8 requires repeated runs, not one. Eight `tests/companion` runs and five full
-reference-suite runs are in progress on the reference target; results and the
-gate's final state are recorded in the Phase 5 report. **This tracker does not
-mark the gate CLEAN until those runs are in.**
+§8 requires repeated runs, not one. At `30f11a6d`, on the reference target, as
+`bunny`, from an ext4 clone:
+
+| | Runs | Failures |
+| --- | ---: | ---: |
+| `tests/companion` | 8 | **0** |
+| Full reference suite (5979 tests) | 5 | **0** |
+| Installer sub-suite (178 tests) | 5 | **0** |
+
+**0 unexplained failures, 0 unexplained errors.**
+
+The eighth companion run recorded `psi_avg10 = 0.71` — seven times the
+threshold that used to degrade the rung — and **zero slice failures**. Before
+the pin, that is the run that would have failed. The certification hit the
+conditions that cause the defect rather than avoiding them.
+
+Evidence: `qualification/phase5/isolation/certification/verify.log`.
+
+**This gate is now CLEAN.** It is the only required gate Phase 5 could close by
+itself, and the only one it closed.
 
 ---
 
@@ -225,9 +242,14 @@ rollback — are engineering, and §4 says what they need.
 
 **PHASE 5 — RELEASE CANDIDATE BLOCKED.**
 
-Not "ALPHA HARDENED", because the reference-suite gate is not clean. Not
-"RELEASE GATE READY", because six required gates are outstanding and four of
-them cannot be closed from inside this repository.
+Not "ALPHA HARDENED" — and no longer for the reason that would have applied an
+hour ago. The reference-suite gate **is** clean. The reason is that **Phase 5
+built no artifact**: the wallpaper fix, the poller instrumentation and the
+isolation fix are all in source, and the Alpha that exists is exactly as hard as
+Phase 4 left it. A hardened tree is not a hardened Alpha.
+
+Not "RELEASE GATE READY", because five required gates are outstanding and four
+of them cannot be closed from inside this repository.
 
 The Alpha Release Candidate `e906a487` remains **READY as an Alpha Release
 Candidate and nothing else**, exactly as Phase 4 left it. Phase 5 has not

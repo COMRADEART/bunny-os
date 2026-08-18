@@ -1,0 +1,21 @@
+=== memory pressure on this host, before anything ===
+some avg10=0.00 avg60=0.00 avg300=0.00 total=5829931
+full avg10=0.00 avg60=0.00 avg300=0.00 total=5780519
+
+=== tests/companion x8, with PSI sampled after each ===
+companion run 1: rc=0 sliceFailures=0 psi_avg10=0.00
+companion run 2: rc=0 sliceFailures=0 psi_avg10=0.00
+companion run 3: rc=0 sliceFailures=0 psi_avg10=0.00
+companion run 4: rc=0 sliceFailures=0 psi_avg10=0.00
+companion run 5: rc=0 sliceFailures=0 psi_avg10=0.00
+companion run 6: rc=0 sliceFailures=0 psi_avg10=0.00
+companion run 7: rc=0 sliceFailures=0 psi_avg10=0.00
+companion run 8: rc=0 sliceFailures=0 psi_avg10=0.71
+
+=== §8: the whole reference suite, x5 ===
+suite run 1: rc=0 failures=0 | Ran 5979 tests Ran 178 tests 
+suite run 2: rc=0 failures=0 | Ran 5979 tests Ran 178 tests 
+suite run 3: rc=0 failures=0 | Ran 5979 tests Ran 178 tests 
+suite run 4: rc=0 failures=0 | Ran 5979 tests Ran 178 tests 
+suite run 5: rc=0 failures=0 | Ran 5979 tests Ran 178 tests 
+VERIFY-DONE

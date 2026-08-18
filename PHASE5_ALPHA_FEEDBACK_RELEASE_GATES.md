@@ -2,10 +2,20 @@
 
 ## STATUS: **PHASE 5 — RELEASE CANDIDATE BLOCKED**
 
-Not `ALPHA HARDENED`: the reference-suite gate requires CLEAN and the suite is
-not clean.
-Not `RELEASE GATE READY`: six required gates are outstanding and four cannot be
-closed from inside this repository.
+**The reference-suite gate is CLEAN.** Five consecutive full runs, 5979 tests
+plus 178 installer tests each, zero failures and zero errors; eight consecutive
+`tests/companion` runs, zero slice failures. Its root cause was found and fixed.
+That is the one required gate Phase 5 could close by itself, and it is closed.
+
+Not `ALPHA HARDENED`, for a reason that has nothing to do with the suite:
+**Phase 5 built no artifact.** The wallpaper fix, the poller instrumentation and
+the isolation fix are in source. The Alpha that exists — `e906a487` — is
+exactly as hard as Phase 4 left it. A hardened tree is not a hardened Alpha, and
+the build is blocked on host storage.
+
+Not `RELEASE GATE READY`: five required gates remain outstanding and four of
+them cannot be closed from inside this repository at all.
+
 Never `STABLE RELEASE`.
 
 **The Phase 4 Alpha Release Candidate `e906a487` is untouched and remains READY
@@ -251,6 +261,33 @@ Negative controls: removing the pin fails 6 of 10; step 18 must still degrade
 on declared pressure and step 19 must still reach `text-only`, so a fix that
 disabled the assertion fails too; and step 17 must reach `animated-2d` **with
 no pressure reason**, so pinning to an arbitrary value would not satisfy it.
+
+### Certification — §8, and it is clean
+
+§8 requires repeated runs, not one: *"Do not declare the suite reliable after
+one passing run."*
+
+On the reference target, as `bunny`, from an ext4 clone, at `30f11a6d`:
+
+| | Runs | Failures |
+| --- | ---: | ---: |
+| `tests/companion` | 8 | **0** |
+| Full reference suite (5979 tests) | 5 | **0** |
+| Installer sub-suite (178 tests) | 5 | **0** |
+
+**0 unexplained failures, 0 unexplained errors.**
+
+The eighth companion run is the one worth naming: it recorded
+`psi_avg10 = 0.71`, seven times the threshold that used to degrade the rung,
+and **zero slice failures**. Before the pin it is the run that would have
+failed. The certification did not merely avoid the conditions that cause the
+defect — it hit them, hard, and passed.
+
+Evidence: `qualification/phase5/isolation/certification/verify.log`, produced
+by `verify.sh` beside it.
+
+**The reference-suite gate moves INTERMITTENT → CLEAN.** It is the only
+required gate Phase 5 could close by itself, and the only one it closed.
 
 ### A separate finding: 153 tests were not being run
 
@@ -649,7 +686,7 @@ produces a number true of neither.
 | Persistence | PASS (journey) / NOT_RUN (matrix) | PASS |
 | Companion | PASS | PASS |
 | Shutdown | PASS | PASS |
-| **Reference suite** | **INTERMITTENT — ≈1/14, quantified** | **CLEAN** |
+| **Reference suite** | **CLEAN** — 5/5 full runs, 0 failures; root cause fixed | **CLEAN** ✓ |
 | Security review | NOT DONE | REQUIRED |
 | Physical hardware | NOT RUN | REQUIRED |
 | Production signing | NOT DONE | REQUIRED |
@@ -788,7 +825,12 @@ found this phase were in things that measure, not in things that run.**
 None of those would have been found by running the suite, because in three of
 the four cases the suite was the thing that was wrong.
 
-**Optimise for a release process where a PASS actually means PASS.** The one
-number in this report I would most like a reader to check is the fourth row of
-§4's table: the whole `tests/companion` package, 28 runs, 2 failures. It is not
-clean, it is not called flaky, and it is not closed.
+**Optimise for a release process where a PASS actually means PASS.** The number
+I would most like a reader to check is `psi_avg10 = 0.71` on the eighth
+companion run of the certification. It is the host crossing the threshold that
+used to break the slice, seven times over, on a run that passed — which is the
+difference between a defect avoided and a defect fixed.
+
+The second is the one that has not moved: **five required gates outstanding,
+four of them unreachable from inside this repository.** A clean suite is not a
+release, and this phase closed exactly one gate.

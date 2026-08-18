@@ -1,0 +1,79 @@
+{
+ "schemaVersion": 1,
+ "record": "phase5-candidate-sbom",
+ "why": [
+  "§18 lists 'SBOM where available' among the things an independent reviewer needs,",
+  "and none existed for this artifact. build/scripts/sbom.sh requires an exported OCI",
+  "archive, which is the path that needs tens of gigabytes and is why the security",
+  "re-scan failed on its first attempt.",
+  "",
+  "This one was produced by mounting the image's overlay in place (podman create +",
+  "podman mount) and cataloguing the mounted directory. Free space measured before",
+  "and after: unchanged.",
+  "",
+  "The file is 70 MB and is NOT committed. This project already has a convention for",
+  "that -- qualification/tpm/scripts/retain_bulky_evidence.py -- and its rule is the",
+  "one followed here: the digest chain runs record -> manifest -> retained bytes on",
+  "the builder, so a file that no longer digests to what this manifest claims is not",
+  "the file this manifest is about."
+ ],
+ "subject": {
+  "imageReference": "localhost/bunny-os-beta:e906a48793d7",
+  "imageId": "6f3bbb9af38dae1636ff5c02dc79b07d3b09774bcacddc15308ae8e80bf3c8b2",
+  "candidateCommit": "e906a48793d74544b39c14cc3e35e0654f5311e2",
+  "isTheAlphaReleaseCandidate": true
+ },
+ "retained": [
+  {
+   "name": "candidate.spdx.json",
+   "sha256": "f915a1c2bc55f7a84cf42753f9ef63be6d91c5715c849fad91f601baf02b2072",
+   "bytes": 73335336,
+   "format": "SPDX-2.3 JSON",
+   "location": "/home/bunny/p5-evidence/sbom/candidate.spdx.json",
+   "host": "the Fedora Linux 44 WSL2 builder"
+  }
+ ],
+ "summary": {
+  "spdxVersion": "SPDX-2.3",
+  "packages": 6451,
+  "byType": {
+   "generic": 4726,
+   "rpm": 1081,
+   "golang": 560,
+   "pypi": 81
+  },
+  "note": [
+   "'generic' is syft's binary and file cataloguer rather than a package manager, so",
+   "it is the largest bucket and the least authoritative. The 1081 rpm entries are the",
+   "ones that correspond to what dnf installed; the 560 golang entries are the modules",
+   "linked into base-image binaries, which is where every one of the 56 fixable",
+   "advisories in the security disposition lives."
+  ]
+ },
+ "tool": {
+  "name": "syft",
+  "version": "1.50.0",
+  "buildDate": "2026-07-28T17:38:13Z",
+  "gitCommit": "16223e6dd7893fe578787658ceb876257483d404"
+ },
+ "producedAt": "2026-08-18T01:04Z",
+ "reproduce": [
+  "bash /home/bunny/p5-ops/sbom-mounted.sh localhost/bunny-os-beta:e906a48793d7",
+  "",
+  "The script creates a container from the image without starting it, mounts the",
+  "overlay, runs `syft scan dir:<mountpoint> -o spdx-json`, and removes both. It is",
+  "not deterministic across syft versions and the version above is part of the record",
+  "for that reason.",
+  "",
+  "It is also NOT the same instrument as build/scripts/sbom.sh, which catalogues an",
+  "oci-archive. The two have not been shown to agree, and a reviewer comparing them",
+  "should be told that before they start rather than after."
+ ],
+ "limitations": [
+  "Catalogued from a directory, not from an OCI archive. Layer attribution is absent:",
+  "this SBOM says what is in the image, not which layer put it there.",
+  "The image was mounted read-only in effect but not asserted read-only; nothing wrote",
+  "to it, and `podman umount` + `podman rm -f` removed the container afterwards.",
+  "Not signed. No production key exists -- see qualification/phase5/signing/."
+ ]
+}
