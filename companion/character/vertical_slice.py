@@ -59,11 +59,57 @@ _DISPLAY = Display("slice-display", PixelRect(0, 0, 1920, 1080), primary=True)
 #: slice needs the *renderer* exercised; whether this particular machine has a
 #: monitor is not the property under test, and pretending it does anywhere else
 #: would be dishonest — so the override is explicit, named, and confined here.
+#:
+#: The last five entries are the isolation fix, and they matter more than they
+#: look.
+#:
+#: :class:`CharacterPresenter` builds ``base_signals`` from
+#: ``assess_current_machine()`` — the *real* host — and every field this dict
+#: does not name survives into every evaluation. ``memory_pressure`` is read
+#: from Linux PSI as ``/proc/pressure/memory`` ``some avg10 >= 0.1``
+#: (:func:`companion.character.diagnostics.signals_from_assessment`), a
+#: ten-second rolling average of memory stall. A suite that has just run
+#: several thousand tests in one process crosses it, intermittently, for
+#: reasons that have nothing to do with this slice.
+#:
+#: When it was crossed, the selector degraded to ``static-image`` citing
+#: "memory pressure disabled animation", and the run failed as::
+#:
+#:     ['step 17 (trigger controlled presentation pressure)',
+#:      'step 21 (recover only after hysteresis)']
+#:
+#: with 18, 19 and 20 passing, no renderer fault, and the presenter healthy.
+#: That pair flipped in and out for four phases and was attributed in turn to a
+#: transient renderer fault, to host contention, and to cross-test
+#: interference. It was the host's own memory pressure arriving through a
+#: signal nobody had pinned. Measured: 0/20 for the class alone, 0/40 for the
+#: module alone, 0/60 after each earlier neighbour, ~2/28 for the whole
+#: package — because it is the package that makes the host stall, not any test
+#: in it.
+#:
+#: The second-order problem is worse than the failure. Step 18 *declares*
+#: ``memory_pressure: True`` to prove the selector degrades. On a machine
+#: already under ambient pressure, step 18 passed without testing anything —
+#: the rung was static before it asked. So pinning these is not silencing a
+#: flake; it is what makes steps 17 to 21 measure the selector at all.
+#:
+#: Pinned here rather than in the presenter, because the presenter reading the
+#: real machine is correct: on a real machine under real pressure the companion
+#: *should* stop animating. It is the slice that must declare its conditions.
+#:
+#: ``tests/companion/test_slice_host_invariance.py`` parses ``adaptation.py``
+#: and requires every signal the ladder consults to be pinned here or declared
+#: exempt with a reason, so a signal added there cannot reopen this quietly.
 _VISUAL = {
     "display_available": True,
     "graphics_ready": True,
     "available_memory_bytes": 8 * 1024 ** 3,
     "gpu_available": True,
+    "memory_pressure": False,
+    "thermal_pressure": False,
+    "cpu_pressure": False,
+    "on_battery": False,
+    "battery_percent": None,
 }
 
 #: The allowance a machine with a display would receive.
