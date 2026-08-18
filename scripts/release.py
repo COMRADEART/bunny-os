@@ -29,6 +29,7 @@ if str(ROOT) not in os.sys.path:
 
 from release import accessibility as accessibility_module
 from release import matrix as matrix_module
+from release import updatepolicy as updatepolicy_module
 from release.artifacts import ArtifactError, parse_manifest, verify_against_disk
 from release.buildmode import BuildModeError, require_candidate_capable
 from release.builders import (
@@ -1603,6 +1604,46 @@ def cve_disposition() -> int:
 # --- Workstreams 14 and 15: independent reviews -------------------------------
 
 
+def update_support_policy() -> int:
+    """Admit or refuse the unsupported-update policy behind blocking condition 7.
+
+    Deliberately a standalone verb rather than a new row in the candidate gate.
+    Changing what the release gate is composed of, during a release phase, on
+    the strength of a decision taken in that same phase, is the kind of edit
+    that should be proposed and reviewed rather than slipped in. This verb
+    reports; it does not relabel the update matrix, which still records that
+    none of its thirteen scenarios was executed.
+    """
+    path = DATA / "update-support-policy.json"
+    if not path.is_file():
+        print("NOT_RUN: operations/data/update-support-policy.json does not exist")
+        print("  Blocking condition 7 is unmet: the update matrix is NOT_RUN and no")
+        print("  approved unsupported-update policy stands behind it.")
+        return 2
+    try:
+        verdict = updatepolicy_module.load_and_evaluate(path, root=ROOT)
+    except updatepolicy_module.UpdatePolicyError as exc:
+        print(f"BLOCKED: {exc}")
+        return 2
+
+    atomic_json(OUT / "update-support-policy.json", verdict.as_dict())
+
+    print(f"update support policy: {verdict.decision} for release class {verdict.releaseClass}")
+    print(f"  approver:          {verdict.approver}")
+    print(f"  bound to:          {verdict.boundToDigest}")
+    print(f"  refusal qualified: {verdict.refusalQualified}")
+    if not verdict.admissible:
+        print("  INADMISSIBLE:")
+        for reason in verdict.reasons:
+            print(f"    - {reason}")
+        return 2
+    print()
+    print("  ADMISSIBLE. Blocking condition 7 is satisfied for the bound artifact.")
+    print("  It does not close the update matrix and waives no scenario: all thirteen")
+    print("  remain NOT_RUN with their recorded reasons.")
+    return 0
+
+
 def validate_independent_reviews() -> int:
     """Requests must be sendable; delivered records must be signed and bound."""
     document = load_optional(DATA / "independent-reviews.json", None)
@@ -2136,6 +2177,7 @@ def main() -> int:
         "accessibility-evidence-plan",
         "validate-accessibility-evidence",
         "validate-independent-reviews",
+        "update-support-policy",
         "stable-evidence-report",
         "qualification-candidate-readiness",
         "validate-release-manifest",
@@ -2232,6 +2274,7 @@ def main() -> int:
         "accessibility-evidence-plan": accessibility_evidence_plan,
         "validate-accessibility-evidence": validate_accessibility_evidence,
         "validate-independent-reviews": validate_independent_reviews,
+        "update-support-policy": update_support_policy,
         "stable-evidence-report": stable_evidence_report,
         "qualification-candidate-readiness": qualification_candidate_readiness,
         "validate-release-manifest": validate_release_manifest,
