@@ -1,0 +1,1122 @@
+{
+  "binaries": {
+    "/usr/bin/podman": {
+      "advisories": {
+        "GHSA-5cgq-3rg8-m6cv": {
+          "absent": [],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/knownhosts",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh/knownhosts.(*hostKeyDB).IsRevoked",
+              "symbol": "hostKeyDB.IsRevoked"
+            }
+          ],
+          "symbolsNamed": 1,
+          "symbolsPresent": 1
+        },
+        "GHSA-89gr-r52h-f8rx": {
+          "absent": [
+            "CertChecker.Authenticate",
+            "NewServerConn",
+            "connection.serverAuthenticate"
+          ],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*CertChecker).CheckCert",
+              "symbol": "CertChecker.CheckCert"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*CertChecker).CheckHostKey",
+              "symbol": "CertChecker.CheckHostKey"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Certificate).Verify",
+              "symbol": "Certificate.Verify"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.Dial",
+              "symbol": "Dial"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.NewClientConn",
+              "symbol": "NewClientConn"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*skECDSAPublicKey).Verify",
+              "symbol": "skECDSAPublicKey.Verify"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*skEd25519PublicKey).Verify",
+              "symbol": "skEd25519PublicKey.Verify"
+            }
+          ],
+          "symbolsNamed": 10,
+          "symbolsPresent": 7
+        },
+        "GHSA-f5wc-c3c7-36mc": {
+          "absent": [],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/agent",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh/agent.(*client).Add",
+              "symbol": "client.Add"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh/agent.(*keyring).Add",
+              "symbol": "keyring.Add"
+            }
+          ],
+          "symbolsNamed": 2,
+          "symbolsPresent": 2
+        },
+        "GHSA-jppx-rxg9-jmrx": {
+          "absent": [],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/agent",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh/agent.(*keyring).Add",
+              "symbol": "keyring.Add"
+            }
+          ],
+          "symbolsNamed": 1,
+          "symbolsPresent": 1
+        },
+        "GHSA-p77j-4mvh-x3m3": {
+          "absent": [],
+          "embeddedVersions": [
+            "v1.72.2"
+          ],
+          "fixedVersion": "v1.73.0",
+          "importPath": "google.golang.org/grpc",
+          "importPathPresent": true,
+          "module": "google.golang.org/grpc",
+          "present": [
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).Serve",
+              "symbol": "Server.Serve"
+            },
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).ServeHTTP",
+              "symbol": "Server.ServeHTTP"
+            },
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).handleStream",
+              "symbol": "Server.handleStream"
+            }
+          ],
+          "symbolsNamed": 3,
+          "symbolsPresent": 3
+        },
+        "GHSA-rm3j-f69w-wqmq": {
+          "absent": [
+            "NewServerConn",
+            "Session.CombinedOutput",
+            "Session.Output",
+            "Session.Shell"
+          ],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.Dial",
+              "symbol": "Dial"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.NewClientConn",
+              "symbol": "NewClientConn"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Session).Run",
+              "symbol": "Session.Run"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Session).Start",
+              "symbol": "Session.Start"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*channel).Write",
+              "symbol": "channel.Write"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*channel).WriteExtended",
+              "symbol": "channel.WriteExtended"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*curve25519sha256).Client",
+              "symbol": "curve25519sha256.Client"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*curve25519sha256).Server",
+              "symbol": "curve25519sha256.Server"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*dhGEXSHA).Client",
+              "symbol": "dhGEXSHA.Client"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*dhGEXSHA).Server",
+              "symbol": "dhGEXSHA.Server"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*dhGroup).Client",
+              "symbol": "dhGroup.Client"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*dhGroup).Server",
+              "symbol": "dhGroup.Server"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*ecdh).Client",
+              "symbol": "ecdh.Client"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*ecdh).Server",
+              "symbol": "ecdh.Server"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*extChannel).Write",
+              "symbol": "extChannel.Write"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*mlkem768WithCurve25519sha256).Client",
+              "symbol": "mlkem768WithCurve25519sha256.Client"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*mlkem768WithCurve25519sha256).Server",
+              "symbol": "mlkem768WithCurve25519sha256.Server"
+            }
+          ],
+          "symbolsNamed": 21,
+          "symbolsPresent": 17
+        },
+        "GHSA-vgwf-h737-ff37": {
+          "absent": [
+            "Client.Listen",
+            "Client.ListenTCP",
+            "Client.ListenUnix",
+            "NewServerConn",
+            "Session.CombinedOutput",
+            "Session.Output",
+            "Session.RequestPty",
+            "Session.SendRequest",
+            "Session.Setenv",
+            "Session.Shell",
+            "Session.Signal",
+            "Session.WindowChange",
+            "tcpListener.Close",
+            "unixListener.Close"
+          ],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.Dial",
+              "symbol": "Dial"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.NewClientConn",
+              "symbol": "NewClientConn"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Session).RequestSubsystem",
+              "symbol": "Session.RequestSubsystem"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Session).Run",
+              "symbol": "Session.Run"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Session).Start",
+              "symbol": "Session.Start"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*channel).SendRequest",
+              "symbol": "channel.SendRequest"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*channel).handlePacket",
+              "symbol": "channel.handlePacket"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*mux).SendRequest",
+              "symbol": "mux.SendRequest"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*mux).handleGlobalPacket",
+              "symbol": "mux.handleGlobalPacket"
+            }
+          ],
+          "symbolsNamed": 23,
+          "symbolsPresent": 9
+        },
+        "GHSA-x527-x647-q7gg": {
+          "absent": [
+            "NewServerConn",
+            "connection.serverAuthenticate"
+          ],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 2,
+          "symbolsPresent": 0
+        }
+      },
+      "buildInfoModuleCount": 155,
+      "buildInfoVersionsOfInterest": {
+        "golang.org/x/crypto": [
+          "v0.53.0"
+        ],
+        "golang.org/x/mod": [
+          "v0.36.0"
+        ],
+        "golang.org/x/net": [
+          "v0.55.0"
+        ],
+        "golang.org/x/text": [
+          "v0.38.0"
+        ],
+        "google.golang.org/grpc": [
+          "v1.72.2"
+        ]
+      },
+      "bytes": 45220848,
+      "sshPackagePathsPresent": [
+        "golang.org/x/crypto/ssh",
+        "golang.org/x/crypto/ssh/agent",
+        "golang.org/x/crypto/ssh/agent/client",
+        "golang.org/x/crypto/ssh/agent/keyring",
+        "golang.org/x/crypto/ssh/agent/server",
+        "golang.org/x/crypto/ssh/buffer",
+        "golang.org/x/crypto/ssh/certs",
+        "golang.org/x/crypto/ssh/channel",
+        "golang.org/x/crypto/ssh/cipher",
+        "golang.org/x/crypto/ssh/client",
+        "golang.org/x/crypto/ssh/common",
+        "golang.org/x/crypto/ssh/connection",
+        "golang.org/x/crypto/ssh/handshake",
+        "golang.org/x/crypto/ssh/internal/bcrypt",
+        "golang.org/x/crypto/ssh/kex",
+        "golang.org/x/crypto/ssh/keys",
+        "golang.org/x/crypto/ssh/knownhosts",
+        "golang.org/x/crypto/ssh/knownhosts/knownhosts",
+        "golang.org/x/crypto/ssh/mac",
+        "golang.org/x/crypto/ssh/messages",
+        "golang.org/x/crypto/ssh/mlkem",
+        "golang.org/x/crypto/ssh/mux",
+        "golang.org/x/crypto/ssh/server",
+        "golang.org/x/crypto/ssh/session",
+        "golang.org/x/crypto/ssh/ssh",
+        "golang.org/x/crypto/ssh/streamlocal",
+        "golang.org/x/crypto/ssh/tcpip",
+        "golang.org/x/crypto/ssh/transport"
+      ]
+    },
+    "/usr/bin/skopeo": {
+      "advisories": {
+        "GHSA-5cgq-3rg8-m6cv": {
+          "absent": [
+            "hostKeyDB.IsRevoked"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/knownhosts",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 1,
+          "symbolsPresent": 0
+        },
+        "GHSA-89gr-r52h-f8rx": {
+          "absent": [
+            "CertChecker.Authenticate",
+            "CertChecker.CheckCert",
+            "CertChecker.CheckHostKey",
+            "Certificate.Verify",
+            "Dial",
+            "NewClientConn",
+            "NewServerConn",
+            "connection.serverAuthenticate",
+            "skECDSAPublicKey.Verify",
+            "skEd25519PublicKey.Verify"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 10,
+          "symbolsPresent": 0
+        },
+        "GHSA-f5wc-c3c7-36mc": {
+          "absent": [
+            "client.Add",
+            "keyring.Add"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/agent",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 2,
+          "symbolsPresent": 0
+        },
+        "GHSA-jppx-rxg9-jmrx": {
+          "absent": [
+            "keyring.Add"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/agent",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 1,
+          "symbolsPresent": 0
+        },
+        "GHSA-p77j-4mvh-x3m3": {
+          "absent": [],
+          "embeddedVersions": [
+            "v1.79.3"
+          ],
+          "fixedVersion": "v1.73.0",
+          "importPath": "google.golang.org/grpc",
+          "importPathPresent": true,
+          "module": "google.golang.org/grpc",
+          "present": [
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).Serve",
+              "symbol": "Server.Serve"
+            },
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).ServeHTTP",
+              "symbol": "Server.ServeHTTP"
+            },
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).handleStream",
+              "symbol": "Server.handleStream"
+            }
+          ],
+          "symbolsNamed": 3,
+          "symbolsPresent": 3
+        },
+        "GHSA-rm3j-f69w-wqmq": {
+          "absent": [
+            "Dial",
+            "NewClientConn",
+            "NewServerConn",
+            "Session.CombinedOutput",
+            "Session.Output",
+            "Session.Run",
+            "Session.Shell",
+            "Session.Start",
+            "channel.Write",
+            "channel.WriteExtended",
+            "curve25519sha256.Client",
+            "curve25519sha256.Server",
+            "dhGEXSHA.Client",
+            "dhGEXSHA.Server",
+            "dhGroup.Client",
+            "dhGroup.Server",
+            "ecdh.Client",
+            "ecdh.Server",
+            "extChannel.Write",
+            "mlkem768WithCurve25519sha256.Client",
+            "mlkem768WithCurve25519sha256.Server"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 21,
+          "symbolsPresent": 0
+        },
+        "GHSA-vgwf-h737-ff37": {
+          "absent": [
+            "Client.Listen",
+            "Client.ListenTCP",
+            "Client.ListenUnix",
+            "Dial",
+            "NewClientConn",
+            "NewServerConn",
+            "Session.CombinedOutput",
+            "Session.Output",
+            "Session.RequestPty",
+            "Session.RequestSubsystem",
+            "Session.Run",
+            "Session.SendRequest",
+            "Session.Setenv",
+            "Session.Shell",
+            "Session.Signal",
+            "Session.Start",
+            "Session.WindowChange",
+            "channel.SendRequest",
+            "channel.handlePacket",
+            "mux.SendRequest",
+            "mux.handleGlobalPacket",
+            "tcpListener.Close",
+            "unixListener.Close"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 23,
+          "symbolsPresent": 0
+        },
+        "GHSA-x527-x647-q7gg": {
+          "absent": [
+            "NewServerConn",
+            "connection.serverAuthenticate"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 2,
+          "symbolsPresent": 0
+        }
+      },
+      "buildInfoModuleCount": 90,
+      "buildInfoVersionsOfInterest": {
+        "golang.org/x/crypto": [
+          "v0.46.0"
+        ],
+        "golang.org/x/mod": [],
+        "golang.org/x/net": [
+          "v0.48.0"
+        ],
+        "golang.org/x/text": [
+          "v0.32.0"
+        ],
+        "google.golang.org/grpc": [
+          "v1.79.3"
+        ]
+      },
+      "bytes": 26035008,
+      "sshPackagePathsPresent": []
+    },
+    "/usr/sbin/podman": {
+      "advisories": {
+        "GHSA-5cgq-3rg8-m6cv": {
+          "absent": [],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/knownhosts",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh/knownhosts.(*hostKeyDB).IsRevoked",
+              "symbol": "hostKeyDB.IsRevoked"
+            }
+          ],
+          "symbolsNamed": 1,
+          "symbolsPresent": 1
+        },
+        "GHSA-89gr-r52h-f8rx": {
+          "absent": [
+            "CertChecker.Authenticate",
+            "NewServerConn",
+            "connection.serverAuthenticate"
+          ],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*CertChecker).CheckCert",
+              "symbol": "CertChecker.CheckCert"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*CertChecker).CheckHostKey",
+              "symbol": "CertChecker.CheckHostKey"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Certificate).Verify",
+              "symbol": "Certificate.Verify"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.Dial",
+              "symbol": "Dial"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.NewClientConn",
+              "symbol": "NewClientConn"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*skECDSAPublicKey).Verify",
+              "symbol": "skECDSAPublicKey.Verify"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*skEd25519PublicKey).Verify",
+              "symbol": "skEd25519PublicKey.Verify"
+            }
+          ],
+          "symbolsNamed": 10,
+          "symbolsPresent": 7
+        },
+        "GHSA-f5wc-c3c7-36mc": {
+          "absent": [],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/agent",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh/agent.(*client).Add",
+              "symbol": "client.Add"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh/agent.(*keyring).Add",
+              "symbol": "keyring.Add"
+            }
+          ],
+          "symbolsNamed": 2,
+          "symbolsPresent": 2
+        },
+        "GHSA-jppx-rxg9-jmrx": {
+          "absent": [],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/agent",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh/agent.(*keyring).Add",
+              "symbol": "keyring.Add"
+            }
+          ],
+          "symbolsNamed": 1,
+          "symbolsPresent": 1
+        },
+        "GHSA-p77j-4mvh-x3m3": {
+          "absent": [],
+          "embeddedVersions": [
+            "v1.72.2"
+          ],
+          "fixedVersion": "v1.73.0",
+          "importPath": "google.golang.org/grpc",
+          "importPathPresent": true,
+          "module": "google.golang.org/grpc",
+          "present": [
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).Serve",
+              "symbol": "Server.Serve"
+            },
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).ServeHTTP",
+              "symbol": "Server.ServeHTTP"
+            },
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).handleStream",
+              "symbol": "Server.handleStream"
+            }
+          ],
+          "symbolsNamed": 3,
+          "symbolsPresent": 3
+        },
+        "GHSA-rm3j-f69w-wqmq": {
+          "absent": [
+            "NewServerConn",
+            "Session.CombinedOutput",
+            "Session.Output",
+            "Session.Shell"
+          ],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.Dial",
+              "symbol": "Dial"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.NewClientConn",
+              "symbol": "NewClientConn"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Session).Run",
+              "symbol": "Session.Run"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Session).Start",
+              "symbol": "Session.Start"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*channel).Write",
+              "symbol": "channel.Write"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*channel).WriteExtended",
+              "symbol": "channel.WriteExtended"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*curve25519sha256).Client",
+              "symbol": "curve25519sha256.Client"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*curve25519sha256).Server",
+              "symbol": "curve25519sha256.Server"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*dhGEXSHA).Client",
+              "symbol": "dhGEXSHA.Client"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*dhGEXSHA).Server",
+              "symbol": "dhGEXSHA.Server"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*dhGroup).Client",
+              "symbol": "dhGroup.Client"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*dhGroup).Server",
+              "symbol": "dhGroup.Server"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*ecdh).Client",
+              "symbol": "ecdh.Client"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*ecdh).Server",
+              "symbol": "ecdh.Server"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*extChannel).Write",
+              "symbol": "extChannel.Write"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*mlkem768WithCurve25519sha256).Client",
+              "symbol": "mlkem768WithCurve25519sha256.Client"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*mlkem768WithCurve25519sha256).Server",
+              "symbol": "mlkem768WithCurve25519sha256.Server"
+            }
+          ],
+          "symbolsNamed": 21,
+          "symbolsPresent": 17
+        },
+        "GHSA-vgwf-h737-ff37": {
+          "absent": [
+            "Client.Listen",
+            "Client.ListenTCP",
+            "Client.ListenUnix",
+            "NewServerConn",
+            "Session.CombinedOutput",
+            "Session.Output",
+            "Session.RequestPty",
+            "Session.SendRequest",
+            "Session.Setenv",
+            "Session.Shell",
+            "Session.Signal",
+            "Session.WindowChange",
+            "tcpListener.Close",
+            "unixListener.Close"
+          ],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.Dial",
+              "symbol": "Dial"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.NewClientConn",
+              "symbol": "NewClientConn"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Session).RequestSubsystem",
+              "symbol": "Session.RequestSubsystem"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Session).Run",
+              "symbol": "Session.Run"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*Session).Start",
+              "symbol": "Session.Start"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*channel).SendRequest",
+              "symbol": "channel.SendRequest"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*channel).handlePacket",
+              "symbol": "channel.handlePacket"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*mux).SendRequest",
+              "symbol": "mux.SendRequest"
+            },
+            {
+              "linkerForm": "golang.org/x/crypto/ssh.(*mux).handleGlobalPacket",
+              "symbol": "mux.handleGlobalPacket"
+            }
+          ],
+          "symbolsNamed": 23,
+          "symbolsPresent": 9
+        },
+        "GHSA-x527-x647-q7gg": {
+          "absent": [
+            "NewServerConn",
+            "connection.serverAuthenticate"
+          ],
+          "embeddedVersions": [
+            "v0.53.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": true,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 2,
+          "symbolsPresent": 0
+        }
+      },
+      "buildInfoModuleCount": 155,
+      "buildInfoVersionsOfInterest": {
+        "golang.org/x/crypto": [
+          "v0.53.0"
+        ],
+        "golang.org/x/mod": [
+          "v0.36.0"
+        ],
+        "golang.org/x/net": [
+          "v0.55.0"
+        ],
+        "golang.org/x/text": [
+          "v0.38.0"
+        ],
+        "google.golang.org/grpc": [
+          "v1.72.2"
+        ]
+      },
+      "bytes": 45220848,
+      "sshPackagePathsPresent": [
+        "golang.org/x/crypto/ssh",
+        "golang.org/x/crypto/ssh/agent",
+        "golang.org/x/crypto/ssh/agent/client",
+        "golang.org/x/crypto/ssh/agent/keyring",
+        "golang.org/x/crypto/ssh/agent/server",
+        "golang.org/x/crypto/ssh/buffer",
+        "golang.org/x/crypto/ssh/certs",
+        "golang.org/x/crypto/ssh/channel",
+        "golang.org/x/crypto/ssh/cipher",
+        "golang.org/x/crypto/ssh/client",
+        "golang.org/x/crypto/ssh/common",
+        "golang.org/x/crypto/ssh/connection",
+        "golang.org/x/crypto/ssh/handshake",
+        "golang.org/x/crypto/ssh/internal/bcrypt",
+        "golang.org/x/crypto/ssh/kex",
+        "golang.org/x/crypto/ssh/keys",
+        "golang.org/x/crypto/ssh/knownhosts",
+        "golang.org/x/crypto/ssh/knownhosts/knownhosts",
+        "golang.org/x/crypto/ssh/mac",
+        "golang.org/x/crypto/ssh/messages",
+        "golang.org/x/crypto/ssh/mlkem",
+        "golang.org/x/crypto/ssh/mux",
+        "golang.org/x/crypto/ssh/server",
+        "golang.org/x/crypto/ssh/session",
+        "golang.org/x/crypto/ssh/ssh",
+        "golang.org/x/crypto/ssh/streamlocal",
+        "golang.org/x/crypto/ssh/tcpip",
+        "golang.org/x/crypto/ssh/transport"
+      ]
+    },
+    "/usr/sbin/skopeo": {
+      "advisories": {
+        "GHSA-5cgq-3rg8-m6cv": {
+          "absent": [
+            "hostKeyDB.IsRevoked"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/knownhosts",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 1,
+          "symbolsPresent": 0
+        },
+        "GHSA-89gr-r52h-f8rx": {
+          "absent": [
+            "CertChecker.Authenticate",
+            "CertChecker.CheckCert",
+            "CertChecker.CheckHostKey",
+            "Certificate.Verify",
+            "Dial",
+            "NewClientConn",
+            "NewServerConn",
+            "connection.serverAuthenticate",
+            "skECDSAPublicKey.Verify",
+            "skEd25519PublicKey.Verify"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 10,
+          "symbolsPresent": 0
+        },
+        "GHSA-f5wc-c3c7-36mc": {
+          "absent": [
+            "client.Add",
+            "keyring.Add"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/agent",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 2,
+          "symbolsPresent": 0
+        },
+        "GHSA-jppx-rxg9-jmrx": {
+          "absent": [
+            "keyring.Add"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh/agent",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 1,
+          "symbolsPresent": 0
+        },
+        "GHSA-p77j-4mvh-x3m3": {
+          "absent": [],
+          "embeddedVersions": [
+            "v1.79.3"
+          ],
+          "fixedVersion": "v1.73.0",
+          "importPath": "google.golang.org/grpc",
+          "importPathPresent": true,
+          "module": "google.golang.org/grpc",
+          "present": [
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).Serve",
+              "symbol": "Server.Serve"
+            },
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).ServeHTTP",
+              "symbol": "Server.ServeHTTP"
+            },
+            {
+              "linkerForm": "google.golang.org/grpc.(*Server).handleStream",
+              "symbol": "Server.handleStream"
+            }
+          ],
+          "symbolsNamed": 3,
+          "symbolsPresent": 3
+        },
+        "GHSA-rm3j-f69w-wqmq": {
+          "absent": [
+            "Dial",
+            "NewClientConn",
+            "NewServerConn",
+            "Session.CombinedOutput",
+            "Session.Output",
+            "Session.Run",
+            "Session.Shell",
+            "Session.Start",
+            "channel.Write",
+            "channel.WriteExtended",
+            "curve25519sha256.Client",
+            "curve25519sha256.Server",
+            "dhGEXSHA.Client",
+            "dhGEXSHA.Server",
+            "dhGroup.Client",
+            "dhGroup.Server",
+            "ecdh.Client",
+            "ecdh.Server",
+            "extChannel.Write",
+            "mlkem768WithCurve25519sha256.Client",
+            "mlkem768WithCurve25519sha256.Server"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 21,
+          "symbolsPresent": 0
+        },
+        "GHSA-vgwf-h737-ff37": {
+          "absent": [
+            "Client.Listen",
+            "Client.ListenTCP",
+            "Client.ListenUnix",
+            "Dial",
+            "NewClientConn",
+            "NewServerConn",
+            "Session.CombinedOutput",
+            "Session.Output",
+            "Session.RequestPty",
+            "Session.RequestSubsystem",
+            "Session.Run",
+            "Session.SendRequest",
+            "Session.Setenv",
+            "Session.Shell",
+            "Session.Signal",
+            "Session.Start",
+            "Session.WindowChange",
+            "channel.SendRequest",
+            "channel.handlePacket",
+            "mux.SendRequest",
+            "mux.handleGlobalPacket",
+            "tcpListener.Close",
+            "unixListener.Close"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 23,
+          "symbolsPresent": 0
+        },
+        "GHSA-x527-x647-q7gg": {
+          "absent": [
+            "NewServerConn",
+            "connection.serverAuthenticate"
+          ],
+          "embeddedVersions": [
+            "v0.46.0"
+          ],
+          "fixedVersion": "v0.52.0",
+          "importPath": "golang.org/x/crypto/ssh",
+          "importPathPresent": false,
+          "module": "golang.org/x/crypto",
+          "present": [],
+          "symbolsNamed": 2,
+          "symbolsPresent": 0
+        }
+      },
+      "buildInfoModuleCount": 90,
+      "buildInfoVersionsOfInterest": {
+        "golang.org/x/crypto": [
+          "v0.46.0"
+        ],
+        "golang.org/x/mod": [],
+        "golang.org/x/net": [
+          "v0.48.0"
+        ],
+        "golang.org/x/text": [
+          "v0.32.0"
+        ],
+        "google.golang.org/grpc": [
+          "v1.79.3"
+        ]
+      },
+      "bytes": 26035008,
+      "sshPackagePathsPresent": []
+    }
+  },
+  "method": "byte search of the shipped binary for each database-named symbol, in both Go linker spellings; no shell pipeline",
+  "record": "phase6-symbol-measurement",
+  "schemaVersion": 1,
+  "whatThisEstablishes": "Whether the specific functions the advisory names are linked into the shipped binary. A symbol that is present is compiled in; it is not thereby reachable from any Bunny-controlled input, and this measurement does not claim it is."
+}
