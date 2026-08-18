@@ -1,17 +1,18 @@
 {
  "againstPhase4": {
-  "measuredHere": "56 distinct fixable advisories (1 Critical, 31 High)",
+  "likeForLike": "Go modules only, module granularity, nineteen days apart: Phase 4 40 distinct (8 Critical, 17 High, 14 Medium); here 45 distinct (8 Critical, 18 High, 17 Medium). Five new advisories, Criticals unchanged.",
+  "measuredHere": "80 distinct fixable advisories (8 Critical, 36 High)",
   "phase4Claim": "59 fixable findings (8 Critical, 28 High)",
-  "reading": "The totals are close (59 against 56) and the Critical counts are not (8 against 1). Three things differ at once - the scanner database, the cataloguing method, and possibly what Phase 4 counted - so this is recorded as a discrepancy to resolve, NOT as a correction of Phase 4. Resolving it needs one oci-archive: scan of this image, which needs disk."
+  "reading": "The Critical count is 8, exactly as Phase 4 recorded it. The earlier Phase 5 figure of 1 was a function-granularity measurement compared against a module-granularity baseline and is withdrawn as a statement about this candidate's position. The larger totals here are coverage, not drift: Phase 4's scan catalogued no rpm at all."
  },
  "counting": {
   "byArtifactType": {
-   "go-module": 85,
-   "linux-kernel": 2,
+   "UnknownPackage": 2,
+   "go-module": 140,
    "python": 7,
    "rpm": 89
   },
-  "distinctAdvisories": 56,
+  "distinctAdvisories": 80,
   "mostDuplicated": [
    {
     "finding": "FEDORA-2026-c53019ed4f",
@@ -34,28 +35,102 @@
     "matches": 7
    }
   ],
-  "note": "The raw match count is not a vulnerability count. Each advisory is reported once per affected package: FEDORA-2026-c53019ed4f accounts for 15 matches from one rpmdb. Every figure below counts distinct advisories.",
-  "rawMatches": 183
+  "note": "The raw match count is not a vulnerability count. It is inflated twice: an advisory is reported once per affected package (FEDORA-2026-c53019ed4f accounts for 15 matches from one rpmdb), and the image's ostree objects are hardlinks to the files in /usr, so every Go binary is catalogued at two paths. Every figure below counts distinct advisories.",
+  "rawMatches": 238
  },
  "counts": {
   "bySeverity": {
-   "Critical": 1,
-   "High": 31,
-   "Low": 5,
-   "Medium": 19
+   "Critical": 8,
+   "High": 36,
+   "Low": 6,
+   "Medium": 29,
+   "Unknown": 1
   },
   "byStatus": {
-   "PENDING_REVIEW": 56
+   "PENDING_REVIEW": 80
   },
-  "distinctAdvisories": 56
+  "distinctAdvisories": 80
  },
  "identicalAcrossBuilds": {
   "controlImage": "localhost/bunny-os-beta:376acf0e076f",
   "meaning": "Two independently built Bunny images have the same vulnerability surface, which is what 'every finding comes from the base image' predicts and is here demonstrated rather than asserted.",
-  "result": "identical counts - 183 raw, 2 Critical, 106 High, 70 Medium, 5 Low"
+  "result": "identical counts - 183 raw, 2 Critical, 106 High, 70 Medium, 5 Low",
+  "route": "the filesystem route, compared against itself"
  },
  "record": "phase5-candidate-disposition",
  "rows": [
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-5cgq-3rg8-m6cv",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Critical",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-89gr-r52h-f8rx",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Critical",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-f5wc-c3c7-36mc",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Critical",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-jppx-rxg9-jmrx",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Critical",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
   {
    "affectedPackageCount": 1,
    "affectedPackages": [
@@ -77,10 +152,64 @@
   {
    "affectedPackageCount": 1,
    "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-rm3j-f69w-wqmq",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Critical",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-vgwf-h737-ff37",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Critical",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-x527-x647-q7gg",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Critical",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
     "linux-kernel 7.1.5-201.fc44.x86_64"
    ],
    "artifactTypes": [
-    "linux-kernel"
+    "UnknownPackage"
    ],
    "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
    "finding": "CVE-2020-27815",
@@ -590,6 +719,42 @@
   {
    "affectedPackageCount": 1,
    "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-q4h4-gmj2-qvw2",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "High",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-w879-237q-wc7r",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "High",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
     "github.com/containers/podman/v5 v5.0.0-20260626000000-d5ac989fc69c+dirty"
    ],
    "artifactTypes": [
@@ -617,6 +782,24 @@
    "finding": "GHSA-x744-4wpc-v9h2",
    "fixedVersions": [
     "29.3.1"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "High",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/net v0.48.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GO-2026-4918",
+   "fixedVersions": [
+    "0.53.0"
    ],
    "owner": "unassigned - the project has one principal and the review must be independent of them",
    "severity": "High",
@@ -681,12 +864,50 @@
    "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
   },
   {
+   "affectedPackageCount": 2,
+   "affectedPackages": [
+    "golang.org/x/mod v0.20.0",
+    "golang.org/x/mod v0.36.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GO-2026-6179",
+   "fixedVersions": [
+    "0.40.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "High",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 2,
+   "affectedPackages": [
+    "golang.org/x/mod v0.20.0",
+    "golang.org/x/mod v0.36.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GO-2026-6180",
+   "fixedVersions": [
+    "0.40.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "High",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
    "affectedPackageCount": 1,
    "affectedPackages": [
     "linux-kernel 7.1.5-201.fc44.x86_64"
    ],
    "artifactTypes": [
-    "linux-kernel"
+    "UnknownPackage"
    ],
    "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
    "finding": "CVE-2026-52972",
@@ -876,6 +1097,24 @@
   {
    "affectedPackageCount": 1,
    "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-45gg-vh54-h5m9",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Medium",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
     "github.com/sigstore/fulcio v1.7.1"
    ],
    "artifactTypes": [
@@ -894,6 +1133,42 @@
   {
    "affectedPackageCount": 1,
    "affectedPackages": [
+    "golang.org/x/net v0.48.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-5cv4-jp36-h3mw",
+   "fixedVersions": [
+    "0.55.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Medium",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-78mq-xcr3-xm33",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Medium",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
     "github.com/containers/podman/v5 v5.0.0-20260626000000-d5ac989fc69c+dirty"
    ],
    "artifactTypes": [
@@ -903,6 +1178,42 @@
    "finding": "GHSA-874v-pj72-92f3",
    "fixedVersions": [
     "5.0.1"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Medium",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-9m57-25v3-79x9",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Medium",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "github.com/sigstore/sigstore v1.9.5"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-fcv2-xgw5-pqxf",
+   "fixedVersions": [
+    "1.10.4"
    ],
    "owner": "unassigned - the project has one principal and the review must be independent of them",
    "severity": "Medium",
@@ -1020,6 +1331,24 @@
   {
    "affectedPackageCount": 1,
    "affectedPackages": [
+    "golang.org/x/crypto v0.46.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GHSA-qpw4-5x99-6vjp",
+   "fixedVersions": [
+    "0.52.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Medium",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
     "filelock 3.15.4"
    ],
    "artifactTypes": [
@@ -1047,6 +1376,78 @@
    "finding": "GHSA-xjvp-4fhw-gc47",
    "fixedVersions": [
     "1.3.6"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Medium",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/net v0.48.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GO-2026-5025",
+   "fixedVersions": [
+    "0.55.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Medium",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/net v0.48.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GO-2026-5027",
+   "fixedVersions": [
+    "0.55.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Medium",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/net v0.48.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GO-2026-5029",
+   "fixedVersions": [
+    "0.55.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Medium",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "golang.org/x/net v0.48.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GO-2026-5030",
+   "fixedVersions": [
+    "0.55.0"
    ],
    "owner": "unassigned - the project has one principal and the review must be independent of them",
    "severity": "Medium",
@@ -1142,6 +1543,43 @@
    "severity": "Low",
    "status": "PENDING_REVIEW",
    "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 2,
+   "affectedPackages": [
+    "golang.org/x/sys v0.29.0",
+    "golang.org/x/sys v0.39.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GO-2026-5024",
+   "fixedVersions": [
+    "0.44.0"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Low",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
+  },
+  {
+   "affectedPackageCount": 1,
+   "affectedPackages": [
+    "github.com/klauspost/compress v1.18.0"
+   ],
+   "artifactTypes": [
+    "go-module"
+   ],
+   "bunnyImpact": "not determined for this scan; the measured reachability evidence in operations/data/vulnerability-disposition.json covers the 2026-07-29 advisory set and has not been re-derived for these",
+   "finding": "GO-2026-5841",
+   "fixedVersions": [
+    "1.18.7"
+   ],
+   "owner": "unassigned - the project has one principal and the review must be independent of them",
+   "severity": "Unknown",
+   "status": "PENDING_REVIEW",
+   "statusBecause": "no independent review has determined reachability; the fix, where one exists, is in a base-image package this repository cannot update"
   }
  ],
  "schemaVersion": 1,
@@ -1150,9 +1588,11 @@
   "imageId": "6f3bbb9af38dae1636ff5c02dc79b07d3b09774bcacddc15308ae8e80bf3c8b2",
   "imageReference": "localhost/bunny-os-beta:e906a48793d7",
   "isTheAlphaReleaseCandidate": true,
-  "method": "grype dir: over the image's overlay, mounted in place via podman create + podman mount. No copy, no tarball expansion.",
-  "methodDiffersFromPhase4": "build/scripts/security-scan.sh uses grype oci-archive: on an exported archive. That path needs tens of gigabytes of temporary space and failed with 'no space left on device'. The two methods are NOT established as equivalent, and the comparison below is indicative rather than conclusive.",
+  "matchGranularity": "module",
+  "method": "grype sbom: over the candidate's own SPDX SBOM, catalogued by syft from the image's overlay mounted in place (podman create + podman mount). Module granularity.",
+  "methodDiffersFromPhase4": "build/scripts/security-scan.sh uses grype oci-archive: on an exported archive. That is also module granularity, so the Critical counts are comparable. It is not equivalent in coverage: the retained Phase 4 scans contain zero rpm findings, and this one contains 26 distinct rpm advisories from /usr/share/rpm/rpmdb.sqlite.",
   "scanner": "grype, database built 2026-08-17T06:19:33Z (valid)",
-  "scope": "--only-fixed, the same scope as security-scan.sh"
+  "scope": "--only-fixed, the same scope as security-scan.sh",
+  "whyNotTheFilesystemRoute": "grype dir: over the same mounted overlay matches Go findings at function granularity and reports 1 Critical instead of 8, excluding the seven golang.org/x/crypto advisories because their vulnerable functions are not linked into /usr/bin/skopeo. The package is present, the advisories are active and Critical in the database, and the ranges apply. A scanner's symbol analysis is not the independent review release/vulnerability.py requires, so the conservative granularity is the one recorded. See SCAN_ROUTE_DISCREPANCY.md."
  }
 }

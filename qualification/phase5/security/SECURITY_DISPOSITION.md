@@ -48,97 +48,125 @@ refactor from doing so.
 
 The first attempt at this matrix was built from the 2026-07-29 record, which is
 a scan of `localhost/bunny-os-beta:79bb99ddb39d` — **not the candidate**. A
-re-scan of `e906a48793d7` failed for want of disk: `grype podman:` hands the
-image to stereoscope, which writes every layer out as a tarball and needs tens
-of gigabytes against a 7.8 GB tmpfs and 7.9 GB free on the host volume.
+re-scan of `e906a48793d7` failed on its first try, was diagnosed as "no disk",
+and that diagnosis was wrong twice over: the failure was against **/tmp, which
+is tmpfs — RAM**, and "the host volume has 7.9 GB free" conflated Windows C:
+with the ext4 volume this builder writes to. Measured since: 20 GiB written
+inside WSL grows the VHDX by zero bytes. The disk was never the problem.
 
-It succeeded on the second attempt by a different route. `podman create` +
-`podman mount` assembles the image's overlay **in place** and hands back a
-merged directory; `grype dir:` then reads the RPM database and the filesystem
-directly. Measured free space before, during and after: unchanged. **No copy,
-no tarball, no disk.**
+It then succeeded three ways, and **the three ways disagree by seven Critical
+findings**. `SCAN_ROUTE_DISCREPANCY.md` is the full chain; this section states
+the result and what the matrix is built from.
 
 | | |
 | --- | --- |
 | Image | `localhost/bunny-os-beta:e906a48793d7` |
 | Image ID | `6f3bbb9af38dae1636ff5c02dc79b07d3b09774bcacddc15308ae8e80bf3c8b2` |
 | Candidate commit | `e906a48793d74544b39c14cc3e35e0654f5311e2` |
-| Scanner database | built 2026-08-17T06:19:33Z, `valid` |
+| Scanner | grype 0.116.1, database built 2026-08-17T06:19:33Z, `valid` |
 | Scope | `--only-fixed`, the same scope as `build/scripts/security-scan.sh` |
 
-Evidence: `scan/candidate-fixed.json`, `scan/image-id.txt`,
-`scan/grype-version.txt`. Matrix: `candidate-disposition-matrix.json`,
-regenerable with `build_candidate_matrix.py`.
+### The route decides the answer
+
+| route | granularity | distinct | Critical | High | Medium | Low | Unknown |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| mounted filesystem (`grype dir:`) | function | 56 | 1 | 31 | 19 | 5 | 0 |
+| **the candidate's own SBOM (`grype sbom:`)** | **module** | **80** | **8** | **36** | **29** | **6** | **1** |
+
+Given a Go binary it can read, grype matches at **function** granularity and
+excludes advisories whose vulnerable functions are not linked in. Given an SBOM
+without symbols it matches at **module** granularity and reports them all,
+warning on stderr that this "may report false positives" — which is to say it
+is the conservative answer.
+
+**This matrix is built from the module-granularity result**, because that is
+the granularity the release gate has always used, the granularity Phase 4's
+number is in, and the conservative one. Building it from the function-level
+result would have silently disposed of seven Critical findings on a scanner's
+say-so, which is exactly what §17 forbids and what `release/vulnerability.py`
+rejects at parse time.
 
 ### The counting, because it is where a reader will go wrong
 
-The scan reports **183 matches**. That is **not 183 vulnerabilities.**
+The SBOM scan reports **238 matches**. That is **not 238 vulnerabilities**, and
+the inflation has two separate causes:
 
-It is **56 distinct advisories**, each counted once per affected package.
-`FEDORA-2026-c53019ed4f` alone accounts for **15** of them, all from the same
-`rpmdb.sqlite` and all the same advisory. Five advisories account for 43
-matches between them.
+* one advisory is counted once per affected package — `FEDORA-2026-c53019ed4f`
+  alone accounts for 15, all from the same `rpmdb.sqlite`;
+* the image carries an ostree repository whose objects are **hardlinks** to the
+  files in `/usr` — `/usr/bin/podman` and
+  `/sysroot/ostree/repo/objects/8c/c9b024….file` are inode 95288 with a link
+  count of 2 — so every Go binary is catalogued twice.
 
 | | |
 | --- | ---: |
-| Raw matches | 183 |
-| Distinct advisories | **56** |
-| Distinct (advisory, package) pairs | 119 |
-
-By artifact type the raw matches split 89 `rpm`, 85 `go-module`, 7 `python`,
-2 `linux-kernel`.
+| Raw matches (SBOM route) | 238 |
+| Distinct advisories | **80** |
+| Raw matches (filesystem route) | 183 |
+| — of which arrived via an ostree object path | 44 |
 
 **Every figure below counts distinct advisories**, because that is the unit an
-independent reviewer dispositions. Quoting 183 would inflate the number more
-than threefold, and 183 is the first number anyone re-running the scan will
-see.
+independent reviewer dispositions.
 
 ### Result
 
 | Severity | Distinct advisories |
 | --- | ---: |
-| **Critical** | **1** |
-| High | 31 |
-| Medium | 19 |
-| Low | 5 |
-| **Total** | **56** |
+| **Critical** | **8** |
+| High | 36 |
+| Medium | 29 |
+| Low | 6 |
+| Unknown | 1 |
+| **Total** | **80** |
 
-The single Critical is `GHSA-p77j-4mvh-x3m3` in `google.golang.org/grpc
-v1.72.2`, fixed upstream in 1.79.3 — a Go module linked into base-image
-binaries, which is the same class as every other finding here.
+The eight Criticals are seven advisories against `golang.org/x/crypto v0.46.0`
+in `/usr/bin/skopeo` and one against `google.golang.org/grpc v1.72.2` in
+`/usr/bin/podman` — Go modules linked into base-image binaries, which is the
+same class as every other finding here.
 
-### Against Phase 4's figure — a discrepancy, not a correction
+### Against Phase 4's figure
 
-Phase 4 reports **"59 fixable findings (8 Critical, 28 High)"**.
+Phase 4 reports **"59 fixable findings (8 Critical, 28 High)"** from an
+`oci-archive:` scan of the beta image.
 
-| | Total | Critical | High |
-| --- | ---: | ---: | ---: |
-| Phase 4 | 59 | 8 | 28 |
-| Measured here | 56 | **1** | 31 |
+Like for like — module granularity, Go modules only, nineteen days apart, the
+only comparison in which nothing but time varies:
 
-The totals are close. **The Critical counts are not: 8 against 1.**
+| | distinct | Critical | High | Medium |
+| --- | ---: | ---: | ---: | ---: |
+| Phase 4 (beta, `oci-archive`) | 40 | 8 | 17 | 14 |
+| Phase 5 (candidate, SBOM) | 45 | 8 | 18 | 17 |
 
-**This is recorded as a discrepancy to resolve, not as a correction of Phase
-4.** Three things differ at once — the scanner database, the cataloguing method
-(`dir:` against `oci-archive:`), and possibly what Phase 4 counted — and with
-three variables moving, attributing the difference to any one of them would be
-a guess. Resolving it takes a single `oci-archive:` scan of this image, which
-takes disk this host does not have.
+**The Critical count is unchanged at 8.** The earlier Phase 5 figure of 1 was a
+function-granularity measurement compared against a module-granularity
+baseline; it is withdrawn as a statement about the candidate's position.
 
-It matters more than an ordinary counting question, because **Critical is the
-severity that cannot be dispositioned without an independent review**. Whether
-the candidate carries eight of them or one changes what that review costs.
+### What Phase 4's instrument could not see
+
+`evidence/vulnerability/beta-grype.json` — retained, 143 matches — is 74
+`linux-kernel` and 40 `go-module` findings, and **zero rpm**. So are
+`base-grype.json` and `beta-minimised-grype.json`.
+
+Both Phase 5 routes find **26 distinct RPM advisories (15 High, 8 Medium, 3
+Low)** and 7 Python ones, sourced from `/usr/share/rpm/rpmdb.sqlite`, a 61 MB
+file that is really present in the image.
+
+So the position Phase 4 recorded was measured by an instrument with no
+visibility into a single distribution package. Stated as measured: **why** the
+archive route catalogued no RPM is not established here, and the `oci-archive:`
+scan of this candidate that would settle it is queued behind the Phase 5 build.
 
 ### One thing the scan does settle
 
-The identical scan of a **different** Bunny build,
+The filesystem-route scan of a **different** Bunny build,
 `localhost/bunny-os-beta:376acf0e076f` — different image ID, different commit —
 returns **identical counts**: 183 raw, 2 Critical, 106 High, 70 Medium, 5 Low.
 
 Two independently built images with the same vulnerability surface is exactly
 what "every finding comes from the base image" predicts, and it is here
 **demonstrated rather than asserted**. Nothing Bunny builds adds to this
-surface.
+surface. The conclusion survives the route correction, because it compares one
+route against itself.
 
 ---
 

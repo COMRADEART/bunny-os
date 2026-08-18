@@ -2,20 +2,32 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The §17 disposition matrix, built against the Alpha Release Candidate itself.
 
-The first attempt at this matrix
-(:mod:`build_disposition_matrix`) was built from
-``operations/data/vulnerability-disposition.json`` — a 2026-07-29 scan of
-``localhost/bunny-os-beta:79bb99ddb39d``, which is not the candidate. A re-scan
-was attempted and failed for want of disk. It succeeded on the second attempt
-by mounting the image's overlay in place rather than expanding it to tarballs,
-which costs no disk at all, so this matrix is about ``e906a48793d7``.
+The first attempt at this matrix (:mod:`build_disposition_matrix`) was built
+from ``operations/data/vulnerability-disposition.json`` — a 2026-07-29 scan of
+``localhost/bunny-os-beta:79bb99ddb39d``, which is not the candidate.
 
-**Counting, which is the whole difficulty.** The raw scan reports 183 matches.
-That is not 183 vulnerabilities. It is **56 distinct advisories**, each counted
-once per affected package: ``FEDORA-2026-c53019ed4f`` alone accounts for 15,
-all from the same ``rpmdb.sqlite`` and all the same advisory. A report quoting
-183 would be inflating the number by more than three times, and anyone
-re-running the scan will see 183 first.
+The second was built from a ``grype dir:`` scan of the candidate's overlay,
+mounted in place. That route reported **one** Critical finding where Phase 4
+had eight, and the difference was not the product improving. grype matches Go
+findings at *function* granularity when it can read the binary and at *module*
+granularity when it is handed an SBOM, and the seven ``golang.org/x/crypto``
+Criticals fall out at function granularity. The package is still in the image,
+the advisories are still Critical in the database, and the ranges still apply
+— ``SCAN_ROUTE_DISCREPANCY.md`` has the chain.
+
+So this matrix is built from the **SBOM** scan: module granularity, which is
+the granularity Phase 4's number is in, the granularity the release gate has
+always used, and — by grype's own warning about the alternative "reporting
+false positives" — the conservative one. Building it from the function-level
+result would have disposed of seven Critical findings on a scanner's say-so,
+which ``release/vulnerability.py`` rejects at parse time and §17 forbids in
+words.
+
+**Counting, which is the whole difficulty.** The scan reports 238 matches. That
+is not 238 vulnerabilities. It is **80 distinct advisories**, inflated twice
+over: once because an advisory is counted per affected package, and once
+because the image carries an ostree repository whose objects are hardlinks to
+the files in ``/usr``, so every Go binary is catalogued at two paths.
 
 Both figures are published, and every derived count is by **distinct
 advisory**, because that is the unit an independent reviewer dispositions.
@@ -31,7 +43,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 HERE = Path(__file__).resolve().parent
-SCAN = HERE / "scan" / "candidate-fixed.json"
+SCAN = HERE / "scan" / "candidate-sbom-fixed.json"
 
 CANDIDATE = "e906a48793d74544b39c14cc3e35e0654f5311e2"
 IMAGE = "localhost/bunny-os-beta:e906a48793d7"
@@ -112,13 +124,26 @@ def main() -> int:
             "candidateCommit": CANDIDATE,
             "isTheAlphaReleaseCandidate": True,
             "scanner": "grype, database built 2026-08-17T06:19:33Z (valid)",
-            "method": "grype dir: over the image's overlay, mounted in place via podman "
-                      "create + podman mount. No copy, no tarball expansion.",
+            "method": "grype sbom: over the candidate's own SPDX SBOM, catalogued by syft "
+                      "from the image's overlay mounted in place (podman create + podman "
+                      "mount). Module granularity.",
+            "matchGranularity": "module",
+            "whyNotTheFilesystemRoute": (
+                "grype dir: over the same mounted overlay matches Go findings at function "
+                "granularity and reports 1 Critical instead of 8, excluding the seven "
+                "golang.org/x/crypto advisories because their vulnerable functions are not "
+                "linked into /usr/bin/skopeo. The package is present, the advisories are "
+                "active and Critical in the database, and the ranges apply. A scanner's "
+                "symbol analysis is not the independent review release/vulnerability.py "
+                "requires, so the conservative granularity is the one recorded. See "
+                "SCAN_ROUTE_DISCREPANCY.md."
+            ),
             "methodDiffersFromPhase4": (
                 "build/scripts/security-scan.sh uses grype oci-archive: on an exported "
-                "archive. That path needs tens of gigabytes of temporary space and failed "
-                "with 'no space left on device'. The two methods are NOT established as "
-                "equivalent, and the comparison below is indicative rather than conclusive."
+                "archive. That is also module granularity, so the Critical counts are "
+                "comparable. It is not equivalent in coverage: the retained Phase 4 scans "
+                "contain zero rpm findings, and this one contains 26 distinct rpm "
+                "advisories from /usr/share/rpm/rpmdb.sqlite."
             ),
             "scope": "--only-fixed, the same scope as security-scan.sh",
         },
@@ -126,9 +151,12 @@ def main() -> int:
             "rawMatches": len(matches),
             "distinctAdvisories": len(rows),
             "note": (
-                "The raw match count is not a vulnerability count. Each advisory is "
-                "reported once per affected package: FEDORA-2026-c53019ed4f accounts for "
-                "15 matches from one rpmdb. Every figure below counts distinct advisories."
+                "The raw match count is not a vulnerability count. It is inflated twice: "
+                "an advisory is reported once per affected package "
+                "(FEDORA-2026-c53019ed4f accounts for 15 matches from one rpmdb), and the "
+                "image's ostree objects are hardlinks to the files in /usr, so every Go "
+                "binary is catalogued at two paths. Every figure below counts distinct "
+                "advisories."
             ),
             "mostDuplicated": [
                 {"finding": identifier, "matches": count}
@@ -153,16 +181,22 @@ def main() -> int:
                 f"{len(rows)} distinct fixable advisories "
                 f"({severities.get('Critical', 0)} Critical, {severities.get('High', 0)} High)"
             ),
+            "likeForLike": (
+                "Go modules only, module granularity, nineteen days apart: Phase 4 40 "
+                "distinct (8 Critical, 17 High, 14 Medium); here 45 distinct (8 Critical, "
+                "18 High, 17 Medium). Five new advisories, Criticals unchanged."
+            ),
             "reading": (
-                "The totals are close (59 against 56) and the Critical counts are not "
-                "(8 against 1). Three things differ at once - the scanner database, the "
-                "cataloguing method, and possibly what Phase 4 counted - so this is "
-                "recorded as a discrepancy to resolve, NOT as a correction of Phase 4. "
-                "Resolving it needs one oci-archive: scan of this image, which needs disk."
+                "The Critical count is 8, exactly as Phase 4 recorded it. The earlier "
+                "Phase 5 figure of 1 was a function-granularity measurement compared "
+                "against a module-granularity baseline and is withdrawn as a statement "
+                "about this candidate's position. The larger totals here are coverage, "
+                "not drift: Phase 4's scan catalogued no rpm at all."
             ),
         },
         "identicalAcrossBuilds": {
             "controlImage": "localhost/bunny-os-beta:376acf0e076f",
+            "route": "the filesystem route, compared against itself",
             "result": "identical counts - 183 raw, 2 Critical, 106 High, 70 Medium, 5 Low",
             "meaning": (
                 "Two independently built Bunny images have the same vulnerability surface, "
