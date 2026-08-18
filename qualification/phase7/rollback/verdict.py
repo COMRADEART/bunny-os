@@ -90,7 +90,14 @@ def parse_log(text: str) -> dict:
             facts["step"] = line.split("=", 1)[1]
         elif line.startswith("END step="):
             facts["ended"] = True
-        elif line.startswith("cmdline="):
+        elif line.startswith("cmdline-bootcsum="):
+            value = line.split("=", 1)[1].strip()
+            if re.fullmatch(r"[a-f0-9]{64}", value):
+                facts["cmdlineBootChecksum"] = value
+        elif line.startswith("cmdline=") and facts["cmdlineBootChecksum"] is None:
+            # Fallback for the long-form record; the short marker above is
+            # authoritative because a long serial line can be split by kernel
+            # messages mid-argument — measured on this harness's first run.
             found = _CMDLINE_OSTREE.search(line)
             if found:
                 facts["cmdlineBootChecksum"] = found.group(1)

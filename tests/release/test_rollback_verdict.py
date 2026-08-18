@@ -70,6 +70,8 @@ def make_log(
     lines = [
         f"BUNNY-P7: BEGIN step={step}",
         f"BUNNY-P7: cmdline=BOOT_IMAGE=/vmlinuz root=UUID=x rw ostree=/ostree/boot.0/default/{bootcsum}/0",
+        f"BUNNY-P7: cmdline-bootcsum={bootcsum}",
+        f"BUNNY-P7: cmdline-bootcsum={bootcsum}",
         f"BUNNY-P7: etc-identity={etc_identity}",
         f"BUNNY-P7: hostname-file={hostname}",
         "BUNNY-P7: hostname-transient=localhost",
@@ -220,6 +222,31 @@ class RollbackVerdict(unittest.TestCase):
         result = self.grade(nominal_rollback_log(), unhealthy)
         self.assertEqual(result["verdict"], "FAIL")
         self.assertTrue(any("healthy boot target" in r for r in result["reasons"]))
+
+    def test_an_interleaved_cmdline_line_is_survivable(self) -> None:
+        # The first real run: a kernel SELinux message landed inside the
+        # 300-byte cmdline marker and split the ostree= argument across two
+        # serial lines. The long line is unreadable; the short redundant
+        # marker must carry the identity anyway.
+        log = nominal_verify_log().replace(
+            f"BUNNY-P7: cmdline=BOOT_IMAGE=/vmlinuz root=UUID=x rw ostree=/ostree/boot.0/default/{BOOT_A}/0",
+            "BUNNY-P7: cmdline=BOOT_IMAGE=/vmlinuz root=UUID=x rw ostree=/ostree/boo"
+            "[    8.09] SELinux: inode=416592 on dev=vda4 was found to have an invalid context=.\n"
+            f"t.0/default/{BOOT_A}/0",
+        )
+        result = self.grade(nominal_rollback_log(), log)
+        self.assertEqual(result["verdict"], "PASS", result["reasons"])
+
+    def test_a_split_short_marker_does_not_poison_the_identity(self) -> None:
+        # If one of the two short markers is itself mangled, the mangled copy
+        # must be ignored rather than parsed into a wrong value.
+        log = nominal_verify_log().replace(
+            f"BUNNY-P7: cmdline-bootcsum={BOOT_A}\nBUNNY-P7: cmdline-bootcsum={BOOT_A}",
+            f"BUNNY-P7: cmdline-bootcsum={BOOT_A[:20]}\nBUNNY-P7: cmdline-bootcsum={BOOT_A}",
+            1,
+        )
+        result = self.grade(nominal_rollback_log(), log)
+        self.assertEqual(result["verdict"], "PASS", result["reasons"])
 
     def test_a_hostname_that_appears_is_fail(self) -> None:
         appeared = make_log(

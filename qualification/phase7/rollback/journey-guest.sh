@@ -9,6 +9,16 @@ step="$(cat /var/lib/bunny-p7/step 2>/dev/null || echo absent)"
 
 mark "BEGIN step=${step}"
 mark "cmdline=$(cat /proc/cmdline)"
+# The full cmdline above is the record; the short marker below is the one the
+# grader reads. The first run of this harness proved a 300-byte serial line is
+# not atomic: a kernel SELinux message landed in the middle of the cmdline
+# marker and split the ostree= argument across lines. A 64-hex marker printed
+# twice survives interleaving; the value still comes from the kernel's own
+# /proc/cmdline, so the source stays independent of bootc and of /etc.
+bootcsum="$(grep -oE 'ostree=/ostree/boot\.[0-9]+/[^/ ]+/[a-f0-9]{64}/[0-9]+' /proc/cmdline \
+  | grep -oE '[a-f0-9]{64}' | head -1)"
+mark "cmdline-bootcsum=${bootcsum:-UNREADABLE}"
+mark "cmdline-bootcsum=${bootcsum:-UNREADABLE}"
 mark "etc-identity=$(cat /etc/bunny-p7-etc-identity 2>/dev/null || echo ABSENT)"
 mark "hostname-file=$(cat /etc/hostname 2>/dev/null || echo ABSENT)"
 mark "hostname-transient=$(hostname 2>/dev/null || echo UNKNOWN)"
