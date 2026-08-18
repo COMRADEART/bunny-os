@@ -112,20 +112,35 @@ WantedBy=multi-user.target bunny-recovery.target
 UNIT
 
 echo "== instrumenting the overlay (the medium itself is untouched) =="
-guestfish -i -a "${OVERLAY}" <<GF
-mkdir-p /etc/bunny-p7r
-upload ${driver} /etc/bunny-p7r/recovery-driver.sh
-chmod 0644 /etc/bunny-p7r/recovery-driver.sh
-upload ${unit} /etc/systemd/system/bunny-p7r-driver.service
-chmod 0644 /etc/systemd/system/bunny-p7r-driver.service
-mkdir-p /etc/systemd/system/multi-user.target.wants
-ln-sf /etc/systemd/system/bunny-p7r-driver.service /etc/systemd/system/multi-user.target.wants/bunny-p7r-driver.service
-mkdir-p /etc/systemd/system/bunny-recovery.target.wants
-ln-sf /etc/systemd/system/bunny-p7r-driver.service /etc/systemd/system/bunny-recovery.target.wants/bunny-p7r-driver.service
-lsetxattr security.selinux "system_u:object_r:etc_t:s0" 0 /etc/bunny-p7r
-lsetxattr security.selinux "system_u:object_r:etc_t:s0" 0 /etc/bunny-p7r/recovery-driver.sh
-lsetxattr security.selinux "system_u:object_r:systemd_unit_file_t:s0" 0 /etc/systemd/system/bunny-p7r-driver.service
-GF
+# The recovery medium is itself a bootc/ostree image: the /etc that a booted
+# system sees is the deployment's, under /ostree/deploy/…/etc on the root
+# partition, not the physical root's. `guestfish -i` would write into the
+# physical root and the unit would never exist at boot.
+recovery_root="${BUNNY_P7_RECOVERY_ROOT_PARTITION:-/dev/sda4}"
+mapfile -t rdeploys < <(guestfish --ro -a "${OVERLAY}" -m "${recovery_root}" \
+    glob-expand '/ostree/deploy/*/deploy/*.0/')
+[[ ${#rdeploys[@]} -ge 1 ]] || { echo "NOT_RUN: no deployment on the recovery medium" >&2; exit 5; }
+commands=(run : mount "${recovery_root}" /)
+labels=(run : mount "${recovery_root}" /)
+for entry in "${rdeploys[@]}"; do
+  entry="${entry%/}"
+  commands+=(: mkdir-p "${entry}/etc/bunny-p7r")
+  commands+=(: upload "${driver}" "${entry}/etc/bunny-p7r/recovery-driver.sh")
+  commands+=(: chmod 0644 "${entry}/etc/bunny-p7r/recovery-driver.sh")
+  commands+=(: upload "${unit}" "${entry}/etc/systemd/system/bunny-p7r-driver.service")
+  commands+=(: chmod 0644 "${entry}/etc/systemd/system/bunny-p7r-driver.service")
+  commands+=(: mkdir-p "${entry}/etc/systemd/system/multi-user.target.wants")
+  commands+=(: ln-sf /etc/systemd/system/bunny-p7r-driver.service
+             "${entry}/etc/systemd/system/multi-user.target.wants/bunny-p7r-driver.service")
+  commands+=(: mkdir-p "${entry}/etc/systemd/system/bunny-recovery.target.wants")
+  commands+=(: ln-sf /etc/systemd/system/bunny-p7r-driver.service
+             "${entry}/etc/systemd/system/bunny-recovery.target.wants/bunny-p7r-driver.service")
+  labels+=(: lsetxattr security.selinux "system_u:object_r:etc_t:s0" 0 "${entry}/etc/bunny-p7r")
+  labels+=(: lsetxattr security.selinux "system_u:object_r:etc_t:s0" 0 "${entry}/etc/bunny-p7r/recovery-driver.sh")
+  labels+=(: lsetxattr security.selinux "system_u:object_r:systemd_unit_file_t:s0" 0 "${entry}/etc/systemd/system/bunny-p7r-driver.service")
+done
+guestfish -a "${OVERLAY}" "${commands[@]}"
+guestfish -a "${OVERLAY}" "${labels[@]}"
 overlay_sha="$(sha256sum "${OVERLAY}" | cut -d' ' -f1)"
 echo "  instrumented overlay sha256 ${overlay_sha}"
 
