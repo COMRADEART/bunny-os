@@ -1,0 +1,53 @@
+{
+ "identities": {
+  "actuallyBooted": {
+   "bootc": "1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a",
+   "cmdline": "1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a",
+   "etcIdentity": "1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a"
+  },
+  "beforeUpdateDeployment": "1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a",
+  "bootedBeforeRollback": "18fd8a7d9673e9107658a90afc06714c707ad9f5303675d89318399653ea1df6",
+  "restageBooted": "18fd8a7d9673e9107658a90afc06714c707ad9f5303675d89318399653ea1df6",
+  "selectedRollbackTarget": "1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a",
+  "updateTargetDeployment": "18fd8a7d9673e9107658a90afc06714c707ad9f5303675d89318399653ea1df6"
+ },
+ "journey": "phase7-rollback",
+ "reasons": [
+  "PASS: rollback selected the before-update deployment, three independent sources agree it booted, and every preserved marker is byte-identical"
+ ],
+ "state": {
+  "/var/home/p5-user-data.txt": {
+   "expected": "7e3a01f60998d08ee985ee5204d58c56a2274171d25bbd76f977e98636b0bf64",
+   "observed": "7e3a01f60998d08ee985ee5204d58c56a2274171d25bbd76f977e98636b0bf64"
+  },
+  "/var/home/p7-user-data.txt": {
+   "expected": "ccb215428c8d373d0c15bb9c69d3327204c7f8933788901b29c6a158c22b75da",
+   "observed": "ccb215428c8d373d0c15bb9c69d3327204c7f8933788901b29c6a158c22b75da"
+  },
+  "/var/lib/bunny-os/companion/p5-mode.json": {
+   "expected": "8f7aa3425a2f89d2eae2a769a6ff9c99144839c47d2813e577552483e2a1d6fa",
+   "observed": "8f7aa3425a2f89d2eae2a769a6ff9c99144839c47d2813e577552483e2a1d6fa"
+  },
+  "/var/lib/bunny-os/companion/p7-position.json": {
+   "expected": "79f479147a41bd4867bf4952dd0e4b0d7392648eb5cc19f21eb0bcccf1c86bbd",
+   "observed": "79f479147a41bd4867bf4952dd0e4b0d7392648eb5cc19f21eb0bcccf1c86bbd"
+  },
+  "/var/lib/bunny-os/companion/p7-scale.json": {
+   "expected": "da43f01de90a2bd79ff633d8f978664c72ad0f94487d355d3ff00efb77a340ce",
+   "observed": "da43f01de90a2bd79ff633d8f978664c72ad0f94487d355d3ff00efb77a340ce"
+  },
+  "/var/lib/bunny-os/p5-settings.txt": {
+   "expected": "ba054c9ad4d0e5e329c2f20c29454f731cb4d8256da743144a67f1d985481a1d",
+   "observed": "ba054c9ad4d0e5e329c2f20c29454f731cb4d8256da743144a67f1d985481a1d"
+  },
+  "/var/lib/bunny-os/trust/p5-grants.json": {
+   "expected": "1d385651bb01f7e1e2c287b7eaabff47cf3a12022795118701d37c71b4e100ce",
+   "observed": "1d385651bb01f7e1e2c287b7eaabff47cf3a12022795118701d37c71b4e100ce"
+  },
+  "/var/lib/bunny-os/voice/p5-settings.json": {
+   "expected": "8c3203f55a470a4028223b32a0ac66bfc1882ac22bdbca69d2dd68626ed91ff1",
+   "observed": "8c3203f55a470a4028223b32a0ac66bfc1882ac22bdbca69d2dd68626ed91ff1"
+  }
+ },
+ "verdict": "PASS"
+}

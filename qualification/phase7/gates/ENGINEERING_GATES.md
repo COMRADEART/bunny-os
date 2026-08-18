@@ -11,8 +11,8 @@ gates are Track A obligations with the same standard.
 
 | Gate | Status | Artifact | Evidence |
 | --- | --- | --- | --- |
-| Rollback harness proves the booted deployment | NOT_RUN | — | — |
-| Rollback user-state preservation vs prior expectation | NOT_RUN | — | — |
+| Rollback harness proves the booted deployment | **PASS** | `e906a48793d7` chain (deploy `1804c600` ← `18fd8a7d`) | `qualification/phase7/rollback/ROLLBACK_QUALIFICATION.md`; four identities, three independent booted-identity sources; runs 1–3 (NOT_RUN, NOT_RUN, FAIL) preserved as the harness's own semantics evidence |
+| Rollback user-state preservation vs prior expectation | **PASS** | same chain | `expectation.json` committed before boot; 8/8 markers byte-identical, per-deployment /etc switch proven, hostname and locale per rule (`evidence/verdict.json`) |
 | Recovery media journey | NOT_RUN | — | — |
 | Accessibility FAIL: `high-contrast` | **FAIL** (carried from `b09f523`) | `b09f523` | `qualification/capsules/evidence/a11y-b09f523/accessibility.json` |
 | Accessibility FAIL: `text-scaling` | **FAIL** (carried from `b09f523`) | `b09f523` | `qualification/capsules/evidence/a11y-b09f523/accessibility.json` |
