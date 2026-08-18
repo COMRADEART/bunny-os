@@ -100,7 +100,7 @@ for conf in entries:
 json.dump(deployments, sys.stdout, indent=1, sort_keys=True)
 PY
 deployments_json="$(python3 "${ident_py}" "${DISK}" "${BOOT_PART}" "${ROOT_PART}" "${bls[@]}")"
-echo "${deployments_json}" | sed 's/^/  /'
+printf '%s\n' "${deployments_json}"
 
 echo "== seeding user-state markers and identity markers =="
 mapfile -t deploy_dirs < <(guestfish --ro -a "${DISK}" -m "${ROOT_PART}" \
@@ -220,7 +220,7 @@ digest_lines=""
 for m in "${markers[@]}"; do
   sum="$(guestfish --ro -a "${DISK}" -m "${ROOT_PART}" checksum sha256 "${m}")" \
     || { echo "NOT_RUN: expected marker ${m} is absent" >&2; exit 5; }
-  runtime_path="/var${m#${var_root}}"
+  runtime_path="/var${m#"${var_root}"}"
   digest_lines+="${sum}  ${runtime_path}"$'\n'
 done
 printf '%s' "${digest_lines}" | sed 's/^/  /'
