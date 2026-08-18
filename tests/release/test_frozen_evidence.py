@@ -39,10 +39,25 @@ _ROOT = Path(__file__).resolve().parents[2]
 _RECORD = _ROOT / "qualification" / "phase7" / "immutability" / "frozen-evidence.json"
 
 #: Must match ``build-record.py`` — asserted below, so the script and the test
-#: cannot drift apart silently.
+#: cannot drift apart silently. This is the CUT-TIME policy and never grows:
+#: a record whose exemptions move afterwards is not a record.
 EXEMPT_PREFIXES = (
     "qualification/phase7/",
     "qualification/grader/",
+)
+
+#: Phase trees created after the record was cut at 7db5962b. Declared
+#: explicitly, one per phase, exactly as the elder guard's
+#: ``_PHASES_AFTER_THE_RECORD`` does it — a new tree fails the added-files
+#: check until somebody writes it here deliberately. These are NOT folded
+#: into ``EXEMPT_PREFIXES``: that tuple is frozen with the record; this one
+#: is maintenance, and the diff of this file is its audit trail.
+PHASES_AFTER_THE_RECORD = (
+    # Phase 8's tree: external-validation governance — blocking conditions
+    # committed before any tester existed, the review package, the hardware
+    # matrix and protocol, signing readiness, and the Alpha program
+    # operations. Still being written to.
+    "qualification/phase8/",
 )
 
 MAINTAINED_TOOLING = frozenset({
@@ -79,7 +94,7 @@ def verify_frozen(root: Path, frozen: dict, tracked: set[str] | None):
         added = [
             name for name in sorted(tracked)
             if name not in frozen
-            and not name.startswith(EXEMPT_PREFIXES)
+            and not name.startswith(EXEMPT_PREFIXES + PHASES_AFTER_THE_RECORD)
             and name not in MAINTAINED_TOOLING
             and not _is_residue(name)
         ]

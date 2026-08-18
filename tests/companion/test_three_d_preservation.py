@@ -91,6 +91,12 @@ _PHASES_AFTER_THE_RECORD = (
     # this list except the one still being written to. This test keeps guarding
     # its own record unchanged; the successor guards the rest.
     "qualification/phase7/",
+    # Phase 8's, for the same reason: the external-validation governance tree
+    # — blocking conditions, the review package, the hardware matrix, signing
+    # readiness, the Alpha program operations. A later phase existing is not
+    # an earlier phase changing. The successor guard declares it too, in its
+    # own PHASES_AFTER_THE_RECORD.
+    "qualification/phase8/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is
