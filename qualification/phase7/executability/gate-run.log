@@ -1,0 +1,13 @@
+test_direct_path_interpreters_resolve_on_posix_hosts (tests.release.test_script_executability.ScriptExecutability.test_direct_path_interpreters_resolve_on_posix_hosts) ... skipped 'interpreter paths are a POSIX question; skipped, not passed'
+test_every_executable_is_a_well_formed_script (tests.release.test_script_executability.ScriptExecutability.test_every_executable_is_a_well_formed_script) ... ok
+test_no_shell_script_is_committed_with_crlf (tests.release.test_script_executability.ScriptExecutability.test_no_shell_script_is_committed_with_crlf) ... ok
+test_a_clean_script_passes (tests.release.test_script_executability.ScriptExecutabilityNegativeControls.test_a_clean_script_passes) ... ok
+test_a_crlf_shebang_fails (tests.release.test_script_executability.ScriptExecutabilityNegativeControls.test_a_crlf_shebang_fails) ... ok
+test_a_crlf_shell_blob_fails (tests.release.test_script_executability.ScriptExecutabilityNegativeControls.test_a_crlf_shell_blob_fails) ... ok
+test_an_executable_data_file_fails (tests.release.test_script_executability.ScriptExecutabilityNegativeControls.test_an_executable_data_file_fails) ... ok
+test_an_unlisted_interpreter_fails (tests.release.test_script_executability.ScriptExecutabilityNegativeControls.test_an_unlisted_interpreter_fails) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.416s
+
+OK (skipped=1)
