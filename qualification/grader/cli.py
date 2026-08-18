@@ -126,6 +126,16 @@ def main(argv: list[str] | None = None) -> int:
             # than dropped.
             merged = dict(previous)
             merged.update(document)
+            # ...except `schemaVersion`, which both sides own and which means
+            # different things to each. A blind merge silently rewrote the
+            # collector's `schemaVersion: 2` to the grader's `1`, so a reader
+            # checking the record's shape would have been told it was an older
+            # format than it is. The collector's version describes the file; the
+            # grader's describes the verdict inside it, and they are versioned
+            # independently because they change for different reasons.
+            if "schemaVersion" in previous:
+                merged["schemaVersion"] = previous["schemaVersion"]
+                merged["graderSchemaVersion"] = document.get("schemaVersion")
             document = merged
 
     rendered = json.dumps(document, indent=1, sort_keys=True)
