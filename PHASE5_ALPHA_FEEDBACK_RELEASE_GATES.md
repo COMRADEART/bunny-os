@@ -459,45 +459,80 @@ the fallback, not on the screen.
 
 ## 12. Security disposition
 
-`qualification/phase5/security/SECURITY_DISPOSITION.md` and
-`disposition-matrix.json`.
+`qualification/phase5/security/SECURITY_DISPOSITION.md`,
+`candidate-disposition-matrix.json`, and the raw scan under `scan/`.
 
-**37 findings, all `PENDING_REVIEW`** — 8 Critical, 16 High, 13 Medium. All
-from the base image, all with **no network exposure**, all **not
-waiver-eligible**, 35 of 37 `installed-not-executed`.
+**The candidate itself was scanned.** The first attempt failed for want of disk
+— `grype podman:` expands every layer to a tarball. The second succeeded by
+mounting the image's overlay in place (`podman create` + `podman mount`, then
+`grype dir:`), which copies nothing: free space measured before, during and
+after was unchanged.
 
-That status is the correct answer, not an evasion:
+### 183 is not 183
+
+The scan reports **183 matches**. That is **56 distinct advisories**, each
+counted once per affected package. `FEDORA-2026-c53019ed4f` alone accounts for
+15, all from one `rpmdb.sqlite`. Quoting 183 would inflate the figure more than
+threefold, and 183 is the first number anyone re-running the scan will see.
+
+| Severity | Distinct advisories |
+| --- | ---: |
+| **Critical** | **1** |
+| High | 31 |
+| Medium | 19 |
+| Low | 5 |
+| **Total** | **56** |
+
+The single Critical is `GHSA-p77j-4mvh-x3m3` in `google.golang.org/grpc
+v1.72.2`, fixed upstream in 1.79.3.
+
+### A discrepancy with Phase 4, recorded as one
+
+| | Total | Critical | High |
+| --- | ---: | ---: | ---: |
+| Phase 4 | 59 | 8 | 28 |
+| Measured here | 56 | **1** | 31 |
+
+The totals are close; the Criticals are not. **This is not offered as a
+correction of Phase 4.** Three things differ at once — the scanner database,
+the cataloguing method (`dir:` against `oci-archive:`), and possibly what
+Phase 4 counted — and attributing the difference to one of them with three
+variables moving would be a guess. One `oci-archive:` scan settles it, and
+that needs disk.
+
+It matters more than a counting question: **Critical is the severity that
+cannot be dispositioned without an independent review**, so whether the
+candidate carries eight or one changes what that review costs.
+
+### What the scan does settle
+
+The same scan of a **different** build (`376acf0e076f`, different image ID,
+different commit) returns **identical counts**. Two independently built images
+with the same vulnerability surface is exactly what "every finding comes from
+the base image" predicts — here demonstrated rather than asserted. **Nothing
+Bunny builds adds to this surface.**
+
+### Every row is `PENDING_REVIEW`, and that is correct
 
 * `release/cve.py` and `release/vulnerability.py` **reject at parse time** any
   non-blocking disposition of a Critical finding without a completed
-  independent review. There is none. `ACCEPT` and `NOT_APPLICABLE` are not
-  statuses a person could write.
-* The generator has **no code path that produces them** either. A function that
-  could and merely does not is one refactor away.
-* `FIX` is unavailable for a different reason: an upstream fixed version exists
-  and the packages are in the base image, not in `build/packages/`, so this
-  repository cannot apply it. **That is a statement about which party can act,
-  not the "inherited, therefore not ours" move §17 forbids.**
+  independent review. There is none, so `ACCEPT` and `NOT_APPLICABLE` are not
+  statuses a person could write. The generator has no code path producing them
+  either.
+* `FIX` is unavailable for a different reason: the fixed versions exist and the
+  packages are in the base image, not `build/packages/`. **That is a statement
+  about which party can act, not the "inherited, therefore not ours" move §17
+  forbids.**
 
-The **Bunny impact** column is filled entirely from measured fields — which
-binaries carry the module, whether any enabled unit reaches them, file modes,
-SELinux state. Those reduce exposure; they do not dispose of a finding, and the
-matrix does not let them.
+The **Bunny impact** column on the candidate matrix reads *not determined*,
+deliberately. The measured reachability evidence covers the July advisory set;
+carrying it across would give an advisory that did not exist when that evidence
+was gathered a reachability answer nobody measured for it. The older matrix
+keeps its evidence and its scope; this one says what it does not know.
 
 The **owner** column reads "unassigned — the project has one principal and the
 review must be independent of them", because intake rejects any reviewer whose
 name matches a project principal.
-
-### The matrix's largest limitation, stated first
-
-**It is not about the candidate.** It is about `79bb99ddb39d`, scanned
-2026-07-29. A re-scan of `e906a48793d7` was attempted and failed:
-
-    failed to catalog … podman: unable to populate layer cache … :
-    no space left on device
-
-The image is in the builder's store and grype's database is current (built
-2026-08-17, `valid`). What is absent is disk.
 
 ---
 
@@ -641,18 +676,22 @@ not on work.
 2. **The reference suite.** ≈1/14, cause narrowed to a non-health rung cap; the
    diagnostic that will name it is in place and a hunt is running.
 3. **Update and rollback.** Need N+1 to exist.
-4. **The re-scan and the review package rebinding.** The request is bound to
-   `80df25b09f65` and intake rejects a scope commit other than the candidate's,
-   so sending it as written would produce a record intake refuses. It also
-   predates App Capsules and Trust — the two boundaries a reviewer of *this*
-   product would most want to see.
+4. **The review package rebinding.** The re-scan is **done** — see §12; the
+   overlay-mount route needs no disk. What remains is the request itself: it is
+   bound to `80df25b09f65`, and intake rejects a scope commit other than the
+   candidate's, so sending it as written would produce a record intake refuses.
+   Its 24 reachability bundles are also built against the July advisory set,
+   not the 56 measured here. And it predates App Capsules and Trust — the two
+   boundaries a reviewer of *this* product would most want to see.
+5. **One `oci-archive:` scan**, to settle the 8-against-1 Critical discrepancy.
+   This is the one item still genuinely blocked on disk.
 
 ### Not engineering
 
-5. **Independent security review** — by definition excludes the people here.
-6. **Physical hardware** — a purchase.
-7. **Production signing** — a second person.
-8. **Owner approvals** — a decision.
+6. **Independent security review** — by definition excludes the people here.
+7. **Physical hardware** — a purchase.
+8. **Production signing** — a second person.
+9. **Owner approvals** — a decision.
 
 ### The storage blocker, measured
 
@@ -663,7 +702,9 @@ an elevated compaction. A build writes about 30 GB.
 
 It has already bitten twice this phase — once as `KNOWN_LIMITATIONS.md`
 predicted (podman block-layer I/O errors), and once as grype's layer cache
-filling `/tmp`.
+filling `/tmp`. The second was **worked around rather than waited on**: mounting
+the image's overlay in place costs no disk at all, and that is how §12 got its
+scan. The build has no equivalent trick; it genuinely needs the space.
 
 ---
 
@@ -695,7 +736,10 @@ Everything else Phase 5 changed lives outside the image (`qualification/`,
 | `isolation/TEST_ISOLATION_INVESTIGATION.md` | Rates, conditions, the controlled injection, what it is not |
 | `performance/POLLER_DATA_SOURCE_COST.md` | The measurement that refutes the leading hypothesis |
 | `performance/poller-bench.js`, `poller-bench-host.txt` | The instrument and its output |
-| `security/SECURITY_DISPOSITION.md`, `disposition-matrix.json`, `build_disposition_matrix.py` | 37 rows, all PENDING_REVIEW, regenerable |
+| `security/SECURITY_DISPOSITION.md` | The disposition, both scans, and the counting |
+| `security/candidate-disposition-matrix.json`, `build_candidate_matrix.py` | 56 advisories on the **candidate**, all PENDING_REVIEW, regenerable |
+| `security/disposition-matrix.json`, `build_disposition_matrix.py` | The July set, 37 rows, kept with its own scope and its measured reachability |
+| `security/scan/candidate-fixed.json`, `image-id.txt`, `grype-version.txt` | The raw scan of `e906a48793d7` |
 | `signing/SIGNING_CONFORMANCE.md` | Conformance, and the refusals measured |
 | `hardware/HARDWARE_TRACK.md` | The track, bound to the candidate |
 | `feedback/ALPHA_FEEDBACK_PLAN.md` | The instrument, and the zero |
