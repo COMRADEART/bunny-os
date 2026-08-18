@@ -217,6 +217,19 @@ It earned that on its first run: it found a fourteenth signal,
 package property read only inside `if requested in THREE_D`, a branch the
 slice's `animated-2d` ceiling cannot reach — and declared with that reason.
 
+### The other slice, checked rather than assumed
+
+`companion/character/three_d_slice.py` has a `_VISUAL` dict of the same shape
+and the same purpose, so it was the obvious second instance. **It does not have
+the defect.** It builds `RendererSignals(**_VISUAL, ...)` from scratch, so every
+field it does not name takes the dataclass default — `memory_pressure: bool =
+False` — rather than a host reading. The 2D slice's `_VISUAL` goes through
+`presenter.update(signal_overrides=...)`, which merges onto `base_signals`, and
+that merge is the whole difference.
+
+Recorded because "the same pattern elsewhere" is worth a look every time, and
+because the answer being *no* is only useful if somebody can see it was asked.
+
 ### Negative controls
 
 | Control | Result |
