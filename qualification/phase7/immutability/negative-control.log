@@ -1,0 +1,10 @@
+== 1. untouched tree: the guard must pass ==
+   PASS
+== 2. one byte appended to qualification/phase5/update/rollback-boot-parity.json: the guard must fail ==
+   the guard failed, as required
+== 3. a file staged under a frozen tree: the guard must fail ==
+   the guard failed, as required
+== 4. restored tree: the guard must pass again ==
+   PASS
+
+NEGATIVE CONTROL PASSED: modify -> FAIL, add -> FAIL, restore -> PASS

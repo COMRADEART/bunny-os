@@ -81,6 +81,16 @@ _PHASES_AFTER_THE_RECORD = (
     # an edit to Phase 5's files, which is why the byte-identity check above
     # still passes unchanged.
     "qualification/phase6/",
+    # Phase 7's, for the same reason. Its tree opens with the blocking
+    # conditions committed before any result, and will carry the rollback,
+    # recovery, accessibility, immutability and executability evidence. Phase 7
+    # also closes the gap this exempt list *is*: everything declared here after
+    # fa49380 is pinned by nothing, which Phase 6 measured and recorded. The
+    # successor record — `qualification/phase7/immutability/frozen-evidence.json`,
+    # enforced by `tests/release/test_frozen_evidence.py` — pins every tree in
+    # this list except the one still being written to. This test keeps guarding
+    # its own record unchanged; the successor guards the rest.
+    "qualification/phase7/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is

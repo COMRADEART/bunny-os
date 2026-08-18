@@ -16,8 +16,8 @@ gates are Track A obligations with the same standard.
 | Recovery media journey | NOT_RUN | — | — |
 | Accessibility FAIL: `high-contrast` | **FAIL** (carried from `b09f523`) | `b09f523` | `qualification/capsules/evidence/a11y-b09f523/accessibility.json` |
 | Accessibility FAIL: `text-scaling` | **FAIL** (carried from `b09f523`) | `b09f523` | `qualification/capsules/evidence/a11y-b09f523/accessibility.json` |
-| Evidence immutability covers phases 4–6 | NOT_RUN | — | — |
-| Evidence immutability negative control | NOT_RUN | — | — |
+| Evidence immutability covers phases 4–6 | **PASS** | repository at record commit `7db5962b` | `qualification/phase7/immutability/frozen-evidence.json` — 5424 files pinned across 24 trees; enforced by `tests/release/test_frozen_evidence.py` |
+| Evidence immutability negative control | **PASS** | repository | `qualification/phase7/immutability/negative-control.log` — modify one historical file → FAIL, stage one file into a frozen tree → FAIL, restore → PASS; constructed-tree controls run on every suite execution |
 | Script executability gate | NOT_RUN | — | — |
 | Script executability negative control | NOT_RUN | — | — |
 
