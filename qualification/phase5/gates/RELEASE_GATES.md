@@ -53,8 +53,8 @@ of them would be misleading whichever it chose.
 | Security review | **NOT DONE** | `PENDING_EXTERNAL_REVIEW` | REQUIRED | candidate re-scanned; matrix rebound to `e906a48793d7` at module granularity, 8 Critical unchanged. The review request itself is still bound to `80df25b09f65` and asks the wrong question — see below |
 | Physical hardware | **NOT RUN** | `PENDING_HARDWARE` | REQUIRED | none — no machine |
 | Production signing | **NOT DONE** | `BLOCKED` (second signer) | REQUIRED | workflow specified; no key created |
-| Update | **NOT RUN** | **NOT_RUN** — 1 PASS / 12 of 13 | REQUIRED | **blocker identified and removable** — see §4 |
-| Rollback | **NOT RUN** | **NOT_RUN** — 0 PASS / 5 | REQUIRED | **blocker identified and removable** — see §4 |
+| Update | **NOT_RUN** — staged update works; the image ships no update trust root and refuses by design | **NOT_RUN** — 1 PASS / 12 of 13 | REQUIRED | needs a production key, i.e. a second person |
+| Rollback | **PASS** by `bootc rollback`, user state intact / **NOT_RUN** by `vm-rollback-test.sh`, which was passing without rolling back | **NOT_RUN** — 0 PASS / 5 | REQUIRED | the harness cannot select a deployment; the product can |
 | Owner approvals | **NOT DONE** | `PENDING_OWNER` | REQUIRED | none — not an engineering act |
 | Licence | — | **PASS** | PASS | none |
 | Independent reproducibility | — | **PASS** | PASS | none |
@@ -157,24 +157,29 @@ no pressure reason*, so pinning to an arbitrary value would not satisfy it.
 | | Runs | Failures |
 | --- | ---: | ---: |
 | `tests/companion` | 8 | **0** |
-| Full reference suite (5979 tests) | 5 | **0** |
+| Full reference suite (5988 tests) | 5 at the fix, 3 at HEAD | **0** |
 | Installer sub-suite (178 tests) | 5 | **0** |
 
 **0 unexplained failures, 0 unexplained errors.**
 
 The eighth companion run recorded `psi_avg10 = 0.71` — seven times the
 threshold that used to degrade the rung — and **zero slice failures**. Before
-the pin, that is the run that would have failed. The certification hit the
-conditions that cause the defect rather than avoiding them.
+the pin, that is the run that would have failed. A later set at HEAD reached
+`psi_avg10 = 2.02`, twenty times over, and also passed. The certification hit
+the conditions that cause the defect rather than avoiding them.
 
-Evidence: `qualification/phase5/isolation/certification/verify.log`.
+Evidence: `qualification/phase5/isolation/certification/verify.log` and
+`verify-at-c923169d.log`. The second run asserts the commit it checked out and
+the number of tests it discovered — the first version of that script did
+neither and reported three clean runs of a different branch, with a suite that
+had discovered 1555 tests instead of 5988.
 
 **This gate is now CLEAN.** It is the only required gate Phase 5 could close by
 itself, and the only one it closed.
 
 ---
 
-## 4. Update and rollback — why they were blocked, and what changes
+## 4. Update and rollback — what was actually in the way
 
 Both matrices are NOT_RUN, and their recorded reasons are exact:
 
@@ -190,17 +195,29 @@ loud: **the blocker was never the harness. It was that the project had only
 ever had one build.** "Update to the next candidate" and "roll back to the
 previous release" are not questions a single artifact can be asked.
 
-Phase 5 changes that, because §3 requires a new build identity for any code
-change and Phase 5 changes code. Once a Phase 5 artifact exists:
+Phase 5 built one, so both questions were asked. N is the Phase 4 RC
+`e906a487`, retained and verified by digest; N+1 is `e501218f2fe0`.
 
-* N is the Phase 4 RC, `e906a487`, ISO `823d50ca…`, beta payload
-  `sha256:c87a6616…` — all retained, all still in the builder's image store.
-* N+1 is the Phase 5 artifact.
-* `BUNNY_PREVIOUS_BETA_DISK` has a value for the first time.
-* A development-signed manifest naming N+1 can be produced; the format is
-  already exercised and passing
-  (`qualification/installed-system/evidence/collections/update-manifest-valid.json`,
-  `keyClass: development`).
+What was found behind the blocker was not what the tracker expected.
+
+* **Boot parity passes.** Both images reach a healthy target.
+* **A staged update is real.** The shipped `bootc` staged N+1 onto a copy of N
+  and the disk went from one deployment to two;
+  `vm-upgrade-test.sh staged` PASSES.
+* **The product rolls back.** `bootc rollback` then reboot brings up N, agreed
+  by the per-deployment `os-release`, the kernel command line and
+  `bootc status`. All five user-state markers survive it.
+* **`vm-rollback-test.sh deployment-rollback` was passing without rolling
+  back** — three runs, every one on the default deployment, because it wrote a
+  40-byte file where GRUB needs a padded 1024-byte block and its only check was
+  that a healthy target was reached. Repaired to identify the deployment that
+  booted; it now reports NOT_RUN on the same disk.
+* **No manifest scenario can run.** Not for want of a manifest: the image ships
+  `enabled: false` and an empty update trust store, so the agent answers
+  `not_configured` and would answer `unknown_key` to anything that got past it.
+  That is correct for an image with no production key.
+
+Detail and evidence: `../update/UPDATE_AND_ROLLBACK.md`.
 
 **What that will and will not close.** It can close the *mechanism* scenarios:
 manifest validation, staging, a booted N+1, a rollback to N, and — §20's
@@ -213,12 +230,28 @@ have: `interrupted-download` and `expired-metadata` need a reachable registry;
 anything signed for production needs a production key, which §19 keeps out of
 this repository by design. Those stay NOT_RUN with their reason named.
 
-**Currently blocked on host storage, not on engineering.** Measured: Windows
-`C:` has 8.6 GB free; the WSL guest reports 607 GB, which is the illusion this
-project has hit before — its `ext4.vhdx` is 731.5 GB on disk against 350 GB
-used, so roughly 380 GB is trapped and reclaimable only by an elevated
-compaction. A build writes about 30 GB and would fail with block-layer I/O
-errors, exactly as `KNOWN_LIMITATIONS.md` already records happening once.
+**It was recorded here as blocked on host storage. It was not.** The claim was:
+Windows `C:` has 8.6 GB free, the guest's 607 GB is an illusion, and a build
+writing 30 GB would fail at the block layer. Two things were wrong with it. The
+failure that started it was `grype podman:` filling **`/tmp`, which is tmpfs —
+RAM**, not a disk. And "the host volume" conflated Windows `C:` with the ext4
+volume the builder writes to: the VHDX was already 731.5 GB on disk against
+350 GB used, so ~380 GB of it was allocated and free for reuse.
+
+Measured before believing it either way: writing 1 GiB, then 20 GiB, inside WSL
+moved the VHDX by **zero bytes** and `C:` free space by **zero bytes** — 7.848 GB
+before and after each. The build then ran, exported a 2.96 GB OCI archive and
+produced a 13.7 GB raw image without difficulty.
+
+**What has since closed.** The build exists (`e501218f2fe0.1787016937`), boot
+parity passes, an update is genuinely staged, and `bootc rollback` brings up the
+previous deployment with all five user-state markers intact — §20's sharpest
+requirement, met. What did *not* close: the manifest scenarios, because the
+image ships no update trust root and refuses by design; `interrupted-download`
+and `expired-metadata`, which need a reachable registry; and
+`vm-rollback-test.sh`'s own deployment-selection route, which turned out to have
+been reporting PASS without rolling back at all. See
+`../update/UPDATE_AND_ROLLBACK.md`.
 
 ---
 
@@ -233,8 +266,12 @@ Recorded so that the remaining distance is not mistaken for a backlog.
 | Production signing | A production key, a second signer, and controlled access. §19 forbids the key entering this repository. |
 | Owner approvals | A decision, by a person with the authority to make it. |
 
-Four of the six outstanding REQUIRED gates. The other two — update and
-rollback — are engineering, and §4 says what they need.
+Four of the six outstanding REQUIRED gates — and the update gate is now a
+fifth: it cannot close while the image ships no update trust root, and that
+root cannot exist until a production key does, which is the second row of this
+table wearing a different hat. Rollback is the only one of the six left that
+engineering can move, and what it needs is a harness that can select a
+deployment; the product half already passes.
 
 ---
 
