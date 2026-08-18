@@ -338,7 +338,41 @@ invalidates the policy that rests on it.
 `NOT_RUN` remained a real outcome throughout. Nothing was converted from *not
 executed* into *passed by absence of failure*.
 
+### Reference suite, certified at the Phase 6 head
+
+On the Fedora reference target, as `bunny`, from an ext4 clone:
+
+    expected commit: 2e01d443e08dcecc715406dbb26ec1df1057b1d4
+    checked out:     2e01d443e08dcecc715406dbb26ec1df1057b1d4
+    commit assertion: OK
+    discovered tests: 6030
+    test-count floor: OK (6030 >= 5900)
+    Ran 6030 tests in 230.565s   run 1 exit: 0
+    Ran 6030 tests in 228.189s   run 2 exit: 0
+
+**2 runs × 6 030 tests, zero failures.** 6 030 is 5 988 plus the 42 tests Phase 6
+added. Evidence: `qualification/phase6/certification/verify-2e01d443.log`.
+
+The script asserts the commit it actually checked out and a test-count floor,
+because the Phase 5 equivalent once defaulted to `FETCH_HEAD`, ran a different
+branch, and reported clean runs of 1 555 tests where the suite has ~6 000.
+
+**Its own defect, found and fixed mid-phase.** Two invocations against different
+commits both truncated and appended to one `verify.log`, producing a record
+carrying one commit's header above the other's test output. Caught because the
+per-run lines did not add up. It now takes a lock directory and **refuses a
+concurrent run with exit 6** rather than interleaving, and writes a per-commit
+log and done-marker. The refusal was exercised: a second run printed
+`REFUSED: another certification run holds …` and did not proceed. **No result
+was reported from the contaminated log.**
+
 Repository validation: **PASS**, 16 validators.
+
+**Windows is not the reference target, and this phase re-confirmed why.** A
+native Windows run shows `test_provenance_accounts_for_every_selected_tts_byte`
+failing by 605 bytes: four `assets/voice/licenses/*` files are `i/lf w/crlf` —
+correct in the repository, CRLF only in this working tree. The repository is
+right and the checkout is not.
 
 ### The evidence-immutability guard protects less than its name suggests
 
@@ -474,6 +508,7 @@ All re-verified from the bytes on 2026-08-18; `qualification/phase6/baseline/fre
 | `qualification/phase6/alpha/` | ALPHA_VALIDATION.md, triage-schema.json |
 | `qualification/phase6/signing/` | SIGNING_POSITION.md |
 | `qualification/phase6/performance/` | PERFORMANCE_FOLLOW_UP.md |
+| `qualification/phase6/certification/` | the reference-suite run at the Phase 6 head |
 | `UPDATE_TRUST_ARCHITECTURE_DECISION.md` | the §10 decision |
 | `operations/data/update-support-policy.json` | machine-readable policy |
 | `release/updatepolicy.py` | the admission path |
