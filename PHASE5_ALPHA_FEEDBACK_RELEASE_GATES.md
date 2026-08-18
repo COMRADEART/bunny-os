@@ -135,50 +135,74 @@ Full record: `qualification/phase5/isolation/TEST_ISOLATION_INVESTIGATION.md`.
 | The target **class** alone | 20 | 0 | 0/20 |
 | The target **module** alone | 40 | 0 | 0/40 |
 | The target class after each earlier neighbour, separately | 60 | 0 | 0/60 |
-| The whole `tests/companion` package | 28 | 2 | **≈1/14** |
+| The whole `tests/companion` package | 28 | 2 | **≈2/28** |
 
 All twelve modules that discovery runs before the target were swept, five times
-each. **It is not one neighbour, and it is not intra-module** — the second row
-closes a gap in my own first design, where stages A and C both ran the *class*
-and could never have seen what `IncidentalRendererFaultTests` leaves behind.
+each. The module row closes a gap in my own first design: stages A and C both
+ran the *class*, so neither could have seen what `IncidentalRendererFaultTests`
+leaves behind.
 
 Phase 4 recorded "5/5 alone and 1-in-3 in-package". The alone result reproduces
 on a larger sample; **the 1-in-3 figure does not and should not be quoted as
-measured**. That is Phase 4's own closing lesson applied to Phase 4's own
-number.
+measured**.
 
-### The signature, and what it is not
+### The cause: the host's own memory pressure
 
-Every failing run carries the identical list — `['step 17 …', 'step 21 …']`
-with 18, 19 and 20 passing. Three steps pass *because the machine is already
-broken*: a degraded renderer satisfies the three degradation assertions for
-free, which is why this has looked like a selector defect for four phases.
+`CharacterPresenter` builds `base_signals` from `assess_current_machine()` —
+the **real host** — and every field the slice's `_VISUAL` override did not name
+survived into every evaluation. `_VISUAL` pinned the display, graphics
+readiness, available memory and GPU. It did not pin `memory_pressure`, which
+`signals_from_assessment` reads as Linux PSI:
 
-A controlled injection reproduces the signature exactly: a recurring renderer
-fault caps the rung at `static-image`, and steps 17 and 21 are the only two
-that assert `animated-2d`.
+    pressure = inventory.memory.pressure_some_avg10.get(None)
+    memory_pressure = isinstance(pressure, (int, float)) and pressure >= 0.1
 
-**But the caught instance refutes that as the cause.** On attempt 16 of a
-package hunt, the two `VerticalSliceAndPerformanceTests` failures recorded
-`incidentalRendererFault=None` — **no fault at all** — and step 17 was still
-`static-image`. So the cap is real and the mechanism is not the presenter's
-health.
+`/proc/pressure/memory`, `some avg10` — a **ten-second rolling average of
+memory stall**. A suite that has just run several thousand tests in one process
+crosses 0.1, intermittently, for reasons that have nothing to do with this
+slice. `adaptation.py` then does what it should: `degrade(STATIC_IMAGE,
+"memory-pressure", "memory pressure disabled animation")`.
 
-### What was fixed
+**Proved by setting that one field and changing nothing else:**
 
-The failure is now diagnosable. The slice report has always carried
-`incidentalRendererFault`, `retryCleanOfFaults` and the renderer events *with
-their exception text*, and every assertion printed a list of step names and
-nothing else. Step 17 now also records the **selector's own reasons** and
-whether it was held by hysteresis, and the assertion prints all of it.
+| Host | passed | step 17 | fault | healthy |
+| --- | --- | --- | --- | --- |
+| no memory pressure | True | `animated-2d` | None | True |
+| memory pressure | **False** | **`static-image`** | **None** | **True** |
 
-Four phases of investigation started from a step number because the field
-beside it was never printed. That is Phase 4's rule — *make the thing that
-failed report what it saw* — applied to the one failure that most needed it.
+The failing row's `failures` list is byte-identical to every observed failure,
+and step 17's recorded reason reads *"memory pressure disabled animation"*.
 
-**This gate is not closed.** It is quantified, its cause is narrowed to a
-non-health cap, and the instrument that will name it is in place. A second hunt
-with the reasons attached is running and has not yet caught one.
+**`fault=None` and `healthy=True` are the tells**, and they are exactly what
+the instance caught on attempt 16 of a package hunt recorded. Every earlier
+explanation — a transient renderer fault, host contention, cross-test
+interference — predicts a fault. There wasn't one. It also explains the rates,
+which no neighbour hypothesis could: **it is the package that makes the host
+stall, and no test in it is the cause.**
+
+### The fix, and why it is a strengthening
+
+`_VISUAL` now pins every host-derived signal the ladder can degrade or cap on.
+Pinned in the *slice*, not the presenter — the presenter reading the real
+machine is correct, because on a real machine under real pressure the companion
+*should* stop animating.
+
+**The second-order problem was worse than the failure.** Step 18 *declares*
+`memory_pressure: True` to prove the selector degrades. On a machine already
+under ambient pressure the rung was static before step 18 asked, so step 18 was
+passing without testing anything.
+
+The guard is structural: `test_slice_host_invariance.py` parses `adaptation.py`
+with `ast`, collects every `signals.<field>` the ladder consults, and requires
+each to be pinned or declared exempt with a reason — so the next signal added
+there cannot reopen this the way this one stayed open for four phases. It found
+a fourteenth on its first run (`package_supports_3d`), which was checked rather
+than waved through.
+
+Negative controls: removing the pin fails 6 of 10; step 18 must still degrade
+on declared pressure and step 19 must still reach `text-only`, so a fix that
+disabled the assertion fails too; and step 17 must reach `animated-2d` **with
+no pressure reason**, so pinning to an arbitrary value would not satisfy it.
 
 ### A separate finding: 153 tests were not being run
 
