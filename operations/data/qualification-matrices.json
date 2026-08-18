@@ -99,19 +99,19 @@
     "scenario": "diagnostics-export"
    },
    {
-    "evidenceReference": "qualification/capsules/evidence/a11y-b09f523/accessibility.json",
+    "evidenceReference": "qualification/phase7/accessibility/evidence/a11y-e906a48793d7/accessibility.json",
     "method": "virtual-machine",
-    "notes": "Driven in a booted Bunny OS guest (image b09f523, 1920x1080). The preference was set, read back, and the screen photographed. Against a 0.15% noise floor measured from a screenshot taken at the SAME settings as the baseline, text-scaling-factor 1.5 changed 0.09% of the screen and high-contrast changed 0.18% - both indistinguishable from the live CPU and network gauges ticking. The cause is structural: 43 of 43 font sizes in the shell stylesheet are absolute pixels and all 151 colour literals are hardcoded, so there is nothing for a scale factor to multiply or a theme to override.",
-    "outcome": "FAIL",
-    "recordedAt": "2026-08-12T00:00:00Z",
+    "notes": "Driven in a booted guest of the subject artifact (e906a48793d7, image sha256:c87a6616..., 1920x1080, llvmpipe). The preference was set via the guest's own gsettings, read back, and the screen photographed; a control screenshot at restored settings measures the run's own noise floor (6.91% of the screen, dominated by the live Companion animation and system gauges - localised in noise-mask.png, not hidden). high-contrast changed 99.6% of the screen (14.4x the noise floor): the wallpaper is replaced by the theme's opaque ground, borders replace shadows, and the palette switches to the high-contrast theme (tests/shell/test_companion_surfaces.py::test_high_contrast_exists_as_a_theme_rather_than_a_wish and the contrast-pair gate fail if that is removed). Observed limitation, recorded not hidden: the first-run GTK dialog keeps its GTK theme; the shell is what this scenario measures.",
+    "outcome": "PASS",
+    "recordedAt": "2026-08-18T16:21:07Z",
     "scenario": "high-contrast"
    },
    {
-    "evidenceReference": "qualification/capsules/evidence/a11y-b09f523/accessibility.json",
+    "evidenceReference": "qualification/phase7/accessibility/evidence/a11y-e906a48793d7/accessibility.json",
     "method": "virtual-machine",
-    "notes": "Driven in a booted Bunny OS guest (image b09f523, 1920x1080). The preference was set, read back, and the screen photographed. Against a 0.15% noise floor measured from a screenshot taken at the SAME settings as the baseline, text-scaling-factor 1.5 changed 0.09% of the screen and high-contrast changed 0.18% - both indistinguishable from the live CPU and network gauges ticking. The cause is structural: 43 of 43 font sizes in the shell stylesheet are absolute pixels and all 151 colour literals are hardcoded, so there is nothing for a scale factor to multiply or a theme to override.",
-    "outcome": "FAIL",
-    "recordedAt": "2026-08-12T00:00:00Z",
+    "notes": "Driven in a booted guest of the subject artifact (e906a48793d7, image sha256:c87a6616..., 1920x1080, llvmpipe). The preference was set via the guest's own gsettings, read back, and the screen photographed; a control screenshot at restored settings measures the run's own noise floor (6.91% of the screen, dominated by the live Companion animation and system gauges - localised in noise-mask.png, not hidden). The direct measurement is AT-SPI control geometry: at 1.5x, 19 of 60 comparable controls grew and none shrank (conclusive). The screen corroborates: 41.5% changed (6.0x the noise floor). The mechanism is the generated stylesheet - every font size is a theme value multiplied by the scale; tests/shell/test_design_system.py::test_no_font_size_survives_a_change_of_scale fails if that is removed.",
+    "outcome": "PASS",
+    "recordedAt": "2026-08-18T16:21:07Z",
     "scenario": "text-scaling"
    },
    {
@@ -617,6 +617,6 @@
   ]
  },
  "note": "Every scenario that has not been executed is recorded as NOT_RUN with the reason it could not run. NOT_RUN is blocking. A scenario is never resolved by inspecting the code that would handle it.",
- "recordedOn": "2026-08-16T23:51:39Z",
+ "recordedOn": "2026-08-18T16:22:03Z",
  "schemaVersion": 1
 }

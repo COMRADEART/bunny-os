@@ -1,6 +1,6 @@
 # Rollback qualification report
 
-Date: 2026-08-16T04:03:01Z  
+Date: 2026-08-18T16:22:03Z  
 Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
 Result: **NOT QUALIFIED** — 0 of 5 scenarios resolved, 0 failing, 5 not run.
 

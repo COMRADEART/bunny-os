@@ -1,8 +1,8 @@
 # Accessibility qualification report
 
-Date: 2026-08-16T04:03:01Z  
+Date: 2026-08-18T16:22:03Z  
 Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
-Result: **NOT QUALIFIED** — 0 of 14 scenarios resolved, 2 failing, 12 not run.
+Result: **NOT QUALIFIED** — 2 of 14 scenarios resolved, 0 failing, 12 not run.
 
 Fourteen essential workflows, from installer keyboard navigation and screen reader through the encryption prompt, first run, login, the Bunny surfaces, update, rollback, recovery, diagnostics export, and the high-contrast, text-scaling and reduced-motion settings.
 
@@ -21,8 +21,8 @@ Fourteen essential workflows, from installer keyboard navigation and screen read
 | `rollback-ui` | NOT_RUN | source-inspection | — |
 | `recovery-ui` | NOT_RUN | source-inspection | — |
 | `diagnostics-export` | NOT_RUN | source-inspection | — |
-| `high-contrast` | FAIL | virtual-machine | `qualification/capsules/evidence/a11y-b09f523/accessibility.json` |
-| `text-scaling` | FAIL | virtual-machine | `qualification/capsules/evidence/a11y-b09f523/accessibility.json` |
+| `high-contrast` | PASS | virtual-machine | `qualification/phase7/accessibility/evidence/a11y-e906a48793d7/accessibility.json` |
+| `text-scaling` | PASS | virtual-machine | `qualification/phase7/accessibility/evidence/a11y-e906a48793d7/accessibility.json` |
 | `reduced-motion` | NOT_RUN | source-inspection | — |
 
 ## Why these scenarios have not run

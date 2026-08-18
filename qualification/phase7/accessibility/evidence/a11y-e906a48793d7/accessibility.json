@@ -1,0 +1,411 @@
+{
+ "artifact": "e906a48793d7",
+ "imageDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+ "measurements": {
+  "atSpiBySize": [
+   {
+    "conclusive": true,
+    "controlsComparable": 60,
+    "grew": [
+     {
+      "from": 34,
+      "name": "AI Assistant",
+      "to": 37
+     },
+     {
+      "from": 43,
+      "name": "Account: Bunny desktop harness user",
+      "to": 54
+     },
+     {
+      "from": 17,
+      "name": "All apps",
+      "to": 21
+     },
+     {
+      "from": 46,
+      "name": "Applications",
+      "to": 60
+     },
+     {
+      "from": 34,
+      "name": "Apps",
+      "to": 37
+     },
+     {
+      "from": 46,
+      "name": "Browser",
+      "to": 60
+     },
+     {
+      "from": 59,
+      "name": "Bunny",
+      "to": 66
+     },
+     {
+      "from": 59,
+      "name": "Bunny Approvals",
+      "to": 66
+     },
+     {
+      "from": 46,
+      "name": "Bunny Assistant",
+      "to": 60
+     },
+     {
+      "from": 59,
+      "name": "Bunny Companion",
+      "to": 66
+     },
+     {
+      "from": 59,
+      "name": "Bunny Diagnostics",
+      "to": 66
+     },
+     {
+      "from": 59,
+      "name": "Bunny Launcher",
+      "to": 66
+     }
+    ],
+    "grewCount": 19,
+    "scale": "1.25",
+    "shrankCount": 0,
+    "unchangedCount": 41
+   },
+   {
+    "conclusive": true,
+    "controlsComparable": 60,
+    "grew": [
+     {
+      "from": 34,
+      "name": "AI Assistant",
+      "to": 43
+     },
+     {
+      "from": 43,
+      "name": "Account: Bunny desktop harness user",
+      "to": 65
+     },
+     {
+      "from": 17,
+      "name": "All apps",
+      "to": 25
+     },
+     {
+      "from": 46,
+      "name": "Applications",
+      "to": 65
+     },
+     {
+      "from": 34,
+      "name": "Apps",
+      "to": 43
+     },
+     {
+      "from": 46,
+      "name": "Browser",
+      "to": 65
+     },
+     {
+      "from": 59,
+      "name": "Bunny",
+      "to": 70
+     },
+     {
+      "from": 59,
+      "name": "Bunny Approvals",
+      "to": 70
+     },
+     {
+      "from": 46,
+      "name": "Bunny Assistant",
+      "to": 65
+     },
+     {
+      "from": 59,
+      "name": "Bunny Companion",
+      "to": 70
+     },
+     {
+      "from": 59,
+      "name": "Bunny Diagnostics",
+      "to": 70
+     },
+     {
+      "from": 59,
+      "name": "Bunny Launcher",
+      "to": 70
+     }
+    ],
+    "grewCount": 19,
+    "scale": "1.5",
+    "shrankCount": 0,
+    "unchangedCount": 41
+   },
+   {
+    "conclusive": true,
+    "controlsComparable": 60,
+    "grew": [
+     {
+      "from": 34,
+      "name": "AI Assistant",
+      "to": 42
+     },
+     {
+      "from": 43,
+      "name": "Account: Bunny desktop harness user",
+      "to": 87
+     },
+     {
+      "from": 17,
+      "name": "All apps",
+      "to": 31
+     },
+     {
+      "from": 46,
+      "name": "Applications",
+      "to": 78
+     },
+     {
+      "from": 34,
+      "name": "Apps",
+      "to": 42
+     },
+     {
+      "from": 46,
+      "name": "Browser",
+      "to": 78
+     },
+     {
+      "from": 59,
+      "name": "Bunny",
+      "to": 81
+     },
+     {
+      "from": 59,
+      "name": "Bunny Approvals",
+      "to": 81
+     },
+     {
+      "from": 46,
+      "name": "Bunny Assistant",
+      "to": 78
+     },
+     {
+      "from": 59,
+      "name": "Bunny Companion",
+      "to": 81
+     },
+     {
+      "from": 59,
+      "name": "Bunny Diagnostics",
+      "to": 106
+     },
+     {
+      "from": 59,
+      "name": "Bunny Launcher",
+      "to": 81
+     }
+    ],
+    "grewCount": 19,
+    "scale": "2.0",
+    "shrankCount": 0,
+    "unchangedCount": 41
+   }
+  ],
+  "atSpiControlGrowth": {
+   "conclusive": true,
+   "controlsComparable": 60,
+   "examples": [
+    {
+     "from": 34,
+     "name": "AI Assistant",
+     "to": 43
+    },
+    {
+     "from": 43,
+     "name": "Account: Bunny desktop harness user",
+     "to": 65
+    },
+    {
+     "from": 17,
+     "name": "All apps",
+     "to": 25
+    },
+    {
+     "from": 46,
+     "name": "Applications",
+     "to": 65
+    },
+    {
+     "from": 34,
+     "name": "Apps",
+     "to": 43
+    },
+    {
+     "from": 46,
+     "name": "Browser",
+     "to": 65
+    }
+   ],
+   "grewCount": 19,
+   "scale": "1.5",
+   "shrankCount": 0,
+   "unchangedCount": 41
+  },
+  "comparisons": [
+   {
+    "boundingBox": {
+     "height": 994,
+     "width": 1573,
+     "x": 272,
+     "y": 5
+    },
+    "isTheControl": false,
+    "pixelsDiffering": 143263,
+    "screenshot": "a11y-02-reduced-motion",
+    "shareOfScreen": 0.069089
+   },
+   {
+    "boundingBox": {
+     "height": 1080,
+     "width": 1920,
+     "x": 0,
+     "y": 0
+    },
+    "isTheControl": false,
+    "pixelsDiffering": 861050,
+    "screenshot": "a11y-03-large-text",
+    "shareOfScreen": 0.415244
+   },
+   {
+    "boundingBox": {
+     "height": 1080,
+     "width": 1920,
+     "x": 0,
+     "y": 0
+    },
+    "isTheControl": false,
+    "pixelsDiffering": 2065897,
+    "screenshot": "a11y-04-high-contrast",
+    "shareOfScreen": 0.996285
+   },
+   {
+    "boundingBox": {
+     "height": 1080,
+     "width": 1920,
+     "x": 0,
+     "y": 0
+    },
+    "isTheControl": false,
+    "pixelsDiffering": 765035,
+    "screenshot": "a11y-06-text-125",
+    "shareOfScreen": 0.36894
+   },
+   {
+    "boundingBox": {
+     "height": 1080,
+     "width": 1920,
+     "x": 0,
+     "y": 0
+    },
+    "isTheControl": false,
+    "pixelsDiffering": 924929,
+    "screenshot": "a11y-07-text-200",
+    "shareOfScreen": 0.44605
+   },
+   {
+    "boundingBox": {
+     "height": 994,
+     "width": 1573,
+     "x": 272,
+     "y": 5
+    },
+    "isTheControl": true,
+    "pixelsDiffering": 143317,
+    "screenshot": "a11y-05-restored",
+    "shareOfScreen": 0.069115
+   }
+  ],
+  "noiseFloorShare": 0.069115,
+  "screen": {
+   "height": 1080,
+   "width": 1920
+  },
+  "screenReader": {
+   "error": null,
+   "installed": true,
+   "ranVersion": true,
+   "version": "Orca version 50.2, AT-SPI2 version: 2.60.6, Session: wayland"
+  },
+  "settingChanges": [
+   {
+    "asked": "1.25",
+    "error": null,
+    "key": "text-scaling-factor",
+    "readBack": "1.25",
+    "schema": "org.gnome.desktop.interface",
+    "tookEffect": true,
+    "wrote": true
+   },
+   {
+    "asked": "1.5",
+    "error": null,
+    "key": "text-scaling-factor",
+    "readBack": "1.5",
+    "schema": "org.gnome.desktop.interface",
+    "tookEffect": true,
+    "wrote": true
+   },
+   {
+    "asked": "2.0",
+    "error": null,
+    "key": "text-scaling-factor",
+    "readBack": "2.0",
+    "schema": "org.gnome.desktop.interface",
+    "tookEffect": true,
+    "wrote": true
+   },
+   {
+    "asked": "true",
+    "error": null,
+    "key": "high-contrast",
+    "readBack": "true",
+    "schema": "org.gnome.desktop.a11y.interface",
+    "tookEffect": true,
+    "wrote": true
+   },
+   {
+    "asked": "reduce",
+    "error": null,
+    "key": "reduced-motion",
+    "readBack": "'reduce'",
+    "schema": "org.gnome.desktop.a11y.interface",
+    "tookEffect": true,
+    "wrote": true
+   },
+   {
+    "asked": "false",
+    "error": null,
+    "key": "enable-animations",
+    "readBack": "false",
+    "schema": "org.gnome.desktop.interface",
+    "tookEffect": true,
+    "wrote": true
+   }
+  ],
+  "settingsReadBack": true
+ },
+ "schemaVersion": 1,
+ "screenshots": {
+  "a11y-01-default.png": "35ce5b4e45200cfa8ba6f3ab2672e8420fd44c3306f9bac378ced2f09e3a3f9e",
+  "a11y-02-reduced-motion.png": "5ca6d7ad9e58b792bd576288c31fc927646c9c7b043cba2493c934d09f8ecadc",
+  "a11y-03-large-text.png": "1759a1d055269875687f11f56b0791425a1afe5012545f7cb1f4fb860b27258e",
+  "a11y-04-high-contrast.png": "a7ee3bbf58321a9718b3ea617018824faead33ec1681bee83c5c505b00d37906",
+  "a11y-05-restored.png": "c30851694ac2168fa98bdb11e70446ba5b521cea76e828421bda4134ad92cf76",
+  "a11y-06-text-125.png": "4a31d191f916685be0d8e577e693f63022ea1b33d1191a53271502ae4a9ec650",
+  "a11y-07-text-200.png": "02ce01eb7e91bc26b2a40430e80de240ed7400a1b0e48088aae66d2e059cef72"
+ },
+ "section": "accessibility"
+}
