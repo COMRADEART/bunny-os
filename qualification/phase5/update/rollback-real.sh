@@ -40,8 +40,6 @@ echo "== a disposable copy of the staged disk =="
 rm -f "${DISK}"
 qemu-img create -f qcow2 -F qcow2 -b "$(readlink -f "${STAGED}")" "${DISK}" >/dev/null
 
-deployment="$(guestfish --ro -a "${DISK}" run : mount "${ROOT_PARTITION}" / \
-  : glob-expand "/ostree/deploy/*/deploy/*.0/" 2>/dev/null | head -1)"
 mapfile -t deployments < <(guestfish --ro -a "${DISK}" run : mount "${ROOT_PARTITION}" / \
   : glob-expand "/ostree/deploy/*/deploy/*.0/" 2>/dev/null)
 echo "  deployments: ${#deployments[@]}"

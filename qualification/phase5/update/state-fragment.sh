@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+# Sourced, not executed, so there is no shebang to read the shell from.
 # Sourced by stage.sh before the switch. Writes the state a rollback must not
 # lose, and one thing it is *expected* to lose, so the result says something.
 #

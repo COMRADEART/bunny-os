@@ -75,7 +75,7 @@ if [[ ! -f "${UPDATE_IMG}" || "${BUNNY_REBUILD_UPDATE_IMG:-0}" == "1" ]]; then
   sync
   umount /mnt/p5-update
 fi
-ls -la "${UPDATE_IMG}" | sed 's/^/  /'
+stat -c '  %n %s bytes' "${UPDATE_IMG}"
 
 echo
 echo "== the deployment to write into =="
@@ -118,7 +118,7 @@ else
   say "MOUNT FAILED for /dev/vdb"
   run lsblk -o NAME,SIZE,FSTYPE
 fi
-run ls -la /run/p5update
+run find /run/p5update -maxdepth 1
 
 source_dir="/run/p5update/candidate"
 if [[ ! -d "${source_dir}" ]]; then

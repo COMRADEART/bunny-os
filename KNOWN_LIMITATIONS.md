@@ -392,9 +392,27 @@ establishes anything about production signing.
 
 ### Nothing is operated
 
-No update manifest is published, no previous release exists, no sync service runs,
-no fleet is enrolled, no device is manufactured. The update, rollback, migration and
-soak evidence categories depend on operated release evidence that does not exist.
+No update manifest is published, no sync service runs, no fleet is enrolled, no
+device is manufactured. The update, migration and soak evidence categories depend
+on operated release evidence that does not exist.
+
+Two things in that sentence stopped being true on 2026-08-18 and the correction
+belongs here rather than in a report nobody reads twice.
+
+**A previous release does exist.** Phase 5 built a second image, so N and N+1
+are both on the builder, and rollback has been exercised for real: `bootc
+rollback` on a disk with two deployments brings up the previous one — verified
+by three independent readings — and every one of the five user-state files
+written before the switch survives it. See
+`qualification/phase5/update/UPDATE_AND_ROLLBACK.md`.
+
+**The update path refuses by design, not for want of a manifest.**
+`/etc/bunny-os/update.json` ships `enabled: false`, and
+`/usr/share/bunny-os/update-keys/` holds a revocation list and **no trusted
+key**, so the agent answers `not_configured` and would answer `unknown_key` to
+any manifest that got past it. That is the correct posture for an image with no
+production signing key, and it means an Alpha machine will not update itself
+even if a manifest appears.
 
 ### An archive-only build is not a candidate build
 
@@ -615,7 +633,8 @@ what would remove it.
 | Only one builder machine exists | `independent-builder` reproducibility cannot be established | a CI runner, a second machine, or a second administrator |
 | No production signing key of any role | the `Signing` evidence row records `FAIL` | a key ceremony, which needs a second person for four of the seven roles |
 | No live ISO and no signed recovery ISO | installation, encryption and recovery matrices cannot run even in a VM | building them |
-| No published update manifest and no previous release | update, rollback, migration and preservation matrices cannot run | publishing one and keeping the other |
+| No published update manifest, and the image ships no update trust root | the manifest matrix cannot run, and the running system refuses every update by design | a production signing key, which needs a second person |
+| *(2026-08-18)* A second build now exists | rollback **does** run: `bootc rollback` brings up the previous deployment and all user state survives, measured. The `vm-rollback-test.sh` deployment-selection route still does not work and reports NOT_RUN | teaching that harness the `bootc rollback` route |
 | No physical machine, ever | `Hardware` and `Secure Boot` categories block; the OEM pilot blocks | one x86-64 UEFI machine |
 | No independent review of any kind | four evidence positions rest on self-assessment | commissioning them |
 | Accessibility evidence is entirely static | 14 essential workflows unverified; this is the limitation that risks harming a user rather than merely leaving a box unticked | driving them with assistive technology |

@@ -34,7 +34,7 @@ podman run --rm --entrypoint /usr/bin/bash "${IMAGE}" -c \
 echo
 echo "== the trust store, as shipped =="
 podman run --rm --entrypoint /usr/bin/bash "${IMAGE}" -c \
-  'ls -la /usr/share/bunny-os/update-keys/; echo "---"; cat /usr/share/bunny-os/update-keys/revoked-keys.json'
+  'find /usr/share/bunny-os/update-keys/ -maxdepth 1 -printf "%m %s %p\n"; echo "---"; cat /usr/share/bunny-os/update-keys/revoked-keys.json'
 
 echo
 echo "== the configuration, as shipped =="
