@@ -1,0 +1,109 @@
+=== Phase 7 reference-suite certification ===
+started  2026-08-18T17:22:33Z
+expected commit: e65e3df05f78516e8dedf6d940e4bff108b96257
+user: bunny   suite: /home/bunny/p7-suite   fs: 
+checked out: e65e3df05f78516e8dedf6d940e4bff108b96257
+commit assertion: OK
+discovered tests: 6072
+test-count floor: OK (6072 >= 6030)
+
+--- run 1 of 2: full reference suite ---
+......BLOCKED: /tmp/tmpf2g_0b5m/expected.json entry 0 must be {kind: dns|tcp|udp, pattern: <glob>, reason: <non-empty>}
+.........................................................................................................................................................ssssssssss............................................................................................................................................................................................................................................sssss...................................................................................................................................................................................................................................................................................................................................................................................................................s......................................................................................................................................................................................s..........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 6072 tests in 222.624s
+
+OK (skipped=22)
+bunny-image-tool: wrote holiday-resized.png at 100x50
+bunny-image-tool: wrote out.png at 100x50
+bunny-image-tool: wrote a.png at 120x60
+bunny-image-tool: wrote b.png at 120x60
+bunny-config-dir: /tmp/tmpxevycgi3/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpxevycgi3/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp7gn2vsp9/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp7gn2vsp9/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp3my964x2/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp3my964x2/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpmtsk9nxq/.config/bunny-os: mode 0777 -> 0700
+bunny-config-dir: /tmp/tmpmtsk9nxq/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpuceg6qhp/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpuceg6qhp/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpuceg6qhp/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpuceg6qhp/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmp092luwz0/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp092luwz0/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmp092luwz0/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpod0qank1/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpod0qank1/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpod0qank1/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmp1d8npsfm/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp1d8npsfm/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpovcvlhd7/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpcq6dkt2d/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpp3j_7vxb/.config/systemd/user: created
+bunny-config-dir: /tmp/tmppidgt7fl/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpk0fnor2t/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpaikbh88i/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpaikbh88i/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpb62h3c96/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpb62h3c96/.config/systemd/user: created
+Verified explicit non-functional Bunny placeholder
+run 1 exit: 0
+
+--- run 2 of 2: full reference suite ---
+......BLOCKED: /tmp/tmplgttlmzj/expected.json entry 0 must be {kind: dns|tcp|udp, pattern: <glob>, reason: <non-empty>}
+.........................................................................................................................................................ssssssssss............................................................................................................................................................................................................................................sssss...................................................................................................................................................................................................................................................................................................................................................................................................................s......................................................................................................................................................................................s..........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 6072 tests in 223.807s
+
+OK (skipped=22)
+bunny-image-tool: wrote holiday-resized.png at 100x50
+bunny-image-tool: wrote out.png at 100x50
+bunny-image-tool: wrote a.png at 120x60
+bunny-image-tool: wrote b.png at 120x60
+bunny-config-dir: /tmp/tmp19vxftfy/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp19vxftfy/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpckt1vcvs/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpckt1vcvs/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpn52_pt7b/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpn52_pt7b/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp_tehzuei/.config/bunny-os: mode 0777 -> 0700
+bunny-config-dir: /tmp/tmp_tehzuei/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp3bzp8ta9/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp3bzp8ta9/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp3bzp8ta9/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmp3bzp8ta9/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpvbmsynq2/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpvbmsynq2/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpvbmsynq2/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpjauow5_l/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpjauow5_l/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpjauow5_l/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpchcs_ba6/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpchcs_ba6/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmp97z2wlbg/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpu80axby9/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpd1i8no4o/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpvae41luc/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpcejgcc94/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpxum3vv_5/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpxum3vv_5/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpt668yg75/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpt668yg75/.config/systemd/user: created
+Verified explicit non-functional Bunny placeholder
+run 2 exit: 0
+
+--- installer sub-suite ---
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.14/unittest/main.py", line 242, in _do_discovery
+    self.createTests(from_discovery=True, Loader=Loader)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.14/unittest/main.py", line 149, in createTests
+    self.test = loader.discover(self.start, self.pattern, self.top)
+                ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.14/unittest/loader.py", line 334, in discover
+    raise ImportError('Start directory is not importable: %r' % start_dir)
+ImportError: Start directory is not importable: '/home/bunny/p7-suite/tests/installer'
+
+=== finished 2026-08-18T17:30:03Z ===
+commit=e65e3df05f78516e8dedf6d940e4bff108b96257 discovered=6072 run1=0 run2=0
