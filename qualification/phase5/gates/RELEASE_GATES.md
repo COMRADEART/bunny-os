@@ -49,7 +49,7 @@ of them would be misleading whichever it chose.
 | Companion | **PASS** — modes survive two reboots | — | PASS | none |
 | Shutdown | **PASS** — clean ACPI on every boot of the chain | — | PASS | none |
 | Reference suite | **INTERMITTENT** | — | **CLEAN** | **quantified** — see §3 |
-| Security review | **NOT DONE** | `PENDING_EXTERNAL_REVIEW` | REQUIRED | package rebound to the candidate; disposition matrix built |
+| Security review | **NOT DONE** | `PENDING_EXTERNAL_REVIEW` | REQUIRED | disposition matrix built; **rebinding to the candidate NOT done** — it needs the re-scan, which is blocked on disk |
 | Physical hardware | **NOT RUN** | `PENDING_HARDWARE` | REQUIRED | none — no machine |
 | Production signing | **NOT DONE** | `BLOCKED` (second signer) | REQUIRED | workflow specified; no key created |
 | Update | **NOT RUN** | **NOT_RUN** — 1 PASS / 12 of 13 | REQUIRED | **blocker identified and removable** — see §4 |
@@ -91,47 +91,69 @@ work, it is waiting on a person.
 
 ---
 
-## 3. Reference suite — the one gate Phase 5 can close by itself
+## 3. Reference suite — the one gate Phase 5 could close by itself
 
-Required: **CLEAN**. Current: **INTERMITTENT**, now with a number.
+Required: **CLEAN**. Entering state: **INTERMITTENT**.
 
-Measured on the Fedora reference target, as `bunny`, from an ext4 clone —
-the conditions the runbook requires, because `/mnt/c` produces nine false
-failures and root produces one more.
+Measured on the Fedora reference target, as `bunny`, from an ext4 clone — the
+conditions the runbook requires, because `/mnt/c` produces nine false failures
+and root produces one more.
 
 | Condition | Runs | Slice failures | Rate |
 | --- | ---: | ---: | --- |
 | The target class alone | 20 | 0 | **0/20** |
-| The target after each earlier neighbour, one at a time | 60 (12 × 5) | 0 | **0/60** |
-| The whole `tests/companion` package | 12 | 1 | **1/12** |
+| The whole module alone | 40 | 0 | **0/40** |
+| The target after each earlier neighbour, one at a time | 60 | 0 | **0/60** |
+| The whole `tests/companion` package | 28 | 2 | **≈2/28** |
 
-Phase 4 recorded "5/5 alone and 1-in-3 in-package". The alone result
-reproduces and is now on a 4× larger sample. The in-package rate does not: 1 in
-12 here against 1 in 3 there. Both are samples of the same intermittent event
-and neither is the true rate; the honest statement is that it is **rare and
-in-package only**, and that the Phase 4 figure should not be quoted as
-measured.
+Phase 4 recorded "5/5 alone and 1-in-3 in-package". The alone result reproduces
+on a 4× larger sample; the in-package rate does not, and **the 1-in-3 figure
+should not be quoted as measured**.
 
-**What the neighbour sweep settles.** Discovery runs modules in name order, so
-only the twelve that sort before `test_character_cli_vertical` can have touched
-anything it reads. All twelve were run immediately before it, five times each.
-None reproduced it. **It is not one neighbour.**
+### Root cause
 
-That leaves a mechanism that depends on how much has happened in the process
-before the slice runs, and the diagnosis is in progress. Every failing run
-carries the same signature — steps **17 and 21** fail while 18, 19 and 20 pass —
-which is the signature of the presenter being **unhealthy** rather than of the
-selector being wrong: an unhealthy renderer is capped below `animated-2d`, so
-the two steps that assert `animated-2d` fail and the three that assert
-degradation succeed trivially.
+**The host's own memory pressure**, arriving through a signal the slice never
+pinned.
 
-Phase 5 has already made the failure diagnosable: the slice report has always
-carried `incidentalRendererFault`, `retryCleanOfFaults` and the renderer events
-with their exception text, and no assertion printed any of it. Four phases of
-investigation started from a step number.
+`CharacterPresenter` builds `base_signals` from `assess_current_machine()` —
+the real host — and every field the slice's `_VISUAL` override did not name
+survived into every evaluation. `memory_pressure` is read as Linux PSI,
+`/proc/pressure/memory` `some avg10 >= 0.1`: a ten-second rolling average of
+memory stall that a suite running several thousand tests in one process
+crosses, intermittently, for reasons unrelated to this slice. The selector then
+correctly degrades to `static-image`, and the two steps that assert
+`animated-2d` fail while the three that assert degradation pass for free.
 
-**This gate is not closed.** It is quantified, its cause is narrowed, and the
-next failure will say why.
+Proved by setting that one field and changing nothing else: the failure list is
+byte-identical, with `incidentalRendererFault=None` and `rendererHealthy=True`
+— the two tells that the caught in-package instance also recorded, and that
+every earlier explanation (a renderer fault, host contention, cross-test
+interference) fails to predict.
+
+### The fix, and why it strengthens rather than silences
+
+`_VISUAL` now pins all five host-derived signals the ladder can degrade or cap
+on. Pinned in the *slice*, not the presenter: the presenter reading the real
+machine is correct, because on a real machine under real pressure the companion
+*should* stop animating.
+
+Step 18 *declares* `memory_pressure: True` to prove the selector degrades. On a
+machine already under ambient pressure, the rung was static before step 18
+asked — **so step 18 was passing without testing anything.** The pin is what
+makes steps 17 to 21 measure the selector at all.
+
+Guarded structurally: `test_slice_host_invariance.py` parses `adaptation.py`
+and requires every signal the ladder consults to be pinned or declared exempt
+with a reason. Negative controls: removing the pin fails 6 of 10; the
+degradation checks must still fire; and step 17 must reach `animated-2d` *with
+no pressure reason*, so pinning to an arbitrary value would not satisfy it.
+
+### Certification
+
+§8 requires repeated runs, not one. Eight `tests/companion` runs and five full
+reference-suite runs are in progress on the reference target; results and the
+gate's final state are recorded in the Phase 5 report. **This tracker does not
+mark the gate CLEAN until those runs are in.**
 
 ---
 

@@ -180,6 +180,36 @@ interference — predicts a fault. There wasn't one. It also explains the rates,
 which no neighbour hypothesis could: **it is the package that makes the host
 stall, and no test in it is the cause.**
 
+### What is proved, and what is inferred
+
+Kept apart deliberately, because this project's own history is of a hypothesis
+that survived one run and was written up as confirmed.
+
+**Proved.** Setting `memory_pressure` and changing nothing else produces the
+observed failure exactly — the same two steps, the same three passes, and both
+distinguishing tells (`fault=None`, `healthy=True`). That makes it a
+*sufficient* cause, demonstrated on demand.
+
+**Inferred.** That this is what fired in the wild. The signature match is
+strong — no other explanation predicts a capped rung with no fault and a
+healthy presenter — but "sufficient" is not "necessary", and a cause that
+cannot actually occur on this host would not be the cause. Sampling
+`/proc/pressure/memory` after a package run reads `avg10 = 0.00`, which is
+weak evidence either way: `avg10` is a ten-second rolling average, the slice
+runs partway through the package, and the average has decayed by the time the
+run ends. `total` does rise during a run — 6.2 ms of accumulated stall on one
+measured run — so stall is occurring; whether it crosses 0.1 at the moment
+`assess_current_machine()` is called is being sampled at 200 ms intervals
+across whole runs.
+
+**Why the fix does not depend on settling that.** `_VISUAL` pins all five
+host-derived signals the ladder can degrade or cap on, not just
+`memory_pressure`. If the trigger were `thermal_pressure` or a critical
+battery reading instead, the same fix covers it, and the structural guard
+requires any *future* signal to be pinned or declared. The defect being
+repaired is the class — the slice reading the host at all — rather than the one
+field.
+
 ### The fix, and why it is a strengthening
 
 `_VISUAL` now pins every host-derived signal the ladder can degrade or cap on.
