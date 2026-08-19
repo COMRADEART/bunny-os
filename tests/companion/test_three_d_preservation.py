@@ -115,6 +115,12 @@ _PHASES_AFTER_THE_RECORD = (
     # which re-derives as accepted evidence arrives. Same refusal earned,
     # same deliberate declaration.
     "qualification/phase11/",
+    # Phase 12's: Alpha tester program operations — the canonical tester
+    # package with its pinned Phase 7/8 sources, the recorded dedup and
+    # reproduction records, the sufficiency policy, and the derived Alpha
+    # finding register, which re-derives as tester evidence arrives. Same
+    # refusal earned, same deliberate declaration.
+    "qualification/phase12/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is

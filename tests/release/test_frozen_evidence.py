@@ -83,6 +83,15 @@ PHASES_AFTER_THE_RECORD = (
     # tests/release/test_phase11_security_review.py. Declared after both
     # guards refused the tree's files, exactly as designed.
     "qualification/phase11/",
+    # Phase 12's tree: Alpha tester program operations — the canonical
+    # tester package (its Phase 7/8 sources pinned by sha256 inside the
+    # tree), the recorded dedup decisions and reproduction attempts, the
+    # sufficiency policy, and the derived Alpha finding register, which
+    # re-derives as accepted tester evidence arrives and so cannot be
+    # pinned while the program is open. Its own reproducibility guard is
+    # tests/release/test_phase12_alpha_operations.py. Declared after both
+    # guards refused the tree's files, exactly as designed.
+    "qualification/phase12/",
 )
 
 MAINTAINED_TOOLING = frozenset({
