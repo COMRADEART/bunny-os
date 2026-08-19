@@ -92,6 +92,18 @@ PHASES_AFTER_THE_RECORD = (
     # tests/release/test_phase12_alpha_operations.py. Declared after both
     # guards refused the tree's files, exactly as designed.
     "qualification/phase12/",
+    # Phase 13's tree: release authority and decision governance — the
+    # authority model with its sealed assignment records, the
+    # owner-controlled sufficiency threshold registry (undefined until a
+    # real owner decides), the blocking-condition registry pinned to the
+    # Phase 8 source by sha256, the sealed decision registries (risk
+    # acceptance, authorization, revocation, conflict resolution), and
+    # the derived authorization status, which re-derives as authority
+    # records and evidence arrive and so cannot be pinned while the
+    # decision is open. Its own reproducibility guard is
+    # tests/release/test_phase13_release_authority.py. Declared after
+    # both guards refused the tree's files, exactly as designed.
+    "qualification/phase13/",
 )
 
 MAINTAINED_TOOLING = frozenset({

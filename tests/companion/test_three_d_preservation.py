@@ -121,6 +121,14 @@ _PHASES_AFTER_THE_RECORD = (
     # finding register, which re-derives as tester evidence arrives. Same
     # refusal earned, same deliberate declaration.
     "qualification/phase12/",
+    # Phase 13's: release authority and decision governance — the authority
+    # model and sealed assignment registry, the owner-controlled sufficiency
+    # threshold registry, the blocking-condition registry over a pinned
+    # Phase 8 source, the sealed decision registries (risk acceptance,
+    # authorization, revocation, conflict resolution), and the derived
+    # authorization status, which re-derives as authority records and
+    # evidence arrive. Same refusal earned, same deliberate declaration.
+    "qualification/phase13/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is
