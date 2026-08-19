@@ -104,6 +104,16 @@ PHASES_AFTER_THE_RECORD = (
     # tests/release/test_phase13_release_authority.py. Declared after
     # both guards refused the tree's files, exactly as designed.
     "qualification/phase13/",
+    # Phase 14's tree: external-evidence execution and decision rehearsal
+    # — the evidence router, sealed evidence cuts, and the decision
+    # assembler, exercised only on TEST_FIXTURE_ONLY material in scratch
+    # universes. MATRIX.json is derived by re-executing all 72 scenarios
+    # against the live phase 9-13 inputs it pins by sha256, so it re-derives
+    # when real evidence arrives and the tree cannot be pinned here. Its own
+    # reproducibility guards are tests/release/test_phase14_evidence_execution.py
+    # and tests/release/test_phase14_decision_rehearsal.py. Declared after
+    # both guards refused the tree's files, exactly as designed.
+    "qualification/phase14/",
 )
 
 MAINTAINED_TOOLING = frozenset({

@@ -129,6 +129,12 @@ _PHASES_AFTER_THE_RECORD = (
     # authorization status, which re-derives as authority records and
     # evidence arrive. Same refusal earned, same deliberate declaration.
     "qualification/phase13/",
+    # Phase 14's: external-evidence execution and decision rehearsal — the
+    # router, sealed evidence cuts, and the decision assembler, exercised
+    # only on TEST_FIXTURE_ONLY material in scratch universes. MATRIX.json
+    # re-derives from the live phase 9-13 inputs it pins, so the tree cannot
+    # be pinned. Same refusal earned, same deliberate declaration.
+    "qualification/phase14/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is
