@@ -97,6 +97,13 @@ _PHASES_AFTER_THE_RECORD = (
     # an earlier phase changing. The successor guard declares it too, in its
     # own PHASES_AFTER_THE_RECORD.
     "qualification/phase8/",
+    # Phase 9's: the external-evidence intake boundary — the append-only
+    # ledger with its own sealed-entry guard (tests/release/test_phase9_intake.py),
+    # the triage registry, and the Alpha release decision record. Incoming
+    # evidence lands here and never in a Phase 4–8 tree; both this guard and
+    # the successor refused these files as additions until this declaration,
+    # which is the refusal a new tree is supposed to earn.
+    "qualification/phase9/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is

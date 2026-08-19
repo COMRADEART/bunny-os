@@ -58,6 +58,13 @@ PHASES_AFTER_THE_RECORD = (
     # matrix and protocol, signing readiness, and the Alpha program
     # operations. Still being written to.
     "qualification/phase8/",
+    # Phase 9's tree: the external-evidence intake boundary. Its interior is
+    # not unguarded like the other exempt prefixes — the intake ledger pins
+    # its own evidence bytes and seals its own entries, enforced by
+    # tests/release/test_phase9_intake.py — but *this* record does not pin
+    # it, because evidence is still arriving. Declared after both guards
+    # refused the tree's files as additions, exactly as designed.
+    "qualification/phase9/",
 )
 
 MAINTAINED_TOOLING = frozenset({
