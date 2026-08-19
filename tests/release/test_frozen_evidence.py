@@ -74,6 +74,15 @@ PHASES_AFTER_THE_RECORD = (
     # recompute from immutable inputs. Declared after both guards refused
     # the tree's files, exactly as designed.
     "qualification/phase10/",
+    # Phase 11's tree: independent-security-review operations — the
+    # commissioning package (scope frozen at SCOPE-1, baseline pinned to
+    # the Phase 8 package by sha256), the submission contract and its
+    # validator, and the derived finding register, which re-derives as
+    # accepted review evidence arrives and so cannot be pinned while the
+    # review is open. Its own reproducibility guard is
+    # tests/release/test_phase11_security_review.py. Declared after both
+    # guards refused the tree's files, exactly as designed.
+    "qualification/phase11/",
 )
 
 MAINTAINED_TOOLING = frozenset({

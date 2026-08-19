@@ -109,6 +109,12 @@ _PHASES_AFTER_THE_RECORD = (
     # the candidate and finding state machines, and the derived candidate
     # status. Same refusal earned, same deliberate declaration.
     "qualification/phase10/",
+    # Phase 11's: independent-security-review operations — the review
+    # commissioning package, the frozen scope, the pinned finding baseline,
+    # the submission contract, and the derived security finding register,
+    # which re-derives as accepted evidence arrives. Same refusal earned,
+    # same deliberate declaration.
+    "qualification/phase11/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is
