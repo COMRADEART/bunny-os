@@ -1,0 +1,24 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the approval-ordering rehearsal: a complete, correctly bound second approval whose approvers are both dated before the signing evidence exists. Ordering cannot be favorable by assumption - the flag is REQUIRES_HUMAN_DECISION.",
+ "record": {
+  "date": "2026-08-17",
+  "firstApprover": {
+   "date": "2026-08-17",
+   "decision": "APPROVE",
+   "name": "Constructed Fixture Approver A",
+   "recomputedDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "role": "owner"
+  },
+  "scope": "constructed fixture: distribute the ISO to the controlled Alpha cohort",
+  "secondApprover": {
+   "date": "2026-08-17",
+   "decision": "APPROVE",
+   "name": "Constructed Fixture Approver B",
+   "recomputedDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "role": "second approver"
+  }
+ },
+ "test_fixture_only": true
+}
