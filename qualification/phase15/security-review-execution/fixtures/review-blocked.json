@@ -1,0 +1,47 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "fixture": true,
+ "test_fixture_only": true,
+ "warning": [
+  "TEST_FIXTURE_ONLY",
+  "NOT EXTERNAL EVIDENCE",
+  "NOT APPLICABLE TO THE SUBJECT ARTIFACT"
+ ],
+ "purpose": "A structurally complete example of an unfavorable (BLOCKED) review submission. Drives the contradictory-reviewers and unfavorable-preservation scenarios in scratch universes, and travels in the reviewer handoff package as the proof that an unfavorable result is a first-class submission. The wrapper is refused by the intake mechanically.",
+ "record": {
+  "schema": "bunny-os/security-review-submission/1",
+  "reviewer_id": "REVIEWER-EX2",
+  "reviewer": "REVIEWER-EX2",
+  "independence": {
+   "declaration": "constructed fixture: this reviewer had no role in producing artifact e906a48793d7 and no interest in its approval",
+   "relationship_to_project": "none",
+   "is_release_decision_authority": false,
+   "policy_exception": null
+  },
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "independently_computed_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "digest_basis": "iso",
+  "digest_computation": "constructed fixture: sha256sum bunny-alpha.iso",
+  "review_scope_version": "SCOPE-1",
+  "scope": "constructed fixture: independent review of artifact e906a48793d7 under REVIEW_SCOPE.md SCOPE-1",
+  "review_start": "2026-08-18",
+  "review_end": "2026-08-19",
+  "date": "2026-08-19",
+  "findings": [
+   {
+    "reviewer_finding_id": "EX2-F1",
+    "title": "constructed fixture finding for GHSA-5cgq-3rg8-m6cv",
+    "severity": "Critical",
+    "affected_component": "golang.org/x/crypto",
+    "applicability": "APPLICABLE",
+    "evidence": "constructed fixture: proof-of-concept reaches the vulnerable path from an unauthenticated position",
+    "rationale": "constructed fixture: exploitable as shipped; no compensating control exists on the artifact",
+    "recommended_disposition": "FIX_BEFORE_ALPHA",
+    "baseline_advisory": "GHSA-5cgq-3rg8-m6cv"
+   }
+  ],
+  "overall_assessment": "BLOCKED",
+  "disposition": "BLOCKED"
+ }
+}

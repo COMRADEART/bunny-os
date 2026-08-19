@@ -1,0 +1,183 @@
+{
+ "counts": {
+  "asExpected": 18,
+  "scenarios": 18
+ },
+ "executedAgainst": {
+  "authorizationState": "EVIDENCE_PENDING",
+  "candidateDecision": "REQUIRES_MORE_EVIDENCE",
+  "graphSha256": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+  "ledgerSha256": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+  "securityRegisterSha256": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+ },
+ "note": "FIXTURE_DEMONSTRATION_ONLY on every row: the machinery handling a scenario correctly proves the machinery, never the artifact.",
+ "purpose": "the derived failure-and-recovery matrix: every row is produced by executing its scenario against the real engines in a scratch universe, never by maintaining prose",
+ "realEvidence": "EXTERNAL_EVIDENCE_REQUIRED \u2014 nothing in this matrix is evidence about the subject artifact",
+ "realLedgerByteIdentical": true,
+ "scenarios": [
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "AWAITING_EXTERNAL_EVIDENCE + AWAITING_SUBMISSION",
+   "observed": "AWAITING_EXTERNAL_EVIDENCE + AWAITING_SUBMISSION",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "No review submitted",
+   "scenarioId": "PH15-M01"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "ACCEPTED contract-valid RECONCILED; gate UNDER_ANALYSIS not SATISFIED",
+   "observed": "ACCEPTED contract-valid RECONCILED; gate UNDER_ANALYSIS not SATISFIED",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Valid artifact-bound review",
+   "scenarioId": "PH15-M02"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "ARTIFACT_MISMATCH + DOES_NOT_APPLY",
+   "observed": "ARTIFACT_MISMATCH + DOES_NOT_APPLY",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Wrong digest",
+   "scenarioId": "PH15-M03"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "intake ACCEPTED; contract-invalid; receipt RECEIVED; ceremony MISSING; advancement False",
+   "observed": "intake ACCEPTED; contract-invalid; receipt RECEIVED; ceremony MISSING; advancement False",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Missing independent observation",
+   "scenarioId": "PH15-M04"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "UNVERIFIABLE + UNVERIFIABLE",
+   "observed": "UNVERIFIABLE + UNVERIFIABLE",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Malformed submission",
+   "scenarioId": "PH15-M05"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "REJECTED before ingestion; nothing copied",
+   "observed": "REJECTED before ingestion; nothing copied",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Credential detected",
+   "scenarioId": "PH15-M06"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "REJECTED before ingestion; nothing copied",
+   "observed": "REJECTED before ingestion; nothing copied",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Private key submitted",
+   "scenarioId": "PH15-M07"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "NEW_FINDING preserved; baseline unrenumbered; no ID minted",
+   "observed": "NEW_FINDING preserved; baseline unrenumbered; no ID minted",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "New finding",
+   "scenarioId": "PH15-M08"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "42 unaddressed rows stay BASELINE; silence measurable",
+   "observed": "42 unaddressed rows stay BASELINE; silence measurable",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Baseline finding omitted",
+   "scenarioId": "PH15-M09"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "INTAKE-001-R1; original byte-identical; original SUPERSEDED",
+   "observed": "INTAKE-001-R1; original byte-identical; original SUPERSEDED",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Reviewer revision",
+   "scenarioId": "PH15-M10"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "CONTRADICTORY_CONCLUSIONS; effective BLOCKED; receipt CONFLICT_REQUIRES_DECISION",
+   "observed": "CONTRADICTORY_CONCLUSIONS; effective BLOCKED; receipt CONFLICT_REQUIRES_DECISION",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Contradictory reviews",
+   "scenarioId": "PH15-M11"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "gate UNDER_ANALYSIS; open Criticals named; not SATISFIED",
+   "observed": "gate UNDER_ANALYSIS; open Criticals named; not SATISFIED",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Critical unresolved",
+   "scenarioId": "PH15-M12"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "risk acceptance without authority is ineffective",
+   "observed": "risk acceptance without authority is ineffective",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Risk acceptance without authority",
+   "scenarioId": "PH15-M13"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "STANDING at expiry date; EXPIRED after it",
+   "observed": "STANDING at expiry date; EXPIRED after it",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Expired risk acceptance",
+   "scenarioId": "PH15-M14"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "REJECTED: a fixture is never evidence",
+   "observed": "REJECTED: a fixture is never evidence",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Fixture submitted to real ledger",
+   "scenarioId": "PH15-M15"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "post-cut intake named; historical cut byte-identical",
+   "observed": "post-cut intake named; historical cut byte-identical",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Post-cut evidence",
+   "scenarioId": "PH15-M16"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "seal broken; append refused",
+   "observed": "seal broken; append refused",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Tampered sealed record",
+   "scenarioId": "PH15-M17"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expectedOutcome": "CANDIDATE IDENTITY FAIL",
+   "observed": "CANDIDATE IDENTITY FAIL",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenario": "Candidate identity mutation",
+   "scenarioId": "PH15-M18"
+  }
+ ],
+ "schemaVersion": 1,
+ "subjectArtifact": "e906a48793d7"
+}

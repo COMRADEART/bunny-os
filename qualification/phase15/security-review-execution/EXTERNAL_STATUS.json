@@ -1,0 +1,73 @@
+{
+ "authorization": {
+  "authorizationState": "EVIDENCE_PENDING",
+  "authorized": false,
+  "candidateDecision": "REQUIRES_MORE_EVIDENCE",
+  "floorMissing": [
+   "security-review: no gate-eligible ACCEPTED intake exists, so the authority that owns this gate has not acted",
+   "hardware: no gate-eligible ACCEPTED intake exists, so the authority that owns this gate has not acted",
+   "signing: no gate-eligible ACCEPTED intake exists, so the authority that owns this gate has not acted",
+   "second-approval: no gate-eligible ACCEPTED intake exists, so the authority that owns this gate has not acted",
+   "alpha-feedback: no gate-eligible ACCEPTED intake exists, so the authority that owns this gate has not acted"
+  ],
+  "floorSatisfied": false
+ },
+ "cuts": [
+  {
+   "asOf": "2026-08-19",
+   "cutId": "CUT-001",
+   "ledgerSha256": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+   "seal": "3e042c0fa7cfab2fc538334af860b125020fc808a6ead7209f059c9bdf21447e"
+  }
+ ],
+ "derivedFrom": {
+  "artifactGraph": "qualification/phase10/artifacts/artifact-graph.json",
+  "authorizationStatus": "qualification/phase13/authorization-status.json",
+  "candidateStatus": "qualification/phase10/candidate-status.json",
+  "ledger": "qualification/phase9/intake/LEDGER.json (read-only)",
+  "matrix": "qualification/phase15/security-review-execution/FAILURE_RECOVERY_MATRIX.json",
+  "note": "derived, never hand-edited; run sync-status and verify refuses drift",
+  "securityRegister": "qualification/phase11/security-findings.json"
+ },
+ "evidenceState": {
+  "acceptedRealSecurityReviews": 0,
+  "acceptedRealSubmissions": [],
+  "basis": "counted from the real Phase 9 ledger; zero is reported as zero",
+  "ledgerEntries": 0,
+  "ledgerSha256": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+  "securityReviewIntakes": 0
+ },
+ "note": "Operational readiness is about machinery. Evidence state is counted, never assumed. The gate moves only on accepted external evidence. The candidate decision comes from the Phase 13 ladder. None of the four implies another, and no favorable word appears here without the external evidence that makes it.",
+ "operationalReadiness": {
+  "allAsExpected": true,
+  "basis": "every failure/recovery scenario re-executes AS_EXPECTED against the real engines in scratch universes; readiness is a statement about machinery and is never evidence about the artifact",
+  "pipelineReady": true,
+  "scenarios": 18
+ },
+ "purpose": "the Phase 15 derived external status: operational readiness, evidence state, gate state, and candidate decision, kept permanently separate",
+ "schemaVersion": 1,
+ "securityReview": {
+  "baselineCounts": {
+   "acceptedSubmissions": 0,
+   "baseline": 44,
+   "contractValidSubmissions": 0,
+   "fromEvidence": 0
+  },
+  "baselineRowsStillAtBaseline": 44,
+  "conflict": null,
+  "gate": {
+   "basis": "zero gate-eligible accepted security-review intakes exist; absence blocks, it does not authorize",
+   "status": "AWAITING_EXTERNAL_EVIDENCE"
+  },
+  "humanDecisionRequired": false,
+  "receiptEntries": [],
+  "receiptState": "AWAITING_SUBMISSION"
+ },
+ "subjectArtifact": {
+  "candidateState": "EVIDENCE_PENDING",
+  "graphRole": "ROOT",
+  "identifier": "e906a48793d7",
+  "imageDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "signingStatus": "UNSIGNED"
+ }
+}

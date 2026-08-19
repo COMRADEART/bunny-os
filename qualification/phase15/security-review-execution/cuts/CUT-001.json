@@ -1,0 +1,36 @@
+{
+ "cut": {
+  "alphaRegisterSha256": "996455753b74848033d7f14a7d8fdc5d79ea336dc5d5bdc40caae7b2a39801f3",
+  "artifactDigests": [
+   "205a77f1b6cdf33915bce3afceb0914d6af25f97b434cf2128aec04d199b43dd",
+   "497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867",
+   "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+   "a6ee06dcbc0ed3aa22c9ea07c339882eb97c7f16ce906b654c9a1e1119849d46",
+   "c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d"
+  ],
+  "asOf": "2026-08-19",
+  "assignmentRevocations": [],
+  "authorityRecords": [],
+  "authorizations": [],
+  "excludedLaterIntakeIds": [],
+  "expiringRecords": [],
+  "gateEligibleAccepted": [],
+  "graphSha256": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+  "intakeIds": [],
+  "ledgerEntries": 0,
+  "ledgerSha256": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+  "policyVersions": [],
+  "resolutions": [],
+  "revocations": [],
+  "riskAcceptances": [],
+  "schemaVersion": 1,
+  "seal": "3e042c0fa7cfab2fc538334af860b125020fc808a6ead7209f059c9bdf21447e",
+  "securityRegisterSha256": "452725c892ef7fec6c7b65fb4cb51286f9af25946411100f85e3feded5d8b2cd",
+  "subjectArtifact": "e906a48793d7",
+  "timeBasis": "operator-stated evaluation date; no clock is read; the commit is the tamper-evident time"
+ },
+ "cutId": "CUT-001",
+ "note": "derived and sealed; historical once committed \u2014 a later cut supersedes by pointing at this one, never by editing it",
+ "purpose": "a sealed identification of everything a decision at this boundary may rely on; later evidence is named by compare_cut_to_ledger, never absorbed here",
+ "schemaVersion": 1
+}
