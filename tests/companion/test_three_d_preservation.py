@@ -135,6 +135,12 @@ _PHASES_AFTER_THE_RECORD = (
     # re-derives from the live phase 9-13 inputs it pins, so the tree cannot
     # be pinned. Same refusal earned, same deliberate declaration.
     "qualification/phase14/",
+    # Phase 15's: security-review execution operations — the reviewer
+    # handoff, the derived receipt register, append-only evidence cuts, and
+    # EXTERNAL_STATUS.json / FAILURE_RECOVERY_MATRIX.json, which re-derive
+    # from the live phase 9-14 inputs as evidence arrives, so the tree
+    # cannot be pinned. Same refusal earned, same deliberate declaration.
+    "qualification/phase15/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is

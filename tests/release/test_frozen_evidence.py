@@ -114,6 +114,17 @@ PHASES_AFTER_THE_RECORD = (
     # and tests/release/test_phase14_decision_rehearsal.py. Declared after
     # both guards refused the tree's files, exactly as designed.
     "qualification/phase14/",
+    # Phase 15's tree: the first-production-use operational layer for the
+    # independent security review — the reviewer handoff package, the
+    # derived receipt register (no favorable state exists), append-only
+    # sealed evidence cuts under cuts/, and the derived EXTERNAL_STATUS.json
+    # and FAILURE_RECOVERY_MATRIX.json, which re-derive from the live
+    # phase 9-14 inputs as evidence arrives and so cannot be pinned while
+    # the review is open. Its own reproducibility guards are
+    # tests/release/test_phase15_review_execution.py and
+    # tests/release/test_phase15_evidence_activation.py. Declared after
+    # both guards refused the tree's files, exactly as designed.
+    "qualification/phase15/",
 )
 
 MAINTAINED_TOOLING = frozenset({
