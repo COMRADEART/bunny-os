@@ -1,0 +1,19 @@
+{
+ "appendMechanism": "qualification/phase13/tools/release_authority_ops.py record risk-acceptance",
+ "note": "Critical findings require an assigned AUTH-SECURITY-OWNER identity. Finding lifecycle authority stays with Phases 10 and 11; this registry records acceptance, never state.",
+ "purpose": "Sealed ACCEPTED_RISK records: explicit, narrow, artifact-bound, and expiring. Empty means no risk has been accepted. An acceptance never closes the underlying finding, is not NOT_AFFECTED, expires automatically at expires_at (an expired acceptance blocks authorization), and never transfers to a successor artifact.",
+ "recordFields": [
+  "risk_id",
+  "artifact_digest",
+  "finding_ids",
+  "scope",
+  "reason",
+  "authority",
+  "evidence",
+  "accepted_at",
+  "expires_at",
+  "revocation_conditions"
+ ],
+ "records": [],
+ "schemaVersion": 1
+}

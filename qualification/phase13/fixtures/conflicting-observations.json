@@ -1,0 +1,54 @@
+{
+ "alphaObservations": [
+  {
+   "assessment": "PASS",
+   "favorable": true,
+   "reference": "INTAKE-001"
+  },
+  {
+   "assessment": "FAIL",
+   "favorable": false,
+   "reference": "INTAKE-002"
+  }
+ ],
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "hardwareObservations": [
+  {
+   "assessment": "PASS",
+   "favorable": true,
+   "reference": "HW-001 wifi"
+  },
+  {
+   "assessment": "FAIL",
+   "favorable": false,
+   "reference": "HW-002 wifi"
+  }
+ ],
+ "purpose": "Drives the conflict controls: PASS and FAIL observations of the same thing from different external sources. Expected: CONFLICT -> REQUIRES_HUMAN_DECISION with the unfavorable assessment effective; never averaged, never auto-resolved favorably.",
+ "resolution": {
+  "authority": "Constructed Fixture Hardware Owner",
+  "date": "2026-08-19",
+  "domain": "hardware",
+  "evidenceReferences": [
+   "HW-001 wifi",
+   "HW-002 wifi"
+  ],
+  "reason": "constructed fixture: the failing machine is in the declared supported set; the failure stands",
+  "resolutionId": "RESOLUTION-001",
+  "resolvedAssessment": "FAIL"
+ },
+ "securityObservations": [
+  {
+   "assessment": "NOT_AFFECTED",
+   "favorable": true,
+   "reference": "INTAKE-003"
+  },
+  {
+   "assessment": "CONFIRMED",
+   "favorable": false,
+   "reference": "SECURITY-OWNER-1"
+  }
+ ],
+ "test_fixture_only": true
+}

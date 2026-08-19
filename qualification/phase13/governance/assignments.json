@@ -1,0 +1,15 @@
+{
+ "appendMechanism": "qualification/phase13/tools/release_authority_ops.py record assignment",
+ "note": "An assignment is still not an act. AUTHORITY_ACTED requires the act itself, and an unassigned decision-making authority invalidates every decision that claims it.",
+ "purpose": "Sealed authority assignment records. Empty means no authority has been assigned: no real external identities are legitimately available, and the repository does not invent them. An assignment is appended only through release_authority_ops.py record assignment, which validates and seals it.",
+ "recordFields": [
+  "assignmentId",
+  "authorityId",
+  "identity",
+  "assignedBy",
+  "date",
+  "basis"
+ ],
+ "records": [],
+ "schemaVersion": 1
+}

@@ -1,0 +1,15 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the revocation dry run: a complete revocation targeting AUTHORIZATION-001. AUTHORIZED -> REVOKED holds; REVOKED -> AUTHORIZED must refuse; editing the sealed revocation must fail immutability.",
+ "record": {
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "authority": "Constructed Fixture Release Authority",
+  "evidence": "constructed fixture: reference to the confirming intake",
+  "reason": "constructed fixture: a confirmed defect surfaced after authorization",
+  "revocation_id": "REVOCATION-001",
+  "target_authorization": "AUTHORIZATION-001",
+  "timestamp": "2026-08-20"
+ },
+ "test_fixture_only": true
+}

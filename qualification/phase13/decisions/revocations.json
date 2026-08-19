@@ -1,0 +1,16 @@
+{
+ "appendMechanism": "qualification/phase13/tools/release_authority_ops.py record revocation",
+ "note": "A revocation is immutable once sealed; editing it away is an IMMUTABILITY FAIL. Revocation outranks expiry.",
+ "purpose": "Sealed revocation records. AUTHORIZED -> REVOKED exists; REVOKED -> AUTHORIZED does not - a new authorization is a new record. Empty means nothing has been revoked (and nothing has been authorized).",
+ "recordFields": [
+  "revocation_id",
+  "target_authorization",
+  "artifact_digest",
+  "reason",
+  "authority",
+  "timestamp",
+  "evidence"
+ ],
+ "records": [],
+ "schemaVersion": 1
+}

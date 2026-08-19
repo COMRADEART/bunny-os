@@ -1,0 +1,20 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the reclassification dry runs: a complete recorded decision moving condition 9 to REQUIRES_HUMAN_DECISION, and (in tests) its incomplete variants that must refuse. An unrecorded reclassification weakens nothing.",
+ "record": {
+  "artifact": "e906a48793d7",
+  "authority": "Constructed Fixture Release Authority",
+  "condition": 9,
+  "decisionId": "RECLASSIFY-001",
+  "evidenceReferences": [
+   "qualification/phase8/hardware-matrix.json"
+  ],
+  "fromClass": "BLOCKING",
+  "policyBasis": "constructed fixture: hardware scope policy reference",
+  "reason": "constructed fixture: the declared supported hardware set is empty, so condition 9 needs a human scope decision before it can bind",
+  "timestamp": "2026-08-19",
+  "toClass": "REQUIRES_HUMAN_DECISION"
+ },
+ "test_fixture_only": true
+}

@@ -1,0 +1,25 @@
+{
+ "appendMechanism": "qualification/phase13/tools/release_authority_ops.py record reclassification",
+ "classVocabulary": [
+  "BLOCKING",
+  "NON_BLOCKING",
+  "REQUIRES_HUMAN_DECISION",
+  "NOT_APPLICABLE"
+ ],
+ "note": "The ten conditions themselves are imported by blocking-conditions.json from the committed decision record, titles verbatim, source pinned by sha256. They are never rewritten here.",
+ "purpose": "Recorded blocking-condition reclassification decisions. Empty means every inherited condition keeps class BLOCKING. BLOCKING -> NON_BLOCKING exists only as a sealed record here with reason, authority, artifact, timestamp, policy basis, and evidence references; classification never silently weakens an inherited blocker.",
+ "recordFields": [
+  "decisionId",
+  "condition",
+  "fromClass",
+  "toClass",
+  "reason",
+  "authority",
+  "artifact",
+  "timestamp",
+  "policyBasis",
+  "evidenceReferences"
+ ],
+ "records": [],
+ "schemaVersion": 1
+}

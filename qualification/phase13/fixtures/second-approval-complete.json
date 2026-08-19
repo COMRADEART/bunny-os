@@ -1,0 +1,24 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the satisfied-floor dry run: a complete second approval in which two distinct people independently recompute and name the subject digest.",
+ "record": {
+  "date": "2026-08-19",
+  "firstApprover": {
+   "date": "2026-08-19",
+   "decision": "APPROVE",
+   "name": "Constructed Fixture Approver A",
+   "recomputedDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "role": "owner"
+  },
+  "scope": "constructed fixture: distribute the ISO to the controlled Alpha cohort",
+  "secondApprover": {
+   "date": "2026-08-19",
+   "decision": "APPROVE",
+   "name": "Constructed Fixture Approver B",
+   "recomputedDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "role": "second approver"
+  }
+ },
+ "test_fixture_only": true
+}

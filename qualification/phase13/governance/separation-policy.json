@@ -1,0 +1,45 @@
+{
+ "appendMechanism": "qualification/phase13/tools/release_authority_ops.py record overlap-decision",
+ "incompatiblePairs": [
+  [
+   "AUTH-SECURITY-REVIEWER",
+   "AUTH-SECURITY-OWNER"
+  ],
+  [
+   "AUTH-SECURITY-REVIEWER",
+   "AUTH-RELEASE"
+  ],
+  [
+   "AUTH-SECURITY-OWNER",
+   "AUTH-RELEASE"
+  ],
+  [
+   "AUTH-ALPHA-PROGRAM",
+   "AUTH-RELEASE"
+  ],
+  [
+   "AUTH-RELEASE",
+   "AUTH-KEY"
+  ],
+  [
+   "AUTH-RELEASE",
+   "AUTH-SECOND-APPROVER"
+  ],
+  [
+   "AUTH-KEY",
+   "AUTH-SECOND-APPROVER"
+  ]
+ ],
+ "note": "records[] holds sealed overlap decisions. An incompatible pair held by one identity with no complete recorded decision is a separation violation and refuses AUTHORIZED.",
+ "purpose": "Separation of duties: incompatible role pairs, and the recorded overlap decisions that are the only mechanism by which one identity may hold both sides of a pair. Overlap is never inferred from matching strings.",
+ "recordFields": [
+  "decisionId",
+  "identity",
+  "roles",
+  "reason",
+  "authority",
+  "date"
+ ],
+ "records": [],
+ "schemaVersion": 1
+}

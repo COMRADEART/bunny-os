@@ -1,0 +1,83 @@
+{
+ "assignments": [
+  {
+   "assignedBy": "Constructed Fixture Organization",
+   "assignmentId": "ASSIGNMENT-001",
+   "authorityId": "AUTH-ALPHA-PROGRAM",
+   "basis": "constructed fixture: dry-run assignment for negative and positive controls",
+   "date": "2026-08-19",
+   "identity": "Constructed Fixture Alpha Program Owner"
+  },
+  {
+   "assignedBy": "Constructed Fixture Organization",
+   "assignmentId": "ASSIGNMENT-002",
+   "authorityId": "AUTH-HARDWARE",
+   "basis": "constructed fixture: dry-run assignment for negative and positive controls",
+   "date": "2026-08-19",
+   "identity": "Constructed Fixture Hardware Owner"
+  },
+  {
+   "assignedBy": "Constructed Fixture Organization",
+   "assignmentId": "ASSIGNMENT-003",
+   "authorityId": "AUTH-KEY",
+   "basis": "constructed fixture: dry-run assignment for negative and positive controls",
+   "date": "2026-08-19",
+   "identity": "Constructed Fixture Key Authority (public identity)"
+  },
+  {
+   "assignedBy": "Constructed Fixture Organization",
+   "assignmentId": "ASSIGNMENT-004",
+   "authorityId": "AUTH-RELEASE",
+   "basis": "constructed fixture: dry-run assignment for negative and positive controls",
+   "date": "2026-08-19",
+   "identity": "Constructed Fixture Release Authority"
+  },
+  {
+   "assignedBy": "Constructed Fixture Organization",
+   "assignmentId": "ASSIGNMENT-005",
+   "authorityId": "AUTH-SECOND-APPROVER",
+   "basis": "constructed fixture: dry-run assignment for negative and positive controls",
+   "date": "2026-08-19",
+   "identity": "Constructed Fixture Approver B"
+  },
+  {
+   "assignedBy": "Constructed Fixture Organization",
+   "assignmentId": "ASSIGNMENT-006",
+   "authorityId": "AUTH-SECURITY-OWNER",
+   "basis": "constructed fixture: dry-run assignment for negative and positive controls",
+   "date": "2026-08-19",
+   "identity": "Constructed Fixture Security Owner"
+  },
+  {
+   "assignedBy": "Constructed Fixture Organization",
+   "assignmentId": "ASSIGNMENT-007",
+   "authorityId": "AUTH-SECURITY-REVIEWER",
+   "basis": "constructed fixture: dry-run assignment for negative and positive controls",
+   "date": "2026-08-19",
+   "identity": "Constructed Fixture Security Reviewer"
+  }
+ ],
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "overlapAssignment": {
+  "assignedBy": "Constructed Fixture Organization",
+  "assignmentId": "ASSIGNMENT-008",
+  "authorityId": "AUTH-SECOND-APPROVER",
+  "basis": "constructed fixture: deliberately incompatible overlap for the separation control",
+  "date": "2026-08-19",
+  "identity": "Constructed Fixture Key Authority (public identity)"
+ },
+ "overlapDecision": {
+  "authority": "Constructed Fixture Organization",
+  "date": "2026-08-19",
+  "decisionId": "OVERLAP-001",
+  "identity": "Constructed Fixture Key Authority (public identity)",
+  "reason": "constructed fixture: the organization explicitly permits this overlap for the dry run",
+  "roles": [
+   "AUTH-KEY",
+   "AUTH-SECOND-APPROVER"
+  ]
+ },
+ "purpose": "Drives the assignment dry runs: seven distinct constructed identities, one per authority. Also carries an overlapping variant (one identity holding KEY and SECOND-APPROVER) for the separation controls, and a recorded overlap decision that permits exactly that pair.",
+ "test_fixture_only": true
+}

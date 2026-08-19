@@ -1,0 +1,128 @@
+{
+ "characterVocabulary": [
+  "CLEARED",
+  "UNDETERMINED",
+  "ABSENCE_OF_EVIDENCE",
+  "ADVERSE_EVIDENCE"
+ ],
+ "classVocabulary": [
+  "BLOCKING",
+  "NON_BLOCKING",
+  "REQUIRES_HUMAN_DECISION",
+  "NOT_APPLICABLE"
+ ],
+ "conditions": [
+  {
+   "class": "BLOCKING",
+   "classBasis": "inherited class; no recorded reclassification decision exists, and absence never weakens a blocker",
+   "condition": 1,
+   "evidenceCharacter": "ABSENCE_OF_EVIDENCE",
+   "evidenceSource": "security-review",
+   "state": "TRUE",
+   "stateBasis": "no completed independent review exists; absence blocks, it does not authorize",
+   "title": "Security review returns BLOCKED (or no completed review exists)"
+  },
+  {
+   "class": "BLOCKING",
+   "classBasis": "inherited class; no recorded reclassification decision exists, and absence never weakens a blocker",
+   "condition": 2,
+   "evidenceCharacter": "ABSENCE_OF_EVIDENCE",
+   "evidenceSource": "security-review",
+   "state": "TRUE",
+   "stateBasis": "all 8 Critical findings carry REQUIRES_REVIEW or UNKNOWN (qualification/phase8/security-review/review-package.json)",
+   "title": "A Critical issue lacks an accepted disposition"
+  },
+  {
+   "class": "BLOCKING",
+   "classBasis": "inherited class; no recorded reclassification decision exists, and absence never weakens a blocker",
+   "condition": 3,
+   "evidenceCharacter": "UNDETERMINED",
+   "evidenceSource": "alpha-feedback",
+   "state": "UNDETERMINED",
+   "stateBasis": "no testing evidence exists either way; undetermined is not cleared",
+   "title": "A confirmed data-loss defect exists"
+  },
+  {
+   "class": "BLOCKING",
+   "classBasis": "inherited class; no recorded reclassification decision exists, and absence never weakens a blocker",
+   "condition": 4,
+   "evidenceCharacter": "UNDETERMINED",
+   "evidenceSource": "alpha-feedback",
+   "state": "UNDETERMINED",
+   "stateBasis": "no testing evidence exists either way; undetermined is not cleared",
+   "title": "A confirmed privacy breach exists"
+  },
+  {
+   "class": "BLOCKING",
+   "classBasis": "inherited class; no recorded reclassification decision exists, and absence never weakens a blocker",
+   "condition": 5,
+   "evidenceCharacter": "UNDETERMINED",
+   "evidenceSource": "alpha-feedback",
+   "state": "UNDETERMINED",
+   "stateBasis": "no testing evidence exists either way; undetermined is not cleared",
+   "title": "A confirmed release-blocking accessibility defect exists"
+  },
+  {
+   "class": "BLOCKING",
+   "classBasis": "inherited class; no recorded reclassification decision exists, and absence never weakens a blocker",
+   "condition": 6,
+   "evidenceCharacter": "CLEARED",
+   "evidenceSource": null,
+   "state": "FALSE",
+   "stateBasis": "all five digests recomputed from bytes 2026-08-18 (qualification/phase7/baseline/freeze.log); the artifact is frozen and identified",
+   "title": "The artifact identity cannot be verified"
+  },
+  {
+   "class": "BLOCKING",
+   "classBasis": "inherited class; no recorded reclassification decision exists, and absence never weakens a blocker",
+   "condition": 7,
+   "evidenceCharacter": "ABSENCE_OF_EVIDENCE",
+   "evidenceSource": "signing",
+   "state": "TRUE",
+   "stateBasis": "the artifact is UNSIGNED, zero signature files exist, and no recorded exception accepts unsigned distribution",
+   "title": "Required signing policy is unmet"
+  },
+  {
+   "class": "BLOCKING",
+   "classBasis": "inherited class; no recorded reclassification decision exists, and absence never weakens a blocker",
+   "condition": 8,
+   "evidenceCharacter": "ABSENCE_OF_EVIDENCE",
+   "evidenceSource": "second-approval",
+   "state": "TRUE",
+   "stateBasis": "no record exists in which a second person independently names the artifact digest",
+   "title": "Required second approval is absent"
+  },
+  {
+   "class": "BLOCKING",
+   "classBasis": "inherited class; no recorded reclassification decision exists, and absence never weakens a blocker",
+   "condition": 9,
+   "evidenceCharacter": "UNDETERMINED",
+   "evidenceSource": "hardware",
+   "state": "UNDETERMINED",
+   "stateBasis": "the committed scope declares zero physical machines supported and no hardware evidence exists; nothing declared supported has failed",
+   "title": "A hardware failure affects the declared supported hardware set"
+  },
+  {
+   "class": "BLOCKING",
+   "classBasis": "inherited class; no recorded reclassification decision exists, and absence never weakens a blocker",
+   "condition": 10,
+   "evidenceCharacter": "UNDETERMINED",
+   "evidenceSource": "alpha-feedback",
+   "state": "UNDETERMINED",
+   "stateBasis": "zero Alpha reports exist; no finding exists to be unresolved",
+   "title": "Alpha testing finds an unresolved release blocker"
+  }
+ ],
+ "importedFrom": "qualification/phase9/decision/alpha-release-decision.json blocking_conditions (titles verbatim; committed before any external evidence; none weakened)",
+ "note": "AUTHORIZED requires every condition FALSE on evidence. A condition TRUE on absence keeps the candidate pending; a condition TRUE on adverse evidence blocks it; neither authorizes anything, and UNDETERMINED is not cleared.",
+ "purpose": "the canonical blocking-condition registry: the ten Phase 8 conditions imported with their source pinned and titles verbatim, classified, and evaluated against the evidence actually held",
+ "reclassificationRule": "BLOCKING -> NON_BLOCKING requires a recorded decision with reason, authority, artifact, timestamp, policy basis, and evidence references; the decision is sealed and the chain is preserved",
+ "schemaVersion": 1,
+ "sourcePins": {
+  "qualification/phase8/conditions/ALPHA_RELEASE_BLOCKING_CONDITIONS.md": {
+   "bytes": 4579,
+   "sha256": "95f18e8d87f123a4a65c392b3fbb8bfb95bf3ac77b6765300d69977c60879373"
+  }
+ },
+ "subjectArtifact": "e906a48793d7"
+}

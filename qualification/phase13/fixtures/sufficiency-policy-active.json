@@ -1,0 +1,27 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the threshold dry runs: a fully-defined ACTIVE policy bound to the subject artifact. Used only in constructed registries - the real registry stays empty until the actual owner decides, and these values are fixture values, not proposals.",
+ "record": {
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "authority": "Constructed Fixture Alpha Program Owner",
+  "effective_at": "2026-08-19",
+  "policy_id": "SUFFICIENCY-POLICY-001",
+  "status": "ACTIVE",
+  "supersedes": null,
+  "thresholds": {
+   "accessibilityEvidenceRequired": false,
+   "maximumUnresolvedBlockerFindings": 0,
+   "maximumUnresolvedCriticalFindings": 0,
+   "minimumAcceptedTesterReports": 1,
+   "minimumCompletedCoreJourneys": 1,
+   "minimumDistinctHardwareMachines": 1,
+   "minimumDistinctMachineIdentities": 1,
+   "minimumDistinctTesters": 1,
+   "minimumEvidencePeriodDays": 1,
+   "minimumSuccessfulInstallationReports": 1,
+   "performanceEvidenceRequired": false
+  }
+ },
+ "test_fixture_only": true
+}

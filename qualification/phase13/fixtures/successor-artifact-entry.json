@@ -1,0 +1,19 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the successor controls: a modelled REMEDIATES successor of the subject artifact. Authorization for the parent applied to it must be REFUSED; the successor starts NOT_AUTHORIZED; an accepted risk on the parent must not transfer. A modelled candidate is never recorded in the real graph as existing.",
+ "successorEntry": {
+  "artifact_id": "fixture-successor-authority",
+  "build_identity": "constructed control",
+  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "digests": {
+   "image": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "parent_artifact": "e906a48793d7",
+  "qualification_state": "REQUALIFICATION_REQUIRED",
+  "relationship": "REMEDIATES",
+  "source_commit": "0000000000000000000000000000000000000000",
+  "supersedes": null
+ },
+ "test_fixture_only": true
+}
