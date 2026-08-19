@@ -129,6 +129,46 @@ def _normalize_digest(value: str) -> str:
 
 # ---------------------------------------------------------------- key hygiene
 
+#: Likely-credential classes, as (pattern, class label). The label is what a
+#: refusal names — the matched value itself is never printed, logged, or
+#: stored. Phase 12 widened this from private keys to the credential classes
+#: an Alpha tester's logs are most likely to leak (passwords, passphrases,
+#: bearer/API/session tokens); qualification/phase12/alpha/PRIVACY_POLICY.md
+#: is the tester-facing statement, and VERIFY_TESTER_REPORT.py carries this
+#: same table as a courtesy pre-check — the guard suite asserts the two
+#: copies are identical so they cannot drift.
+SECRET_CLASS_PATTERNS = (
+    (r"-----BEGIN[^\n]{0,40}PRIVATE KEY", "private key material"),
+    (r"[Bb]earer\s+[A-Za-z0-9._+/=-]{20,}", "bearer token"),
+    (r"AKIA[0-9A-Z]{16}", "cloud access key id"),
+    (r"(?i)(api[_-]?key|apikey|secret[_-]?key|access[_-]?token"
+     r"|auth[_-]?token|session[_-]?token|client[_-]?secret"
+     r"|session[_-]?cookie)[\"']?\s*[=:]\s*[\"']?[A-Za-z0-9._+/=-]{16,}",
+     "api or session token assignment"),
+    (r"(?i)(password|passwd|passphrase)[\"']?\s*[=:]\s*[\"']?\S{8,}",
+     "password assignment"),
+    (r"eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}", "json web token"),
+    (r"(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36}", "code-forge token"),
+)
+
+_SECRET_RES = tuple(
+    (re.compile(pattern.encode("utf-8")), label)
+    for pattern, label in SECRET_CLASS_PATTERNS
+)
+
+
+def detect_secret_classes(raw: bytes) -> list[str]:
+    """Likely-credential classes present in one submission file.
+
+    A byte-level scan, so nesting is irrelevant: a password three levels
+    deep in a JSON attachment is the same bytes. Deliberately fail-closed —
+    a false positive costs one masked resubmission; a false negative
+    publishes a credential into permanent evidence.
+    """
+    return sorted({label for pattern, label in _SECRET_RES
+                   if pattern.search(raw)})
+
+
 def contains_private_key(raw: bytes) -> bool:
     """PEM/OpenSSH private key material, which must never be ingested."""
     return b"PRIVATE KEY" in raw and b"-----BEGIN" in raw
@@ -392,16 +432,27 @@ def register(ledger_path: Path, source: str, record_path: Path,
         "files": {},
     }
 
-    # Key hygiene precedes ingestion: on a hit, nothing is copied.
+    # Credential hygiene precedes ingestion: on a hit, nothing is copied.
+    # The refusal names the class and the filename, never the value.
     sources = [record_path, *attachments]
-    tainted = [p.name for p in sources if contains_private_key(p.read_bytes())]
+    tainted: dict[str, list[str]] = {}
+    for path in sources:
+        classes = detect_secret_classes(path.read_bytes())
+        if classes:
+            tainted[path.name] = classes
     if tainted:
+        detail = "; ".join(
+            "%s: %s" % (name, ", ".join(classes))
+            for name, classes in sorted(tainted.items())
+        )
         entry.update({
             "status": "REJECTED",
-            "statusReason": "private key material in %s; nothing was ingested"
-                            % ", ".join(sorted(tainted)),
-            "usableIf": "resubmit without private key material; treat the "
-                        "exposed key as compromised and record that event",
+            "statusReason": "likely credential material (%s); nothing was "
+                            "ingested and the value is not repeated here"
+                            % detail,
+            "usableIf": "resubmit with the credential material removed or "
+                        "masked; treat any real exposed credential as "
+                        "compromised and record that event",
             "binding": "MISSING",
             "gateEligible": False,
             "validation": {
@@ -409,7 +460,7 @@ def register(ledger_path: Path, source: str, record_path: Path,
                 "timestamp": "not examined",
                 "completeness": {"missing": []},
                 "integrity": "refused before ingestion",
-                "scope": "key hygiene violation",
+                "scope": "credential hygiene violation",
             },
         })
     else:

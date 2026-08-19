@@ -1,0 +1,36 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the closure and transfer refusals: a CONFIRMED alpha finding cannot close without requalification evidence bound to its artifact (Phase 10 lifecycle authority), tester evidence for the ROOT does not apply to the successor, and closure evidence naming the wrong artifact is refused.",
+ "finding": {
+  "findingId": "ALPHA-P9-001",
+  "state": "CONFIRMED",
+  "artifact": "e906a48793d7"
+ },
+ "registerRow": {
+  "finding_id": "AF-INTAKE-001-T",
+  "source_report_ids": [
+   "INTAKE-001"
+  ],
+  "artifact": "e906a48793d7",
+  "category": "FUNCTIONAL",
+  "lifecycle_status": "CLOSED",
+  "user_impact": "UNKNOWN",
+  "derived_severity": null,
+  "reproducibility_status": "NOT_ATTEMPTED",
+  "remediation_artifact": null,
+  "closure_evidence": null
+ },
+ "successorEntry": {
+  "artifact_id": "fixture-successor-alpha",
+  "digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+  "digests": {
+   "image": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
+  "source_commit": "1111111111111111111111111111111111111111",
+  "build_identity": "constructed control",
+  "parent_artifact": "e906a48793d7",
+  "supersedes": null,
+  "relationship": "REMEDIATES",
+  "qualification_state": "REQUALIFICATION_REQUIRED"
+ }
+}

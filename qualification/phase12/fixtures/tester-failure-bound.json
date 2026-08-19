@@ -1,0 +1,35 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the bound-failure dry run: a tester says only that installation failed, with no technical classification. The register derives one FUNCTIONAL finding row with classificationSource DERIVED and the words verbatim.",
+ "record": {
+  "schema": "bunny-os/alpha-tester-report/1",
+  "tester_id": "T-002",
+  "testerId": "T-002",
+  "report_type": "FAILURE",
+  "submitted_at": "2026-08-18",
+  "date": "2026-08-18",
+  "journey": "A",
+  "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+  "artifact_digest_observed": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "artifact_digest_verified": true,
+  "artifact_identity_status": "VERIFIED",
+  "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "steps": [
+   {
+    "name": "boot installer",
+    "status": "COMPLETED"
+   },
+   {
+    "name": "install to disk",
+    "status": "FAILED",
+    "notes": "constructed fixture: stopped at 40 percent"
+   }
+  ],
+  "user_observation": "I could not install it.",
+  "expected_behavior": "the installer finishes",
+  "actual_behavior": "the installer stopped and the machine rebooted",
+  "additional_context": "TEST_FIXTURE_ONLY dry run material",
+  "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421"
+ }
+}

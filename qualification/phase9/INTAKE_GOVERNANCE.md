@@ -117,14 +117,22 @@ subject artifact. An Alpha report whose tester cannot establish the digest
 is preserved as `USER_EVIDENCE_UNBOUND` — accepted as user evidence, unable
 to satisfy or block an artifact-specific gate until reproduction binds it.
 
-## Key hygiene
+## Credential hygiene
 
-Private key material never enters qualification evidence. `register` scans
-every submitted byte for private-key markers before ingesting anything; on a
-hit it ingests **nothing**, appends a REJECTED entry with an empty file
-list, and the event itself is the record. This is the one case where
-"preserve the evidence" yields — to the absolute rule from
-`qualification/phase8/signing/SIGNING_READINESS.md`.
+Credential material never enters qualification evidence. `register` scans
+every submitted byte for likely-credential classes before ingesting
+anything — private keys (the original Phase 9 rule, per
+`qualification/phase8/signing/SIGNING_READINESS.md`) and, since Phase 12
+widened the scan for the Alpha tester program, password/passphrase and
+token assignments, bearer/API/session tokens, and similar classes
+(`SECRET_CLASS_PATTERNS` in the tool;
+`qualification/phase12/alpha/PRIVACY_POLICY.md` is the tester-facing
+statement). On a hit it ingests **nothing**, appends a REJECTED entry with
+an empty file list naming the *class* and filename — never the value — and
+the event itself is the record. This is the one case where "preserve the
+evidence" yields, and it is deliberately fail-closed: a false positive
+costs one masked resubmission; a false negative publishes a credential
+into permanent evidence.
 
 ## Digest verification basis
 

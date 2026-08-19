@@ -1,0 +1,25 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the security-observation dry run: a tester notices something security-shaped. It enters the same door, is preserved verbatim, and is surfaced to the Phase 11 workflow without impersonating the independent review.",
+ "record": {
+  "schema": "bunny-os/alpha-tester-report/1",
+  "tester_id": "T-010",
+  "testerId": "T-010",
+  "report_type": "SECURITY_OBSERVATION",
+  "submitted_at": "2026-08-18",
+  "date": "2026-08-18",
+  "journey": "D",
+  "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+  "artifact_digest_observed": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "artifact_digest_verified": true,
+  "artifact_identity_status": "VERIFIED",
+  "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "steps": [],
+  "user_observation": "constructed fixture: the trust prompt reappeared already answered after a reboot",
+  "expected_behavior": "the prompt requires a fresh answer",
+  "actual_behavior": "it appeared pre-answered",
+  "additional_context": "TEST_FIXTURE_ONLY dry run material",
+  "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421"
+ }
+}

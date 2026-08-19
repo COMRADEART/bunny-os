@@ -672,8 +672,9 @@ def next_action(derived: dict) -> str:
          "Run the hardware protocol on a real machine "
          "(qualification/phase8/hardware/PROTOCOL.md)"),
         ("Alpha tester validation",
-         "Enroll Alpha testers under the controlled protocol "
-         "(qualification/phase8/alpha/)"),
+         "Enroll Alpha testers under the controlled protocol — the "
+         "canonical program package is qualification/phase12/alpha/"
+         "PROGRAM.md (Phase 12 operationalized the Phase 8 program)"),
     )
     for gate, action in ladder:
         if gate in gates:

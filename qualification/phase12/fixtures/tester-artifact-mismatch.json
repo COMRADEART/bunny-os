@@ -1,0 +1,25 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the mismatch dry run: the tester computed a digest that is not the subject artifact and honestly reported MISMATCH. Phase 9 records ARTIFACT_MISMATCH; nothing becomes artifact evidence.",
+ "record": {
+  "schema": "bunny-os/alpha-tester-report/1",
+  "tester_id": "T-004",
+  "testerId": "T-004",
+  "report_type": "FAILURE",
+  "submitted_at": "2026-08-18",
+  "date": "2026-08-18",
+  "journey": "A",
+  "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+  "artifact_digest_observed": "e501218fe501218fe501218fe501218fe501218fe501218fe501218fe501218f",
+  "artifact_digest_verified": false,
+  "artifact_identity_status": "MISMATCH",
+  "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "steps": [],
+  "user_observation": "constructed fixture: the downloaded ISO hashes to something else entirely",
+  "expected_behavior": "the published digest",
+  "actual_behavior": "a different digest",
+  "additional_context": "TEST_FIXTURE_ONLY dry run material",
+  "artifactDigest": "e501218fe501218fe501218fe501218fe501218fe501218fe501218fe501218f"
+ }
+}

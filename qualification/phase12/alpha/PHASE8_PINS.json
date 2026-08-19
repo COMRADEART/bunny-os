@@ -1,0 +1,34 @@
+{
+ "pinnedSources": {
+  "qualification/phase7/alpha/ALPHA_TEST_PROTOCOL.md": {
+   "bytes": 4272,
+   "sha256": "c9fa385f32dc7150629950049a93f3f194a63799a8fdcca49838a4cff6262279"
+  },
+  "qualification/phase8/alpha/ALPHA_KNOWN_LIMITATIONS.md": {
+   "bytes": 2786,
+   "sha256": "cdde43c3a4959b69b1412c4db1804fa8c0ade6e537d3f315e944f20ded9f2434"
+  },
+  "qualification/phase8/alpha/OPERATIONS.md": {
+   "bytes": 2418,
+   "sha256": "2603d1ed9683955e19be6f0e6ab796491b1333870e96a4f2b30ed006c0d739ad"
+  },
+  "qualification/phase8/alpha/RELEASE_SCOPE.md": {
+   "bytes": 2487,
+   "sha256": "d1eb398b05e25a9d8937ee0c7b3bbdf7eafe4a5f1fbd9735ad00ff8e6bb22fdd"
+  },
+  "qualification/phase8/alpha/REPORT_TEMPLATE.json": {
+   "bytes": 992,
+   "sha256": "d3664dd47ccfd71857366ab70d02dbd72d2845c8f21731559befadff3c955a5d"
+  },
+  "qualification/phase8/hardware-matrix.json": {
+   "bytes": 1256,
+   "sha256": "4871f4d4d3f78e14375b4e1a939c132a9b6304be0bbb6d6015b15b652bc56505"
+  },
+  "qualification/phase8/hardware/PROTOCOL.md": {
+   "bytes": 2754,
+   "sha256": "c0768c79ca6bb8e373314775d95a716bdf0c6d20def918c82b828b9ef54c0541"
+  }
+ },
+ "purpose": "The Phase 7/8 sources the Phase 12 tester package reuses and restates, pinned by content. If a pinned source changes, derivation refuses instead of letting the tester-facing restatement silently diverge from the record it restates \u2014 updating a restatement is a deliberate act that re-pins here.",
+ "schemaVersion": 1
+}

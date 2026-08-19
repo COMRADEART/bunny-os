@@ -1,0 +1,26 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the accessibility dry run: a screen-reader observation recorded as first-class USER_REPORTED evidence with the technology preserved; the Phase 7 accessibility qualification is not touched.",
+ "record": {
+  "schema": "bunny-os/alpha-tester-report/1",
+  "tester_id": "T-009",
+  "testerId": "T-009",
+  "report_type": "ACCESSIBILITY",
+  "submitted_at": "2026-08-18",
+  "date": "2026-08-18",
+  "journey": "A",
+  "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+  "artifact_digest_observed": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "artifact_digest_verified": true,
+  "artifact_identity_status": "VERIFIED",
+  "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "steps": [],
+  "user_observation": "constructed fixture: the installer's disk page read the same label for both disks",
+  "expected_behavior": "each disk announced distinctly",
+  "actual_behavior": "identical announcements",
+  "additional_context": "TEST_FIXTURE_ONLY dry run material",
+  "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "accessibility_technology": "constructed fixture: Orca 46, high contrast on, 150 percent text"
+ }
+}

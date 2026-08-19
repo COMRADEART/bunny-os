@@ -1,0 +1,24 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the unbound dry run: no digest observed, identity MISSING. Phase 9 preserves it as USER_EVIDENCE_UNBOUND; the register lists it as unbound evidence that moves no artifact-specific gate; a revision may later bind it.",
+ "record": {
+  "schema": "bunny-os/alpha-tester-report/1",
+  "tester_id": "T-003",
+  "testerId": "T-003",
+  "report_type": "BUG",
+  "submitted_at": "2026-08-18",
+  "date": "2026-08-18",
+  "journey": "exploratory",
+  "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+  "artifact_digest_observed": null,
+  "artifact_digest_verified": false,
+  "artifact_identity_status": "MISSING",
+  "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "steps": [],
+  "user_observation": "constructed fixture: the Companion character flickered when the panel opened",
+  "expected_behavior": "a steady character",
+  "actual_behavior": "flicker for about a second",
+  "additional_context": "TEST_FIXTURE_ONLY dry run material"
+ }
+}

@@ -1,0 +1,182 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "bunny-os/alpha-tester-report/1",
+ "title": "Alpha tester report (record.json)",
+ "description": "The machine-readable contract for one tester report. VERIFY_TESTER_REPORT.py enforces exactly this file (it reads the required lists, enums, patterns, and x-aliases from here, so the schema and the validator cannot drift), plus the cross-field rules a JSON Schema cannot express: the alias pairs must be equal; the artifact identity states must be coherent with the observed digest (VERIFIED and OBSERVED_UNVERIFIED require an observed digest inside the subject set, MISMATCH requires one outside it, MISSING requires none - and the intake alias artifactDigest must be absent, never the expected digest substituted); artifact_digest_verified true is only coherent with VERIFIED; and reviewer-side courtesy secret scanning mirrors the intake's credential classes. A record carrying fixtureClass TEST_FIXTURE_ONLY is never a report. The four intake-alias fields exist because the report must also pass the Phase 9 intake validation unchanged (qualification/phase9/tools/intake.py): testerId, date, environment, artifactDigest are the spellings that boundary checks. The tester classifies nothing technically unless they want to: findings[] is optional, and severity/user-impact are assigned later, outside the immutable report.",
+ "type": "object",
+ "required": [
+  "schema",
+  "tester_id",
+  "testerId",
+  "report_type",
+  "submitted_at",
+  "date",
+  "journey",
+  "artifact_claimed_by_tester",
+  "artifact_digest_observed",
+  "artifact_digest_verified",
+  "artifact_identity_status",
+  "environment_summary",
+  "environment",
+  "steps",
+  "user_observation",
+  "expected_behavior",
+  "actual_behavior"
+ ],
+ "properties": {
+  "schema": {
+   "const": "bunny-os/alpha-tester-report/1",
+   "description": "names the contract version this record answers"
+  },
+  "tester_id": {
+   "type": "string",
+   "pattern": "^T-\\d{3}$",
+   "description": "your cohort identifier (T-NNN). The only identity that enters evidence; the mapping to a person lives with the operator, outside the repository."
+  },
+  "testerId": {
+   "type": "string",
+   "pattern": "^T-\\d{3}$",
+   "description": "intake alias: must equal tester_id"
+  },
+  "report_type": {
+   "enum": ["SUCCESS", "FAILURE", "BUG", "PERFORMANCE", "COMPATIBILITY", "USABILITY", "ACCESSIBILITY", "SECURITY_OBSERVATION", "GENERAL_FEEDBACK"],
+   "description": "the kind of experience you are reporting. Your choice is preserved immutably; the project may classify further later, beside - never over - your words."
+  },
+  "submitted_at": {
+   "type": "string",
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+   "description": "ISO 8601 date of the run you are reporting"
+  },
+  "date": {
+   "type": "string",
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+   "description": "intake alias: must equal submitted_at"
+  },
+  "journey": {
+   "enum": ["A", "B", "C", "D", "E", "exploratory"],
+   "description": "which journey this report is about (GETTING_STARTED.md); exploratory covers everything outside the five"
+  },
+  "artifact_claimed_by_tester": {
+   "type": "string",
+   "minLength": 1,
+   "description": "what you believe you were running, in your own words (e.g. the ISO filename or where you downloaded it)"
+  },
+  "artifact_digest_observed": {
+   "type": ["string", "null"],
+   "pattern": "^(sha256:)?[0-9a-f]{64}$",
+   "description": "the digest YOU computed from the bytes you ran, or null if you could not. Never copy the published digest here - the report records what you observed."
+  },
+  "artifact_digest_verified": {
+   "type": "boolean",
+   "description": "true only if you compared your observed digest against the published identity yourself"
+  },
+  "artifact_identity_status": {
+   "enum": ["VERIFIED", "OBSERVED_UNVERIFIED", "MISSING", "MISMATCH"],
+   "description": "ARTIFACT_VERIFICATION.md: VERIFIED needs your observed digest matching the identity; MISMATCH is itself an important report; MISSING is honest and keeps the report as unbound user evidence"
+  },
+  "environment_summary": {
+   "type": "string",
+   "minLength": 1,
+   "description": "one line: VM (hypervisor + version) or a PII-free hardware sketch. No hostnames that name you, no serial numbers."
+  },
+  "environment": {
+   "type": "string",
+   "minLength": 1,
+   "description": "intake alias: must equal environment_summary"
+  },
+  "machine_label": {
+   "type": "string",
+   "description": "optional: YOUR label for this machine (machine-1, blue-desktop) if you test on several. Never a serial number."
+  },
+  "steps": {
+   "type": "array",
+   "description": "what you did, as far as you got. May be empty - a report without steps is still evidence.",
+   "items": {
+    "type": "object",
+    "required": ["name", "status"],
+    "properties": {
+     "name": {"type": "string", "minLength": 1},
+     "status": {"enum": ["COMPLETED", "FAILED", "SKIPPED"]},
+     "notes": {"type": "string"}
+    }
+   }
+  },
+  "user_observation": {
+   "type": "string",
+   "minLength": 1,
+   "description": "what happened, in your own words. Preserved verbatim, forever."
+  },
+  "expected_behavior": {
+   "type": "string",
+   "minLength": 1,
+   "description": "what you expected"
+  },
+  "actual_behavior": {
+   "type": "string",
+   "minLength": 1,
+   "description": "what you got"
+  },
+  "reproduction_steps": {
+   "type": "array",
+   "description": "optional: only if you can reproduce it. A report without these is still evidence of your experience.",
+   "items": {"type": "string"}
+  },
+  "accessibility_technology": {
+   "type": "string",
+   "description": "optional: assistive technology in use (screen reader + version, contrast/text settings, input method), volunteered"
+  },
+  "performance_measurement": {
+   "type": "object",
+   "description": "optional: only if you measured something. Preserved as your measurement (USER_REPORTED) until the project independently validates it.",
+   "properties": {
+    "method": {"type": "string", "minLength": 1},
+    "interval": {"type": "string"},
+    "environment": {"type": "string"},
+    "raw_values": {"type": "array"}
+   },
+   "required": ["method"]
+  },
+  "measured": {
+   "type": "array",
+   "description": "optional: structured observations in the pinned Phase 8 template shape ({what, value, evidence})"
+  },
+  "userReported": {
+   "type": "array",
+   "description": "optional: impressions in the pinned Phase 8 template shape ({aboutStep, impression}) - your words, kept as words"
+  },
+  "findings": {
+   "type": "array",
+   "description": "optional: fill only if you WANT to classify. 'I could not install it' as user_observation is a complete report without this.",
+   "items": {
+    "type": "object",
+    "required": ["description", "category", "reproductionConfidence"],
+    "properties": {
+     "description": {"type": "string", "minLength": 1},
+     "category": {"enum": ["SECURITY", "PRIVACY", "DATA_LOSS", "RELEASE_BLOCKER", "ACCESSIBILITY", "FUNCTIONAL", "PERFORMANCE", "UX", "HARDWARE", "HARNESS", "ENVIRONMENT"]},
+     "reproductionConfidence": {"enum": ["CONFIRMED", "LIKELY", "REPORTED", "UNREPRODUCED"]},
+     "severity": {"enum": ["critical", "high", "medium", "low"]},
+     "reproduction": {"type": "string"},
+     "evidence": {"type": "string"}
+    }
+   }
+  },
+  "additional_context": {
+   "type": "string",
+   "description": "optional: anything else worth saying"
+  },
+  "digest_computation": {
+   "type": "string",
+   "description": "optional: the command you used to compute the digest, so the observation is reproducible"
+  },
+  "attachmentDigests": {
+   "type": "object",
+   "description": "sha256 per attachment filename; the intake recomputes these from the ingested bytes and refuses a mismatch. Mask credentials before attaching anything (PRIVACY_POLICY.md)."
+  }
+ },
+ "x-aliases": [
+  ["testerId", "tester_id"],
+  ["date", "submitted_at"],
+  ["environment", "environment_summary"],
+  ["artifactDigest", "artifact_digest_observed"]
+ ]
+}

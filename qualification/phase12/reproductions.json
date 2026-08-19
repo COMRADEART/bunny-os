@@ -1,0 +1,9 @@
+{
+ "schemaVersion": 1,
+ "attempts": [],
+ "resultVocabulary": ["REPRODUCED", "NOT_REPRODUCED", "INSUFFICIENT_INFORMATION", "ENVIRONMENT_DEPENDENT"],
+ "attemptRequires": ["attemptId", "sourceReport", "artifactTested", "environment", "hypothesis", "method", "result", "date", "operator"],
+ "policy": "Attempts follow qualification/phase12/alpha/REPRODUCTION_PROTOCOL.md: the original tester report is never rewritten, the attempt records its own environment, hypothesis, method and limitations, and any technical finding binds to the artifact actually tested. NOT_REPRODUCED is not INVALID - the tester report remains valid user evidence, and the finding stays open. An attempt on an artifact other than the finding's moves that finding's reproducibility only through an explicitly recorded Phase 10 applicability relationship.",
+ "note": "Zero attempts. Findings without an attempt derive reproducibility NOT_ATTEMPTED; absence of an attempt is never evidence about the report.",
+ "validationAuthority": "qualification/phase12/tools/alpha_ops.py validate_reproduction_attempt"
+}
