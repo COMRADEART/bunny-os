@@ -347,6 +347,29 @@ class RegisterDerivation(_ScratchIntake):
                           "the register never mints triage identifiers")
         self.assertEqual(derived["securityGate"]["status"], "BLOCKED")
 
+    def test_a_new_critical_under_an_approving_review_holds_the_gate(
+            self) -> None:
+        """The Phase 15 repair's ownership-boundary control. A NEW_FINDING
+        row carries internal_id None by design, and sorting open Criticals
+        by bare internal_id raised TypeError exactly when a reviewer added
+        a new Critical under an approving assessment — the case where the
+        gate must hold, not crash. The new Critical is named by the
+        reviewer's own finding identifier."""
+        record = _fixture("review-new-critical.json")["record"]
+        record["overall_assessment"] = "APPROVED_WITH_CONDITIONS"
+        record["disposition"] = "APPROVED_WITH_CONDITIONS"
+        self._register(record)
+        derived = self._derive()  # the defect made this line raise
+        self.assertEqual(derived["securityGate"]["status"], "UNDER_ANALYSIS")
+        new_row = derived["findings"][-1]
+        self.assertEqual(new_row["reconciliation"], "NEW_FINDING")
+        self.assertIsNone(new_row["internal_id"])
+        self.assertIn(new_row["source_finding_id"],
+                      derived["securityGate"]["basis"],
+                      "an open new Critical must be named in the gate "
+                      "basis, not silently dropped")
+        self._assert_reality_untouched()
+
     def test_an_undetermined_answer_is_held_not_closed(self) -> None:
         self._register(
             _fixture("review-baseline-not-applicable.json")["record"])
