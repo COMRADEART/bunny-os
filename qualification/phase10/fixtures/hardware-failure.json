@@ -1,0 +1,27 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the hardware-failure dry run: a valid per-dimension record where boot passes and the microphone fails. Dimensions never collapse into a machine verdict.",
+ "record": {
+  "hwId": "HW-001",
+  "operator": "Constructed Fixture Operator",
+  "date": "2026-08-18",
+  "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "machine": {
+   "manufacturer": "Constructed",
+   "model": "Fixture Machine",
+   "cpu": "fixture-x86-64",
+   "ram": "16GiB",
+   "gpu": "fixture-igpu",
+   "storage": "fixture-nvme",
+   "firmwareMode": "UEFI",
+   "secureBootState": "enabled"
+  },
+  "results": {
+   "boot-installation-media": {"status": "PASS", "evidence": "fixture-serial.log"},
+   "installation": {"status": "PASS", "evidence": "fixture-journey.log"},
+   "voice-microphone": {"status": "FAIL", "evidence": "fixture-journal.txt"},
+   "companion-3d-native": {"status": "NOT_SUPPORTED", "evidence": "machine.gpu"},
+   "companion-3d-fallback": {"status": "PASS", "evidence": "fixture-frames.log"}
+  }
+ }
+}

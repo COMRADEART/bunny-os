@@ -1,0 +1,14 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the valid-signature-metadata dry run: a complete PRODUCTION ARTIFACT SIGNED record shape. Metadata only - no signature bytes exist, no key material anywhere, and the artifact remains UNSIGNED.",
+ "record": {
+  "category": "PRODUCTION ARTIFACT SIGNED",
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "signatureIdentifier": "fixture-signature-0001.sig",
+  "signerIdentity": "Constructed Fixture Key Authority (public identity)",
+  "signerAuthority": "TEST_FIXTURE_ONLY dry run",
+  "signingTimestamp": "2026-08-18",
+  "verificationResult": "constructed fixture: verification output recorded verbatim",
+  "verificationRunBy": "Constructed Fixture Verifier (not the signing command)"
+ }
+}

@@ -1,0 +1,19 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the accepted-security-finding dry run in scratch trees. The wrapper is refused everywhere evidence is consumed; tests register only the inner record, into constructed ledgers, never the real one.",
+ "record": {
+  "reviewer": "Constructed Fixture Reviewer",
+  "organisation": "TEST_FIXTURE_ONLY dry run",
+  "scope": "constructed fixture: a completed review of the subject artifact",
+  "date": "2026-08-18",
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "disposition": "APPROVED_WITH_CONDITIONS",
+  "findings": [
+   {
+    "description": "constructed fixture finding: one High requiring disposition",
+    "severity": "high",
+    "advisory": "FIXTURE-0001"
+   }
+  ]
+ }
+}

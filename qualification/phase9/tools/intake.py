@@ -432,12 +432,16 @@ def register(ledger_path: Path, source: str, record_path: Path,
             key = "%s%s/%s/%s" % (LEDGER_PREFIX, source, intake_id, name)
             entry["files"][key] = {"bytes": size, "sha256": digest}
 
+        record = None
+        parse_error: Exception | None = None
         try:
             record = json.loads(ingested["record.json"].read_text(encoding="utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            parse_error = error
+        if parse_error is not None:
             entry.update({
                 "status": "UNVERIFIABLE",
-                "statusReason": "record.json is not parseable JSON: %s" % error,
+                "statusReason": "record.json is not parseable JSON: %s" % parse_error,
                 "usableIf": "resubmit a machine-readable record as a revision",
                 "binding": "MISSING",
                 "gateEligible": False,
@@ -447,6 +451,25 @@ def register(ledger_path: Path, source: str, record_path: Path,
                     "completeness": {"missing": ["a parseable record"]},
                     "integrity": "bytes preserved verbatim",
                     "scope": "unparseable",
+                },
+            })
+        elif isinstance(record, dict) and record.get("fixtureClass") == "TEST_FIXTURE_ONLY":
+            # Synthetic dry-run material is distinguished structurally, not
+            # by filename: a record declaring itself a fixture is never
+            # evidence, whatever it is named or wherever it came from.
+            entry.update({
+                "status": "REJECTED",
+                "statusReason": "the record declares fixtureClass "
+                                "TEST_FIXTURE_ONLY; a fixture is never evidence",
+                "usableIf": "real evidence carries no fixture marker",
+                "binding": "MISSING",
+                "gateEligible": False,
+                "validation": {
+                    "identity": "not examined", "artifactBinding": "not examined",
+                    "timestamp": "not examined",
+                    "completeness": {"missing": []},
+                    "integrity": "bytes preserved verbatim",
+                    "scope": "declared test fixture",
                 },
             })
         else:

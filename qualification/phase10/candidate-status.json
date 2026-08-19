@@ -1,0 +1,133 @@
+{
+ "applicableEvidence": [],
+ "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+ "blockingConditions": [
+  {
+   "basis": "no completed independent review exists; absence blocks, it does not authorize",
+   "condition": 1,
+   "state": "TRUE",
+   "title": "Security review returns BLOCKED (or no completed review exists)"
+  },
+  {
+   "basis": "all 8 Critical findings carry REQUIRES_REVIEW or UNKNOWN (qualification/phase8/security-review/review-package.json)",
+   "condition": 2,
+   "state": "TRUE",
+   "title": "A Critical issue lacks an accepted disposition"
+  },
+  {
+   "basis": "no testing evidence exists either way; undetermined is not cleared",
+   "condition": 3,
+   "state": "UNDETERMINED",
+   "title": "A confirmed data-loss defect exists"
+  },
+  {
+   "basis": "no testing evidence exists either way; undetermined is not cleared",
+   "condition": 4,
+   "state": "UNDETERMINED",
+   "title": "A confirmed privacy breach exists"
+  },
+  {
+   "basis": "no testing evidence exists either way; undetermined is not cleared",
+   "condition": 5,
+   "state": "UNDETERMINED",
+   "title": "A confirmed release-blocking accessibility defect exists"
+  },
+  {
+   "basis": "all five digests recomputed from bytes 2026-08-18 (qualification/phase7/baseline/freeze.log); the artifact is frozen and identified",
+   "condition": 6,
+   "state": "FALSE",
+   "title": "The artifact identity cannot be verified"
+  },
+  {
+   "basis": "the artifact is UNSIGNED, zero signature files exist, and no recorded exception accepts unsigned distribution",
+   "condition": 7,
+   "state": "TRUE",
+   "title": "Required signing policy is unmet"
+  },
+  {
+   "basis": "no record exists in which a second person independently names the artifact digest",
+   "condition": 8,
+   "state": "TRUE",
+   "title": "Required second approval is absent"
+  },
+  {
+   "basis": "the committed scope declares zero physical machines supported and no hardware evidence exists; nothing declared supported has failed",
+   "condition": 9,
+   "state": "UNDETERMINED",
+   "title": "A hardware failure affects the declared supported hardware set"
+  },
+  {
+   "basis": "zero Alpha reports exist; no finding exists to be unresolved",
+   "condition": 10,
+   "state": "UNDETERMINED",
+   "title": "Alpha testing finds an unresolved release blocker"
+  }
+ ],
+ "candidate": "e906a48793d7",
+ "completedQualification": [
+  {
+   "basis": "condition 6 is false: five digests recomputed from bytes (qualification/phase7/baseline/freeze.log)",
+   "gate": "Artifact identity",
+   "status": "PASS"
+  },
+  {
+   "basis": "Phase 7 closed certification, commit e65e3df0, 2 x 6072 tests zero failures on the reference target; closed gates stay closed",
+   "gate": "Internal engineering certification",
+   "status": "PASS"
+  }
+ ],
+ "currentState": "EVIDENCE_PENDING",
+ "derivedFrom": {
+  "artifactGraph": "qualification/phase10/artifacts/artifact-graph.json",
+  "decisionRecord": "qualification/phase9/decision/alpha-release-decision.json",
+  "findingsRegistries": [
+   "qualification/phase9/triage/findings.json",
+   "qualification/phase10/findings/registry.json"
+  ],
+  "intakeLedger": "qualification/phase9/intake/LEDGER.json (read-only)",
+  "note": "recomputable from these immutable inputs plus the append-only state history; tested by tests/release/test_phase10_operations.py"
+ },
+ "nextAction": "Commission the independent security review \u2014 the package has been ready since Phase 8 (qualification/phase8/security-review/PACKAGE.md) and conditions 1 and 2 stay true until its owner acts",
+ "openFindings": [],
+ "parentCandidate": null,
+ "requiredQualification": [
+  {
+   "gate": "Independent security review",
+   "owner": "external \u2014 see PHASE9_ALPHA_RELEASE_DECISION_MATRIX.md",
+   "status": "NOT_RUN"
+  },
+  {
+   "gate": "Physical hardware qualification",
+   "owner": "external \u2014 see PHASE9_ALPHA_RELEASE_DECISION_MATRIX.md",
+   "status": "NOT_RUN"
+  },
+  {
+   "gate": "Production signing",
+   "owner": "external \u2014 see PHASE9_ALPHA_RELEASE_DECISION_MATRIX.md",
+   "status": "NOT_RUN"
+  },
+  {
+   "gate": "Second approval",
+   "owner": "external \u2014 see PHASE9_ALPHA_RELEASE_DECISION_MATRIX.md",
+   "status": "NOT_RUN"
+  },
+  {
+   "gate": "Alpha tester validation",
+   "owner": "external \u2014 see PHASE9_ALPHA_RELEASE_DECISION_MATRIX.md",
+   "status": "NOT_RUN"
+  }
+ ],
+ "schemaVersion": 1,
+ "stateHistory": [
+  {
+   "basis": "recorded at Phase 10 genesis: the artifact has been frozen since the Phase 7 baseline; digests recomputed from bytes 2026-08-18 (qualification/phase7/baseline/freeze.log)",
+   "recordedOn": "2026-08-18",
+   "state": "FROZEN"
+  },
+  {
+   "basis": "Phase 9 opened the external-evidence intake boundary (82d90dcb); zero intakes, every external gate NOT_RUN",
+   "recordedOn": "2026-08-18",
+   "state": "EVIDENCE_PENDING"
+  }
+ ]
+}

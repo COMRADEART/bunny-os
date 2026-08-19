@@ -1,0 +1,13 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the artifact-mismatch dry run: a valid-looking review bound to bytes that are not the subject artifact. Must earn ARTIFACT_MISMATCH and transfer nothing.",
+ "record": {
+  "reviewer": "Constructed Fixture Reviewer",
+  "organisation": "TEST_FIXTURE_ONLY dry run",
+  "scope": "constructed fixture: a review of some other artifact",
+  "date": "2026-08-18",
+  "artifactDigest": "e501218fe501218fe501218fe501218fe501218fe501218fe501218fe501218f",
+  "disposition": "APPROVED",
+  "findings": []
+ }
+}
