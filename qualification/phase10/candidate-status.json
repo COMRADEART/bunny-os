@@ -87,7 +87,7 @@
   "intakeLedger": "qualification/phase9/intake/LEDGER.json (read-only)",
   "note": "recomputable from these immutable inputs plus the append-only state history; tested by tests/release/test_phase10_operations.py"
  },
- "nextAction": "Commission the independent security review \u2014 the package has been ready since Phase 8 (qualification/phase8/security-review/PACKAGE.md) and conditions 1 and 2 stay true until its owner acts",
+ "nextAction": "Commission the independent security review \u2014 the canonical commissioning package is qualification/phase11/security-review/REQUEST.md (Phase 11 operationalized the Phase 8 package) and conditions 1 and 2 stay true until its owner acts",
  "openFindings": [],
  "parentCandidate": null,
  "requiredQualification": [

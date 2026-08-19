@@ -657,9 +657,11 @@ def next_action(derived: dict) -> str:
                 % ", ".join(e["evidenceId"] for e in unprocessed))
     ladder = (
         ("Independent security review",
-         "Commission the independent security review — the package has been "
-         "ready since Phase 8 (qualification/phase8/security-review/PACKAGE.md) "
-         "and conditions 1 and 2 stay true until its owner acts"),
+         "Commission the independent security review — the canonical "
+         "commissioning package is "
+         "qualification/phase11/security-review/REQUEST.md (Phase 11 "
+         "operationalized the Phase 8 package) and conditions 1 and 2 stay "
+         "true until its owner acts"),
         ("Production signing",
          "Establish the key authority and sign the exact artifact bytes "
          "(qualification/phase8/signing/SIGNING_READINESS.md)"),

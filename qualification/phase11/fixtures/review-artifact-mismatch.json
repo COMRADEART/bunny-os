@@ -1,0 +1,29 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the artifact-mismatch dry run: the reviewer computed a digest that is not the subject artifact. Phase 9 registration must return ARTIFACT_MISMATCH and the contract must flag both digest fields.",
+ "record": {
+  "schema": "bunny-os/security-review-submission/1",
+  "reviewer_id": "REVIEWER-001",
+  "reviewer": "REVIEWER-001",
+  "organisation": "TEST_FIXTURE_ONLY dry run",
+  "independence": {
+   "declaration": "constructed fixture: this reviewer had no role in producing artifact e906a48793d7 and no interest in its approval",
+   "relationship_to_project": "none",
+   "is_release_decision_authority": false,
+   "policy_exception": null
+  },
+  "artifact_digest": "sha256:e501218fe501218fe501218fe501218fe501218fe501218fe501218fe501218f",
+  "artifactDigest": "sha256:e501218fe501218fe501218fe501218fe501218fe501218fe501218fe501218f",
+  "independently_computed_digest": "sha256:e501218fe501218fe501218fe501218fe501218fe501218fe501218fe501218f",
+  "digest_basis": "image",
+  "digest_computation": "constructed fixture: skopeo inspect --format {{.Digest}} oci-archive:bunny-alpha.tar",
+  "review_scope_version": "SCOPE-1",
+  "scope": "constructed fixture: independent review of artifact e906a48793d7 under REVIEW_SCOPE.md SCOPE-1",
+  "review_start": "2026-08-17",
+  "review_end": "2026-08-18",
+  "date": "2026-08-18",
+  "findings": [],
+  "overall_assessment": "APPROVED",
+  "disposition": "APPROVED"
+ }
+}

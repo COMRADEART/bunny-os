@@ -1,0 +1,15 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the closure refusals: CONFIRMED to CLOSED is not a declared transition, an accepted risk cannot close without its full record, and a fixed finding cannot close without requalification evidence bound to its successor.",
+ "finding": {
+  "internal_id": "SEC-BL-001",
+  "source_finding_id": "GHSA-5cgq-3rg8-m6cv",
+  "source_evidence_id": "INTAKE-901",
+  "artifact": "e906a48793d7",
+  "severity": "Critical",
+  "status": "CONFIRMED",
+  "disposition": "FIX_BEFORE_ALPHA",
+  "remediation_artifact": null,
+  "closure_evidence": null
+ }
+}
