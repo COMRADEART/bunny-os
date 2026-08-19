@@ -104,6 +104,11 @@ _PHASES_AFTER_THE_RECORD = (
     # the successor refused these files as additions until this declaration,
     # which is the refusal a new tree is supposed to earn.
     "qualification/phase9/",
+    # Phase 10's: candidate operations — the artifact graph, the evidence
+    # applicability engine, the impact mapping and requalification planner,
+    # the candidate and finding state machines, and the derived candidate
+    # status. Same refusal earned, same deliberate declaration.
+    "qualification/phase10/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is

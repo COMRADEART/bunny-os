@@ -65,6 +65,15 @@ PHASES_AFTER_THE_RECORD = (
     # it, because evidence is still arriving. Declared after both guards
     # refused the tree's files as additions, exactly as designed.
     "qualification/phase9/",
+    # Phase 10's tree: candidate operations. The artifact graph and
+    # candidate status are live operational records — the graph gains a row
+    # when a real successor artifact exists, the status re-derives as
+    # evidence arrives — so the tree cannot be pinned while the candidate
+    # is being operated. Its own reproducibility guard is
+    # tests/release/test_phase10_operations.py: the committed status must
+    # recompute from immutable inputs. Declared after both guards refused
+    # the tree's files, exactly as designed.
+    "qualification/phase10/",
 )
 
 MAINTAINED_TOOLING = frozenset({
