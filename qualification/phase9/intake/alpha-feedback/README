@@ -1,0 +1,1 @@
+Alpha tester reports land here as INTAKE-NNN/ directories, registered only through qualification/phase9/tools/intake.py. Report shape: qualification/phase8/alpha/REPORT_TEMPLATE.json; tester IDs are T-NNN with no PII. A report whose tester cannot establish the digest is preserved as USER_EVIDENCE_UNBOUND, never discarded. Empty = zero testers = the gate is NOT_RUN.

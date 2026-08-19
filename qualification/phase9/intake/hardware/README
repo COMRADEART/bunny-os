@@ -1,0 +1,1 @@
+Physical hardware run submissions land here as INTAKE-NNN/ directories, registered only through qualification/phase9/tools/intake.py. Protocol for the operator: qualification/phase8/hardware/PROTOCOL.md. Empty = zero machines = the gate is NOT_RUN.

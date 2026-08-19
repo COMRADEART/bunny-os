@@ -1,0 +1,33 @@
+{
+ "appendMechanism": "qualification/phase9/tools/intake.py",
+ "entries": [],
+ "note": "Zero intakes. Every entry is appended by the mechanism above and sealed; stored entries are immutable and SUPERSEDED is derived from a later revision's existence, never written back. An empty entries list means no external evidence has arrived - it is NOT_RUN for every external gate, and it authorizes nothing.",
+ "schemaVersion": 1,
+ "sealAlgorithm": "sha256 over canonical JSON (sorted keys, compact separators) of the entry without its seal field",
+ "sources": [
+  "security-review",
+  "hardware",
+  "signing",
+  "second-approval",
+  "alpha-feedback"
+ ],
+ "statusVocabulary": [
+  "ACCEPTED",
+  "REJECTED",
+  "INCOMPLETE",
+  "ARTIFACT_MISMATCH",
+  "UNVERIFIABLE",
+  "SUPERSEDED"
+ ],
+ "subjectArtifact": {
+  "frozen": true,
+  "identifier": "e906a48793d7",
+  "imageDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "isoSha256": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "ociTarSha256": "205a77f1b6cdf33915bce3afceb0914d6af25f97b434cf2128aec04d199b43dd",
+  "qcow2Sha256": "497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867",
+  "rawSha256": "a6ee06dcbc0ed3aa22c9ea07c339882eb97c7f16ce906b654c9a1e1119849d46",
+  "signingStatus": "UNSIGNED",
+  "sourceCommit": "e906a48793d74544b39c14cc3e35e0654f5311e2"
+ }
+}

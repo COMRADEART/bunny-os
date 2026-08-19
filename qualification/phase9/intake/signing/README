@@ -1,0 +1,1 @@
+Production signing records land here as INTAKE-NNN/ directories, registered only through qualification/phase9/tools/intake.py. Procedure for the key authority: qualification/phase8/signing/SIGNING_READINESS.md. Private key material is never ingested; register refuses the bytes and records the refusal. Empty = the artifact remains UNSIGNED = the gate is NOT_RUN.
