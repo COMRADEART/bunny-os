@@ -792,8 +792,14 @@ def derive_security_gate(submissions: list[dict], rows: list[dict],
         return {"status": "UNDER_ANALYSIS",
                 "basis": "the accepted independent review requires more "
                          "evidence"}
+    # A NEW_FINDING row carries no internal_id (the register never mints
+    # triage identifiers), so a new Critical is named by the reviewer's
+    # own finding identifier here. Found by Phase 15's new-Critical
+    # scenario: sorting bare internal_ids raised TypeError on None, so a
+    # new Critical crashed the derivation instead of holding the gate.
     open_criticals = sorted(
-        r["internal_id"] for r in rows
+        r.get("internal_id") or r.get("source_finding_id") or "<unnamed>"
+        for r in rows
         if str(r.get("severity", "")).lower() == "critical"
         and r.get("status") not in ("NOT_APPLICABLE", "CLOSED")
         and r.get("disposition") not in CRITICAL_DISPOSITIONS)
