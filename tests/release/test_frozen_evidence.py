@@ -125,6 +125,13 @@ PHASES_AFTER_THE_RECORD = (
     # tests/release/test_phase15_evidence_activation.py. Declared after
     # both guards refused the tree's files, exactly as designed.
     "qualification/phase15/",
+    # Phase 16's tree: the external-security-review receipt and gate
+    # execution layer — reviewer handoff, identity ceremony, one-door intake
+    # composition, reconciliation, evidence-cut execution, derived status,
+    # executable matrices, and their verifier. The tree remains live as real
+    # evidence arrives, so it cannot be pinned by the Phase 7 cut. Both guards
+    # refused all twenty committed files before this deliberate declaration.
+    "qualification/phase16/",
 )
 
 MAINTAINED_TOOLING = frozenset({

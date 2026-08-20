@@ -141,6 +141,12 @@ _PHASES_AFTER_THE_RECORD = (
     # from the live phase 9-14 inputs as evidence arrives, so the tree
     # cannot be pinned. Same refusal earned, same deliberate declaration.
     "qualification/phase15/",
+    # Phase 16's external-security-review receipt and gate-execution tree:
+    # reviewer handoff, identity ceremony, the composed one-door operator,
+    # derived matrices/status, and verification. Real evidence can advance its
+    # live views, so this elder cut cannot pin it. Both standing guards refused
+    # all twenty committed files before this deliberate declaration.
+    "qualification/phase16/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is
