@@ -351,7 +351,7 @@ REVOCATION_ID = re.compile(r"^REVOCATION-\d{3}$")
 RESOLUTION_ID = re.compile(r"^RESOLUTION-\d{3}$")
 RECLASSIFICATION_ID = re.compile(r"^RECLASSIFY-\d{3}$")
 SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
-ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}")
+ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 class BoundaryViolation(ValueError):
@@ -430,7 +430,16 @@ def _missing(record: dict, fields: tuple[str, ...],
 
 def _date(value) -> datetime.date:
     """Parse an ISO date from a record; never a clock read."""
-    return datetime.date.fromisoformat(str(value)[:10])
+    text = str(value)
+    if not ISO_DATE.fullmatch(text):
+        raise BoundaryViolation(
+            "%r is not an exact ISO 8601 calendar date" % text)
+    try:
+        return datetime.date.fromisoformat(text)
+    except ValueError as error:
+        raise BoundaryViolation(
+            "%r is not a valid ISO 8601 calendar date: %s" %
+            (text, error)) from error
 
 
 # ---------------------------------------------------------------- seals
@@ -474,8 +483,12 @@ def validate_assignment(record: dict) -> list[str]:
         issues.append("authorityId %r is not a defined authority"
                       % record["authorityId"])
     date = record.get("date")
-    if date and not ISO_DATE.match(str(date)):
-        issues.append("date must be ISO 8601")
+    if date:
+        try:
+            _date(date)
+        except BoundaryViolation:
+            issues.append("date must be an exact, valid ISO 8601 calendar "
+                          "date")
     return issues
 
 
@@ -1158,8 +1171,12 @@ def validate_risk_acceptance(record: dict, assignments: list[dict],
                 "underlying finding" % key)
     for date_field in ("accepted_at", "expires_at"):
         value = record.get(date_field)
-        if value and not ISO_DATE.match(str(value)):
-            issues.append("%s must be ISO 8601" % date_field)
+        if value:
+            try:
+                _date(value)
+            except BoundaryViolation:
+                issues.append("%s must be an exact, valid ISO 8601 "
+                              "calendar date" % date_field)
     if record.get("accepted_at") and record.get("expires_at") \
             and not issues:
         if _date(record["expires_at"]) <= _date(record["accepted_at"]):
@@ -1287,14 +1304,20 @@ def validate_authorization(record: dict, *, ledger: dict,
         issues.append("revocation_status is derived from the revocation "
                       "registry, never stored on the record; a stored flag "
                       "is an editable flag, and revocation is not editable")
+    invalid_dates = False
     for field in ("issued_at", "expires_at", "decision_timestamp"):
         value = record.get(field)
-        if value and not ISO_DATE.match(str(value)):
-            issues.append("%s must be ISO 8601" % field)
+        if value:
+            try:
+                _date(value)
+            except BoundaryViolation:
+                invalid_dates = True
+                issues.append("%s must be an exact, valid ISO 8601 "
+                              "calendar date" % field)
     if not record.get("expires_at"):
         issues.append("no infinite authorization by omission: a record "
                       "without expires_at is invalid")
-    elif record.get("issued_at") \
+    elif record.get("issued_at") and not invalid_dates \
             and _date(record["expires_at"]) <= _date(record["issued_at"]):
         issues.append("expires_at must be after issued_at")
 
@@ -1954,8 +1977,12 @@ def sync_status(write: bool = True,
     previous = load_json(STATUS_PATH) if STATUS_PATH.is_file() else None
     if as_of is None and previous:
         as_of = previous.get("evaluationDate")
-    if as_of is not None and not ISO_DATE.match(str(as_of)):
-        return {}, ["--as-of must be ISO 8601"]
+    if as_of is not None:
+        try:
+            _date(as_of)
+        except BoundaryViolation:
+            return {}, ["--as-of must be an exact, valid ISO 8601 "
+                        "calendar date"]
     derived = derive_status(
         json.loads(ledger_bytes.decode("utf-8")), _sha256(ledger_bytes),
         load_json(PHASE10_GRAPH), load_json(PHASE9_DECISION),

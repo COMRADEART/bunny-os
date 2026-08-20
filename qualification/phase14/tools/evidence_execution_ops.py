@@ -147,7 +147,7 @@ REHEARSAL_DATE = "2026-08-19"
 CUT_A_DATE = "2026-08-19"
 CUT_B_DATE = "2026-12-01"
 
-ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}")
+ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
 EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]{2,}")
 
@@ -229,7 +229,16 @@ def _normalize_digest(value: str) -> str:
 
 def _date(value):
     import datetime
-    return datetime.date.fromisoformat(str(value)[:10])
+    text = str(value)
+    if not ISO_DATE.fullmatch(text):
+        raise BoundaryViolation(
+            "%r is not an exact ISO 8601 calendar date" % text)
+    try:
+        return datetime.date.fromisoformat(text)
+    except ValueError as error:
+        raise BoundaryViolation(
+            "%r is not a valid ISO 8601 calendar date: %s" %
+            (text, error)) from error
 
 
 def seal_record(record: dict) -> str:
@@ -572,8 +581,12 @@ def validate_assignment_revocation(record: dict,
         issues.append("target assignment %r does not exist; a revocation "
                       "of nothing revokes nothing" % target)
     timestamp = record.get("timestamp")
-    if timestamp and not ISO_DATE.match(str(timestamp)):
-        issues.append("timestamp must be ISO 8601")
+    if timestamp:
+        try:
+            _date(timestamp)
+        except BoundaryViolation:
+            issues.append("timestamp must be an exact, valid ISO 8601 "
+                          "calendar date")
     return issues
 
 
@@ -652,8 +665,13 @@ def build_evidence_cut(*, ledger_bytes: bytes, graph_bytes: bytes,
             "--as-of is mandatory once an expiring record exists (%s); a "
             "cut without an evaluation date cannot answer what stood at "
             "the cut" % ", ".join(expiring))
-    if as_of is not None and not ISO_DATE.match(str(as_of)):
-        raise BoundaryViolation("as-of must be an ISO 8601 date")
+    if as_of is not None:
+        try:
+            _date(as_of)
+        except BoundaryViolation as error:
+            raise BoundaryViolation(
+                "as-of must be an exact, valid ISO 8601 calendar date: %s"
+                % error) from error
 
     intake = _phase9()
     effective = intake.effective_statuses(ledger)
@@ -929,7 +947,9 @@ def approval_ordering_problems(signing_record: dict,
     derives REQUIRES_HUMAN_DECISION, never a favorable reading."""
     problems = []
     signed_on = signing_record.get("signingTimestamp")
-    if not signed_on or not ISO_DATE.match(str(signed_on)):
+    try:
+        signed_date = _date(signed_on)
+    except (BoundaryViolation, TypeError):
         problems.append("REQUIRES_HUMAN_DECISION: the signing evidence "
                         "carries no parseable timestamp; ordering cannot "
                         "be determined, and undeterminable time fails "
@@ -938,12 +958,14 @@ def approval_ordering_problems(signing_record: dict,
     for who in ("firstApprover", "secondApprover"):
         approver = approval_record.get(who) or {}
         approved_on = approver.get("date")
-        if not approved_on or not ISO_DATE.match(str(approved_on)):
+        try:
+            approved_date = _date(approved_on)
+        except (BoundaryViolation, TypeError):
             problems.append(
                 "REQUIRES_HUMAN_DECISION: %s carries no parseable date; "
                 "ordering cannot be determined" % who)
             continue
-        if _date(approved_on) < _date(signed_on):
+        if approved_date < signed_date:
             problems.append(
                 "REQUIRES_HUMAN_DECISION: %s approved on %s, before the "
                 "signing evidence dated %s existed; an approval cannot "
@@ -994,18 +1016,20 @@ def time_consistency_problems(*, record_dates: dict[str, str],
     problems = []
     parsed = {}
     for name, value in sorted(record_dates.items()):
-        if value is None or not ISO_DATE.match(str(value)):
+        try:
+            parsed[name] = _date(value)
+        except (BoundaryViolation, TypeError):
             problems.append(
                 "%s is not a parseable ISO 8601 date; time semantics "
                 "cannot be determined, and undeterminable time fails "
                 "closed" % name)
             continue
-        parsed[name] = _date(value)
     if received_on is not None:
-        if not ISO_DATE.match(str(received_on)):
+        try:
+            received = _date(received_on)
+        except (BoundaryViolation, TypeError):
             problems.append("the intake receipt date is unparseable")
         else:
-            received = _date(received_on)
             for name, value in sorted(parsed.items()):
                 if value > received:
                     problems.append(
@@ -1013,14 +1037,21 @@ def time_consistency_problems(*, record_dates: dict[str, str],
                         "intake receipt (%s); evidence claiming to be "
                         "observed after it arrived conflicts with intake "
                         "ordering" % (name, value.isoformat(), received_on))
-            if revises_received_on is not None \
-                    and ISO_DATE.match(str(revises_received_on)) \
-                    and received < _date(revises_received_on):
-                problems.append(
-                    "REQUIRES_HUMAN_DECISION: the revision was received "
-                    "%s, before the record it revises (%s); a correction "
-                    "cannot precede what it corrects" % (
-                        received_on, revises_received_on))
+            if revises_received_on is not None:
+                try:
+                    original_received = _date(revises_received_on)
+                except (BoundaryViolation, TypeError):
+                    problems.append(
+                        "the revised intake's original receipt date is "
+                        "unparseable; revision ordering fails closed")
+                else:
+                    if received < original_received:
+                        problems.append(
+                            "REQUIRES_HUMAN_DECISION: the revision was "
+                            "received %s, before the record it revises "
+                            "(%s); a correction cannot precede what it "
+                            "corrects" % (received_on,
+                                          revises_received_on))
     if len(set(parsed.values())) > 1:
         problems.append(
             "REQUIRES_HUMAN_DECISION: the record states %s for the same "

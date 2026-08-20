@@ -7,10 +7,11 @@ Run this before submitting::
 
     python3 VERIFY_SUBMISSION.py record.json
 
-Exit 0 means the record satisfies ``SUBMISSION_SCHEMA.json`` plus the four
+Exit 0 means the record satisfies ``SUBMISSION_SCHEMA.json`` plus the
 cross-field rules the schema documents but cannot express (alias equality,
-digest membership in ``ARTIFACT_IDENTITY.json``, review_start not after
-review_end, and the release-authority overlap needing a recorded policy).
+digest membership in ``ARTIFACT_IDENTITY.json``, exact calendar dates and
+review ordering, finding-ID uniqueness, attachment-digest shape, and the
+release-authority overlap needing a recorded policy).
 Exit 2 lists every problem found. The checks are read from the schema file
 itself — required lists, enums, patterns, ``x-aliases`` — so this validator
 and the schema cannot drift apart.
@@ -34,6 +35,7 @@ with "now".
 
 from __future__ import annotations
 
+import datetime
 import json
 import re
 import sys
@@ -151,9 +153,25 @@ def cross_field_problems(record: dict, schema: dict, identity: dict) -> list[str
                 "you are holding different bytes; stop and report that "
                 "(blocking condition 6)" % (field, normalize_digest(value)))
 
-    start, end = record.get("review_start"), record.get("review_end")
-    if isinstance(start, str) and isinstance(end, str) and start > end:
-        problems.append("review_start %s postdates review_end %s" % (start, end))
+    parsed_dates: dict[str, datetime.date] = {}
+    for field in ("review_start", "review_end", "date"):
+        value = record.get(field)
+        if not isinstance(value, str):
+            continue
+        try:
+            # These contract fields are dates, not timestamps. Exact parsing
+            # rejects impossible calendar dates and suffixes that merely begin
+            # like a date; neither is a usable evidence boundary.
+            parsed_dates[field] = datetime.date.fromisoformat(value)
+        except ValueError:
+            problems.append(
+                "%s: %r is not an exact ISO 8601 calendar date" %
+                (field, value))
+    start, end = (parsed_dates.get("review_start"),
+                  parsed_dates.get("review_end"))
+    if start is not None and end is not None and start > end:
+        problems.append("review_start %s postdates review_end %s" %
+                        (start.isoformat(), end.isoformat()))
 
     independence = record.get("independence")
     if isinstance(independence, dict) \

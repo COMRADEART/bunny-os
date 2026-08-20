@@ -1,0 +1,46 @@
+{
+ "pins": {
+  "qualification/phase11/security-review/ARTIFACT_IDENTITY.json": {
+   "bytes": 1998,
+   "sha256": "da10af33e5f13531d454a5cb169b03e6e70284dacaefbb72a98f3d0980399967"
+  },
+  "qualification/phase11/security-review/FINDINGS_BASELINE.json": {
+   "bytes": 15665,
+   "sha256": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25"
+  },
+  "qualification/phase11/security-review/REQUEST.md": {
+   "bytes": 4680,
+   "sha256": "d09383717b1775a92a9472edcd9af307eec2c15247e8b1e5239546413ac74796"
+  },
+  "qualification/phase11/security-review/REVIEWER_INSTRUCTIONS.md": {
+   "bytes": 4490,
+   "sha256": "c6872b7b0311fddc4f8d4bfd71552f5f6219a2e70e9aa2da14a937bc78ba35a1"
+  },
+  "qualification/phase11/security-review/REVIEW_SCOPE.md": {
+   "bytes": 3059,
+   "sha256": "4151a1012e87c440b6ef14d3d052d251d506d1e0d79eb1f88d1fe46b5b2c247b"
+  },
+  "qualification/phase11/security-review/SUBMISSION_SCHEMA.json": {
+   "bytes": 8269,
+   "sha256": "7dce841595eb927a4f56ae4634b70627a191661e4c9f837b60c31a1f3eae4d2d"
+  },
+  "qualification/phase11/security-review/VERIFY_SUBMISSION.py": {
+   "bytes": 10118,
+   "sha256": "0d720891babadec112fffa96ebf0ddf1b6ee79a8801100b95e812e3157afb6ef"
+  },
+  "qualification/phase15/security-review-execution/REVIEW_HANDOFF.md": {
+   "bytes": 8418,
+   "sha256": "97e0375d3a9ead8cc459bdf05c4b66e4682c283d35fcae0b4afc820df928e4bb"
+  },
+  "qualification/phase15/security-review-execution/fixtures/review-approved-with-conditions.json": {
+   "bytes": 2866,
+   "sha256": "0e0a743b8e95a86d878aaca7b0d98822023e5515742a2100b2af02ebbec3ac10"
+  },
+  "qualification/phase15/security-review-execution/fixtures/review-blocked.json": {
+   "bytes": 2224,
+   "sha256": "e4f78f186ed0bb4ec6d5a0e82c64f562c0b989da5e365375cb83db1dfd230bfb"
+  }
+ },
+ "purpose": "the contract inputs the Phase 16 layer operates over, pinned by sha256; verify refuses drift, and a pin update is a deliberate act recorded in this file's diff",
+ "schemaVersion": 1
+}

@@ -1,0 +1,398 @@
+{
+ "counts": {
+  "asExpected": 25,
+  "realUniverseReadOnly": 1,
+  "scenarios": 25
+ },
+ "executedAgainst": {
+  "authorizationState": "EVIDENCE_PENDING",
+  "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+  "candidateDecision": "REQUIRES_MORE_EVIDENCE",
+  "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+  "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+  "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+ },
+ "note": "the real-universe zero-evidence row (fixtureOnly false) stays distinguishable from every hypothetical fixture run",
+ "purpose": "the Phase 16 failure-and-recovery matrix, derived from the same execution as MATRIX.json \u2014 never maintained by hand",
+ "realEvidence": "EXTERNAL_EVIDENCE_REQUIRED \u2014 nothing in this matrix is evidence about the subject artifact",
+ "realLedgerByteIdentical": true,
+ "rows": [
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "0 real ledger entries; boundary AWAITING_SUBMISSION; gate AWAITING_EXTERNAL_EVIDENCE; EVIDENCE_PENDING/REQUIRES_MORE_EVIDENCE; current inputs reproduce CUT-001; real inputs self-consistent",
+   "fixtureOnly": false,
+   "observedResult": "0 real ledger entries; boundary AWAITING_SUBMISSION; gate AWAITING_EXTERNAL_EVIDENCE; EVIDENCE_PENDING/REQUIRES_MORE_EVIDENCE; current inputs reproduce CUT-001; real inputs self-consistent",
+   "recoveryPath": "deliver the handoff package to a real reviewer while the state is empty; after evidence exists, follow the derived gate and revision path without rewriting the historical observation",
+   "result": "AS_EXPECTED",
+   "scenario": "No submission (real universe)",
+   "scenarioId": "PH16-S01"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "inspect MALFORMED; intake UNVERIFIABLE; receipt UNVERIFIABLE; bytes preserved",
+   "fixtureOnly": true,
+   "observedResult": "inspect MALFORMED; intake UNVERIFIABLE; receipt UNVERIFIABLE; bytes preserved",
+   "recoveryPath": "resubmit a machine-readable record as a revision; the original bytes stay preserved verbatim",
+   "result": "AS_EXPECTED",
+   "scenario": "Malformed submission",
+   "scenarioId": "PH16-S02"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "inspect INCOMPLETE; intake ACCEPTED; ceremony MISSING; advancement False; contract-invalid",
+   "fixtureOnly": true,
+   "observedResult": "inspect INCOMPLETE; intake ACCEPTED; ceremony MISSING; advancement False; contract-invalid",
+   "recoveryPath": "revise with the independently computed digest and the stated measurement; the original is preserved",
+   "result": "AS_EXPECTED",
+   "scenario": "Missing artifact observation",
+   "scenarioId": "PH16-S03"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "OBSERVED_UNVERIFIED; advancement False; never VERIFIED",
+   "fixtureOnly": true,
+   "observedResult": "OBSERVED_UNVERIFIED; advancement False; never VERIFIED",
+   "recoveryPath": "the reviewer states the measurement (digest_basis + digest_computation) over bytes they actually computed; the repository never substitutes its expectation",
+   "result": "AS_EXPECTED",
+   "scenario": "Expected digest substituted for observation",
+   "scenarioId": "PH16-S04"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "ceremony MISMATCH; advancement False; contract-invalid",
+   "fixtureOnly": true,
+   "observedResult": "ceremony MISMATCH; advancement False; contract-invalid",
+   "recoveryPath": "the reviewer verifies what bytes they measured; a mismatch is evidence about the measurement, never absorbed",
+   "result": "AS_EXPECTED",
+   "scenario": "Wrong observed digest",
+   "scenarioId": "PH16-S05"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "inspect WRONG_ARTIFACT; intake ARTIFACT_MISMATCH; receipt DOES_NOT_APPLY; binding ARTIFACT_MISMATCH",
+   "fixtureOnly": true,
+   "observedResult": "inspect WRONG_ARTIFACT; intake ARTIFACT_MISMATCH; receipt DOES_NOT_APPLY; binding ARTIFACT_MISMATCH",
+   "recoveryPath": "resubmit against the subject artifact, or establish an explicit recorded artifact relationship; no transfer happens by default",
+   "result": "AS_EXPECTED",
+   "scenario": "Foreign artifact",
+   "scenarioId": "PH16-S06"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "inspect AMBIGUOUS_IDENTITY; contract-invalid; binding REFUSED",
+   "fixtureOnly": true,
+   "observedResult": "inspect AMBIGUOUS_IDENTITY; contract-invalid; binding REFUSED",
+   "recoveryPath": "the reviewer resubmits with one coherent artifact identity; ambiguity is never resolved by choosing the convenient digest",
+   "result": "AS_EXPECTED",
+   "scenario": "Ambiguous identity",
+   "scenarioId": "PH16-S07"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "inspect CREDENTIAL_BEARING; intake REJECTED before ingestion; nothing copied; value withheld",
+   "fixtureOnly": true,
+   "observedResult": "inspect CREDENTIAL_BEARING; intake REJECTED before ingestion; nothing copied; value withheld",
+   "recoveryPath": "resubmit with the private material removed; treat any real exposed key as compromised and record that event",
+   "result": "AS_EXPECTED",
+   "scenario": "Private key attachment",
+   "scenarioId": "PH16-S08"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "inspect CREDENTIAL_BEARING; intake REJECTED before ingestion; nothing copied",
+   "fixtureOnly": true,
+   "observedResult": "inspect CREDENTIAL_BEARING; intake REJECTED before ingestion; nothing copied",
+   "recoveryPath": "resubmit with the credential masked; nesting depth is irrelevant to a byte-level scan",
+   "result": "AS_EXPECTED",
+   "scenario": "Nested credential",
+   "scenarioId": "PH16-S09"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "inspect CREDENTIAL_BEARING; intake REJECTED before ingestion; nothing copied",
+   "fixtureOnly": true,
+   "observedResult": "inspect CREDENTIAL_BEARING; intake REJECTED before ingestion; nothing copied",
+   "recoveryPath": "resubmit with the attachment sanitized; the refusal names the class and file, never the value",
+   "result": "AS_EXPECTED",
+   "scenario": "Attachment credential",
+   "scenarioId": "PH16-S10"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "inspect INCOMPLETE; intake ACCEPTED; contract-invalid; gate UNDER_ANALYSIS; contributes nothing",
+   "fixtureOnly": true,
+   "observedResult": "inspect INCOMPLETE; intake ACCEPTED; contract-invalid; gate UNDER_ANALYSIS; contributes nothing",
+   "recoveryPath": "revise with the finding completed; an incomplete finding moves no baseline row",
+   "result": "AS_EXPECTED",
+   "scenario": "Incomplete finding",
+   "scenarioId": "PH16-S11"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "1 new finding(s); gate UNDER_ANALYSIS; not SATISFIED; named by the reviewer's identifier",
+   "fixtureOnly": true,
+   "observedResult": "1 new finding(s); gate UNDER_ANALYSIS; not SATISFIED; named by the reviewer's identifier",
+   "recoveryPath": "the new Critical enters triage for its own identifier and blocks until dispositioned through the Phase 11 lifecycle",
+   "result": "AS_EXPECTED",
+   "scenario": "New Critical finding",
+   "scenarioId": "PH16-S12"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "CONTRADICTORY_CONCLUSIONS; effective BLOCKED; gate BLOCKED; boundary ACCEPTED; workflow CONFLICT_REQUIRES_DECISION; assembly non-authorized",
+   "fixtureOnly": true,
+   "observedResult": "CONTRADICTORY_CONCLUSIONS; effective BLOCKED; gate BLOCKED; boundary ACCEPTED; workflow CONFLICT_REQUIRES_DECISION; assembly non-authorized",
+   "recoveryPath": "both submissions are preserved; resolution is a recorded human decision in Phase 11's outcome vocabulary, and the effective assessment stays the most blocking until then",
+   "result": "AS_EXPECTED",
+   "scenario": "Contradictory reviewers",
+   "scenarioId": "PH16-S13"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "post-cut intake named; historical cut byte-identical",
+   "fixtureOnly": true,
+   "observedResult": "post-cut intake named; historical cut byte-identical",
+   "recoveryPath": "a later decision over a later cut may supersede; the sealed cut is never edited and absorbs nothing",
+   "result": "AS_EXPECTED",
+   "scenario": "Evidence after an earlier cut",
+   "scenarioId": "PH16-S14"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "INTAKE-001-R1; original byte-identical; original SUPERSEDED; revision ACCEPTED",
+   "fixtureOnly": true,
+   "observedResult": "INTAKE-001-R1; original byte-identical; original SUPERSEDED; revision ACCEPTED",
+   "recoveryPath": "the derived views follow the latest applicable revision; the ledger preserves every original",
+   "result": "AS_EXPECTED",
+   "scenario": "Revised submission",
+   "scenarioId": "PH16-S15"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "seal broken; append refused",
+   "fixtureOnly": true,
+   "observedResult": "seal broken; append refused",
+   "recoveryPath": "restore the ledger from the committed history; the commit is the tamper-evident time",
+   "result": "AS_EXPECTED",
+   "scenario": "Tampered ledger entry",
+   "scenarioId": "PH16-S16"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "entry seals hold (reseal is self-consistent); cut pin names the change",
+   "fixtureOnly": true,
+   "observedResult": "entry seals hold (reseal is self-consistent); cut pin names the change",
+   "recoveryPath": "the committed ledger bytes and every sealed cut pin the pre-tamper state; restore from history and record the event",
+   "result": "AS_EXPECTED",
+   "scenario": "Resealed ledger entry",
+   "scenarioId": "PH16-S17"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "tampered cut fails its seal; intact cut verifies",
+   "fixtureOnly": true,
+   "observedResult": "tampered cut fails its seal; intact cut verifies",
+   "recoveryPath": "a change to a sealed cut is a new cut, never an edit; the tampered record is preserved as evidence of the event",
+   "result": "AS_EXPECTED",
+   "scenario": "Tampered evidence cut",
+   "scenarioId": "PH16-S18"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "STANDING at expiry; EXPIRED after; no as-of refuses; ladder REQUIRES_MORE_EVIDENCE naming the expiry",
+   "fixtureOnly": true,
+   "observedResult": "STANDING at expiry; EXPIRED after; no as-of refuses; ladder REQUIRES_MORE_EVIDENCE naming the expiry",
+   "recoveryPath": "the accepting authority re-decides or the finding is fixed; expiry is derived and nobody flips it by hand",
+   "result": "AS_EXPECTED",
+   "scenario": "Expired risk acceptance",
+   "scenarioId": "PH16-S19"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "REVOKED at the cut; 0 standing; acceptance ineffective; STANDING before revocation",
+   "fixtureOnly": true,
+   "observedResult": "REVOKED at the cut; 0 standing; acceptance ineffective; STANDING before revocation",
+   "recoveryPath": "a new assignment through the Phase 13 registry; revocation is a record, never an edit",
+   "result": "AS_EXPECTED",
+   "scenario": "Revoked authority",
+   "scenarioId": "PH16-S20"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "refused; row REFUSED; absent floor named; state EVIDENCE_PENDING",
+   "fixtureOnly": true,
+   "observedResult": "refused; row REFUSED; absent floor named; state EVIDENCE_PENDING",
+   "recoveryPath": "authorization exists only as a validated external authority decision over a satisfied floor; there is no internal path to it",
+   "result": "AS_EXPECTED",
+   "scenario": "Internal AUTHORIZED JSON",
+   "scenarioId": "PH16-S21"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "REJECTED: a fixture is never evidence; floor still missing 5",
+   "fixtureOnly": true,
+   "observedResult": "REJECTED: a fixture is never evidence; floor still missing 5",
+   "recoveryPath": "real evidence carries no fixture marker; there is no fixture bypass and no way to promote one",
+   "result": "AS_EXPECTED",
+   "scenario": "Favorable fixture to real intake",
+   "scenarioId": "PH16-S22"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "router refuses; inspect UNSUPPORTED_EVIDENCE_SHAPE; intake INCOMPLETE; favorable prose moved nothing",
+   "fixtureOnly": true,
+   "observedResult": "router refuses; inspect UNSUPPORTED_EVIDENCE_SHAPE; intake INCOMPLETE; favorable prose moved nothing",
+   "recoveryPath": "the reviewer resubmits in the committed contract shape; unknown shapes never become generic evidence",
+   "result": "AS_EXPECTED",
+   "scenario": "Unsupported novel evidence shape",
+   "scenarioId": "PH16-S23"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "earlier AUTHORIZED; later REVOKED; replay AUTHORIZED",
+   "fixtureOnly": true,
+   "observedResult": "earlier AUTHORIZED; later REVOKED; replay AUTHORIZED",
+   "recoveryPath": "a historical state is reconstructed by re-assembling that cut's inputs; the mutable current state is never the shortcut",
+   "result": "AS_EXPECTED",
+   "scenario": "Historical cut reconstruction",
+   "scenarioId": "PH16-S24"
+  },
+  {
+   "executedAgainst": {
+    "baseline": "917420b92ff87a1b2d8abbc3263419d74314b93814d2bc0516045333276f4b25",
+    "graph": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+    "ledger": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+    "securityRegister": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+   },
+   "expectedResult": "gate SATISFIED by inherited policy; assembly ALPHA_EVIDENCE_PENDING; floor missing alpha-feedback, hardware, second-approval, signing",
+   "fixtureOnly": true,
+   "observedResult": "gate SATISFIED by inherited policy; assembly ALPHA_EVIDENCE_PENDING; floor missing alpha-feedback, hardware, second-approval, signing",
+   "recoveryPath": "a satisfied security gate is one gate; the Phase 13 floor still names every absent source, and only their owners can act",
+   "result": "AS_EXPECTED",
+   "scenario": "Gate satisfied, floor still refuses",
+   "scenarioId": "PH16-S25"
+  }
+ ],
+ "schemaVersion": 1,
+ "subjectArtifact": "e906a48793d7"
+}

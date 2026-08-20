@@ -804,9 +804,12 @@ def derive_security_gate(submissions: list[dict], rows: list[dict],
         and r.get("status") not in ("NOT_APPLICABLE", "CLOSED")
         and r.get("disposition") not in CRITICAL_DISPOSITIONS)
     unresolved = sorted(
-        r["internal_id"] for r in rows
+        r.get("internal_id") or r.get("source_finding_id") or "<unnamed>"
+        for r in rows
         if r.get("reconciliation") in ("REQUIRES_FURTHER_ANALYSIS",
-                                       "EVIDENCE_CONFLICT"))
+                                       "EVIDENCE_CONFLICT")
+        or (r.get("reconciliation") == "NEW_FINDING"
+            and r.get("status") == "UNDER_REVIEW"))
     if open_criticals or unresolved:
         return {
             "status": "UNDER_ANALYSIS",

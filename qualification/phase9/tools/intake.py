@@ -31,6 +31,7 @@ manufactured by automation.
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import json
 import re
@@ -83,6 +84,7 @@ ALPHA_JOURNEYS = ("A", "B", "C", "D", "E", "exploratory")
 
 INTAKE_ID = re.compile(r"^INTAKE-(\d{3})(?:-R([1-9]\d*))?$")
 ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}")
+ISO_DATE_EXACT = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 HW_ID = re.compile(r"^HW-\d{3}$")
 TESTER_ID = re.compile(r"^T-\d{3}$")
 SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
@@ -412,8 +414,15 @@ def register(ledger_path: Path, source: str, record_path: Path,
     """Ingest one submission; append one sealed entry; return it."""
     if source not in SOURCES:
         raise SystemExit("refusing: unknown source %r" % source)
-    if not ISO_DATE.match(received_on):
-        raise SystemExit("refusing: --received-on must be ISO 8601")
+    try:
+        received_date = datetime.date.fromisoformat(str(received_on))
+    except (TypeError, ValueError):
+        received_date = None
+    if not ISO_DATE_EXACT.fullmatch(str(received_on)) \
+            or received_date is None:
+        raise SystemExit(
+            "refusing: --received-on must be an exact, valid ISO 8601 "
+            "calendar date")
     ledger = load_ledger(ledger_path)
     broken = [e["intakeId"] for e in ledger["entries"] if seal_entry(e) != e["seal"]]
     if broken:
