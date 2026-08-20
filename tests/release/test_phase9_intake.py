@@ -159,6 +159,21 @@ class CommittedIntakeTree(unittest.TestCase):
 class AppendOnlyControls(_ScratchTree):
     """The §19 immutability properties, failure branches executed."""
 
+    def test_received_on_requires_an_exact_valid_calendar_date(self) -> None:
+        record_path = self._stage("received-on-control.json",
+                                  _control_review_record())
+        original = self.ledger_path.read_bytes()
+        for invalid in ("2026-02-30", "2026-08-18-later", "today"):
+            with self.subTest(received_on=invalid):
+                with self.assertRaises(SystemExit) as caught:
+                    intake.register(
+                        self.ledger_path, "security-review", record_path, [],
+                        invalid, "control fixture")
+                self.assertIn("exact, valid ISO 8601 calendar date",
+                              str(caught.exception))
+                self.assertEqual(self.ledger_path.read_bytes(), original,
+                                 "a refused date must append nothing")
+
     def test_a_new_intake_through_the_mechanism_passes(self) -> None:
         entry = self._register("security-review", _control_review_record())
         self.assertEqual(entry["status"], "ACCEPTED")

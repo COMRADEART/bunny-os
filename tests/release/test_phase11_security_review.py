@@ -209,6 +209,20 @@ class SubmissionContract(unittest.TestCase):
         problems = ops11.validate_submission(record)
         self.assertTrue(any("postdates" in p for p in problems), problems)
 
+    def test_review_dates_require_exact_valid_calendar_dates(self) -> None:
+        for field in ("review_start", "review_end", "date"):
+            for invalid in ("2026-02-30", "2026-08-18-later"):
+                with self.subTest(field=field, value=invalid):
+                    record = _valid_record()
+                    record[field] = invalid
+                    problems = ops11.validate_submission(record)
+                    self.assertTrue(
+                        any(field in problem and
+                            ("calendar date" in problem or
+                             "does not match" in problem)
+                            for problem in problems),
+                        problems)
+
     def test_an_invented_outcome_fails(self) -> None:
         record = _valid_record()
         record["overall_assessment"] = "PASSED"
@@ -368,6 +382,23 @@ class RegisterDerivation(_ScratchIntake):
                       derived["securityGate"]["basis"],
                       "an open new Critical must be named in the gate "
                       "basis, not silently dropped")
+        self._assert_reality_untouched()
+
+    def test_a_new_noncritical_under_an_approving_review_holds_the_gate(
+            self) -> None:
+        record = _fixture("review-new-critical.json")["record"]
+        record["findings"][0]["severity"] = "High"
+        record["overall_assessment"] = "APPROVED_WITH_CONDITIONS"
+        record["disposition"] = "APPROVED_WITH_CONDITIONS"
+        self._register(record)
+        derived = self._derive()
+        new_row = derived["findings"][-1]
+        self.assertEqual(new_row["reconciliation"], "NEW_FINDING")
+        self.assertEqual(new_row["status"], "UNDER_REVIEW")
+        self.assertEqual(derived["securityGate"]["status"],
+                         "UNDER_ANALYSIS")
+        self.assertIn(new_row["source_finding_id"],
+                      derived["securityGate"]["basis"])
         self._assert_reality_untouched()
 
     def test_an_undetermined_answer_is_held_not_closed(self) -> None:

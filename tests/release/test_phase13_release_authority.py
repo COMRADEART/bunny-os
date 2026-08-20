@@ -294,6 +294,15 @@ class AssignmentRecords(unittest.TestCase):
             _fixture("authority-assignments.json"))
         self.assertTrue(any("fixture" in i for i in issues), issues)
 
+    def test_assignment_dates_are_exact_valid_calendar_dates(self) -> None:
+        original = _fixture("authority-assignments.json")["assignments"][0]
+        for invalid in ("2026-02-30", "2026-08-19-later"):
+            with self.subTest(value=invalid):
+                issues = ops13.validate_assignment(
+                    dict(original, date=invalid))
+                self.assertTrue(any("exact, valid" in issue
+                                    for issue in issues), issues)
+
 
 class SeparationOfDuties(unittest.TestCase):
     def test_distinct_identities_hold_separation(self) -> None:
@@ -596,6 +605,23 @@ class RiskAcceptance(unittest.TestCase):
         with self.assertRaises(ops13.BoundaryViolation):
             ops13.risk_acceptance_state(record, None)
 
+    def test_risk_dates_and_evaluation_date_fail_closed(self) -> None:
+        for field in ("accepted_at", "expires_at"):
+            for invalid in ("2026-02-30", "2026-08-19-later"):
+                with self.subTest(field=field, value=invalid):
+                    record = _record("risk-acceptance-critical.json")
+                    record[field] = invalid
+                    issues = ops13.validate_risk_acceptance(
+                        record, _assignments(), self._subject(),
+                        self._SEVERITIES)
+                    self.assertTrue(any(field in issue and "exact, valid"
+                                        in issue for issue in issues), issues)
+        record = _record("risk-acceptance-critical.json")
+        for invalid in ("2026-02-30", "2026-09-01-later"):
+            with self.subTest(as_of=invalid):
+                with self.assertRaises(ops13.BoundaryViolation):
+                    ops13.risk_acceptance_state(record, invalid)
+
     def test_an_acceptance_never_transfers_to_a_successor(self) -> None:
         record = _record("risk-acceptance-critical.json")
         successor = _fixture("successor-artifact-entry.json")[
@@ -633,6 +659,17 @@ class AuthorizationRecords(_Scratch):
         issues = self._validate(record)
         self.assertTrue(any("no infinite authorization" in i.lower()
                             for i in issues), issues)
+
+    def test_authorization_dates_are_exact_valid_calendar_dates(self) -> None:
+        for field in ("issued_at", "expires_at", "decision_timestamp"):
+            for invalid in ("2026-02-30", "2026-08-19-later"):
+                with self.subTest(field=field, value=invalid):
+                    record = _record("authorization-internal-authorized.json")
+                    record[field] = invalid
+                    issues = self._validate(record)
+                    self.assertTrue(any(
+                        field in issue and "exact, valid" in issue
+                        for issue in issues), issues)
 
     def test_a_stored_revocation_status_is_refused(self) -> None:
         record = _record("authorization-internal-authorized.json")

@@ -251,8 +251,11 @@ class EvidenceCuts(_Scratch):
         self.assertEqual(cut["expiringRecords"], [])
 
     def test_a_malformed_as_of_is_refused(self) -> None:
-        with self.assertRaises(ops14.BoundaryViolation):
-            self._cut(self._space(), as_of="not-a-date")
+        for invalid in ("not-a-date", "2026-02-30",
+                        "2026-08-19-later"):
+            with self.subTest(as_of=invalid):
+                with self.assertRaises(ops14.BoundaryViolation):
+                    self._cut(self._space(), as_of=invalid)
 
     def test_cut_rows_derive_states_per_evaluation_date(self) -> None:
         risk = ops14._seal13(ops14._inner("risk-acceptance-critical.json",
@@ -503,10 +506,14 @@ class TimeSemantics(_Scratch):
         self.assertIn("ambiguous time basis", flags[0])
 
     def test_unparseable_dates_fail_closed(self) -> None:
-        flags = ops14.time_consistency_problems(
-            record_dates={"date": "recently"}, received_on="2026-08-19")
-        self.assertEqual(len(flags), 1)
-        self.assertIn("fails closed", flags[0])
+        for invalid in ("recently", "2026-02-30",
+                        "2026-08-19-later"):
+            with self.subTest(value=invalid):
+                flags = ops14.time_consistency_problems(
+                    record_dates={"date": invalid},
+                    received_on="2026-08-19")
+                self.assertEqual(len(flags), 1)
+                self.assertIn("fails closed", flags[0])
 
     def test_consistent_dates_pass_clean(self) -> None:
         self.assertEqual(ops14.time_consistency_problems(
