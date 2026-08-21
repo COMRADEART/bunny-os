@@ -147,6 +147,14 @@ _PHASES_AFTER_THE_RECORD = (
     # live views, so this elder cut cannot pin it. Both standing guards refused
     # all twenty committed files before this deliberate declaration.
     "qualification/phase16/",
+    # Phase 17's multi-source external-floor tree: source registry, one-door
+    # operator, five source evaluators, sealed cross-source references,
+    # derived floor/status views, marked fixtures and executable matrices.
+    # The tree is live because real evidence may advance those views. At the
+    # undeclared tests commit feff1527 both guards refused exactly the same
+    # twenty-six Phase 17 additions; this declaration follows that measured
+    # refusal and does not enlarge any historical cut-time exemption.
+    "qualification/phase17/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is

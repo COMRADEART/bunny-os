@@ -1,0 +1,18 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Production-shaped signing proof; never real signing evidence",
+ "record": {
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "category": "PRODUCTION ARTIFACT SIGNED",
+  "independentlyRecomputedArtifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "signatureIdentifier": "fixture-production-signature.sig",
+  "signatureOrVerificationArtifact": "fixture detached signature bytes are outside this wrapper",
+  "signerAuthority": "FIXTURE-KEY-AUTHORITY",
+  "signerIdentity": "FIXTURE-SIGNER",
+  "signingMethod": "fixture detached signature method",
+  "signingTimestamp": "2026-08-19T12:00:00Z",
+  "verificationMethod": "fixture independent verification command",
+  "verificationResult": "PASS",
+  "verificationRunBy": "FIXTURE-INDEPENDENT-VERIFIER"
+ }
+}

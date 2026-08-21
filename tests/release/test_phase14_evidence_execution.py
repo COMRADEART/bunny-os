@@ -117,6 +117,22 @@ class RouterClasses(_Scratch):
         with self.assertRaises(ops14.BoundaryViolation):
             ops14.classify_evidence(["not", "a", "record"])
 
+    def test_phase17_independent_second_approval_shape_routes(self) -> None:
+        record = {
+            "approverId": "second approver",
+            "authorityRole": "SECOND_APPROVER",
+            "decision": "APPROVED",
+        }
+        self.assertEqual(ops14.classify_evidence(record), "SECOND_APPROVAL")
+
+    def test_full_timestamps_are_validated_before_date_comparison(self) -> None:
+        self.assertEqual(
+            str(ops14._date("2026-08-18T12:30:00-04:00")),
+            "2026-08-18",
+        )
+        with self.assertRaises(ops14.BoundaryViolation):
+            ops14._date("2026-08-18T12:30:00")
+
     def test_a_fixture_marker_is_terminal(self) -> None:
         record = dict(ops14._inner("signing-metadata-valid.json",
                                    ops14.FIXTURES10), fixture=True)

@@ -148,6 +148,9 @@ CUT_A_DATE = "2026-08-19"
 CUT_B_DATE = "2026-12-01"
 
 ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+ISO_TIMESTAMP = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
 SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
 EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]{2,}")
 
@@ -230,14 +233,26 @@ def _normalize_digest(value: str) -> str:
 def _date(value):
     import datetime
     text = str(value)
-    if not ISO_DATE.fullmatch(text):
+    if ISO_DATE.fullmatch(text):
+        try:
+            return datetime.date.fromisoformat(text)
+        except ValueError as error:
+            raise BoundaryViolation(
+                "%r is not a valid ISO 8601 calendar date: %s" %
+                (text, error)) from error
+    if not ISO_TIMESTAMP.fullmatch(text):
         raise BoundaryViolation(
-            "%r is not an exact ISO 8601 calendar date" % text)
+            "%r is neither an exact ISO 8601 calendar date nor a "
+            "timezone-qualified timestamp" % text)
     try:
-        return datetime.date.fromisoformat(text)
+        # Validate the entire timestamp, including its zone, before taking the
+        # calendar component used by the existing cut-ordering rules.
+        return datetime.datetime.fromisoformat(
+            text.replace("Z", "+00:00")
+        ).date()
     except ValueError as error:
         raise BoundaryViolation(
-            "%r is not a valid ISO 8601 calendar date: %s" %
+            "%r is not a valid ISO 8601 timestamp: %s" %
             (text, error)) from error
 
 
@@ -350,7 +365,9 @@ _CLASS_FINGERPRINTS = (
                          ("disposition", "overall_assessment"))),
     ("HARDWARE_VALIDATION", ("hwId", "machine", "results")),
     ("SIGNING", ("signatureIdentifier", "signerIdentity")),
-    ("SECOND_APPROVAL", ("firstApprover", "secondApprover")),
+    ("SECOND_APPROVAL", (("firstApprover", "approverId"),
+                         ("secondApprover", "authorityRole"),
+                         ("scope", "decision"))),
     ("ALPHA_TESTER_REPORT", (("testerId", "tester_id"),
                              ("report_type", "journey"))),
     ("AUTHORITY_ASSIGNMENT", ("assignmentId", "authorityId")),

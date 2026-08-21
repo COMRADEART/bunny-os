@@ -174,6 +174,70 @@ class AppendOnlyControls(_ScratchTree):
                 self.assertEqual(self.ledger_path.read_bytes(), original,
                                  "a refused date must append nothing")
 
+    def test_evidence_action_dates_require_exact_calendar_semantics(self) -> None:
+        subject = intake.subject_digests(intake.load_ledger(self.ledger_path))
+        for invalid in ("2026-08-18-later", "2026-02-30", "2026-08"):
+            with self.subTest(value=invalid):
+                verdict = intake.validate_record(
+                    "security-review",
+                    _control_review_record(date=invalid), subject,
+                )
+                self.assertEqual(verdict["status"], "INCOMPLETE")
+                self.assertIn("exact valid ISO", verdict["statusReason"])
+
+    def test_signing_timestamps_require_a_valid_timezone_when_full(self) -> None:
+        subject = intake.subject_digests(intake.load_ledger(self.ledger_path))
+        record = {
+            "category": "PRODUCTION ARTIFACT SIGNED",
+            "artifactDigest": _IMAGE,
+            "signatureIdentifier": "control.sig",
+            "signerIdentity": "control signer",
+            "signerAuthority": "control authority",
+            "signingTimestamp": "2026-08-18T12:00:00Z",
+            "verificationResult": "PASS",
+            "verificationRunBy": "control verifier",
+        }
+        self.assertEqual(
+            intake.validate_record("signing", record, subject)["status"],
+            "ACCEPTED",
+        )
+        record["signingTimestamp"] = "2026-08-18T12:00:00"
+        self.assertEqual(
+            intake.validate_record("signing", record, subject)["status"],
+            "INCOMPLETE",
+        )
+
+    def test_phase17_independent_second_approval_shape_is_receivable(self) -> None:
+        subject = intake.subject_digests(intake.load_ledger(self.ledger_path))
+        record = {
+            "approverId": "control second approver",
+            "authorityRole": "SECOND_APPROVER",
+            "independentlyRecomputedArtifactDigest": _IMAGE,
+            "decision": "APPROVED",
+            "timestamp": "2026-08-18T13:00:00Z",
+            "relevantEvidenceCut": "CUT-017",
+            "conditions": [],
+        }
+        verdict = intake.validate_record("second-approval", record, subject)
+        self.assertEqual(verdict["status"], "ACCEPTED")
+        self.assertEqual(verdict["binding"], "BOUND")
+
+    def test_phase17_second_approval_decision_vocabulary_fails_closed(self) -> None:
+        subject = intake.subject_digests(intake.load_ledger(self.ledger_path))
+        record = {
+            "approverId": "control second approver",
+            "authorityRole": "SECOND_APPROVER",
+            "independentlyRecomputedArtifactDigest": _IMAGE,
+            "decision": "PASS",
+            "timestamp": "2026-08-18",
+            "relevantEvidenceCut": "CUT-017",
+            "conditions": [],
+        }
+        verdict = intake.validate_record("second-approval", record, subject)
+        self.assertEqual(verdict["status"], "INCOMPLETE")
+        self.assertIn("APPROVED, REJECTED, or CONDITIONAL",
+                      verdict["statusReason"])
+
     def test_a_new_intake_through_the_mechanism_passes(self) -> None:
         entry = self._register("security-review", _control_review_record())
         self.assertEqual(entry["status"], "ACCEPTED")

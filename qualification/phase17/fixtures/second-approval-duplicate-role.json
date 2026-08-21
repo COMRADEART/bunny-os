@@ -1,0 +1,13 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Second approver identity equals signer identity and must fail separation",
+ "record": {
+  "approverId": "FIXTURE-SIGNER",
+  "authorityRole": "SECOND_APPROVER",
+  "conditions": [],
+  "decision": "APPROVED",
+  "independentlyRecomputedArtifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "relevantEvidenceCut": "CUT-017",
+  "timestamp": "2026-08-19T13:00:00Z"
+ }
+}

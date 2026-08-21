@@ -1,0 +1,25 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Mechanism-only active Alpha policy; it never enters the real Phase 13 registry",
+ "record": {
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "authority": "FIXTURE-ALPHA-OWNER",
+  "effective_at": "2026-08-19",
+  "policy_id": "SUFFICIENCY-POLICY-017",
+  "status": "ACTIVE",
+  "supersedes": null,
+  "thresholds": {
+   "accessibilityEvidenceRequired": false,
+   "maximumUnresolvedBlockerFindings": 0,
+   "maximumUnresolvedCriticalFindings": 0,
+   "minimumAcceptedTesterReports": 1,
+   "minimumCompletedCoreJourneys": 1,
+   "minimumDistinctHardwareMachines": 1,
+   "minimumDistinctMachineIdentities": 1,
+   "minimumDistinctTesters": 1,
+   "minimumEvidencePeriodDays": 0,
+   "minimumSuccessfulInstallationReports": 1,
+   "performanceEvidenceRequired": false
+  }
+ }
+}

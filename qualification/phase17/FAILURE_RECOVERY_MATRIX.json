@@ -1,0 +1,495 @@
+{
+ "rows": [
+  {
+   "failure": "SOURCE_CLASSIFIED",
+   "id": "REGISTRY-SECURITY_REVIEW",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "security-review"
+  },
+  {
+   "failure": "SOURCE_CLASSIFIED",
+   "id": "REGISTRY-HARDWARE",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "SOURCE_CLASSIFIED",
+   "id": "REGISTRY-SIGNING",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "SOURCE_CLASSIFIED",
+   "id": "REGISTRY-SECOND_APPROVAL",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "SOURCE_CLASSIFIED",
+   "id": "REGISTRY-ALPHA_FEEDBACK",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "alpha-feedback"
+  },
+  {
+   "failure": "UNKNOWN_SOURCE_REFUSED",
+   "id": "REGISTRY-UNKNOWN-REFUSED",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "REAL_STATE_DERIVED",
+   "id": "REAL_UNIVERSE_READ_ONLY",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "READINESS_SEPARATE_FROM_SATISFACTION",
+   "id": "READINESS-NOT-SATISFACTION",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "NO_AVERAGING",
+   "id": "HW-CONTRADICTORY-GRAPHICS",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "AGGREGATE_CLAIM_REFUSED",
+   "id": "HW-FINITE-SET-NO-PC-CLAIM",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "QUALIFIED_DECLARED_SCOPE",
+   "id": "HW-FULL-PASS",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "MACHINE_DIMENSIONS_PRESERVED",
+   "id": "HW-MIC-FAIL",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "ALTERNATIVE_PRESERVED",
+   "id": "HW-NATIVE-UNSUPPORTED-FALLBACK-PASS",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "NATIVE_FAILURE_NOT_ERASED",
+   "id": "HW-NATIVE-FAIL-FALLBACK-PASS",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "WRONG_ARTIFACT_REFUSED",
+   "id": "HW-WRONG-ARTIFACT",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "MACHINE_ID_REQUIRED",
+   "id": "HW-MISSING-MACHINE-ID",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "MEDIA_ID_REQUIRED",
+   "id": "HW-MISSING-MEDIA-DIGEST",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "USER_FEEDBACK_NOT_HARDWARE_PROTOCOL",
+   "id": "HW-USER-FEEDBACK-NOT-PROTOCOL",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "POLICY_REQUIRED",
+   "id": "HW-NO-SUPPORT-POLICY",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "EXPIRED_POLICY_BLOCKS",
+   "id": "HW-EXPIRED-POLICY",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "FIXTURE_REJECTED",
+   "id": "SIGN-FIXTURE-REAL-PATH",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "VERIFIED_PRODUCTION_SIGNING",
+   "id": "SIGN-PRODUCTION-VERIFIED",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "DRILL_NEVER_CONTRIBUTES",
+   "id": "SIGN-DRILL",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "WRONG_ARTIFACT",
+   "id": "SIGN-CORRECT-SIGNATURE-WRONG-ARTIFACT",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "VERIFICATION_FAIL",
+   "id": "SIGN-WRONG-SIGNATURE-CORRECT-ARTIFACT",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "RECOMPUTED_DIGEST_REQUIRED",
+   "id": "SIGN-MISSING-RECOMPUTED-DIGEST",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "AUTHORITY_REQUIRED",
+   "id": "SIGN-UNAUTHORIZED",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "TIME_REFUSED",
+   "id": "SIGN-MALFORMED-ZONE",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "EXPIRED_AUTHORITY_BLOCKS",
+   "id": "SIGN-EXPIRED-AUTHORITY",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "REVOKED_AUTHORITY_BLOCKS",
+   "id": "SIGN-REVOKED-AUTHORITY",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "APPROVED",
+   "id": "APPROVAL-AFTER-SIGNING",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "ORDERING_REFUSED",
+   "id": "APPROVAL-BEFORE-SIGNING",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "WRONG_ARTIFACT",
+   "id": "APPROVAL-WRONG-ARTIFACT",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "STALE_CUT",
+   "id": "APPROVAL-EARLIER-CUT",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "CONDITIONAL_NOT_APPROVED",
+   "id": "APPROVAL-CONDITIONAL",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "REJECTED_BLOCKS",
+   "id": "APPROVAL-REJECTED",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "SEPARATION_REFUSED",
+   "id": "APPROVAL-SIGNER-OVERLAP",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "SEPARATION_REFUSED",
+   "id": "APPROVAL-RELEASE-OVERLAP",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "EXPIRED_RISK_BLOCKS",
+   "id": "APPROVAL-EXPIRED-RISK",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "REVOCATION_BLOCKS",
+   "id": "APPROVAL-AUTHORITY-REVOKED",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "NO_EVIDENCE_UNDETERMINED",
+   "id": "ALPHA-ZERO-REPORTS",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "alpha-feedback"
+  },
+  {
+   "failure": "MANY_REPORTS_STILL_UNDETERMINED",
+   "id": "ALPHA-100-NO-POLICY",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "alpha-feedback"
+  },
+  {
+   "failure": "SUFFICIENT_WITH_POLICY",
+   "id": "ALPHA-SUFFICIENT-FIXTURE",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "alpha-feedback"
+  },
+  {
+   "failure": "BLOCKER_PREVENTS_CONTRIBUTION",
+   "id": "ALPHA-BLOCKER",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "alpha-feedback"
+  },
+  {
+   "failure": "INSUFFICIENT",
+   "id": "ALPHA-INSUFFICIENT",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "alpha-feedback"
+  },
+  {
+   "failure": "USER_EVIDENCE_UNBOUND_NONCONTRIBUTING",
+   "id": "ALPHA-UNBOUND-PRESERVED",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "alpha-feedback"
+  },
+  {
+   "failure": "NO_REVIEW_BLOCKS",
+   "id": "SECURITY-NO-REVIEW",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "security-review"
+  },
+  {
+   "failure": "SATISFIED_SCRATCH",
+   "id": "SECURITY-FAVORABLE-SCRATCH",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "security-review"
+  },
+  {
+   "failure": "CRITICAL_BLOCKS",
+   "id": "SECURITY-UNRESOLVED-CRITICAL",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "security-review"
+  },
+  {
+   "failure": "CONFLICT_BLOCKS",
+   "id": "SECURITY-CONFLICT",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "security-review"
+  },
+  {
+   "failure": "EXPIRED_RISK_BLOCKS",
+   "id": "SECURITY-EXPIRED-RISK",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "security-review"
+  },
+  {
+   "failure": "WRONG_ARTIFACT_REFUSED",
+   "id": "SECURITY-WRONG-ARTIFACT",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "security-review"
+  },
+  {
+   "failure": "AUTHORIZED_IMPOSSIBLE",
+   "id": "FLOOR-0-OF-5",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "AUTHORIZED_IMPOSSIBLE",
+   "id": "FLOOR-1-OF-5",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "AUTHORIZED_IMPOSSIBLE",
+   "id": "FLOOR-2-OF-5",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "AUTHORIZED_IMPOSSIBLE",
+   "id": "FLOOR-3-OF-5",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "AUTHORIZED_IMPOSSIBLE",
+   "id": "FLOOR-4-OF-5",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "FLOOR_SATISFIED",
+   "id": "FLOOR-5-OF-5",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "INTERNAL_CLAIM_REFUSED",
+   "id": "INTERNAL-ALL-PASS-JSON",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "CONFLICT_BLOCKS_FLOOR",
+   "id": "FLOOR-ONE-CONFLICT",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "BYTE_IDENTICAL",
+   "id": "CUT-DETERMINISTIC",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "SEAL_REFUSED",
+   "id": "CUT-TAMPER",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "MALFORMED_TIME_REFUSED",
+   "id": "TIME-EXACT-1",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "MALFORMED_TIME_REFUSED",
+   "id": "TIME-EXACT-2",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "DOES_NOT_APPLY",
+   "id": "SUCCESSOR-NO-INHERITANCE",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "multi-source"
+  },
+  {
+   "failure": "SECRET_QUARANTINED",
+   "id": "SECRET-REVIEW-BEARER",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "security-review"
+  },
+  {
+   "failure": "SECRET_QUARANTINED",
+   "id": "SECRET-HARDWARE-PASSWORD",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "hardware"
+  },
+  {
+   "failure": "SECRET_QUARANTINED",
+   "id": "SECRET-SIGNING-PRIVATE-KEY",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "signing"
+  },
+  {
+   "failure": "SECRET_QUARANTINED",
+   "id": "SECRET-APPROVAL-CREDENTIAL",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "second-approval"
+  },
+  {
+   "failure": "SECRET_QUARANTINED",
+   "id": "SECRET-ALPHA-TOKEN",
+   "realEvidenceMutationPermitted": false,
+   "recovery": "preserve result; no recovery required",
+   "source": "alpha-feedback"
+  }
+ ],
+ "schemaVersion": 1
+}
