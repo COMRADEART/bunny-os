@@ -1,0 +1,13 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Blocking security review for scratch conflict controls",
+ "record": {
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "date": "2026-08-19",
+  "disposition": "BLOCKED",
+  "findings": [],
+  "reviewer": "FIXTURE-BLOCKING-REVIEWER",
+  "scope": "TEST_FIXTURE_ONLY security review",
+  "overall_assessment": "BLOCKED"
+ }
+}

@@ -1,0 +1,170 @@
+{
+ "asOf": null,
+ "authorizationState": "EVIDENCE_PENDING",
+ "candidateDecision": "REQUIRES_MORE_EVIDENCE",
+ "conflicts": [],
+ "convergence": {
+  "authorizedPossible": false,
+  "conflicts": [],
+  "contributing": [],
+  "count": 0,
+  "missing": [
+   "security-review",
+   "hardware",
+   "signing",
+   "second-approval",
+   "alpha-feedback"
+  ],
+  "reason": "zero through four sources, unproven internal claims, or conflict can never authorize",
+  "required": [
+   "security-review",
+   "hardware",
+   "signing",
+   "second-approval",
+   "alpha-feedback"
+  ],
+  "satisfied": false,
+  "unproven": []
+ },
+ "inputHashes": {
+  "qualification/phase10/artifacts/artifact-graph.json": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+  "qualification/phase11/security-findings.json": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad",
+  "qualification/phase12/alpha-findings.json": "e21cbcd43f4f9a9d40f12ead9ea1d8493e0d0ce11769f74d9d77ca9c43adadb7",
+  "qualification/phase13/authorization-status.json": "f14a546708cec6418ce1a082493dd9ef04b59afbf1d30d1e97b713725f7013b0",
+  "qualification/phase17/SOURCE_REGISTRY.json": "720a709d8962f8edfb3b17309ce581ac7b002f7dfbd75ca69166a620f332a4a9",
+  "qualification/phase9/intake/LEDGER.json": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b"
+ },
+ "note": "readiness, receipt, validity, binding, sufficiency, and contribution are separate; this view creates no evidence",
+ "phaseStatus": "PHASE 17 \u2014 EXTERNAL FLOOR OPERATIONS READY",
+ "schemaVersion": 1,
+ "singleNextDeterministicAction": "Commission the independent security review \u2014 the canonical commissioning package is qualification/phase11/security-review/REQUEST.md, and conditions 1 and 2 stay true until its owner acts",
+ "sources": [
+  {
+   "artifact": "e906a48793d7",
+   "bindingStatus": "UNBOUND_OR_MISSING",
+   "conflictState": "NONE",
+   "contributes_to_floor": false,
+   "effectiveStatus": "AWAITING_EXTERNAL_EVIDENCE",
+   "evidenceIds": [],
+   "expiryState": "NONE_OR_STANDING",
+   "ownerEngineEvaluations": [],
+   "provenance": {
+    "ownerEngineResult": true,
+    "registryClass": "SECURITY_REVIEW"
+   },
+   "reason": "no Phase 9 intake entry exists for this source",
+   "revocationState": "NONE",
+   "source": "security-review",
+   "source_artifact_bound": false,
+   "source_contributes_to_floor": false,
+   "source_evidence_received": false,
+   "source_evidence_valid": false,
+   "source_operational_ready": true,
+   "source_sufficient": false,
+   "validationStatus": "MISSING_OR_INVALID"
+  },
+  {
+   "artifact": "e906a48793d7",
+   "bindingStatus": "UNBOUND_OR_MISSING",
+   "conflictState": "NONE",
+   "contributes_to_floor": false,
+   "effectiveStatus": "NO_EVIDENCE",
+   "evidenceIds": [],
+   "expiryState": "NONE_OR_STANDING",
+   "ownerEngineEvaluations": [],
+   "provenance": {
+    "ownerEngineResult": true,
+    "registryClass": "HARDWARE_VALIDATION"
+   },
+   "reason": "no Phase 9 intake entry exists for this source",
+   "revocationState": "NONE",
+   "source": "hardware",
+   "source_artifact_bound": false,
+   "source_contributes_to_floor": false,
+   "source_evidence_received": false,
+   "source_evidence_valid": false,
+   "source_operational_ready": true,
+   "source_sufficient": false,
+   "validationStatus": "MISSING_OR_INVALID"
+  },
+  {
+   "artifact": "e906a48793d7",
+   "bindingStatus": "UNBOUND_OR_MISSING",
+   "conflictState": "NONE",
+   "contributes_to_floor": false,
+   "effectiveStatus": "NO_EVIDENCE",
+   "evidenceIds": [],
+   "expiryState": "NONE_OR_STANDING",
+   "ownerEngineEvaluations": [],
+   "provenance": {
+    "ownerEngineResult": true,
+    "registryClass": "PRODUCTION_SIGNING"
+   },
+   "reason": "no Phase 9 intake entry exists for this source",
+   "revocationState": "NONE",
+   "source": "signing",
+   "source_artifact_bound": false,
+   "source_contributes_to_floor": false,
+   "source_evidence_received": false,
+   "source_evidence_valid": false,
+   "source_operational_ready": true,
+   "source_sufficient": false,
+   "validationStatus": "MISSING_OR_INVALID"
+  },
+  {
+   "artifact": "e906a48793d7",
+   "bindingStatus": "UNBOUND_OR_MISSING",
+   "conflictState": "NONE",
+   "contributes_to_floor": false,
+   "effectiveStatus": "NO_EVIDENCE",
+   "evidenceIds": [],
+   "expiryState": "NONE_OR_STANDING",
+   "ownerEngineEvaluations": [],
+   "provenance": {
+    "ownerEngineResult": true,
+    "registryClass": "SECOND_APPROVAL"
+   },
+   "reason": "no Phase 9 intake entry exists for this source",
+   "revocationState": "NONE",
+   "source": "second-approval",
+   "source_artifact_bound": false,
+   "source_contributes_to_floor": false,
+   "source_evidence_received": false,
+   "source_evidence_valid": false,
+   "source_operational_ready": true,
+   "source_sufficient": false,
+   "validationStatus": "MISSING_OR_INVALID"
+  },
+  {
+   "artifact": "e906a48793d7",
+   "bindingStatus": "UNBOUND_OR_MISSING",
+   "conflictState": "NONE",
+   "contributes_to_floor": false,
+   "effectiveStatus": "NO_EVIDENCE",
+   "evidenceIds": [],
+   "expiryState": "NONE_OR_STANDING",
+   "ownerEngineEvaluations": [],
+   "provenance": {
+    "ownerEngineResult": true,
+    "registryClass": "ALPHA_TESTER_REPORT"
+   },
+   "reason": "no Phase 9 intake entry exists for this source",
+   "revocationState": "NONE",
+   "source": "alpha-feedback",
+   "source_artifact_bound": false,
+   "source_contributes_to_floor": false,
+   "source_evidence_received": false,
+   "source_evidence_valid": false,
+   "source_operational_ready": true,
+   "source_sufficient": false,
+   "validationStatus": "MISSING_OR_INVALID"
+  }
+ ],
+ "subjectArtifact": {
+  "frozen": true,
+  "identifier": "e906a48793d7",
+  "relationship": "ROOT",
+  "signingStatus": "UNSIGNED",
+  "unchanged": true
+ }
+}

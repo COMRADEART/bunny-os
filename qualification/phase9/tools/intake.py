@@ -68,6 +68,12 @@ HARDWARE_DIMENSIONS = (
     "voice-recognition", "voice-response", "trust-allow-verified",
     "trust-deny-verified", "reboot-persistence", "wifi", "audio-output",
     "display",
+    # Phase 17's external hardware protocol retains these operator-facing
+    # dimensions separately.  The Phase 8 spellings above remain valid; an
+    # intake record may use either vocabulary, and the Phase 17 evaluator
+    # maps them without averaging or collapsing machine results.
+    "networking", "microphone", "voice", "trust", "reboot",
+    "persistence", "shutdown",
 )
 
 HARDWARE_IDENTITY_FIELDS = (
@@ -83,8 +89,10 @@ ALPHA_CONFIDENCE = ("CONFIRMED", "LIKELY", "REPORTED", "UNREPRODUCED")
 ALPHA_JOURNEYS = ("A", "B", "C", "D", "E", "exploratory")
 
 INTAKE_ID = re.compile(r"^INTAKE-(\d{3})(?:-R([1-9]\d*))?$")
-ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}")
 ISO_DATE_EXACT = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+ISO_TIMESTAMP_EXACT = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
 HW_ID = re.compile(r"^HW-\d{3}$")
 TESTER_ID = re.compile(r"^T-\d{3}$")
 SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
@@ -197,6 +205,37 @@ def _record_digest(record: dict, *keys: str) -> str | None:
     return None
 
 
+def _valid_calendar_date(value: object) -> bool:
+    """Exact, possible ISO calendar date; prefix matches never count."""
+    text = str(value)
+    if not ISO_DATE_EXACT.fullmatch(text):
+        return False
+    try:
+        datetime.date.fromisoformat(text)
+    except ValueError:
+        return False
+    return True
+
+
+def _valid_timestamp(value: object) -> bool:
+    """Exact date or timezone-qualified ISO timestamp.
+
+    Signing and the Phase 17 independent-approval contract permit a full
+    timestamp.  A timezone is mandatory in that form so local wall-clock text
+    cannot become an ordering fact by accident.
+    """
+    text = str(value)
+    if _valid_calendar_date(text):
+        return True
+    if not ISO_TIMESTAMP_EXACT.fullmatch(text):
+        return False
+    try:
+        datetime.datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
 def validate_record(source: str, record: dict, subject: set[str]) -> dict:
     """Answer the six questions; resolve one stored status.
 
@@ -211,6 +250,7 @@ def validate_record(source: str, record: dict, subject: set[str]) -> dict:
     digests: list[str] = []
     identity = "MISSING"
     timestamp = record.get("date") or record.get("signingTimestamp") or ""
+    full_timestamp_allowed = False
 
     if source == "security-review":
         missing += _missing(record, ("reviewer", "scope", "date", "disposition"))
@@ -274,6 +314,7 @@ def validate_record(source: str, record: dict, subject: set[str]) -> dict:
             record.get("signerIdentity", "MISSING"),
             record.get("signerAuthority", "MISSING"),
         )
+        full_timestamp_allowed = True
         digest = _record_digest(record, "artifactDigest")
         if digest is None:
             missing.append("artifactDigest")
@@ -283,32 +324,71 @@ def validate_record(source: str, record: dict, subject: set[str]) -> dict:
                            "the command's success message is insufficient")
 
     elif source == "second-approval":
-        missing += _missing(record, ("scope",))
-        first = record.get("firstApprover") or {}
-        second = record.get("secondApprover") or {}
-        for label, approver in (("firstApprover", first), ("secondApprover", second)):
-            for field in ("name", "role", "date", "decision"):
-                if not approver.get(field):
-                    missing.append("%s.%s" % (label, field))
-            if approver.get("decision") not in (None, "", "APPROVE", "REJECT"):
-                missing.append("%s.decision must be APPROVE or REJECT" % label)
-        if first.get("name") and first.get("name") == second.get("name"):
-            rejected.append("one person approving twice is not a second approval")
-        identity = "%s + %s" % (
-            first.get("name", "MISSING"), second.get("name", "MISSING"),
+        # Phase 17 adds the operational external second-approval record.  The
+        # older two-approver record remains accepted for historical fixtures;
+        # both contracts retain independent digest observation and neither is
+        # silently rewritten into the other.
+        independent_shape = any(
+            key in record for key in (
+                "approverId", "authorityRole",
+                "independentlyRecomputedArtifactDigest",
+                "relevantEvidenceCut", "conditions",
+            )
         )
-        timestamp = timestamp or first.get("date", "") or second.get("date", "")
-        for label, approver in (("firstApprover", first), ("secondApprover", second)):
-            digest = approver.get("recomputedDigest")
+        if independent_shape:
+            missing += _missing(record, (
+                "approverId", "authorityRole",
+                "independentlyRecomputedArtifactDigest", "decision",
+                "timestamp", "relevantEvidenceCut",
+            ))
+            decision = record.get("decision")
+            if decision not in (None, "", "APPROVED", "REJECTED", "CONDITIONAL"):
+                missing.append(
+                    "decision must be APPROVED, REJECTED, or CONDITIONAL"
+                )
+            identity = str(record.get("approverId") or "MISSING")
+            timestamp = record.get("timestamp") or ""
+            full_timestamp_allowed = True
+            digest = _record_digest(
+                record, "independentlyRecomputedArtifactDigest"
+            )
             if digest:
                 digests.append(digest)
-            else:
-                missing.append("%s.recomputedDigest — each approver recomputes "
-                               "the digest; neither inherits it" % label)
-        if not digests and (record.get("commit") or record.get("branch")):
-            missing.append("approval names a branch or commit but not the "
-                           "artifact; approval of a branch is not approval of bytes")
-        scope_notes.append("two people, independently naming the same bytes")
+            scope_notes.append(
+                "one independent second-approver authority action bound to "
+                "an explicit evidence cut"
+            )
+        else:
+            missing += _missing(record, ("scope",))
+            first = record.get("firstApprover") or {}
+            second = record.get("secondApprover") or {}
+            for label, approver in (("firstApprover", first),
+                                    ("secondApprover", second)):
+                for field in ("name", "role", "date", "decision"):
+                    if not approver.get(field):
+                        missing.append("%s.%s" % (label, field))
+                if approver.get("decision") not in (None, "", "APPROVE", "REJECT"):
+                    missing.append("%s.decision must be APPROVE or REJECT" % label)
+            if first.get("name") and first.get("name") == second.get("name"):
+                rejected.append("one person approving twice is not a second approval")
+            identity = "%s + %s" % (
+                first.get("name", "MISSING"), second.get("name", "MISSING"),
+            )
+            timestamp = timestamp or first.get("date", "") or second.get("date", "")
+            for label, approver in (("firstApprover", first),
+                                    ("secondApprover", second)):
+                digest = approver.get("recomputedDigest")
+                if digest:
+                    digests.append(digest)
+                else:
+                    missing.append(
+                        "%s.recomputedDigest — each approver recomputes the "
+                        "digest; neither inherits it" % label
+                    )
+            if not digests and (record.get("commit") or record.get("branch")):
+                missing.append("approval names a branch or commit but not the "
+                               "artifact; approval of a branch is not approval of bytes")
+            scope_notes.append("two people, independently naming the same bytes")
 
     elif source == "alpha-feedback":
         missing += _missing(record, ("testerId", "journey", "environment", "date"))
@@ -346,9 +426,17 @@ def validate_record(source: str, record: dict, subject: set[str]) -> dict:
         binding = "BOUND"
 
     # Timestamp.
-    stamp_ok = bool(timestamp) and bool(ISO_DATE.match(str(timestamp)))
+    stamp_ok = bool(timestamp) and (
+        _valid_timestamp(timestamp) if full_timestamp_allowed
+        else _valid_calendar_date(timestamp)
+    )
     if not stamp_ok:
-        missing.append("the record must date its own action (ISO 8601)")
+        missing.append(
+            "the record must date its own action with an exact valid ISO "
+            "8601 calendar date%s"
+            % (" or timezone-qualified timestamp"
+               if full_timestamp_allowed else "")
+        )
 
     # Resolution.
     if rejected:

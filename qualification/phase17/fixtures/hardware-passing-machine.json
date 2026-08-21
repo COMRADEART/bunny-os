@@ -1,0 +1,52 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "One fully passing machine with an explicit fixture-only owner policy",
+ "record": {
+  "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "date": "2026-08-19",
+  "executedJourneys": ["install", "login", "desktop", "voice", "reboot", "shutdown"],
+  "hwId": "HW-001",
+  "installationMediumIdentity": "sha256:823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "machine": {
+   "cpu": "fixture x86-64 CPU",
+   "firmwareMode": "UEFI",
+   "gpu": "fixture GPU",
+   "machineId": "fixture-machine-001",
+   "manufacturer": "Fixture Systems",
+   "model": "Fixture One",
+   "network": "fixture ethernet and Wi-Fi",
+   "ram": "16 GB",
+   "secureBootState": "enabled",
+   "storage": "512 GB NVMe"
+  },
+  "operator": "FIXTURE-HARDWARE-OPERATOR",
+  "results": {
+   "audio-output": {"evidence": "fixture-audio.log", "status": "PASS"},
+   "bunny-desktop": {"evidence": "fixture-desktop.png", "status": "PASS"},
+   "companion-2d": {"evidence": "fixture-2d.png", "status": "PASS"},
+   "companion-3d-fallback": {"evidence": "fixture-fallback.png", "status": "PASS"},
+   "companion-3d-native": {"evidence": "fixture-native.png", "status": "PASS"},
+   "companion-prerendered": {"evidence": "fixture-prerendered.png", "status": "PASS"},
+   "encrypted-boot": {"evidence": "fixture-boot.log", "status": "PASS"},
+   "installation": {"evidence": "fixture-install.log", "status": "PASS"},
+   "login": {"evidence": "fixture-login.png", "status": "PASS"},
+   "microphone": {"evidence": "fixture-microphone.log", "status": "PASS"},
+   "networking": {"evidence": "fixture-network.log", "status": "PASS"},
+   "persistence": {"evidence": "fixture-persistence.log", "status": "PASS"},
+   "reboot": {"evidence": "fixture-reboot.log", "status": "PASS"},
+   "shutdown": {"evidence": "fixture-shutdown.log", "status": "PASS"},
+   "trust": {"evidence": "fixture-trust.log", "status": "PASS"},
+   "voice": {"evidence": "fixture-voice.log", "status": "PASS"},
+   "wifi": {"evidence": "fixture-wifi.log", "status": "PASS"}
+  },
+  "supportPolicy": {
+   "authority": "FIXTURE-HARDWARE-OPERATOR",
+   "effectiveAt": "2026-08-19",
+   "expiresAt": null,
+   "policyId": "FIXTURE-HW-SUPPORT-001",
+   "scope": ["fixture-machine-001"],
+   "status": "ACTIVE"
+  },
+  "testedCompanionModes": ["pre-rendered", "2D", "native 3D", "fallback 3D"]
+ }
+}

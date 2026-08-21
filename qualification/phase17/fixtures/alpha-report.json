@@ -1,0 +1,14 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "One bound Alpha success report; one report alone never satisfies the program",
+ "record": {
+  "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "date": "2026-08-19",
+  "environment": "fixture physical machine",
+  "journey": "A",
+  "report_type": "SUCCESS",
+  "steps": [{"name": "install", "status": "COMPLETED"}],
+  "testerId": "T-017",
+  "tester_id": "T-017"
+ }
+}

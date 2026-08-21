@@ -1,0 +1,28 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Favorable-shaped security source for scratch composition; unresolved Critical policy is still evaluated by Phase 11",
+ "record": {
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "date": "2026-08-19",
+  "digest_basis": "image",
+  "digest_computation": "TEST_FIXTURE_ONLY independent digest command",
+  "findings": [],
+  "independence": {
+   "declaration": "TEST_FIXTURE_ONLY independent reviewer",
+   "is_release_decision_authority": false,
+   "policy_exception": null,
+   "relationship_to_project": "none"
+  },
+  "independently_computed_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "overall_assessment": "APPROVED",
+  "review_end": "2026-08-19",
+  "review_scope_version": "SCOPE-1",
+  "review_start": "2026-08-18",
+  "reviewer": "FIXTURE-SECURITY-REVIEWER",
+  "reviewer_id": "FIXTURE-SECURITY-REVIEWER",
+  "scope": "TEST_FIXTURE_ONLY SCOPE-1 review",
+  "schema": "bunny-os/security-review-submission/1",
+  "disposition": "APPROVED"
+ }
+}

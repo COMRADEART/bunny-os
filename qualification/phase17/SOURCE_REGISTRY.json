@@ -1,0 +1,77 @@
+{
+ "genericFallback": null,
+ "schemaVersion": 1,
+ "sources": {
+  "alpha-feedback": {
+   "artifactBindingRules": "Phase 10 applicability; unbound user evidence is preserved but never contributes to an artifact floor",
+   "authorityRequirement": "an ACTIVE artifact-bound Phase 13 sufficiency policy made by assigned AUTH-ALPHA-PROGRAM",
+   "canonicalEvidenceClass": "ALPHA_TESTER_REPORT",
+   "conflictSemantics": "Phase 12 blockers and cross-source conflicts are preserved; favorable reports never outvote blockers",
+   "expirySemantics": "policy effective/supersession state is evaluated only at the cut's explicit asOf",
+   "intakeContract": "Phase 9 alpha-feedback plus Phase 12 TESTER_REPORT_SCHEMA.json",
+   "oneRecordCanSatisfyWholeSource": false,
+   "owningPhaseEngine": "Phase 12 report/triage/sufficiency and Phase 13 owner policy",
+   "requiredStatusForAuthorization": "SUFFICIENT under an active applicable policy with no blocking Alpha finding",
+   "revisionsAllowed": true,
+   "revocationSemantics": "authority revocation or policy supersession removes contribution at later cuts without rewriting history",
+   "sufficiencyModel": "DIMENSIONAL"
+  },
+  "hardware": {
+   "artifactBindingRules": "Phase 10 exact-artifact applicability; an observation without verified artifact identity remains observational only",
+   "authorityRequirement": "assigned AUTH-HARDWARE and an explicit owner-approved machine/support scope",
+   "canonicalEvidenceClass": "HARDWARE_VALIDATION",
+   "conflictSemantics": "per-machine/per-dimension results are preserved; contradictions require scoped human review and are never averaged",
+   "expirySemantics": "an expiring support policy is evaluated only at the cut's explicit asOf",
+   "intakeContract": "Phase 9 hardware HW-NNN contract plus the Phase 8 physical protocol",
+   "oneRecordCanSatisfyWholeSource": false,
+   "owningPhaseEngine": "Phase 8 protocol with Phase 14 hardware_submission_review/hardware_effective_state",
+   "requiredStatusForAuthorization": "QUALIFIED_FOR_DECLARED_SCOPE under a standing owner-approved support policy",
+   "revisionsAllowed": true,
+   "revocationSemantics": "authority or support-policy revocation removes later contribution; original machine evidence remains",
+   "sufficiencyModel": "DIMENSIONAL"
+  },
+  "second-approval": {
+   "artifactBindingRules": "Phase 10 exact-artifact applicability plus an independently recomputed artifact digest and explicit evidence cut",
+   "authorityRequirement": "assigned AUTH-SECOND-APPROVER, separate from AUTH-KEY and AUTH-RELEASE unless an explicit Phase 13 overlap decision stands",
+   "canonicalEvidenceClass": "SECOND_APPROVAL",
+   "conflictSemantics": "REJECTED, CONDITIONAL, stale-cut, pre-signing, overlap, supersession, or unresolved blocker prevents contribution",
+   "expirySemantics": "approver assignment, risks, and referenced cut are evaluated only at explicit asOf",
+   "intakeContract": "Phase 9 independent second-approval contract; legacy two-approver records remain readable",
+   "oneRecordCanSatisfyWholeSource": true,
+   "owningPhaseEngine": "Phase 13 authority/separation with Phase 14 ordering",
+   "requiredStatusForAuthorization": "APPROVED by a standing independent authority after signing over the relevant cut",
+   "revisionsAllowed": true,
+   "revocationSemantics": "authority revocation or a valid superseding approval removes later contribution without editing the original",
+   "sufficiencyModel": "BINARY_WITH_ORDERING"
+  },
+  "security-review": {
+   "artifactBindingRules": "Phase 10 applicability over the Phase 16 identity ceremony; wrong-artifact review DOES_NOT_APPLY",
+   "authorityRequirement": "independent reviewer evidence through the Phase 16/11 chain and Phase 13 security authority for dispositions/risks",
+   "canonicalEvidenceClass": "SECURITY_REVIEW",
+   "conflictSemantics": "Phase 11 reconciliation is most-blocking; unresolved Critical or conflicting applicable reviews prevent contribution",
+   "expirySemantics": "risk acceptance is evaluated only at the cut's explicit asOf",
+   "intakeContract": "Phase 16 receipt/validation delegating through Phase 15 to Phase 9 security-review intake",
+   "oneRecordCanSatisfyWholeSource": false,
+   "owningPhaseEngine": "Phase 16 receipt -> Phase 11 reconciliation/gate -> Phase 13 risk/authority",
+   "requiredStatusForAuthorization": "Phase 11 security gate SATISFIED with no unresolved conflict or expired risk",
+   "revisionsAllowed": true,
+   "revocationSemantics": "authority/risk revocation is effective at later cuts; prior cuts retain the earlier record set",
+   "sufficiencyModel": "RECONCILIATION"
+  },
+  "signing": {
+   "artifactBindingRules": "submitted and independently recomputed digests must both equal the exact artifact; signature verification must succeed against it",
+   "authorityRequirement": "assigned standing AUTH-KEY signer authority",
+   "canonicalEvidenceClass": "PRODUCTION_SIGNING",
+   "conflictSemantics": "any applicable failed verification, wrong digest, drill, authority failure, or conflicting correction prevents contribution",
+   "expirySemantics": "signer assignment/certificate expiry is evaluated only at the cut's explicit asOf",
+   "intakeContract": "Phase 9 signing intake with Phase 17 production-verification fields; private material is forbidden",
+   "oneRecordCanSatisfyWholeSource": true,
+   "owningPhaseEngine": "Phase 9 immutable intake plus Phase 13 key authority and Phase 17 verification composition",
+   "requiredStatusForAuthorization": "PRODUCTION_SIGNING VERIFIED for the exact artifact by standing authority",
+   "revisionsAllowed": true,
+   "revocationSemantics": "signer authority/certificate revocation removes contribution at later cuts; the signing record remains preserved",
+   "sufficiencyModel": "CRYPTOGRAPHIC_BINARY"
+  }
+ },
+ "unknownSourcePolicy": "REFUSE; there is no generic-external-evidence fallback"
+}

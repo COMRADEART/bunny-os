@@ -1,0 +1,11 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Scenario descriptors only; the runner constructs scratch universes through production functions",
+ "scenarios": [
+  {"id": "full-favorable-five-source", "mutation": null},
+  {"id": "full-one-expired", "mutation": "expire key authority"},
+  {"id": "full-one-wrong-artifact", "mutation": "replace signing digest"},
+  {"id": "full-one-conflict", "mutation": "add blocking security review"},
+  {"id": "alpha-insufficient", "mutation": "raise minimumAcceptedTesterReports"}
+ ]
+}
