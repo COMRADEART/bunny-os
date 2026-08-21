@@ -1,0 +1,144 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# The capability control plane.
+#
+# It observes the machine, plans what should run, and — once an operator
+# enables it — reconciles the difference. The shipped configuration is
+# observe-only, so installing this unit does not cause the machine to start
+# changing itself. Enabling apply is a separate, deliberate act, documented in
+# docs/CAPABILITY_INSTALLED.md.
+#
+# Every hardening directive below was chosen against what the supervisor
+# actually does, and the ones that are ABSENT are as deliberate as the ones
+# present. The supervisor's job is to control other services, so a template
+# that confines it away from D-Bus and the cgroup hierarchy would produce a
+# unit that starts, reports everything as unknown, and applies nothing — which
+# looks like it is working.
+
+[Unit]
+Description=Bunny OS capability supervisor
+Documentation=file:/usr/share/doc/bunny-os/CAPABILITY_INSTALLED.md
+Documentation=file:/usr/share/doc/bunny-os/CAPABILITY_APPLICATOR.md
+# It reads the service manager and the kernel, so it wants both up first.
+After=basic.target dbus.service
+Wants=dbus.service
+# Never part of a boot transaction that could deadlock on it: the supervisor
+# controls services, so it must not be something other services wait for.
+DefaultDependencies=yes
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/bunny-capability-supervisor --config /etc/bunny-os/capability/supervisor.json
+ExecReload=/bin/kill -HUP $MAINPID
+
+# --- identity ---------------------------------------------------------------
+# Runs as root, and this is the directive that most deserves justification.
+# The supervisor calls `systemctl start/stop` on system units; there is no
+# unprivileged identity that can do that without either a polkit rule granting
+# the same authority by another name or a setuid helper with a wider attack
+# surface than this unit. The authority is instead narrowed where it is
+# actually exercised: SystemdBackend derives unit names by a fixed rule, checks
+# them against an allowlist built from the shipped manifests, and refuses
+# anything else. See docs/CAPABILITY_PRIVILEGE.md.
+User=root
+
+# --- directories ------------------------------------------------------------
+# systemd creates and owns these, with these modes, and cleans the runtime one
+# up on stop. The supervisor never creates a state directory itself, so a
+# permission mistake cannot be introduced by its own mkdir.
+StateDirectory=bunny-os/capability
+StateDirectoryMode=0700
+RuntimeDirectory=bunny-os/capability
+RuntimeDirectoryMode=0700
+LogsDirectory=bunny-os
+LogsDirectoryMode=0750
+ConfigurationDirectory=bunny-os/capability
+ConfigurationDirectoryMode=0755
+
+# --- bounds -----------------------------------------------------------------
+TimeoutStartSec=60s
+# Longer than one cycle deadline, so a shutdown during a cycle is graceful
+# rather than a kill that leaves the lock file's owner record stale.
+TimeoutStopSec=150s
+KillSignal=SIGTERM
+KillMode=mixed
+
+# Restart, but never in a loop. Five starts in five minutes and systemd gives
+# up, which is the outer bound on the applicator's own retry policy: two
+# independently bounded mechanisms, not one unbounded pair.
+Restart=on-failure
+RestartSec=30s
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+# The supervisor's own resources. It is the component that enforces limits on
+# others; leaving itself unlimited would be the one process on the machine that
+# can exhaust the memory it is protecting.
+MemoryMax=192M
+MemoryHigh=128M
+TasksMax=64
+CPUWeight=20
+
+# --- confinement ------------------------------------------------------------
+NoNewPrivileges=yes
+# strict, plus exactly the paths it writes. /usr is read-only to it, which is
+# what makes "immutable code cannot write into its own installation directory"
+# a kernel-enforced property rather than a convention.
+ProtectSystem=strict
+ReadWritePaths=/var/lib/bunny-os/capability /var/log/bunny-os /run/bunny-os
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@swap @obsolete @mount @reboot @module
+
+# It talks to systemd over the private D-Bus socket and reads /proc and /sys.
+# AF_UNIX is required for that; AF_NETLINK is required for the network probe's
+# route enumeration. No AF_INET of any kind: the supervisor itself contacts
+# nothing, and remote execution is dispatched by a different component under a
+# different policy.
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+
+# It starts and stops units and reads the kernel. It does not need to load
+# modules, change time, bind ports or own devices.
+CapabilityBoundingSet=CAP_KILL CAP_SYS_RESOURCE CAP_DAC_READ_SEARCH
+AmbientCapabilities=
+
+# --- deliberately NOT set ---------------------------------------------------
+# ProtectKernelTunables=yes
+#   Would make /proc/sys read-only. The supervisor only reads it, so this is
+#   compatible today — but it is left off because the discovery layer's own
+#   bounded readers are the intended control, and turning it on would silently
+#   change what a future probe can see. Reconsider with the probe set fixed.
+#
+# ProtectControlGroups=yes
+#   INCOMPATIBLE. The applicator verifies enforcement by reading a unit's real
+#   cgroup, and this would make /sys/fs/cgroup read-only to it. Measured on
+#   Fedora 44: with it set, the read-back that proves a limit is in force
+#   cannot be performed, and the applicator would correctly report every
+#   transition as unenforceable and roll it back.
+#
+# PrivateNetwork=yes
+#   INCOMPATIBLE with the network probe's route enumeration, which is how the
+#   plan decides whether remote execution is even reachable.
+#
+# DynamicUser=yes
+#   INCOMPATIBLE with User=root and with persistent state whose ownership must
+#   survive a restart.
+
+[Install]
+WantedBy=multi-user.target

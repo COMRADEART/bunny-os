@@ -435,6 +435,23 @@ def _plan_release(
             return None
         if observation.implementation_id == service.implementation_id:
             return None
+        if observation.implementation_id is None:
+            # The backend could not say which implementation is running. That is
+            # "unknown", not "different", and the two call for opposite actions.
+            #
+            # Measured on a real systemd host: `systemctl show` reports no
+            # implementation, so treating None as a mismatch made reconciliation
+            # stop and restart every running service on every cycle — the exact
+            # oscillation the hysteresis and cooldown machinery exists to
+            # prevent, reintroduced below all of it by a comparison against a
+            # value the backend never had.
+            #
+            # The cost of this rule is that a backend which cannot report an
+            # implementation cannot have an implementation *change* detected
+            # either; such a service converges to whatever is running and stays
+            # there until something stops it. That is recorded in
+            # KNOWN_LIMITATIONS.md, and it is strictly better than churning.
+            return None
         if observation.state == "suspended":
             # Resuming into the wrong implementation is not a resume. Fall
             # through to a stop so the correct one can start.
@@ -591,8 +608,12 @@ def _plan_acquire(
         # one; it starts here.
 
     if observation.state in ("running", "degraded"):
-        if observation.implementation_id != service.implementation_id:
-            # Phase one stopped it, so it starts here.
+        if (
+            observation.implementation_id is not None
+            and observation.implementation_id != service.implementation_id
+        ):
+            # Phase one stopped it, so it starts here. An unknown implementation
+            # is deliberately not a mismatch — see _plan_release.
             pass
         elif _limits_match(service, observation):
             return None

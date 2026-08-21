@@ -1,0 +1,123 @@
+{
+  "failures": [],
+  "passed": true,
+  "schemaVersion": 1,
+  "steps": [
+    {
+      "controllers": "cpu,cpuset,hugetlb,io,memory,pids,rdma",
+      "detail": "cgroup v2 with controllers cpu, cpuset, hugetlb, io, memory, pids, rdma",
+      "step": "cgroup-environment",
+      "usable": true,
+      "version": 2
+    },
+    {
+      "architecture": "x86_64",
+      "availableBytes": 15737462784,
+      "step": "inventory",
+      "usableBytes": 16561373184
+    },
+    {
+      "allocatable": 13589979136,
+      "reserve": 2147483648,
+      "step": "budget",
+      "viable": true
+    },
+    {
+      "grantBytes": 33554432,
+      "planId": "plan-8c15fc68c46c73ab",
+      "probeAction": "start_local",
+      "revision": 1,
+      "step": "plan"
+    },
+    {
+      "observedBy": "systemd",
+      "state": "stopped",
+      "step": "actual-before"
+    },
+    {
+      "probeOperations": [
+        "start"
+      ],
+      "step": "reconcile",
+      "total": 9
+    },
+    {
+      "step": "dry-run",
+      "transitions": 9,
+      "unitStateAfter": "inactive"
+    },
+    {
+      "detail": "systemctl start bunny-bunny-capability-probe.service succeeded",
+      "planId": "plan-8c15fc68c46c73ab",
+      "probeResult": "succeeded",
+      "step": "apply"
+    },
+    {
+      "isActive": "active",
+      "mainPid": "1164",
+      "step": "systemd-state"
+    },
+    {
+      "path": "/sys/fs/cgroup/system.slice/bunny-bunny-capability-probe.service",
+      "step": "cgroup-path"
+    },
+    {
+      "exit": 0,
+      "output": "",
+      "requestedBytes": 33554432,
+      "step": "set-property"
+    },
+    {
+      "memoryCurrent": "17682432",
+      "memoryMax": "33554432",
+      "memoryPeak": "17682432",
+      "requestedBytes": 33554432,
+      "step": "cgroup-readback"
+    },
+    {
+      "mainPid": "1164",
+      "procs": "1164",
+      "step": "cgroup-membership"
+    },
+    {
+      "detail": "active",
+      "ok": true,
+      "step": "health"
+    },
+    {
+      "bytes": 33554432,
+      "count": 1,
+      "state": "committed",
+      "step": "reservation"
+    },
+    {
+      "probeTransitions": [],
+      "step": "idempotency",
+      "totalTransitions": 8
+    },
+    {
+      "availableAfter": 13619339264,
+      "availableBefore": 13585784832,
+      "ok": true,
+      "released": 1,
+      "step": "stop",
+      "unitState": "inactive"
+    },
+    {
+      "events": [
+        "backend.operation",
+        "reconcile.finished",
+        "reconcile.started",
+        "reservation.committed",
+        "reservation.released",
+        "reservation.taken",
+        "transition.attempted",
+        "transition.failed",
+        "transition.rolled_back",
+        "transition.succeeded"
+      ],
+      "step": "audit",
+      "total": 49
+    }
+  ]
+}
