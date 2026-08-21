@@ -218,8 +218,10 @@ echo "injected: harness, unit, linger, ${user}"
 
 # SELinux labels for everything created. See the header: a guestfish-created
 # file has no label at all and the policy refuses it, silently.
-labels="$(guestfish --ro -a "${disk}" run : mount "${root_partition}" / \
-  : file-architecture "${deployment}/usr/bin/bash" 2>/dev/null || true)"
+#
+# A `labels=$(guestfish ... file-architecture ...)` probe stood here and its
+# output was never read — a whole extra guestfish boot, several seconds, for a
+# value nothing used. ShellCheck's SC2034 is what noticed.
 relabel=(
   run
   : mount "${root_partition}" /

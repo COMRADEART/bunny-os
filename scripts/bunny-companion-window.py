@@ -119,12 +119,17 @@ def wait_for_runtime(
         sleep(_POLL_SECONDS)
 
 
-def apply_character_policy(root: Path) -> dict[str, object]:
+def apply_character_policy(root: Path, mode: object = None) -> dict[str, object]:
     """Choose the bundled character this machine can draw. Never raises.
 
     The eligible rung comes from :func:`companion.presentation.select_presentation`
     against this session's own signals — the same function the runtime uses, so
     the launcher is not a second opinion about capability either.
+
+    ``mode`` is the user's renderer mode and lowers the ceiling further. Without
+    it this function selected the 3D package on every machine that could hold a
+    GL context, which is what made 3D the de-facto default before the
+    polished-alpha phase made pre-rendered the stated one.
     """
     try:
         from companion.character.importer import PackageRegistry
@@ -144,10 +149,30 @@ def apply_character_policy(root: Path) -> dict[str, object]:
         preferences = accessibility_from_environment()
         recommendation = select_presentation(signals, preferences)
         registry = PackageRegistry(root / "characters", built_in_paths=default_character_paths())
-        decision = apply_default_character_policy(registry, eligible=recommendation.eligible)
+        decision = apply_default_character_policy(
+            registry, eligible=recommendation.eligible, mode=mode
+        )
         return decision.to_json()
     except Exception as error:
         return {"error": f"{error}", "applied": False}
+
+
+def _render_mode(root: Path) -> object:
+    """The renderer mode from settings, or the default. Never raises.
+
+    Settings are read on the path that opens the companion window, so an
+    unreadable file must cost the user their *preference* and not their
+    companion — the default is pre-rendered, which is also the safest thing to
+    fall back to.
+    """
+    try:
+        from companion.settings import load_settings
+
+        return load_settings(root).character.mode()
+    except Exception:
+        from companion.character.modes import DEFAULT_MODE
+
+        return DEFAULT_MODE
 
 
 def _available_memory() -> int | None:
@@ -238,7 +263,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     if not arguments.no_character_policy and not safe.enabled:
-        record["characterPolicy"] = apply_character_policy(root)
+        record["characterPolicy"] = apply_character_policy(root, mode=_render_mode(root))
     else:
         record["characterPolicy"] = {
             "applied": False,

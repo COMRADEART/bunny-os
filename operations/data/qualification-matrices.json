@@ -99,25 +99,25 @@
     "scenario": "diagnostics-export"
    },
    {
-    "evidenceReference": null,
-    "method": "source-inspection",
-    "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
-    "outcome": "NOT_RUN",
-    "recordedAt": "2026-07-29T00:00:00Z",
+    "evidenceReference": "qualification/capsules/evidence/a11y-b09f523/accessibility.json",
+    "method": "virtual-machine",
+    "notes": "Driven in a booted Bunny OS guest (image b09f523, 1920x1080). The preference was set, read back, and the screen photographed. Against a 0.15% noise floor measured from a screenshot taken at the SAME settings as the baseline, text-scaling-factor 1.5 changed 0.09% of the screen and high-contrast changed 0.18% - both indistinguishable from the live CPU and network gauges ticking. The cause is structural: 43 of 43 font sizes in the shell stylesheet are absolute pixels and all 151 colour literals are hardcoded, so there is nothing for a scale factor to multiply or a theme to override.",
+    "outcome": "FAIL",
+    "recordedAt": "2026-08-12T00:00:00Z",
     "scenario": "high-contrast"
    },
    {
-    "evidenceReference": null,
-    "method": "source-inspection",
-    "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
-    "outcome": "NOT_RUN",
-    "recordedAt": "2026-07-29T00:00:00Z",
+    "evidenceReference": "qualification/capsules/evidence/a11y-b09f523/accessibility.json",
+    "method": "virtual-machine",
+    "notes": "Driven in a booted Bunny OS guest (image b09f523, 1920x1080). The preference was set, read back, and the screen photographed. Against a 0.15% noise floor measured from a screenshot taken at the SAME settings as the baseline, text-scaling-factor 1.5 changed 0.09% of the screen and high-contrast changed 0.18% - both indistinguishable from the live CPU and network gauges ticking. The cause is structural: 43 of 43 font sizes in the shell stylesheet are absolute pixels and all 151 colour literals are hardcoded, so there is nothing for a scale factor to multiply or a theme to override.",
+    "outcome": "FAIL",
+    "recordedAt": "2026-08-12T00:00:00Z",
     "scenario": "text-scaling"
    },
    {
     "evidenceReference": null,
     "method": "source-inspection",
-    "notes": "No assistive-technology session has been driven. release/matrix.py refuses a source-inspection pass in this matrix, so these stay unresolved rather than being recorded from code review.",
+    "notes": "Still NOT_RUN after the 2026-08-12 accessibility pass, for two reasons. The pass photographed the screen rather than filming it, and a still cannot show whether a transition animated. And the guest's own log reads 'mutter reports rendering is software' then 'animations are disabled; the character is drawn in a resting pose' - under llvmpipe the desktop turns animations off by itself, so the preference had nothing left to switch off. Measuring this needs frame capture AND hardware rendering. The desktop does pin its motion budget to 0 under reduced motion in source (companionPresence.js, taskWorkspace.js), but recording a pass from source inspection is what this matrix refuses.",
     "outcome": "NOT_RUN",
     "recordedAt": "2026-07-29T00:00:00Z",
     "scenario": "reduced-motion"

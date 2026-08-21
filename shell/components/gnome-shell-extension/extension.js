@@ -86,7 +86,9 @@ export default class BunnyShellExtension extends Extension {
             return;
         }
         try {
-            this._desktop = new DesktopShell({settings: this._settings});
+            // `dir` is how the theme manager finds the shipped stylesheet it
+            // has to unload — and reload if it is ever torn down.
+            this._desktop = new DesktopShell({settings: this._settings, dir: this.dir});
             console.log('bunny-desktop: the Bunny desktop is up');
         } catch (error) {
             this._desktop = null;

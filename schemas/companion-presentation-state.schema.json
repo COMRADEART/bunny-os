@@ -115,7 +115,24 @@
             "const": "denied",
             "description": "What happens if nobody answers. Always a denial for a sensitive action; there is no configuration that makes it a grant."
           },
-          "decision": { "enum": ["pending", "granted", "denied", "expired"] }
+          "decision": { "enum": ["pending", "granted", "denied", "expired"] },
+          "prompt": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "The structured facts a permission surface draws. Display only, and outside the binding for the same reason destinationDetail is: it is a rendering, not a record, and binding a rendering would mean rewording a sentence invalidates an answer somebody already gave. Every field is an allowlisted key bounded by companion.presentation.PROMPT_FIELDS, because several of these strings originate in an application's own manifest and they are being drawn in a security dialog.",
+            "properties": {
+              "kind": { "type": "string", "maxLength": 32 },
+              "applicationName": { "type": "string", "maxLength": 64 },
+              "applicationId": { "type": "string", "maxLength": 96 },
+              "operationId": { "type": "string", "maxLength": 64 },
+              "presentation": { "type": "string", "maxLength": 200 },
+              "expectedEffect": { "type": "string", "maxLength": 200 },
+              "disclosure": { "type": "string", "maxLength": 160 },
+              "fileAccess": { "type": "string", "maxLength": 96 },
+              "network": { "type": "string", "maxLength": 32 },
+              "privateAppData": { "type": "string", "maxLength": 32 }
+            }
+          }
         }
       }
     },

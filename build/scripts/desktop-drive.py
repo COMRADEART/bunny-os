@@ -47,6 +47,18 @@ _qmp_input = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_qmp_input)
 Pointer = _qmp_input.Pointer
 
+# The same control finder the guest probe uses, imported rather than reimplemented
+# so that "the button the host pressed" and "the button the guest found" cannot be
+# two different rules for choosing among controls with one name.
+_interaction_spec = importlib.util.spec_from_file_location(
+    "desktop_interaction_host", Path(__file__).resolve().parent / "desktop_interaction.py")
+_interaction = importlib.util.module_from_spec(_interaction_spec)
+_interaction_spec.loader.exec_module(_interaction)
+desktop_interaction_find = _interaction.find_control
+
+#: What the person asks for. One sentence, and the only text the journey types.
+JOURNEY_REQUEST = "Resize this to 100 pixels wide."
+
 
 class Control:
     """The host end of the guest's control channel."""
@@ -116,6 +128,18 @@ def main() -> int:
     #: answer from the runtime; the second must produce a desktop action.
     parser.add_argument("--ask", default="What files are in my Downloads folder?")
     parser.add_argument("--ask-action", default="Open Files")
+    parser.add_argument("--accessibility", action="store_true",
+                        help="measure the session against assistive technology: "
+                             "names, keyboard reach, reduced motion, text scaling, Orca")
+    parser.add_argument("--screen-reader", action="store_true",
+                        help="run Orca through the journey and record every "
+                             "utterance it produces")
+    parser.add_argument("--performance", action="store_true",
+                        help="idle CPU and memory for the desktop and the "
+                             "Companion, and what a theme change costs")
+    parser.add_argument("--journey", default="skip",
+                        choices=("skip", "granted", "denied", "failing"),
+                        help="drive the image journey through the shell's own Trust surface")
     arguments = parser.parse_args()
 
     steps: list[dict] = []
@@ -282,6 +306,31 @@ def interact(control, qmp, pointer, targets, arguments,
         (before_files or {}).get("state", {}).get("launched") or
         (before_terminal or {}).get("state", {}).get("launched"))
 
+    # Defined before run_journey, not after, because run_journey calls it.
+    #
+    # Python resolves a closure's free variable at call time, so this was a
+    # NameError waiting for the first run in which the journey got past the
+    # approval — and until the Trust prompt could actually be pressed, it
+    # never did. The failure path had been exercised a dozen times; the
+    # success path had never run once.
+    def watch_character(seconds: float, label: str) -> list[dict]:
+        """Poll the character and record every state it passes through."""
+        seen: list[dict] = []
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            answer = control.ask({"command": "character", "label": label}, timeout=120)
+            observation = (answer or {}).get("character") or {}
+            state = observation.get("state", "")
+            if state and (not seen or seen[-1]["state"] != state):
+                seen.append({"state": state, "says": observation.get("says", ""),
+                             "reason": observation.get("reason", "")})
+                # Idle after something happened means the request is over.
+                if state == "idle" and len(seen) > 1:
+                    break
+            time.sleep(2)
+        return seen
+
+
     # ---- the assistant's backend, through the shell's own bridge ----------
     #
     # Run first and reported separately from the interface half. This is the
@@ -289,6 +338,547 @@ def interact(control, qmp, pointer, targets, arguments,
     # action, executes and returns an answer"; the scenario below it is the
     # claim "a person can type that request into the desktop". They are
     # different claims and one must not be allowed to stand for the other.
+    # ---- the image journey, through the screen -----------------------------
+    #
+    # The Trust surface already exists in the shell: an approval box with Allow
+    # and Deny, both carrying accessible names. It never appeared in earlier
+    # runs because `desktopShell.js` shows an approval only for a task *it*
+    # asked for — `this._owns(meta)` — and the journey probe submitted through
+    # its own protocol client. So the request is typed into the assistant here,
+    # the same way a person types it, and the button is pressed on screen.
+    #
+    # No protocol shortcut: this function never calls resolve_approval. If the
+    # approval box does not appear, the journey fails, which is the correct
+    # outcome for a Trust prompt nobody can see.
+    def run_journey(decision: str, fixture: str) -> dict:
+        outcome: dict = {"decision": decision, "fixture": fixture}
+        # Ready first. Asking *first* is not the same as asking *early*: the
+        # same request that came back `warning` when it was the session's first
+        # reached a permission prompt later in the same session. The product
+        # ships a readiness probe that answers eight conditions; this waits on
+        # it rather than on a sleep.
+        ready = control.ask({"command": "ready", "wait": 150, "label": "journey-ready"},
+                            timeout=260)
+        outcome["ready"] = (ready or {}).get("ready") or {}
+        step("journey-ready", **{k: v for k, v in outcome["ready"].items() if k != "checks"})
+
+        prepared = control.ask({"command": "fixture", "kind": fixture,
+                                "label": "journey-fixture"}, timeout=180)
+        outcome["fixture"] = (prepared or {}).get("fixture") or {}
+        step("journey-fixture", **{k: v for k, v in outcome["fixture"].items()
+                                   if k != "raw"})
+        if not outcome["fixture"].get("ok"):
+            return outcome
+
+        screenshot("journey-01-idle")
+        # Activate the assistant, then *check* that it woke.
+        #
+        # The shortcut is the documented binding and is tried first, but on this
+        # guest it does not fire — the two asks earlier in this same run both
+        # fell back to the pointer. Typing into an assistant that never became
+        # listening put the request nowhere, and the journey then reported "no
+        # approval appeared", which is true and entirely misleading.
+        pointer.key("meta_l", "shift", "b")
+        time.sleep(2.5)
+        woke = control.ask({"command": "character", "label": "journey-activated"},
+                           timeout=120)
+        state = ((woke or {}).get("character") or {}).get("state", "")
+        route = "shortcut"
+        if state != "listening":
+            target = targets.get("ask")
+            if target is None:
+                step("journey-activate", activated=False, route="none",
+                     reason="the shortcut did not activate and the input was not found")
+                outcome["activated"] = False
+                return outcome
+            x, y = centre(target["extents"])
+            pointer.click(x, y)
+            time.sleep(1.5)
+            route = "pointer"
+            state = ((control.ask({"command": "character", "label": "journey-activated-2"},
+                                  timeout=120) or {}).get("character") or {}).get("state", "")
+        # Clicking the input counts as activated even when the character has not
+        # reached `listening`. That is not a concession: the two asks earlier in
+        # this run take exactly this route, do not check the state at all, and
+        # produce answers — so requiring `listening` after a click is stricter
+        # than the behaviour that demonstrably works, and it stopped the journey
+        # on a session where typing would have succeeded.
+        #
+        # Whether the request actually landed is settled afterwards, by whether
+        # the task changes state, which is the honest test.
+        outcome["activated"] = state == "listening" or route == "pointer"
+        outcome["activationRoute"] = route
+        outcome["activationState"] = state
+        step("journey-activate", activated=outcome["activated"], route=route, state=state)
+        if not outcome["activated"]:
+            screenshot("journey-02-not-listening")
+            return outcome
+        screenshot("journey-02-listening")
+        pointer.type_text(JOURNEY_REQUEST)
+        time.sleep(0.5)
+        screenshot("journey-03-typed")
+        pointer.key("ret")
+        step("journey-asked", request=JOURNEY_REQUEST)
+
+        # Wait for the approval box by *name*, re-locating controls each time.
+        # The box does not exist until the task reaches waiting_for_approval, so
+        # the target list built at start-up cannot contain it.
+        wanted = "Allow this Bunny action" if decision == "granted" else "Deny this Bunny action"
+        button = None
+        last_answer: dict | None = None
+        controls_now: dict = {}
+        states: list[dict] = []
+
+        # Wait on the *cheap* signal, then ask the expensive question once.
+        #
+        # The first version polled the whole accessibility tree every two
+        # seconds while it waited. Each of those walks the shell's actors and
+        # takes tens of seconds under llvmpipe, so the calls overlapped, the
+        # probe stopped answering, and the run recorded "0 controls" and no
+        # character states — an instrument that had loaded itself to a standstill
+        # and reported the desktop as empty.
+        #
+        # The character state is one small read. It is polled until the shell
+        # says it is waiting for permission, and only then is the tree walked.
+        deadline = time.monotonic() + arguments.settle * 2
+        asking = False
+        while time.monotonic() < deadline:
+            character = control.ask({"command": "character", "label": "journey-wait"},
+                                    timeout=180)
+            observation = (character or {}).get("character") or {}
+            state = str(observation.get("state", ""))
+            if state and (not states or states[-1] != state):
+                states.append(state)
+            if "approval" in state or "permission" in str(observation.get("says", "")).lower():
+                asking = True
+                break
+            if state in ("success", "error") and len(states) > 1:
+                break
+            time.sleep(3)
+        outcome["statesBeforeApproval"] = states
+        outcome["sawAskingState"] = asking
+
+        # Photograph the question the moment the shell says it is asking, before
+        # the expensive walk. A tree walk over this desktop can take minutes, and
+        # anything with its own clock — the desktop's watchdog did exactly this —
+        # can take the prompt away in between. Without this shot, "the walk found
+        # no button" cannot be told from "the prompt was there and went".
+        if asking:
+            screenshot("journey-03b-asking")
+
+        # The fast path first: two names, early exit. The full inventory walk
+        # below can take minutes over this tree, and the prompt only lives as
+        # long as the shortest clock watching it — so spending four minutes
+        # cataloguing the desktop before pressing a button is how the button
+        # stops being there.
+        #
+        # Additive, not a replacement. The inventory walk still runs when this
+        # finds nothing, and its diagnostics are still what a failure reports,
+        # because the last in-place "improvement" to this instrument broke it.
+        quick = control.ask({"command": "approval-buttons", "label": "journey-approval-fast"},
+                            timeout=180)
+        fast = (quick or {}).get("buttons") or {}
+        outcome["fastFind"] = {k: v for k, v in fast.items() if k != "buttons"}
+        if fast.get("ok") and wanted in (fast.get("buttons") or {}):
+            entry = fast["buttons"][wanted]
+            if entry.get("extents"):
+                button = entry
+                controls_now = {"controls": list((fast.get("buttons") or {}).values())}
+                step("journey-approval-fast", found=True, button=wanted,
+                     nodesVisited=fast.get("nodesVisited"))
+
+        for _ in range(3):
+            if button is not None:
+                break
+            answer = control.ask({"command": "controls", "label": "journey-approval"},
+                                 timeout=240)
+            last_answer = answer
+            controls_now = (answer or {}).get("controls") or {}
+            button = desktop_interaction_find(controls_now, wanted)
+            if button is not None or controls_now.get("controls"):
+                break
+            time.sleep(5)
+
+        if button is None:
+            # What the walk *did* see, so the next diagnosis is not another
+            # guess. Twice now the prompt has been on screen in a screenshot
+            # taken at this exact moment while the finder reported nothing, and
+            # each time the cause was in the instrumentation.
+            seen = (controls_now or {}).get("controls") or []
+            interesting = sorted({
+                str(entry.get("name", ""))
+                for entry in seen
+                if any(word in str(entry.get("name", "")).lower()
+                       for word in ("allow", "deny", "bunny", "permission", "ask"))
+            })
+            outcome["controlsSeen"] = len(seen)
+            outcome["controlsSample"] = sorted({
+                str(entry.get("name", "")) for entry in seen if entry.get("name")
+            })[:40]
+            outcome["controlsMatching"] = interesting
+            outcome["atspiOk"] = (controls_now or {}).get("ok")
+            outcome["answerKeys"] = sorted(last_answer or {})
+            outcome["probeError"] = str((last_answer or {}).get("error", ""))[:300]
+            outcome["atspiCall"] = {
+                k: str(v)[:200] for k, v in ((controls_now or {}).get("call") or {}).items()
+                if k in ("returncode", "stderr", "error", "ran")
+            }
+            step("journey-approval", visible=False,
+                 reason=f"no control named {wanted!r} appeared on screen",
+                 controlsSeen=len(seen), matching=interesting[:10],
+                 atspiOk=(controls_now or {}).get("ok"))
+            outcome["approvalVisible"] = False
+            screenshot("journey-04-no-approval")
+
+            # There are two ways to have no approval on screen, and they need
+            # opposite fixes: the runtime never asked, or it asked and the
+            # desktop did not draw it. Everything above measures the screen, so
+            # this asks the runtime — which event did it write last, and does it
+            # believe there is a pending approval right now.
+            #
+            # Without this the next diagnosis is another guess, and this
+            # particular guess has already cost three cycles.
+            trace = control.ask({"command": "task-trace", "label": "journey-trace"},
+                                timeout=180)
+            outcome["taskTrace"] = (trace or {}).get("trace") or {}
+            unit = control.ask({"command": "companion-state", "label": "journey-companion"},
+                               timeout=180)
+            outcome["companionState"] = (unit or {}).get("companion") or {}
+            for task in (outcome["taskTrace"].get("tasks") or [])[-3:]:
+                step("journey-task-trace",
+                     taskId=task.get("taskId"), phase=task.get("phase"),
+                     status=task.get("status"), approvals=task.get("approvals"),
+                     eventCount=task.get("eventCount"),
+                     lastEvents=[e.get("type") for e in (task.get("events") or [])],
+                     errorSummary=task.get("errorSummary"))
+            return outcome
+
+        # The prompt is on screen. Photograph it before touching it.
+        screenshot("journey-04-trust-prompt")
+        labels = [
+            entry.get("name", "")
+            for entry in (controls_now.get("controls") or [])
+            if entry.get("name") and "bunny-assistant-approval" in " ".join(entry.get("path", []))
+        ]
+        outcome["approvalVisible"] = True
+        outcome["approvalLabels"] = labels[:12]
+        step("journey-approval", visible=True, button=wanted,
+             extents=button["extents"], role=button.get("role"), labels=labels[:6])
+
+        # The one moment the permission dialog is on screen is the only moment
+        # its accessibility can be measured. A prompt that can be seen but not
+        # reached from a keyboard is a security surface that excludes people,
+        # and it cannot be asked about before it exists or after it is gone.
+        if arguments.accessibility:
+            reached = control.ask({"command": "a11y-tree", "label": "journey-a11y"},
+                                  timeout=300)
+            outcome["approvalAccessibility"] = (reached or {}).get("a11y") or {}
+            prompt = outcome["approvalAccessibility"].get("trustPrompt") or {}
+            step("journey-approval-a11y",
+                 buttonsFound=sorted(prompt),
+                 focusable={k: (v.get("states") or {}).get("focusable")
+                            for k, v in prompt.items()},
+                 actions={k: v.get("actions") for k, v in prompt.items()})
+
+        x, y = centre(button["extents"])
+        pointer.click(x, y)
+        step("journey-decision", pressed=wanted, at={"x": x, "y": y})
+        screenshot("journey-05-decided")
+
+        outcome["statesAfterApproval"] = [
+            item["state"] for item in watch_character(arguments.settle * 2, "journey")
+        ]
+        screenshot("journey-06-settled")
+        final = control.ask({"command": "character", "label": "journey-final"}, timeout=120)
+        outcome["final"] = (final or {}).get("character") or {}
+        result = control.ask({"command": "result", "label": "journey-result"}, timeout=180)
+        outcome["result"] = (result or {}).get("result") or {}
+        step("journey-result", **{k: v for k, v in outcome["result"].items() if k != "raw"})
+        screenshot("journey-07-result")
+        return outcome
+
+    # ---- the screen reader --------------------------------------------------
+    #
+    # Orca is started *before* the journey and left running through it, so what
+    # follows is the actual announcement stream of a real permission flow rather
+    # than a reading of a static tree. §31 asks what is announced; this is the
+    # only place in the system where that exists as text, because the audio path
+    # is a speech engine and a sound card and neither is qualified here.
+    #
+    # What this cannot answer: pronunciation, rate, whether an utterance was
+    # interrupted, and whether a person could follow it. Those need listening.
+    if arguments.screen_reader:
+        started = (control.ask({"command": "orca-start", "wait": 30,
+                                "label": "orca-start"}, timeout=240) or {}).get("orca") or {}
+        report["orcaStart"] = started
+        # The diagnostics are large and go in the record; the four fields that
+        # decide whether this run can answer anything are printed.
+        step("orca-start", launched=started.get("launched"),
+             running=started.get("running"), isOurInstance=started.get("isOurInstance"),
+             speaking=started.get("speaking"), commandLine=started.get("commandLine"))
+        # A run that could not start the screen reader must not go on to report
+        # an empty transcript as "nothing was announced".
+        if not started.get("speaking"):
+            step("orca-not-speaking",
+                 note="the journey will run without a screen reader",
+                 orcaOutput=(started.get("orcaOutput") or "")[:300],
+                 journal=((started.get("diagnostics") or {}).get("journal") or "")[-300:])
+
+    if arguments.journey != "skip":
+        decision = "denied" if arguments.journey == "denied" else "granted"
+        fixture = "corrupt" if arguments.journey == "failing" else "real"
+        report["journey"] = run_journey(decision, fixture)
+
+    if arguments.screen_reader:
+        spoken = (control.ask({"command": "orca-speech", "label": "orca-speech"},
+                              timeout=240) or {}).get("speech") or {}
+        report["orcaSpeech"] = spoken
+        utterances = spoken.get("utterances") or []
+        # The phrases §31 names, looked for in what was actually said. Recorded
+        # as found/not-found per phrase rather than as one boolean, because
+        # "the screen reader said something" is not the claim.
+        # The six things §31 asks a screen reader to get across, looked for by
+        # meaning rather than by control name.
+        #
+        # The first version of this looked for "Allow this Bunny action" as a
+        # standalone utterance and reported it missing. Orca announces the
+        # *focused* control, which is Deny by design, and conveys the choice in
+        # the prompt's own announcement — "Allow, or deny. Deny is selected."
+        # A person hears that Allow exists; a check that demanded the button's
+        # accessible name be spoken on appearance was testing a screen reader
+        # behaviour nobody wants.
+        wanted = {
+            "applicationName": "Bunny Image Tool",
+            "requestedResource": "holiday.png",
+            "reason": "will save a copy",
+            "confinement": "Network: Off",
+            "bothOptions": "Allow, or deny",
+            "focusedControlIsTheSafeOne": "Deny this Bunny action",
+            "completed": "Done. I made",
+        }
+        joined = " • ".join(utterances)
+        report["orcaHeard"] = {
+            key: (phrase in joined) for key, phrase in wanted.items()
+        }
+        step("orca-speech", total=spoken.get("total"),
+             captured=len(utterances), **report["orcaHeard"])
+
+    # ---- accessibility ------------------------------------------------------
+    #
+    # Each preference is measured the same way: read the default, change it,
+    # read it back, and photograph the desktop under it. The read-back is not
+    # ceremony — `gsettings set` succeeds against a key the running shell never
+    # reads, and a report that recorded only the write would say the desktop
+    # honours a preference it ignores.
+    #
+    # The tree walk at the default is the negative control for the walks after.
+    # Without it, "0 unnamed controls" cannot be told from "the walk returned
+    # nothing", which is a failure this harness has produced before.
+    def run_accessibility() -> dict:
+        outcome: dict = {}
+        outcome["settingsBefore"] = (control.ask(
+            {"command": "a11y-settings", "label": "a11y-before"}, timeout=120
+        ) or {}).get("settings") or {}
+        step("a11y-settings", **outcome["settingsBefore"])
+
+        outcome["screenReader"] = (control.ask(
+            {"command": "screen-reader", "label": "a11y-orca"}, timeout=120
+        ) or {}).get("screenReader") or {}
+        step("a11y-screen-reader", **outcome["screenReader"])
+
+        baseline = (control.ask({"command": "a11y-tree", "label": "a11y-tree-default"},
+                                timeout=300) or {}).get("a11y") or {}
+        outcome["treeAtDefault"] = baseline
+        step("a11y-tree-default", ok=baseline.get("ok"),
+             nodes=baseline.get("nodes"), interactive=baseline.get("interactive"),
+             named=baseline.get("named"), unnamed=len(baseline.get("unnamed") or []),
+             focusable=baseline.get("focusable"), withActions=baseline.get("withActions"))
+        screenshot("a11y-01-default")
+
+        # One preference at a time, each reverted before the next.
+        #
+        # These used to be applied cumulatively — reduced motion, then no
+        # animations, then 1.5x text, then high contrast — and the screenshot
+        # named "high contrast" was therefore also large-text and reduced-motion.
+        # That confounds exactly the two measurements §32 and §33 are release
+        # blockers for: the 0.18 % of the screen attributed to high contrast was
+        # measured against a desktop that had already been changed twice, and
+        # neither figure could be attributed to the setting it was named after.
+        def apply(schema: str, key: str, value: str, label: str) -> dict:
+            answer = control.ask({"command": "a11y-set", "schema": schema, "key": key,
+                                  "value": value, "label": label}, timeout=120)
+            record = (answer or {}).get("set") or {}
+            record.update({"schema": schema, "key": key, "asked": value})
+            # gsettings reads a string back in GVariant text form, so an enum
+            # comes back as `'reduce'` and a bare comparison against `reduce`
+            # fails. Stripping the quotes is not leniency about whether the
+            # write took: `wrote` and the value itself are both still checked.
+            record["tookEffect"] = str(record.get("readBack", "")).strip("'\"") == value.strip("'\"")
+            step(label, **record)
+            return record
+
+        def sample_heights(label: str) -> dict:
+            walk = (control.ask({"command": "a11y-tree", "label": label},
+                                timeout=300) or {}).get("a11y") or {}
+            return walk
+
+        def compare(before: dict, after: dict) -> dict:
+            """The same named controls, before and after, by height.
+
+            Comparing named controls rather than counting roles is what
+            distinguishes "the setting is stored" from "the desktop drew it
+            differently"; a count would not have moved either way.
+            """
+            first = before.get("sample") or {}
+            second = after.get("sample") or {}
+            grew, shrank, same = [], [], []
+            for name, box in first.items():
+                other = second.get(name)
+                if not other:
+                    continue
+                if other["height"] > box["height"]:
+                    grew.append({"name": name, "from": box["height"], "to": other["height"]})
+                elif other["height"] < box["height"]:
+                    shrank.append({"name": name, "from": box["height"], "to": other["height"]})
+                else:
+                    same.append(name)
+            measured = len(grew) + len(shrank) + len(same)
+            return {
+                "controlsComparable": measured,
+                "grew": grew[:12],
+                "grewCount": len(grew),
+                "shrankCount": len(shrank),
+                "unchangedCount": len(same),
+                # Stated rather than concluded: with nothing comparable this
+                # says nothing at all, and must not read as "the desktop
+                # ignored it".
+                "conclusive": measured > 0,
+            }
+
+        changes = []
+        SCALE_SHOTS = {"1.25": "a11y-06-text-125", "1.5": "a11y-03-large-text",
+                       "2.0": "a11y-07-text-200"}
+
+        # --- §32 text scaling, at each of the four sizes the brief names ----
+        scaling = []
+        for value in ("1.25", "1.5", "2.0"):
+            changes.append(apply("org.gnome.desktop.interface", "text-scaling-factor",
+                                 value, f"a11y-set-text-scaling-{value}"))
+            time.sleep(3)
+            screenshot(SCALE_SHOTS[value])
+            walk = sample_heights(f"a11y-tree-text-{value}")
+            measurement = {"scale": value, **compare(baseline, walk)}
+            scaling.append(measurement)
+            step(f"a11y-text-scaling-{value}",
+                 **{k: v for k, v in measurement.items() if k != "grew"})
+        apply("org.gnome.desktop.interface", "text-scaling-factor", "1.0",
+              "a11y-restore-text-scaling")
+        time.sleep(2)
+        outcome["textScalingBySize"] = scaling
+        # The 1.5x figure keeps its old name and shape so the two runs can be
+        # compared directly against each other.
+        outcome["textScaling"] = next(
+            (dict(m) for m in scaling if m["scale"] == "1.5"), {"conclusive": False})
+
+        # --- §33 high contrast, on its own -----------------------------------
+        changes.append(apply("org.gnome.desktop.a11y.interface", "high-contrast",
+                             "true", "a11y-set-high-contrast"))
+        time.sleep(3)
+        screenshot("a11y-04-high-contrast")
+        contrast_walk = sample_heights("a11y-tree-high-contrast")
+        outcome["treeAdapted"] = contrast_walk
+        step("a11y-tree-adapted", ok=contrast_walk.get("ok"),
+             nodes=contrast_walk.get("nodes"),
+             interactive=contrast_walk.get("interactive"),
+             named=contrast_walk.get("named"))
+        apply("org.gnome.desktop.a11y.interface", "high-contrast", "false",
+              "a11y-restore-high-contrast")
+        time.sleep(2)
+
+        # --- §15 reduced motion, on its own ----------------------------------
+        #
+        # `reduce`, not `true`. The key is an enum — `no-preference` or
+        # `reduce` — and every previous run of this sweep asked for `true`,
+        # which gsettings refused. The record then carried a reduced-motion
+        # measurement taken on a desktop whose reduced-motion preference had
+        # never been set. `enable-animations` below is the one St actually
+        # reads, and it did take effect, which is why the desktop behaved
+        # correctly while the evidence was measuring nothing.
+        changes.append(apply("org.gnome.desktop.a11y.interface", "reduced-motion",
+                             "reduce", "a11y-set-reduced-motion"))
+        changes.append(apply("org.gnome.desktop.interface", "enable-animations",
+                             "false", "a11y-set-enable-animations"))
+        time.sleep(3)
+        screenshot("a11y-02-reduced-motion")
+        apply("org.gnome.desktop.a11y.interface", "reduced-motion", "no-preference",
+              "a11y-restore-reduced-motion")
+        apply("org.gnome.desktop.interface", "enable-animations", "true",
+              "a11y-restore-enable-animations")
+        outcome["changes"] = changes
+
+        # --- the control -----------------------------------------------------
+        # Everything is back where it started, so this screenshot differs from
+        # a11y-01-default only by render noise. It is what every figure above is
+        # measured against, and without it "0.09 % of the screen changed" cannot
+        # be told from "nothing ever changes by more than 0.09 %".
+        time.sleep(3)
+        outcome["restored"] = (control.ask(
+            {"command": "a11y-settings", "label": "a11y-after"}, timeout=120
+        ) or {}).get("settings") or {}
+        step("a11y-restored", **outcome["restored"])
+        screenshot("a11y-05-restored")
+        return outcome
+
+    # ---- performance --------------------------------------------------------
+    #
+    # §41 asks what the design-system refactor cost. Four numbers, and the two
+    # that are new this phase are the theme ones: the desktop now renders a
+    # stylesheet and hands it to St whenever a display setting changes, and
+    # nothing before this phase did that at all.
+    def run_performance() -> dict:
+        outcome: dict = {}
+
+        idle = (control.ask({"command": "performance", "seconds": 20,
+                             "label": "performance-idle"}, timeout=180) or {}).get("performance") or {}
+        outcome["idle"] = idle
+        for label, entry in (idle.get("processes") or {}).items():
+            step(f"performance-{label}", **entry)
+
+        # What a settings change costs. Measured from the host, so it includes
+        # the write, the shell noticing, the render, the stylesheet load and the
+        # restyle — which is the whole of what a person waits for.
+        timings = []
+        for value in ("1.5", "1.0"):
+            began = time.monotonic()
+            control.ask({"command": "a11y-set", "schema": "org.gnome.desktop.interface",
+                         "key": "text-scaling-factor", "value": value,
+                         "label": f"performance-scale-{value}"}, timeout=120)
+            # The tree walk is the first thing that can only answer once the
+            # restyle has landed, so it is the honest end of the interval.
+            control.ask({"command": "a11y-tree", "label": f"performance-tree-{value}"}, timeout=300)
+            timings.append({"scale": value, "seconds": round(time.monotonic() - began, 2)})
+        outcome["themeChange"] = timings
+        step("performance-theme-change", timings=timings)
+
+        return outcome
+
+    if arguments.performance:
+        report["performance"] = run_performance()
+
+    if arguments.accessibility:
+        report["accessibility"] = run_accessibility()
+
+    # The journey goes first.
+    #
+    # The assistant answers the *first* request of a session and not the second:
+    # in the run before this reordering, `assistant-factual` produced
+    # thinking → success → idle and `assistant-action`, taken the same way
+    # moments later, produced only ["idle"]. The journey ran third and got
+    # nothing, which reads as a missing Trust prompt and is a missing turn.
+    #
+    # Whether that is focus, the panel closing, or the shell's own state is a
+    # real question about the product and is recorded as one. It is not a reason
+    # to let the journey inherit a spent assistant.
     for label, request in (("factual", arguments.ask), ("action", arguments.ask_action)):
         if not request:
             continue
@@ -319,23 +909,6 @@ def interact(control, qmp, pointer, targets, arguments,
     # moves through the states the request is actually in, and a real answer
     # comes back from the runtime. Every observation is read out of the
     # accessibility tree, which is the same thing a screen reader would see.
-    def watch_character(seconds: float, label: str) -> list[dict]:
-        """Poll the character and record every state it passes through."""
-        seen: list[dict] = []
-        deadline = time.monotonic() + seconds
-        while time.monotonic() < deadline:
-            answer = control.ask({"command": "character", "label": label}, timeout=120)
-            observation = (answer or {}).get("character") or {}
-            state = observation.get("state", "")
-            if state and (not seen or seen[-1]["state"] != state):
-                seen.append({"state": state, "says": observation.get("says", ""),
-                             "reason": observation.get("reason", "")})
-                # Idle after something happened means the request is over.
-                if state == "idle" and len(seen) > 1:
-                    break
-            time.sleep(2)
-        return seen
-
     for label, request in (("factual", arguments.ask), ("action", arguments.ask_action)):
         if not request:
             continue
@@ -389,6 +962,7 @@ def interact(control, qmp, pointer, targets, arguments,
             "final": final,
         }
         screenshot(f"08-{label}-answered")
+
 
     # ---- Files ------------------------------------------------------------
     if press("files", "Files") is not None:

@@ -29,9 +29,20 @@ class RenderedFrame:
     scale: float
     mouth_shape: str
     accessibility_description: str
+    #: Named pose channels for a renderer that *computes* its frame instead of
+    #: looking one up — see
+    #: :mod:`companion.character.procedural_renderer`. A pair sequence rather
+    #: than a mapping so the frame stays hashable and frozen like every other
+    #: field, and empty for the frame-sequence and static renderers, which have
+    #: nothing to say here: their frame *is* the asset.
+    #:
+    #: Serialised only when non-empty. A surface written against the frame
+    #: contract before this field existed keeps seeing exactly the keys it
+    #: already handled.
+    pose: tuple[tuple[str, float], ...] = ()
 
     def to_json(self) -> dict[str, Any]:
-        return {
+        value = {
             "assetId": self.asset_id,
             "assetPath": str(self.asset_path),
             "width": self.width,
@@ -44,6 +55,9 @@ class RenderedFrame:
             "mouthShape": self.mouth_shape,
             "accessibilityDescription": self.accessibility_description,
         }
+        if self.pose:
+            value["pose"] = {name: round(amount, 4) for name, amount in self.pose}
+        return value
 
 
 @dataclass(frozen=True)

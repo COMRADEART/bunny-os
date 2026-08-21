@@ -1,9 +1,0 @@
-@define-color bunny_bg #f5f7f4;
-@define-color bunny_surface #ffffff;
-@define-color bunny_text #17211d;
-@define-color bunny_accent #087f5b;
-@define-color bunny_focus #005fcc;
-
-window { background: @bunny_bg; color: @bunny_text; }
-button.suggested-action { background: @bunny_accent; color: white; }
-*:focus-visible { outline: 2px solid @bunny_focus; outline-offset: 2px; }

@@ -1,9 +1,0 @@
-@define-color bunny_bg #000000;
-@define-color bunny_surface #000000;
-@define-color bunny_text #ffffff;
-@define-color bunny_accent #00ffff;
-@define-color bunny_focus #ffff00;
-
-window { background: @bunny_bg; color: @bunny_text; }
-button { border: 2px solid @bunny_text; }
-*:focus-visible { outline: 3px solid @bunny_focus; outline-offset: 2px; }

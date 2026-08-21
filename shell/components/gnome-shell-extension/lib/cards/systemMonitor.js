@@ -19,7 +19,7 @@
 import St from 'gi://St';
 
 import {Card} from './base.js';
-import {Rgb} from '../tokens.js';
+import {rgb} from '../design/current.js';
 import {box, Meter, MetricRow, UNAVAILABLE} from '../widgets.js';
 import {formatRate, logError_} from '../util.js';
 import {Icons, themedIcon} from '../icons.js';
@@ -136,8 +136,8 @@ export class SystemMonitor extends Card {
                 cr.stroke();
             }
 
-            this._series(cr, this._down, peak, width, height, Rgb.ACCENT_BRIGHT, 0.30);
-            this._series(cr, this._up, peak, width, height, Rgb.SUCCESS, 0.18);
+            this._series(cr, this._down, peak, width, height, rgb('accentText'), 0.30);
+            this._series(cr, this._up, peak, width, height, rgb('success'), 0.18);
         } catch (error) {
             logError_('the network graph could not be drawn', error);
         } finally {

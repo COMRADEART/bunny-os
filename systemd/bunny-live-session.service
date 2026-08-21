@@ -12,7 +12,54 @@ NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/run/bunny-installer /home /etc/passwd /etc/shadow /etc/group /etc/gshadow
+# systemd creates this before it builds the mount namespace, which is the whole
+# point. The unit previously named /run/bunny-installer in ReadWritePaths and
+# left its creation to the program — and a mount namespace is set up *before*
+# ExecStart, so the program that would have created the directory never ran:
+#
+#   bunny-live-session.service: Failed to set up mount namespacing:
+#       /run/bunny-installer: No such file or directory
+#   bunny-live-session.service: Failed at step NAMESPACE spawning
+#       /usr/libexec/bunny-live-session: No such file or directory
+#   bunny-live-session.service: Main process exited, code=exited,
+#       status=226/NAMESPACE
+#
+# Measured on the first medium that reached userspace. Nothing downstream of
+# this unit can work without it: it creates the bunny-live account, so GDM had
+# no one to log in and the medium reached a text login prompt instead of a
+# session. Preserved because bunny-installer-backend.service reads the marker
+# file from the same directory and this unit is a oneshot.
+RuntimeDirectory=bunny-installer
+RuntimeDirectoryPreserve=yes
+# /etc rather than the four files inside it, because useradd does not write them
+# in place. It takes a lock by creating /etc/.pwd.lock and /etc/passwd.lock, and
+# it replaces each database by writing `passwd+` and renaming — both of which
+# need the *directory* writable. Naming the files bind-mounts exactly those four
+# inodes and leaves /etc read-only, so:
+#
+#   bunny-live-session[1255]: useradd: cannot lock /etc/passwd; try again later.
+#   KeyError: "getpwnam(): name not found: 'bunny-live'"
+#
+# Measured on the medium that first got past the namespace fault above. The
+# message names /etc/passwd, which is the one thing that *was* writable, and
+# that is the whole trap: a file-level ReadWritePaths looks like it grants what
+# the program needs and grants the one part it does not use.
+#
+# ProtectSystem=strict still holds everywhere else, and this unit's entire job
+# is to add an account on ephemeral media.
+#
+# /var/home as well as /home, because on an ostree system they are not two names
+# for the same declaration. /home is a symlink to /var/home, and useradd resolves
+# it before creating anything:
+#
+#   useradd[1266]: new user: name=bunny-live, UID=1000, home=/var/home/bunny-live
+#   bunny-live-session[1266]: useradd: cannot create directory /var/home/bunny-live
+#   useradd[1266]: failed adding user 'bunny-live', exit code: 12
+#
+# Note what that run did before it failed: it created the group and the passwd
+# entry. The /etc repair above worked, and this is the next path out — which is
+# why the account still did not exist and getpwnam still raised KeyError.
+ReadWritePaths=/home /var/home /etc
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes

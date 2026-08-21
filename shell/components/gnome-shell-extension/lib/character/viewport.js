@@ -20,25 +20,32 @@ import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
 
-import {Rgb} from '../tokens.js';
+import {rgb} from '../design/current.js';
 import {box} from '../widgets.js';
 import {createRenderer} from './renderer.js';
 import {DEFAULT_CHARACTER} from './definition.js';
 import {ease, animationsEnabled} from '../animation.js';
 import {clamp, logError_, makeActivatable} from '../util.js';
 
-/** Which token colour the floor glow takes in each state. */
+/**
+ * Which semantic colour the floor glow takes in each state.
+ *
+ * Role names, not values. The table used to hold frozen floats, which is why the
+ * character kept its violet glow on a high-contrast desktop: the colours were
+ * decided at import time, once, before any setting had been read. Resolving the
+ * name at paint time means the glow follows the theme like everything else.
+ */
 const GLOW_COLOUR = {
-    idle: Rgb.ACCENT,
-    listening: Rgb.ACCENT_BRIGHT,
-    thinking: Rgb.ACCENT,
-    working: Rgb.ACCENT_BRIGHT,
-    success: Rgb.SUCCESS,
-    celebrating: Rgb.SUCCESS,
-    warning: Rgb.WARNING,
-    error: Rgb.ERROR,
-    talking: Rgb.ACCENT_BRIGHT,
-    sleeping: Rgb.ACCENT,
+    idle: 'accent',
+    listening: 'accentText',
+    thinking: 'accent',
+    working: 'accentText',
+    success: 'success',
+    celebrating: 'success',
+    warning: 'warning',
+    error: 'danger',
+    talking: 'accentText',
+    sleeping: 'accent',
 };
 
 const GLOW_INTENSITY = {
@@ -54,7 +61,7 @@ export class CharacterViewport {
     constructor(context) {
         this._context = context;
         this._rect = {x: 0, y: 0, width: 400, height: 600};
-        this._glowColour = GLOW_COLOUR.idle;
+        this._glowRole = GLOW_COLOUR.idle;
         this._glowIntensity = GLOW_INTENSITY.idle;
         this._glowPulse = 0;
 
@@ -189,10 +196,22 @@ export class CharacterViewport {
             text: `${timeOfDayGreeting()}, ${first}`,
             style_class: 'bunny-greeting-primary',
         });
+        // Wraps rather than ellipsises.
+        //
+        // At 200 % text this label is 48px and read "Good evening, B…" on the
+        // booted desktop: the person's own name was the part that got cut. St
+        // ellipsizes at the end by default, and a name is exactly the kind of
+        // string that has no good truncation — so it wraps to a second line and
+        // the character band, which has the whole middle of the screen, takes it.
         this._prompt = new St.Label({
             text: 'How can I help you today?',
             style_class: 'bunny-greeting-secondary',
         });
+        for (const label of [this._hello, this._prompt]) {
+            label.clutter_text.line_wrap = true;
+            label.clutter_text.set_line_wrap_mode(2);
+            label.clutter_text.ellipsize = 0;
+        }
         column.add_child(this._hello);
         column.add_child(this._prompt);
         return column;
@@ -200,7 +219,7 @@ export class CharacterViewport {
 
     _onState(state, reason) {
         this._renderer.setState(state);
-        this._glowColour = GLOW_COLOUR[state] ?? GLOW_COLOUR.idle;
+        this._glowRole = GLOW_COLOUR[state] ?? GLOW_COLOUR.idle;
         this._glowIntensity = GLOW_INTENSITY[state] ?? GLOW_INTENSITY.idle;
         this._glow.queue_repaint();
 
@@ -232,7 +251,7 @@ export class CharacterViewport {
             const [width, height] = area.get_surface_size();
             if (width <= 0 || height <= 0)
                 return;
-            const [r, g, b] = this._glowColour;
+            const [r, g, b] = rgb(this._glowRole);
             const breath = animationsEnabled() ? 1 + this._glowPulse * 0.06 : 1;
             const peak = clamp(this._glowIntensity * breath, 0, 1);
 

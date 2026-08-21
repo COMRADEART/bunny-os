@@ -18,8 +18,18 @@ from .animated_renderer import Animated2DRenderer
 from .bubble import BubbleLayout, BubbleState
 from .lipsync import LipSyncController, LipSyncEvent, LipSyncStatus
 from .mapper import MappedCharacterState
+from .modes import (
+    DEFAULT_MODE,
+    MODE_CEILINGS,
+    PRERENDERED_RENDERER,
+    RenderMode,
+    performance_cap,
+    renderer_chain,
+)
 from .package import ValidatedPackage
 from .positioning import PositionDecision
+from .procedural_renderer import Procedural2DRenderer
+from .quiescence import DEFAULT_POLICY, QuiescenceDecision, QuiescenceLevel, QuiescencePolicy
 from .renderer import CharacterRenderer, RenderedFrame, RendererFailureEvent
 from .static_renderer import StaticImageRenderer
 
@@ -34,6 +44,12 @@ class CharacterRendererSnapshot:
     bubble: dict[str, Any] | None
     lip_sync: dict[str, Any] | None
     events: tuple[dict[str, Any], ...]
+    #: The mode the user chose, which is not the same fact as
+    #: ``presentation.effectivePresentation`` — that is the rung the machine is
+    #: currently honouring. A settings page needs both to say "you chose 3D and
+    #: this machine is drawing 2D because the GPU context was lost".
+    mode: str = DEFAULT_MODE.value
+    quiescence: dict[str, Any] | None = None
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -45,6 +61,8 @@ class CharacterRendererSnapshot:
             "bubble": self.bubble,
             "lipSync": self.lip_sync,
             "events": list(self.events),
+            "mode": self.mode,
+            "quiescence": self.quiescence,
         }
 
 
@@ -57,8 +75,48 @@ class CharacterRendererController:
         selector: AdaptiveRendererSelector | None = None,
         three_d_context: Any = None,
         three_d_seed: int | None = None,
+        mode: RenderMode | None = None,
+        quiescence: QuiescencePolicy | None = None,
+        idle_animation: bool = True,
+        animation_intensity: float = 1.0,
+        performance: str = "automatic",
+        contextual_reactions: bool = True,
     ) -> None:
         self.selector = selector or AdaptiveRendererSelector()
+        #: Which of the three companions the user asked for, or ``None`` when
+        #: nobody said. A *choice*, never written by degradation — see
+        #: :mod:`companion.character.modes` for why the mode and the capability
+        #: rung are two values.
+        #:
+        #: ``None`` means "apply no mode ceiling", and it is the default here on
+        #: purpose. The product's default is pre-rendered, but that is a
+        #: *policy* and it is enforced where policy lives: in the settings
+        #: default, in :func:`companion.character.policy.default_character_decision`,
+        #: and in the launcher that reads both. Baking it in here instead — which
+        #: is what this did first — silently capped every caller that had a
+        #: capability plan permitting 3D and had never heard of modes, including
+        #: the 3D slice and the diagnostics whose whole job is to draw 3D. A
+        #: mechanism that quietly overrules its caller's plan is not a default,
+        #: it is a bug with a rationale.
+        self.mode = mode
+        self.quiescence = quiescence or DEFAULT_POLICY
+        self.idle_animation = idle_animation
+        self.animation_intensity = animation_intensity
+        #: §10's performance setting. A frame-rate ceiling only; it never
+        #: changes which renderer runs.
+        self.performance = performance
+        #: §10's "enable/disable contextual reactions". Whether the companion
+        #: attends to the pointer at all. Off is enforced here rather than by
+        #: asking every caller not to call :meth:`look_at` — a preference that
+        #: depends on every call site remembering it is a preference that will
+        #: eventually be ignored by one of them.
+        self.contextual_reactions = contextual_reactions
+        #: When the current character state was entered, on the ``now_ms`` clock
+        #: the caller ticks with. Quiescence is a question about *duration*, and
+        #: measuring it from a wall clock while the renderer runs on a synthetic
+        #: one is how a slice ends up quiescing on its second frame.
+        self.state_entered_ms: int | None = None
+        self.last_quiescence: QuiescenceDecision | None = None
         #: A zero-argument callable returning a
         #: :class:`companion.character.three_d.context.GraphicsContext`, or
         #: ``None``. Injected rather than constructed here so this module — which
@@ -78,6 +136,19 @@ class CharacterRendererController:
         self.lip_status: LipSyncStatus | None = None
         self.events: list[dict[str, Any]] = []
         self._selector_event_count = 0
+
+    @property
+    def effective_mode(self) -> RenderMode:
+        """The mode used to pick a renderer, defaulting when nobody chose.
+
+        Only the *renderer chain* consults this; the capability ceiling does
+        not, because defaulting a ceiling and defaulting a renderer choice are
+        different risks. Defaulting the renderer to pre-rendered on the 2D rung
+        reproduces the behaviour that existed before modes — that rung was
+        always served by the frame player — so a caller that never mentions a
+        mode sees no change at all.
+        """
+        return self.mode if self.mode is not None else DEFAULT_MODE
 
     def load_package(self, package: ValidatedPackage) -> None:
         previous = self.package
@@ -109,24 +180,75 @@ class CharacterRendererController:
         self.lip_status = None
 
     def _renderer_for(self, presentation: Presentation, signals: RendererSignals) -> CharacterRenderer | None:
+        """The renderer serving this rung under the current mode, built if needed.
+
+        The rung says how much may be drawn; the *mode* says which renderer
+        draws it, and on the 2D rung those are two different questions because
+        two renderers serve it. :func:`companion.character.modes.renderer_chain`
+        answers both and this walks its answer.
+
+        Walking rather than picking is §15's fallback made immediate. Before
+        this, a renderer that would not start raised, the presenter caught it,
+        the selector degraded a rung and the *next* evaluation drew something —
+        so a machine whose interactive renderer failed showed nothing for a
+        frame and then showed a static image, having skipped the pre-rendered
+        companion that would have worked perfectly. Now the chain is exhausted
+        within the rung first, and only a rung with no working renderer at all
+        degrades.
+        """
         if presentation is Presentation.TEXT_ONLY:
             return None
-        expected = presentation.value
-        if self.renderer is not None and self.renderer.renderer_name == expected:
+        chain = renderer_chain(self.effective_mode, presentation)
+        if not chain:
+            return None
+        if self.renderer is not None and self.renderer.renderer_name == chain[0]:
+            # Already running the best renderer for this rung and mode.
             self.renderer.display_available = signals.display_available
             return self.renderer
         package = self.package
         if package is None:
             raise RuntimeError("renderer controller has no validated package")
         previous = self.renderer
-        if presentation in (Presentation.FULL_3D, Presentation.LIGHTWEIGHT_3D):
-            renderer = self._three_d_renderer(presentation, signals, package)
-        elif presentation is Presentation.ANIMATED_2D:
-            renderer = Animated2DRenderer(display_available=signals.display_available)
-            renderer.load_package(package)
-        else:
-            renderer = StaticImageRenderer(display_available=signals.display_available)
-            renderer.load_package(package)
+        errors: list[str] = []
+        renderer: CharacterRenderer | None = None
+        for name in chain:
+            if previous is not None and previous.renderer_name == name and previous.running:
+                # The chain has fallen back to the renderer already running —
+                # which is the steady state after an in-rung fallback. Keep it
+                # rather than rebuilding an identical one every evaluation.
+                previous.display_available = signals.display_available
+                return previous
+            try:
+                renderer = self._construct(name, signals, package)
+            except Exception as error:
+                errors.append(f"{name}: {error}")
+                self.events.append({
+                    "eventType": "renderer.fallback",
+                    "renderer": name,
+                    "code": "renderer-unavailable",
+                    "explanation": f"the {name} renderer could not start: {error}",
+                    "taskContinues": True,
+                })
+                continue
+            break
+        if renderer is None:
+            raise RuntimeError(
+                "no renderer in the "
+                f"{self.effective_mode.value} chain for {presentation.value} would start ("
+                + "; ".join(errors) + ")"
+            )
+        if errors:
+            self.events.append({
+                "eventType": "renderer.degraded",
+                "code": "renderer-chain-fallback",
+                "previousPresentation": presentation.value,
+                "effectivePresentation": presentation.value,
+                "explanation": (
+                    f"the {self.effective_mode.value} companion fell back to the {renderer.renderer_name} "
+                    "renderer; the task is unaffected"
+                ),
+                "taskContinues": True,
+            })
         if previous is not None:
             renderer.set_scale(previous.scale)
             renderer.set_opacity(previous.opacity)
@@ -142,6 +264,63 @@ class CharacterRendererController:
             renderer.attach_speech_bubble(self.bubble_state, self.bubble_layout)
         self.renderer = renderer
         return renderer
+
+    def _construct(
+        self, name: str, signals: RendererSignals, package: ValidatedPackage
+    ) -> CharacterRenderer:
+        """Build one renderer by name. Raises so the chain can try the next."""
+        if name in (Presentation.FULL_3D.value, Presentation.LIGHTWEIGHT_3D.value):
+            return self._three_d_renderer(Presentation(name), signals, package)
+        if name == "interactive-2d":
+            renderer = Procedural2DRenderer(
+                display_available=signals.display_available,
+                seed=self.three_d_seed or 0,
+                intensity=self.animation_intensity,
+            )
+            renderer.load_package(package)
+            return renderer
+        if name == PRERENDERED_RENDERER:
+            renderer = Animated2DRenderer(display_available=signals.display_available)
+            renderer.load_package(package)
+            return renderer
+        renderer = StaticImageRenderer(display_available=signals.display_available)
+        renderer.load_package(package)
+        return renderer
+
+    def set_mode(self, mode: RenderMode, *, now_ms: int = 0) -> None:
+        """Change which companion is drawn, keeping everything else.
+
+        §16: the AI session survives a renderer change. It does here by
+        construction — this method touches the *presentation* objects only, and
+        the task, its events, its approvals and its transcript live in the
+        runtime, which has no reference to any of them. The visible state is
+        re-applied from :attr:`mapped_state`, so the new renderer opens on the
+        state the old one was showing rather than on idle.
+        """
+        if mode is self.mode:
+            return
+        previous = self.mode
+        self.mode = mode
+        # The outgoing renderer is deliberately left in place. ``_renderer_for``
+        # is the one path that swaps renderers, and it carries scale, opacity,
+        # visibility, placement and the speech bubble across before releasing
+        # the old one. Unloading and nulling here — which is what this did
+        # first — meant that path saw no predecessor, so a user who had scaled
+        # their companion to 1.75 got a default-sized one back the moment they
+        # changed mode. §16 says only the presentation layer changes; the size
+        # they chose is not part of it.
+        self.events.append({
+            "eventType": "renderer.mode-changed",
+            "previousMode": previous.value,
+            "mode": mode.value,
+            "restoredState": self.mapped_state.character_state.value if self.mapped_state else None,
+            "taskContinues": True,
+        })
+        # The state clock restarts: a character that has just been redrawn in a
+        # different renderer has not been sitting still, whatever the old one's
+        # timer said, and quiescing it immediately would hide the switch the
+        # user just asked for.
+        self.state_entered_ms = now_ms
 
     def _three_d_renderer(
         self, presentation: Presentation, signals: RendererSignals, package: ValidatedPackage
@@ -196,6 +375,11 @@ class CharacterRendererController:
         package = self.package
         if package is None:
             raise RuntimeError("renderer controller has no validated package")
+        plan = self._bounded_by_mode(plan)
+        if self.mapped_state is None or (
+            self.mapped_state.character_state is not mapped.character_state
+        ):
+            self.state_entered_ms = now_ms
         decision = self.selector.evaluate(plan, package, signals, now=now)
         if mapped.frame_rate_cap < decision.frame_rate_cap:
             decision = replace(
@@ -205,6 +389,15 @@ class CharacterRendererController:
                     f"the accessibility frame-rate preference capped animation at {mapped.frame_rate_cap} fps",
                 ),
             )
+        cap = performance_cap(self.performance)
+        if cap is not None and cap < decision.frame_rate_cap:
+            decision = replace(
+                decision,
+                frame_rate_cap=cap,
+                reasons=decision.reasons + (
+                    f"the {self.performance} performance setting capped animation at {cap} fps",
+                ),
+            )
         self.decision = decision
         self.mapped_state = mapped
         renderer = self._renderer_for(decision.effective, signals)
@@ -212,6 +405,8 @@ class CharacterRendererController:
         if renderer is not None:
             renderer.set_reduced_motion(signals.reduced_motion or signals.no_animation)
             renderer.set_frame_rate_cap(decision.frame_rate_cap)
+            if isinstance(renderer, Procedural2DRenderer):
+                renderer.set_intensity(self.animation_intensity)
             frame = renderer.display_state(mapped, now_ms=now_ms)
             if self.lip_status is not None and self.lip_status.active:
                 renderer.set_mouth_shape(self.lip_status.shape.value)
@@ -220,6 +415,22 @@ class CharacterRendererController:
             self.events.append(event.to_json())
         self._selector_event_count = len(self.selector.events)
         return self.snapshot(frame=frame)
+
+    def look_at(self, x: float, y: float) -> bool:
+        """Attend to a point, if the renderer can and the user allows it.
+
+        Returns whether the reaction was taken, so a caller can tell "ignored by
+        preference" from "this renderer does not react" without inspecting
+        either. The frame player cannot react — it has only the frames it was
+        given — so this is a no-op there rather than an error.
+        """
+        if not self.contextual_reactions:
+            return False
+        renderer = self.renderer
+        if not isinstance(renderer, Procedural2DRenderer):
+            return False
+        renderer.look_at(x, y)
+        return True
 
     def set_position(self, position: PositionDecision) -> None:
         self.position = position
@@ -293,7 +504,16 @@ class CharacterRendererController:
         try:
             presentation = Presentation(old.renderer_name)
         except ValueError:
-            presentation = Presentation.STATIC_IMAGE
+            # A renderer whose name is not a rung name. ``interactive-2d`` is
+            # the only one, and it serves the 2D rung — mapping it to
+            # static-image, which is what the bare ``except`` used to do, would
+            # have made a restart of the interactive companion silently demote
+            # it to a still picture and never come back.
+            presentation = (
+                Presentation.ANIMATED_2D
+                if old.renderer_name == "interactive-2d"
+                else Presentation.STATIC_IMAGE
+            )
         package = self.package
         if package is None:
             raise RuntimeError("renderer restart has no package")
@@ -332,16 +552,81 @@ class CharacterRendererController:
         })
         return self.snapshot(frame=frame)
 
+    def _bounded_by_mode(self, plan: CapabilityPresentationPlan) -> CapabilityPresentationPlan:
+        """Lower a capability plan to what the chosen mode permits.
+
+        The mode is a ceiling applied *on top of* the machine's. A machine that
+        could run 3D and a user who chose pre-rendered produce a 2D-rung plan,
+        and the reason is recorded so the settings page can say why the 3D rung
+        is not in use without having to guess between "your machine cannot" and
+        "you asked for something lighter".
+        """
+        from .adaptation import _RANK
+
+        if self.mode is None:
+            # Nobody chose a mode, so nothing is capped. The caller's plan is
+            # the whole answer, which is exactly what it was before modes.
+            return plan
+        ceiling = MODE_CEILINGS[self.mode]
+        if _RANK[ceiling] >= _RANK[plan.ceiling]:
+            return plan
+        return replace(
+            plan,
+            ceiling=ceiling,
+            requested=ceiling,
+            reasons=plan.reasons + (
+                f"the {self.mode.value} companion is the renderer mode in settings, "
+                f"so presentation is capped at {ceiling.value}",
+            ),
+        )
+
+    def quiescence_decision(self, *, now_ms: int) -> QuiescenceDecision:
+        """What the idle policy says right now, without acting on it."""
+        mapped = self.mapped_state
+        state = mapped.character_state if mapped is not None else None
+        cap = self.decision.frame_rate_cap if self.decision is not None else 30
+        if state is None:
+            return QuiescenceDecision(
+                QuiescenceLevel.ACTIVE, cap, "no character state has been applied yet"
+            )
+        entered = self.state_entered_ms if self.state_entered_ms is not None else now_ms
+        seconds = max(0.0, (now_ms - entered) / 1000.0)
+        loops = bool(mapped.loop) if mapped is not None else True
+        return self.quiescence.evaluate(
+            state,
+            seconds_in_state=seconds,
+            active_cap=cap,
+            idle_animation=self.idle_animation,
+            loops=loops,
+        )
+
     def tick(self, *, now_ms: int) -> RenderedFrame | None:
+        """Advance the renderer, unless the idle policy says not to.
+
+        The return value is the frame either way. A quiescent tick returns the
+        frame already on screen — the caller does not have to know whether a
+        draw happened, only what to show, and a caller that had to know would be
+        a second place the quiescence rule lives.
+        """
         renderer = self.renderer
-        if isinstance(renderer, Animated2DRenderer):
+        decision = self.quiescence_decision(now_ms=now_ms)
+        self.last_quiescence = decision
+        if renderer is None:
+            return None
+        if not decision.draws:
+            # §3's "no unnecessary background rendering". Nothing is advanced and
+            # no timer needs to fire again until the state changes.
+            return renderer.frame
+        if decision.level is QuiescenceLevel.DROWSY:
+            renderer.set_frame_rate_cap(max(1, decision.frame_rate_cap))
+        if isinstance(renderer, (Animated2DRenderer, Procedural2DRenderer)):
             return renderer.tick(now_ms=now_ms)
-        if renderer is not None and renderer.renderer_name in {"full-3d", "lightweight-3d"}:
+        if renderer.renderer_name in {"full-3d", "lightweight-3d"}:
             # A skeletal renderer has no frame list to advance through: every
             # tick is a new pose sampled at a new time, so a tick *is* a draw.
             # ``draw`` is bounded by the frame-rate cap the selector set.
             return renderer.draw(now_ms=now_ms)
-        return renderer.frame if renderer else None
+        return renderer.frame
 
     def snapshot(self, *, frame: RenderedFrame | None = None) -> CharacterRendererSnapshot:
         if self.decision is None:
@@ -359,4 +644,6 @@ class CharacterRendererController:
             self.bubble_state.to_json() if self.bubble_state else None,
             self.lip_status.to_json() if self.lip_status else None,
             tuple(self.events),
+            self.effective_mode.value,
+            self.last_quiescence.to_json() if self.last_quiescence else None,
         )

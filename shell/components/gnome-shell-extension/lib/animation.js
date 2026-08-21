@@ -19,7 +19,7 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
-import {Motion} from './tokens.js';
+import {MOTION} from './design/tokens.js';
 import {interval} from './util.js';
 
 export function animationsEnabled() {
@@ -27,17 +27,17 @@ export function animationsEnabled() {
 }
 
 export function duration(milliseconds) {
-    return animationsEnabled() ? milliseconds : Motion.REDUCED_MS;
+    return animationsEnabled() ? milliseconds : MOTION.reduced;
 }
 
 /**
  * Ease an actor's properties, or set them outright under reduced motion.
  *
  * `properties` is the same object Clutter.Actor.ease takes, minus duration and
- * mode, which come from here so the durations in tokens.js are the only ones in
- * the desktop.
+ * mode, which come from here so the durations in design/tokens.js are the only ones
+ * in the desktop.
  */
-export function ease(actor, properties, {ms = Motion.PANEL_MS, mode = Clutter.AnimationMode.EASE_OUT_QUAD, onComplete = null} = {}) {
+export function ease(actor, properties, {ms = MOTION.normal, mode = Clutter.AnimationMode.EASE_OUT_QUAD, onComplete = null} = {}) {
     const time = duration(ms);
     if (time === 0) {
         for (const [key, value] of Object.entries(properties))
@@ -55,7 +55,7 @@ export function ease(actor, properties, {ms = Motion.PANEL_MS, mode = Clutter.An
  * eight widgets does not take eight times as long to appear as one with one —
  * the last card must still be up inside the entrance budget.
  */
-export function enter(actor, {index = 0, rise = 12, ms = Motion.ENTRANCE_MS} = {}) {
+export function enter(actor, {index = 0, rise = 12, ms = MOTION.slow} = {}) {
     if (duration(ms) === 0) {
         actor.opacity = 255;
         actor.translation_y = 0;
@@ -106,7 +106,7 @@ export function pulse(actor, {low = 140, high = 255, ms = 900} = {}) {
 }
 
 /** Crossfade one actor out and another in, in the same slot. */
-export function crossfade(outgoing, incoming, {ms = Motion.CHARACTER_MS} = {}) {
+export function crossfade(outgoing, incoming, {ms = MOTION.slow} = {}) {
     const time = duration(ms);
     if (time === 0) {
         outgoing.opacity = 0;

@@ -567,6 +567,15 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "anaconda-profile", "installer/config/bunny-os.conf",
         "/etc/anaconda/profile.d/bunny-os.conf", 0o444, profiles=LIVE_PROFILES,
     ),
+    # The initramfs modules image-builder requires of a bootc installer medium.
+    # Placing the file is necessary and not sufficient: the initramfs has to be
+    # regenerated afterwards, which build/Containerfile does for the live
+    # profile. See the file's own comment for what happens without it.
+    _file_route(
+        "live-dracut-modules", "installer/config/bunny-live-dracut.conf",
+        "/usr/lib/dracut/dracut.conf.d/95-bunny-live.conf", 0o444,
+        profiles=LIVE_PROFILES,
+    ),
     _file_route(
         "anaconda-defaults", "installer/config/interactive-defaults.ks",
         "/usr/share/anaconda/interactive-defaults.ks", 0o444, profiles=LIVE_PROFILES,
@@ -583,6 +592,21 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "live-installer-autostart",
         "installer/frontend/art.comrade.BunnyInstaller-autostart.desktop",
         "/etc/xdg/autostart/art.comrade.BunnyInstaller.desktop", 0o644, profiles=LIVE_PROFILES,
+    ),
+    # The §42 driver. Almost every other harness in build/scripts stays on the
+    # host and is injected into a disk image with guestfish, which an ISO cannot
+    # be — it is read-only and there is nothing to inject into. So this one
+    # ships, and the thing that drives the installer is the thing the installer
+    # carries. It does nothing unless a kernel argument asks for it.
+    _file_route(
+        "live-setup-driver", "build/scripts/setup-drive.py",
+        "/usr/libexec/bunny-setup-drive", 0o555, profiles=LIVE_PROFILES,
+    ),
+    _file_route(
+        "live-setup-driver-autostart",
+        "installer/frontend/art.comrade.BunnySetupDrive-autostart.desktop",
+        "/etc/xdg/autostart/art.comrade.BunnySetupDrive.desktop", 0o644,
+        profiles=LIVE_PROFILES,
     ),
 
     # -- unconditional, and last ---------------------------------------------

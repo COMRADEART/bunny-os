@@ -1,0 +1,246 @@
+{
+ "schemaVersion": 1,
+ "evidenceLevel": "HOST RUNTIME VALIDATED",
+ "note": "The setup surface built and walked under real GTK. Not a VM run.",
+ "gtk": "4.22",
+ "confirmationPhrase": "ERASE /dev/vda 7D5628",
+ "textScaleBodySizes": {
+  "1.0": 12,
+  "1.25": 15,
+  "1.5": 18,
+  "2.0": 24
+ },
+ "screens": [
+  {
+   "key": "welcome",
+   "heading": "Welcome",
+   "announcementChars": 123,
+   "controls": 4,
+   "buttons": [
+    "Accessibility",
+    "Get started",
+    "Installation details"
+   ],
+   "roles": [
+    "button",
+    "group",
+    "paragraph"
+   ]
+  },
+  {
+   "key": "accessibility",
+   "heading": "Accessibility",
+   "announcementChars": 262,
+   "controls": 12,
+   "buttons": [
+    "Back",
+    "Continue",
+    "Installation details"
+   ],
+   "roles": [
+    "button",
+    "group",
+    "paragraph",
+    "radio",
+    "switch"
+   ]
+  },
+  {
+   "key": "language_region",
+   "heading": "Language and region",
+   "announcementChars": 133,
+   "controls": 17,
+   "buttons": [
+    "Back",
+    "Continue",
+    "Installation details"
+   ],
+   "roles": [
+    "button",
+    "group",
+    "paragraph",
+    "radio"
+   ]
+  },
+  {
+   "key": "keyboard",
+   "heading": "Keyboard",
+   "announcementChars": 187,
+   "controls": 8,
+   "buttons": [
+    "Back",
+    "Continue",
+    "Installation details"
+   ],
+   "roles": [
+    "alert",
+    "button",
+    "none",
+    "paragraph",
+    "radio",
+    "text-box"
+   ]
+  },
+  {
+   "key": "network",
+   "heading": "Network",
+   "announcementChars": 221,
+   "controls": 7,
+   "buttons": [
+    "Back",
+    "Connect",
+    "Continue without network",
+    "Installation details"
+   ],
+   "roles": [
+    "button",
+    "group",
+    "none",
+    "paragraph",
+    "radio",
+    "text-box"
+   ]
+  },
+  {
+   "key": "storage",
+   "heading": "Where to install",
+   "announcementChars": 264,
+   "controls": 4,
+   "buttons": [
+    "Back",
+    "Installation details",
+    "Review what happens"
+   ],
+   "roles": [
+    "alert",
+    "button",
+    "checkbox",
+    "paragraph"
+   ]
+  },
+  {
+   "key": "encryption",
+   "heading": "Encryption",
+   "announcementChars": 319,
+   "controls": 6,
+   "buttons": [
+    "Back",
+    "Continue",
+    "Installation details"
+   ],
+   "roles": [
+    "alert",
+    "button",
+    "none",
+    "paragraph",
+    "switch",
+    "text-box"
+   ]
+  },
+  {
+   "key": "account",
+   "heading": "Your account",
+   "announcementChars": 117,
+   "controls": 8,
+   "buttons": [
+    "Back",
+    "Continue",
+    "Installation details"
+   ],
+   "roles": [
+    "button",
+    "group",
+    "none",
+    "paragraph",
+    "text-box"
+   ]
+  },
+  {
+   "key": "privacy",
+   "heading": "Privacy",
+   "announcementChars": 319,
+   "controls": 11,
+   "buttons": [
+    "Back",
+    "Continue",
+    "Installation details"
+   ],
+   "roles": [
+    "button",
+    "group",
+    "paragraph",
+    "switch"
+   ]
+  },
+  {
+   "key": "appearance",
+   "heading": "Appearance",
+   "announcementChars": 145,
+   "controls": 13,
+   "buttons": [
+    "Back",
+    "Continue",
+    "Installation details"
+   ],
+   "roles": [
+    "button",
+    "group",
+    "paragraph",
+    "radio"
+   ]
+  },
+  {
+   "key": "companion_behaviour",
+   "heading": "Bunny",
+   "announcementChars": 228,
+   "controls": 11,
+   "buttons": [
+    "Back",
+    "Continue",
+    "Installation details"
+   ],
+   "roles": [
+    "button",
+    "group",
+    "paragraph",
+    "radio",
+    "switch"
+   ]
+  },
+  {
+   "key": "applications",
+   "heading": "Apps",
+   "announcementChars": 348,
+   "controls": 12,
+   "buttons": [
+    "Back",
+    "Continue",
+    "Installation details",
+    "Skip apps"
+   ],
+   "roles": [
+    "button",
+    "checkbox",
+    "group",
+    "paragraph"
+   ]
+  },
+  {
+   "key": "review",
+   "heading": "Review",
+   "announcementChars": 602,
+   "controls": 3,
+   "buttons": [
+    "Back",
+    "Install Bunny OS",
+    "Installation details"
+   ],
+   "roles": [
+    "alert",
+    "button",
+    "paragraph"
+   ]
+  }
+ ],
+ "findings": []
+}

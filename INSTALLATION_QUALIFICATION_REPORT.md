@@ -1,8 +1,8 @@
 # Installation qualification report
 
-Date: 2026-07-29  
+Date: 2026-08-01T14:31:13Z  
 Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
-Result: **NOT QUALIFIED** — 0 of 12 scenarios resolved, 0 failing, 12 not run.
+Result: **NOT QUALIFIED** — 3 of 12 scenarios resolved, 1 failing, 8 not run.
 
 Twelve disposable-disk installation scenarios, from an empty UEFI disk through interrupted installation and bootloader failure. Every scenario is destructive by nature and is run against disposable virtual disks.
 
@@ -10,18 +10,18 @@ Twelve disposable-disk installation scenarios, from an empty UEFI disk through i
 
 | Scenario | Outcome | Method | Evidence |
 |---|---|---|---|
-| `empty-uefi-disk` | NOT_RUN | source-inspection | — |
-| `encrypted-uefi-installation` | NOT_RUN | source-inspection | — |
-| `unencrypted-installation` | NOT_RUN | source-inspection | — |
 | `offline-installation` | NOT_RUN | source-inspection | — |
 | `multiple-disks` | NOT_RUN | source-inspection | — |
 | `nvme-like-virtual-disk` | NOT_RUN | source-inspection | — |
 | `sata-like-virtual-disk` | NOT_RUN | source-inspection | — |
-| `existing-linux-replacement` | NOT_RUN | source-inspection | — |
 | `supported-free-space-installation` | NOT_RUN | source-inspection | — |
 | `interrupted-installation` | NOT_RUN | source-inspection | — |
 | `bootloader-failure` | NOT_RUN | source-inspection | — |
 | `recovery-installation` | NOT_RUN | source-inspection | — |
+| `empty-uefi-disk` | PASS | virtual-machine | `qualification/installed-system/evidence/installs/blank.json` |
+| `unencrypted-installation` | PASS | virtual-machine | `qualification/installed-system/evidence/installs/blank.json` |
+| `encrypted-uefi-installation` | FAIL | virtual-machine | `qualification/installed-system/evidence/installs/encrypted.json` |
+| `existing-linux-replacement` | PASS | virtual-machine | `qualification/installed-system/evidence/installs/existing-data-protected.json` |
 
 ## Why these scenarios have not run
 
@@ -31,14 +31,10 @@ The installation harness (build/scripts/vm-install-smoke.sh) launches an interac
 
 Each of these is blocking. `NOT_RUN` is not a soft state:
 
-- `empty-uefi-disk`
-- `encrypted-uefi-installation`
-- `unencrypted-installation`
 - `offline-installation`
 - `multiple-disks`
 - `nvme-like-virtual-disk`
 - `sata-like-virtual-disk`
-- `existing-linux-replacement`
 - `supported-free-space-installation`
 - `interrupted-installation`
 - `bootloader-failure`

@@ -22,8 +22,11 @@ import St from 'gi://St';
 import {Card} from '../cards/base.js';
 import {box} from '../widgets.js';
 import {enter} from '../animation.js';
-import {makeActivatable} from '../util.js';
+import {logError_, makeActivatable} from '../util.js';
 import {Icons, themedIcon} from '../icons.js';
+import {TrustComponent} from '../components/trust.js';
+import {buildApproval} from '../trustPrompt.js';
+import {currentTheme} from '../design/current.js';
 
 /** Transcript entries kept in the card. Older ones live in the companion store. */
 const MAX_TURNS = 6;
@@ -59,25 +62,19 @@ export class AssistantPanel extends Card {
         this._status.visible = false;
         this.content.add_child(this._status);
 
-        this._approval = box({vertical: true, style_class: 'bunny-assistant-approval'});
-        this._approvalLabel = new St.Label({
-            text: '', style_class: 'bunny-assistant-approval-label',
-        });
-        this._approvalLabel.clutter_text.line_wrap = true;
-        this._approvalLabel.clutter_text.set_line_wrap_mode(2);
-        this._approval.add_child(this._approvalLabel);
-        const approvalActions = box({style_class: 'bunny-assistant-approval-actions'});
-        this._approvalDeny = this._textButton('Deny', () => this._decideApproval('deny'));
-        this._approvalAllow = this._textButton('Allow', () => this._decideApproval('allow'));
-        this._approvalDeny.accessible_name = 'Deny this Bunny action';
-        this._approvalAllow.accessible_name = 'Allow this Bunny action';
-        approvalActions.add_child(this._approvalDeny);
-        approvalActions.add_child(this._approvalAllow);
-        this._approval.add_child(approvalActions);
-        this._approval.visible = false;
-        this._approvalRequestId = '';
+        // The permission question. A component rather than a label and two
+        // buttons: see lib/components/trust.js for what it replaced and why.
         this._approvalDecision = null;
-        this.content.add_child(this._approval);
+        this._trust = new TrustComponent({
+            onDecision: (verdict, requestId) => {
+                // The panel does not decide anything either; it forwards to the
+                // callback DesktopShell registered, which sends the verdict over
+                // the protocol for the runtime to check against the question it
+                // issued.
+                this._approvalDecision?.(verdict, requestId);
+            },
+        });
+        this.content.add_child(this._trust.actor);
 
         this._fileResultsScroll = new St.ScrollView({
             style_class: 'bunny-assistant-file-results-scroll',
@@ -176,39 +173,51 @@ export class AssistantPanel extends Card {
             this.actor.add_style_class_name('bunny-assistant-busy');
     }
 
-    /** Display one exact permission question from the canonical task state. */
+    /**
+     * Display one exact permission question from the canonical task state.
+     *
+     * The model comes from `buildApproval`, which reads the structured facts in
+     * `approval.prompt` and falls back to `approval.reason` when there are none.
+     * Nothing is composed here: this method passes an approval to a projection
+     * and a model to a component.
+     */
     showApproval(approval, onDecision) {
         const requestId = String(approval?.requestId ?? '');
         if (!requestId)
             return;
-        this._approvalRequestId = requestId;
         this._approvalDecision = typeof onDecision === 'function' ? onDecision : null;
-        this._approvalLabel.text = String(
-            approval?.reason ?? 'Allow Bunny to perform this action?');
-        this._approvalAllow.reactive = true;
-        this._approvalAllow.can_focus = true;
-        this._approvalDeny.reactive = true;
-        this._approvalDeny.can_focus = true;
-        this._approval.visible = true;
+        // Building the model must not be able to lose the question. A prompt
+        // this projection cannot read is still a permission request that a
+        // person has to answer, so a throw here degrades to the bare reason
+        // rather than leaving a task waiting on a dialog nobody drew.
+        let model;
+        try {
+            model = buildApproval(approval, {
+                highContrast: currentTheme().highContrast,
+                largeText: currentTheme().textScale > 1,
+            });
+        } catch (error) {
+            logError_('the permission question could not be laid out; showing its reason alone', error);
+            model = buildApproval({
+                requestId,
+                reason: String(approval?.reason ?? 'Allow Bunny to perform this action?'),
+                safeDefault: String(approval?.safeDefault ?? 'denied'),
+            });
+        }
+        this._trust.show(model);
         this.actor.add_style_class_name('bunny-assistant-approval-active');
     }
 
     clearApproval(requestId = '') {
-        if (requestId && requestId !== this._approvalRequestId)
-            return;
-        this._approval.visible = false;
-        this._approvalRequestId = '';
-        this._approvalDecision = null;
-        this.actor.remove_style_class_name('bunny-assistant-approval-active');
+        this._trust.hide(requestId);
+        if (!this._trust.requestId) {
+            this._approvalDecision = null;
+            this.actor.remove_style_class_name('bunny-assistant-approval-active');
+        }
     }
 
     approvalDecisionFailed(requestId) {
-        if (requestId !== this._approvalRequestId)
-            return;
-        this._approvalAllow.reactive = true;
-        this._approvalAllow.can_focus = true;
-        this._approvalDeny.reactive = true;
-        this._approvalDeny.can_focus = true;
+        this._trust.decisionFailed(requestId);
     }
 
     /** Grey the microphone when the companion's speech service cannot be reached. */
@@ -284,16 +293,6 @@ export class AssistantPanel extends Card {
             return;
         this._entry.set_text('');
         this._context.onSubmit?.(text);
-    }
-
-    _decideApproval(decision) {
-        if (!this._approvalRequestId || !this._approvalDecision)
-            return;
-        this._approvalAllow.reactive = false;
-        this._approvalAllow.can_focus = false;
-        this._approvalDeny.reactive = false;
-        this._approvalDeny.can_focus = false;
-        this._approvalDecision(decision, this._approvalRequestId);
     }
 
     _iconButton(iconName, accessibleName, onActivate) {

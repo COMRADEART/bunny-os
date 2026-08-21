@@ -74,10 +74,28 @@ def user_bus_environment(user: str) -> list[str]:
     value = uid.get("stdout", "").strip()
     if not value.isdigit():
         return []
-    return [
+    environment = [
         f"XDG_RUNTIME_DIR=/run/user/{value}",
         f"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{value}/bus",
     ]
+    # And the display, when the session has imported one.
+    #
+    # These two are enough to reach the user bus, which is all this started out
+    # needing. They are not enough for anything that asks *whether there is a
+    # compositor*: the shipped readiness probe reads WAYLAND_DISPLAY and, given
+    # an environment without it, reported "compositor not ready" on a desktop
+    # that was visibly drawing. Read from the user manager rather than assumed
+    # to be wayland-0, because gnome-session imports it at a moment nothing here
+    # can predict and a guess is right until it is not.
+    dump = run(
+        ["/usr/bin/env", *environment, "/usr/bin/systemctl", "--user", "show-environment"],
+        user=user,
+    )
+    for line in dump.get("stdout", "").splitlines():
+        key, _, setting = line.partition("=")
+        if key.strip() in ("WAYLAND_DISPLAY", "DISPLAY", "XDG_SESSION_TYPE"):
+            environment.append(f"{key.strip()}={setting.strip()}")
+    return environment
 
 
 def shell_dbus(user: str, environment: list[str], method: str, body: str) -> dict:
@@ -342,33 +360,92 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
         verb = request.get("command")
         label = request.get("label", "")
         answer: dict = {"command": verb, "label": label}
-        if verb == "controls":
-            fresh = desktop_interaction.locate_controls(user, environment)
-            answer["controls"] = fresh
-        elif verb == "state":
-            name = request.get("application")
-            if name in desktop_interaction.APPLICATIONS:
-                answer["state"] = desktop_interaction.application_state(name, user, environment)
+        # Every command is answered, including one that raised.
+        #
+        # An exception in here used to kill the probe, and the host then read
+        # `null` for every answer after it — a broken harness that looks exactly
+        # like a broken desktop. The host can tell an error from a silence; it
+        # cannot tell a silence from a dead session.
+        try:
+            if verb == "controls":
+                fresh = desktop_interaction.locate_controls(user, environment)
+                answer["controls"] = fresh
+            elif verb == "state":
+                name = request.get("application")
+                if name in desktop_interaction.APPLICATIONS:
+                    answer["state"] = desktop_interaction.application_state(name, user, environment)
+                else:
+                    answer["error"] = f"unknown application {name!r}"
+            elif verb == "shell":
+                answer["shell"] = desktop_interaction.shell_alive(user, environment)
+            elif verb == "ask":
+                # The backend half of the end-to-end claim, through the exact
+                # program the shell spawns. See desktop_interaction.ask_through_the_bridge.
+                answer["ask"] = desktop_interaction.ask_through_the_bridge(
+                    str(request.get("request", "")), user, environment)
+            elif verb == "ready":
+                answer["ready"] = desktop_interaction.session_ready(
+                    user, environment, float(request.get("wait", 120))
+                )
+            elif verb == "fixture":
+                # The journey's images, written as the user. A file root created in
+                # /var/home would be owned by root and unreadable through the
+                # capsule's grant — a permission failure wearing a security result's
+                # clothes.
+                answer["fixture"] = desktop_interaction.make_image_fixture(
+                    str(request.get("kind", "real")), user, environment
+                )
+            elif verb == "result":
+                answer["result"] = desktop_interaction.journey_result(user, environment)
+            elif verb == "approval-buttons":
+                # The two buttons by name, with an early exit. See
+                # desktop_interaction._APPROVAL_BUTTONS_PROGRAM for why this
+                # exists beside `controls` rather than replacing it.
+                answer["buttons"] = desktop_interaction.approval_buttons(user, environment)
+            elif verb == "task-trace":
+                # Which event was written last. "Thinking…" for ever is a
+                # stopped event stream, and the stream is the only thing that
+                # can say where it stopped.
+                answer["trace"] = desktop_interaction.task_trace(user, environment)
+            elif verb == "companion-state":
+                answer["companion"] = desktop_interaction.companion_state(user, environment)
+            elif verb == "a11y-tree":
+                # Names, roles, focusability and actions for every interactive
+                # control. This is the tree a screen reader would read, asked
+                # for as a screen reader would get it.
+                answer["a11y"] = desktop_interaction.accessibility_tree(user, environment)
+            elif verb == "a11y-settings":
+                answer["settings"] = desktop_interaction.read_a11y_settings(user, environment)
+            elif verb == "a11y-set":
+                answer["set"] = desktop_interaction.set_a11y_setting(
+                    str(request.get("schema", "")), str(request.get("key", "")),
+                    str(request.get("value", "")), user, environment)
+            elif verb == "screen-reader":
+                answer["screenReader"] = desktop_interaction.screen_reader(user, environment)
+            elif verb == "orca-start":
+                # Turn the screen reader on and wait for it to be speaking. What
+                # it says is read from its own debug log; see ORCA_DEBUG.
+                answer["orca"] = desktop_interaction.start_screen_reader(
+                    user, environment, wait=float(request.get("wait", 25.0)))
+            elif verb == "orca-speech":
+                answer["speech"] = desktop_interaction.screen_reader_speech(
+                    user, environment, since=int(request.get("since", 0)))
+            elif verb == "performance":
+                answer["performance"] = desktop_interaction.performance_sample(
+                    user, seconds=float(request.get("seconds", 20.0)))
+            elif verb == "character":
+                # What the figure is doing and what the bubble says, both read out
+                # of the accessibility tree. This is how the host watches the state
+                # machine it just started by typing.
+                answer["character"] = desktop_interaction.character_state(user, environment)
+            elif verb == "done":
+                transcript.append(answer)
+                channel.send({"reply": answer})
+                break
             else:
-                answer["error"] = f"unknown application {name!r}"
-        elif verb == "shell":
-            answer["shell"] = desktop_interaction.shell_alive(user, environment)
-        elif verb == "ask":
-            # The backend half of the end-to-end claim, through the exact
-            # program the shell spawns. See desktop_interaction.ask_through_the_bridge.
-            answer["ask"] = desktop_interaction.ask_through_the_bridge(
-                str(request.get("request", "")), user, environment)
-        elif verb == "character":
-            # What the figure is doing and what the bubble says, both read out
-            # of the accessibility tree. This is how the host watches the state
-            # machine it just started by typing.
-            answer["character"] = desktop_interaction.character_state(user, environment)
-        elif verb == "done":
-            transcript.append(answer)
-            channel.send({"reply": answer})
-            break
-        else:
-            answer["error"] = f"unknown command {verb!r}"
+                answer["error"] = f"unknown command {verb!r}"
+        except Exception as error:  # noqa: BLE001 - a command that raised is an answer
+            answer["error"] = f"{type(error).__name__}: {error}"
         transcript.append(answer)
         channel.send({"reply": answer})
 

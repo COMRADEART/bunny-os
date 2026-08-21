@@ -22,7 +22,7 @@ import St from 'gi://St';
 import {box, glass} from './widgets.js';
 import {ease} from './animation.js';
 import {makeActivatable} from './util.js';
-import {Motion} from './tokens.js';
+import {MOTION} from './design/tokens.js';
 import {Icons, themedIcon} from './icons.js';
 
 /**
@@ -143,7 +143,7 @@ export class Sidebar {
         // The hover lift is a translation rather than a scale: scaling a row
         // that contains text resamples the glyphs and they shimmer.
         row.connect('notify::hover', () => {
-            ease(row, {translation_x: row.hover ? 3 : 0}, {ms: Motion.HOVER_MS});
+            ease(row, {translation_x: row.hover ? 3 : 0}, {ms: MOTION.fast});
         });
 
         return {actor: row, label: item.label, label_actor: label, icon_actor: icon};

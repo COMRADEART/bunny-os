@@ -34,7 +34,7 @@ import St from 'gi://St';
 import {box, glass} from '../widgets.js';
 import {ease} from '../animation.js';
 import {makeActivatable} from '../util.js';
-import {Motion} from '../tokens.js';
+import {MOTION} from '../design/tokens.js';
 import {Icons, themedIcon} from '../icons.js';
 
 const MAX_SHOWN = 4;
@@ -95,7 +95,7 @@ export class SuggestedActions {
                 this._context.onAction?.(item.action);
         }, {accessibleName: item.label});
         row.connect('notify::hover', () => {
-            ease(row, {translation_x: row.hover ? 4 : 0}, {ms: Motion.HOVER_MS});
+            ease(row, {translation_x: row.hover ? 4 : 0}, {ms: MOTION.fast});
         });
         return row;
     }

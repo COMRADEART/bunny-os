@@ -18,7 +18,7 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import Shell from 'gi://Shell';
 
-import {Colour} from './tokens.js';
+import {currentTheme} from './design/current.js';
 import {resolveIconName} from './icons.js';
 import {logOnce, makeActivatable} from './util.js';
 
@@ -145,9 +145,17 @@ export class MetricRow {
     }
 }
 
-/** A thin horizontal bar, 0..1, or dimmed and empty when the value is null. */
+/**
+ * A thin horizontal bar, 0..1, or dimmed and empty when the value is null.
+ *
+ * Takes a colour *role* rather than a colour. The fill is an inline style —
+ * St has no way to express "this much of the width" in a stylesheet — so the
+ * value is re-read from the theme on every apply. A meter built once with a
+ * frozen colour is a meter that stays violet on a high-contrast desktop.
+ */
 export class Meter {
-    constructor({height = 6, colour = Colour.ACCENT} = {}) {
+    constructor({height = 6, role = 'accent'} = {}) {
+        this._role = role;
         this.actor = new St.Widget({
             style_class: 'bunny-meter',
             height,
@@ -156,7 +164,6 @@ export class Meter {
         });
         this._fill = new St.Widget({
             style_class: 'bunny-meter-fill',
-            style: `background-color: ${colour};`,
             x_align: Clutter.ActorAlign.START,
         });
         this.actor.add_child(this._fill);
@@ -170,6 +177,7 @@ export class Meter {
     }
 
     _apply() {
+        this._fill.style = `background-color: ${currentTheme().colour[this._role]};`;
         const width = this.actor.get_width();
         if (this._fraction === null) {
             this._fill.set_width(0);
@@ -199,8 +207,27 @@ export function iconTile({gicon = null, iconName = null, iconSize = 28, label = 
     else if (iconName)
         icon.icon_name = resolveIconName(iconName);
     tile.add_child(icon);
-    if (label !== null)
-        tile.add_child(new St.Label({text: label, style_class: 'bunny-tile-label'}));
+    if (label !== null) {
+        const text = new St.Label({text: label, style_class: 'bunny-tile-label'});
+        // Two lines rather than an ellipsis.
+        //
+        // A tile is as wide as four of them fitting across the card allows, and
+        // "Diagnostics" does not fit on one line of it. It was drawn as
+        // "Diagnosti…" on the booted desktop — which is the defect
+        // VISUAL_QA_REPORT.md §3.1 fixed once already, by dropping the "Bunny "
+        // prefix, and which came back when the 9px tile label was folded up
+        // into the 10px caption role.
+        //
+        // Wrapping is the answer that does not cost either the grid or the
+        // legibility: the tile gets taller, the card's height allowance in
+        // lib/layout.js covers it, and the accessible name still carries the
+        // application's full name for a screen reader.
+        text.clutter_text.line_wrap = true;
+        text.clutter_text.set_line_wrap_mode(2);
+        text.clutter_text.ellipsize = 0;
+        text.clutter_text.set_max_length(0);
+        tile.add_child(text);
+    }
     if (onActivate) {
         // The tooltip goes into the *name*, after the label, because a dock
         // tile has no visible text and `accessible_description` is a no-op on

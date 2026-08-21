@@ -69,6 +69,60 @@ sudo podman build \
 ) 2>&1 | tee "${output}/image-builder.log"
 sudo chown -R "$(id -u):$(id -g)" "${output}"
 
+# ## The medium is not qualified because it was assembled
+#
+# Everything above this line succeeds on an ISO that cannot boot. It did, for
+# every run that was ever recorded: image-builder returned 0, the ISO was
+# 2.8 GB, GRUB drew its menu, the kernel loaded, /images/pxeboot/initrd.img was
+# present and 116 MB — and the medium had never once reached userspace, because
+# that initramfs contained no module able to read the root= it was given.
+#
+# So "IMAGE BUILT" and "BOOT ARTIFACT VALIDATED" are different states and this
+# is the boundary between them. Nothing downstream may treat a built ISO as a
+# bootable one, and this check costs under a second against an hour of VM time.
+iso="$(find "${output}" -maxdepth 2 -type f -name '*.iso' -print -quit)"
+if [[ -z "${iso}" ]]; then
+  echo "BLOCKED: image-builder reported success but produced no ISO under ${output}" >&2
+  exit 7
+fi
+
+# The in-image regeneration record, carried out of the image so the ISO's
+# evidence names the kernel, the dracut version and the initramfs digest that
+# went into it (§32) without anyone having to run the container again.
+# Piped rather than redirected, because `sudo cmd > file` opens the file as the
+# *invoking* user and shellcheck is right to say so (SC2024). Under `pipefail`
+# the pipeline still carries podman's exit status, which is the one that matters.
+sudo podman run --rm --entrypoint /usr/bin/cat "${installer_tag}" \
+  /usr/share/bunny-os/live-initramfs.json \
+  | tee "${output}/live-initramfs.json" >/dev/null || {
+    echo "BLOCKED: the live image carries no /usr/share/bunny-os/live-initramfs.json." >&2
+    echo "build/scripts/regenerate-live-initramfs.sh writes it on every live build," >&2
+    echo "so its absence means the initramfs was never explicitly regenerated and" >&2
+    echo "the medium is carrying whatever the base image happened to ship." >&2
+    exit 7
+  }
+expected_kver="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["kernelRelease"])' \
+                 "${output}/live-initramfs.json")"
+
+# Read the medium as the firmware will: the assembled ISO, not the tree it was
+# made from. This is what catches a stale initrd, an initrd replaced by another
+# image path, a GRUB entry naming an artifact that is not there, and a
+# CDLABEL that does not match the volume it names.
+if ! sudo python3 build/scripts/check-iso-boot-artifacts.py \
+       --iso "${iso}" \
+       --expect-kver "${expected_kver}" \
+       --json "${output}/boot-artifacts.json"; then
+  echo "" >&2
+  echo "BLOCKED: ${iso} is not a bootable medium. It has been left in place for" >&2
+  echo "diagnosis; ${output}/boot-artifacts.json names every check that failed." >&2
+  exit 7
+fi
+sudo chown "$(id -u):$(id -g)" "${output}/boot-artifacts.json" "${output}/live-initramfs.json"
+
+# The digest of the artifact that was qualified, so a boot result can be
+# attributed to an exact medium rather than to "the ISO".
+sha256sum "${iso}" | tee "${output}/iso-digest.txt"
+
 python3 build/scripts/write-build-provenance.py \
   --profile live \
   --output "${output}" \

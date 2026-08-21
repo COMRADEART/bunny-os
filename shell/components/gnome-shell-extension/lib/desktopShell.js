@@ -50,6 +50,8 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {solve, LEFT_COLUMN, RIGHT_COLUMN} from './layout.js';
+import {ThemeManager} from './themeManager.js';
+import {setCurrentTheme} from './design/current.js';
 import {box, glass} from './widgets.js';
 import {Icons, resolveIconName} from './icons.js';
 import {enter, ease} from './animation.js';
@@ -98,8 +100,9 @@ const TALKING_DWELL_MS = 6000;
 const TRANSIENT_STATES = new Set(['talking', 'success', 'error', 'warning']);
 
 export class DesktopShell {
-    constructor({settings}) {
+    constructor({settings, dir = null}) {
         this._settings = settings;
+        this._dir = dir;
         this._signals = [];
         this._destroyed = false;
         //: The request the desktop is currently showing. See `_owns`.
@@ -136,6 +139,11 @@ export class DesktopShell {
         // half-built object, so the cleanest guarantee is to tear down what
         // exists and let extension.js see the original error and fall back.
         try {
+            // First, and before any actor exists. Widgets that carry an inline
+            // style — the meters, the character's glow — read the resolved
+            // theme when they are built, so a theme that arrives after them is
+            // a theme half the desktop is not wearing.
+            this._buildTheme();
             this._buildServices();
             this._buildComponents();
             this._placeActors();
@@ -231,6 +239,44 @@ export class DesktopShell {
         }
     }
 
+    /**
+     * Start the design system, or carry on with the shipped stylesheet.
+     *
+     * Guarded rather than structural. If the theme manager cannot start —
+     * unwritable runtime directory, an St API that moved — the desktop still
+     * has `stylesheet.css`, which GNOME loaded when the extension enabled and
+     * which the manager only unloads once a generated sheet is in. That is a
+     * desktop in the default dark theme that does not follow the text scale: a
+     * real regression, named in `degraded` and reported, and not a black screen.
+     */
+    _buildTheme() {
+        this.themeManager = this._optional('the design system', () => new ThemeManager({
+            dir: this._dir,
+            onChanged: theme => {
+                setCurrentTheme(theme);
+                // Metrics changed, so the solver has to run again. Guarded
+                // because this fires from a settings signal, where a throw
+                // would land in GNOME's main loop rather than in the
+                // constructor's catch.
+                try {
+                    if (!this._destroyed && this._desktopLayer)
+                        this._relayout();
+                } catch (error) {
+                    logError_('the desktop could not be laid out for the new theme', error);
+                }
+            },
+        }));
+        if (this.themeManager?.theme)
+            setCurrentTheme(this.themeManager.theme);
+        for (const problem of this.themeManager?.degraded ?? [])
+            this.degraded.push(problem);
+    }
+
+    /** The resolved theme, or null if the design system did not start. */
+    get theme() {
+        return this.themeManager?.theme ?? null;
+    }
+
     _buildServices() {
         // The four the desktop cannot be assembled without. Each reads a file
         // or takes a reference; none of them talks to a bus or builds an actor,
@@ -255,16 +301,121 @@ export class DesktopShell {
         this.assistant = this._optional('assistant bridge', () => new AssistantService());
         this.voice = this._optional('voice bridge', () => new VoiceService());
 
-        this.assistant?.checkHealth((available, reason) => {
-            this._suggestions?.rebuild();
-            if (!available) {
-                this.characterState.setState('sleeping', {reason});
-                this._bubble?.say(
-                    'I am not connected to my runtime yet. Everything else on this desktop still works.',
-                    {tone: 'warning'});
-            }
-        });
+        this._watchAssistantAvailability();
         this._watchVoiceAvailability();
+    }
+
+    /**
+     * Ask whether the companion is reachable until it is, or until it is not.
+     *
+     * This asked *once*, and once is wrong for the reason written out under
+     * `_watchVoiceAvailability` below: GNOME Shell is the session, and
+     * `bunny-companion.service` is pulled in by `graphical-session.target`,
+     * which is reached after the shell is up. So the first check regularly runs
+     * before the companion has bound its socket.
+     *
+     * The consequence was photographed on a cold guest: with the desktop fully
+     * up and the readiness probe reporting `bunny-companion.service` active and
+     * its socket answering, the suggestion panel showed
+     * "⚠ Assistant offline — open Settings" and the character had been put to
+     * sleep. Every one of those statements was false by the time anyone could
+     * read them, and nothing would have corrected them for the life of the
+     * session.
+     *
+     * The retry is the same shape as voice's — the defect was found on voice,
+     * fixed on voice, and left in place here — so the two now share
+     * `_pollHealth` rather than the fix being carried across by hand a second
+     * time.
+     */
+    _watchAssistantAvailability() {
+        if (!this.assistant)
+            return;
+        // Not shown as offline while it is merely still starting. `available`
+        // is tri-state and the suggestion panel already treats `null` as
+        // "assume it works"; announcing a failure only after the attempts run
+        // out is what keeps a cold boot from lying.
+        // Rebuilt on a *change*, not on every attempt. The poll runs thirty
+        // times in a minute at startup, and rebuilding the suggestion panel
+        // thirty times would rebuild it twenty-nine times for nothing — and
+        // visibly, since the panel is on screen while it happens.
+        let lastReported = null;
+        this._assistantHealthTimer = this._pollHealth(this.assistant, (available, reason, settled) => {
+            const shown = available ? true : (settled ? false : null);
+            if (shown !== lastReported) {
+                lastReported = shown;
+                this._suggestions?.rebuild();
+            }
+            if (available) {
+                log_('the companion runtime is reachable');
+                return;
+            }
+            if (!settled)
+                return;
+            this.characterState.setState('sleeping', {reason});
+            this._bubble?.say(
+                'I am not connected to my runtime yet. Everything else on this desktop still works.',
+                {tone: 'warning'});
+            log_(`assistant unavailable: ${reason}`);
+        });
+    }
+
+    /**
+     * Ask a service's `checkHealth` until it says yes, or the attempts run out.
+     *
+     * `report` is called after every attempt with `(available, reason, settled)`.
+     * `settled` is true only on the final attempt of a run that never succeeded,
+     * which is the only moment a caller may tell the user something is missing.
+     *
+     * @param {{checkHealth: Function}} service
+     * @param {Function} report
+     * @returns {object|null} the timer, so the caller can keep it for teardown
+     */
+    _pollHealth(service, report) {
+        //: Every two seconds for a minute. A cold companion on this image binds
+        //: its socket in under ten; a minute is the point past which "it is
+        //: still starting" stops being the likely explanation.
+        let attemptsLeft = 30;
+        let timer = null;
+        // `done` rather than `timer === null`, because the first attempt is made
+        // before the interval exists. `checkHealth` answers asynchronously in
+        // the ordinary case but synchronously when the bridge cannot be spawned
+        // at all — so a first attempt that settles can call stop() while `timer`
+        // is still null, and the interval assigned a line later would then poll
+        // for the life of the session with nothing able to cancel it.
+        let done = false;
+        const stop = () => {
+            done = true;
+            timer?.stop();
+            timer = null;
+        };
+        const ask = () => {
+            if (done)
+                return;
+            service.checkHealth((available, reason) => {
+                if (done)
+                    return;
+                if (available) {
+                    stop();
+                    report(true, reason, true);
+                    return;
+                }
+                attemptsLeft -= 1;
+                report(false, reason, attemptsLeft <= 0);
+                if (attemptsLeft <= 0)
+                    stop();
+            });
+        };
+        ask();
+        if (done)
+            return null;
+        timer = interval(2, () => {
+            if (this._destroyed || done) {
+                stop();
+                return;
+            }
+            ask();
+        });
+        return timer;
     }
 
     /**
@@ -290,32 +441,14 @@ export class DesktopShell {
     _watchVoiceAvailability() {
         if (!this.voice)
             return;
-        //: Every two seconds for a minute. A cold companion on this image binds
-        //: its socket in under ten; a minute is the point past which "it is
-        //: still starting" stops being the likely explanation.
-        let attemptsLeft = 30;
-        const ask = () => {
-            this.voice.checkHealth((available, reason) => {
-                this._assistantPanel?.setVoiceAvailable(available, reason);
-                if (available) {
-                    this._voiceHealthTimer?.stop();
-                    this._voiceHealthTimer = null;
-                    log_('push-to-talk is available');
-                    return;
-                }
-                attemptsLeft -= 1;
-                if (attemptsLeft > 0)
-                    return;
-                this._voiceHealthTimer?.stop();
-                this._voiceHealthTimer = null;
-                log_(`push-to-talk unavailable: ${reason}`);
-            });
-        };
-        ask();
-        this._voiceHealthTimer = interval(2, () => {
-            if (this._destroyed || attemptsLeft <= 0)
+        this._voiceHealthTimer = this._pollHealth(this.voice, (available, reason, settled) => {
+            this._assistantPanel?.setVoiceAvailable(available, reason);
+            if (available) {
+                log_('push-to-talk is available');
                 return;
-            ask();
+            }
+            if (settled)
+                log_(`push-to-talk unavailable: ${reason}`);
         });
     }
 
@@ -751,7 +884,9 @@ export class DesktopShell {
         track(Main.layoutManager, 'startup-complete', () => this._dismissOverviewOnce());
         this._dismissOverviewOnce();
 
-        track(St.Settings.get(), 'notify::enable-animations', () => this._relayout());
+        // The font name still matters — it is the family and the base size the
+        // stylesheet inherits — but it is no longer where the text scale comes
+        // from. The theme manager owns the scaling settings and calls back.
         track(St.Settings.get(), 'notify::font-name', () => this._relayout());
 
         this._installedChangedId = this.launcher.connectInstalledChanged(() => {
@@ -814,7 +949,10 @@ export class DesktopShell {
         // are no struts, and using the work area would leave the dock floating
         // above a band of wallpaper on a session that once had a panel.
         const screen = {width: monitor.width, height: monitor.height};
-        const solution = solve(screen, {scale: this._textScale()});
+        const solution = solve(screen, {
+            scale: this._textScale(),
+            metric: this.theme?.metric ?? null,
+        });
         this._solution = solution;
 
         this._desktopLayer.set_position(monitor.x, monitor.y);
@@ -881,15 +1019,21 @@ export class DesktopShell {
      *
      * Cards grow with their text, and a card that grows past the band has to be
      * dropped — so the scale is an input to the layout solver, not a detail of
-     * the stylesheet. GNOME states it as a point size in the font name; 11 is
-     * the Adwaita default and the ratio to it is the factor.
+     * the stylesheet.
+     *
+     * This used to parse the point size out of `St.Settings.font_name` and
+     * divide by 11. That reads a key `text-scaling-factor` does not touch:
+     * GNOME implements text scaling by setting Xft DPI for GTK clients and
+     * leaves `org.gnome.desktop.interface font-name` at "Cantarell 11" for
+     * every scale. So this returned 1.0 at 125 %, at 150 % and at 200 %, the
+     * solver was told nothing had changed, and the accessibility run measured a
+     * desktop that redrew itself identically and called it a failure to honour
+     * the setting. It was, but not for the reason the stylesheet suggested.
+     *
+     * The theme manager reads the setting that moves. This delegates to it.
      */
     _textScale() {
-        const match = /(\d+(?:\.\d+)?)\s*$/.exec(St.Settings.get().font_name ?? '');
-        if (match === null)
-            return 1;
-        const points = Number(match[1]);
-        return Number.isFinite(points) && points > 0 ? Math.max(1, points / 11) : 1;
+        return this.theme?.textScale ?? 1;
     }
 
     _placeBubbles(band) {
@@ -1747,6 +1891,7 @@ export class DesktopShell {
             this._talkTimer?.stop();
             this._panelTimer?.stop();
             this._voiceHealthTimer?.stop();
+            this._assistantHealthTimer?.stop();
         });
 
         attempt('keybindings', () => {
@@ -1756,6 +1901,13 @@ export class DesktopShell {
         });
 
         attempt('power menu', () => this._closePowerMenu());
+
+        // Before the actors go, so that the restyle St triggers when the
+        // generated sheet is unloaded lands on actors that still exist.
+        attempt('the design system', () => {
+            this.themeManager?.destroy();
+            this.themeManager = null;
+        });
 
         attempt('signals', () => {
             for (const [object, id] of this._signals ?? []) {

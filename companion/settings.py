@@ -111,9 +111,44 @@ def _clamp(value: float, low: float, high: float) -> float:
     return max(low, min(high, float(value)))
 
 
+#: The placement names this field accepts, which are exactly
+#: :class:`companion.character.positioning.Placement`'s values. Imported lazily
+#: inside the function below rather than at module import: ``settings`` is
+#: loaded by the CLI and by headless clients that have no business importing the
+#: character package's geometry.
+_DOCK_VALUES = frozenset({
+    "center-screen", "dock-left", "dock-right", "bottom-left", "bottom-right",
+    "top-left", "top-right", "compact-floating", "user-dragged",
+})
+
+#: Names written by earlier builds, and what each means now. ``center`` was the
+#: only one that named a position the engine could already reach; the two top
+#: corners named positions it could not, which is why
+#: :class:`companion.character.positioning.Placement` gained them rather than
+#: this mapping quietly folding them onto a bottom corner.
+_DOCK_ALIASES = {
+    "center": "center-screen",
+    "docked": "dock-right",
+    "compact": "compact-floating",
+}
+
+
+def normalise_dock(value: str) -> str:
+    """The canonical placement name for a stored ``dock``. Never raises.
+
+    An unreadable value becomes the default rather than an error: this is on
+    the path that opens the companion window, and a typo in a settings file
+    should cost a person their chosen corner, not their companion.
+    """
+    text = str(value or "").strip()
+    if text in _DOCK_VALUES:
+        return text
+    return _DOCK_ALIASES.get(text, "bottom-right")
+
+
 @dataclass(frozen=True)
 class CharacterSettings:
-    """§29 Character: selection, 3D preference, scale, dock, animation level."""
+    """§29 Character: selection, renderer mode, scale, dock, animation level."""
 
     #: Empty means "whatever the default-character policy decided". A value here
     #: is a *user* selection and :mod:`companion.character.policy` will not
@@ -122,22 +157,88 @@ class CharacterSettings:
     #: ``auto`` lets capability decide, ``off`` refuses 3D on a machine that
     #: could do it. There is no ``on``: a preference that forced 3D onto a
     #: machine that cannot render it would be a setting that breaks the window.
+    #:
+    #: Superseded by :attr:`render_mode` and kept because settings files written
+    #: before it exist on disk. It survives as a *veto* only — see
+    #: :func:`companion.character.modes.mode_from_settings` for why that
+    #: direction is the one that cannot surprise anyone.
     three_d: str = "auto"
+    #: Which of the three companions the user asked for: ``prerendered``, ``2d``
+    #: or ``3d``. Pre-rendered is the default and the cheapest; see
+    #: :mod:`companion.character.modes`.
+    render_mode: str = "prerendered"
+    #: ``automatic``, ``low``, ``balanced`` or ``high``. A ceiling on effort
+    #: rather than a renderer choice: ``low`` on 3D means a lower frame cap and
+    #: quality rung, not a silent demotion to 2D. §10 keeps the two separate so
+    #: that a person who chose 3D still gets 3D on a machine set to ``low``.
+    performance: str = "automatic"
     scale: float = 1.0
     #: Where the character sits. Named positions rather than coordinates —
     #: §24 forbids relying on absolute coordinates across a monitor change.
+    #:
+    #: The vocabulary is :class:`companion.character.positioning.Placement`'s,
+    #: which it had drifted from: this field accepted ``top-left``, ``top-right``
+    #: and ``center``, none of which the placement engine could express, while
+    #: the engine offered ``dock-left``, ``dock-right`` and ``compact-floating``,
+    #: which this field rejected. Nothing consumed the setting at all, so the
+    #: divergence had never been noticed. The old names are still accepted and
+    #: normalised — see :data:`_DOCK_ALIASES` — because they are in settings
+    #: files on disk.
     dock: str = "bottom-right"
+    #: §6's "Hidden". Orthogonal to *where* the companion sits, so it is a flag
+    #: rather than a placement: a user who hides the companion and later shows
+    #: it again should get it back where they left it, not in a default corner.
+    #:
+    #: Never absolute. The attention model overrides it for a permission
+    #: request, an error and a live microphone — see
+    #: :data:`companion.character.attention._ALWAYS_VISIBLE`. Hiding is a
+    #: preference about the *resting* companion, not a way to dismiss a question.
+    visible: bool = True
     #: ``full``, ``reduced`` or ``none``.
     animation: str = "full"
+    #: §10's "enable/disable idle animation". Off means the character holds its
+    #: frame when nothing is happening, and the quiescence policy stops the
+    #: timer sooner rather than later.
+    idle_animation: bool = True
+    #: §10's "enable/disable contextual reactions" — whether the character
+    #: responds to the pointer and to ambient events at all.
+    contextual_reactions: bool = True
+    #: §10's "animation intensity", 0 to 1. Scales how far the character departs
+    #: from a neutral pose; it never scales *expression*, so a character at 0 is
+    #: still readable. Only the interactive renderer can honour a value between
+    #: the ends — a frame sequence is authored at one intensity.
+    animation_intensity: float = 1.0
 
     def __post_init__(self) -> None:
         if self.three_d not in ("auto", "off"):
             raise SettingsError("character.threeD is 'auto' or 'off'")
-        if self.dock not in ("bottom-right", "bottom-left", "top-right", "top-left", "center"):
-            raise SettingsError(f"character.dock {self.dock!r} is not a named position")
+        if self.render_mode not in ("prerendered", "2d", "3d"):
+            raise SettingsError("character.renderMode is 'prerendered', '2d' or '3d'")
+        if self.performance not in ("automatic", "low", "balanced", "high"):
+            raise SettingsError(
+                "character.performance is 'automatic', 'low', 'balanced' or 'high'"
+            )
+        if self.dock not in _DOCK_VALUES and self.dock not in _DOCK_ALIASES:
+            raise SettingsError(
+                f"character.dock {self.dock!r} is not a named position; "
+                f"one of {', '.join(sorted(_DOCK_VALUES))}"
+            )
         if self.animation not in ("full", "reduced", "none"):
             raise SettingsError("character.animation is 'full', 'reduced' or 'none'")
         object.__setattr__(self, "scale", _clamp(self.scale, 0.5, 3.0))
+        object.__setattr__(self, "animation_intensity", _clamp(self.animation_intensity, 0.0, 1.0))
+
+    def mode(self) -> Any:
+        """The :class:`companion.character.modes.RenderMode` this asks for."""
+        from .character.modes import mode_from_settings
+
+        return mode_from_settings(self.render_mode, three_d=self.three_d)
+
+    def placement(self) -> Any:
+        """The :class:`companion.character.positioning.Placement` this asks for."""
+        from .character.positioning import Placement
+
+        return Placement(normalise_dock(self.dock))
 
 
 @dataclass(frozen=True)
@@ -362,9 +463,15 @@ class Settings:
             "character": {
                 "packageId": self.character.package_id,
                 "threeD": self.character.three_d,
+                "renderMode": self.character.render_mode,
+                "performance": self.character.performance,
                 "scale": self.character.scale,
                 "dock": self.character.dock,
+                "visible": self.character.visible,
                 "animation": self.character.animation,
+                "idleAnimation": self.character.idle_animation,
+                "contextualReactions": self.character.contextual_reactions,
+                "animationIntensity": self.character.animation_intensity,
             },
             "voice": {
                 "enabled": self.voice.enabled,
@@ -451,9 +558,20 @@ class Settings:
             character=CharacterSettings(
                 package_id=text(character, "packageId"),
                 three_d=text(character, "threeD", "auto"),
+                # A file written before this key existed asks for pre-rendered,
+                # which is the default *and* the cheapest — so an upgrade never
+                # silently promotes a machine to a heavier renderer. A machine
+                # that was deliberately put in 3D keeps it through
+                # ``packageId``, which the character policy still honours.
+                render_mode=text(character, "renderMode", "prerendered"),
+                performance=text(character, "performance", "automatic"),
                 scale=number(character, "scale", 1.0),
                 dock=text(character, "dock", "bottom-right"),
+                visible=flag(character, "visible", True),
                 animation=text(character, "animation", "full"),
+                idle_animation=flag(character, "idleAnimation", True),
+                contextual_reactions=flag(character, "contextualReactions", True),
+                animation_intensity=number(character, "animationIntensity", 1.0),
             ),
             voice=VoiceSettings(
                 enabled=flag(voice, "enabled", True),

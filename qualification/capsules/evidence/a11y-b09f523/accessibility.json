@@ -1,0 +1,84 @@
+{
+ "explanation": "text-scaling-factor 1.5 changed 0.09% of the screen and high contrast changed 0.18%, against a 0.15% noise floor measured from a screenshot taken at the *same* settings as the baseline. The desktop honours neither: all 43 font sizes are absolute pixels and all 151 colour literals are hardcoded.",
+ "findings": [
+  "the desktop does not honour org.gnome.desktop.interface text-scaling-factor",
+  "the desktop does not honour org.gnome.desktop.a11y.interface high-contrast"
+ ],
+ "measurements": {
+  "comparisons": [
+   {
+    "boundingBox": {
+     "height": 266,
+     "width": 1542,
+     "x": 276,
+     "y": 145
+    },
+    "isTheControl": false,
+    "pixelsDiffering": 860,
+    "screenshot": "a11y-02-reduced-motion",
+    "shareOfScreen": 0.000415
+   },
+   {
+    "boundingBox": {
+     "height": 337,
+     "width": 1542,
+     "x": 276,
+     "y": 74
+    },
+    "isTheControl": false,
+    "pixelsDiffering": 1948,
+    "screenshot": "a11y-03-large-text",
+    "shareOfScreen": 0.000939
+   },
+   {
+    "boundingBox": {
+     "height": 694,
+     "width": 1542,
+     "x": 276,
+     "y": 1
+    },
+    "isTheControl": false,
+    "pixelsDiffering": 3693,
+    "screenshot": "a11y-04-high-contrast",
+    "shareOfScreen": 0.001781
+   },
+   {
+    "boundingBox": {
+     "height": 694,
+     "width": 1531,
+     "x": 287,
+     "y": 1
+    },
+    "isTheControl": true,
+    "pixelsDiffering": 3118,
+    "screenshot": "a11y-05-restored",
+    "shareOfScreen": 0.001504
+   }
+  ],
+  "noiseFloorShare": 0.001504,
+  "screen": {
+   "height": 1080,
+   "width": 1920
+  },
+  "screenReader": {
+   "braille": "brltty is not installed",
+   "package": "orca-50.2-1.fc44",
+   "path": "/usr/bin/orca"
+  },
+  "stylesheet": {
+   "absolutePixelFontSizes": 43,
+   "colourLiterals": 151,
+   "fontSizeDeclarations": 43,
+   "relativeFontSizes": 0,
+   "themeDerivedColours": 0
+  }
+ },
+ "schemaVersion": 1,
+ "screenshots": {
+  "a11y-01-default.png": "2a10f731146811422a18511534af5e2c7baeee963e3655762800b8f879161ea9",
+  "a11y-03-large-text.png": "cab4f5d11706488c7c8489a1e04bc0a59a602b6a464c2e7eca17e68d96350801",
+  "a11y-04-high-contrast.png": "ed30a5632989ea475afad7953e3d58494b13e01d69758a0307a984828665b18b",
+  "a11y-05-restored.png": "0b1a49e27949ff81cf6023c5198d70e6950c02aca3f984e4e8eaa50116f00b41"
+ },
+ "section": "accessibility"
+}

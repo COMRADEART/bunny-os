@@ -72,6 +72,9 @@ export class AssistantService {
         this._sequence = 0;
         this._activeRequestId = 0;
         this._watchdog = null;
+        //: True while a permission question is on screen and unanswered. The
+        //: watchdog does not run then; see `ask`.
+        this._awaitingPerson = false;
         this._taskId = '';
         this._speechActive = false;
     }
@@ -159,19 +162,36 @@ export class AssistantService {
             this._watchdog?.stop();
             this._watchdog = null;
         };
-        this._watchdog?.stop();
-        this._watchdog = timeout(WATCHDOG_MS, () => {
-            if (!stillCurrent() || settled)
-                return;
-            logOnce('assistant-watchdog',
-                `no answer within ${Math.round(WATCHDOG_MS / 1000)}s; the request was abandoned`);
-            finish();
-            this.cancelWatch();
-            handlers.onError?.(
-                'The assistant did not answer in time. It may still be working — ' +
-                'the Tasks window will show it.',
-                {requestId});
-        });
+        // The watchdog does not run while a question is on somebody's screen.
+        //
+        // Same reasoning as the bridge's own deadline, one layer up, and it had
+        // to be fixed here too: measured on a booted guest, the permission
+        // prompt was replaced after 200 seconds by "The assistant did not answer
+        // in time" — while the answer it was waiting for was the person's, and
+        // the person had not been given 200 seconds to read a sentence about
+        // their own files.
+        //
+        // Nobody decides a permission question in 200 seconds because a timer
+        // says so. Suspending is the only safe direction: extending it just
+        // moves the number, and removing it lets a genuinely stuck request sit
+        // in THINKING for ever, which is the state the brief names twice.
+        const armWatchdog = () => {
+            this._watchdog?.stop();
+            this._watchdog = timeout(WATCHDOG_MS, () => {
+                if (!stillCurrent() || settled || this._awaitingPerson)
+                    return;
+                logOnce('assistant-watchdog',
+                    `no answer within ${Math.round(WATCHDOG_MS / 1000)}s; the request was abandoned`);
+                finish();
+                this.cancelWatch();
+                handlers.onError?.(
+                    'The assistant did not answer in time. It may still be working — ' +
+                    'the Tasks window will show it.',
+                    {requestId});
+            });
+        };
+        this._awaitingPerson = false;
+        armWatchdog();
 
         this._current = this._run(['ask', trimmed], line => {
             if (!stillCurrent())
@@ -182,9 +202,23 @@ export class AssistantService {
                 handlers.onAccepted?.(line.taskId, {requestId});
                 break;
             case 'phase':
+                // Leaving `waiting_for_approval` means the question has been
+                // answered — by this desktop or by another surface — so the
+                // clock starts again, with a full budget for the work that
+                // follows rather than the remainder of the time somebody spent
+                // reading.
+                if (this._awaitingPerson && line.phase !== 'waiting_for_approval') {
+                    this._awaitingPerson = false;
+                    armWatchdog();
+                }
                 handlers.onPhase?.(line.phase, line.statusText ?? '', {requestId});
                 break;
             case 'approval':
+                // A question is now on screen. Until it is answered, silence is
+                // the system working, not the runtime failing.
+                this._awaitingPerson = true;
+                this._watchdog?.stop();
+                this._watchdog = null;
                 handlers.onApproval?.(line, {requestId});
                 break;
             case 'reply':

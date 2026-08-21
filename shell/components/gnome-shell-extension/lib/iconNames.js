@@ -117,6 +117,22 @@ export const Icons = Object.freeze({
     PLAN: 'document-edit-symbolic',             // was 📝
     DISK_SPACE: 'drive-harddisk-symbolic',      // was 🧹
     WARNING: 'dialog-warning-symbolic',         // was ⚠
+
+    // Security and task state. §19 is the reason these exist as icons at all:
+    // a permission state carried by colour alone fails for the reader who
+    // cannot distinguish the colour, and the state that matters most —
+    // "declared, but this build cannot enforce it" — is the one whose colour is
+    // closest to its neighbour's. Each of these appears beside a word, never
+    // instead of one.
+    SUCCESS: 'object-select-symbolic',
+    BLOCKED: 'action-unavailable-symbolic',
+    UNKNOWN: 'dialog-question-symbolic',
+    SECURITY: 'channel-secure-symbolic',
+    APPLICATION: 'application-x-executable-symbolic',
+    WAITING: 'content-loading-symbolic',
+    WORKING: 'view-refresh-symbolic',
+    FAILED: 'dialog-error-symbolic',
+    CANCELLED: 'process-stop-symbolic',
 });
 
 /** Volume, by band. `_refreshVolume` picks the band; this names the icon. */

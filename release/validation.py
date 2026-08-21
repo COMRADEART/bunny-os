@@ -193,6 +193,12 @@ def _schema_validation(root: Path) -> ValidatorOutcome:
         *_walk(root, "*.schema.json", under="schemas"),
         *_walk(root, "*.schema.json", under="shell/schemas"),
         *_walk(root, "*.schema.json", under="security"),
+        # Bunny Model Studio's training configuration schema. It lives in
+        # model_studio/schemas rather than schemas/ because the latter is an
+        # install route and a training schema has no business on a Bunny
+        # machine — but a schema nothing validates is a schema that rots, so it
+        # is walked here.
+        *_walk(root, "*.schema.json", under="model_studio/schemas"),
     })
     for path in paths:
         name = _name(root, path)

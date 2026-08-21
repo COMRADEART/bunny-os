@@ -26,6 +26,7 @@ import Cairo from 'cairo';
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
+import {currentTheme, rgb} from './design/current.js';
 import {logError_} from './util.js';
 
 export class WallpaperLayer {
@@ -56,31 +57,52 @@ export class WallpaperLayer {
             if (width <= 0 || height <= 0)
                 return;
 
+            // The scrim's colour is the theme's own ground, not a fixed
+            // near-black. Three hardcoded floats here were #080B12 — the dark
+            // theme's background — which meant the light theme's scrim darkened
+            // a warm-white desktop with a cool near-black.
+            const [r, g, b] = rgb('surfacePrimary');
+
+            // At high contrast there is no gradient at all.
+            //
+            // This layer exists to guarantee contrast over an image the user
+            // may have chosen, and at high contrast the only guarantee worth
+            // giving is that there is no image. The first booted high-contrast
+            // screenshot showed cyan controls and opaque black panels over the
+            // *purple wallpaper*, because the wallpaper is GNOME's to draw and
+            // this scrim was still only dimming it.
+            if (currentTheme().highContrast) {
+                cr.setSourceRGBA(r, g, b, 1.0);
+                cr.rectangle(0, 0, width, height);
+                cr.fill();
+                return;
+            }
+
             // Corner vignette. Centred slightly above the middle because the
             // character stands below centre and the darkest part of the frame
             // should not be behind its face.
             const radial = new Cairo.RadialGradient(
                 width * 0.5, height * 0.42, Math.min(width, height) * 0.25,
                 width * 0.5, height * 0.42, Math.max(width, height) * 0.78);
-            radial.addColorStopRGBA(0, 0.031, 0.043, 0.071, 0.0);
-            radial.addColorStopRGBA(0.62, 0.031, 0.043, 0.071, 0.22);
-            radial.addColorStopRGBA(1, 0.031, 0.043, 0.071, 0.62);
+            radial.addColorStopRGBA(0, r, g, b, 0.0);
+            radial.addColorStopRGBA(0.62, r, g, b, 0.22);
+            radial.addColorStopRGBA(1, r, g, b, 0.62);
             cr.setSource(radial);
             cr.rectangle(0, 0, width, height);
             cr.fill();
 
             // Bottom band, under the dock and the lower cards.
             const linear = new Cairo.LinearGradient(0, height * 0.55, 0, height);
-            linear.addColorStopRGBA(0, 0.031, 0.043, 0.071, 0.0);
-            linear.addColorStopRGBA(1, 0.031, 0.043, 0.071, 0.55);
+            linear.addColorStopRGBA(0, r, g, b, 0.0);
+            linear.addColorStopRGBA(1, r, g, b, 0.55);
             cr.setSource(linear);
             cr.rectangle(0, height * 0.55, width, height * 0.45);
             cr.fill();
 
             // Top band, under the bar.
             const top = new Cairo.LinearGradient(0, 0, 0, 140);
-            top.addColorStopRGBA(0, 0.031, 0.043, 0.071, 0.48);
-            top.addColorStopRGBA(1, 0.031, 0.043, 0.071, 0.0);
+            top.addColorStopRGBA(0, r, g, b, 0.48);
+            top.addColorStopRGBA(1, r, g, b, 0.0);
             cr.setSource(top);
             cr.rectangle(0, 0, width, 140);
             cr.fill();

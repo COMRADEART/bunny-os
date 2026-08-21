@@ -1,6 +1,6 @@
 # Recovery media qualification report
 
-Date: 2026-07-29  
+Date: 2026-08-01T14:31:13Z  
 Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
 Result: **NOT QUALIFIED** — 0 of 11 scenarios resolved, 0 failing, 11 not run.
 

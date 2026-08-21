@@ -325,11 +325,51 @@ class TokenTests(unittest.TestCase):
     def test_the_focus_ring_is_never_zero_width(self) -> None:
         self.assertGreaterEqual(self.tokens["focus"]["widthPx"], 2)
 
-    def test_the_version_one_values_are_unchanged(self) -> None:
-        """Version 2 is additive. An existing surface renders identically."""
-        self.assertEqual(self.tokens["light"]["accent"], "#087F5B")
-        self.assertEqual(self.tokens["dark"]["accent"], "#88E7C4")
-        self.assertEqual(self.tokens["radius"], {"control": 10, "surface": 18, "hero": 28})
+    def test_there_is_one_bunny_accent_and_both_stacks_use_it(self) -> None:
+        """The property that replaced "version one is unchanged", and why.
+
+        Schema version 2 promised the version-one values would not move, and
+        they did not — but there were *two* sets of them. This file described an
+        evergreen and mint palette (`light.accent` `#087F5B`, `dark.accent`
+        `#88E7C4`) that no display server ever loaded, because nothing read this
+        file at runtime; the desktop shell had its own violet palette in
+        JavaScript, and that is the one in every screenshot the project has.
+        docs/DESIGN_SYSTEM.md recorded the split and said resolving it "is worth
+        doing and is not done yet".
+
+        Version 3 resolves it in favour of the rendered palette. The check that
+        matters now is not that a value has not changed but that there is only
+        one of it, so the two stacks cannot drift apart again.
+        """
+        self.assertGreaterEqual(self.tokens["schemaVersion"], 3)
+        self.assertEqual(
+            self.tokens["generatedFrom"],
+            "shell/components/gnome-shell-extension/lib/design/tokens.js")
+
+        violet = {"#7C3AED", "#6D28D9", "#5B21B6", "#A78BFA", "#8B5CF6"}
+        for theme in ("light", "dark"):
+            with self.subTest(theme=theme):
+                self.assertIn(self.tokens[theme]["accent"], violet)
+
+    def test_every_theme_defines_every_semantic_role(self) -> None:
+        """A missing role is a surface that falls back to whatever St had."""
+        roles = set(self.tokens["colourRoles"])
+        self.assertIn("textOnSelection", roles)
+        for name, theme in self.tokens["themes"].items():
+            with self.subTest(theme=name):
+                self.assertEqual(set(theme["colour"]), roles)
+
+    def test_high_contrast_exists_as_a_theme_rather_than_a_wish(self) -> None:
+        """The measured failure was that no second palette existed to switch to."""
+        self.assertIn("highContrastDark", self.tokens["themes"])
+        self.assertIn("highContrastLight", self.tokens["themes"])
+        for name in ("highContrastDark", "highContrastLight"):
+            with self.subTest(theme=name):
+                theme = self.tokens["themes"][name]
+                self.assertTrue(theme["highContrast"])
+                # No shadows: a shadow is the separation cue a person using
+                # high contrast cannot see. A visible border replaces it.
+                self.assertEqual(set(theme["shadow"].values()), {"none"})
 
 
 if __name__ == "__main__":

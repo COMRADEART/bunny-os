@@ -17,7 +17,7 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
 import {Card} from './base.js';
-import {Rgb} from '../tokens.js';
+import {rgb} from '../design/current.js';
 import {box, setOrientation, MetricRow, UNAVAILABLE} from '../widgets.js';
 import {clamp, formatBytes, formatPair, logError_} from '../util.js';
 
@@ -189,8 +189,8 @@ export class SystemOverview extends Card {
                 // Colour steps at the thresholds a user would act on, not a
                 // continuous ramp: a dial that is slightly orange at 55% trains
                 // people to ignore orange.
-                const [r, g, b] = value >= 0.9 ? Rgb.ERROR
-                    : value >= 0.7 ? Rgb.WARNING : Rgb.ACCENT_BRIGHT;
+                const [r, g, b] = rgb(value >= 0.9 ? 'danger'
+                    : value >= 0.7 ? 'warning' : 'accentText');
                 cr.newPath();
                 cr.arc(centreX, centreY, radius, start, start + Math.PI * 2 * value);
                 cr.setSourceRGBA(r, g, b, 1);

@@ -1,0 +1,4112 @@
+{
+ "schemaVersion": 1,
+ "evidenceLevel": "HOST RUNTIME VALIDATED",
+ "note": "Every setup screen launched under GTK and walked over the real AT-SPI bus. This is what Orca would find. Not a VM run.",
+ "screens": [
+  {
+   "screen": "welcome",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Hi. I'm Bunny. I'll help set up your computer.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Welcome",
+     "description": "",
+     "text": "Welcome",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Get started",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Get started",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Accessibility",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Accessibility",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, for advanced users",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 5,
+    "headings": [
+     "Welcome"
+    ],
+    "readableText": 7
+   }
+  },
+  {
+   "screen": "accessibility",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Would you like larger text, more contrast, less movement, or a screen reader? You can change all of this later.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Accessibility",
+     "description": "",
+     "text": "Accessibility",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Text size",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Changes immediately, here and on the installed system.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Normal",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Normal",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Large",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Large",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Larger",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Larger",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Largest",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Largest",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "High contrast",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Stronger borders and a plain background behind every control.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "High contrast. Stronger borders and a plain background behind every control.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Reduce motion",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Bunny stops moving. Nothing is communicated by animation alone.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Reduce motion. Bunny stops moving. Nothing is communicated by animation alone.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Screen reader",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Starts Orca now and enables it on the installed system.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Screen reader. Starts Orca now and enables it on the installed system.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Captions",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Shows in text everything Bunny says aloud.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Captions. Shows in text everything Bunny says aloud.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Text-only Bunny",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Bunny becomes words with no picture. Setup works the same.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Text-only Bunny. Bunny becomes words with no picture. Setup works the same.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Continue",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Continue",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 13,
+    "headings": [
+     "Accessibility"
+    ],
+    "readableText": 22
+   }
+  },
+  {
+   "screen": "language_region",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Which language should I use?",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Language and region",
+     "description": "",
+     "text": "Language and region",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Language",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "English (United Kingdom)",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "English (United Kingdom)",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "English (United States)",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "English (United States)",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Français (France)",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Français (France)",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Deutsch (Deutschland)",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Deutsch (Deutschland)",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Español (España)",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Español (España)",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Region",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Sets date, time and number formats.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "United Kingdom",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "United Kingdom",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "United States",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "United States",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "France",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "France",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Germany",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Germany",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Spain",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Spain",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Time zone",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "London",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "London",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Paris",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Paris",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Berlin",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Berlin",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "New York",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "New York",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Detected",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "No network, so nothing was detected. Choose below.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Continue",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Continue",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 18,
+    "headings": [
+     "Language and region"
+    ],
+    "readableText": 26
+   }
+  },
+  {
+   "screen": "keyboard",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Let's check your keyboard before you type anything important.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Keyboard",
+     "description": "",
+     "text": "Keyboard",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "Keyboard. Let's check your keyboard before you type anything important. Choose a layout and type in the test box to check it. A wrong layout makes a disk password impossible to type back.",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "A wrong layout makes a disk password impossible to type back.",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "A wrong layout makes a disk password impossible to type back.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Keyboard layout",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "English (UK)",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "English (UK)",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "English (US)",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "English (US)",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "French (AZERTY)",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "French (AZERTY)",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "German (QWERTZ)",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "German (QWERTZ)",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Type here to check it",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "What you type is not saved and is not sent anywhere.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "text",
+     "name": "Type here to check it. What you type is not saved and is not sent anywhere.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Continue",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Continue",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 9,
+    "headings": [
+     "Keyboard"
+    ],
+    "readableText": 14
+   }
+  },
+  {
+   "screen": "network",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "I can connect to Wi-Fi now, or you can do it later. Nothing here needs the internet.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Network",
+     "description": "",
+     "text": "Network",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Connection",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Not connected. Installation does not need it.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Available networks",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "check box",
+     "name": "No networks found. Setup continues without one.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": false
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "No networks found",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Setup continues without one.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Network password",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Held only while connecting. It is not written to setup state.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "password text",
+     "name": "Network password. Held only while connecting. It is not written to setup state.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Continue without network",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Continue without network",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Connect",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Connect",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 7,
+    "headings": [
+     "Network"
+    ],
+    "readableText": 14
+   }
+  },
+  {
+   "screen": "storage",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "I need to know where to install. I won't change anything until you say so.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Where to install",
+     "description": "",
+     "text": "Where to install",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "Where to install. I need to know where to install. I won't change anything until you say so. 1 disk found. Nothing is selected yet. Nothing is written to any disk on this screen.",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "No disk that Bunny OS can install to was found. Check that the drive is connected, then restart setup.",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "No disk that Bunny OS can install to was found. Check that the drive is connected, then restart setup.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Install to",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "check box",
+     "name": "No disks found. Bunny OS needs a disk of at least 40 GiB, connected before setup starts.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": false
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "No disks found",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Bunny OS needs a disk of at least 40 GiB, connected before setup starts.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Review what happens",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Review what happens",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 5,
+    "headings": [
+     "Where to install"
+    ],
+    "readableText": 10
+   }
+  },
+  {
+   "screen": "encryption",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "I can encrypt the disk. If you forget the passphrase, nobody can recover what's on it — not even me.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Encryption",
+     "description": "",
+     "text": "Encryption",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "Encryption. I can encrypt the disk. If you forget the passphrase, nobody can recover what's on it — not even me. Type a passphrase twice. A recovery key is shown once before installation begins. If you forget the passphrase and lose the recovery key, the data is gone: it cannot be recovered by Bunny or by anyone else.",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "If you forget the passphrase and lose the recovery key, the data is gone. Bunny cannot recover it and neither can anyone else.",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "If you forget the passphrase and lose the recovery key, the data is gone. Bunny cannot recover it and neither can anyone else.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Encrypt this disk",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Protects what is on the disk if the computer is lost or stolen. It does not protect you while you are logged in.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Encrypt this disk. Protects what is on the disk if the computer is lost or stolen. It does not protect you while you are logged in.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Passphrase",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "You will type this every time the computer starts.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "password text",
+     "name": "Passphrase. You will type this every time the computer starts.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Passphrase again",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "password text",
+     "name": "Passphrase again.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Recovery key",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "A recovery key is generated and shown once, before installation begins. Write it down. It is the only other way in.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Continue",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Continue",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 7,
+    "headings": [
+     "Encryption"
+    ],
+    "readableText": 14
+   }
+  },
+  {
+   "screen": "account",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Who is this computer for?",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Your account",
+     "description": "",
+     "text": "Your account",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Your name",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "What Bunny calls you.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "text",
+     "name": "Your name. What Bunny calls you.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Username",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Lower-case letters, digits, dash and underscore.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "text",
+     "name": "Username. Lower-case letters, digits, dash and underscore.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Password",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "password text",
+     "name": "Password.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Password again",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "password text",
+     "name": "Password again.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Device name",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Optional. Used on networks. No hardware serial number is included.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "text",
+     "name": "Device name. Optional. Used on networks. No hardware serial number is included.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Continue",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Continue",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 9,
+    "headings": [
+     "Your account"
+    ],
+    "readableText": 14
+   }
+  },
+  {
+   "screen": "privacy",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Everything is off unless you turn it on. I'll tell you what each one means.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Privacy",
+     "description": "",
+     "text": "Privacy",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Diagnostics",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Counts of which Bunny features are used. No file names, no text you type. Sent to ComradeArt. Optional; off by default.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Diagnostics. Counts of which Bunny features are used. No file names, no text you type. Sent to ComradeArt. Optional; off by default.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Crash reports",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "A stack trace when something crashes, plus the OS version. Can contain a file path. Sent to ComradeArt when you approve each one. Optional; off by default.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Crash reports. A stack trace when something crashes, plus the OS version. Can contain a file path. Sent to ComradeArt when you approve each one. Optional; off by default.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Feedback",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Only what you write and choose to send. Nothing is collected in the background.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Feedback. Only what you write and choose to send. Nothing is collected in the background.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Location services",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Approximate location from nearby Wi-Fi names. Used by apps that ask, one at a time. Never leaves this computer unless an app you allowed sends it.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Location services. Approximate location from nearby Wi-Fi names. Used by apps that ask, one at a time. Never leaves this computer unless an app you allowed sends it.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Microphone available to apps",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Off means no app can record, including Bunny. You can still allow one app later.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Microphone available to apps. Off means no app can record, including Bunny. You can still allow one app later.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Camera available to apps",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Off means no app can see the camera. You can still allow one app later.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Camera available to apps. Off means no app can see the camera. You can still allow one app later.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Online AI providers",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Sends what you ask Bunny to a provider you choose and pay for. Off means Bunny works only with what is on this computer. Set up later, never during install.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Online AI providers. Sends what you ask Bunny to a provider you choose and pay for. Off means Bunny works only with what is on this computer. Set up later, never during install.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Remote processing",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Lets a task run on another machine you own. Off by default.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Remote processing. Lets a task run on another machine you own. Off by default.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Continue",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Continue",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 12,
+    "headings": [
+     "Privacy"
+    ],
+    "readableText": 22
+   }
+  },
+  {
+   "screen": "appearance",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "How would you like it to look? You can change this whenever you want.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Appearance",
+     "description": "",
+     "text": "Appearance",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Light or dark",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Light",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Light",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Dark",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Dark",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Match the time of day",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Match the time of day",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Accent colour",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Violet",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Violet",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Teal",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Teal",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Amber",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Amber",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Rose",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Rose",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Background",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Bunny",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Bunny",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Plain colour",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Plain colour",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Photograph",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Photograph",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Continue",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Continue",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 14,
+    "headings": [
+     "Appearance"
+    ],
+    "readableText": 19
+   }
+  },
+  {
+   "screen": "companion_behaviour",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "How much of me would you like on screen?",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Bunny",
+     "description": "",
+     "text": "Bunny",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "How much of Bunny",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Full. A character, captions and controls.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Full",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "A character, captions and controls.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Compact. A smaller character in the corner.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Compact",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "A smaller character in the corner.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Minimal. A small figure and an indicator, no captions.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Minimal",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "A small figure and an indicator, no captions.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Text only. Words, no picture.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Text only",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Words, no picture.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "radio button",
+     "name": "Off. No Bunny surface at all. Permission requests still appear.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Off",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "No Bunny surface at all. Permission requests still appear.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Speak aloud",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Bunny says things as well as showing them.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Speak aloud. Bunny says things as well as showing them.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Always show captions",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Everything Bunny says appears as text, whether or not it is spoken.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Always show captions. Everything Bunny says appears as text, whether or not it is spoken.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Start Bunny when I log in",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "switch",
+     "name": "Start Bunny when I log in.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Continue",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Continue",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 12,
+    "headings": [
+     "Bunny"
+    ],
+    "readableText": 22
+   }
+  },
+  {
+   "screen": "applications",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "I can set up a few apps now. Each one gets its own protected space, and I'll ask before any of them touch your files.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Apps",
+     "description": "",
+     "text": "Apps",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "What do you use this computer for?",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Bunny suggests a few apps from this. Nothing is installed without you choosing it.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "check box",
+     "name": "Everyday. Web, mail, photos, music.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Everyday",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Web, mail, photos, music.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "check box",
+     "name": "Creative work. Images, video, audio, design.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Creative work",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Images, video, audio, design.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "check box",
+     "name": "Development. Editors, toolchains, containers.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Development",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Editors, toolchains, containers.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "check box",
+     "name": "School. Documents, reading, note taking.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "School",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Documents, reading, note taking.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "check box",
+     "name": "Office and productivity. Documents, spreadsheets, slides.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Office and productivity",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Documents, spreadsheets, slides.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "check box",
+     "name": "Media. Watching and listening.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Media",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Watching and listening.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "check box",
+     "name": "Gaming. Games and the runtimes they need.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Gaming",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Games and the runtimes they need.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Suggested apps",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Each one shows what it costs, where it comes from, and whether it runs in a protected space.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "check box",
+     "name": "Nothing selected. Apps can be added at any time.",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": false
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Nothing selected",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Apps can be added at any time.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Permissions",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Every app starts with nothing. It asks the first time it needs your files, camera, microphone or the network.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Skip apps",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Skip apps",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Continue",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Continue",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 13,
+    "headings": [
+     "Apps"
+    ],
+    "readableText": 29
+   }
+  },
+  {
+   "screen": "review",
+   "controls": [
+    {
+     "role": "scroll pane",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "I still need to know which disk to install to.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "heading",
+     "name": "Review",
+     "description": "",
+     "text": "Review",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "Review. No disk has been selected yet, so installation cannot start. Go back to choose one.",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "No disk has been selected yet.",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "No disk has been selected yet.",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Language",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "en-GB",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Region and time zone",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "GB · Europe/London",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Keyboard",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "gb",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Install to",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "no disk selected",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "What happens to it",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Erased completely",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Encryption",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Off",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Account",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": " (), administrator",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Privacy",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Everything off",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Appearance",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "system, violet accent",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Bunny",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "full, captions on, starts at login",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Apps",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "None",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Text size",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "100%",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "High contrast",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Off",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Reduce motion",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Off",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Screen reader",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Off",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Back",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Back",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Install Bunny OS",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": false
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Install Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Installation details, technical information about this step",
+     "description": "",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Installation details",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "paragraph",
+     "name": "",
+     "description": "",
+     "text": "Set up Bunny OS",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "alert",
+     "name": "",
+     "description": "",
+     "text": "",
+     "focusable": false,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Minimize",
+     "description": "Minimize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Maximize",
+     "description": "Maximize the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    },
+    {
+     "role": "button",
+     "name": "Close",
+     "description": "Close the window",
+     "text": "",
+     "focusable": true,
+     "sensitive": true
+    }
+   ],
+   "findings": [],
+   "platformLimitations": [
+    "GTK4 ScrolledWindow publishes a focusable scroll pane with no accessible name; reproduced on a stock GTK4 application, not introduced here."
+   ],
+   "summary": {
+    "controls": 4,
+    "headings": [
+     "Review"
+    ],
+    "readableText": 37
+   }
+  }
+ ],
+ "findings": []
+}
