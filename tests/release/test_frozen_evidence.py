@@ -132,6 +132,14 @@ PHASES_AFTER_THE_RECORD = (
     # evidence arrives, so it cannot be pinned by the Phase 7 cut. Both guards
     # refused all twenty committed files before this deliberate declaration.
     "qualification/phase16/",
+    # Phase 17's tree: multi-source external-floor operations — the closed
+    # five-source registry, explicit operator, source-specific evaluation,
+    # unified reference cuts, derived floor/status/dashboard, 70-scenario
+    # matrix, and marked scratch fixtures. Real evidence can advance the
+    # derived views, so the Phase 7 cut cannot pin this live tree. Both guards
+    # refused the same twenty-six committed paths at feff1527 before this
+    # declaration; neither historical cut-time exemption changed.
+    "qualification/phase17/",
 )
 
 MAINTAINED_TOOLING = frozenset({
